@@ -4,6 +4,27 @@
 docker-compose up -d
 ```
 
+# Minio
+
+Yes, we really need four volumes, otherwise object lock will not work.
+
+# Cleanup data dirs
+
+Be careful!
+
+```bash
+sudo ./cleanup-data-dir.sh
+```
+
+# Kafka
+
+Debugging Kafka events:
+
+```bash
+docker-compose logs --follow kafkacat
+```
+
+
 # Simulate creating a new thing
 
 ```
