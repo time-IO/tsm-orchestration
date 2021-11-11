@@ -1,0 +1,89 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12-alpine
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+    user: "${UID}:${GID}"
+
+  minio:
+    image: minio/minio
+    depends_on:
+      - kafka
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_NOTIFY_KAFKA_ENABLE: "on"
+      MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
+      MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
+    volumes:
+      - ./data/minio/vol0:/vol0
+      - ./data/minio/vol1:/vol1
+      - ./data/minio/vol2:/vol2
+      - ./data/minio/vol3:/vol3
+    user: "${UID}:${GID}"
+    command:
+      - "server"
+      - "/vol{0...3}"
+      - "--console-address"
+      - ":9001"
+
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.7
+    volumes:
+      - ./data/zookeeper:/bitnami/zookeeper
+    user: "${UID}:${GID}"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    image: docker.io/bitnami/kafka:3
+    hostname: kafka
+    ports:
+      - "127.0.0.1:9092:9092"
+    volumes:
+      - ./data/kafka:/bitnami/kafka
+    user: "${UID}:${GID}"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ADVERTISED_PORT=9092
+    depends_on:
+      - zookeeper
+
+  dispatcher-producer:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    command:
+      - --version
+
+  dispatcher-minio-new-thing-runner:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: on-failure
+    depends_on:
+      - kafka
+      - minio
+    command:
+      - --topic
+      - thing_created
+      - --kafka-server
+      - kafka:9092
+      - --verbose
+      - run-create-thing-on-minio-action-service
+      - --minio_secure
+      - "False"
+      - minio:9000
+      - minioadmin
+      - minioadmin
+
+configs:
+  my_config:
+    file: ./my_config.txt
+  my_other_config:
+    external: true
