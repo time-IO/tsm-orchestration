@@ -1,6 +1,7 @@
-version: "3.9"
+version: "2.4"
 services:
   postgres:
+    restart: on-failure
     image: postgres:12-alpine
     ports:
       - "127.0.0.1:5432:5432"
@@ -9,14 +10,16 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data
+      - ./data/postgres/postgres-ddl.sql:/docker-entrypoint-initdb.d/postgres-ddl.sql
+      - ./data/postgres/postgres-fixtures.sql:/docker-entrypoint-initdb.d/postgres-fixtures.sql
     user: "${UID}:${GID}"
 
   minio:
     image: minio/minio
+    restart: on-failure
     depends_on:
       kafka:
         condition: service_healthy
-
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
@@ -43,15 +46,22 @@ services:
 
   zookeeper:
     image: docker.io/bitnami/zookeeper:3.7
+    restart: on-failure
     volumes:
       - ./data/zookeeper:/bitnami/zookeeper
     user: "${UID}:${GID}"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
+    healthcheck:
+      test: [ "CMD", "zkServer.sh", "status" ]
+      interval: 2s
+      timeout: 1s
+      retries: 15
 
   kafka:
     image: docker.io/bitnami/kafka:3
     hostname: kafka
+    restart: on-failure
     ports:
       - "127.0.0.1:9092:9092"
     volumes:
@@ -63,7 +73,8 @@ services:
       - KAFKA_ADVERTISED_HOST_NAME=kafka
       - KAFKA_ADVERTISED_PORT=9092
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "127.0.0.1:9092", "--list"]
       interval: 5s
@@ -96,6 +107,27 @@ services:
       - minioadmin
       - minioadmin
 
+  dispatcher-run-process-new-file-service:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    command:
+      - --topic
+      - minio-bucket-notifications
+      - --kafka-server
+      - kafka:9092
+      - --verbose
+      - run-process-new-file-service
+      - --minio_secure
+      - "False"
+      - minio:9000
+      - minioadmin
+      - minioadmin
+
   # for debugging kafka events
   kafkacat:
     image: confluentinc/cp-kafkacat
@@ -115,3 +147,6 @@ services:
       minio:
         condition: service_healthy
 
+  extractor:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
+    restart: on-failure
