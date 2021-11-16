@@ -99,13 +99,28 @@ services:
       - thing_created
       - --kafka-server
       - kafka:9092
-      - --verbose
       - run-create-thing-on-minio-action-service
       - --minio_secure
       - "False"
       - minio:9000
       - minioadmin
       - minioadmin
+
+  dispatcher-create-new-thing-db-runner:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: on-failure
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    command:
+      - --topic
+      - thing_created
+      - --kafka-server
+      - kafka:9092
+      - run-create-database-schema-action-service
+      - postgresql://postgres:postgres@postgres/postgres
 
   dispatcher-run-process-new-file-service:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
@@ -120,7 +135,6 @@ services:
       - minio-bucket-notifications
       - --kafka-server
       - kafka:9092
-      - --verbose
       - run-process-new-file-service
       - --minio_secure
       - "False"
