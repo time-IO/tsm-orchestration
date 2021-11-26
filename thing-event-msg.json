@@ -1,0 +1,55 @@
+{
+  "uuid": "057d8bba-40b3-11ec-a337-125e5a40a849",
+  "name": "The Doors",
+  "database": {
+    "username": "myfirstproject_6185a5b8462711ec910a125e5a40a845",
+    "password": "d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M"
+  },
+  "project": {
+    "name": "My first project",
+    "uuid": "6185a5b8-4627-11ec-910a-125e5a40a845"
+  },
+  "raw_data_storage": {
+    "bucket_name": "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849",
+    "username":  "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849",
+    "password": "R3eKIIxZWtYlC9s9ZIEeWc4peH4OebiHWE252xQF"
+  },
+  "properties": {
+    "default_parser": "CsvParser",
+    "parsers": [
+      {
+        "type": "AnotherCustomParser",
+        "settings": {
+          "delimiter": ",",
+          "footlines": 0,
+          "headlines": 1,
+          "timestamp": {
+            "date": {
+              "pattern": "^(\\d{4})-(\\d{2})-(\\d{2})",
+              "position": 1,
+              "replacement": "$1-$2-$3"
+            },
+            "time": {
+              "pattern": "(\\d{2}):(\\d{2}):(\\d{2})$",
+              "position": 1,
+              "replacement": "$1:$2:$3"
+            }
+          }
+        }
+      },
+      {
+        "type": "MyCustomParser"
+      },
+      {
+        "type": "CsvParser",
+        "settings": {
+          "timestamp_format": "%Y/%m/%d %H:%M:%S",
+          "header": 3,
+          "delimiter": ",",
+          "timestamp_column": 1,
+          "skipfooter": 1
+        }
+      }
+    ]
+  }
+}
