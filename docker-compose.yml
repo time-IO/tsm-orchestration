@@ -141,6 +141,7 @@ services:
       - minio:9000
       - minioadmin
       - minioadmin
+      - http://extractor:5000/extractor/run
 
   # for debugging kafka events
   kafkacat:
