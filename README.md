@@ -1,22 +1,112 @@
 # Get started with ZID/TSM
 
+The orchestration repository is the place where all the little [ZID/TSM
+components](https://git.ufz.de/rdm-software/timeseries-management) are
+combined to a running system. This is achieved by putting the docker
+images of the ZID/TSM components together in a
+[docker compose file](docker-compose.yml) so you can start them with a
+single command and without deeper knowledge of every single part of it.
+
+Used [ZID/TSM
+components](https://git.ufz.de/rdm-software/timeseries-management) in
+that repo:
+
+- [tsm-orchestration](https://git.ufz.de/rdm-software/timeseries-management/tsm-orchestration)
+- [tsm-extractor](https://git.ufz.de/rdm-software/timeseries-management/tsm-extractor)
+- [tsm-dispatcher](https://git.ufz.de/rdm-software/timeseries-management/tsm-dispatcher)
+- [TSM Basic Demo Scheduler](https://git.ufz.de/rdm-software/timeseries-management/tsm-basic-demo-scheduler)
+
+## 1. Create environment/config file from example:
+
+```bash
+cp .env.example .env 
 ```
+The settings from the example are ok for local testing and development.
+Postgres, Minio and Kafka services are exposed on localhost, so you can
+access them with clients from your machine.
+
+When using this in (semi-) production (i.g. on a server) some settings,
+especially the passwords should be changed! Also keep in mind, that you
+will need encryption when exposing the services: For example, minio HTTP
+ports will need a TLS proxy (i.e. nginx) with certificates (i.e.
+issued by
+[DFN PKI](https://www.pki.dfn.de/geant-trusted-certificate-services/)).
+
+##  2. Run all the services and have fun
+
+```bash
 docker-compose up -d
 ```
 
-# Minio
+It will take some seconds until everything is up. Especially the kafka
+service is very costly and will engage your CPU and CPU fan.
 
-Yes, we really need four volumes, otherwise object lock will not work.
+## 3. Create a thing
 
-# Cleanup data dirs
+A *thing* in ZID/TSM/STA sense is an entity that is producing time
+series data in one or more data streams. In ZID/TSM we follow the
+approach, that an end user is able to create a new *thing* and all its
+settings for its infrastructure like database credentials or parser
+properties. When somebody enters or changes settings of a *thing* these
+changes are populated to *action services* by kafka events.
 
-Be careful!
+As long as ZID/TSM doesn't have a graphical end user frontend we have to
+produce events by ourselves. We directly use the kafka container for
+that:
 
 ```bash
-sudo ./remove-all-data.sh
+cat thing-event-msg.json | tr -d '\n' | docker-compose exec -T kafka kafka-console-producer.sh --broker-list kafka:9092 --topic thing_created
+
+# Be aware of the `tr` step - `kafka-console-producer` is processing all
+# input line by line and will break multiline (JSON) strings otherwise. 
 ```
 
-# Kafka
+The dispatcher action services will create
+- a new minio user and bucket:
+  - <http://localhost:9001/buckets/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/admin/summary>
+  - <http://localhost:9001/buckets/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/browse>
+- a new postgres database role and schema:
+  - <postgresql://myfirstproject_6185a5b8462711ec910a125e5a40a845:d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M@postgres/postgres>
+  -   and a *thing* entity with (hopefully) all the necessary properties
+      in the new `thing` table
+
+## 4. Upload data
+
+Now you can go to the fresh new bucket in the
+[minio console](http://localhost:9001/buckets/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/browse)
+and upload a `csv` file.
+
+The dispatcher action service called *run-process-new-file-service* gets
+notified by a kafka event produced by minio and will forward the file
+resource and the necessary settings to the scheduler. The scheduler
+starts the extractor wo will parse the data and write it to the things
+database.
+
+## 5. Clean up
+
+To temporary stop the containers and services use `docker-compose stop`.
+
+When you're ready or destroyed your setup while playing around you can
+reset everything by kicking away the containers and removing all data:
+
+```bash
+docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
+```
+
+All data is lost with this. Be careful!
+
+# Further thoughts and hints
+
+## Minio
+
+- Yes, we really need four volumes, otherwise object lock will not work.
+- Find the current event ARN to configure bucket notifications:
+
+    ```bash
+    mc admin info  myminio/ --json | jq .info.sqsARN
+    ```
+
+## Kafka
 
 Debugging Kafka events:
 
@@ -24,32 +114,7 @@ Debugging Kafka events:
 docker-compose logs --follow kafkacat
 ```
 
-
-# Simulate creating a new thing
-
-```
-docker-compose run --rm dispatcher-producer --topic thing_created -k kafka:9092 -v produce "{\"uuid\":\"057d8bba-40b3-11ec-a337-125e5a40a845\",\"name\":\"Axel F.\"}"
-```
-
-The dispatcher will create a new minio user and bucket: <http://localhost:9001/buckets/axelf-057d8bba-40b3-11ec-a337-125e5a40a845/browse>
-
-# Another way of producing new thing
-
-```
-cat thing-event-msg.json | tr -d '\n' | docker-compose exec -T kafka kafka-console-producer.sh --broker-list kafka:9092 --topic thing_created
-```
-
-Be aware of the `tr` step - `kafka-console-producer` is processing all
-input line by line and will break multiline (JSON) strings.
-
-
-# MinIO: Find the current event ARN to configure bucket notifications
-
-```bash
-mc admin info  myminio/ --json | jq .info.sqsARN
-```
-
-# Naming conventions
+## Naming conventions
 
 Human readable ID for projects and things: Use UUID as suffix and
 sanitized name to fill it from the left until it is 63 chars long.
