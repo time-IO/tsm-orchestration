@@ -2,7 +2,8 @@ version: "2.4"
 services:
   postgres:
     restart: on-failure
-    image: postgres:12-alpine
+#    image: postgres:14-alpine
+    image: postgres:14-bullseye
     ports:
       - "127.0.0.1:5432:5432"
     environment:
@@ -13,6 +14,9 @@ services:
       - ./data/postgres/postgres-ddl.sql:/docker-entrypoint-initdb.d/postgres-ddl.sql
       - ./data/postgres/postgres-fixtures.sql:/docker-entrypoint-initdb.d/postgres-fixtures.sql
     user: "${UID}:${GID}"
+    # hack, to allow a gitkeep file in empty data directory
+    command: sh -c "rm /var/lib/postgresql/data/.gitkeep || echo existing setup && docker-entrypoint.sh
+      postgres"
 
   minio:
     image: minio/minio
