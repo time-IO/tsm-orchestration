@@ -171,3 +171,12 @@ services:
   extractor:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
+    
+  broker:
+    image: eclipse-mosquitto:latest
+    ports:
+      - 1883:1883
+    volumes:
+      - ./mosquitto:/mosquitto/config
+    networks:
+      - localnet
