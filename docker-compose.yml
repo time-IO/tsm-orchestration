@@ -175,7 +175,7 @@ services:
   broker:
     image: eclipse-mosquitto:latest
     ports:
-      - 1883:1883
+      - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
     volumes:
       - ./mosquitto:/mosquitto/config
     networks:
