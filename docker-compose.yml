@@ -172,7 +172,7 @@ services:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
     
-  broker:
+  mqtt-broker:
     image: eclipse-mosquitto:latest
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
