@@ -136,7 +136,7 @@ services:
       - --kafka-server
       - kafka:9092
       - run-create-database-schema-action-service
-      - postgresql://${POSTGRES_USER:?Please define an postgres user!}:${POSTGRES_PASSWORD:?Please define an postgres password!}@postgres/postgres
+      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
 
   dispatcher-run-process-new-file-service:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
