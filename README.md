@@ -95,6 +95,14 @@ docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
 
 All data is lost with this. Be careful!
 
+# Doing it with Mosquitto MQTT instead of Apache Kafka
+
+**Step 3 is:**
+
+```bash
+cat thing-event-msg.json | docker-compose exec -T mqtt-broker mosquitto_pub -t thing_created -u testUser -P password -s
+```
+
 # Further thoughts and hints
 
 ## Minio
