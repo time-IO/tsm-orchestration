@@ -32,6 +32,17 @@ services:
       MINIO_NOTIFY_KAFKA_ENABLE: "on"
       MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
       MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
+      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
+      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
+      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "30s"
+#      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
     volumes:
       - ./data/minio/vol0:/vol0
       - ./data/minio/vol1:/vol1
