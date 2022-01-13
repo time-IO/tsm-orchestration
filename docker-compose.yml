@@ -43,21 +43,20 @@ services:
 #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
 #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
 #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
+      MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
     volumes:
       - ./data/minio/vol0:/vol0
       - ./data/minio/vol1:/vol1
       - ./data/minio/vol2:/vol2
       - ./data/minio/vol3:/vol3
-      - ${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/certs/public.cert:ro
-      - ${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/certs/private.key:ro
+      - ${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro
+      - ${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro
     user: "${UID}:${GID}"
     command:
       - "server"
       - "/vol{0...3}"
       - "--console-address"
       - ":9001"
-      - "--certs-dir"
-      - "/certs"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 2s
