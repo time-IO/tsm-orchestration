@@ -146,3 +146,26 @@ def slug(self):
             '{shortname}-{uuid}'.format(shortname=self.name[0:26].lower(), uuid=self.uuid)
         )
 ```
+
+# Enable TLS Security for Minio and Postgres database
+
+For secure connections over the network you need transport security like
+`https`. To achieve this you need certificates of a public key
+infrastructure (PKI) like the
+[DFN PKI](https://www.pki.dfn.de/geant-trusted-certificate-services/).
+
+Once you have a private key and a public certificate you can enable
+security by
+
+- changing `MINIO_TLS_CERT_PATH` to the path of your certificate file
+- changing `MINIO_TLS_KEY_PATH` to the path of your private key file
+- changing `POSTGRES_TLS_CERT_PATH` to the path of your certificate file
+- changing `POSTGRES_TLS_KEY_PATH` to the path of your private key file
+- uncommenting the line beginning with `POSTGRES_EXTRA_PARAMS`
+
+in the `.env` file of your deployment.
+
+Now you're able to access the minio service with `https`. The postgres
+database will enforce encryption but you need to enable
+[`full-verification`](https://stackoverflow.com/questions/14021998/using-psql-to-connect-to-postgresql-in-ssl-mode) mode in client to also check the identity of the
+server.
