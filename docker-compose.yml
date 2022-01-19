@@ -123,7 +123,7 @@ services:
       - run-create-thing-on-minio-action-service
       - --minio_secure
       - "${MINIO_SECURE:-False}"
-      - ${MINIO_SERVER_URL:-minio:9000}
+      - ${MINIO_HOST:-minio:9000}
       - ${MINIO_ROOT_USER:?Please define an minio root user!}
       - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
 
@@ -159,7 +159,7 @@ services:
       - run-process-new-file-service
       - --minio_secure
       - "${MINIO_SECURE:-False}"
-      - ${MINIO_SERVER_URL:-minio:9000}
+      - ${MINIO_HOST:-minio:9000}
       - ${MINIO_ROOT_USER:?Please define an minio root user!}
       - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
       - http://extractor:5000/extractor/run
