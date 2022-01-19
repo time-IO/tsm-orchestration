@@ -22,24 +22,24 @@ services:
   minio:
     image: minio/minio
     restart: ${RESTART:-on-failure}
-    depends_on:
-      kafka:
-        condition: service_healthy
+#    depends_on:
+#      kafka:
+#        condition: service_healthy
     ports:
       - "${MINIO_API_PORT:-127.0.0.1:9000}:9000"
       - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Please define an minio root user!}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
-      MINIO_NOTIFY_KAFKA_ENABLE: "on"
-      MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
-      MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
-      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
-      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
-      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
-      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "30s"
+#      MINIO_NOTIFY_KAFKA_ENABLE: "on"
+#      MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
+#      MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
+#      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
+#      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
+#      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
+#      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
+#      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+#      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "30s"
 #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
 #      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "<string>"
 #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
@@ -122,8 +122,8 @@ services:
       - kafka:9092
       - run-create-thing-on-minio-action-service
       - --minio_secure
-      - "False"
-      - minio:9000
+      - "${MINIO_SECURE:-False}"
+      - ${MINIO_SERVER_URL:-minio:9000}
       - ${MINIO_ROOT_USER:?Please define an minio root user!}
       - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
 
@@ -158,8 +158,8 @@ services:
       - kafka:9092
       - run-process-new-file-service
       - --minio_secure
-      - "False"
-      - minio:9000
+      - "${MINIO_SECURE:-False}"
+      - ${MINIO_SERVER_URL:-minio:9000}
       - ${MINIO_ROOT_USER:?Please define an minio root user!}
       - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
       - http://extractor:5000/extractor/run
