@@ -212,3 +212,13 @@ services:
       - minio-bucket-notifications
       - -t
       - thing_created
+
+  grafana:
+    restart: ${RESTART:-on-failure}
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:?Please define a grafana user}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?Please define a grafana password}
+    ports:
+      - 3000:3000
+
