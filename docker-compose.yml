@@ -219,6 +219,18 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:?Please define a grafana user}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?Please define a grafana password}
+# You can use the following env variables to create a default data source
+      - DS_NAME="PostgreSQL"
+      - DS_TYPE="PostgreSQL"
+      - DS_ACCESS="direct"
+# Can use either proxy or direct
+      - DS_URL="POSTGRES_PORT"
+      - DS_PASS="POSTGRES_PASSWORD"
+      - DS_USER="POSTGRES_USER"
+      - DS_DB="CREATEDB_POSTGRES_DATABASE"
+      - DS_AUTH="false"
+      - DS_AUTH_USER=""
+      - AUTH_PASS=""
     ports:
       - 3000:3000
 
