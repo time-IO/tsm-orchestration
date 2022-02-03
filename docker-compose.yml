@@ -232,5 +232,5 @@ services:
       - DS_AUTH_USER=""
       - AUTH_PASS=""
     ports:
-      - 3000:3000
+      - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
