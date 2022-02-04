@@ -216,21 +216,18 @@ services:
   grafana:
     restart: ${RESTART:-on-failure}
     image: grafana/grafana:latest
+    user: "${UID}:${GID}"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:?Please define a grafana user}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?Please define a grafana password}
-# You can use the following env variables to create a default data source
-      - DS_NAME="PostgreSQL"
-      - DS_TYPE="PostgreSQL"
-      - DS_ACCESS="direct"
-# Can use either proxy or direct
-      - DS_URL="POSTGRES_PORT"
-      - DS_PASS="POSTGRES_PASSWORD"
-      - DS_USER="POSTGRES_USER"
-      - DS_DB="CREATEDB_POSTGRES_DATABASE"
-      - DS_AUTH="false"
-      - DS_AUTH_USER=""
-      - AUTH_PASS=""
+      - GRAFANA_DEFAULT_DATASOURCE_URL=${GRAFANA_DEFAULT_DATASOURCE_URL:-postgres:5432}
+      - GRAFANA_DEFAULT_DATASOURCE_DATABASE=${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}
+      - GRAFANA_DEFAULT_DATASOURCE_USER=${GRAFANA_DEFAULT_DATASOURCE_USER:-postgres}
+      - GRAFANA_DEFAULT_DATASOURCE_PASSWORD=${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}
+      - GRAFANA_DEFAULT_DATASOURCE_SSLMODE=${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning/
+      - ./data/grafana/:/var/lib/grafana
     ports:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
