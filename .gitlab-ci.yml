@@ -1,7 +1,7 @@
 # Initial template for CI/CD 
 
 stages:
-  - deploym
+  - deploy
 
 deploy-to-tsm:
   stage: deploy
