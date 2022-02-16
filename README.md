@@ -95,13 +95,23 @@ docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
 
 All data is lost with this. Be careful!
 
-# Doing it with Mosquitto MQTT instead of Apache Kafka
+## 6. Doing it with Mosquitto MQTT instead of Apache Kafka
 
-**Step 3 is:**
+To test sending/receiving messages via MQTT you have 2 containers: the **mqtt-broker**
+and the **mqtt-client**. You can use the client to send a **thing_created** message according 
+the defined avro schema via:
 
 ```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker mosquitto_pub -t thing_created -u testUser -P password -s
+docker-compose run --rm mqtt-client publish_thing_created.py
 ```
+
+Additionaly you can also use the **mqtt-client** as a subscriber to the **thing-created**
+topic to see its behaviour when receiving a message:
+
+```bash
+docker-compose run --rm mqtt-client subscribe_thing_created.py
+```
+
 
 # Further thoughts and hints
 

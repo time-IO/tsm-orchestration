@@ -1,14 +1,14 @@
 version: "2.4"
 services:
   postgres:
-    restart: ${RESTART:-on-failure}
     image: postgres:14-bullseye
+    restart: ${RESTART:-on-failure}
     ports:
       - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:?Please define an postgres user!}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Please define an postgres password!}
-      - PGDATA=/var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${POSTGRES_USER:?Please define an postgres user!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please define an postgres password!}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data
       - ./data/postgres/postgres-ddl.sql:/docker-entrypoint-initdb.d/postgres-ddl.sql
@@ -23,36 +23,32 @@ services:
     image: minio/minio
     restart: ${RESTART:-on-failure}
     depends_on:
-      kafka:
-        condition: service_healthy
+      - mqtt-broker
     ports:
       - "${MINIO_API_PORT:-127.0.0.1:9000}:9000"
       - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Please define an minio root user!}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
-      MINIO_NOTIFY_KAFKA_ENABLE: "on"
-      MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
-      MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
       MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
       MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
       MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
       MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
       MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
-#      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
-#      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
-#      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
-#      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
     volumes:
       - ./data/minio/vol0:/vol0
       - ./data/minio/vol1:/vol1
       - ./data/minio/vol2:/vol2
       - ./data/minio/vol3:/vol3
-      - ${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro
-      - ${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro
+      #- ${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro
+      #- ${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro
     user: "${UID}:${GID}"
     command:
       - "server"
@@ -65,136 +61,25 @@ services:
       timeout: 5s
       retries: 15
 
-  zookeeper:
-    image: docker.io/bitnami/zookeeper:3.7
-    restart: ${RESTART:-on-failure}
-    volumes:
-      - ./data/zookeeper:/bitnami/zookeeper
-    user: "${UID}:0"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    healthcheck:
-      test: [ "CMD", "zkServer.sh", "status" ]
-      interval: 2s
-      timeout: 10s
-      retries: 15
-
-  kafka:
-    image: docker.io/bitnami/kafka:3
-    hostname: kafka
-    restart: on-failure
-    ports:
-      - "${KAFKA_PORT:-127.0.0.1:9092}:9092"
-    volumes:
-      - ./data/kafka:/bitnami/kafka
-    user: "${UID}:0"
-    environment:
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_ADVERTISED_HOST_NAME=kafka
-      - KAFKA_ADVERTISED_PORT=9092
-    depends_on:
-      zookeeper:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "127.0.0.1:9092", "--list"]
-      interval: 2s
-      timeout: 10s
-      retries: 15
-
-  dispatcher-producer:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    command:
-      - --version
-
-  dispatcher-minio-new-thing-runner:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: ${RESTART:-on-failure}
-    depends_on:
-      kafka:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    command:
-      - --topic
-      - thing_created
-      - --kafka-server
-      - kafka:9092
-      - run-create-thing-on-minio-action-service
-      - --minio_secure
-      - "${MINIO_SECURE:-False}"
-      - ${MINIO_HOST:-minio:9000}
-      - ${MINIO_ROOT_USER:?Please define an minio root user!}
-      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
-
-  dispatcher-create-new-thing-db-runner:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: ${RESTART:-on-failure}
-    depends_on:
-      kafka:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    command:
-      - --topic
-      - thing_created
-      - --kafka-server
-      - kafka:9092
-      - run-create-database-schema-action-service
-      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
-
-  dispatcher-run-process-new-file-service:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: on-failure
-    depends_on:
-      kafka:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    command:
-      - --topic
-      - minio-bucket-notifications
-      - --kafka-server
-      - kafka:9092
-      - run-process-new-file-service
-      - --minio_secure
-      - "${MINIO_SECURE:-False}"
-      - ${MINIO_HOST:-minio:9000}
-      - ${MINIO_ROOT_USER:?Please define an minio root user!}
-      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
-      - http://extractor:5000/extractor/run
-
-  # for debugging kafka events
-  kafkacat:
-    restart: ${RESTART:-on-failure}
-    image: confluentinc/cp-kafkacat
-    command:
-      - kafkacat
-      - -b
-      - kafka:9092
-      - -C
-      - -u
-      - -G
-      - 5867ab54
-      - thing_created
-      - minio-bucket-notifications
-    depends_on:
-      kafka:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-
-  extractor:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
-    restart: ${RESTART:-on-failure}
-    
   mqtt-broker:
-    restart: ${RESTART:-on-failure}
     image: eclipse-mosquitto:latest
+    restart: ${RESTART:-on-failure}
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
     volumes:
       - ./mosquitto:/mosquitto/config
+
+  mqtt-client:
+    build: ./mosquitto
+    volumes:
+      - ./mosquitto:/usr/src/app/
+    environment:
+      - MQTT_BROKER=mqtt-broker
+      - MQTT_USER=${MQTT_USER:?Please define a mqtt user!}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:?Please define a mqtt password!}
+    depends_on:
+      - mqtt-broker
+    command: -c exit
 
   mqtt-cat:
     restart: ${RESTART:-on-failure}
@@ -212,6 +97,72 @@ services:
       - minio-bucket-notifications
       - -t
       - thing_created
+
+  dispatcher-producer:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    command:
+      - --version
+
+  dispatcher-minio-new-thing-runner:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: ${RESTART:-on-failure}
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      minio:
+        condition: service_healthy
+    command:
+      - --topic
+      - thing_created
+      - --mqtt
+      - mqtt-broker:1883
+      - run-create-thing-on-minio-action-service
+      - --minio_secure
+      - "${MINIO_SECURE:-False}"
+      - ${MINIO_HOST:-minio:9000}
+      - ${MINIO_ROOT_USER:?Please define an minio root user!}
+      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
+
+  dispatcher-create-new-thing-db-runner:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: ${RESTART:-on-failure}
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      minio:
+        condition: service_healthy
+    command:
+      - --topic
+      - thing_created
+      - --mqtt
+      - mqtt-broker:1883
+      - run-create-database-schema-action-service
+      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
+
+  dispatcher-run-process-new-file-service:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: on-failure
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      minio:
+        condition: service_healthy
+    command:
+      - --topic
+      - minio-bucket-notifications
+      - --mqtt
+      - mqtt-broker:1883
+      - run-process-new-file-service
+      - --minio_secure
+      - "${MINIO_SECURE:-False}"
+      - ${MINIO_HOST:-minio:9000}
+      - ${MINIO_ROOT_USER:?Please define an minio root user!}
+      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
+      - http://extractor:5000/extractor/run
+
+  extractor:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
+    restart: ${RESTART:-on-failure}
 
   grafana:
     restart: ${RESTART:-on-failure}
@@ -235,4 +186,5 @@ services:
       - ${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro
     ports:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
-
+volumes:
+  postgres:
