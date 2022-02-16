@@ -18,4 +18,4 @@ deploy-to-tsm:
     ## Add target hostkey to known hosts
     - mkdir -p ~/.ssh && echo "$SERVER_CD_HOSTKEY" >> ~/.ssh/known_hosts
     ## fire it up (deployment is triggered by "command" parameter in targets authorized_keys
-    - ssh root@tsm.intranet.ufz.de
+    - ssh tsm-orchestration@tsm.intranet.ufz.de
