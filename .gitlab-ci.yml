@@ -6,7 +6,7 @@ stages:
 deploy-to-tsm:
   stage: deploy
   only:
-    - master
+    - main
   image: alpine
   script:
     ## Install SSH agent
