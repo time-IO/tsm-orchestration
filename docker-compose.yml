@@ -193,6 +193,7 @@ services:
     image: eclipse-mosquitto:latest
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
+      - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - ./mosquitto:/mosquitto/config
 
