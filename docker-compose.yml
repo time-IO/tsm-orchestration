@@ -34,17 +34,17 @@ services:
       MINIO_NOTIFY_KAFKA_ENABLE: "on"
       MINIO_NOTIFY_KAFKA_BROKERS: "kafka:9092"
       MINIO_NOTIFY_KAFKA_TOPIC: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
-      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
-      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
-      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
-      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
-#      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
-      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
-#      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
-#      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
-#      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
+#      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
+#      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
+#      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
+#      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+#      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
+##      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
+#      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
+##      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
+##      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
+##      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
     volumes:
       - ./data/minio/vol0:/vol0
@@ -64,6 +64,29 @@ services:
       interval: 2s
       timeout: 5s
       retries: 15
+
+  minio_notify_mqtt_workaround:
+    # one off container to configure minio mqtt notification target as long as setting it by
+    # minio environment vars causes reconnect bug in minio
+    depends_on:
+      minio:
+        condition: service_healthy
+    image: minio/mc:latest
+    environment:
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL:-http://minio:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Please define an minio root user!}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        mc alias set myminio "$${MINIO_SERVER_URL}" "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"
+        mc admin config set myminio/ notify_mqtt:1 broker=tcp://mqtt-broker:1883 \
+        password=$${MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER} queue_dir= \
+        queue_limit=0 reconnect_interval=60s keep_alive_interval=60s qos=2 \
+        topic=minio-bucket-notifications username=$${MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER}
+        mc admin service restart myminio/
 
   zookeeper:
     image: docker.io/bitnami/zookeeper:3.7
