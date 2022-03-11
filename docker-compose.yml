@@ -25,6 +25,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      mqtt-broker:
+        condition: service_healthy
     ports:
       - "${MINIO_API_PORT:-127.0.0.1:9000}:9000"
       - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
@@ -187,19 +189,27 @@ services:
   extractor:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
-    
+
   mqtt-broker:
     restart: ${RESTART:-on-failure}
     image: eclipse-mosquitto:latest
+    user: "${UID}:${GID}"
+    environment:
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - ${MOSQUITTO_CONFIG:-./data/mosquitto/mosquitto.dev.conf}:/mosquitto/config/mosquitto.dev.conf
-      - ${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.crt
-      - ${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.key
-      - ${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt
 
+
+    healthcheck:
+      test: [ "CMD-SHELL", "timeout 5 mosquitto_sub -t '$$SYS/#' -C 1 -u $${MQTT_USER} -P 
+      $${MQTT_PASSWORD} | grep -v Error || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 6
 
   mqtt-cat:
     restart: ${RESTART:-on-failure}
