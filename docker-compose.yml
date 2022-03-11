@@ -195,7 +195,11 @@ services:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
-      - ./mosquitto:/mosquitto/config
+      - ${MOSQUITTO_CONFIG:-./data/mosquitto/mosquitto.dev.conf}:/mosquitto/config/mosquitto.dev.conf
+      - ${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.crt
+      - ${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.key
+      - ${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt
+
 
   mqtt-cat:
     restart: ${RESTART:-on-failure}
