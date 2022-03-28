@@ -105,6 +105,27 @@ cat thing-event-msg.json | docker-compose exec -T mqtt-broker mosquitto_pub -t t
 
 # Further thoughts and hints
 
+## Configuring and operating Mosquitto MQTT broker
+
+When started the first time it generates a password database
+(`data/mosquitto/passwd/mosquitto.passwd`) with the credentials from the environment. Later 
+changes of the password and user in env do not have any effect to the password file but will
+break the health check of the service. To change passwords or add users use the 
+`mosquitto_passwd` command from inside the container:
+
+```bash
+docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-passwd/mosquitto.passwd "user" "password"
+```
+
+With interactive password input:
+
+```bash
+docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-passwd/mosquitto.passwd "user"
+```
+
+When using in production it is recommended to use the `mosquitto.tls.conf` template (change
+`MOSQUITTO_CONFIG` in your `.env` file) to enable encrypted connections by tls.
+
 ## Minio
 
 - Yes, we really need four volumes, otherwise object lock will not work.
