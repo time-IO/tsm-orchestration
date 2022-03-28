@@ -69,18 +69,6 @@ services:
     volumes:
       - ./mosquitto:/mosquitto/config
 
-  mqtt-client:
-    build: ./mosquitto
-    volumes:
-      - ./mosquitto:/usr/src/app/
-    environment:
-      - MQTT_BROKER=mqtt-broker
-      - MQTT_USER=${MQTT_USER:?Please define a mqtt user!}
-      - MQTT_PASSWORD=${MQTT_PASSWORD:?Please define a mqtt password!}
-    depends_on:
-      - mqtt-broker
-    command: -c exit
-
   mqtt-cat:
     restart: ${RESTART:-on-failure}
     image: eclipse-mosquitto:latest
@@ -98,11 +86,6 @@ services:
       - -t
       - thing_created
 
-  dispatcher-producer:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    command:
-      - --version
-
   dispatcher-minio-new-thing-runner:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
     restart: ${RESTART:-on-failure}
@@ -114,8 +97,12 @@ services:
     command:
       - --topic
       - thing_created
-      - --mqtt
+      - --mqtt-broker
       - mqtt-broker:1883
+      - --mqtt-user
+      - ${MQTT_USER:?Please define a mqtt user!}
+      - --mqtt-password
+      - ${MQTT_PASSWORD:?Please define a mqtt password!}
       - run-create-thing-on-minio-action-service
       - --minio_secure
       - "${MINIO_SECURE:-False}"
@@ -127,15 +114,17 @@ services:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
     restart: ${RESTART:-on-failure}
     depends_on:
-      mqtt-broker:
-        condition: service_started
-      minio:
-        condition: service_healthy
+      - mqtt-broker
+      - postgres
     command:
       - --topic
       - thing_created
-      - --mqtt
+      - --mqtt-broker
       - mqtt-broker:1883
+      - --mqtt-user
+      - ${MQTT_USER:?Please define a mqtt user!}
+      - --mqtt-password
+      - ${MQTT_PASSWORD:?Please define a mqtt password!}
       - run-create-database-schema-action-service
       - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
 
@@ -150,8 +139,12 @@ services:
     command:
       - --topic
       - minio-bucket-notifications
-      - --mqtt
+      - --mqtt-broker
       - mqtt-broker:1883
+      - --mqtt-user
+      - ${MQTT_USER:?Please define a mqtt user!}
+      - --mqtt-password
+      - ${MQTT_PASSWORD:?Please define a mqtt password!}
       - run-process-new-file-service
       - --minio_secure
       - "${MINIO_SECURE:-False}"
