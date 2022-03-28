@@ -100,12 +100,17 @@ All data is lost with this. Be careful!
 **Step 3 is:**
 
 ```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker mosquitto_pub -t thing_created -u testUser -P password -s
+cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
 ```
 
 # Further thoughts and hints
 
 ## Configuring and operating Mosquitto MQTT broker
+
+## General
+
+When using in production it is recommended to use the `mosquitto.tls.conf` template (change
+`MOSQUITTO_CONFIG` in your `.env` file) to enable encrypted connections by tls.
 
 When started the first time it generates a password database
 (`data/mosquitto/passwd/mosquitto.passwd`) with the credentials from the environment. Later 
@@ -114,17 +119,39 @@ break the health check of the service. To change passwords or add users use the
 `mosquitto_passwd` command from inside the container:
 
 ```bash
-docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-passwd/mosquitto.passwd "user" "password"
+docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd "user" "password"
 ```
 
 With interactive password input:
 
 ```bash
-docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-passwd/mosquitto.passwd "user"
+docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-auth/mosquitto.passwd "user"
 ```
 
-When using in production it is recommended to use the `mosquitto.tls.conf` template (change
-`MOSQUITTO_CONFIG` in your `.env` file) to enable encrypted connections by tls.
+### Example for adding a new user and an acl to publish data
+
+1. Start the mqtt-broker service with `docker-compose up mqtt-broker` at least once the create 
+   the initial `mosquitto.passwd` and `mosquitto.acl` files.
+2. Call `docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd
+   "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849" "hyzdjetQEzrAz3HvrpGObGh7TlCoopQo"` to add 
+   the new user with its password 
+3. Restart the mqtt-broker service `docker-compose restart mqtt-broker`
+4. From now on you should be able to publish to the new users topic namespace:
+   ```bash
+   echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/beautiful/sensor/1 -u thedoors-057d8bba-40b3-11ec-a337-125e5a40a849 -P hyzdjetQEzrAz3HvrpGObGh7TlCoopQo -s"
+   ```
+   Watch them by checking the output of the mqtt-cat service:
+   `docker-compose logs --follow mqtt-cat`
+
+### mosquitto_ctrl
+
+[mosquitto_ctrl](https://mosquitto.org/man/mosquitto_ctrl-1.html) seems to be a new API to 
+configure the mosquitto server on runtime without to reload it when things change.
+
+### Mosquitto auth plugins
+
+For dynamic acls from database: https://gist.github.com/TheAshwanik/7ed2a3032ca16841bcaa
+
 
 ## Minio
 
