@@ -97,19 +97,10 @@ All data is lost with this. Be careful!
 
 ## 6. Doing it with Mosquitto MQTT instead of Apache Kafka
 
-To test sending/receiving messages via MQTT you have 2 containers: the **mqtt-broker**
-and the **mqtt-client**. You can use the client to send a **thing_created** message according 
-the defined avro schema via:
+**step 3 is:**
 
 ```bash
 cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
-```
-
-Additionaly you can also use the **mqtt-client** as a subscriber to the **thing-created**
-topic to see its behaviour when receiving a message:
-
-```bash
-docker-compose run --rm mqtt-client subscribe_thing_created.py
 ```
 
 
