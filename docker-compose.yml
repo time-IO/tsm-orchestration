@@ -1,8 +1,8 @@
 version: "2.4"
 services:
   postgres:
-    image: postgres:14-bullseye
     restart: ${RESTART:-on-failure}
+    image: postgres:14-bullseye
     ports:
       - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
     environment:
@@ -60,31 +60,6 @@ services:
       interval: 2s
       timeout: 5s
       retries: 15
-
-  mqtt-broker:
-    image: eclipse-mosquitto:latest
-    restart: ${RESTART:-on-failure}
-    ports:
-      - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
-    volumes:
-      - ./mosquitto:/mosquitto/config
-
-  mqtt-cat:
-    restart: ${RESTART:-on-failure}
-    image: eclipse-mosquitto:latest
-    command:
-      - mosquitto_sub
-      - -h
-      - mqtt-broker
-      - --pretty
-      - -u
-      - ${MQTT_USER:?Please define a mqtt user!}
-      - -P
-      - ${MQTT_PASSWORD:?Please define a mqtt password!}
-      - -t
-      - minio-bucket-notifications
-      - -t
-      - thing_created
 
   dispatcher-minio-new-thing-runner:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
@@ -156,6 +131,31 @@ services:
   extractor:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
+
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    restart: ${RESTART:-on-failure}
+    ports:
+      - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
+    volumes:
+      - ./mosquitto:/mosquitto/config
+
+  mqtt-cat:
+    restart: ${RESTART:-on-failure}
+    image: eclipse-mosquitto:latest
+    command:
+      - mosquitto_sub
+      - -h
+      - mqtt-broker
+      - --pretty
+      - -u
+      - ${MQTT_USER:?Please define a mqtt user!}
+      - -P
+      - ${MQTT_PASSWORD:?Please define a mqtt password!}
+      - -t
+      - minio-bucket-notifications
+      - -t
+      - thing_created
 
   grafana:
     restart: ${RESTART:-on-failure}
