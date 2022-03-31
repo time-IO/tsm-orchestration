@@ -11,8 +11,6 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data
-      - ./data/postgres/postgres-ddl.sql:/docker-entrypoint-initdb.d/postgres-ddl.sql
-      - ./data/postgres/postgres-fixtures.sql:/docker-entrypoint-initdb.d/postgres-fixtures.sql
       - ./data/postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
       - ${POSTGRES_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt
       - ${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key
