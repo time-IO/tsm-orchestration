@@ -22,7 +22,7 @@ that repo:
 cp .env.example .env 
 ```
 The settings from the example are ok for local testing and development.
-Postgres, Minio and Kafka services are exposed on localhost, so you can
+Postgres, Minio and MQTT services are exposed on localhost, so you can
 access them with clients from your machine.
 
 When using this in (semi-) production (i.g. on a server) some settings,
@@ -38,8 +38,7 @@ issued by
 docker-compose up -d
 ```
 
-It will take some seconds until everything is up. Especially the kafka
-service is very costly and will engage your CPU and CPU fan.
+It will take some seconds until everything is up.
 
 ## 3. Create a thing
 
@@ -48,10 +47,10 @@ series data in one or more data streams. In ZID/TSM we follow the
 approach, that an end user is able to create a new *thing* and all its
 settings for its infrastructure like database credentials or parser
 properties. When somebody enters or changes settings of a *thing* these
-changes are populated to *action services* by kafka events.
+changes are populated to *action services* by MQTT events.
 
 As long as ZID/TSM doesn't have a graphical end user frontend we have to
-produce events by ourselves. We directly use the kafka container for
+produce events by ourselves. We directly use the MQTT container for
 that:
 
 ```bash
@@ -74,7 +73,7 @@ Now you can go to the fresh new bucket in the
 and upload a `csv` file.
 
 The dispatcher action service called *run-process-new-file-service* gets
-notified by a kafka event produced by minio and will forward the file
+notified by a MQTT event produced by minio and will forward the file
 resource and the necessary settings to the scheduler. The scheduler
 starts the extractor wo will parse the data and write it to the things
 database.
