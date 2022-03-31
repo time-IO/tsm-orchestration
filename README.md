@@ -55,10 +55,7 @@ produce events by ourselves. We directly use the kafka container for
 that:
 
 ```bash
-cat thing-event-msg.json | tr -d '\n' | docker-compose exec -T kafka kafka-console-producer.sh --broker-list kafka:9092 --topic thing_created
-
-# Be aware of the `tr` step - `kafka-console-producer` is processing all
-# input line by line and will break multiline (JSON) strings otherwise. 
+cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
 ```
 
 The dispatcher action services will create
@@ -94,15 +91,6 @@ docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
 ```
 
 All data is lost with this. Be careful!
-
-## 6. Doing it with Mosquitto MQTT instead of Apache Kafka
-
-**step 3 is:**
-
-```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
-```
-
 
 # Further thoughts and hints
 
@@ -162,14 +150,6 @@ For dynamic acls from database: https://gist.github.com/TheAshwanik/7ed2a3032ca1
     ```bash
     mc admin info  myminio/ --json | jq .info.sqsARN
     ```
-
-## Kafka
-
-Debugging Kafka events:
-
-```bash
-docker-compose logs --follow kafkacat
-```
 
 ## Naming conventions
 
