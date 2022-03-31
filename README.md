@@ -22,7 +22,7 @@ that repo:
 cp .env.example .env 
 ```
 The settings from the example are ok for local testing and development.
-Postgres, Minio and Kafka services are exposed on localhost, so you can
+Postgres, Minio and MQTT services are exposed on localhost, so you can
 access them with clients from your machine.
 
 When using this in (semi-) production (i.g. on a server) some settings,
@@ -38,8 +38,7 @@ issued by
 docker-compose up -d
 ```
 
-It will take some seconds until everything is up. Especially the kafka
-service is very costly and will engage your CPU and CPU fan.
+It will take some seconds until everything is up.
 
 ## 3. Create a thing
 
@@ -48,17 +47,14 @@ series data in one or more data streams. In ZID/TSM we follow the
 approach, that an end user is able to create a new *thing* and all its
 settings for its infrastructure like database credentials or parser
 properties. When somebody enters or changes settings of a *thing* these
-changes are populated to *action services* by kafka events.
+changes are populated to *action services* by MQTT events.
 
 As long as ZID/TSM doesn't have a graphical end user frontend we have to
-produce events by ourselves. We directly use the kafka container for
+produce events by ourselves. We directly use the MQTT container for
 that:
 
 ```bash
-cat thing-event-msg.json | tr -d '\n' | docker-compose exec -T kafka kafka-console-producer.sh --broker-list kafka:9092 --topic thing_created
-
-# Be aware of the `tr` step - `kafka-console-producer` is processing all
-# input line by line and will break multiline (JSON) strings otherwise. 
+cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
 ```
 
 The dispatcher action services will create
@@ -77,7 +73,7 @@ Now you can go to the fresh new bucket in the
 and upload a `csv` file.
 
 The dispatcher action service called *run-process-new-file-service* gets
-notified by a kafka event produced by minio and will forward the file
+notified by a MQTT event produced by minio and will forward the file
 resource and the necessary settings to the scheduler. The scheduler
 starts the extractor wo will parse the data and write it to the things
 database.
@@ -94,14 +90,6 @@ docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
 ```
 
 All data is lost with this. Be careful!
-
-# Doing it with Mosquitto MQTT instead of Apache Kafka
-
-**Step 3 is:**
-
-```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
-```
 
 # Further thoughts and hints
 
@@ -161,14 +149,6 @@ For dynamic acls from database: https://gist.github.com/TheAshwanik/7ed2a3032ca1
     ```bash
     mc admin info  myminio/ --json | jq .info.sqsARN
     ```
-
-## Kafka
-
-Debugging Kafka events:
-
-```bash
-docker-compose logs --follow kafkacat
-```
 
 ## Naming conventions
 
