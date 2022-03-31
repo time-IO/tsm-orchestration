@@ -2,12 +2,10 @@
 venv
 .idea
 data/
-!data/kafka/.gitkeep
 !data/minio/vol0/.gitkeep
 !data/minio/vol1/.gitkeep
 !data/minio/vol2/.gitkeep
 !data/minio/vol3/.gitkeep
 !data/postgres/.gitkeep
 !data/postgres/data/.gitkeep
-!data/zookeeper/.gitkeep
 !data/mosquitto/auth/.gitkeep
