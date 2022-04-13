@@ -8,3 +8,4 @@ rm -rf data/postgres/data/*
 touch data/postgres/data/.gitkeep
 rm data/mosquitto/auth/mosquitto.acl
 rm data/mosquitto/auth/mosquitto.passwd
+rm -rf data/grafana/*
