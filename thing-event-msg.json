@@ -2,9 +2,9 @@
   "uuid": "057d8bba-40b3-11ec-a337-125e5a40a849",
   "name": "The Doors",
   "database": {
-    "username": "crns520a6d265e5511ec991454e1ad7c5c19",
+    "username": "myfirst6185a5b8462711ec910a125e5a40a845",
     "password": "d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M",
-    "url": "postgresql://crns520a6d265e5511ec991454e1ad7c5c19:d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M@postgres/postgres"
+    "url": "postgresql://myfirst6185a5b8462711ec910a125e5a40a845:d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M@postgres/postgres"
   },
   "project": {
     "name": "My first project",
