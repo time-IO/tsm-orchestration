@@ -158,7 +158,7 @@ services:
       retries: 6
     logging:
       options:
-        max-size: "${MQTT_BROKER_LOG_SIZE:-1K}"
+        max-size: "${MQTT_BROKER_LOG_SIZE:-100K}"
         max-file: "${MQTT_BROKER_FILE_COUNT:-10}"
 
   mqtt-cat:
@@ -166,7 +166,7 @@ services:
     image: eclipse-mosquitto:latest
     logging:
       options:
-        max-size: "${MQTT_CAT_LOG_SIZE:-1K}"
+        max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
         max-file: "${MQTT_CAT_FILE_COUNT:-10}"
     command:
       - mosquitto_sub
