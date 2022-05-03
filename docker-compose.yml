@@ -156,10 +156,18 @@ services:
       interval: 10s
       timeout: 10s
       retries: 6
+    logging:
+      options:
+        max-size: "${MQTT_BROKER_LOG_SIZE:-100K}"
+        max-file: "${MQTT_BROKER_FILE_COUNT:-10}"
 
   mqtt-cat:
     restart: ${RESTART:-on-failure}
     image: eclipse-mosquitto:latest
+    logging:
+      options:
+        max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
+        max-file: "${MQTT_CAT_FILE_COUNT:-10}"
     command:
       - mosquitto_sub
       - -h
