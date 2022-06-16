@@ -16,10 +16,10 @@
     "password": "R3eKIIxZWtYlC9s9ZIEeWc4peH4OebiHWE252xQF"
   },
   "properties": {
-    "default_parser": "envimo_parser",
+    "default_parser": "campbell_parser",
     "parsers": [
       {
-        "type": "envimo_parser"
+        "type": "campbell_parser"
       }
     ]
   }
