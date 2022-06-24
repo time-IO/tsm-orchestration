@@ -181,7 +181,7 @@ services:
       - -t
       - minio-bucket-notifications
       - -t
-      - logging
+      - logging/#
       - -t
       - thing_created
       - -t
