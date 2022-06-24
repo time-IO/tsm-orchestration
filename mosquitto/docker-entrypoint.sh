@@ -19,6 +19,7 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo "topic read #"
     echo "topic read \$SYS/#"
     echo "topic thing_created"
+    echo "topic logging/#"
     echo "topic minio-bucket-notifications"
     echo ""
     echo "# Each user has its own topic namespace"

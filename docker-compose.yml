@@ -181,6 +181,8 @@ services:
       - -t
       - minio-bucket-notifications
       - -t
+      - logging/#
+      - -t
       - thing_created
       - -t
       - thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#
