@@ -20,6 +20,8 @@ test-containers:
   script:
     - mv .env.example .env
     - docker-compose up -d
+  tags:
+    - hifis
 
 deploy-to-tsm:
   stage: deploy
