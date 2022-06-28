@@ -6,19 +6,24 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 stages:
+  - build
   - test
   - deploy
 
 # Official docker compose image.
-image:
-  name: docker/compose:latest
+image: tmaier/docker-compose:latest
 
 services:
   - docker:dind
 
 before_script:
-  - docker version
-  - docker-compose version
+  - docker info
+  - docker-compose --version
+
+build image:
+  stage: build
+  script:
+    - docker-compose build
 
 test-containers:
   stage: test
