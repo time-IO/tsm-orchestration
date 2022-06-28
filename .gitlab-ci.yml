@@ -1,5 +1,3 @@
-# Initial template for CI/CD
-
 stages:
   - test
   - deploy
