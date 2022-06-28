@@ -1,18 +1,29 @@
-# Initial template for CI/CD 
+# Initial template for CI/CD
+
+variables:
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
 
 stages:
   - test
   - deploy
 
+# Official docker compose image.
 image:
-  name: docker/compose:1.23.2
-  entrypoint: [""]
+  name: docker/compose:latest
+
+services:
+  - docker:dind
+
+before_script:
+  - docker version
+  - docker-compose version
 
 test-containers:
   stage: test
   script:
     - mv .env.example .env
-    - sudo docker-compose up -d
+    - docker-compose up -d
 
 deploy-to-tsm:
   stage: deploy
