@@ -14,8 +14,8 @@ services:
 
 before_script:
   - docker info
-  - echo "$SCHEDULER_TOKEN" | docker login $SCHEDULER_REGISTRY -u $SCHEDULER_USER --password-stdin
-  - echo "$DISPATCHER_TOKEN" | docker login $DISPATCHER_REGISTRY -u $DISPATCHER_USER --password-stdin
+  - echo "$GROUP_TOKEN" | docker login $SCHEDULER_REGISTRY -u $SCHEDULER_USER --password-stdin
+  - echo "$GROUP_TOKEN" | docker login $DISPATCHER_REGISTRY -u $DISPATCHER_USER --password-stdin
 
 test-containers:
   stage: test
