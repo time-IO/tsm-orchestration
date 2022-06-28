@@ -1,7 +1,7 @@
 # Initial template for CI/CD
 
 variables:
-  DOCKER_HOST: tcp://docker:2378/
+  DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
 
 stages:
@@ -13,7 +13,11 @@ image:
   name: docker/compose:latest
 
 services:
+  -
   - docker:dind
+build:
+  script:
+    - apk add --no-cache docker-compose
 
 before_script:
   - docker version
