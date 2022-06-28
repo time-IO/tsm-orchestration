@@ -8,9 +8,10 @@ image:
   name: docker/compose:latest
 
 services:
- - docker:dind
- entrypoint: ["env", "-u", "DOCKER_HOST"]
- command: ["dockerd-entrypoint.sh"]
+  - name: docker:dind
+    entrypoint: ["env", "-u", "DOCKER_HOST"]
+    command: ["dockerd-entrypoint.sh"]
+
 
 before_script:
   - apk update
