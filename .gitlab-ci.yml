@@ -7,10 +7,16 @@ stages:
 image:
   name: "python:3.9"
 
+services:
+- docker:dind
+
 before_script:
-  - pip install docker
+  - docker info
+  - apk update
+  - apk upgrade
+  - apk add python python-dev py-pip build-base
   - pip install docker-compose
-  - systemctl status docker
+
 
 test-containers:
   stage: test
