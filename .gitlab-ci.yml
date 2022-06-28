@@ -8,9 +8,13 @@ image:
   name: docker/compose:1.23.2
   entrypoint: [""]
 
+services:
+  - docker:dind
+
 test-containers:
   stage: test
   script:
+    - docker info
     - mv .env.example .env
     - docker-compose up -d
 
