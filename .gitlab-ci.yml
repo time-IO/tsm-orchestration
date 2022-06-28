@@ -10,7 +10,6 @@ image:
 before_script:
   - pip install docker
   - pip install docker-compose
-  - chmod 666 /var/run/docker.sock
   - systemctl status docker
 
 test-containers:
