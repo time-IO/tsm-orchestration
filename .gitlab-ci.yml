@@ -16,8 +16,7 @@ services:
 before_script:
   - apk update
   - apk upgrade
-  - apk add python python-dev py-pip build-base
-
+  - apk add python python-dev py-pip build-base docker
 test-containers:
   stage: test
   script:
