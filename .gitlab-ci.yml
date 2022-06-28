@@ -4,24 +4,20 @@ stages:
   - test
   - deploy
 
-image:
-  name: docker/compose:latest
+image: docker:20.10.16
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
 
 services:
-  - name: docker:dind
-    entrypoint: ["env", "-u", "DOCKER_HOST"]
-    command: ["dockerd-entrypoint.sh"]
-
+  - docker:20.10.16-dind
 
 before_script:
-  - apk update
-  - apk upgrade
-  - apk add python python-dev py-pip build-base
+  - docker info
 
 test-containers:
   stage: test
   script:
-    - apk add docker
     - mv .env.example .env
     - docker-compose up -d
   tags:
