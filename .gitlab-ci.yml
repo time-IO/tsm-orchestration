@@ -1,29 +1,14 @@
 # Initial template for CI/CD
 
-variables:
-  DOCKER_HOST: tcp://docker:2375/
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-
 stages:
-  - build
   - test
   - deploy
 
-# Official docker compose image.
-image: tmaier/docker-compose:latest
-
-services:
-  - docker:dind
+image:
+  name: "python:3.9"
 
 before_script:
-  - docker info
-  - docker-compose --version
-
-build image:
-  stage: build
-  script:
-    - docker-compose build
+  -pip install docker-compose
 
 test-containers:
   stage: test
