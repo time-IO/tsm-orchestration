@@ -23,7 +23,6 @@ test-containers:
   script:
     - apk add docker
     - mv .env.example .env
-    - service docker start
     - docker-compose up -d
   tags:
     - hifis
