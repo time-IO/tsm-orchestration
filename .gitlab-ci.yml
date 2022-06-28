@@ -9,6 +9,7 @@ image:
 
 before_script:
   - pip install docker
+  - pip install docker-compose
 
 test-containers:
   stage: test
