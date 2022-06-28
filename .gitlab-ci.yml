@@ -8,13 +8,14 @@ image:
   name: docker/compose:latest
 
 services:
-- docker:dind
+ - docker:dind
+ entrypoint: ["env", "-u", "DOCKER_HOST"]
+ command: ["dockerd-entrypoint.sh"]
 
 before_script:
   - apk update
   - apk upgrade
   - apk add python python-dev py-pip build-base
-  - chmod -R 777 /var/run/docker.sock
 
 test-containers:
   stage: test
