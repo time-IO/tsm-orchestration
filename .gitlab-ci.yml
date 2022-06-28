@@ -14,6 +14,7 @@ services:
 
 before_script:
   - docker info
+  - echo "$SCHEDULER_TOKEN" | docker login $SCHEDULER_REGISTRY -u $SCHEDULER_USER --password-stdin
 
 test-containers:
   stage: test
