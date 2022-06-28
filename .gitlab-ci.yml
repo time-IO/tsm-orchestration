@@ -16,10 +16,12 @@ services:
 before_script:
   - apk update
   - apk upgrade
-  - apk add python python-dev py-pip build-base docker
+  - apk add python python-dev py-pip build-base
+
 test-containers:
   stage: test
   script:
+    - apk add docker
     - mv .env.example .env
     - service docker start
     - docker-compose up -d
