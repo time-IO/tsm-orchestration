@@ -1,7 +1,14 @@
 # Initial template for CI/CD 
 
 stages:
+  - test
   - deploy
+
+
+test-containers:
+  stage: test
+  script:
+    - "docker-compose up -d"
 
 deploy-to-tsm:
   stage: deploy
