@@ -22,7 +22,7 @@ test-containers:
   stage: test
   script:
     - mv .env.example .env
-    - service docker status
+    - service docker start
     - docker-compose up -d
   tags:
     - hifis
