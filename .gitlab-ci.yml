@@ -14,7 +14,7 @@ before_script:
   - apk update
   - apk upgrade
   - apk add python python-dev py-pip build-base
-  - whoami
+  - chmod -R 777 /var/run/docker.sock
 
 test-containers:
   stage: test
