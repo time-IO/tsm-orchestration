@@ -54,7 +54,7 @@ produce events by ourselves. We directly use the MQTT container for
 that:
 
 ```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
+cat mqtt-thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
 ```
 
 The dispatcher action services will create
@@ -204,5 +204,5 @@ server.
 - insert data into a test database (as explained [here](https://git.ufz.de/rdm-software/timeseries-management/tsm-dispatcher/-/merge_requests/16) for `seefo_envimo_cr6_test_001`)
 - open a db connection to the frost database (postgis): `postgresql://sensorthings:ChangeMe@localhost:5431/sensorthings`
 - execute there [setup.sql](frost-postgis/setup.sql)
-- go to the [FROST STA web interface](http://localhost:8080/FROST-Server/v1.1)
-- navigate to your Datastreams and inspect the Observations 
+- go to the locally running [FROST STA web interface](http://localhost:8080/FROST-Server/v1.1)
+- navigate to your Datastreams and inspect the Observations (probably [here](http://localhost:8080/FROST-Server/v1.1/Datastreams(1)/Observations))
