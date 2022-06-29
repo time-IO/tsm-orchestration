@@ -208,3 +208,37 @@ services:
       - ${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro
     ports:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
+
+  frost:
+    image: fraunhoferiosb/frost-server:latest
+    environment:
+      - serviceRootUrl=http://localhost:8080/FROST-Server
+      - http_cors_enable=true
+      - http_cors_allowed.origins=*
+      - persistence_db_driver=org.postgresql.Driver
+      - persistence_db_url=jdbc:postgresql://postgis:5432/sensorthings
+      - persistence_db_username=sensorthings
+      - persistence_db_password=ChangeMe
+      - persistence_autoUpdateDatabase=true
+      - plugins_plugins=openApi
+      - plugins_openApi_enable=true
+    ports:
+      - 8080:8080
+      - 1883:1883
+      - 9876:9876
+    depends_on:
+      - postgis
+
+  postgis:
+    image: postgis/postgis:11-2.5-alpine
+    environment:
+      - POSTGRES_DB=sensorthings
+      - POSTGRES_USER=sensorthings
+      - POSTGRES_PASSWORD=ChangeMe
+    ports:
+      - 5431:5432
+    volumes:
+      - postgis_volume:/var/lib/postgresql/data
+
+volumes:
+  postgis_volume:

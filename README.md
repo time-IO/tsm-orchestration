@@ -197,3 +197,12 @@ Now you're able to access the minio service with `https`. The postgres
 database will enforce encryption but you need to enable
 [`full-verification`](https://stackoverflow.com/questions/14021998/using-psql-to-connect-to-postgresql-in-ssl-mode) mode in client to also check the identity of the
 server.
+
+
+## FROST STA Interface
+
+- insert data into a test database (as explained [here](https://git.ufz.de/rdm-software/timeseries-management/tsm-dispatcher/-/merge_requests/16) for `seefo_envimo_cr6_test_001`)
+- open a db connection to the frost database (postgis): `postgresql://sensorthings:ChangeMe@localhost:5431/sensorthings`
+- execute there [setup.sql](frost-postgis/setup.sql)
+- go to the [FROST STA web interface](http://localhost:8080/FROST-Server/v1.1)
+- navigate to your Datastreams and inspect the Observations 
