@@ -39,12 +39,11 @@ from seefo_envimo_cr6_test_001.datastream;
 
 
 
-drop view "OBSERVATIONS";
 CREATE VIEW "OBSERVATIONS" AS SELECT
     bigint '1' as "ID",
     phenomenon_time_start as "PHENOMENON_TIME_START",
     phenomenon_time_end as "PHENOMENON_TIME_END",
-    date_trunc('hour', result_time) as "RESULT_TIME",
+    result_time as "RESULT_TIME",
     result_number as "RESULT_NUMBER",
     result_string as "RESULT_STRING",
     result_quality as "RESULT_QUALITY",
