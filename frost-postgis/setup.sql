@@ -57,3 +57,33 @@ CREATE VIEW "OBSERVATIONS" AS SELECT
     result_boolean as "RESULT_BOOLEAN",
     bigint '0' as "MULTI_DATASTREAM_ID"
 from seefo_envimo_cr6_test_001.observation;
+
+-- *************************************************************************************
+-- OBSERVATIONS could be also provided with a GROUP-BY statement to provide for examples results per hour:
+
+-- create view "OBSERVATIONS"
+--             ("RESULT_TIME", "DATASTREAM_ID", "ID", "PHENOMENON_TIME_START", "PHENOMENON_TIME_END", "RESULT_NUMBER",
+--              "RESULT_STRING", "RESULT_QUALITY", "VALID_TIME_START", "VALID_TIME_END", "PARAMETERS", "FEATURE_ID",
+--              "RESULT_TYPE", "RESULT_JSON", "RESULT_BOOLEAN", "MULTI_DATASTREAM_ID")
+-- as
+-- SELECT date_trunc('hour'::text, observation.result_time) AS "RESULT_TIME",
+--        observation.datastream_id                         AS "DATASTREAM_ID",
+--        '1'::bigint                                       AS "ID",
+--        NULL::timestamp with time zone                    AS "PHENOMENON_TIME_START",
+--        NULL::timestamp with time zone                    AS "PHENOMENON_TIME_END",
+--        avg(observation.result_number)                    AS "RESULT_NUMBER",
+--        NULL::character varying(200)                      AS "RESULT_STRING",
+--        '{}'::jsonb                                       AS "RESULT_QUALITY",
+--        NULL::timestamp with time zone                    AS "VALID_TIME_START",
+--        NULL::timestamp with time zone                    AS "VALID_TIME_END",
+--        '{}'::jsonb                                       AS "PARAMETERS",
+--        '0'::bigint                                       AS "FEATURE_ID",
+--        '0'::smallint                                     AS "RESULT_TYPE",
+--        NULL::text                                        AS "RESULT_JSON",
+--        NULL::boolean                                     AS "RESULT_BOOLEAN",
+--        '0'::bigint                                       AS "MULTI_DATASTREAM_ID"
+-- FROM seefo_envimo_cr6_test_001.observation
+-- GROUP BY (date_trunc('hour'::text, observation.result_time)), observation.datastream_id;
+--
+-- alter table "OBSERVATIONS"
+--     owner to sensorthings;
