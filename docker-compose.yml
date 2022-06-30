@@ -71,9 +71,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
       :-http://localhost:9000}/minio/health/live"]
-      interval: "2s"
-      timeout: "5s"
-      retries: "15"
+      interval: 2s
+      timeout: 5s
+      retries: 15
 
   dispatcher-minio-new-thing-runner:
     image: "git.ufz.de:4567/rdm-software/\
@@ -181,9 +181,9 @@ services:
       test: ["CMD-SHELL", "mosquitto_sub -t\
       '$$SYS/broker/version' -C 1 -u $${MQTT_USER}\
       -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
-      interval: "10s"
-      timeout: "10s"
-      retries: "6"
+      interval: 10s
+      timeout: 10s
+      retries: 6
     logging:
       options:
         max-size: "${MQTT_BROKER_LOG_SIZE:-100K}"
