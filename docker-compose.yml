@@ -18,8 +18,8 @@ services:
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
       - "./data/postgres/data:/var/lib/postgresql/data"
-      - "./data/postgres/postgres-force-ssl.sh:/
-        \docker-entrypoint-initdb.d/postgres-force-ssl.sh"
+      - "./data/postgres/postgres-force-ssl.sh:\
+        /docker-entrypoint-initdb.d/postgres-force-ssl.sh"
       - "${POSTGRES_TLS_CERT_PATH:-/tmp/c8cf2d92-\
         73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt"
       - "${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-\
@@ -37,12 +37,15 @@ services:
       - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
     environment:
       MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Please define an minio root user!}"
-      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?\
+                            Please define an minio root user password!}"
       MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
       MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
       MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
-      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:\
+                                                ?Please define a mqtt user!}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:\
+                                                ?Please define a mqtt password!}"
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
       #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
@@ -166,9 +169,11 @@ services:
          :/mosquitto/config/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
       - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
-         -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.crt:ro"
+         -73cd-11ec-b035-54e1ad7c5c19}:\
+         /mosquitto/config/certs/server.crt:ro"
       - "${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92\
-         -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.key:ro"
+         -73cd-11ec-b035-54e1ad7c5c19}:\
+         /mosquitto/config/certs/server.key:ro"
       - "${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92\
          -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
       - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
