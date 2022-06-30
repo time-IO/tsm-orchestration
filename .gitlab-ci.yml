@@ -1,54 +1,5 @@
-# Initial template for CI/CD
+include: '.gitlab/ci/*.yml'
 
-stages:
-  - "lint"
-  - "test"
-  - "deploy"
 
-image: "docker:20.10.16"
-
-variables:
-  DOCKER_TLS_CERTDIR: ""
-
-codestyle:
-  stage: "lint"
-  script:
-    - "pipenv run ansible-lint --version"
-    - "pipenv run ansible-lint -v --force-color --offline"
-    - "pipenv run yamllint --version"
-    - "pipenv run yamllint --strict --format colored ."
-
-services:
-  - "docker:20.10.16-dind"
-
-before_script:
-  - "docker info"
-  - "echo $GROUP_TOKEN | docker login $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-  - "echo $GROUP_TOKEN | docker login $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-
-test-containers:
-  stage: "test"
-  script:
-    - "mv .env.example .env"
-    - "docker-compose up -d"
-  tags:
-    - "hifis"
-
-deploy-to-tsm:
-  stage: "deploy"
-  only:
-    - "main"
-  image: "alpine"
-  script:
-    ## Install SSH agent
-    - 'command -v ssh-agent >/dev/null || ( apk add openssh-client )'
-    ## Run ssh-agent (inside the build environment)
-    - eval $(ssh-agent -s)
-    ## Add the SSH key stored in SERVER_CD_KEY variable to the agent store
-    - echo "$SERVER_CD_KEY" | base64 -d | ssh-add -
-    ## Add target hostkey to known hosts
-    - mkdir -p ~/.ssh && echo "$SERVER_CD_HOSTKEY" >> ~/.ssh/known_hosts
-    ## fire it up (deployment is triggered by "command" parameter in targets authorized_keys
-    - ssh tsm-orchestration@tsm.intranet.ufz.de
 
 

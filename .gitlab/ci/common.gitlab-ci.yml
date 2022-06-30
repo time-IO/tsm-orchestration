@@ -1,0 +1,20 @@
+stages:
+  - "lint"
+  - "test"
+  - "deploy"
+
+image: "docker:20.10.16"
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+  - "docker:20.10.16-dind"
+
+codestyle:
+  stage: "lint"
+  script:
+    - "pipenv run ansible-lint --version"
+    - "pipenv run ansible-lint -v --force-color --offline"
+    - "pipenv run yamllint --version"
+    - "pipenv run yamllint --strict --format colored ."
