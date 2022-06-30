@@ -4,9 +4,9 @@ test-containers:
   stage: "test"
   script:
     - "docker info"
-    - "echo $GROUP_TOKEN | docker login\
+    - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $GROUP_TOKEN | docker login\
+    - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "mv .env.example .env"
     - "docker-compose up -d"
