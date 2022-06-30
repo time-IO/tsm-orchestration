@@ -14,7 +14,6 @@ services:
 codestyle:
   stage: "lint"
   script:
-    - "pipenv run ansible-lint --version"
-    - "pipenv run ansible-lint -v --force-color --offline"
+    - "pip install --ignore-installed pipenv"
     - "pipenv run yamllint --version"
     - "pipenv run yamllint --strict --format colored ."
