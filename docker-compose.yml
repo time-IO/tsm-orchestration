@@ -69,8 +69,8 @@ services:
       - "--console-address"
       - ":9001"
     healthcheck:
-      test: ["CMD","curl","-f","${MINIO_SERVER_URL\
-      :-http://localhost:9000}/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
+      :-http://localhost:9000}/minio/health/live"]
       interval: "2s"
       timeout: "5s"
       retries: "15"
@@ -178,7 +178,7 @@ services:
       -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
       - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
     healthcheck:
-      test: ["CMD-SHELL","mosquitto_sub -t\
+      test: ["CMD-SHELL", "mosquitto_sub -t\
       '$$SYS/broker/version' -C 1 -u $${MQTT_USER}\
       -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
       interval: "10s"
