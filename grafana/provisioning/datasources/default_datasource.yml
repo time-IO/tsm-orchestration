@@ -1,3 +1,4 @@
+---
 apiVersion: 1
 datasources:
   - name: TSM Postgres
@@ -8,11 +9,15 @@ datasources:
     url: ${GRAFANA_DEFAULT_DATASOURCE_URL}
     user: ${GRAFANA_DEFAULT_DATASOURCE_USER}
     secureJsonData:
-      password: '${GRAFANA_DEFAULT_DATASOURCE_PASSWORD}'
+      password: "${GRAFANA_DEFAULT_DATASOURCE_PASSWORD}"
     jsonData:
-      sslmode: '${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}' # disable/require/verify-ca/verify-full
-      maxOpenConns: 0 # Grafana v5.4+
-      maxIdleConns: 2 # Grafana v5.4+
-      connMaxLifetime: 14400 # Grafana v5.4+
+      # disable/require/verify-ca/verify-full
+      sslmode: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
+      # Grafana v5.4+
+      maxOpenConns: 0
+      # Grafana v5.4+
+      maxIdleConns: 2
+      # Grafana v5.4+
+      connMaxLifetime: 14400
       timescaledb: false
       postgresVersion: 1200
