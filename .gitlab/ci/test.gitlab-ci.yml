@@ -1,11 +1,12 @@
-before_script:
-  - "docker info"
-  - "echo $GROUP_TOKEN | docker login $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-  - "echo $GROUP_TOKEN | docker login $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-
 test-containers:
+  image: "docker:20.10.16"
   stage: "test"
   script:
+    - "docker info"
+    - "echo $GROUP_TOKEN | docker login\
+      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $GROUP_TOKEN | docker login\
+      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "mv .env.example .env"
     - "docker-compose up -d"
   tags:
