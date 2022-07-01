@@ -1,0 +1,19 @@
+---
+stages:
+  - "lint"
+  - "test"
+  - "deploy"
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+  - "docker:20.10.16-dind"
+
+codestyle:
+  image: "python:3.9"
+  stage: "lint"
+  script:
+    - "pip install --ignore-installed pipenv"
+    - "pip install yamllint"
+    - "pipenv run yamllint --strict --format colored ."
