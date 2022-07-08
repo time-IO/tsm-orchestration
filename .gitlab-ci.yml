@@ -5,6 +5,8 @@ stages:
 
 deploy-to-tsm:
   stage: deploy
+  tags:
+    - ufz-intranet
   only:
     - main
   image: alpine
