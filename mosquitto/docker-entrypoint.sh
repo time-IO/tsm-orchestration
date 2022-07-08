@@ -9,7 +9,8 @@ fi
 
 # create password db when not present
 if [ ! -f /mosquitto-auth/mosquitto.passwd ]; then
-  mosquitto_passwd -c -b /mosquitto-auth/mosquitto.passwd "$MQTT_USER" "$MQTT_PASSWORD"
+  mosquitto_passwd -c -b /mosquitto-auth/mosquitto.passwd "$MQTT_USER" "$MQTT_PASSWORD" &&
+  mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd "$MQTT_INGEST_USER" "$MQTT_INGEST_PASSWORD"
 fi
 
 # create acl file when not present

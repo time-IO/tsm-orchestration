@@ -159,6 +159,8 @@ services:
     environment:
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      MQTT_INGEST_USER: "${MQTT_INGEST_USER:?Please define a mqtt user!}"
+      MQTT_INGEST_PASSWORD: "${MQTT_INGEST_PASSWORD:?Please define a mqtt password!}"
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
