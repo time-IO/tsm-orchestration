@@ -130,6 +130,24 @@ services:
       - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
       - http://extractor:5000/extractor/run
 
+  worker-mqtt-ingest:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    restart: on-failure
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    command:
+      - --topic
+      - mqtt_ingest/#
+      - --mqtt-broker
+      - mqtt-broker:1883
+      - --mqtt-user
+      - mqtt_ingest
+      - --mqtt-password
+      - neeTham4iexee5aiwoop8Eeroxeichahfo6zezai
+      - parse-data
+      - postgresql://postgres:postgres@localhost:5432/postgres
+
   extractor:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
