@@ -16,3 +16,6 @@ deploy-to-tsm:
     ## fire it up (deployment is triggered by "command"
     ## parameter in targets authorized_keys
     - ssh tsm-orchestration@tsm.intranet.ufz.de
+  tags:
+    - "ufz-intranet"
+
