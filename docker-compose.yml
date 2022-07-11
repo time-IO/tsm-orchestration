@@ -131,22 +131,23 @@ services:
       - http://extractor:5000/extractor/run
 
   worker-mqtt-ingest:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:2022-07-08-144728
     restart: on-failure
     depends_on:
-      mqtt-broker:
-        condition: service_started
+      - mqtt-broker
+      - postgres
     command:
       - --topic
       - mqtt_ingest/#
       - --mqtt-broker
       - mqtt-broker:1883
       - --mqtt-user
-      - mqtt_ingest
+      - ${MQTT_INGEST_USER:?Please define a mqtt user!}
       - --mqtt-password
-      - neeTham4iexee5aiwoop8Eeroxeichahfo6zezai
+      - ${MQTT_INGEST_PASSWORD:?Please define a mqtt password!}
       - parse-data
-      - postgresql://postgres:postgres@localhost:5432/postgres
+      - --target-uri
+      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
 
   extractor:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
