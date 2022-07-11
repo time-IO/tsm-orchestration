@@ -18,4 +18,3 @@ deploy-to-tsm:
     - ssh tsm-orchestration@tsm.intranet.ufz.de
   tags:
     - "ufz-intranet"
-
