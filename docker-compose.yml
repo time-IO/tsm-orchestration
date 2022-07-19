@@ -211,7 +211,8 @@ services:
       - "thing_created"
       - "-t"
       - "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#"
-
+      - "-t"
+      - "logging/#"
 
   grafana:
     restart: "${RESTART:-on-failure}"
