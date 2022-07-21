@@ -54,7 +54,7 @@ produce events by ourselves. We directly use the MQTT container for
 that:
 
 ```bash
-cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_created -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
+cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thing_creation -u \$MQTT_USER -P \$MQTT_PASSWORD -s"
 ```
 
 The dispatcher action services will create

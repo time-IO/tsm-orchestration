@@ -1,7 +1,7 @@
 ---
 version: "2.4"
 services:
-  postgres:
+  database:
     restart: "${RESTART:-on-failure}"
     # image: timescale/timescaledb:latest-pg14
     build:
@@ -27,7 +27,7 @@ services:
     user: "${UID}:${GID}"
     command: "${POSTGRES_EXTRA_PARAMS:-}"
 
-  minio:
+  object-storage:
     image: "minio/minio"
     restart: "${RESTART:-on-failure}"
     depends_on:
@@ -41,7 +41,7 @@ services:
       Please define an minio root user password!}"
       MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
       MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
-      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
+      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "object_storage_notification"
       MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:\
       ?Please define a mqtt user!}"
       MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:\
@@ -75,18 +75,18 @@ services:
       timeout: 5s
       retries: 15
 
-  dispatcher-minio-new-thing-runner:
+  worker-object-storage-setup:
     image: "git.ufz.de:4567/rdm-software/\
     timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
         condition: "service_started"
-      minio:
+      object-storage:
         condition: "service_healthy"
     command:
       - "--topic"
-      - "thing_created"
+      - "thing_creation"
       - "--mqtt-broker"
       - "mqtt-broker:1883"
       - "--mqtt-user"
@@ -101,16 +101,16 @@ services:
       - "${MINIO_ROOT_PASSWORD:?\
       Please define an minio root user password!}"
 
-  dispatcher-create-new-thing-db-runner:
+  worker-db-setup:
     image: "git.ufz.de:4567/rdm-software/\
     timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
-      - "postgres"
+      - "database"
     command:
       - "--topic"
-      - "thing_created"
+      - "thing_creation"
       - "--mqtt-broker"
       - "mqtt-broker:1883"
       - "--mqtt-user"
@@ -121,20 +121,20 @@ services:
       - "postgresql://${CREATEDB_POSTGRES_USER:\
       ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
       ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
-      -postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
-  dispatcher-run-process-new-file-service:
+  worker-file-ingest:
     image: "git.ufz.de:4567/rdm-software/\
     timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
         condition: "service_started"
-      minio:
+      object-storage:
         condition: "service_healthy"
     command:
       - "--topic"
-      - "minio-bucket-notifications"
+      - "object_storage_notification"
       - "--mqtt-broker"
       - "mqtt-broker:1883"
       - "--mqtt-user"
@@ -147,9 +147,9 @@ services:
       - "${MINIO_HOST:-minio:9000}"
       - "${MINIO_ROOT_USER:?Please define an minio root user!}"
       - "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
-      - "http://extractor:5000/extractor/run"
+      - "http://basic-demo-extractor:5000/extractor/run"
 
-  extractor:
+  basic-demo-extractor:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/\
     tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
@@ -206,15 +206,15 @@ services:
       - "-P"
       - "${MQTT_PASSWORD:?Please define a mqtt password!}"
       - "-t"
-      - "minio-bucket-notifications"
+      - "object_storage_notification"
       - "-t"
-      - "thing_created"
+      - "thing_creation"
       - "-t"
       - "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#"
       - "-t"
       - "logging/#"
 
-  grafana:
+  visualization:
     restart: "${RESTART:-on-failure}"
     image: "grafana/grafana:latest"
     user: "${UID}:${GID}"
@@ -224,7 +224,7 @@ services:
       - "GF_SECURITY_ADMIN_PASSWORD=\
       ${GRAFANA_PASSWORD:?Please define a grafana password}"
       - "GRAFANA_DEFAULT_DATASOURCE_URL=\
-      ${GRAFANA_DEFAULT_DATASOURCE_URL:-postgres:5432}"
+      ${GRAFANA_DEFAULT_DATASOURCE_URL:-database:5432}"
       - "GRAFANA_DEFAULT_DATASOURCE_DATABASE=\
       ${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}"
       - "GRAFANA_DEFAULT_DATASOURCE_USER=\
