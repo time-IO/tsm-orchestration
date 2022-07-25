@@ -147,9 +147,9 @@ services:
       - "${MINIO_HOST:-minio:9000}"
       - "${MINIO_ROOT_USER:?Please define an minio root user!}"
       - "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
-      - "http://basic-demo-extractor:5000/extractor/run"
+      - "http://basic-demo-scheduler:5000/extractor/run"
 
-  basic-demo-extractor:
+  basic-demo-scheduler:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/\
     tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
