@@ -1,42 +1,51 @@
+---
 version: "2.4"
 services:
-  postgres:
-    restart: ${RESTART:-on-failure}
-#    image: timescale/timescaledb:latest-pg14
+  database:
+    restart: "${RESTART:-on-failure}"
+    # image: timescale/timescaledb:latest-pg14
     build:
-      context: data/postgres
+      context: "data/postgres"
       args:
-        UID: ${UID}
+        UID: "${UID}"
     ports:
       - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?Please define an postgres user!}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please define an postgres password!}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: "${POSTGRES_USER:\
+                     ?Please define an postgres user!}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:\
+                         ?Please define an postgres password!}"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
-      - ./data/postgres/data:/var/lib/postgresql/data
-      - ./data/postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
-      - ${POSTGRES_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt
-      - ${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key
+      - "./data/postgres/data:/var/lib/postgresql/data"
+      - "./data/postgres/postgres-force-ssl.sh:\
+      /docker-entrypoint-initdb.d/postgres-force-ssl.sh"
+      - "${POSTGRES_TLS_CERT_PATH:-/tmp/c8cf2d92-\
+      73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt"
+      - "${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-\
+      73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key"
     user: "${UID}:${GID}"
-    command: ${POSTGRES_EXTRA_PARAMS:-}
+    command: "${POSTGRES_EXTRA_PARAMS:-}"
 
-  minio:
-    image: minio/minio
-    restart: ${RESTART:-on-failure}
+  object-storage:
+    image: "minio/minio"
+    restart: "${RESTART:-on-failure}"
     depends_on:
-      - mqtt-broker
+      - "mqtt-broker"
     ports:
       - "${MINIO_API_PORT:-127.0.0.1:9000}:9000"
       - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Please define an minio root user!}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Please define an minio root user!}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?\
+      Please define an minio root user password!}"
       MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
       MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
-      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "minio-bucket-notifications"
-      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:?Please define a mqtt user!}"
-      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "object_storage_notification"
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:\
+      ?Please define a mqtt user!}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:\
+      ?Please define a mqtt password!}"
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
       #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
@@ -45,12 +54,14 @@ services:
       #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
     volumes:
-      - ./data/minio/vol0:/vol0
-      - ./data/minio/vol1:/vol1
-      - ./data/minio/vol2:/vol2
-      - ./data/minio/vol3:/vol3
-      - ${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro
-      - ${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro
+      - "./data/minio/vol0:/vol0"
+      - "./data/minio/vol1:/vol1"
+      - "./data/minio/vol2:/vol2"
+      - "./data/minio/vol3:/vol3"
+      - "${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro"
+      - "${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro"
     user: "${UID}:${GID}"
     command:
       - "server"
@@ -58,77 +69,85 @@ services:
       - "--console-address"
       - ":9001"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "${MINIO_SERVER_URL:-http://localhost:9000}/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
+      :-http://localhost:9000}/minio/health/live"]
       interval: 2s
       timeout: 5s
       retries: 15
 
-  dispatcher-minio-new-thing-runner:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: ${RESTART:-on-failure}
+  worker-object-storage-setup:
+    image: "git.ufz.de:4567/rdm-software/\
+    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: service_started
-      minio:
-        condition: service_healthy
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
     command:
-      - --topic
-      - thing_created
-      - --mqtt-broker
-      - mqtt-broker:1883
-      - --mqtt-user
-      - ${MQTT_USER:?Please define a mqtt user!}
-      - --mqtt-password
-      - ${MQTT_PASSWORD:?Please define a mqtt password!}
-      - run-create-thing-on-minio-action-service
-      - --minio_secure
+      - "--topic"
+      - "thing_creation"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-create-thing-on-minio-action-service"
+      - "--minio_secure"
       - "${MINIO_SECURE:-False}"
-      - ${MINIO_HOST:-minio:9000}
-      - ${MINIO_ROOT_USER:?Please define an minio root user!}
-      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
+      - "${MINIO_HOST:-minio:9000}"
+      - "${MINIO_ROOT_USER:?Please define an minio root user!}"
+      - "${MINIO_ROOT_PASSWORD:?\
+      Please define an minio root user password!}"
 
-  dispatcher-create-new-thing-db-runner:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: ${RESTART:-on-failure}
+  worker-db-setup:
+    image: "git.ufz.de:4567/rdm-software/\
+    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    restart: "${RESTART:-on-failure}"
     depends_on:
-      - mqtt-broker
-      - postgres
+      - "mqtt-broker"
+      - "database"
     command:
-      - --topic
-      - thing_created
-      - --mqtt-broker
-      - mqtt-broker:1883
-      - --mqtt-user
-      - ${MQTT_USER:?Please define a mqtt user!}
-      - --mqtt-password
-      - ${MQTT_PASSWORD:?Please define a mqtt password!}
-      - run-create-database-schema-action-service
-      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
+      - "--topic"
+      - "thing_creation"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-create-database-schema-action-service"
+      - "postgresql://${CREATEDB_POSTGRES_USER:\
+      ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
+      ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
+      -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
-  dispatcher-run-process-new-file-service:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:latest
-    restart: on-failure
+  worker-file-ingest:
+    image: "git.ufz.de:4567/rdm-software/\
+    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    restart: "on-failure"
     depends_on:
       mqtt-broker:
-        condition: service_started
-      minio:
-        condition: service_healthy
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
     command:
-      - --topic
-      - minio-bucket-notifications
-      - --mqtt-broker
-      - mqtt-broker:1883
-      - --mqtt-user
-      - ${MQTT_USER:?Please define a mqtt user!}
-      - --mqtt-password
-      - ${MQTT_PASSWORD:?Please define a mqtt password!}
-      - run-process-new-file-service
-      - --minio_secure
+      - "--topic"
+      - "object_storage_notification"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-process-new-file-service"
+      - "--minio_secure"
       - "${MINIO_SECURE:-False}"
-      - ${MINIO_HOST:-minio:9000}
-      - ${MINIO_ROOT_USER:?Please define an minio root user!}
-      - ${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}
-      - http://extractor:5000/extractor/run
+      - "${MINIO_HOST:-minio:9000}"
+      - "${MINIO_ROOT_USER:?Please define an minio root user!}"
+      - "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
+      - "http://basic-demo-scheduler:5000/extractor/run"
 
   worker-mqtt-ingest:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:2022-07-08-144728
@@ -153,9 +172,14 @@ services:
     image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
     restart: ${RESTART:-on-failure}
 
+  basic-demo-scheduler:
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
+    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
+    restart: "${RESTART:-on-failure}"
+
   mqtt-broker:
-    restart: ${RESTART:-on-failure}
-    image: eclipse-mosquitto:latest
+    restart: "${RESTART:-on-failure}"
+    image: "eclipse-mosquitto:latest"
     user: "${UID}:${GID}"
     environment:
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
@@ -166,15 +190,22 @@ services:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
-      - ${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}:/mosquitto/config/mosquitto.conf:ro
-      - ./data/mosquitto/auth:/mosquitto-auth/
-      - ${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.crt:ro
-      - ${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/server.key:ro
-      - ${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro
-      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh
+      - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
+      :/mosquitto/config/mosquitto.conf:ro"
+      - "./data/mosquitto/auth:/mosquitto-auth/"
+      - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:\
+      /mosquitto/config/certs/server.crt:ro"
+      - "${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:\
+      /mosquitto/config/certs/server.key:ro"
+      - "${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
+      - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
     healthcheck:
-      test: [ "CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 -u $${MQTT_USER}
-      -P $${MQTT_PASSWORD} --id docker-compose-healthcheck" ]
+      test: ["CMD-SHELL", "mosquitto_sub -t\
+      '$$SYS/broker/version' -C 1 -u $${MQTT_USER}\
+      -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
       interval: 10s
       timeout: 10s
       retries: 6
@@ -184,50 +215,58 @@ services:
         max-file: "${MQTT_BROKER_FILE_COUNT:-10}"
 
   mqtt-cat:
-    restart: ${RESTART:-on-failure}
-    image: eclipse-mosquitto:latest
+    restart: "${RESTART:-on-failure}"
+    image: "eclipse-mosquitto:latest"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
         max-file: "${MQTT_CAT_FILE_COUNT:-10}"
     command:
-      - mosquitto_sub
-      - -h
-      - mqtt-broker
-      - --pretty
-      - -u
-      - ${MQTT_USER:?Please define a mqtt user!}
-      - -P
-      - ${MQTT_PASSWORD:?Please define a mqtt password!}
-      - -t
-      - minio-bucket-notifications
-      - -t
-      - logging/#
-      - -t
-      - thing_created
-      - -t
-      - thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#
+      - "mosquitto_sub"
+      - "-h"
+      - "mqtt-broker"
+      - "--pretty"
+      - "-u"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "-P"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "-t"
+      - "object_storage_notification"
+      - "-t"
+      - "thing_creation"
+      - "-t"
+      - "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#"
+      - "-t"
+      - "logging/#"
 
-
-  grafana:
-    restart: ${RESTART:-on-failure}
-    image: grafana/grafana:latest
+  visualization:
+    restart: "${RESTART:-on-failure}"
+    image: "grafana/grafana:latest"
     user: "${UID}:${GID}"
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:?Please define a grafana user}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?Please define a grafana password}
-      - GRAFANA_DEFAULT_DATASOURCE_URL=${GRAFANA_DEFAULT_DATASOURCE_URL:-postgres:5432}
-      - GRAFANA_DEFAULT_DATASOURCE_DATABASE=${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}
-      - GRAFANA_DEFAULT_DATASOURCE_USER=${GRAFANA_DEFAULT_DATASOURCE_USER:-postgres}
-      - GRAFANA_DEFAULT_DATASOURCE_PASSWORD=${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}
-      - GRAFANA_DEFAULT_DATASOURCE_SSLMODE=${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}
-      - GF_SERVER_CERT_FILE=/etc/ssl/public.crt
-      - GF_SERVER_CERT_KEY=/etc/ssl/private.key
-      - GF_SERVER_PROTOCOL=${GRAFANA_SERVER_PROTOCOL:-http}
+      - "GF_SECURITY_ADMIN_USER=\
+      ${GRAFANA_USER:?Please define a grafana user}"
+      - "GF_SECURITY_ADMIN_PASSWORD=\
+      ${GRAFANA_PASSWORD:?Please define a grafana password}"
+      - "GRAFANA_DEFAULT_DATASOURCE_URL=\
+      ${GRAFANA_DEFAULT_DATASOURCE_URL:-database:5432}"
+      - "GRAFANA_DEFAULT_DATASOURCE_DATABASE=\
+      ${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}"
+      - "GRAFANA_DEFAULT_DATASOURCE_USER=\
+      ${GRAFANA_DEFAULT_DATASOURCE_USER:-postgres}"
+      - "GRAFANA_DEFAULT_DATASOURCE_PASSWORD=\
+      ${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}"
+      - "GRAFANA_DEFAULT_DATASOURCE_SSLMODE=\
+      ${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
+      - "GF_SERVER_CERT_FILE=/etc/ssl/public.crt"
+      - "GF_SERVER_CERT_KEY=/etc/ssl/private.key"
+      - "GF_SERVER_PROTOCOL=${GRAFANA_SERVER_PROTOCOL:-http}"
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning/
-      - ./data/grafana/:/var/lib/grafana
-      - ${GRAFANA_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro
-      - ${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro
+      - "./grafana/provisioning:/etc/grafana/provisioning/"
+      - "./data/grafana/:/var/lib/grafana"
+      - "${GRAFANA_TLS_CERT_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro"
+      - "${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
     ports:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"

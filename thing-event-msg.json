@@ -15,6 +15,7 @@
     "username":  "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849",
     "password": "R3eKIIxZWtYlC9s9ZIEeWc4peH4OebiHWE252xQF"
   },
+  "description": "some foo with bar",
   "properties": {
     "default_parser": "CsvParser",
     "parsers": [
