@@ -15,6 +15,7 @@
     "username":  "crns04-bca189a2-5e56-11ec-957a-54e1ad7c5c19",
     "password": "R3eKIIxZWtYlC9s9ZIEeWc4peH4OebiHWE252xQF"
   },
+  "description": "manually generated test message (msg2)",
   "properties": {
     "default_parser": "campbell_cr6",
     "parsers": [
