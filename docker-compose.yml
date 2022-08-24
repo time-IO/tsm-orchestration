@@ -150,11 +150,12 @@ services:
       - "http://basic-demo-scheduler:5000/extractor/run"
 
   worker-mqtt-ingest:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-dispatcher/dispatcher:2022-07-08-144728
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
+    tsm-dispatcher/dispatcher:2022-07-08-144728"
     restart: on-failure
     depends_on:
       - mqtt-broker
-      - postgres
+      - database
     command:
       - --topic
       - mqtt_ingest/#
@@ -166,10 +167,13 @@ services:
       - ${MQTT_INGEST_PASSWORD:?Please define a mqtt password!}
       - parse-data
       - --target-uri
-      - postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}
+      - "postgresql://${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:/
+      ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}/
+      @${CREATEDB_POSTGRES_HOST:-postgres}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
   extractor:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
+    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: ${RESTART:-on-failure}
 
   basic-demo-scheduler:
