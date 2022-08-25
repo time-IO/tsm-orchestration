@@ -25,6 +25,9 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo ""
     echo "# Each user has its own topic namespace"
     echo "pattern readwrite mqtt_ingest/%u/#"
+    echo ""
+    echo "user $MQTT_INGEST_USER"
+    echo "topic read mqtt_ingest/#"
   } >>/mosquitto-auth/mosquitto.acl
 fi
 
