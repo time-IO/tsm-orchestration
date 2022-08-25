@@ -238,13 +238,8 @@ services:
       - "-P"
       - "${MQTT_PASSWORD:?Please define a mqtt password!}"
       - "-t"
-      - "object_storage_notification"
-      - "-t"
-      - "thing_creation"
-      - "-t"
-      - "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/#"
-      - "-t"
-      - "logging/#"
+      - "#"
+      - "-v"
 
   visualization:
     restart: "${RESTART:-on-failure}"
