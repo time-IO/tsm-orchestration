@@ -126,7 +126,7 @@ docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-auth/mosquitto.p
 3. Restart the mqtt-broker service `docker-compose restart mqtt-broker`
 4. From now on you should be able to publish to the new users topic namespace:
    ```bash
-   echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/beautiful/sensor/1 -u thedoors-057d8bba-40b3-11ec-a337-125e5a40a849 -P hyzdjetQEzrAz3HvrpGObGh7TlCoopQo -s"
+   echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t mqtt_ingest/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/beautiful/sensor/1 -u thedoors-057d8bba-40b3-11ec-a337-125e5a40a849 -P hyzdjetQEzrAz3HvrpGObGh7TlCoopQo -s"
    ```
    Watch them by checking the output of the mqtt-cat service:
    `docker-compose logs --follow mqtt-cat`
