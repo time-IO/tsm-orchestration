@@ -23,7 +23,7 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo "topic object_storage_notification"
     echo ""
     echo "# Each user has its own topic namespace"
-    echo "pattern readwrite %u/#"
+    echo "pattern readwrite mqtt_ingest/%u/#"
   } >>/mosquitto-auth/mosquitto.acl
 fi
 
