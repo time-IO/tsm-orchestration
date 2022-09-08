@@ -76,8 +76,8 @@ services:
       retries: 15
 
   worker-object-storage-setup:
-    image: "git.ufz.de:4567/rdm-software/\
-    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    build:
+      context: ../tsm-dispatcher
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -98,12 +98,11 @@ services:
       - "${MINIO_SECURE:-False}"
       - "${MINIO_HOST:-minio:9000}"
       - "${MINIO_ROOT_USER:?Please define an minio root user!}"
-      - "${MINIO_ROOT_PASSWORD:?\
-      Please define an minio root user password!}"
+      - "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
 
   worker-db-setup:
-    image: "git.ufz.de:4567/rdm-software/\
-    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    build:
+      context: ../tsm-dispatcher
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
@@ -124,8 +123,8 @@ services:
       -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
   worker-file-ingest:
-    image: "git.ufz.de:4567/rdm-software/\
-    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    build:
+      context: ../tsm-dispatcher
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -150,8 +149,8 @@ services:
       - "http://basic-demo-scheduler:5000/extractor/run"
 
   worker-mqtt-ingest:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-dispatcher/dispatcher:2022-07-08-144728"
+    build:
+      context: ../tsm-dispatcher
     restart: on-failure
     depends_on:
       - mqtt-broker
@@ -179,8 +178,8 @@ services:
     restart: ${RESTART:-on-failure}
 
   basic-demo-scheduler:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
+    build:
+      context: ../tsm-basic-demo-scheduler
     restart: "${RESTART:-on-failure}"
     command:
       - "--mqtt-broker"
