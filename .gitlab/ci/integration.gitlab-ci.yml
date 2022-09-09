@@ -3,7 +3,6 @@ docker-service-test:
   image: "docker:20.10.16"
   stage: "integration"
   script:
-    - "readlink /proc/$$/exe"
     - "mv .env.example .env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
@@ -13,6 +12,6 @@ docker-service-test:
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
-    - "bash ./dockertest.sh"
+    - "./dockertest.sh"
   tags:
     - "hifis"
