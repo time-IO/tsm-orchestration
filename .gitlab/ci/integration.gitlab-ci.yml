@@ -1,6 +1,11 @@
 ---
-integration-test:
-  image: "python:3.9"
+docker-service-test:
+  image: "docker:20.10.16"
   stage: "integration"
   script:
+    - "mv .env.example .env"
+    - "docker-compose up -d"
     - "docker ps"
+    - "cd .gitlab"
+    - "chmod +x ./dockertest.sh"
+    - "./dockertest.sh"
