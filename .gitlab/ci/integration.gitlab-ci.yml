@@ -1,0 +1,5 @@
+integration-test:
+  image: "python:3.9"
+  stage: "integration"
+  script:
+    - "docker ps"

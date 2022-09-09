@@ -1,3 +1,17 @@
 ---
 
 include: '.gitlab/ci/*.yml'
+
+docker-service-test:
+  image: "docker:20.10.16"
+  stage: "integration"
+  script:
+    - "mv .env.example .env"
+    - "docker-compose up -d"
+    - "docker ps"
+    - 'docker-compose ps --services --filter "status=running" | grep "database\|object-storage\|
+    worker-object-storage-setup\|worker-db-setup\|worker-file-ingest\|worker-mqtt-ingest\|extractor\|
+    basic-demo-scheduler\|mqtt-broker\|mqtt-cat\|visualization\|"'
+    - "ls -a"
+    - "./dockertest.sh"
+

@@ -3,6 +3,7 @@ stages:
   - "lint"
   - "test"
   - "deploy"
+  - "integration"
 
 variables:
   DOCKER_TLS_CERTDIR: ""
