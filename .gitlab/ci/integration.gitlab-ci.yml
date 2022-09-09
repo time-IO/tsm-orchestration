@@ -15,4 +15,3 @@ docker-service-test:
     - "./dockertest.sh"
   tags:
     - "hifis"
-
