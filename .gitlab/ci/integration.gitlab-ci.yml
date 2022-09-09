@@ -5,11 +5,14 @@ docker-service-test:
   script:
     - "mv .env.example .env"
     - "echo $GROUP_TOKEN | docker login \
-       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
-       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
     - "docker ps"
     - "cd .gitlab"
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
+  tags:
+    - "hifis"
+
