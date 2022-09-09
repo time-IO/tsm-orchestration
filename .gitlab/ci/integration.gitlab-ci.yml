@@ -1,3 +1,4 @@
+---
 integration-test:
   image: "python:3.9"
   stage: "integration"

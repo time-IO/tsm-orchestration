@@ -1,5 +1,4 @@
 ---
-
 include: '.gitlab/ci/*.yml'
 
 docker-service-test:
