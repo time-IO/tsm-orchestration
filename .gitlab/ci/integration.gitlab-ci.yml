@@ -3,7 +3,7 @@ docker-service-test:
   image: "docker:20.10.16"
   stage: "integration"
   script:
-    - "ps -p $$"
+    - "readlink /proc/$$/exe"
     - "mv .env.example .env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
