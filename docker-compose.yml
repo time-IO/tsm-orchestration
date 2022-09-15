@@ -180,7 +180,15 @@ services:
 
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
-    image: "eclipse-mosquitto:latest"
+    image: "iegomez/mosquitto-go-auth:latest"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/etc/mosquitto/mosquitto.conf"
+    entrypoint:
+      - "/docker-entrypoint.sh"
     user: "${UID}:${GID}"
     environment:
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
@@ -193,7 +201,7 @@ services:
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
-      :/mosquitto/config/mosquitto.conf:ro"
+      :/etc/mosquitto/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
       - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:\
@@ -204,13 +212,13 @@ services:
       - "${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
       - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
-    healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t \
-      '$$SYS/broker/version' -C 1 -u $${MQTT_USER} \
-      -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
-      interval: 10s
-      timeout: 10s
-      retries: 6
+#    healthcheck:
+#      test: ["CMD-SHELL", "mosquitto_sub -t \
+#      '$$SYS/broker/version' -C 1 -u $${MQTT_USER} \
+#      -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
+#      interval: 10s
+#      timeout: 10s
+#      retries: 6
     logging:
       options:
         max-size: "${MQTT_BROKER_LOG_SIZE:-100K}"

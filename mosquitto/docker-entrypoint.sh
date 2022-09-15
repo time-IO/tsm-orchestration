@@ -1,5 +1,6 @@
-#!/bin/ash
+#!/bin/bash
 set -e
+
 
 # Set permissions
 user="$(id -u)"
@@ -8,9 +9,9 @@ if [ "$user" = '0' ]; then
 fi
 
 # create password db when not present
-if [ ! -f /mosquitto-auth/mosquitto.passwd ]; then
-  mosquitto_passwd -c -b /mosquitto-auth/mosquitto.passwd "$MQTT_USER" "$MQTT_PASSWORD" &&
-  mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd "$MQTT_INGEST_USER" "$MQTT_INGEST_PASSWORD"
+if [ ! -f "/mosquitto-auth/mosquitto.passwd" ]; then
+  echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd &&
+  echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd
 fi
 
 # create acl file when not present
@@ -30,5 +31,5 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo "topic read mqtt_ingest/#"
   } >>/mosquitto-auth/mosquitto.acl
 fi
-
+echo "$@"
 exec "$@"
