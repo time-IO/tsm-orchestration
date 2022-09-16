@@ -18,7 +18,7 @@ fi
 if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
   {
     echo "user $MQTT_USER"
-    echo "topic read #"
+    echo "topic readwrite #"
     echo "topic read \$SYS/#"
     echo "topic thing_creation"
     echo "topic logging/#"
