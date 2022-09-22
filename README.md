@@ -120,13 +120,12 @@ docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-auth/mosquitto.p
 
 1. Start the mqtt-broker service with `docker-compose up mqtt-broker` at least once the create 
    the initial `mosquitto.passwd` and `mosquitto.acl` files.
-2. Call `docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd
-   "thedoors-057d8bba-40b3-11ec-a337-125e5a40a849" "hyzdjetQEzrAz3HvrpGObGh7TlCoopQo"` to add 
-   the new user with its password 
+2. Call ``docker-compose exec mqtt-broker bash -c $'echo `echo -n "MY_NEW_MQTT_USER:" && /mosquitto/pw -p "MY_NEW_MQTT_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd'``
+   to add the new user with its password 
 3. Restart the mqtt-broker service `docker-compose restart mqtt-broker`
 4. From now on you should be able to publish to the new users topic namespace:
    ```bash
-   echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t mqtt_ingest/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849/beautiful/sensor/1 -u thedoors-057d8bba-40b3-11ec-a337-125e5a40a849 -P hyzdjetQEzrAz3HvrpGObGh7TlCoopQo -s"
+   echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c "mosquitto_pub -t mqtt_ingest/MY_NEW_MQTT_USER/beautiful/sensor/1 -u MY_NEW_MQTT_USER -P MY_NEW_MQTT_PASSWORD -s"
    ```
    Watch them by checking the output of the mqtt-cat service:
    `docker-compose logs --follow mqtt-cat`
