@@ -16,7 +16,12 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:\
                          ?Please define an postgres password!}"
       PGDATA: "/var/lib/postgresql/data/pgdata"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER:?\
+                               Please define a mqtt auth database user!}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
+                               Please define a mqtt auth database password!}"
     volumes:
+      - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
       - "./data/postgres/postgres-force-ssl.sh:\
       /docker-entrypoint-initdb.d/postgres-force-ssl.sh"
@@ -180,7 +185,15 @@ services:
 
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
-    image: "eclipse-mosquitto:latest"
+    image: "iegomez/mosquitto-go-auth:latest"
+    depends_on:
+      - "database"
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/var/lib/mosquitto/mosquitto.conf"
+    entrypoint:
+      - "/docker-entrypoint.sh"
     user: "${UID}:${GID}"
     environment:
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
@@ -188,12 +201,22 @@ services:
       MQTT_INGEST_USER: "${MQTT_INGEST_USER:?Please define a mqtt user!}"
       MQTT_INGEST_PASSWORD: "${MQTT_INGEST_PASSWORD:?\
                             Please define a mqtt password!}"
+      MQTT_AUTH_POSTGRES_HOST: "${MQTT_AUTH_POSTGRES_HOST:?\
+                               Please define a mqtt auth database host!}"
+      MQTT_AUTH_POSTGRES_PORT: "${MQTT_AUTH_POSTGRES_PORT:?\
+                               Please define a mqtt auth database portt!}"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER:?\
+                               Please define a mqtt auth database user!}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
+                               Please define a mqtt auth database password!}"
+      MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB\
+                               :?Please define a mqtt auth database name!}"
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
-      :/mosquitto/config/mosquitto.conf:ro"
+      :/etc/mosquitto/config/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
       - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:\
