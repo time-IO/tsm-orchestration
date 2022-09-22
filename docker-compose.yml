@@ -216,8 +216,7 @@ services:
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
-      :/tmp/mosquitto.conf:ro"
-      - "./data/mosquitto/config:/etc/mosquitto/config/:rw"
+      :/etc/mosquitto/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
       - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:\

@@ -32,13 +32,8 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
   } >>/mosquitto-auth/mosquitto.acl
 fi
 
-# create config file when not present
-if [ ! -f /etc/mosquitto/config/mosquitto.conf ]; then
-  cp /tmp/mosquitto.conf /etc/mosquitto/config/mosquitto.conf
-fi
-
 # substitute env vars in config template
-( echo "cat <<EOF" ; cat /etc/mosquitto/config/mosquitto.conf ; echo EOF ) | sh > /var/lib/mosquitto/mosquitto.conf
+( echo "cat <<EOF" ; cat /etc/mosquitto/mosquitto.conf ; echo EOF ) | sh > /var/lib/mosquitto/mosquitto.conf
 
 echo "$@"
 exec "$@"
