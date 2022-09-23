@@ -96,7 +96,7 @@ services:
       - "run-create-thing-on-minio-action-service"
       - "--minio_secure"
       - "${MINIO_SECURE:-False}"
-      - "${MINIO_HOST:-minio:9000}"
+      - "${MINIO_HOST:-object-storage:9000}"
       - "${MINIO_ROOT_USER:?Please define an minio root user!}"
       - "${MINIO_ROOT_PASSWORD:?\
       Please define an minio root user password!}"
@@ -269,7 +269,8 @@ services:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
   frontend:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend/app:0.0.1
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
+    tsm-frontend/app:0.0.1"
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
