@@ -267,3 +267,22 @@ services:
       -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
     ports:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
+
+  frontend:
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend/app:0.0.1
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=${CREATEDB_POSTGRES_HOST}
+      - POSTGRES_NAME=${CREATEDB_POSTGRES_DATABASE}
+      - POSTGRES_USER=${CREATEDB_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${CREATEDB_POSTGRES_USER}
+      - PUBLISH_THING_TO_BROKER=True
+      - TSM_DATABASE_HOST=${CREATEDB_POSTGRES_HOST}
+      - TSM_DATABASE_NAME=${CREATEDB_POSTGRES_DATABASE}
+      - MQTT_BROKER=mqtt-broker
+      - MQTT_USER=${MQTT_USER}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    depends_on:
+      - database
