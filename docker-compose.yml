@@ -212,7 +212,8 @@ services:
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB\
                                :?Please define a mqtt auth database name!}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE\
-                              :?Please define a mqtt auth database connection tls mode!}"
+                              :?Please define a mqtt auth database connection\
+                               tls mode!}"
     ports:
       - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
       - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
