@@ -310,8 +310,7 @@ services:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
   frontend:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-frontend/app:0.0.1"
+    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend/app:0.0.1
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
