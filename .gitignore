@@ -9,3 +9,4 @@ data/
 !data/postgres/.gitkeep
 !data/postgres/data/.gitkeep
 !data/mosquitto/auth/.gitkeep
+!data/mosquitto/config/.gitkeep
