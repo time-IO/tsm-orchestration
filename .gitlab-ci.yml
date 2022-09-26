@@ -1,2 +1,19 @@
 ---
 include: '.gitlab/ci/*.yml'
+
+docker-service-test:
+  image: "docker:20.10.16"
+  stage: "integration"
+  script:
+    - "mv .env.example .env"
+#    - "echo $GROUP_TOKEN | docker login \
+#      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+#    - "echo $GROUP_TOKEN | docker login \
+#     $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "docker-compose up -d"
+    - "docker ps"
+    - "cd .gitlab/ci"
+    - "chmod +x ./dockertest.sh"
+    - "./dockertest.sh"
+  tags:
+    - "hifis"

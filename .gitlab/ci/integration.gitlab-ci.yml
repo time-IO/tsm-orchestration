@@ -4,6 +4,7 @@ docker-service-test:
   stage: "integration"
   script:
     - "mv .env.example .env"
+    - "cat .env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
