@@ -11,11 +11,15 @@ services:
     ports:
       - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
     environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_USER: "${POSTGRES_USER:\
+                     ?Please define an postgres user!}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:\
+                         ?Please define an postgres password!}"
       PGDATA: "/var/lib/postgresql/data/pgdata"
-      MQTT_AUTH_POSTGRES_USER: "mqtt_auth"
-      MQTT_AUTH_POSTGRES_PASS: "secret"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER:?\
+                               Please define a mqtt auth database user!}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
+                               Please define a mqtt auth database password!}"
     volumes:
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
