@@ -9,7 +9,7 @@ docker-service-test:
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "docker-compose up -d"
+    - "docker-compose up -d --remove-orphans"
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
