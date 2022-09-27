@@ -182,6 +182,14 @@ services:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/\
     tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
+    command:
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "--verbose"
 
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
