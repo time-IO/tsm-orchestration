@@ -155,8 +155,8 @@ services:
       - "http://basic-demo-scheduler:5000/extractor/run"
 
   worker-mqtt-ingest:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-dispatcher/dispatcher:2022-07-08-144728"
+    image: "git.ufz.de:4567/rdm-software/\
+        timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: on-failure
     depends_on:
       - mqtt-broker
