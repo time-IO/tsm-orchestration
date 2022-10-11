@@ -314,12 +314,15 @@ services:
       - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
   frontend:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend/tsm-frontend:latest"
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend\
+            /tsm-frontend:latest"
+    restart: "${RESTART:-on-failure}"
     command: >
       bash -c "python3 manage.py migrate
       && python3 manage.py loaddata admin_interface_theme_foundation.json
-      && python3 manage.py createsuperuser --noinput || echo 'Speruser already created'
-      && python3 manage.py collectstatic
+      && python3 manage.py createsuperuser --noinput
+      || echo 'Speruser already created'
+      && python3 manage.py collectstatic --noinput
       && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
     user: "appuser"
     volumes:
