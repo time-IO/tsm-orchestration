@@ -31,11 +31,11 @@ mqtt-service-test:
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
     - "docker-compose exec -T mqtt-broker
-      bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >> 
+      bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
     - "docker-compose restart mqtt-broker"
-    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c 
-       "mosquitto_pub -h mqtt-broker -t 
+    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
+       "mosquitto_pub -h mqtt-broker -t
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
     - 'docker-compose logs mqtt-cat'
   tags:
@@ -53,7 +53,7 @@ thing-creation-test:
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
-    - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c 
+    - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc \
       --create-dirs \
