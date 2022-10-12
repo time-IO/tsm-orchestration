@@ -5,7 +5,6 @@ docker-service-test:
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "ps -p $$"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
@@ -24,7 +23,6 @@ mqtt-service-test:
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "ps -p $$"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
@@ -47,7 +45,6 @@ thing-creation-test:
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "ps -p $$"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
