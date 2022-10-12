@@ -350,8 +350,10 @@ services:
       - "DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}"
       - "DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-example@example.com}"
     depends_on:
-      - "database"
-      - "mqtt-broker"
+      database:
+        condition: service_healthy
+      mqtt-broker:
+        condition: service_started
 
 volumes:
   frontend-statics:
