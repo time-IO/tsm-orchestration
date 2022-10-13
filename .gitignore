@@ -10,3 +10,4 @@ data/
 !data/postgres/data/.gitkeep
 !data/mosquitto/auth/.gitkeep
 !data/mosquitto/config/.gitkeep
+/Pipfile

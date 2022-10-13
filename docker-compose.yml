@@ -31,6 +31,11 @@ services:
       73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key"
     user: "${UID}:${GID}"
     command: "${POSTGRES_EXTRA_PARAMS:-}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   object-storage:
     image: "minio/minio"
@@ -188,7 +193,7 @@ services:
 
   basic-demo-scheduler:
     build:
-      context: ../tsm-basic-demo-scheduler
+      context: ../tsm-extractor
 #    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
 #    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
