@@ -3,7 +3,7 @@ docker-service-test:
   image: "docker:20.10.16"
   stage: "integration"
   before_script:
-    - "docker pull bash"
+    - "apk add --no-cache bash"
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
