@@ -184,8 +184,10 @@ services:
 
 
   basic-demo-scheduler:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
+    build:
+      context: ../tsm-extractor
+#    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
+#    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
     command:
       - "--mqtt-broker"
