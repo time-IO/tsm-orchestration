@@ -44,7 +44,7 @@ mqtt-service-test:
 thing-creation-test:
   image: "docker:20.10.16"
   stage: "integration"
-    before_script:
+  before_script:
     - "apk add --no-cache curl"
   script:
     - "mv .env.example .env"
