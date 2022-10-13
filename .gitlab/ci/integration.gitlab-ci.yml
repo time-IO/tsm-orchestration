@@ -62,7 +62,6 @@ thing-creation-test:
       -o $HOME/minio-binaries/mc"
     - "chmod +x $HOME/minio-binaries/mc"
     - "export PATH=$PATH:$HOME/minio-binaries/"
-    - "sleep 30"
     - "mc alias set minio http://127.0.0.1:9000 minioadmin minioadmin"
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
     - "psql 'postgresql://postgres:postgres@127.0.0.1:5432' -l"
