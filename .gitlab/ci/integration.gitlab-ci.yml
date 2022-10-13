@@ -46,7 +46,7 @@ thing-creation-test:
   stage: "integration"
   before_script:
     - "apk add --no-cache curl"
-    - "apk add --no-cache ping"
+    - "apk add --no-cache iputils"
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
