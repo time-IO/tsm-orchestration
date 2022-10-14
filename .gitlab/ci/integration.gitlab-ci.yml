@@ -4,7 +4,6 @@ docker-service-test:
   stage: "integration"
   before_script:
     - "apk add --no-cache bash"
-    - "apk add --no-cache iputils"
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
@@ -13,11 +12,11 @@ docker-service-test:
     - "echo $GROUP_TOKEN | docker login \
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
+    - "sleep 10"
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
-    - "ping 127.0.0.1:9000"
   tags:
     - "hifis"
 
