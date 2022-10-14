@@ -12,7 +12,7 @@ docker-service-test:
     - "echo $GROUP_TOKEN | docker login \
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
-    - "sleep 10"
+    - "sleep 15"
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
@@ -31,6 +31,7 @@ mqtt-service-test:
     - "echo $GROUP_TOKEN | docker login \
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
+    - "sleep 15"
     - "docker-compose exec -T mqtt-broker
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
@@ -55,7 +56,7 @@ thing-creation-test:
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
-    - "sleep 50"
+    - "sleep 120"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
