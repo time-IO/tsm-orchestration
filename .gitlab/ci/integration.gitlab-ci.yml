@@ -56,6 +56,7 @@ thing-creation-test:
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
     - "sleep 50"
+    - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc \
