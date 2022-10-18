@@ -1,4 +1,4 @@
-!/bin/ash
+#!/bin/ash
 running="$(docker-compose ps --services --filter "status=running")"
 services="$(docker-compose ps --services)"
 if [ "$running" != "$services" ]; then
