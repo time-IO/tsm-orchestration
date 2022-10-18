@@ -4,7 +4,7 @@
   "database": {
     "username": "seefo_envimo_cr6_test_002",
     "password": "ehah7ohDoophiliegoC9vaog2ievahqu9poohein",
-    "url": "postgresql://seefo-envimo-cr6-test-002:ehah7ohDoophiliegoC9vaog2ievahqu9poohein@postgres/postgres"
+    "url": "postgresql://seefo-envimo-cr6-test-002:ehah7ohDoophiliegoC9vaog2ievahqu9poohein@database/postgres"
   },
   "project": {
     "name": "MQTTStreamsProject2",
