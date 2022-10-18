@@ -4,7 +4,7 @@
   "database": {
     "username": "myfirstproject_6185a5b8462711ec910a125e5a40a845",
     "password": "d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M",
-    "url": "postgresql://myfirstproject_6185a5b8462711ec910a125e5a40a845:d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M@postgres/postgres"
+    "url": "postgresql://myfirstproject_6185a5b8462711ec910a125e5a40a845:d0ZZ9d3QSDZ6tXIZTnKRY1uVLKIc05GmQh8SA36M@database/postgres"
   },
   "project": {
     "name": "My first project",
