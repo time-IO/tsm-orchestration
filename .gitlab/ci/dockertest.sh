@@ -1,5 +1,4 @@
-#Has to run in ash because of busybox
-#!/bin/ash
+#!/bin/bash
 running="$(docker-compose ps --services --filter "status=running")"
 services="$(docker-compose ps --services)"
 if [ "$running" != "$services" ]; then
