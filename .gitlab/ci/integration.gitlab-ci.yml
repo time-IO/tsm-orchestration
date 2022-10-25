@@ -51,6 +51,9 @@ thing-creation-test:
     - "apk add --no-cache postgresql"
   script:
     - "mv .env.example .env"
+    - "echo 'POSTGRES_PORT=5432' >> .env"
+    - "echo 'MINIO_API_PORT=9000' >> .env"
+    - "echo 'MINIO_CONSOLE_PORT=9001' >> .env"
     - "cp .env .gitlab/ci/.env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
