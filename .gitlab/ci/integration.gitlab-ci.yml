@@ -1,0 +1,76 @@
+---
+docker-service-test:
+  image: "docker:20.10.16"
+  stage: "integration"
+  before_script:
+    - "apk add --no-cache bash"
+  script:
+    - "mv .env.example .env"
+    - "cp .env .gitlab/ci/.env"
+    - "echo $GROUP_TOKEN | docker login \
+      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $GROUP_TOKEN | docker login \
+     $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "docker-compose up -d"
+    - "sleep 15"
+    - "docker ps"
+    - "cd .gitlab/ci"
+    - "chmod +x ./dockertest.sh"
+    - "./dockertest.sh"
+  tags:
+    - "hifis"
+
+mqtt-service-test:
+  image: "docker:20.10.16"
+  stage: "integration"
+  script:
+    - "mv .env.example .env"
+    - "cp .env .gitlab/ci/.env"
+    - "echo $GROUP_TOKEN | docker login \
+      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $GROUP_TOKEN | docker login \
+     $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "docker-compose up -d"
+    - "sleep 15"
+    - "docker-compose exec -T mqtt-broker
+      bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
+      /mosquitto-auth/mosquitto.passwd'"
+    - "docker-compose restart mqtt-broker"
+    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
+       "mosquitto_pub -h mqtt-broker -t
+       mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
+    - 'docker-compose logs mqtt-cat'
+  tags:
+    - "hifis"
+
+thing-creation-test:
+  image: "docker:20.10.16-dind"
+  stage: "integration"
+  before_script:
+    - "apk add --no-cache curl"
+    - "apk add --no-cache postgresql"
+  script:
+    - "mv .env.example .env"
+    - "cp .env .gitlab/ci/.env"
+    - "echo $GROUP_TOKEN | docker login \
+      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $GROUP_TOKEN | docker login \
+      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "docker-compose up -d"
+    - "sleep 30"
+    - "docker-compose logs object-storage"
+    - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
+      "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
+    - "curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+      --create-dirs \
+      -o $HOME/minio-binaries/mc"
+    - "chmod +x $HOME/minio-binaries/mc"
+    - "export PATH=$PATH:$HOME/minio-binaries/"
+    - "mc alias set minio http://docker:9000 minioadmin minioadmin"
+    - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
+    - "psql 'postgresql://postgres:postgres@docker:5432' -l"
+    - "psql 'postgresql://postgres:postgres@docker:5432' -tAc
+      \"SELECT 1 FROM pg_roles WHERE
+      rolname='myfirstproject_6185a5b8462711ec910a125e5a40a845'\""
+  tags:
+    - "hifis"
