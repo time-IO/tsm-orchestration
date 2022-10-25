@@ -48,7 +48,7 @@ thing-creation-test:
   stage: "integration"
   before_script:
     - "apk add --no-cache curl"
-    - "apk add --no-cache psql"
+    - "apk add --no-cache postgres"
   script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
