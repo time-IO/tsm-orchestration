@@ -106,7 +106,7 @@ services:
       - "run-create-thing-on-minio-action-service"
       - "--minio_secure"
       - "${MINIO_SECURE:-False}"
-      - "${MINIO_HOST:-minio:9000}"
+      - "${MINIO_HOST:-object-storage:9000}"
       - "${MINIO_ROOT_USER:?Please define an minio root user!}"
       - "${MINIO_ROOT_PASSWORD:?\
       Please define an minio root user password!}"
@@ -160,8 +160,8 @@ services:
       - "http://basic-demo-scheduler:5000/extractor/run"
 
   worker-mqtt-ingest:
-    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-    tsm-dispatcher/dispatcher:latest"
+    image: "git.ufz.de:4567/rdm-software/\
+        timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: on-failure
     depends_on:
       - mqtt-broker
@@ -187,6 +187,14 @@ services:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/\
     tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
+    command:
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "--verbose"
 
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
