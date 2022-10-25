@@ -12,6 +12,7 @@ fi
 if [ ! -f "/mosquitto-auth/mosquitto.passwd" ]; then
   echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd &&
   echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd
+  echo `echo -n "$FRONTEND_MQTT_USER:" && /mosquitto/pw -p "$FRONTEND_MQTT_PASS"` >> /mosquitto-auth/mosquitto.passwd
 fi
 
 # create acl file when not present
