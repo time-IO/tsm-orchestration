@@ -47,9 +47,6 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
-    ports:
-      - "${MINIO_API_PORT:-127.0.0.1:9000}:9000"
-      # - "${MINIO_CONSOLE_PORT:-127.0.0.1:9001}:9001"
     environment:
       MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Please define an minio root user!}"
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?\
@@ -306,20 +303,11 @@ services:
       ${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}"
       - "GRAFANA_DEFAULT_DATASOURCE_SSLMODE=\
       ${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
-      - "GF_SERVER_CERT_FILE=/etc/ssl/public.crt"
-      - "GF_SERVER_CERT_KEY=/etc/ssl/private.key"
-      - "GF_SERVER_PROTOCOL=${GRAFANA_SERVER_PROTOCOL:-http}"
       - "GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/visualization/"
       - "GF_SERVER_SERVE_FROM_SUB_PATH=True"
     volumes:
       - "./grafana/provisioning:/etc/grafana/provisioning/"
       - "./data/grafana/:/var/lib/grafana"
-      - "${GRAFANA_TLS_CERT_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro"
-      - "${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
-      # ports:
-      #   - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
 
   frontend:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/tsm-frontend\
@@ -370,6 +358,7 @@ services:
     ports:
       - "${PROXY_PLAIN_PORT:-127.0.0.1:80:80}"
       - "${PROXY_TLS_PORT:-127.0.0.1:443:443}"
+      - "${PROXY_MINIO_PORT:-127.0.0.1:9000:9000}"
     volumes:
       - "frontend-statics:/home/appuser/app/static"
       - "./nginx/${PROXY_SITE_CONFIG_FILE:-tsm.dev.conf}:/etc/nginx/conf.d/default.conf:ro"
