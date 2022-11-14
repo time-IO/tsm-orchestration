@@ -36,6 +36,7 @@ mqtt-service-test:
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
     - "docker-compose restart mqtt-broker"
+    - "sleep 10"
     - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
        "mosquitto_pub -h mqtt-broker -t
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
