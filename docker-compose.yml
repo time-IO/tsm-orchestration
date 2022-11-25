@@ -88,8 +88,6 @@ services:
   worker-object-storage-setup:
     build:
       context: ../tsm-dispatcher
-#    image: "git.ufz.de:4567/rdm-software/\
-#    timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -116,8 +114,6 @@ services:
   worker-db-setup:
     build:
       context: ../tsm-dispatcher
-    image: "git.ufz.de:4567/rdm-software/\
-    timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
@@ -140,8 +136,6 @@ services:
   worker-file-ingest:
     build:
       context: ../tsm-dispatcher
-#    image: "git.ufz.de:4567/rdm-software/\
-#    timeseries-management/tsm-dispatcher/dispatcher:latest"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -168,8 +162,6 @@ services:
   worker-mqtt-ingest:
     build:
       context: ../tsm-dispatcher
-#    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-#    tsm-dispatcher/dispatcher:2022-07-08-144728"
     restart: on-failure
     depends_on:
       - mqtt-broker
@@ -193,9 +185,7 @@ services:
 
   basic-demo-scheduler:
     build:
-      context: ../tsm-extractor
-#    image: "git.ufz.de:4567/rdm-software/timeseries-management/\
-#    tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
+      context: ../tsm-basic-demo-scheduler  # attention uses the extractor from git registry not the local !
     restart: "${RESTART:-on-failure}"
     command:
       - "--mqtt-broker"
@@ -287,34 +277,3 @@ services:
       - "#"
       - "-v"
 
-  visualization:
-    restart: "${RESTART:-on-failure}"
-    image: "grafana/grafana:latest"
-    user: "${UID}:${GID}"
-    environment:
-      - "GF_SECURITY_ADMIN_USER=\
-      ${GRAFANA_USER:?Please define a grafana user}"
-      - "GF_SECURITY_ADMIN_PASSWORD=\
-      ${GRAFANA_PASSWORD:?Please define a grafana password}"
-      - "GRAFANA_DEFAULT_DATASOURCE_URL=\
-      ${GRAFANA_DEFAULT_DATASOURCE_URL:-database:5432}"
-      - "GRAFANA_DEFAULT_DATASOURCE_DATABASE=\
-      ${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_USER=\
-      ${GRAFANA_DEFAULT_DATASOURCE_USER:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_PASSWORD=\
-      ${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_SSLMODE=\
-      ${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
-      - "GF_SERVER_CERT_FILE=/etc/ssl/public.crt"
-      - "GF_SERVER_CERT_KEY=/etc/ssl/private.key"
-      - "GF_SERVER_PROTOCOL=${GRAFANA_SERVER_PROTOCOL:-http}"
-    volumes:
-      - "./grafana/provisioning:/etc/grafana/provisioning/"
-      - "./data/grafana/:/var/lib/grafana"
-      - "${GRAFANA_TLS_CERT_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro"
-      - "${GRAFANA_TLS_KEY_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
-    ports:
-      - "${GRAFANA_PORT:-127.0.0.1:3000}:3000"
