@@ -15,6 +15,10 @@
     "username":  "crns04-a1bfc93c-5e56-11ec-9837-54e1ad7c5c19",
 //    "password": "CHANGE ME!"
   },
+  "mqtt_authentication_credentials": {
+    "username": "ufzcrns_520a6d265e5511ec991454e1ad7c5c19",
+//    "password": "CHANGE ME!"
+  },
   "properties": {
     "default_parser": "CsvParser",
     "parsers": [
