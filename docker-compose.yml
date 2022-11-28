@@ -185,6 +185,28 @@ services:
         ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
+  worker-mqtt-user-ingest:
+    image: "git.ufz.de:4567/rdm-software/\
+        timeseries-management/tsm-dispatcher/dispatcher:latest"
+    restart: on-failure
+    depends_on:
+      - mqtt-broker
+      - database
+    command:
+      - --topic
+      - thing_creation
+      - --mqtt-broker
+      - mqtt-broker:1883
+      - --mqtt-user
+      - ${MQTT_INGEST_USER:?Please define a mqtt user!}
+      - --mqtt-password
+      - ${MQTT_INGEST_PASSWORD:?Please define a mqtt password!}
+      - run-create-mqtt-user-action-service
+      - "postgresql://${CREATEDB_POSTGRES_USER:\
+        ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
+        ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
+        -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
+
 
   basic-demo-scheduler:
     image: "git.ufz.de:4567/rdm-software/timeseries-management/\
