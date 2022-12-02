@@ -182,10 +182,17 @@ services:
         ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
+  extractor:
+    # only used for building the extractor image
+    build:
+      context: ../tsm-extractor
+    image: "extractor:local"
+    entrypoint: ["echo", "Service 'extractor' is not intended to run."]
 
   basic-demo-scheduler:
     build:
-      context: ../tsm-basic-demo-scheduler  # attention uses the extractor from git registry not the local !
+      context: ../tsm-basic-demo-scheduler
+    image: "basic-demo-scheduler:local"
     restart: "${RESTART:-on-failure}"
     command:
       - "--mqtt-broker"
