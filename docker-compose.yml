@@ -182,6 +182,27 @@ services:
         ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
+  worker-start-qaqc:
+    build:
+      context: ../tsm-dispatcher
+    restart: "on-failure"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
+    command:
+      - "--topic"
+      - "data_parsed"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-qaqc"
+      - "http://basic-demo-scheduler:5000/qaqc/run"
+
   extractor:
     # only used for building the extractor image
     build:
