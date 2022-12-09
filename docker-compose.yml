@@ -162,6 +162,28 @@ services:
       - "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
       - "http://basic-demo-scheduler:5000/extractor/run"
 
+
+  worker-run-qaqc:
+    image: "git.ufz.de:4567/rdm-software/\
+    timeseries-management/tsm-dispatcher/dispatcher:latest"
+    restart: "on-failure"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
+    command:
+      - "--topic"
+      - "data_parsed"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-qaqc"
+      - "http://basic-demo-scheduler:5000/qaqc/run"
+
   worker-mqtt-ingest:
     image: "git.ufz.de:4567/rdm-software/\
         timeseries-management/tsm-dispatcher/dispatcher:latest"

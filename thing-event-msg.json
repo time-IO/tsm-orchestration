@@ -56,6 +56,29 @@
           "skipfooter": 1
         }
       }
-    ]
+    ],
+    "QAQC": {
+      "default": 0,
+      "configs": [
+        {
+          "type": "SaQC",
+          "name": "MyConfig",
+          "context_window": 3,
+          "tests": [
+            {"position": 0, "function": "flagRange", "kwargs": {"min": 1100}},
+            {"position": 2, "function": "flagMAD", "kwargs": {"window": "1H", "center": true}},
+            {"position": 2, "function": "flagRange", "kwargs": {"min": 0, "max": 990, "flag": 99}}
+          ]
+        },
+        {
+          "type": "SaQC",
+          "name": "AnotherConfig",
+          "context_window": "4D",
+          "tests": [
+            {"position": 0, "function": "flagRange", "kwargs": {"min": 1100}}
+          ]
+        }
+      ]
+    }
   }
 }
