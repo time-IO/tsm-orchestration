@@ -17,7 +17,7 @@
   },
   "mqtt_authentication_credentials": {
     "username": "thedoors",
-    "password": "openit"
+    "password_hash": "PBKDF2$sha512$100000$Yyx4vBKIYwJj5u/NuRHhHQ==$U9bBuPNQ8D2OnCUFPiicvfwVTFAaEiCKUmY42WKiBoFr9P0XBn7Ou5TLS8KmnjSoU02eD8oWAAQeC8BQpPr0cg=="
   },
   "description": "some foo with bar",
   "properties": {

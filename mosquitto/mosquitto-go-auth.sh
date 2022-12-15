@@ -13,12 +13,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     CREATE TABLE "mqtt_user"
     (
-        "id"          bigserial    NOT NULL PRIMARY KEY,
-        "thing_uuid"  uuid         NOT NULL UNIQUE,
-        "username"    varchar(256) NOT NULL,
-        "password"    varchar(256) NOT NULL,
-        "description" text         NULL,
-        "properties"  jsonb        NULL
+        "id"           bigserial    NOT NULL PRIMARY KEY,
+        "project_uuid" uuid         NOT NULL,
+        "thing_uuid"   uuid         NOT NULL UNIQUE,
+        "username"     varchar(256) NOT NULL,
+        "password"     varchar(256) NOT NULL,
+        "description"  text         NULL,
+        "properties"   jsonb        NULL,
+        constraint mqtt_user_project_thing_unique
+          unique (project_uuid, thing_uuid)
     );
 
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA $MQTT_AUTH_POSTGRES_USER TO $MQTT_AUTH_POSTGRES_USER;
