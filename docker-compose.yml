@@ -396,6 +396,19 @@ services:
       mqtt-broker:
         condition: service_started
 
+  tsmdl:
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/tsm-ufz-tsmdl/\
+    tsm-ufz-tsmdl:latest"
+    restart: "${RESTART:-on-failure}"
+    entrypoint: "/app/start.sh"
+    environment:
+      DB_URL: "postgresql://${CREATEDB_POSTGRES_USER:\
+        ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
+        ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
+        -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      WEB_CONCURRENCY: 10
+      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /tsmdl"
+
   proxy:
     image: nginx
     restart: "${RESTART:-on-failure}"
@@ -414,6 +427,7 @@ services:
       - "frontend"
       - "visualization"
       - "object-storage"
+      - "tsmdl"
 
 volumes:
   frontend-statics:
