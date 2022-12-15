@@ -397,7 +397,8 @@ services:
         condition: service_started
 
   tsmdl:
-    image: git.ufz.de:4567/rdm-software/timeseries-management/tsm-ufz-tsmdl/tsm-ufz-tsmdl:latest
+    image: "git.ufz.de:4567/rdm-software/timeseries-management/tsm-ufz-tsmdl/\
+    tsm-ufz-tsmdl:latest"
     restart: "${RESTART:-on-failure}"
     entrypoint: "/app/start.sh"
     environment:
