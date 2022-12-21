@@ -18,6 +18,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         "thing_uuid"   uuid         NOT NULL UNIQUE,
         "username"     varchar(256) NOT NULL,
         "password"     varchar(256) NOT NULL,
+        "db_schema"    varchar(256) NOT NULL,
         "description"  text         NULL,
         "properties"   jsonb        NULL,
         constraint mqtt_user_project_thing_unique
