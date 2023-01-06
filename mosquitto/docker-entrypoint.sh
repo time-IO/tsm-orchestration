@@ -30,6 +30,9 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo ""
     echo "user $MQTT_INGEST_USER"
     echo "topic read mqtt_ingest/#"
+    echo ""
+    echo "user $FRONTEND_MQTT_USER"
+    echo "topic readwrite thing_creation/#"
   } >>/mosquitto-auth/mosquitto.acl
 fi
 
