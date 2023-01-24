@@ -81,7 +81,8 @@ thing-creation-test:
     - "psql 'postgresql://postgres:postgres@docker:5432' -l || true"
     - "docker-compose logs database"
     - "docker-compose ps"
-    - "echo | openssl s_client -showcerts -connect docker:5432 -starttls postgres"
+    - "echo | openssl s_client -showcerts -connect docker:5432 \
+      -starttls postgres"
     - "cd .gitlab/ci"
     - "chmod +x ./databasetest.sh"
     - "./databasetest.sh"
