@@ -56,10 +56,11 @@ thing-creation-test:
   #  variables:
   #    POSTGRES_SSLMODE: disable
   script:
-    - "mv .env.example .env"
-    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
-    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
-    - "cp .env .gitlab/ci/.env"
+    - "cp .env.example .gitlab/ci/.env"
+    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" \
+      .gitlab/ci/.env"
+    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" \
+      .gitlab/ci/.env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
@@ -76,12 +77,7 @@ thing-creation-test:
     - "export PATH=$PATH:$HOME/minio-binaries/"
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
-    - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l || true"
-    - "docker-compose logs database"
-    - "docker-compose ps"
-    - "nmap -p 5432,9000 docker"
-    - "echo | openssl s_client -showcerts -connect docker:5432 \
-      -starttls postgres"
+    - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l"
     - "cd .gitlab/ci"
     - "chmod +x ./databasetest.sh"
     - "./databasetest.sh"
@@ -103,6 +99,6 @@ debug-ci:
     - "ip addr"
     - "nslookup docker || true"
     - "hostname"
-    - "hostname --all-fqdns"
+    - "hostname -f || true"
   tags:
     - "hifis"
