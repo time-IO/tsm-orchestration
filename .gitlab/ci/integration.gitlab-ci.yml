@@ -52,6 +52,7 @@ thing-creation-test:
     - "apk add --no-cache postgresql"
     - "apk add --no-cache bash"
     - "apk add --no-cache openssl"
+    - "apk add --no-cache nmap"
   #  variables:
   #    POSTGRES_SSLMODE: disable
   script:
@@ -81,6 +82,7 @@ thing-creation-test:
     - "psql 'postgresql://postgres:postgres@docker:5432' -l || true"
     - "docker-compose logs database"
     - "docker-compose ps"
+    - "nmap -p 5432 docker"
     - "echo | openssl s_client -showcerts -connect docker:5432 \
       -starttls postgres"
     - "cd .gitlab/ci"
