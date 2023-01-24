@@ -54,6 +54,7 @@ thing-creation-test:
   variables:
     POSTGRES_SSLMODE: disable
   script:
+    - "./remove-all-data.sh"
     - "mv .env.example .env"
     - "echo 'POSTGRES_PORT=5432' >> .env"
     - "echo 'PROXY_MINIO_PORT=9000:9000' >> .env"
