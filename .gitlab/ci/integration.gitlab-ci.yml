@@ -95,6 +95,7 @@ debug-ci:
     - "cp .env.example .gitlab/ci/.env"
     - "echo 'POSTGRES_PORT=5432' >> .gitlab/ci/.env"
     - "echo 'PROXY_MINIO_PORT=9000:9000' >> .gitlab/ci/.env"
+    - "cat .gitlab/ci/.env"
     - "docker-compose up -d database"
     - "docker inspect $(docker-compose ps -q database)"
     - "docker port $(docker-compose ps -q database)"
