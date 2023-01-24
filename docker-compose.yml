@@ -390,6 +390,7 @@ services:
       - "DJANGO_TRUSTED_ORIGINS=${DJANGO_TRUSTED_ORIGINS:-http://localhost:80}"
       - "DJANGO_BASE_PATH=${DJANGO_BASE_PATH:-/frontend/}"
       - "DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-}"
+      - "POSTGRES_SSLMODE=${DJANGO_POSTGRES_SSLMODE:-verify-full}"
     depends_on:
       database:
         condition: service_healthy
@@ -407,7 +408,7 @@ services:
         ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
       WEB_CONCURRENCY: 10
-      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /tsmdl"
+      UVICORN_ARGS: "${UVICORN_ARGS:-} --root-path /tsmdl"
 
   proxy:
     image: nginx
