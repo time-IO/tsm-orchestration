@@ -87,3 +87,17 @@ thing-creation-test:
     - "./databasetest.sh"
   tags:
     - "hifis"
+
+debug-ci:
+  image: "docker:20.10.16-dind"
+  stage: "integration"
+  script:
+    - "docker-compose up -d database"
+    - "docker inspect $(docker-compose ps -q database)"
+    - "docker port $(docker-compose ps -q database)"
+    - "ip addr"
+    - "nslookup docker"
+    - "hostname"
+    - "hostname --all-fqdns"
+  tags:
+    - "hifis"
