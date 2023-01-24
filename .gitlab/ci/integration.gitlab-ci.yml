@@ -51,8 +51,8 @@ thing-creation-test:
     - "apk add --no-cache curl"
     - "apk add --no-cache postgresql"
     - "apk add --no-cache bash"
-  variables:
-    POSTGRES_SSLMODE: disable
+#  variables:
+#    POSTGRES_SSLMODE: disable
   script:
     - "./remove-all-data.sh"
     - "mv .env.example .env"
