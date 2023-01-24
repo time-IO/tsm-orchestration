@@ -37,7 +37,7 @@ services:
     user: "${UID}:${GID}"
     command: "${POSTGRES_EXTRA_PARAMS:-}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: "${POSTGRES_HEALTHCHECK_INTERVAL:-10s}"
       timeout: 5s
       retries: 5
