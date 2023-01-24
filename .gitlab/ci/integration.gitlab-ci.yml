@@ -79,7 +79,7 @@ thing-creation-test:
     - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l || true"
     - "docker-compose logs database"
     - "docker-compose ps"
-    - "nmap -p 5432 docker"
+    - "nmap -p 5432,9000 docker"
     - "echo | openssl s_client -showcerts -connect docker:5432 \
       -starttls postgres"
     - "cd .gitlab/ci"
