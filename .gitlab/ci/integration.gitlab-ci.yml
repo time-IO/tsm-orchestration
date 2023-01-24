@@ -64,7 +64,7 @@ thing-creation-test:
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d"
-    - "sleep 60"
+    - "sleep 30"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
@@ -77,6 +77,12 @@ thing-creation-test:
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
     - "psql 'postgresql://postgres:postgres@docker:5432' -l || true"
     - "docker-compose logs database"
+    - "docker-compose ps"
+    - "netstat -tulpen"
+    - "docker-compose restart database"
+    - "netstat -tulpen"
+    - "docker-compose ps"
+    - "env"
     - "cd .gitlab/ci"
     - "chmod +x ./databasetest.sh"
     - "./databasetest.sh"
