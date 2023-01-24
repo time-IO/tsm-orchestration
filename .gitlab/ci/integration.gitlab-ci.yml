@@ -49,10 +49,11 @@ thing-creation-test:
   stage: "integration"
   before_script:
     - "apk add --no-cache curl postgresql bash"
+  variables:
+    POSTGRES_PORT: "5432"
+    PROXY_MINIO_PORT: "9000:9000"
   script:
     - "cp .env.example .env"
-    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
-    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
