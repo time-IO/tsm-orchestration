@@ -54,7 +54,6 @@ thing-creation-test:
   #  variables:
   #    POSTGRES_SSLMODE: disable
   script:
-    - "./remove-all-data.sh"
     - "mv .env.example .env"
     - "echo 'POSTGRES_PORT=5432' >> .env"
     - "echo 'PROXY_MINIO_PORT=9000:9000' >> .env"
@@ -65,6 +64,8 @@ thing-creation-test:
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
+    - "docker-compose exec database ls -lah /var/lib/postgresql"
+    - "docker-compose exec database cat /var/lib/postgresql/data/pgdata/pg_hba.conf"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
