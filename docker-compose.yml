@@ -408,6 +408,9 @@ services:
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
       WEB_CONCURRENCY: 10
       UVICORN_ARGS: "${UVICORN_ARGS:-} --root-path /tsmdl"
+    depends_on:
+      database:
+        condition: service_healthy
 
   proxy:
     image: nginx

@@ -63,7 +63,7 @@ thing-creation-test:
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "docker-compose up -d"
+    - "docker-compose up -d --force-recreate -V"
     - "sleep 30"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
