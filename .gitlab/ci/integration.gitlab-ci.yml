@@ -65,7 +65,8 @@ thing-creation-test:
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
     - "docker-compose exec database ls -lah /var/lib/postgresql"
-    - "docker-compose exec database cat /var/lib/postgresql/data/pgdata/pg_hba.conf"
+    - "docker-compose exec database \
+      cat /var/lib/postgresql/data/pgdata/pg_hba.conf"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
