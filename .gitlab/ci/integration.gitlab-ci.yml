@@ -101,7 +101,7 @@ debug-ci:
     - "docker inspect $(docker-compose ps -q database)"
     - "docker port $(docker-compose ps -q database)"
     - "ip addr"
-    - "nslookup docker"
+    - "nslookup docker || true"
     - "hostname"
     - "hostname --all-fqdns"
   tags:
