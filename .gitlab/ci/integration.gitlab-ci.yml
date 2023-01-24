@@ -57,8 +57,8 @@ thing-creation-test:
   #    POSTGRES_SSLMODE: disable
   script:
     - "mv .env.example .env"
-    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\POSTGRES_PORT=5432\" .env"
-    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\PROXY_MINIO_PORT=9000:9000\" .env"
+    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
+    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
     - "cp .env .gitlab/ci/.env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
@@ -93,8 +93,8 @@ debug-ci:
   stage: "integration"
   script:
     - "mv .env.example .env"
-    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\POSTGRES_PORT=5432\" .env"
-    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\PROXY_MINIO_PORT=9000:9000\" .env"
+    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
+    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
     - "cp .env .gitlab/ci/.env"
     - "cat .gitlab/ci/.env"
     - "docker-compose up -d database"
