@@ -47,10 +47,13 @@ mqtt-service-test:
 thing-creation-test:
   image: "docker:20.10.16-dind"
   stage: "integration"
+  env:
   before_script:
     - "apk add --no-cache curl"
     - "apk add --no-cache postgresql"
     - "apk add --no-cache bash"
+  variables:
+    POSTGRES_SSLMODE: disable
   script:
     - "mv .env.example .env"
     - "echo 'POSTGRES_PORT=5432' >> .env"
