@@ -92,7 +92,7 @@ debug-ci:
   image: "docker:20.10.16-dind"
   stage: "integration"
   script:
-    - "cp .env .gitlab/ci/.env"
+    - "cp .env.example .gitlab/ci/.env"
     - "echo 'POSTGRES_PORT=5432' >> .gitlab/ci/.env"
     - "echo 'PROXY_MINIO_PORT=9000:9000' >> .gitlab/ci/.env"
     - "docker-compose up -d database"
