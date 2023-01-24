@@ -390,6 +390,7 @@ services:
       - "DJANGO_TRUSTED_ORIGINS=${DJANGO_TRUSTED_ORIGINS:-http://localhost:80}"
       - "DJANGO_BASE_PATH=${DJANGO_BASE_PATH:-/frontend/}"
       - "DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-}"
+      - "POSTGRES_SSLMODE=${DJANGO_POSTGRES_SSLMODE:-verify-full}"
     depends_on:
       database:
         condition: service_healthy

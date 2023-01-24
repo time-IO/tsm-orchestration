@@ -66,9 +66,6 @@ thing-creation-test:
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
-    - "docker-compose exec database ls -lah /var/lib/postgresql"
-    - "docker-compose exec database \
-      cat /var/lib/postgresql/data/pgdata/pg_hba.conf"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
@@ -79,7 +76,7 @@ thing-creation-test:
     - "export PATH=$PATH:$HOME/minio-binaries/"
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
-    - "psql 'postgresql://postgres:postgres@docker:5432' -l || true"
+    - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l || true"
     - "docker-compose logs database"
     - "docker-compose ps"
     - "nmap -p 5432 docker"
