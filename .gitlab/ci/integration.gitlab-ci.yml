@@ -48,19 +48,17 @@ thing-creation-test:
   image: "docker:20.10.16-dind"
   stage: "integration"
   before_script:
-    - "apk add --no-cache curl"
-    - "apk add --no-cache postgresql"
-    - "apk add --no-cache bash"
+    - "apk add --no-cache curl postgresql bash"
+  variables:
+    POSTGRES_PORT: "5432"
+    PROXY_MINIO_PORT: "9000:9000"
   script:
-    - "mv .env.example .env"
-    - "echo 'POSTGRES_PORT=5432' >> .env"
-    - "echo 'PROXY_MINIO_PORT=9000:9000' >> .env"
-    - "cp .env .gitlab/ci/.env"
+    - "cp .env.example .env"
     - "echo $GROUP_TOKEN | docker login \
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "docker-compose up -d"
+    - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
@@ -72,9 +70,26 @@ thing-creation-test:
     - "export PATH=$PATH:$HOME/minio-binaries/"
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
-    - "psql 'postgresql://postgres:postgres@docker:5432' -l"
-    - "cd .gitlab/ci"
-    - "chmod +x ./databasetest.sh"
-    - "./databasetest.sh"
+    - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l"
+    - "bash .gitlab/ci/databasetest.sh"
   tags:
     - "hifis"
+#
+#debug-ci:
+#  image: "docker:20.10.16-dind"
+#  stage: "integration"
+#  script:
+#    - "mv .env.example .env"
+#    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
+#    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
+#    - "cp .env .gitlab/ci/.env"
+#    - "cat .gitlab/ci/.env"
+#    - "docker-compose up -d database"
+#    - "docker inspect $(docker-compose ps -q database)"
+#    - "docker port $(docker-compose ps -q database)"
+#    - "ip addr"
+#    - "nslookup docker || true"
+#    - "hostname"
+#    - "hostname -f || true"
+#  tags:
+#    - "hifis"
