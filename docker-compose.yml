@@ -98,6 +98,8 @@ services:
       object-storage:
         condition: "service_healthy"
     command:
+      - "--log-level"
+      - "${LOG_LEVEL:-INFO}"
       - "--topic"
       - "thing_creation"
       - "--mqtt-broker"
@@ -122,6 +124,8 @@ services:
       - "mqtt-broker"
       - "database"
     command:
+      - "--log-level"
+      - "${LOG_LEVEL:-INFO}"
       - "--topic"
       - "thing_creation"
       - "--mqtt-broker"
@@ -146,6 +150,8 @@ services:
       object-storage:
         condition: "service_healthy"
     command:
+      - "--log-level"
+      - "${LOG_LEVEL:-INFO}"
       - "--topic"
       - "object_storage_notification"
       - "--mqtt-broker"
@@ -173,6 +179,8 @@ services:
       object-storage:
         condition: "service_healthy"
     command:
+      - "--log-level"
+      - "${LOG_LEVEL:-INFO}"
       - "--topic"
       - "data_parsed"
       - "--mqtt-broker"
@@ -192,6 +200,8 @@ services:
       - mqtt-broker
       - database
     command:
+      - --log-level
+      - ${LOG_LEVEL:-INFO}
       - --topic
       - mqtt_ingest/#
       - --mqtt-broker
@@ -215,6 +225,8 @@ services:
       - mqtt-broker
       - database
     command:
+      - --log-level
+      - ${LOG_LEVEL:-INFO}
       - --topic
       - thing_creation
       - --mqtt-broker
