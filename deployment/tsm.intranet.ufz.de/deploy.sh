@@ -2,6 +2,6 @@
 cd "$(dirname "$0")/../.."
 
 git pull
-sudo docker-compose pull
-sudo docker-compose up -d
+sudo docker-compose pull -q
+sudo docker-compose up --quiet-pull -d
 sudo docker-compose ps
