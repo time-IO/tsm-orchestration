@@ -372,6 +372,7 @@ services:
     command: >
       bash -c "python3 manage.py migrate
       && python3 manage.py loaddata admin_interface_theme_foundation.json
+      && python3 manage.py loaddata ufz_theme.json
       && python3 manage.py createsuperuser --noinput
       || echo 'Speruser already created'
       && python3 manage.py collectstatic --noinput
