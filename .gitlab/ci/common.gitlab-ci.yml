@@ -2,7 +2,6 @@
 stages:
 #  - "lint"
   - "integration"
-  - "deploy"
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
