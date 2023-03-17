@@ -237,8 +237,7 @@ services:
 
 
   basic-demo-scheduler:
-    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/\
-    basic_demo_scheduler:2023-03-12-181233"
+    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
     command:
       - "--mqtt-broker"
