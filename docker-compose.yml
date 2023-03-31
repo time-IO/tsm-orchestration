@@ -283,9 +283,6 @@ services:
                             :?Please define a frontend mqtt user!}"
       FRONTEND_MQTT_PASS: "${FRONTEND_MQTT_PASS\
                             :?Please define a frontend mqtt password!}"
-#    ports:
-#      - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
-#      - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
     volumes:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
       :/etc/mosquitto/config/mosquitto.conf:ro"
