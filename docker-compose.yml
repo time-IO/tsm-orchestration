@@ -140,12 +140,14 @@ services:
 
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
-    restart: "on-failure"
+    restart: on-failure
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: service_started
       object-storage:
-        condition: "service_healthy"
+        condition: service_healthy
+      basic-demo-scheduler:
+        condition: service_healthy
     command:
       - "--log-level"
       - "${LOG_LEVEL:-INFO}"
@@ -168,12 +170,14 @@ services:
 
   worker-run-qaqc:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
-    restart: "on-failure"
+    restart: on-failure
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: service_started
       object-storage:
-        condition: "service_healthy"
+        condition: service_healthy
+      basic-demo-scheduler:
+        condition: service_healthy
     command:
       - "--log-level"
       - "${LOG_LEVEL:-INFO}"
@@ -243,6 +247,9 @@ services:
     # see the README [1] of the base image, why this is needed.
     # [1] https://github.com/giovtorres/docker-centos7-slurm#usage
     hostname: slurmctl
+    depends_on:
+      - mqtt-broker
+      - database
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1"]
       interval: 10s
