@@ -238,11 +238,16 @@ services:
 
   basic-demo-scheduler:
     image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
-    restart: "${RESTART:-on-failure}"
+    restart: on-failure
     # hostname MUST be set to `slurmctl`,
     # see the README [1] of the base image, why this is needed.
     # [1] https://github.com/giovtorres/docker-centos7-slurm#usage
     hostname: slurmctl
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
     command:
       - "--mqtt-broker"
       - "mqtt-broker:1883"
