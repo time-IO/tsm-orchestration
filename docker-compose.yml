@@ -146,6 +146,8 @@ services:
         condition: "service_started"
       object-storage:
         condition: "service_healthy"
+      basic-demo-scheduler:
+        condition: "service_healthy"
     command:
       - "--log-level"
       - "${LOG_LEVEL:-INFO}"
@@ -173,6 +175,8 @@ services:
       mqtt-broker:
         condition: "service_started"
       object-storage:
+        condition: "service_healthy"
+      basic-demo-scheduler:
         condition: "service_healthy"
     command:
       - "--log-level"
@@ -243,6 +247,14 @@ services:
     # see the README [1] of the base image, why this is needed.
     # [1] https://github.com/giovtorres/docker-centos7-slurm#usage
     hostname: slurmctl
+    depends_on:
+      - mqtt-broker
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
     command:
       - "--mqtt-broker"
       - "mqtt-broker:1883"
