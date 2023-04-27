@@ -25,7 +25,7 @@ The settings from the example are ok for local testing and development.
 Postgres, Minio and MQTT services are exposed on localhost, so you can
 access them with clients from your machine.
 
-When using this in (semi-) production (i.g. on a server) some settings,
+When using this in (semi-) production (e.g. on a server) some settings,
 especially the passwords should be changed! Also keep in mind, that you
 will need encryption when exposing the services: For example, minio HTTP
 ports will need a TLS proxy (i.e. nginx) with certificates (i.e.
@@ -90,6 +90,32 @@ docker-compose down --timeout 0 -v --remove-orphans && ./remove-all-data.sh
 ```
 
 All data is lost with this. Be careful!
+
+# Using SFTP and FTP for uploads 
+
+The minio object storage provides SFTP and FTP services. Its automatically equipped with self signed TLS certs for FTP
+and a generated SSH host key. Please change the TLs certificates to some officially signed, you can take the same certs
+that are used by the proxy.
+
+You can directly use the minio accounts, but it would be better to use minio service accounts for authentication.
+
+## Testing FTP service with `lftp`
+
+With the [previously generated account](#3-create-a-thing) and the default settings:
+
+```bash
+lftp -p 40021 thedoors-057d8bba-40b3-11ec-a337-125e5a40a849@localhost -e "set ssl:ca-file ./data/minio/certs/minio-ftp.crt"
+```
+
+In development mode with self signed certificate we have to define the CA. 
+
+## Testing SFTP service with `sftp`
+
+With the [previously generated account](#3-create-a-thing) and the default settings:
+
+```bash
+sftp -P 40022 thedoors-057d8bba-40b3-11ec-a337-125e5a40a849@localhost
+```
 
 # Further thoughts and hints
 
@@ -174,7 +200,7 @@ def slug(self):
         )
 ```
 
-# Enable TLS Security for Minio and Postgres database
+# Enable TLS Security for Postgres database
 
 For secure connections over the network you need transport security like
 `https`. To achieve this you need certificates of a public key
@@ -184,8 +210,6 @@ infrastructure (PKI) like the
 Once you have a private key and a public certificate you can enable
 security by
 
-- changing `MINIO_TLS_CERT_PATH` to the path of your certificate file
-- changing `MINIO_TLS_KEY_PATH` to the path of your private key file
 - changing `POSTGRES_TLS_CERT_PATH` to the path of your certificate file
 - changing `POSTGRES_TLS_KEY_PATH` to the path of your private key file
 - uncommenting the line beginning with `POSTGRES_EXTRA_PARAMS`

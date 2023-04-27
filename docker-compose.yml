@@ -1,6 +1,18 @@
 ---
 version: "2.4"
 services:
+
+  init:
+    build:
+      context: "init"
+      args:
+        UID: "${UID}"
+        GID: "${GID}"
+    restart: "no"
+    user: "${UID}:${GID}"
+    volumes:
+      - "./data/minio/certs/:/tmp/certs"
+
   database:
     restart: "${RESTART:-on-failure}"
     # image: timescale/timescaledb:latest-pg14
@@ -45,8 +57,15 @@ services:
   object-storage:
     image: "minio/minio"
     restart: "${RESTART:-on-failure}"
+    ports:
+      - "${MINIO_SFTP_PORT:-127.0.0.1:40022}:22"
+      - "${MINIO_FTP_PORT:-127.0.0.1:40021}:21"
+      - "${MINIO_FTP_PASV_PORTS:-127.0.0.1:30000-30010:30000-30010}"
     depends_on:
-      - "mqtt-broker"
+      mqtt-broker:
+        condition: "service_started"
+      init:
+        condition: "service_completed_successfully"
     environment:
       MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Please define an minio root user!}"
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?\
@@ -71,16 +90,30 @@ services:
       - "./data/minio/vol1:/vol1"
       - "./data/minio/vol2:/vol2"
       - "./data/minio/vol3:/vol3"
-      - "${MINIO_TLS_CERT_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/public.crt:ro"
-      - "${MINIO_TLS_KEY_PATH:-/tmp/c8cf2d92\
-      -73cd-11ec-b035-54e1ad7c5c19}:/.minio/certs/private.key:ro"
+      # FTP server tls key and cert
+      - "${MINIO_FTP_TLS_CRT:-./data/minio/certs/minio-ftp.crt}:/certs/minio-ftp.crt:ro"
+      - "${MINIO_FTP_TLS_KEY:-./data/minio/certs/minio-ftp.key}:/certs/minio-ftp.key:ro"
+      # SSH Server key to provide constant ssh host key
+      - "${MINIO_SFTP_HOSTKEY:-./data/minio/certs/id_ed25519}:/certs/id_ed25519:ro"
     user: "${UID}:${GID}"
     command:
       - "server"
       - "/vol{0...3}"
       - "--console-address"
       - ":9001"
+      - "--ftp"
+      - "address=:21"
+      - "--ftp"
+      - "passive-port-range=30000-30010"
+      - "--sftp"
+      - "address=:22"
+      - "--sftp"
+      - "ssh-private-key=/certs/id_ed25519"
+      - "--ftp"
+      - "tls-private-key=/certs/minio-ftp.key"
+      - "--ftp"
+      - "tls-public-cert=/certs/minio-ftp.crt"
+      - "--json"
     healthcheck:
       test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
       :-http://localhost:9000}/minio/health/live"]
