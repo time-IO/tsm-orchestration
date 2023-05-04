@@ -297,6 +297,31 @@ services:
       - "${MQTT_PASSWORD:?Please define a mqtt password!}"
       - "--verbose"
 
+  eve-mock:
+    # TODO: push image
+    image: "registry.hzdr.de/ufz-tsm/slurm-scheduler/...:latest"
+    restart: "${RESTART:-on-failure}"
+    # hostname MUST be set to `slurmctl`,
+    # see the README [1] of the base image, why this is needed.
+    # [1] https://github.com/giovtorres/docker-centos7-slurm#usage
+    hostname: slurmctl
+    healthcheck:
+      test: ["CMD-SHELL", "supervisorctl status | grep -c RUNNING | grep -q 6"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    ports:
+      # RestAPI Port
+      - 6820:6820
+    volumes:
+      # mandatory
+      - ./data/slurm/jwt_hs256.key:/etc/slurm/jwt_hs256.key
+      # optional to inspect logs on the fly
+      - ./volumes/lib:/var/lib/slurmd
+      - ./volumes/spool:/var/spool/slurm
+      - ./volumes/log:/var/log/slurm
+      - ./volumes/db:/var/lib/mysql
+
 
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
