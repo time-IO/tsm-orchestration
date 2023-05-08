@@ -10,4 +10,9 @@ data/
 !data/postgres/data/.gitkeep
 !data/mosquitto/auth/.gitkeep
 !data/mosquitto/config/.gitkeep
+!data/slurm/.gitkeep
+!data/slurm/volumes/db/.gitkeep
+!data/slurm/volumes/lib/.gitkeep
+!data/slurm/volumes/log/.gitkeep
+!data/slurm/volumes/spool/.gitkeep
 /Pipfile
