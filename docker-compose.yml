@@ -315,12 +315,12 @@ services:
       - 6820:6820
     volumes:
       # mandatory
-      - ./data/slurm/jwt_hs256.key:/etc/slurm/jwt_hs256.key
+      - ${SLURM_JWTKEY_FILE:-./slurm/jwt_hs256.key}:/etc/slurm/jwt_hs256.key:ro
       # optional to inspect logs on the fly
-      - ./volumes/lib:/var/lib/slurmd
-      - ./volumes/spool:/var/spool/slurm
-      - ./volumes/log:/var/log/slurm
-      - ./volumes/db:/var/lib/mysql
+      - .data/slurm/volumes/lib:/var/lib/slurmd
+      - .data/slurm/volumes/spool:/var/spool/slurm
+      - .data/slurm/volumes/log:/var/log/slurm
+      - .data/slurm/volumes/db:/var/lib/mysql
 
 
 
@@ -367,7 +367,7 @@ services:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
       :/etc/mosquitto/config/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
-      - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
+      - "${MOSQUITTO_TLS_CE/RT_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:\
       /mosquitto/config/certs/server.crt:ro"
       - "${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92\
