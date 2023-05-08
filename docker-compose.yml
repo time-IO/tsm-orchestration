@@ -297,9 +297,9 @@ services:
       - "${MQTT_PASSWORD:?Please define a mqtt password!}"
       - "--verbose"
 
+
   eve-mock:
-    # TODO: push image
-    image: "registry.hzdr.de/ufz-tsm/slurm-scheduler/...:latest"
+    image: "registry.hzdr.de/ufz-tsm/slurm-scheduler:latest"
     restart: "${RESTART:-on-failure}"
     # hostname MUST be set to `slurmctl`,
     # see the README [1] of the base image, why this is needed.
@@ -321,6 +321,8 @@ services:
       - ./volumes/spool:/var/spool/slurm
       - ./volumes/log:/var/log/slurm
       - ./volumes/db:/var/lib/mysql
+
+
 
 
   mqtt-broker:
