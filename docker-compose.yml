@@ -298,7 +298,7 @@ services:
       - "--verbose"
 
 
-  eve-mock:
+  slurm-scheduler:
     image: "registry.hzdr.de/ufz-tsm/slurm-scheduler:latest"
     restart: "${RESTART:-on-failure}"
     # hostname MUST be set to `slurmctl`,
@@ -311,11 +311,10 @@ services:
       timeout: 5s
       retries: 2
     ports:
-      # RestAPI Port
-      - 6820:6820
+      - "${SLURM_RESTAPI_PORT:-127.0.0.1:6820}:6820"
     volumes:
       # mandatory
-      - ${SLURM_JWTKEY_FILE:-./slurm/jwt_hs256.key}:/etc/slurm/jwt_hs256.key:ro
+      - "${SLURM_JWTKEY_FILE:-./slurm/jwt_hs256.key}:/etc/slurm/jwt_hs256.key:ro"
       # optional to inspect logs on the fly
       - .data/slurm/volumes/lib:/var/lib/slurmd
       - .data/slurm/volumes/spool:/var/spool/slurm
@@ -367,7 +366,7 @@ services:
       - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
       :/etc/mosquitto/config/mosquitto.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
-      - "${MOSQUITTO_TLS_CE/RT_PATH:-/tmp/c8cf2d92\
+      - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:\
       /mosquitto/config/certs/server.crt:ro"
       - "${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92\

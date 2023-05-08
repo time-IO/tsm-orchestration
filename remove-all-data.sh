@@ -10,3 +10,10 @@ touch data/postgres/data/.gitkeep
 rm data/mosquitto/auth/mosquitto.acl
 rm data/mosquitto/auth/mosquitto.passwd
 rm -rf data/grafana/*
+rm -rf data/slurm/volumes/db/*
+rm -rf data/slurm/volumes/lib/*
+rm -rf data/slurm/volumes/log/*
+rm -rf data/slurm/volumes/spool/*
+pushd data/slurm/volumes || exit
+touch db/.gitkeep lib/.gitkeep log/.gitkeep spool/.gitkeep
+popd || exit
