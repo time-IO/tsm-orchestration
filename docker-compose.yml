@@ -316,10 +316,10 @@ services:
       # mandatory
       - "${SLURM_JWTKEY_FILE:-./slurm/jwt_hs256.key}:/etc/slurm/jwt_hs256.key:ro"
       # optional to inspect logs on the fly
-      - .data/slurm/volumes/lib:/var/lib/slurmd
-      - .data/slurm/volumes/spool:/var/spool/slurm
-      - .data/slurm/volumes/log:/var/log/slurm
-      - .data/slurm/volumes/db:/var/lib/mysql
+      - ./data/slurm/volumes/lib:/var/lib/slurmd
+      - ./data/slurm/volumes/spool:/var/spool/slurm
+      - ./data/slurm/volumes/log:/var/log/slurm
+      - ./data/slurm/volumes/db:/var/lib/mysql
 
 
 
