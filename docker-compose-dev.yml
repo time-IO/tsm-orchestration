@@ -1,0 +1,39 @@
+---
+version: "3.9"
+services:
+
+  worker-object-storage-setup:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-db-setup:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-file-ingest:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-run-qaqc:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-mqtt-ingest:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-mqtt-user-creation:
+    volumes:
+      - "${DEV_DISPATTCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  basic-demo-scheduler:
+    volumes:
+      - "${DEV_SCHEDULER_SRC_DIR:-../tsm-basic-demo-scheduler/src}:/home/sontsm/src"
+
+  frontend:
+    volumes:
+      - "${DEV_FRONTEND_DIR:-../tsm-frontend}:/home/appuser/app"
+
+  tsmdl:
+    volumes:
+      - "${DEV_TSMDL_SRC_DIR:-../tsm-ufz-tsmdl/app}:/app"
