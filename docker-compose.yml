@@ -487,7 +487,7 @@ services:
       - "object-storage"
       - "tsmdl"
 
-  cadvisor:
+  monitoring:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: "cadvisor"
     ports:
