@@ -276,11 +276,6 @@ services:
   basic-demo-scheduler:
     image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
-    healthcheck:
-      test: [ "CMD-SHELL", "curl --fail http://basic-demo-scheduler:5000/health || exit 1" ]
-      interval: 10s
-      timeout: 2s
-      retries: 5
     command:
       - "--mqtt-broker"
       - "mqtt-broker:1883"
