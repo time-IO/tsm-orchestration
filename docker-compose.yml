@@ -273,7 +273,7 @@ services:
         -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
 
-basic-demo-scheduler:
+  basic-demo-scheduler:
     image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:latest"
     restart: "${RESTART:-on-failure}"
     healthcheck:
