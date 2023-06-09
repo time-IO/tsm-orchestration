@@ -491,12 +491,6 @@ services:
     - "/var/run:/var/run:rw"
     - "/sys:/sys:ro"
     - "/var/lib/docker/:/var/lib/docker:ro"
-    depends_on:
-    - "tsmdl"
-    - "frontend"
-    - "database"
-    - "mqtt-broker"
-    - "object-storage"
 
 volumes:
   frontend-statics:
