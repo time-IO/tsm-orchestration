@@ -485,7 +485,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: "cadvisor"
     ports:
-    - "9343:9343"
+    - "${CADVISOR_PORT:-127.0.0.1:9343}:9343"
     volumes:
     - "/:/rootfs:ro"
     - "/var/run:/var/run:rw"
