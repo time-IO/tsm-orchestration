@@ -291,7 +291,6 @@ services:
       - "--verbose"
 
 
-
   mqtt-broker:
     restart: "${RESTART:-on-failure}"
     image: "iegomez/mosquitto-go-auth:latest"
