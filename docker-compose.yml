@@ -37,7 +37,20 @@ services:
                                Please define a frontend database user!}"
       FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
                                Please define a frontend database password!}"
+      SMS_DB_USER: "${SMS_DB_USER:\
+                           ?Please define a SMS postgres user!}"
+      SMS_DB_PASSWORD: "${SMS_DB_PASSWORD:\
+                           ?Please define a SMS postgres password!}"
+      SMS_DB_PORT: "${SMS_DB_PORT:\
+                           ?Please define a SMS postgres port!}"
+      SMS_DB_DB: "${SMS_DB_DB:\
+                           ?Please define a SMS postgres DB name!}"
+      SMS_DB_HOST: "${SMS_DB_HOST:\
+                           ?Please define a SMS postgres host!}"
     volumes:
+      - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
+      - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
+      - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
@@ -166,6 +179,31 @@ services:
     command:
       - "run-create-database-schema-action-service"
 
+
+  worker-frost-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
+    restart: "${RESTART:-on-failure}"
+    depends_on:
+      - "mqtt-broker"
+      - "database"
+    volumes:
+      - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
+    command:
+      - "--log-level"
+      - "${LOG_LEVEL:-INFO}"
+      - "--topic"
+      - "thing_creation"
+      - "--mqtt-broker"
+      - "mqtt-broker:1883"
+      - "--mqtt-user"
+      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "--mqtt-password"
+      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "run-create-new-frost-server-service"
+      - "postgresql://${CREATEDB_POSTGRES_USER:\
+      ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
+      ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
+      -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
@@ -466,6 +504,11 @@ services:
       - "object-storage"
       - "tsmdl"
 
+  frost:
+    image: "registry.hzdr.de/ufz-tsm/frost/frost:latest"
+    restart: "${RESTART:-on-failure}"
+    volumes:
+      - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
 
   monitoring:
     image: gcr.io/cadvisor/cadvisor:latest
