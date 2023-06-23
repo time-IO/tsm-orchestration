@@ -11,6 +11,8 @@ docker-service-test:
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $CI_JOB_TOKEN | docker login \
+     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
     - "sleep 15"
     - "docker ps"
@@ -30,6 +32,8 @@ mqtt-service-test:
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $CI_JOB_TOKEN | docker login \
+     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
     - "sleep 15"
     - "docker-compose exec -T mqtt-broker
@@ -58,6 +62,8 @@ thing-creation-test:
       $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $GROUP_TOKEN | docker login \
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
+    - "echo $CI_JOB_TOKEN | docker login \
+     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
     - "docker-compose logs object-storage"
