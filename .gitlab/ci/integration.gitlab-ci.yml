@@ -18,7 +18,7 @@ docker-service-test:
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
   tags:
-    - "hifis"
+    - "dind"
 
 mqtt-service-test:
   image: "docker:20.10.16"
@@ -42,7 +42,7 @@ mqtt-service-test:
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
     - 'docker-compose logs mqtt-cat'
   tags:
-    - "hifis"
+    - "dind"
 
 thing-creation-test:
   image: "docker:20.10.16-dind"
@@ -73,7 +73,7 @@ thing-creation-test:
     - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l"
     - "bash .gitlab/ci/databasetest.sh"
   tags:
-    - "hifis"
+    - "dind"
 #
 #debug-ci:
 #  image: "docker:20.10.16-dind"
