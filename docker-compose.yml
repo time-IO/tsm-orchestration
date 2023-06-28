@@ -461,6 +461,10 @@ services:
       - "DJANGO_BASE_PATH=${DJANGO_BASE_PATH:-/frontend/}"
       - "DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-}"
       - "POSTGRES_SSLMODE=${DJANGO_POSTGRES_SSLMODE:-verify-full}"
+      - "DJANGO_HELMHOLTZ_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID:-ufz-tsm}"
+      - "DJANGO_HELMHOLTZ_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET:-00000000000000000000}"
+      - "DJANGO_HELMHOLTZ_AAI_CONF_URL=${DJANGO_HELMHOLTZ_AAI_CONF_URL:\
+            -https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration}"
     depends_on:
       database:
         condition: service_healthy
