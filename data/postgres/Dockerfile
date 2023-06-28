@@ -11,5 +11,8 @@ RUN apt-get update \
 ARG UID=1000
 RUN adduser --uid ${UID} --disabled-password tsm || exit 0
 
+# Adjust owner of postgres data directory
+RUN chown ${UID} /var/lib/postgresql
+
 # switch to user with UID
 USER ${UID}
