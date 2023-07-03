@@ -51,6 +51,7 @@ services:
       - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
       - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
       - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
@@ -188,22 +189,19 @@ services:
       - "database"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TOPIC: "thing_creation"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      DATABASE_URL: "postgresql://\
+        ${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:\
+        ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@\
+        ${CREATEDB_POSTGRES_HOST:-database}/\
+        ${CREATEDB_POSTGRES_DATABASE:-postgres}"
     command:
-      - "--log-level"
-      - "${LOG_LEVEL:-INFO}"
-      - "--topic"
-      - "thing_creation"
-      - "--mqtt-broker"
-      - "mqtt-broker:1883"
-      - "--mqtt-user"
-      - "${MQTT_USER:?Please define a mqtt user!}"
-      - "--mqtt-password"
-      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
       - "run-create-new-frost-server-service"
-      - "postgresql://${CREATEDB_POSTGRES_USER:\
-      ?Please define an postgres user!}:${CREATEDB_POSTGRES_PASSWORD:\
-      ?Please define an postgres password!}@${CREATEDB_POSTGRES_HOST:\
-      -database}/${CREATEDB_POSTGRES_DATABASE:-postgres}"
 
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
@@ -292,6 +290,28 @@ services:
         ${CREATEDB_POSTGRES_DATABASE:-postgres}"
     command:
       - run-create-mqtt-user-action-service
+
+  worker-grafana-dashboard:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:latest"
+    restart: "${RESTART:-on-failure}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
+      visualization:
+        condition: "service_started"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TOPIC: "thing_creation"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      GRAFANA_URL: "${GRAFANA_URL:-http://proxy./visualization/}"
+      GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
+      GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
+    command:
+      - "run-create-grafana-dashboard-service"
 
 
   basic-demo-scheduler:

@@ -28,7 +28,11 @@ services:
 
   worker-mqtt-user-creation:
     volumes:
-      - "${DEV_DISPATTCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+  worker-grafana-dashboard:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
   basic-demo-scheduler:
     volumes:
