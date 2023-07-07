@@ -36,7 +36,7 @@ services:
 
   basic-demo-scheduler:
     volumes:
-      - "${DEV_SCHEDULER_SRC_DIR:-../tsm-basic-demo-scheduler/src}:/home/appuser/app/src"
+      - "${DEV_SCHEDULER_SRC_DIR:-../tsm-basic-demo-scheduler/src}:/home/appuser/app/basic_demo_scheduler"
     ports:
       - "127.0.0.1:5000:5000"
 
