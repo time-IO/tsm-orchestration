@@ -316,6 +316,7 @@ services:
       GRAFANA_URL: "${GRAFANA_URL:-http://proxy./visualization/}"
       GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
+      GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
     command:
       - "run-create-grafana-dashboard-service"
 
