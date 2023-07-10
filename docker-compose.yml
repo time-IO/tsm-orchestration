@@ -223,6 +223,9 @@ services:
       MINIO_URL: "${MINIO_HOST:-minio:9000}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER:?Please define an minio root user!}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
+      SCHEDULER: "BasicScheduler"
+      SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/extractor/run"
+      # remove if MR!52 of ufz-tsm/tsm-dispatcher is merged
       SCHEDULER_ENDPOINT_URL: "http://basic-demo-scheduler:5000/extractor/run"
     command:
       - "run-process-new-file-service"
@@ -244,6 +247,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      SCHEDULER: "BasicScheduler"
+      SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/qaqc/run"
+      # remove if MR!52 of ufz-tsm/tsm-dispatcher is merged
       SCHEDULER_ENDPOINT_URL: "http://basic-demo-scheduler:5000/qaqc/run"
     command:
       - "run-qaqc"
