@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE FOREIGN TABLE IF NOT EXISTS public.measured_quantity (
+CREATE FOREIGN TABLE IF NOT EXISTS public.sms_cv_measured_quantity (
     id                  int4 not null,
     term                varchar(255) not null,
     provenance_uri      varchar(255),
