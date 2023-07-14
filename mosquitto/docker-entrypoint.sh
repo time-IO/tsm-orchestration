@@ -36,8 +36,13 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
   } >>/mosquitto-auth/mosquitto.acl
 fi
 
+if [ ! -d "/var/lib/mosquitto/tls" ]
+then
+    mkdir ./var/lib/mosquitto/tls
+fi
+
 # substitute env vars in config template
 ( echo "cat <<EOF" ; cat /etc/mosquitto/config/mosquitto.conf ; echo EOF ) | sh > /var/lib/mosquitto/mosquitto.conf
-
+( echo "cat <<EOF" ; cat /etc/mosquitto/config/tls/mosquitto.tls.conf ; echo EOF ) | sh > /var/lib/mosquitto/tls/mosquitto.tls.conf
 echo "$@"
 exec "$@"
