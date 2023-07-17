@@ -1,3 +1,5 @@
+BEGIN;
+
 create table public.contact
 (
     id            serial primary key,
@@ -180,6 +182,8 @@ create table public.datastream_link
     tsm_endpoint_id        integer
 );
 
+
+COMMIT;
 
 -- public.contact foreign keys
 --ALTER TABLE public.contact ADD CONSTRAINT "fk_Contact_created_by_id" FOREIGN KEY (created_by_id) REFERENCES public."user"(id);
