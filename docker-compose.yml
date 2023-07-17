@@ -190,6 +190,7 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@\
         ${CREATEDB_POSTGRES_HOST:-database}/\
         ${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
     command:
       - "run-create-database-schema-action-service"
