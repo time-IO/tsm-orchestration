@@ -31,11 +31,25 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_contact_role (
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_dynamic_location_begin_action (
+    id                  integer not null,
     configuration_id    integer not null,
     begin_date          timestamp with time zone,
     end_date            timestamp with time zone
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_dynamic_location_begin_action');
+
+
+CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_static_location_begin_action (
+    id                  integer not null,
+    x                   double precision,
+    y                   double precision,
+    label               varchar(256),
+    configuration_id    integer not null,
+    begin_date          timestamp with time zone,
+    begin_description   text,
+    end_date            timestamp with time zone
+)
+    SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_static_location_begin_action');
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device (

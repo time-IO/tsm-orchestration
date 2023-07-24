@@ -75,6 +75,30 @@ create table public.configuration_dynamic_location_begin_action
 );
 
 
+create table public.configuration_static_location_begin_action
+(
+    created_at           timestamp with time zone,
+    updated_at           timestamp with time zone,
+    id                   serial primary key,
+    configuration_id     integer                  not null,
+    begin_date           timestamp with time zone not null,
+    begin_description    text,
+    begin_contact_id     integer                  not null,
+    x_property_id        integer,
+    y_property_id        integer,
+    z_property_id        integer,
+    epsg_code            varchar(256),
+    elevation_datum_name varchar(256),
+    elevation_datum_uri  varchar(256),
+    created_by_id        integer,
+    updated_by_id        integer,
+    end_date             timestamp with time zone,
+    end_description      text,
+    end_contact_id       integer,
+    label                varchar(256)
+);
+
+
 create table public.device
 (
     created_at            timestamp with time zone,
