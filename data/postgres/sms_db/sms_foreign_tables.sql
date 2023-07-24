@@ -32,8 +32,10 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_contact_role (
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_dynamic_location_begin_action (
     id                  integer not null,
+    label               varchar(256),
     configuration_id    integer not null,
     begin_date          timestamp with time zone,
+    begin_description   text,
     end_date            timestamp with time zone
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_dynamic_location_begin_action');
