@@ -50,6 +50,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_static_location_begi
     id                  integer not null,
     x                   double precision,
     y                   double precision,
+    z                   double precision,
     label               varchar(256),
     configuration_id    integer not null,
     begin_date          timestamp with time zone,
