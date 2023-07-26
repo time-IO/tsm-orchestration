@@ -78,7 +78,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_mount_action (
     device_id           integer not null,
     offset_x            double precision,
     offset_y            double precision,
-    offset_z            double precision
+    offset_z            double precision,
+    begin_date          timestamp with time zone not null,
+    end_date            timestamp with time zone
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device_mount_action');
 
