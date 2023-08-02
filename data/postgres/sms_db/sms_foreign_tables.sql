@@ -31,11 +31,33 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_contact_role (
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_dynamic_location_begin_action (
-    configuration_id    integer not null,
-    begin_date          timestamp with time zone,
-    end_date            timestamp with time zone
+    id                      integer not null,
+    label                   varchar(256),
+    configuration_id        integer not null,
+    begin_date              timestamp with time zone not null,
+    x_property_id           integer,
+    y_property_id           integer,
+    z_property_id           integer,
+    epsg_code               varchar(256),
+    elevation_datum_name    varchar(256),
+    begin_description       text,
+    end_date                timestamp with time zone
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_dynamic_location_begin_action');
+
+
+CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_static_location_begin_action (
+    id                  integer not null,
+    x                   double precision,
+    y                   double precision,
+    z                   double precision,
+    label               varchar(256),
+    configuration_id    integer not null,
+    begin_date          timestamp with time zone,
+    begin_description   text,
+    end_date            timestamp with time zone
+)
+    SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_static_location_begin_action');
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device (
@@ -57,7 +79,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_mount_action (
     device_id           integer not null,
     offset_x            double precision,
     offset_y            double precision,
-    offset_z            double precision
+    offset_z            double precision,
+    begin_date          timestamp with time zone not null,
+    end_date            timestamp with time zone
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device_mount_action');
 
@@ -65,13 +89,17 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_mount_action (
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_property (
 	id		                integer not null,
     device_id               integer not null,
+    property_name           varchar(256) not null,
+    property_uri            varchar(256),
 	label		            varchar(256),
 	unit_name	            varchar(256),
     unit_uri                varchar(256),
     resolution              double precision,
+    resolution_unit_name    varchar(256),
     accuracy                double precision,
     measuring_range_min     double precision,
-    measuring_range_max     double precision
+    measuring_range_max     double precision,
+    aggregation_type_name   varchar(256)
 )
     SERVER sms_db OPTIONS(schema_name 'public', table_name 'device_property');
 
