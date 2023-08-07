@@ -215,6 +215,7 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@\
         ${CREATEDB_POSTGRES_HOST:-database}/\
         ${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL:-http://localhost/sta/}"
     command:
       - "run-create-new-frost-server-service"
 
