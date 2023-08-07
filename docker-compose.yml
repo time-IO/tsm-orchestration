@@ -554,7 +554,11 @@ services:
       - "tsmdl"
 
   frost:
-    image: "registry.hzdr.de/ufz-tsm/frost/frost:latest"
+    build:
+      context: "data/tomcat"
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
     restart: "${RESTART:-on-failure}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
