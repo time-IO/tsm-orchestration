@@ -505,6 +505,9 @@ services:
       - "DJANGO_HELMHOLTZ_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET:-00000000000000000000}"
       - "DJANGO_HELMHOLTZ_AAI_CONF_URL=${DJANGO_HELMHOLTZ_AAI_CONF_URL:\
             -https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration}"
+      - "MINIO_FTP_PORT=${MINIO_FTP_PORT:-127.0.0.1:40021}"
+      - "MINIO_SFTP_PORT=${MINIO_SFTP_PORT:-127.0.0.1:40022}"
+      - "PROXY_URL=${PROXY_URL:-http://localhost:80}"
     depends_on:
       database:
         condition: service_healthy
