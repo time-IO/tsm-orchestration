@@ -439,7 +439,7 @@ services:
 
   visualization:
     restart: "${RESTART:-on-failure}"
-    image: "grafana/grafana:latest:${GRAF_IMAGE_TAG:-latest}"
+    image: "grafana/grafana:${GRAF_IMAGE_TAG:-latest}"
     user: "${UID}:${GID}"
     environment:
       - "GF_SECURITY_ADMIN_USER=\
