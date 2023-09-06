@@ -16,7 +16,7 @@ services:
 
   database:
     restart: "${RESTART:-on-failure}"
-    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG:-latest}
+    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG:-latest-pg14}
     build:
       context: "data/postgres"
       args:
