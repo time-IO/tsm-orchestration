@@ -466,7 +466,7 @@ services:
       ${GRAFANA_USER:?Please define a grafana user}"
       - "GF_SECURITY_ADMIN_PASSWORD=\
       ${GRAFANA_PASSWORD:?Please define a grafana password}"
-      - "GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL:-http://localhost/visualization/}"
+      - "GF_SERVER_ROOT_URL=${GRAFANA_URL:-http://localhost/visualization/}"
       - "GF_SERVER_SERVE_FROM_SUB_PATH=true"
       - "GF_AUTH_GENERIC_OAUTH_ENABLED=true"
       - "GF_AUTH_GENERIC_OAUTH_NAME=Helmholtz AAI"
