@@ -329,6 +329,29 @@ services:
       - "run-create-grafana-dashboard-service"
 
 
+  worker-grafana-user-orgs:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    restart: "${RESTART:-on-failure}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
+      object-storage:
+        condition: "service_healthy"
+      visualization:
+        condition: "service_started"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TOPIC: "user_login"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      GRAFANA_URL: "${GRAFANA_URL:-http://proxy./visualization/}"
+      GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
+      GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
+    command:
+      - "run-create-grafana-user-orgs-service"
+
+
   basic-demo-scheduler:
     image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
@@ -443,18 +466,19 @@ services:
       ${GRAFANA_USER:?Please define a grafana user}"
       - "GF_SECURITY_ADMIN_PASSWORD=\
       ${GRAFANA_PASSWORD:?Please define a grafana password}"
-      - "GRAFANA_DEFAULT_DATASOURCE_URL=\
-      ${GRAFANA_DEFAULT_DATASOURCE_URL:-database:5432}"
-      - "GRAFANA_DEFAULT_DATASOURCE_DATABASE=\
-      ${GRAFANA_DEFAULT_DATASOURCE_DATABASE:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_USER=\
-      ${GRAFANA_DEFAULT_DATASOURCE_USER:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_PASSWORD=\
-      ${GRAFANA_DEFAULT_DATASOURCE_PASSWORD:-postgres}"
-      - "GRAFANA_DEFAULT_DATASOURCE_SSLMODE=\
-      ${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
-      - "GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/visualization/"
+      - "GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/visualization/"
       - "GF_SERVER_SERVE_FROM_SUB_PATH=True"
+      - "GF_AUTH_GENERIC_OAUTH_ENABLED=true"
+      - "GF_AUTH_GENERIC_OAUTH_NAME=Helmholtz AAI"
+      - "GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID}"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      - "GF_AUTH_GENERIC_OAUTH_SCOPES=email profile eduperson_principal_name"
+      - "GF_AUTH_GENERIC_OAUTH_AUTH_URL=${GF_AUTH_GENERIC_OAUTH_AUTH_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${GF_AUTH_GENERIC_OAUTH_TOKEN_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_API_URL=${GF_AUTH_GENERIC_OAUTH_API_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=eduperson_principal_name"
+      - "GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC=true"
     volumes:
       - "./grafana/provisioning:/etc/grafana/provisioning/"
       - "./data/grafana/:/var/lib/grafana"
@@ -468,7 +492,7 @@ services:
       && python3 manage.py loaddata admin_interface_theme_foundation.json
       && python3 manage.py loaddata ufz_theme.json
       && python3 manage.py createsuperuser --noinput
-      || echo 'Speruser already created'
+      || echo 'Superuser already created'
       && python3 manage.py collectstatic --noinput
       && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
     user: "appuser"
@@ -548,6 +572,7 @@ services:
       - "visualization"
       - "object-storage"
       - "tsmdl"
+      - "frost"
 
   frost:
     build:
