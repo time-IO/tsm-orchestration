@@ -321,7 +321,7 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
-      GRAFANA_URL: "${GRAFANA_URL:-http://proxy./visualization/}"
+      GRAFANA_URL: "${GRAFANA_URL:-http://visualization:3000}"
       GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
@@ -345,7 +345,7 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
-      GRAFANA_URL: "${GRAFANA_URL:-http://proxy./visualization/}"
+      GRAFANA_URL: "${GRAFANA_URL:-http://visualization:3000}"
       GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
     command:
@@ -466,7 +466,7 @@ services:
       ${GRAFANA_USER:?Please define a grafana user}"
       - "GF_SECURITY_ADMIN_PASSWORD=\
       ${GRAFANA_PASSWORD:?Please define a grafana password}"
-      - "GF_SERVER_ROOT_URL=${GRAFANA_URL:-http://localhost/visualization/}"
+      - "GF_SERVER_ROOT_URL=${GRAFANA_PROXY_URL:-http://localhost/visualization/}"
       - "GF_SERVER_SERVE_FROM_SUB_PATH=true"
       - "GF_AUTH_GENERIC_OAUTH_ENABLED=true"
       - "GF_AUTH_GENERIC_OAUTH_NAME=Helmholtz AAI"
