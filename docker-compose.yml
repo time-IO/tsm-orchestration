@@ -355,6 +355,9 @@ services:
   basic-demo-scheduler:
     image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
+    # prevent blocking/slowing-down of other services
+    # if many scheduler jobs occur at the same time
+    cpu_percent: 50
     healthcheck:
       test: [ "CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1" ]
       interval: 10s
