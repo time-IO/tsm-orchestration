@@ -357,7 +357,7 @@ services:
     restart: "${RESTART:-on-failure}"
     # prevent blocking/slowing-down of other services
     # if many scheduler jobs occur at the same time
-    cpu_percent: 50
+    cpu_count: ${SCHEDULER_CPU_COUNT:-1}
     healthcheck:
       test: [ "CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1" ]
       interval: 10s
