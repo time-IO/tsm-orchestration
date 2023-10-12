@@ -233,16 +233,13 @@ services:
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
       SCHEDULER: "BasicScheduler"
       SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/extractor/run"
-      # SCHEDULER: "SlurmScheduler"
-      # SCHED_ENDPOINT_URL: "https://head3.eve.ufz.de"
-      # disable MQTT on eve, pass "None"
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
+      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
       SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
       SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
       SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
-      SCHED_SLURM_RESTAPI_VERSION: "{SCHED_SLURM_RESTAPI_VERSION}"
     command:
       - "run-process-new-file-service"
 
@@ -265,16 +262,13 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
       SCHEDULER: "BasicScheduler"
       SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/qaqc/run"
-      # SCHEDULER: "SlurmScheduler"
-      # SCHED_ENDPOINT_URL: "https://head3.eve.ufz.de"
-      # all SCHED_SOMETHING are just used by SlurmScheduler
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
       SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
+      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
       SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
       SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
-      SCHED_SLURM_RESTAPI_VERSION: "{SCHED_SLURM_RESTAPI_VERSION}"
     command:
       - "run-qaqc"
 
