@@ -267,7 +267,7 @@ services:
       SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/qaqc/run"
       # SCHEDULER: "SlurmScheduler"
       # SCHED_ENDPOINT_URL: "https://head3.eve.ufz.de"
-      # disable MQTT on eve, pass "None"
+      # all SCHED_SOMETHING are just used by SlurmScheduler
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
