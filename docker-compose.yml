@@ -12,7 +12,7 @@ services:
     user: "${UID}:${GID}"
     volumes:
       - "./data/minio/certs/:/tmp/certs"
-      - "./nginx/html/:/home/tsm/"
+      - "./nginx/html/:/home/tsm/html"
 
 
   database:
@@ -586,11 +586,18 @@ services:
       - "${PROXY_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro"
       - "${PROXY_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
     depends_on:
-      - "frontend"
-      - "visualization"
-      - "object-storage"
-      - "tsmdl"
-      - "frost"
+      frontend:
+        condition: "service_started"
+      visualization:
+        condition: "service_started"
+      object-storage:
+        condition: "service_started"
+      tsmdl:
+        condition: "service_started"
+      frost:
+        condition: "service_started"
+      init:
+        condition: "service_completed_successfully"
 
   frost:
     build:
