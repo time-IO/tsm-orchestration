@@ -14,6 +14,7 @@ docker-service-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
+    - "docker-compose logs init"
     - "sleep 15"
     - "docker ps"
     - "cd .gitlab/ci"

@@ -14,7 +14,11 @@ ls -lah /tmp/certs/minio-ftp.key /tmp/certs/minio-ftp.crt 2>/dev/null \
     -addext "basicConstraints=critical,CA:FALSE"
 
 # Make nginx proxy landing page content accessible for all users
-chmod a+x /tmp/html
-chmod a+x /tmp/html/css
-chmod a+x /tmp/html/images
-chmod -R a+r /tmp/html
+
+tree -pugfi /home/tsm
+
+chmod a+x /home/tsm/css
+chmod a+x /home/tsm/images
+chmod -R a+r /home/tsm/
+
+tree -pugfi /home/tsm
