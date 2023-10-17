@@ -12,3 +12,9 @@ ls -lah /tmp/certs/minio-ftp.key /tmp/certs/minio-ftp.crt 2>/dev/null \
     -subj "/C=DE/O=Helmholtz-Zentrum für Umweltforschung GmbH - UFZ/OU=RDM/CN=ZID TSM Development CA" \
     -addext "subjectAltName = DNS:localhost" \
     -addext "basicConstraints=critical,CA:FALSE"
+
+# Make nginx proxy landing page content accessible for all users
+chmod a+x /tmp/html
+chmod a+x /tmp/html/css
+chmod a+x /tmp/html/images
+chmod -R a+r /tmp/html

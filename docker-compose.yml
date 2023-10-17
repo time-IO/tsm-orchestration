@@ -12,6 +12,7 @@ services:
     user: "${UID}:${GID}"
     volumes:
       - "./data/minio/certs/:/tmp/certs"
+      - "./nginx/html/:/tmp/html"
 
 
   database:
