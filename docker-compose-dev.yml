@@ -34,6 +34,11 @@ services:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
+  worker-grafana-user-orgs:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
+
   basic-demo-scheduler:
     volumes:
       - "${DEV_EXTRACTOR_SRC_DIR:-../tsm-extractor/src}:/home/appuser/app/src"

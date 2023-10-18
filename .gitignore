@@ -1,7 +1,8 @@
-.env
+.env*
 venv
 .idea
 data/
+!.env.example
 !data/minio/vol0/.gitkeep
 !data/minio/vol1/.gitkeep
 !data/minio/vol2/.gitkeep
