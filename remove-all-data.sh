@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-rm -rf data/minio/vol0/* data/minio/vol0/.minio.sys data/minio/vol0/.writable-check-*
-rm -rf data/minio/certs/*
-rm -rf data/postgres/data/*
-touch data/postgres/data/.gitkeep
+rm -r data/minio/vol0/* data/minio/vol0/.minio.sys
+rm -r data/minio/certs/*
+rm -r data/postgres/data/*
 rm data/mosquitto/auth/mosquitto.acl
 rm data/mosquitto/auth/mosquitto.passwd
-rm -rf data/grafana/*
+rm -r data/grafana/*
+rm -r data/tomcat/context/*
