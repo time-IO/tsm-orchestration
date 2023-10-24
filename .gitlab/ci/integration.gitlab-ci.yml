@@ -14,8 +14,8 @@ docker-service-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
+    - "sleep 20"
     - "docker-compose logs init"
-    - "sleep 15"
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
@@ -36,7 +36,7 @@ mqtt-service-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
-    - "sleep 15"
+    - "sleep 20"
     - "docker-compose exec -T mqtt-broker
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
@@ -49,8 +49,9 @@ mqtt-service-test:
   tags:
     - "dind"
 
+# can probably be removed, when all components are covered by end-to-end tests
 thing-creation-test:
-  image: "docker:20.10.16-dind"
+  image: "docker:20.10.16"
   stage: "integration"
   before_script:
     - "apk add --no-cache curl postgresql bash"
@@ -66,7 +67,7 @@ thing-creation-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
-    - "sleep 30"
+    - "sleep 20"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
@@ -81,22 +82,21 @@ thing-creation-test:
     - "bash .gitlab/ci/databasetest.sh"
   tags:
     - "dind"
-#
-#debug-ci:
-#  image: "docker:20.10.16-dind"
-#  stage: "integration"
-#  script:
-#    - "mv .env.example .env"
-#    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
-#    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
-#    - "cp .env .gitlab/ci/.env"
-#    - "cat .gitlab/ci/.env"
-#    - "docker-compose up -d database"
-#    - "docker inspect $(docker-compose ps -q database)"
-#    - "docker port $(docker-compose ps -q database)"
-#    - "ip addr"
-#    - "nslookup docker || true"
-#    - "hostname"
-#    - "hostname -f || true"
-#  tags:
-#    - "hifis"
+
+proxy-test:
+  image: "docker:20.10.16-dind"
+  stage: "integration"
+  before_script:
+    "apk add --no-cache curl"
+  script:
+    - "cp -env-example .env"
+    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+    - "export PROXY_URL=$(grep "PROXY_URL=" .env | cut -d= -f2)"
+    - "curl -Isf ${PROXY_URL} || exit 1"
+    - "curl -Isf ${PROXY_URL}/frontend/ || exit 1"
+    - "curl -Isf ${PROXY_URL}/object-storage/ || exit 1"
+    - "curl -Isf ${PROXY_URL}/visualization/ || exit 1"
+    - "curl -Isf ${PROXY_URL}/sta/ || exit 1"
+  tags:
+    - "dind"

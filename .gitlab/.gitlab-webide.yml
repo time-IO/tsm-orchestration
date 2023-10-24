@@ -6,5 +6,6 @@ terminal:
     - "apk add --no-cache curl"
     - "apk add --no-cache postgresql"
     - "apk add --no-cache bash"
+    - "apk add --no-cache jq"
   variables:
     POSTGRES_SSLMODE: disable
