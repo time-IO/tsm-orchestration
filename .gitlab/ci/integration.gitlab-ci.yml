@@ -87,7 +87,8 @@ proxy-test:
   image: "docker:20.10.16"
   stage: "integration"
   before_script:
-    "apk add --no-cache curl"
+    - "apk add --no-cache curl"
+    - "apk add --no-cache iputils"
   script:
     - "cp .env.example .env"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
@@ -97,6 +98,8 @@ proxy-test:
     - "docker-compose ps"
     - "export PROXY_URL=http://localhost:80"
     - "echo ${PROXY_URL}"
+    - "echo ping to localhost"
+    - "ping -c 4 localhost"
     - "echo checking proxy"
     - "curl -I ${PROXY_URL}"
     - "echo checking frontend"
