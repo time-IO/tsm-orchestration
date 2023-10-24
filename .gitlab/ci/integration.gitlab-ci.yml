@@ -93,7 +93,7 @@ proxy-test:
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 10"
     - "docker-compose logs proxy"
-    - "export PROXY_URL=http://localhost"
+    - "export PROXY_URL=http://docker:80"
     - "echo ${PROXY_URL}"
     - "echo checking frontend"
     - "curl -I ${PROXY_URL}/frontend/"
