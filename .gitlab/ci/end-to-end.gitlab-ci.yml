@@ -3,7 +3,7 @@ object-storage-test:
   image: "docker:20.10.16"
   stage: "end-to-end"
   before_script:
-    - "apk add --co-cache curl jq"
+    - "apk add --no-cache curl jq"
   script: 
     - "cp .env.example .env"
     - "docker-compose up -d --force-recreate -V --quiet-pull --build"
