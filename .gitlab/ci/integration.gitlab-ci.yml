@@ -13,9 +13,9 @@ docker-service-test:
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d"
+    - "docker compose up -d"
     - "sleep 15"
-    - "docker-compose logs init"
+    - "docker compose logs init"
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
@@ -35,17 +35,17 @@ mqtt-service-test:
      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d"
+    - "docker compose up -d"
     - "sleep 15"
-    - "docker-compose exec -T mqtt-broker
+    - "docker compose exec -T mqtt-broker
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
-    - "docker-compose restart mqtt-broker"
+    - "docker compose restart mqtt-broker"
     - "sleep 30"
-    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
+    - 'echo "very nice data!" | docker compose exec -T mqtt-broker sh -c
        "mosquitto_pub -h mqtt-broker -t
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
-    - 'docker-compose logs mqtt-cat'
+    - 'docker compose logs mqtt-cat'
   tags:
     - "dind"
 
@@ -65,10 +65,10 @@ thing-creation-test:
       $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 10"
-    - "docker-compose logs object-storage"
-    - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
+    - "docker compose logs object-storage"
+    - 'cat thing-event-msg.json | docker compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc \
       --create-dirs \
@@ -90,11 +90,11 @@ proxy-test:
     - "apk add --no-cache iputils"
   script:
     - "cp .env.example .env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 10"
-    - "docker-compose restart proxy"
-    - "docker-compose logs proxy"
-    - "docker-compose ps"
+    - "docker compose restart proxy"
+    - "docker compose logs proxy"
+    - "docker compose ps"
     - "export PROXY_URL=http://localhost:80"
     - "echo ${PROXY_URL}"
     - "echo ping to localhost"

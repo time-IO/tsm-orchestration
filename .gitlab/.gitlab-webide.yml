@@ -1,7 +1,7 @@
 ---
 
 terminal:
-  image: "docker:20.10.16-dind"
+  image: "docker:24.0.6-dind"
   before_script:
     - "apk add --no-cache curl"
     - "apk add --no-cache postgresql"
