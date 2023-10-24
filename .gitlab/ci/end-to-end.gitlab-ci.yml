@@ -4,9 +4,7 @@ object-storage-test:
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
-  script: 
-    - "echo ${DOCKER_TLS_CERTDIR}"
-    - "ls /certs"
+  script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 30" 
@@ -27,8 +25,9 @@ database-test:
   before_script:
     - "apk add --no-cache postgresql-client"
   script:
-    - "echo ${DOCKER_TLS_CERTDIR}"
-    - "ls /certs"
+    - "ls -lah /certs/ca"
+    - "ls -lah /certs/client"
+    - "ls -lah /certs/server"
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 30" 
