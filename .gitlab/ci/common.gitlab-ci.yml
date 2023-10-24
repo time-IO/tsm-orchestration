@@ -1,9 +1,7 @@
 ---
 stages:
-#  - "lint"
-  - "end-to-end"
   - "integration"
-
+  - "end-to-end"
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
