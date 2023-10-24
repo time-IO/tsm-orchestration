@@ -1,6 +1,6 @@
 ---
 object-storage-test:
-  image: "docker:20.10.16"
+  image: "docker:20.10.16-dind"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
@@ -20,7 +20,7 @@ object-storage-test:
     - "dind"
 
 database-test:
-  image: "docker:20.10.16"
+  image: "docker:20.10.16-dind"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache postgresql-client"
