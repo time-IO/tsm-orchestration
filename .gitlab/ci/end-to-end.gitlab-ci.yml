@@ -36,7 +36,7 @@ database-test:
     - "export DB_USER=$(cat database.json | jq -r '.[]."fields"."username"')"
     - "export DB_PASSWORD=$(cat database.json | jq -r '.[]."fields"."password"')"
     - "export DB_NAME=$(cat database.json | jq -r '.[]."fields"."name"')"
-    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h localhost -d ${DB_NAME} -tAc 'SELECT * from {DB_USER}.thing' &>/dev/null || exit 1"
+    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h localhost -d ${DB_NAME} -tAc \"SELECT * from {DB_USER}.thing\" &>/dev/null || exit 1"
   tags:
     - "dind"
 
