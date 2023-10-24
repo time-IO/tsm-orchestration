@@ -84,7 +84,7 @@ thing-creation-test:
     - "dind"
 
 proxy-test:
-  image: "docker:20.10.16-dind"
+  image: "docker:20.10.16"
   stage: "integration"
   before_script:
     "apk add --no-cache curl"
@@ -92,9 +92,13 @@ proxy-test:
     - "cp .env.example .env"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 10"
+    - "docker-compose restart proxy"
     - "docker-compose logs proxy"
-    - "export PROXY_URL=http://docker:80"
+    - "docker-compose ps"
+    - "export PROXY_URL=http://localhost:80"
     - "echo ${PROXY_URL}"
+    - "echo checking proxy"
+    - "curl -I ${PROXY_URL}"
     - "echo checking frontend"
     - "curl -I ${PROXY_URL}/frontend/"
     - "echo checking object storage"
