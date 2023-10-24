@@ -89,7 +89,7 @@ proxy-test:
   before_script:
     "apk add --no-cache curl"
   script:
-    - "cp -env-example .env"
+    - "cp .env.example .env"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
     - "export PROXY_URL=$(grep \"PROXY_URL=\" .env | cut -d= -f2)"
