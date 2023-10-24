@@ -14,7 +14,7 @@ docker-service-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
-    - "sleep 20"
+    - "sleep 10"
     - "docker-compose logs init"
     - "docker ps"
     - "cd .gitlab/ci"
@@ -36,7 +36,7 @@ mqtt-service-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d"
-    - "sleep 20"
+    - "sleep 10"
     - "docker-compose exec -T mqtt-broker
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
@@ -67,7 +67,7 @@ thing-creation-test:
     - "echo $CI_JOB_TOKEN | docker login \
      $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
-    - "sleep 20"
+    - "sleep 10"
     - "docker-compose logs object-storage"
     - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
       "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
@@ -91,8 +91,9 @@ proxy-test:
   script:
     - "cp .env.example .env"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
-    - "sleep 20"
-    - "export PROXY_URL=$(grep \"^PROXY_URL=\" .env | cut -d= -f2)"
+    - "sleep 10"
+    - "docker-compose logs proxy"
+    - "export PROXY_URL=http://localhost"
     - "echo ${PROXY_URL}"
     - "echo checking proxy"
     - "curl -Isf ${PROXY_URL} || exit 1"
