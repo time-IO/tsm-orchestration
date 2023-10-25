@@ -16,7 +16,7 @@ object-storage-test:
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
-    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://object-storage:40021 -I -s -o /dev/null && echo \"yes that worked\"|| echo \"no it didn't\""
+    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://127.0.0.1:40021 -I -s -o /dev/null && echo \"yes that worked\"|| echo \"no it didn't\""
   tags:
     - "dind"
 
@@ -41,7 +41,7 @@ database-test:
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "export DB_PASSWORD=$(cat database.json | jq -r '.[].fields.password')"
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
-    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h database -P 5432 -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" && echo \"yes that worked\" || echo \no it didn't\""
+    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h 127.0.0.1 -p 5432 -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" && echo \"yes that worked\" || echo \no it didn't\""
   tags:
     - "dind"
 
