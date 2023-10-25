@@ -43,6 +43,6 @@ database-test:
     - "export DB_PASSWORD=$(cat database.json | jq -r '.[].fields.password')"
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
     - "docker compose ps"
-    - "psql \"postgresql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5432/${DB_NAME}\" -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null && echo \"yes that worked\" || echo \"no it didn't\""
+    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h 127.0.0.1 -p 5432 -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null && echo \"yes that worked\" || echo \"no it didn't\""
   tags:
     - "dind"

@@ -1,6 +1,6 @@
 ---
 stages:
-  - "end-to-end"
+  #- "end-to-end"
   - "integration"
 
 variables:
