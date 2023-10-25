@@ -516,6 +516,8 @@ services:
     user: "appuser"
     volumes:
       - "frontend-statics:/home/appuser/app/static"
+      - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
+      - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
     entrypoint: ""
     # ports:
     #   - "127.0.0.1:8000:8000"
