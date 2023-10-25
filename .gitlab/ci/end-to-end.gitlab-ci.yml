@@ -7,7 +7,7 @@ object-storage-test:
   script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 5" 
+    - "sleep 15" 
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
@@ -32,7 +32,7 @@ database-test:
     - "ls -lah /certs/server"
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 5" 
+    - "sleep 15" 
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
