@@ -19,6 +19,8 @@ docker-service-test:
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
+  tags:
+    - "dind"
 
 mqtt-service-test:
   stage: "integration"
@@ -42,6 +44,8 @@ mqtt-service-test:
        "mosquitto_pub -h mqtt-broker -t
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
     - 'docker compose logs mqtt-cat'
+  tags:
+    - "dind"
 
 thing-creation-test:
   stage: "integration"
@@ -72,6 +76,8 @@ thing-creation-test:
     - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
     - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l"
     - "bash .gitlab/ci/databasetest.sh"
+  tags:
+    - "dind"
 
 proxy-test:
   stage: "integration"
@@ -99,3 +105,5 @@ proxy-test:
     - "curl -I ${PROXY_URL}/visualization/"
     - "echo checking sta"
     - "curl -I ${PROXY_URL}/sta/"
+  tags:
+    - "dind"
