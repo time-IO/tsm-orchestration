@@ -16,11 +16,11 @@ RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
     && addgroup --system --gid ${GID} tomcat \
     && adduser --system --uid ${UID} --gid ${GID} tomcat \
     && mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
-    && wget -O $CATALINA_HOME/lib/postgis-jdbc.jar $POSTGIS_JDBC_URL \
-    && wget -O $CATALINA_HOME/lib/postgresql.jar $POSTGRESQL_URL \    
+    && wget --show-progress=off -O $CATALINA_HOME/lib/postgis-jdbc.jar $POSTGIS_JDBC_URL \
+    && wget --show-progress=off -O $CATALINA_HOME/lib/postgresql.jar $POSTGRESQL_URL \    
     && chown -R tomcat:tomcat $CATALINA_HOME \
     && mkdir -p /share \
-    && wget -O /share/FROST-Server.war $FROST_URL \
+    && wget --show-progress=off -O /share/FROST-Server.war $FROST_URL \
     && chown -R tomcat /share
 
 USER tomcat
