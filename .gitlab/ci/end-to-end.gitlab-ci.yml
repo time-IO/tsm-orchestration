@@ -17,7 +17,7 @@ object-storage-test:
     - "echo $MINIO_USER"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
     - "echo $MINIO_PASSWORD"
-    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
+    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://object-storage:40021 -I -s -o /dev/null || exit 1"
   tags:
     - "dind"
 
@@ -45,7 +45,7 @@ database-test:
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
     - "echo $DB_NAME"
     - "ping -c 4 127.0.0.1"
-    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -P 5432 -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
+    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h database -P 5432 -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
   tags:
     - "dind"
 
