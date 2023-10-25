@@ -5,7 +5,38 @@
       "fields": {
         "name": "urn:geant:helmholtz.de:group:UFZ-Timeseries-Management:Test#login-dev.helmholtz.de",
         "permissions": [
-          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 61, 62, 63, 64, 65, 66, 67, 68
+          29,
+          30,
+          31,
+          32,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          1,
+          2,
+          3,
+          4,
+          25,
+          26,
+          27,
+          28,
+          21,
+          22,
+          23,
+          24,
+          9,
+          10,
+          11,
+          12,
+          5,
+          6,
+          7,
+          8  
         ]
       }
     },
@@ -22,7 +53,7 @@
         "email": "example@example.com",
         "is_staff": true,
         "is_active": true,
-        "date_joined": "2023-10-23T15:02:50.394Z",
+        "date_joined": "2023-10-25T08:00:00.000Z",
         "groups": [],
         "user_permissions": []
       }
@@ -32,7 +63,7 @@
       "pk": 2,
       "fields": {
         "password": "",
-        "last_login": "2023-10-24T08:00:00.000Z",
+        "last_login": "2023-10-25T08:01:00.000Z",
         "is_superuser": false,
         "username": "test.user",
         "first_name": "Dr. Test",
@@ -40,7 +71,7 @@
         "email": "test.user@ufz.de",
         "is_staff": true,
         "is_active": true,
-        "date_joined": "2023-10-24T08:00:00.000Z",
+        "date_joined": "2023-10-25T08:01:00.000Z",
         "groups": [
           1
         ],
