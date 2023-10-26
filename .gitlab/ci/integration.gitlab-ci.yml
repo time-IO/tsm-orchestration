@@ -3,11 +3,12 @@ proxy-test:
   image: "docker:24.0.6-dind"
   stage: "integration"
   before_script:
-    - "apk add --no-cache curl bash jq"
+    - "apk add --no-cache curl bash jq net-tools"
   script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 5"
+    - "netstat -tulpn"
     - "bash .gitlab/ci/proxytest.sh"
   tags:
     - "dind"
