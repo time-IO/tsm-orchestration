@@ -6,7 +6,7 @@ proxy-test:
     - "apk add --no-cache curl iproute2 net-tools"
   script:
     - "cp .env.example .env"
-    - "docker compose up proxy -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 5"
     - "ip addr"
     - "ifconfig"
