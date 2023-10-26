@@ -1,6 +1,5 @@
 ---
 proxy-test:
-  image: "docker:24.0.6-dind"
   stage: "integration"
   before_script:
     - "apk add --no-cache curl bash jq net-tools"

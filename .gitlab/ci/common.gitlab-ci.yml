@@ -5,6 +5,3 @@ stages:
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
-services:
-  - "docker:24.0.6-dind"
-
