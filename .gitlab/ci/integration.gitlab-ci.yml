@@ -3,7 +3,7 @@ proxy-test:
   stage: "integration"
   before_script:
     - "apt update"
-    - "apt install curl bash jq net-tools"
+    - "apt -y install curl bash jq net-tools"
   script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
