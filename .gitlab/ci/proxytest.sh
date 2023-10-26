@@ -6,14 +6,9 @@ GATEWAY_IP=$(docker inspect tsm-orchestration-proxy-1 | jq -r .[].NetworkSetting
 curl --version
 
 echo "running proxytest.sh"
+curl http://localhost && echo yes || echo no
 curl http://localhost:80 && echo yes || echo no
-#echo ""
-echo "checking http://0.0.0.0"
-curl 0.0.0.0 && echo yes || echo no
-#echo ""
-#echo "checking http://${GATEWAY_IP}:80"
-#curl ${GATEWAY_IP}:80 && echo yes || echo no
-#echo ""
-#echo "checking http://${GATEWAY_IP}"
-#curl ${GATEWAY_IP} && echo yes || echo no
-
+curl http://127.0.0.1 && echo yes || echo no
+curl http://127.0.0.1:80 && echo yes || echo no
+curl $PROXY_IP && echo yes || echo no
+curl $GATEWAY_IP && echo yes || echo no
