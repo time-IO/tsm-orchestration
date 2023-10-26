@@ -3,7 +3,7 @@ proxy-test:
   stage: "integration"
   image: docker:24.0.6-dind
   before_script:
-    - "apk add --no-cache jq curl"
+    - "apk add --no-cache jq curl bash"
   script:
     - "cp .env.example .env"
     - "docker compose pull -q"
