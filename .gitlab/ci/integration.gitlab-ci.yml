@@ -3,14 +3,14 @@ proxy-test:
   stage: "integration"
   image: "docker:24.0.6-dind"
   before_script:
-    - "apk add --no-cache curl"
+    - "apk add --no-cache curl iproute2"
     - "cp .env.example .env"
     - "docker compose pull -q"
     - "docker compose build -q"
-  script:
-    - "docker info"
     - "docker compose up -d -V"
     - "docker compose ps"
-    - "curl http://docker:80"
+  script:
+    - "ip a"
+    - "curl -I http://docker"
   tags:
     - "dind"
