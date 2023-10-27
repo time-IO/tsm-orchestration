@@ -11,6 +11,7 @@ proxy-test:
     - "docker compose ps"
   script:
     - "ip a"
+    - "sleep 30"
     - "curl -I http://docker"
   tags:
     - "dind"
