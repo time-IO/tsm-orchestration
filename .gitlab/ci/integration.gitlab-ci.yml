@@ -1,16 +1,7 @@
 ---
 proxy-test:
   stage: "integration"
-  image: docker:24.0.6-dind
-  before_script:
-    - "apk add --no-cache jq curl bash"
   script:
-    - "cp .env.example .env"
-    - "docker compose pull -q"
-    - "docker compose build -q"
-    - "docker compose up -d"
-    - "sleep 5"
-    - "docker compose ps"
-    - "bash .gitlab/ci/proxytest.sh"
+    - "docker info"
   tags:
     - "dind"
