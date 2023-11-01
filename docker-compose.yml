@@ -147,7 +147,7 @@ services:
       - "/vol0"
     healthcheck:
       test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
-      :-http://localhost:9000}/minio/health/live"]
+      :-http://docker:9000}/minio/health/live"]
       interval: "${MINIO_HEALTHCHECK_INTERVAL:-2s}"
       timeout: 5s
       retries: 15
