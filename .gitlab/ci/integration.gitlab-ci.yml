@@ -10,8 +10,10 @@ proxy-test:
     - "docker compose up -d -V"
     - "docker compose ps"
   script:
+    - "docker network ls"
+    - "docker volume ls"
     - "ip a"
-    - "sleep 30"
-    - "curl -I http://docker"
+    - "sleep 20"
+    - "curl -I http://localhost:80"
   tags:
     - "dind"
