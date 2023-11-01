@@ -494,7 +494,8 @@ services:
     restart: "${RESTART:-on-failure}"
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
     depends_on:
-      mqtt-broker: "service_healthy"
+      mqtt-broker: 
+        condition: "service_healthy"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
