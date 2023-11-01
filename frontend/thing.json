@@ -3,7 +3,7 @@
       "model": "tsm.parsertype",
       "pk": 1,
       "fields": {
-        "name": "CSV"
+        "name": "CsvParser"
       }
     },
     {
