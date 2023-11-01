@@ -182,9 +182,9 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service healthy"
+        condition: "service_healthy"
       database:
-        condition: "service healthy"
+        condition: "service_healthy"
     networks:
       - "timeio"
     environment:
@@ -209,11 +209,11 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service healthy"
+        condition: "service_healthy"
       database:
-        condition: "service healthy"
+        condition: "service_healthy"
       frost:
-        condition: "service started"
+        condition: "service_started"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
     networks:
@@ -303,9 +303,9 @@ services:
     restart: on-failure
     depends_on:
       mqtt-broker:
-        condition: "service healthy"
+        condition: "service_healthy"
       database:
-        condition: "service healthy"
+        condition: "service_healthy"
     networks:
       - "timeio"
     environment:
@@ -329,9 +329,9 @@ services:
     restart: on-failure
     depends_on:
       mqtt-broker:
-        condition: "service healthy"
+        condition: "service_healthy"
       database:
-        condition: "service healthy"
+        condition: "service_healthy"
     networks:
       - "timeio"
     environment:
@@ -494,7 +494,7 @@ services:
     restart: "${RESTART:-on-failure}"
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
     depends_on:
-      mqtt-broker: "service healthy"
+      mqtt-broker: "service_healthy"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
