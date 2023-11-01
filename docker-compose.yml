@@ -147,7 +147,7 @@ services:
       - "/vol0"
     healthcheck:
       test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
-      :-http://docker:9000}/minio/health/live"]
+      :-http://localhost:9000}/minio/health/live"]
       interval: "${MINIO_HEALTHCHECK_INTERVAL:-2s}"
       timeout: 5s
       retries: 15
@@ -160,7 +160,7 @@ services:
       mqtt-broker:
         condition: "service_healthy"
       object-storage:
-        condition: "service_healthy"
+        condition: "service_started"
     networks:
       - "timeio"
     environment:
@@ -235,7 +235,7 @@ services:
       mqtt-broker:
         condition: "service_healthy"
       object-storage:
-        condition: "service_healthy"
+        condition: "service_started"
       basic-demo-scheduler:
         condition: "service_healthy"
     networks:
@@ -272,7 +272,7 @@ services:
       mqtt-broker:
         condition: "service_healthy"
       object-storage:
-        condition: "service_healthy"
+        condition: "service_started"
       basic-demo-scheduler:
         condition: "service_healthy"
     networks:
@@ -354,8 +354,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
-      object-storage:
-        condition: "service_healthy"
       visualization:
         condition: "service_started"
     networks:
@@ -379,8 +377,6 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_healthy"
-      object-storage:
         condition: "service_healthy"
       visualization:
         condition: "service_started"
@@ -496,7 +492,7 @@ services:
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
     depends_on:
       mqtt-broker: 
-        condition: "service_healthy"
+        condition: "service_started"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
@@ -599,7 +595,7 @@ services:
       database:
         condition: service_healthy
       mqtt-broker:
-        condition: service_started
+        condition: service_healthy
 
 
   tsmdl:
