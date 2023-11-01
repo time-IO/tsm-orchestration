@@ -95,7 +95,7 @@ services:
       - "${MINIO_FTP_PASV_PORTS:-127.0.0.1:30000-30010:30000-30010}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       init:
         condition: "service_completed_successfully"
     environment:
@@ -158,7 +158,7 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
     networks:
@@ -181,8 +181,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
-      - "mqtt-broker"
-      - "database"
+      mqtt-broker:
+        condition: "service healthy"
+      database:
+        condition: "service healthy"
     networks:
       - "timeio"
     environment:
@@ -206,8 +208,12 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
-      - "mqtt-broker"
-      - "database"
+      mqtt-broker:
+        condition: "service healthy"
+      database:
+        condition: "service healthy"
+      frost:
+        condition: "service started"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
     networks:
@@ -227,7 +233,7 @@ services:
     restart: "on-failure"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
       basic-demo-scheduler:
@@ -264,7 +270,7 @@ services:
     restart: "on-failure"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
       basic-demo-scheduler:
@@ -296,8 +302,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
-      - mqtt-broker
-      - database
+      mqtt-broker:
+        condition: "service healthy"
+      database:
+        condition: "service healthy"
     networks:
       - "timeio"
     environment:
@@ -320,8 +328,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
-      - mqtt-broker
-      - database
+      mqtt-broker:
+        condition: "service healthy"
+      database:
+        condition: "service healthy"
     networks:
       - "timeio"
     environment:
@@ -343,7 +353,7 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
       visualization:
@@ -369,7 +379,7 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
       visualization:
@@ -483,6 +493,8 @@ services:
   mqtt-cat:
     restart: "${RESTART:-on-failure}"
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
+    depends_on:
+      mqtt-broker: "service healthy"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
