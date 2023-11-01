@@ -29,5 +29,10 @@ proxy-test:
     - "docker compose logs mqtt-cat"
     - "sleep 5"
     - "PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -d $DB_NAME -h docker -p 5432 -tAc \"select * from thing\" || echo nope"
+    - "docker-compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
+    - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].\"fields\".\"access_key\"')"
+    - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].\"fields\".\"secret_key\"')"
+    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null && echo yes || echo nope"
+ 
   tags:
     - "dind"
