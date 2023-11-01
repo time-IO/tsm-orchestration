@@ -75,6 +75,8 @@ services:
       73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt"
       - "${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-\
       73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key"
+    networks:
+      - "timeio"
     user: "${UID}:${GID}"
     command: "${POSTGRES_EXTRA_PARAMS:-}"
     healthcheck:
@@ -122,6 +124,8 @@ services:
       - "${MINIO_FTP_TLS_KEY:-./data/minio/certs/minio-ftp.key}:/certs/minio-ftp.key:ro"
       # SSH Server key to provide constant ssh host key
       - "${MINIO_SFTP_HOSTKEY:-./data/minio/certs/id_ed25519}:/certs/id_ed25519:ro"
+    networks:
+      - "timeio"
     user: "${UID}:${GID}"
     command:
       - "server"
@@ -157,6 +161,8 @@ services:
         condition: "service_started"
       object-storage:
         condition: "service_healthy"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -177,6 +183,8 @@ services:
     depends_on:
       - "mqtt-broker"
       - "database"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -202,6 +210,8 @@ services:
       - "database"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -222,6 +232,8 @@ services:
         condition: "service_healthy"
       basic-demo-scheduler:
         condition: "service_healthy"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "object_storage_notification"
@@ -257,6 +269,8 @@ services:
         condition: "service_healthy"
       basic-demo-scheduler:
         condition: "service_healthy"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "data_parsed"
@@ -284,6 +298,8 @@ services:
     depends_on:
       - mqtt-broker
       - database
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "mqtt_ingest/#"
@@ -306,6 +322,8 @@ services:
     depends_on:
       - mqtt-broker
       - database
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -330,6 +348,8 @@ services:
         condition: "service_healthy"
       visualization:
         condition: "service_started"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -354,6 +374,8 @@ services:
         condition: "service_healthy"
       visualization:
         condition: "service_started"
+    networks:
+      - "timeio"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "user_login"
@@ -378,6 +400,8 @@ services:
       interval: 10s
       timeout: 2s
       retries: 5
+    networks:
+      - "timeio"
     environment:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
@@ -439,6 +463,8 @@ services:
       - "${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92\
       -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
       - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
+    networks:
+      - "timeio"
     tmpfs:
       - "/var/lib/mosquitto/:uid=${UID}"
     healthcheck:
@@ -461,6 +487,8 @@ services:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
         max-file: "${MQTT_CAT_FILE_COUNT:-10}"
+    networks:
+      - "timeio"
     command:
       - "mosquitto_sub"
       - "-h"
@@ -497,6 +525,8 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${GF_AUTH_GENERIC_OAUTH_API_URL}"
       - "GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=eduperson_principal_name"
       - "GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC=true"
+    networks:
+      - "timeio"
     volumes:
       - "./grafana/provisioning:/etc/grafana/provisioning/"
       - "./data/grafana/:/var/lib/grafana"
@@ -549,6 +579,8 @@ services:
       - "MINIO_FTP_PORT=${MINIO_FTP_PORT:-127.0.0.1:40021}"
       - "MINIO_SFTP_PORT=${MINIO_SFTP_PORT:-127.0.0.1:40022}"
       - "PROXY_URL=${PROXY_URL:-http://localhost:80}"
+    networks:
+      - "timeio"
     depends_on:
       database:
         condition: service_healthy
@@ -568,6 +600,8 @@ services:
       ${CREATEDB_POSTGRES_DATABASE:-postgres}"
       WEB_CONCURRENCY: 10
       UVICORN_ARGS: "${UVICORN_ARGS:-} --root-path /tsmdl"
+    networks:
+      - "timeio"
     depends_on:
       database:
         condition: service_healthy
@@ -587,6 +621,8 @@ services:
       - "./nginx/locations:/etc/nginx/locations:ro"
       - "${PROXY_TLS_CERT_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/public.crt:ro"
       - "${PROXY_TLS_KEY_PATH:-/tmp/c8cf2d92-73cd-11ec-b035-54e1ad7c5c19}:/etc/ssl/private.key:ro"
+    networks:
+      - "timeio"
     depends_on:
       frontend:
         condition: "service_started"
@@ -610,24 +646,27 @@ services:
     restart: "${RESTART:-on-failure}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
+    networks:
+      - "timeio"
 
   monitoring:
     image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     container_name: "cadvisor"
     ports:
-    - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
+      - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
     volumes:
-    - "/:/rootfs:ro"
-    - "/var/run:/var/run:ro"
-    - "/sys:/sys:ro"
-    - "/var/lib/docker/:/var/lib/docker:ro"
-
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks:
+      - "timeio"
 
 volumes:
   frontend-statics:
 
 
 networks:
-  tsm-orchestration:
+  timeio:
     driver: "bridge"
