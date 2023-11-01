@@ -15,8 +15,8 @@ proxy-test:
     - "ip a"
     - "sleep 20"
     - "curl -I http://localhost:80 || echo nope"
-    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -p 5432 -tAc "SELECT 1 || echo nope"
-    #- "docker compose exec -T frontend python3 manage.py loaddata user.json"
-    #- "docker compose exec -T frontend python3 manage.py loaddata thing.json"
+    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -p 5432 -tAc \"SELECT 1\" || echo nope"
+    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
+    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
   tags:
     - "dind"
