@@ -33,6 +33,7 @@ proxy-test:
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].\"fields\".\"access_key\"')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].\"fields\".\"secret_key\"')"
     - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null && echo yes || echo nope"
+    - "curl -I http://docker || echo nope"
  
   tags:
     - "dind"
