@@ -6,4 +6,4 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 services:
-  - "docker:24.0.6-dind"
+  - "docker:20.10.16-dind"

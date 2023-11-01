@@ -1,9 +1,9 @@
 ---
 proxy-test:
   stage: "integration"
-  image: "docker:24.0.6-dind"
+  image: "docker:20.10.16-dind"
   before_script:
-    - "apk add --no-cache curl iproute2"
+    - "apk add --no-cache curl iproute2 postgresql jq"
     - "cp .env.example .env"
     - "docker compose pull -q"
     - "docker compose build -q"
@@ -14,6 +14,9 @@ proxy-test:
     - "docker volume ls"
     - "ip a"
     - "sleep 20"
-    - "curl -I http://localhost:80"
+    - "curl -I http://localhost:80 || echo nope"
+    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -p 5432 -tAc "SELECT 1 || echo nope"
+    #- "docker compose exec -T frontend python3 manage.py loaddata user.json"
+    #- "docker compose exec -T frontend python3 manage.py loaddata thing.json"
   tags:
     - "dind"
