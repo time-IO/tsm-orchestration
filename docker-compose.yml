@@ -424,7 +424,8 @@ services:
     restart: "${RESTART:-on-failure}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG:-latest}"
     depends_on:
-      - "database"
+      database:
+        condition: "service_healthy"
     command:
       - "/usr/sbin/mosquitto"
       - "-c"
