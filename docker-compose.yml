@@ -150,7 +150,7 @@ services:
 
 
   worker-object-storage-setup:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -172,7 +172,7 @@ services:
 
 
   worker-db-setup:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
@@ -195,7 +195,7 @@ services:
 
 
   worker-frost-setup:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       - "mqtt-broker"
@@ -213,7 +213,7 @@ services:
       - "run-create-new-frost-server-service"
 
   worker-file-ingest:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -248,7 +248,7 @@ services:
 
 
   worker-run-qaqc:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -279,7 +279,7 @@ services:
 
 
   worker-mqtt-ingest:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
       - mqtt-broker
@@ -301,7 +301,7 @@ services:
 
 
   worker-mqtt-user-creation:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
       - mqtt-broker
@@ -321,7 +321,7 @@ services:
       - run-create-mqtt-user-action-service
 
   worker-grafana-dashboard:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -345,7 +345,7 @@ services:
 
 
   worker-grafana-user-orgs:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -368,7 +368,7 @@ services:
 
 
   basic-demo-scheduler:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     # prevent blocking/slowing-down of other services
     # if many scheduler jobs occur at the same time
@@ -503,7 +503,7 @@ services:
 
 
   frontend:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${FRONTEND_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${FRONTEND_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     command: >
       bash -c "python3 manage.py migrate
@@ -557,7 +557,7 @@ services:
 
 
   tsmdl:
-    image: "https://registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl:${TSM_DL_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl:${TSM_DL_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     entrypoint: "/app/start.sh"
     environment:
