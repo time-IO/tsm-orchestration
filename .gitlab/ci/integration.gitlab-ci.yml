@@ -24,6 +24,8 @@ proxy-test:
     - "DB_USER=$(cat database.json | jq -r '.[].\"fields\".\"username\"')"
     - "DB_PASSWORD=$(cat database.json | jq -r '.[].\"fields\".\"password\"')"
     - "DB_NAME=$(cat database.json | jq -r '.[].\"fields\".\"name\"')"
-    - "echo \"$DB_USER DB_PASSWORD DB_NAME\""
+    - "echo \"$DB_USER $DB_PASSWORD $DB_NAME\""
+    - "sleep 5"
+    - "PGPASSWORD=$DB_PASSWORD psql -U $DB_USER -d $DB_NAME -h docker -p 5432 -tAc \"select * from thing\" || echo nope"
   tags:
     - "dind"
