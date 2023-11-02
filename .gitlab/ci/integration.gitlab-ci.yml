@@ -5,8 +5,7 @@ proxy-test:
   before_script:
     - "apk add --no-cache curl iproute2 postgresql jq"
     - "cp .env.example .env"
-    - "docker compose pull -q"
-    - "docker compose up -d -V --build"
+    - "docker compose up -d -V"
     - "docker compose ps"
   script:
     - "docker network ls"
