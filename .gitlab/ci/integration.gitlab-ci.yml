@@ -6,7 +6,7 @@ proxy-test:
     - "apk add --no-cache curl iproute2 postgresql jq"
     - "cp .env.example .env"
     - "docker compose pull -q"
-    - "docker compose build -q"
+    - "docker compose build"
     - "docker compose up -d -V"
     - "docker compose ps"
   script:
