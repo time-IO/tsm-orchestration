@@ -3,18 +3,18 @@
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
-  script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 30"
+    - "sleep 20"
+  script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
-    - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].\"fields\".\"access_key\"')"
-    - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].\"fields\".\"secret_key\"')"
-    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://localhost:40021 -I -s -o /dev/null || exit 1"
+    - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
+    - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
+    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
   tags:
     - "dind"
 
@@ -23,18 +23,18 @@ database-test:
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache postgresql-client jq"
-  script:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 30"
+    - "sleep 20"
+  script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 2"
     - "docker compose exec-T frontend python3 manage.py dumpdata tsm.database > database.json"
-    - "export DB_USER=$(cat database.json | jq -r '.[].\"fields\".\"username\"')"
-    - "export DB_PASSWORD=$(cat database.json | jq -r '.[].\"fields\".\"password\"')"
-    - "export DB_NAME=$(cat database.json | jq -r '.[].\"fields\".\"name\"')"
-    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h localhost -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
+    - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
+    - "export DB_PASSWORD=$(cat database.json | jq -r '.[].fields.password')"
+    - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
+    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
   tags:
     - "dind"
