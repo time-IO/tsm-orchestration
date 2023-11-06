@@ -5,7 +5,7 @@ proxy-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker pull timescale/timescaledb-ha:pg14"
+    - "docker system prune -af"
     - "docker compose build -q"
     - "docker compose pull -q"
     - "docker compose up -d -V proxy"
