@@ -6,11 +6,9 @@ proxy-test:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
     - "docker system prune -af"
-    - "docker compose build -q"
-    - "docker compose pull -q"
-    - "docker compose up -d -V proxy"
-  script:
+    - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
+  script:
     - "curl -I http://docker && echo yes || echo nope"
   tags:
     - "dind"
