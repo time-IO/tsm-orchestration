@@ -6,8 +6,8 @@ docker-service-test:
     - "apk add --no-cache bash"
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
-    - "docker-compose logs init"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose logs init"
     - "sleep 20"
   script:
     - "docker ps"
@@ -23,18 +23,18 @@ mqtt-service-test:
   before_script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
-    - "docker-compose exec -T mqtt-broker
+    - "docker compose exec -T mqtt-broker
       bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
       /mosquitto-auth/mosquitto.passwd'"
-    - "docker-compose restart mqtt-broker"
+    - "docker compose restart mqtt-broker"
     - "sleep 30"
-    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
+    - 'echo "very nice data!" | docker compose exec -T mqtt-broker sh -c
        "mosquitto_pub -h mqtt-broker -t
        mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
-    - 'docker-compose logs mqtt-cat'
+    - 'docker compose logs mqtt-cat'
   tags:
     - "dind"
 
@@ -44,14 +44,14 @@ proxy-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
-    - "curl -I http://docker || exit 1"
-    - "curl -I http://docker/frontend/ || exit 1"
-    - "curl -I http://docker/object-storage/ || exit 1"
-    - "curl -I http://docker/visualization/ || exit 1"
-    - "curl -I http://docker/sta/ || exit 1"
+    - "curl -Isf http://docker -o /dev/null || exit 1"
+    - "curl -Isf http://docker/frontend/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/object-storage/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/visualization/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
   tags:
     - "dind"
 
@@ -61,7 +61,7 @@ object-storage-test:
   before_script:    
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
@@ -72,7 +72,7 @@ database-test:
   before_script:    
     - "apk add --no-cache postgresql-client"
     - "cp .env.example .env"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
