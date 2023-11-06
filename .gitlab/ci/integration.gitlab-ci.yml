@@ -5,10 +5,31 @@ proxy-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker system prune -af"
     - "docker-compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "curl -I http://docker && echo yes || echo nope"
   tags:
     - "dind"
+
+object-storage-test:
+  stage: "integration"
+  image: "docker:20.10.16-dind"
+  before_script:    
+    - "apk add --no-cache curl"
+    - "cp .env.example .env"
+    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+  script:
+    - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
+
+database-test:
+  stage: "integration"
+  image: "docker:20.10.16-dind"
+  before_script:    
+    - "apk add --no-cache postgresql-client"
+    - "cp .env.example .env"
+    - "docker-compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+  script:
+    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
