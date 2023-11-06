@@ -1,4 +1,5 @@
 ---
+object-storage-e2e:
   image: "docker:24-dind"
   stage: "end-to-end"
   before_script:
@@ -18,7 +19,7 @@
   tags:
     - "dind"
 
-database-test:
+database-e2e:
   image: "docker:24-dind"
   stage: "end-to-end"
   before_script:
