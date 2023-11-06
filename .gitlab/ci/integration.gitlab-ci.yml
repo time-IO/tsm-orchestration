@@ -46,6 +46,7 @@ proxy-test:
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
+    - "docker compose restart proxy"
   script:
     - "curl -Isf http://docker -o /dev/null || exit 1"
     - "curl -Isf http://docker/frontend/ -o /dev/null || echo nope"
