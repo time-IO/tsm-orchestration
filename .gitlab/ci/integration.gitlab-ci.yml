@@ -5,10 +5,10 @@ proxy-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
+    - "docker pull timescale/timescaledb-ha:pg14"
     - "docker compose build -q"
     - "docker compose pull -q"
-    - "docker compose up -d -V"
-    - "docker compose ps"
+    - "docker compose up -d -V proxy"
   script:
     - "sleep 20"
     - "curl -I http://docker && echo yes || echo nope"
