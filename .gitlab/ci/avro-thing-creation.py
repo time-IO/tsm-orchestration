@@ -8,7 +8,7 @@ import threading
 import os
 
 # MQTT settings
-host = "localhost"
+host = "docker"
 port = 1883
 topic = "thing_creation"
 username = "mqtt"
