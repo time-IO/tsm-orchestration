@@ -56,7 +56,7 @@ frost-e2e:
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
-    - "docker compose logs worker-frost-creation"
+    - "docker compose logs worker-frost-setup"
     - "docker compose logs frost"
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
