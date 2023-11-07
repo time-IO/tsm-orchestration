@@ -66,6 +66,8 @@ object-storage-test:
     - "sleep 30"
   script:
     - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
+  tags:
+    - "dind"
 
 database-test:
   stage: "integration"
@@ -77,3 +79,5 @@ database-test:
     - "sleep 20"
   script:
     - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
+  tags:
+    - "dind"
