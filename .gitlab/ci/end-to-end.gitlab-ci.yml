@@ -56,11 +56,10 @@ frost-e2e:
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
-    - "docker compose logs worker-frost-setup"
+    - "sleep 10"
     - "docker compose logs frost"
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "echo $DB_USER"
-    - "curl http://docker/sta/"
-    - "curl http://docker:80/sta/${DB_USER} || echo nope"
+    - "curl http://docker/sta/${DB_USER} || echo nope"
   tags:
     - "dind"
