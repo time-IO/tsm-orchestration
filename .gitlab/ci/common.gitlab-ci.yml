@@ -1,7 +1,8 @@
 ---
 stages:
-  - "integration"
   - "end-to-end"
+  - "integration"
+
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
