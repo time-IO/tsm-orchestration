@@ -1,5 +1,5 @@
 # start from ubuntu based timescale image
-FROM timescale/timescaledb-ha
+FROM timescale/timescaledb-ha:pg15
 
 # switch from postgres/1000 to root and install postgis
 USER root
