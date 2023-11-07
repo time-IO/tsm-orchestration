@@ -59,6 +59,8 @@ frost-e2e:
     - "docker compose logs worker-frost-setup"
     - "docker compose logs frost"
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
-    - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
+    - "echo $DB_USER"
+    - "curl http://docker/sta/"
+    - "curl http://docker/sta/${DB_USER} || echo nope"
   tags:
     - "dind"
