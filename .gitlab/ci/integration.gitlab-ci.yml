@@ -47,11 +47,11 @@ proxy-test:
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
   script:
-    - "curl -Isf http://docker -o /dev/null || echo nope"
-    - "curl -Isf http://docker/frontend/ -o /dev/null || echo nope"
-    - "curl -Isf http://docker/object-storage/ -o /dev/null || echo nope"
-    - "curl -Isf http://docker/visualization/ -o /dev/null || echo nope"
-    - "curl -Isf http://docker/sta/ -o /dev/null || echo nope"
+    - "curl -Isf http://docker -o /dev/null || exit 1"
+    - "curl -Isf http://docker/frontend/tsm -o /dev/null || echo nope"
+    - "curl -Isf http://docker/object-storage/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/visualization/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
   tags:
     - "dind"
 

@@ -39,3 +39,22 @@ database-e2e:
     - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
   tags:
     - "dind"
+
+frost-e2e:
+  image: "docker:24-dind"
+  stage: "end-to-end"
+  before_script:
+      - "apk add --no-cache postgresql-client jq"
+    - "cp .env.example .env"
+    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "sleep 20"
+  script:
+    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
+    - "sleep 2"
+    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
+    - "sleep 2"
+    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
+    - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
+    - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
+  tags:
+    - "dind"
