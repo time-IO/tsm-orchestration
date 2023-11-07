@@ -61,6 +61,6 @@ frost-e2e:
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "echo $DB_USER"
     - "curl http://docker/sta/"
-    - "curl http://docker/sta/${DB_USER} || echo nope"
+    - "curl http://docker:80/sta/${DB_USER} || echo nope"
   tags:
     - "dind"
