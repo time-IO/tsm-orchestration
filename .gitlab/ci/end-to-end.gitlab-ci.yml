@@ -8,10 +8,11 @@ avro-thing-creation-e2e:
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install fastavro paho-mqtt"
     - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d frontend mqtt-broker --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "echo \"Check if thing_creation message is valid\""
-    - "./.gitlab/ci/avro-thing-creation.sh"
+    - "chmod +x ./.gitlab/ci/avro-thing-creation.py"
+    - "./.gitlab/ci/avro-thing-creation.py"
   tags:
     - "dind"
