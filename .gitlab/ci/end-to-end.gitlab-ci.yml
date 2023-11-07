@@ -6,7 +6,7 @@ avro-thing-creation-e2e:
     - "apk add --no-cache python3 curl jq"
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
-    - "python3 -m pip install fastavro paho-mqtt threading"
+    - "python3 -m pip install fastavro paho-mqtt"
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
   script:
