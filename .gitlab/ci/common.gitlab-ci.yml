@@ -17,4 +17,4 @@ variables:
   CADVISOR_PORT: 8080
 
 services:
-  - "docker:24-dind"
+  - "docker:24"

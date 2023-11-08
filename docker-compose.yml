@@ -62,6 +62,7 @@ services:
       - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
       - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
       - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
       - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/docker-entrypoint-initdb.d/05_sms_cv_ddl.sql"
       - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
@@ -92,7 +93,7 @@ services:
       - "${MINIO_FTP_PASV_PORTS:-127.0.0.1:30000-30010:30000-30010}"
     depends_on:
       mqtt-broker:
-        condition: "service_healthy"
+        condition: "service_started"
       init:
         condition: "service_completed_successfully"
     environment:
@@ -155,7 +156,7 @@ services:
       mqtt-broker:
         condition: "service_healthy"
       object-storage:
-        condition: "service_started"
+        condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -203,8 +204,6 @@ services:
         condition: "service_healthy"
       database:
         condition: "service_healthy"
-      frost:
-        condition: "service_started"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
     environment:
@@ -224,7 +223,7 @@ services:
       mqtt-broker:
         condition: "service_healthy"
       object-storage:
-        condition: "service_started"
+        condition: "service_healthy"
       basic-demo-scheduler:
         condition: "service_healthy"
     environment:
@@ -258,8 +257,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
-      object-storage:
-        condition: "service_started"
       basic-demo-scheduler:
         condition: "service_healthy"
     environment:
@@ -464,7 +461,7 @@ services:
     restart: "${RESTART:-on-failure}"
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
     depends_on:
-      mqtt-broker: 
+      mqtt-broker:
         condition: "service_started"
     logging:
       options:
@@ -604,6 +601,8 @@ services:
       object-storage:
         condition: "service_started"
       tsmdl:
+        condition: "service_started"
+      frost:
         condition: "service_started"
       init:
         condition: "service_completed_successfully"

@@ -1,4 +1,4 @@
-FROM tomcat:10-jdk21
+FROM tomcat:9-jdk17
 
 EXPOSE 8080
 
