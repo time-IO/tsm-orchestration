@@ -69,7 +69,7 @@ object-storage-e2e:
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc"
     - "chmod +x $HOME/minio-binaries/mc"
     - "export PATH=$PATH:$HOME/minio-binaries/"
-    - "mc alias set minio http://docker:9000 ${MINIO_USER} ${MINIO_PASSWORD} || echo nope"
+    - "mc alias set minio http://docker:9000 minioadmin minioadmin || echo nope"
     - "mc tag list --json minio/${MINIO_USER} || echo nope"
 
   tags:
