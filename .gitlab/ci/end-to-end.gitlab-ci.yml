@@ -70,7 +70,7 @@ object-storage-e2e:
     - "chmod +x $HOME/minio-binaries/mc"
     - "export PATH=$PATH:$HOME/minio-binaries/"
     - "mc alias set minio http://docker:9000 ${MINIO_USER} ${MINIO_PASSWORD} || echo nope"
-    - "mc tag list minio/${MINIO_USER} || echo nope"
+    - "mc tag list --json minio/${MINIO_USER} || echo nope"
 
   tags:
     - "dind"
