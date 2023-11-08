@@ -66,6 +66,12 @@ object-storage-e2e:
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
     - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
+    - "curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc"
+    - "chmod +x $HOME/minio-binaries/mc"
+    - "export PATH=$PATH:$HOME/minio-binaries/"
+    - "mc alias set minio http://docker:9000 ${MINIO_USER} ${MINIO_PASSWORD} || echo nope"
+    - "mc tag list minio/${MINIO_USER} || echo nope"
+
   tags:
     - "dind"
 
