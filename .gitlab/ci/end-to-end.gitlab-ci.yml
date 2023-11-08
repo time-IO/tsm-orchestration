@@ -8,7 +8,7 @@ visualization-e2e:
     - "docker compose up -d proxy worker-grafana-dashboard --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
-    - "docker compose restart proxy ""
+    - "docker compose restart proxy"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
