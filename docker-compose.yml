@@ -605,8 +605,6 @@ services:
         condition: "service_started"
       tsmdl:
         condition: "service_started"
-      frost:
-        condition: "service_started"
       init:
         condition: "service_completed_successfully"
 
