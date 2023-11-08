@@ -1,18 +1,27 @@
 ---
-avro-thing-creation-e2e:
+visualization-e2e:
   image: "docker:24-dind"
   stage: "end-to-end"
   before_script:
-    - "apk add --no-cache python3"
-    - "python3 -m ensurepip"
-    - "python3 -m pip install --upgrade pip"
-    - "python3 -m pip install fastavro paho-mqtt"
+    - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
-    - "docker compose up -d frontend mqtt-broker --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 20"
   script:
-    - "echo \"Check if thing_creation message is valid\""
-    - "chmod +x ./.gitlab/ci/avro-thing-creation.py"
-    - "./.gitlab/ci/avro-thing-creation.py"
+    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
+    - "sleep 2"
+    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
+    - "sleep 2"
+    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
+    - "THING_UID=$(cat thing_dump.json | jq -r '.[].fields.thing_id') || echo nope"
+    - "GROUP_ID=$(cat thing_dump.json | jq -r '.[].fields.group') || echo nope"
+    - "GROUP_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${GROUP_ID}))\") || echo nope"
+    - "curl -Is -u grafana:grafana http://docker/visualization/api/dashboards/uid/${THING_UID} -o /dev/null || echo nope"
+    - "curl -Is -u grafana:grafana http://docker/visualization/api/dashboards/uid/${GROUP_UID} -o /dev/null || echo nope"
+    - "curl -Is -u grafana:grafana http://docker/visualization/api/datasources/uid/${GROUP_UID} -o /dev/null || echo nope"
+    - "curl -s -u grafana:grafana http://docker/visualization/api/teams/search?uid=${GROUP_UID} > teams.json"
+    - "TEAMS_ID=$(cat teams.json | jq -r .teams[0].orgId)"
+    - "TEAMS_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${TEAMS_ID}))\") || echo nope"
+    - "[ \"$TEAMS_UID\" == \"$GROUP_UID\" ] || echo nope"
   tags:
     - "dind"
