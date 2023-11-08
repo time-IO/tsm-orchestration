@@ -2,17 +2,16 @@
 visualization-e2e:
   image: "docker:24-dind"
   stage: "end-to-end"
-  before_script:
+  script:
     - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
-    - "docker compose up -d proxy worker-grafana-dashboard --force-recreate -V --quiet-pull"
+    - "cp .env .gitlab/cin/.env"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
-  script:
-    - "docker compose restart proxy"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
-    - "sleep 10"
+    - "sleep 5"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
     - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id) || echo nope"
     - "echo $THING_UID"
