@@ -142,8 +142,7 @@ services:
       - "--json"
       - "/vol0"
     healthcheck:
-      test: ["CMD", "curl", "-f", "${MINIO_SERVER_URL\
-      :-http://localhost:9000}/minio/health/live"]
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
       interval: "${MINIO_HEALTHCHECK_INTERVAL:-2s}"
       timeout: 5s
       retries: 15
