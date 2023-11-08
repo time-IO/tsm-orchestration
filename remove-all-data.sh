@@ -7,3 +7,4 @@ rm data/mosquitto/auth/mosquitto.acl
 rm data/mosquitto/auth/mosquitto.passwd
 rm -r data/grafana/*
 rm -r data/tomcat/context/*
+exit 0
