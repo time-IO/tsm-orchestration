@@ -1,6 +1,6 @@
 ---
 visualization-e2e:
-  image: "docker:24-dind"
+  image: "docker:${DOCKER_IMAGE_TAG:-24}"
   stage: "end-to-end"
   script:
     - "apk add --no-cache curl jq python3"
@@ -13,9 +13,9 @@ visualization-e2e:
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 5"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
-    - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id) || echo nope"
+    - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id)"
     - "echo $THING_UID"
-    - "GROUP_ID=$(cat thing_dump.json | jq -r .[].fields.group) || echo nope"
+    - "GROUP_ID=$(cat thing_dump.json | jq -r .[].fields.group)"
     - "echo $GROUP_ID"
     - "GROUP_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${GROUP_ID}))\")"
     - "echo $GROUP_UID"
@@ -24,7 +24,7 @@ visualization-e2e:
     - "curl -Isf -u grafana:grafana ${GF_API}/dashboards/uid/${GROUP_UID} || exit 1"
     - "curl -Isf -u grafana:grafana ${GF_API}/datasources/uid/${GROUP_UID} || exit 1"
     - "curl -sf -u grafana:grafana ${GF_API}/teams/search?uid=${GROUP_UID} > teams.json || exit 1"
-    - "TEAMS_ID=$(cat teams.json | jq -r .teams[0].orgId) || echo nope"
+    - "TEAMS_ID=$(cat teams.json | jq -r .teams[0].orgId)"
     - "TEAMS_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${TEAMS_ID}))\")"
     - "echo $TEAMS_UID"
     - "[ \"$TEAMS_UID\" == \"$GROUP_UID\" ] || exit 1"
@@ -32,7 +32,7 @@ visualization-e2e:
     - "dind"
 
 avro-thing-creation-e2e:
-  image: "docker:24-dind"
+  image: "docker:${DOCKER_IMAGE_TAG:-24}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache python3"
@@ -50,7 +50,7 @@ avro-thing-creation-e2e:
     - "dind"
     
 object-storage-e2e:
-  image: "docker:24-dind"
+  image: "docker:${DOCKER_IMAGE_TAG:-24}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
@@ -76,7 +76,7 @@ object-storage-e2e:
     - "dind"
 
 database-e2e:
-  image: "docker:24-dind"
+  image: "docker:${DOCKER_IMAGE_TAG:-24}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache postgresql-client jq"
@@ -99,7 +99,7 @@ database-e2e:
     - "dind"
 
 frost-e2e:
-  image: "docker:24-dind"
+  image: "docker:${DOCKER_IMAGE_TAG:-24}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
