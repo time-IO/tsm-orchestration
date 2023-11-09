@@ -153,7 +153,7 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
     environment:
@@ -174,8 +174,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
-      - "mqtt-broker"
-      - "database"
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -197,8 +199,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
-      - "mqtt-broker"
-      - "database"
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
     volumes:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
     environment:
@@ -211,12 +215,13 @@ services:
     command:
       - "run-create-new-frost-server-service"
 
+
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
+        condition: "service_healthy"
       object-storage:
         condition: "service_healthy"
       basic-demo-scheduler:
@@ -251,8 +256,6 @@ services:
     restart: "on-failure"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
-      object-storage:
         condition: "service_healthy"
       basic-demo-scheduler:
         condition: "service_healthy"
@@ -281,8 +284,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
-      - mqtt-broker
-      - database
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "mqtt_ingest/#"
@@ -303,8 +308,10 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: on-failure
     depends_on:
-      - mqtt-broker
-      - database
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       TOPIC: "thing_creation"
@@ -319,13 +326,12 @@ services:
     command:
       - run-create-mqtt-user-action-service
 
+
   worker-grafana-dashboard:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
-      object-storage:
         condition: "service_healthy"
       visualization:
         condition: "service_started"
@@ -348,8 +354,6 @@ services:
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
-        condition: "service_started"
-      object-storage:
         condition: "service_healthy"
       visualization:
         condition: "service_started"
@@ -389,7 +393,8 @@ services:
     restart: "${RESTART:-on-failure}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG:-latest}"
     depends_on:
-      - "database"
+      database:
+        condition: "service_healthy"
     command:
       - "/usr/sbin/mosquitto"
       - "-c"
@@ -456,6 +461,9 @@ services:
   mqtt-cat:
     restart: "${RESTART:-on-failure}"
     image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
     logging:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
@@ -515,6 +523,8 @@ services:
     user: "appuser"
     volumes:
       - "frontend-statics:/home/appuser/app/static"
+      - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
+      - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
     entrypoint: ""
     # ports:
     #   - "127.0.0.1:8000:8000"
@@ -550,7 +560,7 @@ services:
       database:
         condition: service_healthy
       mqtt-broker:
-        condition: service_started
+        condition: service_healthy
 
 
   tsmdl:
@@ -598,6 +608,7 @@ services:
       init:
         condition: "service_completed_successfully"
 
+
   frost:
     build:
       context: "data/tomcat"
@@ -608,17 +619,18 @@ services:
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
 
+
   monitoring:
     image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     container_name: "cadvisor"
     ports:
-    - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
+      - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
     volumes:
-    - "/:/rootfs:ro"
-    - "/var/run:/var/run:ro"
-    - "/sys:/sys:ro"
-    - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
 
 
 volumes:

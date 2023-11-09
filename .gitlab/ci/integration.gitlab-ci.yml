@@ -1,21 +1,15 @@
 ---
 docker-service-test:
-  image: "docker:24"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
   before_script:
     - "apk add --no-cache bash"
-  script:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "echo $GROUP_TOKEN | docker login \
-      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $GROUP_TOKEN | docker login \
-     $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $CI_JOB_TOKEN | docker login \
-     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d"
-    - "docker-compose logs init"
-    - "sleep 15"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose logs init"
+    - "sleep 20"
+  script:
     - "docker ps"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
@@ -24,79 +18,65 @@ docker-service-test:
     - "dind"
 
 mqtt-service-test:
-  image: "docker:24"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
-  script:
+  before_script:
+    - "apk add --no-cache python3"
+    - "python3 -m ensurepip"
+    - "python3 -m pip install --upgrade pip"
+    - "python3 -m pip install paho-mqtt"
     - "mv .env.example .env"
-    - "cp .env .gitlab/ci/.env"
-    - "echo $GROUP_TOKEN | docker login \
-      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $GROUP_TOKEN | docker login \
-     $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $CI_JOB_TOKEN | docker login \
-     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d"
-    - "sleep 15"
-    - "docker-compose exec -T mqtt-broker
-      bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
-      /mosquitto-auth/mosquitto.passwd'"
-    - "docker-compose restart mqtt-broker"
-    - "sleep 30"
-    - 'echo "very nice data!" | docker-compose exec -T mqtt-broker sh -c
-       "mosquitto_pub -h mqtt-broker -t
-       mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
-    - 'docker-compose logs mqtt-cat'
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+  script:
+    - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
+    - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
+    - "docker compose logs mqtt-cat"
   tags:
     - "dind"
 
-thing-creation-test:
-  image: "docker:24-dind"
+proxy-test:
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
   before_script:
-    - "apk add --no-cache curl postgresql bash"
-  variables:
-    POSTGRES_PORT: "5432"
-    PROXY_MINIO_PORT: "9000:9000"
-  script:
+    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
+    - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "echo $GROUP_TOKEN | docker login \
-      $SCHEDULER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $GROUP_TOKEN | docker login \
-      $DISPATCHER_REGISTRY -u $GROUP_USER --password-stdin"
-    - "echo $CI_JOB_TOKEN | docker login \
-     $FROST_REGISTRY -u gitlab-ci-token --password-stdin"
-    - "docker-compose up -d --force-recreate -V --quiet-pull"
-    - "sleep 30"
-    - "docker-compose logs object-storage"
-    - 'cat thing-event-msg.json | docker-compose exec -T mqtt-broker sh -c
-      "mosquitto_pub -t thing_creation -u mqtt -P mqtt -s"'
-    - "curl https://dl.min.io/client/mc/release/linux-amd64/mc \
-      --create-dirs \
-      -o $HOME/minio-binaries/mc"
-    - "chmod +x $HOME/minio-binaries/mc"
-    - "export PATH=$PATH:$HOME/minio-binaries/"
-    - "mc alias set minio http://docker:9000 minioadmin minioadmin"
-    - "mc tag list minio/thedoors-057d8bba-40b3-11ec-a337-125e5a40a849"
-    - "psql 'postgresql://postgres:postgres@docker:5432?sslmode=disable' -l"
-    - "bash .gitlab/ci/databasetest.sh"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+  script:
+    - "curl -Isf http://docker -o /dev/null || exit 1"
+    - "curl -Isf http://docker/object-storage/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/visualization/ -o /dev/null || exit 1"
+    - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
+    # somehow curl -Isf http://docker/frontend returns 400
+    # so for now we curl it from inside the proxy container
+    - "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
   tags:
     - "dind"
-#
-#debug-ci:
-#  image: "docker:20.10.16-dind"
-#  stage: "integration"
-#  script:
-#    - "mv .env.example .env"
-#    - "sed -i \"/^POSTGRES_PORT=127.0.0.1:5432/c\\POSTGRES_PORT=5432\" .env"
-#    - "sed -i \"/^PROXY_MINIO_PORT=127.0.0.1:9000:9000/c\\PROXY_MINIO_PORT=9000:9000\" .env"
-#    - "cp .env .gitlab/ci/.env"
-#    - "cat .gitlab/ci/.env"
-#    - "docker-compose up -d database"
-#    - "docker inspect $(docker-compose ps -q database)"
-#    - "docker port $(docker-compose ps -q database)"
-#    - "ip addr"
-#    - "nslookup docker || true"
-#    - "hostname"
-#    - "hostname -f || true"
-#  tags:
-#    - "hifis"
+
+object-storage-test:
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  stage: "integration"
+  before_script:
+    - "apk add --no-cache curl"
+    - "cp .env.example .env"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 30"
+  script:
+    - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
+  tags:
+    - "dind"
+
+database-test:
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  stage: "integration"
+  before_script:    
+    - "apk add --no-cache postgresql-client"
+    - "cp .env.example .env"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "sleep 20"
+  script:
+    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
+  tags:
+    - "dind"
