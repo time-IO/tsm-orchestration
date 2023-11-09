@@ -44,7 +44,7 @@ avro-thing-creation-e2e:
     - "sleep 20"
   script:
     - "echo \"Check if thing_creation message is valid\""
-    - "chmod +x ./.gitlab/ci/avro-thing-creation.py"
+    - "chmod +x ./.gitlab/ci/py/avro-thing-creation.py"
     - "./.gitlab/ci/py/avro-thing-creation.py"
   tags:
     - "dind"
@@ -65,12 +65,12 @@ object-storage-e2e:
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
-    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc"
     - "chmod +x $HOME/minio-binaries/mc"
     - "export PATH=$PATH:$HOME/minio-binaries/"
-    - "mc alias set minio http://docker:9000 minioadmin minioadmin || echo nope"
-    - "mc tag list --json minio/${MINIO_USER} || echo nope"
+    - "mc alias set minio http://docker:9000 minioadmin minioadmin"
+    - "mc tag list --json minio/${MINIO_USER} || exit 1"
+    - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
 
   tags:
     - "dind"
