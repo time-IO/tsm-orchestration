@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 import fastavro
 import threading
 import os
+import sys
 
 # MQTT settings
 host = "docker"
