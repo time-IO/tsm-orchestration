@@ -17,7 +17,6 @@ docker-service-test:
   tags:
     - "dind"
 
-# rewrite mqtt service test (use python with paho-mqtt)
 mqtt-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
@@ -30,7 +29,6 @@ mqtt-service-test:
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
-    # this doesn't really do anything. acl would also needed to be defined for user integrate
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
     - "docker compose logs mqtt-cat"

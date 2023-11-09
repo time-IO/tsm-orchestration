@@ -215,6 +215,7 @@ services:
     command:
       - "run-create-new-frost-server-service"
 
+
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "on-failure"
@@ -324,6 +325,7 @@ services:
         ${CREATEDB_POSTGRES_DATABASE:-postgres}"
     command:
       - run-create-mqtt-user-action-service
+
 
   worker-grafana-dashboard:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
@@ -605,6 +607,7 @@ services:
         condition: "service_started"
       init:
         condition: "service_completed_successfully"
+
 
   frost:
     build:

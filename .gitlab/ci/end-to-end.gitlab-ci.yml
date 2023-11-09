@@ -2,12 +2,13 @@
 visualization-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
-  script:
+  before_script:
     - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
     - "cp .env .gitlab/ci/.env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
+  script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
@@ -71,7 +72,6 @@ object-storage-e2e:
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
     - "mc tag list --json minio/${MINIO_USER} || exit 1"
     - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
-
   tags:
     - "dind"
 

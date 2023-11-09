@@ -15,9 +15,7 @@ topic = "thing_creation"
 username = "mqtt"
 password = "mqtt"
 qos = 0
-is_valid = False
 
-lock = threading.Lock()
 
 def on_connect(client, userdata, flags, rc):
     print(f"Connected to broker with result code {rc}")
@@ -32,7 +30,6 @@ def on_message(client, userdata, msg):
     msg_json = json.loads(msg.payload)
     if validate_message(msg_json):
         is_valid = True
-
 
 def validate_message(msg_json):
     avsc_file = "./.gitlab/ci/avsc/thing_creation.avsc"
@@ -60,14 +57,12 @@ def django_loaddata():
     )
     time.sleep(2)
 
-
 def build_client():
     clt = mqtt.Client()
     clt.on_connect = on_connect
     clt.on_message = on_message
     clt.username_pw_set(username, password)
     return clt
-
 
 def connect_and_listen():
     client = build_client()
@@ -79,8 +74,11 @@ def connect_and_listen():
     time.sleep(2)
     client.disconnect()
 
+
 if __name__ == "__main__":
+    is_valid = False
     connected = False
+    lock = threading.Lock()
     t1 = threading.Thread(target=connect_and_listen)
     t1.start()
     while not connected:
