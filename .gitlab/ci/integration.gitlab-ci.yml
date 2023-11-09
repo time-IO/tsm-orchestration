@@ -27,7 +27,7 @@ mqtt-service-test:
     - "sleep 20"
   script:
     # this doesn't really do anything. acl would also needed to be defined for user integrate
-    - "chmod +x .gitlab/ci/mqtt-service-test"
+    - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
     - "docker compose logs mqtt-cat"
   tags:
