@@ -70,7 +70,7 @@ object-storage-e2e:
     - "chmod +x $HOME/minio-binaries/mc"
     - "export PATH=$PATH:$HOME/minio-binaries/"
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
-    - "mc tag list --json minio/${MINIO_USER} | jq || exit 1"
+    - "mc tag list minio/${MINIO_USER} || exit 1"
     - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
   tags:
     - "dind"
