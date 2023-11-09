@@ -45,7 +45,7 @@ avro-thing-creation-e2e:
   script:
     - "echo \"Check if thing_creation message is valid\""
     - "chmod +x ./.gitlab/ci/avro-thing-creation.py"
-    - "./.gitlab/ci/avro-thing-creation.py"
+    - "./.gitlab/ci/py/avro-thing-creation.py"
   tags:
     - "dind"
     

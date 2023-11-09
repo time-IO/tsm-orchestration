@@ -17,24 +17,19 @@ docker-service-test:
   tags:
     - "dind"
 
+# rewrite mqtt service test (use python with paho-mqtt)
 mqtt-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
   before_script:
     - "mv .env.example .env"
-    - "cp .env .gitlab/ci/.env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
-    - "docker compose exec -T mqtt-broker
-      bash -c $'echo `echo -n integrate && /mosquitto/pw -p cicd` >>
-      /mosquitto-auth/mosquitto.passwd'"
-    - "docker compose restart mqtt-broker"
-    - "sleep 30"
-    - 'echo "very nice data!" | docker compose exec -T mqtt-broker sh -c
-       "mosquitto_pub -h mqtt-broker -t
-       mqtt_ingest/integrate/beautiful/sensor/1 -u mqtt -P mqtt -s"'
-    - 'docker compose logs mqtt-cat'
+    # this doesn't really do anything. acl would also needed to be defined for user integrate
+    - "chmod +x .gitlab/ci/mqtt-service-test"
+    - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
+    - "docker compose logs mqtt-cat"
   tags:
     - "dind"
 
@@ -54,14 +49,14 @@ proxy-test:
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
     # somehow curl -Isf http://docker/frontend returns 400
     # so for now we curl it from inside the proxy container
-    - "docker compose exec proxy curl -Isf http://proxy/frontend || exit 1"
+    - "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
   tags:
     - "dind"
 
 object-storage-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
-  before_script:    
+  before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"

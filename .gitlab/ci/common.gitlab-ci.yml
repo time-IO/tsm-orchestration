@@ -5,6 +5,8 @@ stages:
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
+  # ports mapped to 127.0.0.1 will not be reachable from inside docker network
+  # need to define PORT Variables here to overwrite ENVVARs from .env
   POSTGRES_PORT: 5432
   MOSQUITTO_PORT: 1883
   MOSQUITTO_PORT_SECURE: 8883
@@ -15,9 +17,7 @@ variables:
   MINIO_FTP_PORT: 40021
   MINIO_FTP_PASV_PORTS: 30000-30010:30000-30010
   CADVISOR_PORT: 8080
-  DOCKER_IMAGE_TAG: 24  
-  DJANGO_TRUSTED_ORIGINS: http://docker:80
-  PROXY_URL: http://docker:80
+  DOCKER_IMAGE_TAG: 24
 
 services:
   - "docker:${DOCKER_IMAGE_TAG}"
