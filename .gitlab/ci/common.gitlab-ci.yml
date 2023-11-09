@@ -18,4 +18,4 @@ variables:
   DOCKER_IMAGE_TAG: 24
 
 services:
-  - "docker:${DOCKER_IMAGE_TAG:-24}"
+  - "docker:${DOCKER_IMAGE_TAG}"

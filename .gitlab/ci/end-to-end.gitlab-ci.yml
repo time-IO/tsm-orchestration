@@ -1,6 +1,6 @@
 ---
 visualization-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG:-24}"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   script:
     - "apk add --no-cache curl jq python3"
@@ -32,7 +32,7 @@ visualization-e2e:
     - "dind"
 
 avro-thing-creation-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG:-24}"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache python3"
@@ -50,7 +50,7 @@ avro-thing-creation-e2e:
     - "dind"
     
 object-storage-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG:-24}"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
@@ -76,7 +76,7 @@ object-storage-e2e:
     - "dind"
 
 database-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG:-24}"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache postgresql-client jq"
@@ -99,7 +99,7 @@ database-e2e:
     - "dind"
 
 frost-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG:-24}"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   before_script:
     - "apk add --no-cache curl jq"
