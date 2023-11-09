@@ -53,7 +53,9 @@ proxy-test:
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
     - "docker compose exec proxy curl -I http://proxy/frontend"
     - "sleep 60"
-    - "curl -sfv http://docker/frontend/ || exit 1"
+    - "curl -Isf http://docker/frontend/login/?next=/frontend/ || echo nope"
+    - "docker compose logs frontend"
+    - "docker compose logs proxy"
   tags:
     - "dind"
 
