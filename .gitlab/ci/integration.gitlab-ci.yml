@@ -42,6 +42,7 @@ proxy-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
   before_script:
+    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
     - "apk add --no-cache curl"
     - "cp .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
