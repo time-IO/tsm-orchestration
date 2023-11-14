@@ -48,6 +48,8 @@ services:
                            ?Please define a SMS postgres DB name!}"
       SMS_DB_HOST: "${SMS_DB_HOST:\
                            ?Please define a SMS postgres host!}"
+      SMS_API_ACCESS: "${SMS_API_ACCESS:-false}"
+      SMS_URL: "${SMS_URL}"
       CV_DB_USER: "${CV_DB_USER:\
                            ?Please define a SMS_CV postgres user!}"
       CV_DB_PASSWORD: "${CV_DB_PASSWORD:\
@@ -58,14 +60,17 @@ services:
                            ?Please define a SMS_CV postgres DB name!}"
       CV_DB_HOST: "${CV_DB_HOST:\
                            ?Please define a SMS_CV postgres host!}"
+      CV_API_ACCESS: "${CV_API_ACCESS:-true}"
+      CV_URL: "${CV_URL}"
     volumes:
-      - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
-      - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
-      - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
-      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/docker-entrypoint-initdb.d/05_sms_cv_ddl.sql"
-      - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql"
+      - "./data/postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql"
+      - "./data/postgres/sms_db/init_sms_tables.sh:/docker-entrypoint-initdb.d/11_init_sms_tables.sh"
+      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_cv_db/init_sms_cv_tables.sh:/docker-entrypoint-initdb.d/12_init_sms_cv_tables.sh"
+      - "./data/postgres/sms_cv_db/update_sms_cv_tables.py:/home/postgres/update_sms_cv_tables.py"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
