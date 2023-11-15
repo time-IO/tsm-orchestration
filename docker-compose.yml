@@ -34,6 +34,10 @@ services:
                                Please define a mqtt auth database user!}"
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
                                Please define a mqtt auth database password!}"
+      S3MAP_POSTGRES_USER: "${S3MAP_POSTGRES_USER:?\
+                               Please define a s3-map database user!}"
+      S3MAP_POSTGRES_PASS: "${S3MAP_POSTGRES_PASS:?\
+                               Please define a s3-map database password!}"
       FRONTEND_POSTGRES_USER: "${FRONTEND_POSTGRES_USER:?\
                                Please define a frontend database user!}"
       FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
@@ -68,6 +72,7 @@ services:
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
+      - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
       - "./data/postgres/postgres-force-ssl.sh:\
       /docker-entrypoint-initdb.d/postgres-force-ssl.sh"
@@ -166,6 +171,11 @@ services:
       MINIO_URL: "${MINIO_HOST:-minio:9000}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER:?Please define an minio root user!}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
+      S3MAP_DB_URL: "postgresql://\
+        ${S3MAP_POSTGRES_USER:?Please define an postgres user!}:\
+        ${S3MAP_POSTGRES_PASS:?Please define an postgres password!}@\
+        ${S3MAP_POSTGRES_HOST:-database}/\
+        ${S3MAP_POSTGRES_DATABASE:-postgres}"
     command:
       - "run-create-thing-on-minio-action-service"
 
@@ -236,6 +246,11 @@ services:
       MINIO_URL: "${MINIO_HOST:-minio:9000}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER:?Please define an minio root user!}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD:?Please define an minio root user password!}"
+      S3MAP_DB_URL: "postgresql://\
+        ${S3MAP_POSTGRES_USER:?Please define an postgres user!}:\
+        ${S3MAP_POSTGRES_PASS:?Please define an postgres password!}@\
+        ${S3MAP_POSTGRES_HOST:-database}/\
+        ${S3MAP_POSTGRES_DATABASE:-postgres}"
       SCHEDULER: "${SCHEDULER:-BasicScheduler}"
       SCHED_HOST: "${SCHED_HOST:-http://basic-demo-scheduler:5000}"
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER:-None}"
