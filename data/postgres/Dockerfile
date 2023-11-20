@@ -18,5 +18,10 @@ RUN adduser --uid ${UID} --disabled-password tsm || exit 0
 # Adjust owner of postgres data directory
 RUN chown ${UID} /var/lib/postgresql
 
+RUN chmod gu+rw /var/run \
+    && chmod gu+s /usr/sbin/cron
+
 # switch to user with UID
 USER ${UID}
+
+ENTRYPOINT ["/bin/bash", "-c", "/docker-entrypoint.sh postgres & /usr/sbin/cron -f"]
