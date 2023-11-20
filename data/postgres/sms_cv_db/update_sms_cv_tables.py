@@ -56,7 +56,7 @@ def get_json_from_url(url: str, endpoint: str):
     return data
 
 def update_measured_quantity(cursor: cursor, url: str, endpoint: str):
-    print("Updating sms_cv_measured_quantity ...")
+    print("sms_cv_measured_quantity updating ...")
     # create table if not exists
     cursor.execute(
         """
@@ -87,7 +87,7 @@ def update_measured_quantity(cursor: cursor, url: str, endpoint: str):
                 item["attributes"]["definition"],
             ),
         )
-    print("Updated sms_cv_measured_quantity table!")
+    print("sms_cv_measured_quantity updated!")
 
 
 if __name__ == "__main__":
