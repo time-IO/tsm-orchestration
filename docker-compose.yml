@@ -175,7 +175,7 @@ services:
         ${S3MAP_POSTGRES_USER:?Please define an postgres user!}:\
         ${S3MAP_POSTGRES_PASS:?Please define an postgres password!}@\
         ${S3MAP_POSTGRES_HOST:-database}/\
-        ${S3MAP_POSTGRES_DATABASE:-postgres}"
+        ${S3MAP_POSTGRES_DB:-postgres}"
     command:
       - "run-create-thing-on-minio-action-service"
 
@@ -250,7 +250,7 @@ services:
         ${S3MAP_POSTGRES_USER:?Please define an postgres user!}:\
         ${S3MAP_POSTGRES_PASS:?Please define an postgres password!}@\
         ${S3MAP_POSTGRES_HOST:-database}/\
-        ${S3MAP_POSTGRES_DATABASE:-postgres}"
+        ${S3MAP_POSTGRES_DB:-postgres}"
       SCHEDULER: "${SCHEDULER:-BasicScheduler}"
       SCHED_HOST: "${SCHED_HOST:-http://basic-demo-scheduler:5000}"
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER:-None}"
