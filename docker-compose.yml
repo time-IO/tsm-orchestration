@@ -66,6 +66,7 @@ services:
       - "./data/postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql"
       - "./data/postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql"
       - "./data/postgres/sms_db/init_sms_tables.sh:/docker-entrypoint-initdb.d/11_init_sms_tables.sh"
+      - "./data/postgres/sms_db/update_sms_tables.py:/home/postgres/update_sms_tables.py"
       - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql"
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
       - "./data/postgres/sms_cv_db/init_sms_cv_tables.sh:/docker-entrypoint-initdb.d/12_init_sms_cv_tables.sh"

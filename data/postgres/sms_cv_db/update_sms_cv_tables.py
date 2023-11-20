@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2.extensions import cursor
 from urllib.request import urlopen
+from urllib.parse import urljoin
 import json
 from os import environ
 import time
@@ -39,20 +40,25 @@ def establish_connection():
         exit(1)
     return db
 
-def update_sms_cv_tables():
-    cv_url = environ.get("CV_URL")
+def update_sms_cv_tables(cv_url: str):
     db = establish_connection()
     with db:
         with db.cursor() as c:
-            update_measured_quantity(c)            
+            update_measured_quantity(cursor=c, url=cv_url, endpoint="measuredquantities")
+            # add more tables here
+
             db.commit()
             print("All tables updated")
 
+def get_json_from_url(url: str, endpoint: str):
+    response = urlopen(urljoin(url, endpoint))
+    data = json.loads(response.read())
+    return data
 
-def update_measured_quantity(cursor: cursor):
-    print("Updating sms_cv_measured_quantity table...")
+def update_measured_quantity(cursor: cursor, url: str, endpoint: str):
+    print("Updating sms_cv_measured_quantity ...")
     # create table if not exists
-    cur.execute(
+    cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS sms_cv_measured_quantity (
             id integer PRIMARY KEY,
@@ -62,11 +68,10 @@ def update_measured_quantity(cursor: cursor):
         )
         """
     )
-    response = urlopen(cv_url)
-    data = json.loads(response.read())
+    data = get_json_from_url(url, endpoint)
     # insert/update data
     for item in data["data"]:
-        cur.execute("""
+        cursor.execute("""
             INSERT INTO sms_cv_measured_quantity 
             (id, term, provenance_uri, definition)
             VALUES (%s, %s, %s, %s)
@@ -76,14 +81,15 @@ def update_measured_quantity(cursor: cursor):
             definition = EXCLUDED.definition
             """,
             (
-                int(item["id"]),
+                item["id"],
                 item["attributes"]["term"],
                 item["attributes"]["provenance_uri"],
                 item["attributes"]["definition"],
             ),
         )
-    print("sms_cv_measured_quantity table updated")
+    print("Updated sms_cv_measured_quantity table!")
 
 
 if __name__ == "__main__":
-    update_sms_cv_tables()
+    cv_url = environ.get("CV_URL")
+    update_sms_cv_tables(cv_url)
