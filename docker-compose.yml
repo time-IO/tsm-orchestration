@@ -2,7 +2,7 @@
 version: "3.9"
 
 include:
-  - "docker-compose-base.yml"
+  - "docker-compose-backend.yml"
   - "docker-compose-worker.yml"
   - "docker-compose-frontend.yml"
 
