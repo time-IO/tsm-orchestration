@@ -1,0 +1,370 @@
+---
+version: "3.9"
+services:
+
+  # Summary
+  # =======
+  # brief: create certificates
+  # dir: init
+  # see also: init/Dockerfile
+  #
+  # Description
+  # ===========
+  # This service run init/init.sh, which create and install
+  # ssl certificates for minio and sftp
+  init:
+    build:
+      context: "init"
+      args:
+        UID: "${UID}"
+        GID: "${GID}"
+    restart: "no"
+    user: "${UID}:${GID}"
+    volumes:
+      - "./data/minio/certs/:/tmp/certs"
+      - "./nginx/html/:/home/tsm/html"
+
+
+  # Summary
+  # =======
+  # brief: central database
+  # dir: data/postgres mosquitto frontend dispatcher
+  # see also:
+  #     - data/postgres/Dockerfile,
+  #     - scripts mentioned in the 'volumes' section below
+  # admin login:
+  #     - TODO: replace with correct $ENVVARS
+  #     - `psql postgresql:// USER : PASSWORD @ HOST : PORT / DATABASE`
+  #     - `psql postgresql://postgres:postgres@localhost:5432/postgres`
+  #
+  # Description
+  # ===========
+  # This service provide database(s) for other services, namely
+  # 1. a database for each group/project to store the things and the observations
+  # 2. 'mqtt_auth' database for the service 'mqtt-broker'. It holds the mqtt-user,
+  #   which are allowed to send data to the broker
+  # 3. 's3map_db' database, for some worker-services. It maps group specific
+  #   object-storage buckets to things and corresponding databases (see 1.)
+  # 4. the 'frontenddb' database for the service 'frontend', which use django
+  # 5. SMS: TODO
+  # 6. SMS_CV: TODO
+  # To see how and where the creation of each db is defined see in the volumes section
+  # for the scripts, which gets mounted and executed on startup.
+  database:
+    restart: "${RESTART:-on-failure}"
+    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG:-latest-pg14}
+    build:
+      context: "data/postgres"
+      args:
+        UID: "${UID}"
+    ports:
+      - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:\
+                     ?Please define an postgres user!}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:\
+                         ?Please define an postgres password!}"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER:?\
+                               Please define a mqtt auth database user!}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
+                               Please define a mqtt auth database password!}"
+      S3MAP_POSTGRES_USER: "${S3MAP_POSTGRES_USER:?\
+                               Please define a s3-map database user!}"
+      S3MAP_POSTGRES_PASS: "${S3MAP_POSTGRES_PASS:?\
+                               Please define a s3-map database password!}"
+      FRONTEND_POSTGRES_USER: "${FRONTEND_POSTGRES_USER:?\
+                               Please define a frontend database user!}"
+      FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
+                               Please define a frontend database password!}"
+      SMS_DB_USER: "${SMS_DB_USER:\
+                           ?Please define a SMS postgres user!}"
+      SMS_DB_PASSWORD: "${SMS_DB_PASSWORD:\
+                           ?Please define a SMS postgres password!}"
+      SMS_DB_PORT: "${SMS_DB_PORT:\
+                           ?Please define a SMS postgres port!}"
+      SMS_DB_DB: "${SMS_DB_DB:\
+                           ?Please define a SMS postgres DB name!}"
+      SMS_DB_HOST: "${SMS_DB_HOST:\
+                           ?Please define a SMS postgres host!}"
+      CV_DB_USER: "${CV_DB_USER:\
+                           ?Please define a SMS_CV postgres user!}"
+      CV_DB_PASSWORD: "${CV_DB_PASSWORD:\
+                           ?Please define a SMS_CV postgres password!}"
+      CV_DB_PORT: "${CV_DB_PORT:\
+                           ?Please define a SMS_CV postgres port!}"
+      CV_DB_DB: "${CV_DB_DB:\
+                           ?Please define a SMS_CV postgres DB name!}"
+      CV_DB_HOST: "${CV_DB_HOST:\
+                           ?Please define a SMS_CV postgres host!}"
+    volumes:
+      - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
+      - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
+      - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
+      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/docker-entrypoint-initdb.d/05_sms_cv_ddl.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
+      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
+      - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
+      - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
+      - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
+      - "./data/postgres/data:/var/lib/postgresql/data"
+      - "./data/postgres/postgres-force-ssl.sh:\
+      /docker-entrypoint-initdb.d/postgres-force-ssl.sh"
+      - "${POSTGRES_TLS_CERT_PATH:-/tmp/c8cf2d92-\
+      73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.crt"
+      - "${POSTGRES_TLS_KEY_PATH:-/tmp/c8cf2d92-\
+      73cd-11ec-b035-54e1ad7c5c19}:/var/lib/postgresql/server.key"
+    user: "${UID}:${GID}"
+    command: "${POSTGRES_EXTRA_PARAMS:-}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: "${POSTGRES_HEALTHCHECK_INTERVAL:-10s}"
+      timeout: 5s
+      retries: 5
+
+  # Summary
+  # =======
+  # brief: raw storage for observation files
+  # dir: none
+  # see also: none
+  # mqtt-topics: "object_storage_notification" (send)
+  # admin login:
+  #     -> http://localhost/object-storage/login
+  #     -> user, pass: $MINIO_ROOT_USER, $MINIO_ROOT_PASSWORD  (default: minioadmin)
+  #
+  # Description
+  # ===========
+  # The 'object-storage' aka. 'raw-data-storage' (or simply 'the minio' or 'S3') is
+  # a file based storage for the users to upload raw data files (e.g. some
+  # observations as a CSV).
+  # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
+  # sends mqtt messages to the broker on file upload (and other events).
+  object-storage:
+    image: "minio/minio:${OBJECT_STORAGE_IMAGE_TAG:-latest}"
+    restart: "${RESTART:-on-failure}"
+    ports:
+      - "${MINIO_SFTP_PORT:-127.0.0.1:40022}:22"
+      - "${MINIO_FTP_PORT:-127.0.0.1:40021}:21"
+      - "${MINIO_FTP_PASV_PORTS:-127.0.0.1:30000-30010:30000-30010}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_started"
+      init:
+        condition: "service_completed_successfully"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Please define an minio root user!}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?\
+      Please define an minio root user password!}"
+      MINIO_BROWSER_REDIRECT_URL: "${MINIO_BROWSER_REDIRECT_URL}"
+      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
+      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
+      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "object_storage_notification"
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER:\
+      ?Please define a mqtt user!}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD:\
+      ?Please define a mqtt password!}"
+      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
+      #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
+      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
+      #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
+      MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
+    volumes:
+      - "./data/minio/vol0:/vol0"
+      # FTP server tls key and cert
+      - "${MINIO_FTP_TLS_CRT:-./data/minio/certs/minio-ftp.crt}:/certs/minio-ftp.crt:ro"
+      - "${MINIO_FTP_TLS_KEY:-./data/minio/certs/minio-ftp.key}:/certs/minio-ftp.key:ro"
+      # SSH Server key to provide constant ssh host key
+      - "${MINIO_SFTP_HOSTKEY:-./data/minio/certs/id_ed25519}:/certs/id_ed25519:ro"
+    user: "${UID}:${GID}"
+    command:
+      - "server"
+      - "--console-address"
+      - ":9001"
+      - "--ftp"
+      - "address=:21"
+      - "--ftp"
+      - "passive-port-range=30000-30010"
+      - "--sftp"
+      - "address=:22"
+      - "--sftp"
+      - "ssh-private-key=/certs/id_ed25519"
+      - "--ftp"
+      - "tls-private-key=/certs/minio-ftp.key"
+      - "--ftp"
+      - "tls-public-cert=/certs/minio-ftp.crt"
+      - "--json"
+      - "/vol0"
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: "${MINIO_HEALTHCHECK_INTERVAL:-2s}"
+      timeout: 5s
+      retries: 15
+
+
+  # Summary
+  # =======
+  # brief: central mqtt message bus / broker
+  # dir: mosquitto
+  # see also: mosquitto/docker-entrypoint.sh
+  #
+  # Description
+  # ===========
+  # This is the main message bus, all mqtt messages are send here. Services can
+  # subscribe to topics and will receive messages that was sent to them.
+  mqtt-broker:
+    restart: "${RESTART:-on-failure}"
+    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG:-latest}"
+    depends_on:
+      database:
+        condition: "service_healthy"
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/var/lib/mosquitto/mosquitto.conf"
+    entrypoint:
+      - "/docker-entrypoint.sh"
+    user: "${UID}:${GID}"
+    environment:
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      MQTT_INGEST_USER: "${MQTT_INGEST_USER:?Please define a mqtt user!}"
+      MQTT_INGEST_PASSWORD: "${MQTT_INGEST_PASSWORD:?\
+                            Please define a mqtt password!}"
+      MQTT_AUTH_POSTGRES_HOST: "${MQTT_AUTH_POSTGRES_HOST:?\
+                               Please define a mqtt auth database host!}"
+      MQTT_AUTH_POSTGRES_PORT: "${MQTT_AUTH_POSTGRES_PORT:?\
+                               Please define a mqtt auth database portt!}"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER:?\
+                               Please define a mqtt auth database user!}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS:?\
+                               Please define a mqtt auth database password!}"
+      MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB\
+                               :?Please define a mqtt auth database name!}"
+      MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE\
+                              :?Please define a mqtt auth database connection\
+                               tls mode!}"
+      FRONTEND_MQTT_USER: "${FRONTEND_MQTT_USER\
+                            :?Please define a frontend mqtt user!}"
+      FRONTEND_MQTT_PASS: "${FRONTEND_MQTT_PASS\
+                            :?Please define a frontend mqtt password!}"
+    ports:
+      - "${MOSQUITTO_PORT:-127.0.0.1:1883}:1883"
+      - "${MOSQUITTO_PORT_SECURE:-127.0.0.1:8883}:8883"
+    volumes:
+      - "${MOSQUITTO_CONFIG:-./mosquitto/mosquitto.dev.conf}\
+      :/etc/mosquitto/config/mosquitto.conf:ro"
+      - "${MOSQUITTO_TLS_CONFIG:-./mosquitto/mosquitto.tls.conf}\
+      :/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
+      - "./data/mosquitto/auth:/mosquitto-auth/"
+      - "${MOSQUITTO_TLS_CERT_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:\
+      /mosquitto/config/certs/server.crt:ro"
+      - "${MOSQUITTO_TLS_KEY_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:\
+      /mosquitto/config/certs/server.key:ro"
+      - "${MOSQUITTO_TLS_CA_PATH:-/tmp/c8cf2d92\
+      -73cd-11ec-b035-54e1ad7c5c19}:/mosquitto/config/certs/ca.crt:ro"
+      - "./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh"
+    tmpfs:
+      - "/var/lib/mosquitto/:uid=${UID}"
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t \
+      '$$SYS/broker/version' -C 1 -u $${MQTT_USER} \
+      -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
+      interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL:-10s}"
+      timeout: 10s
+      retries: 6
+    logging:
+      options:
+        max-size: "${MQTT_BROKER_LOG_SIZE:-100K}"
+        max-file: "${MQTT_BROKER_FILE_COUNT:-10}"
+
+
+
+  # Summary
+  # =======
+  # brief: visualisation of observations stored in the -> database
+  # dir: grafana
+  # see also: none
+  # admin login:
+  #     -> http://localhost/visualization/login
+  #     -> user, pass: $GRAFANA_USER, $GRAFANA_PASSWORD  (default: grafana)
+  #
+  # Description
+  # ===========
+  # This visualize observations of a group or project that are stored in the database.
+  visualization:
+    restart: "${RESTART:-on-failure}"
+    image: "grafana/grafana:${GRAFANA_IMAGE_TAG:-latest}"
+    user: "${UID}:${GID}"
+    environment:
+      - "GF_SECURITY_ADMIN_USER=\
+      ${GRAFANA_USER:?Please define a grafana user}"
+      - "GF_SECURITY_ADMIN_PASSWORD=\
+      ${GRAFANA_PASSWORD:?Please define a grafana password}"
+      - "GF_SERVER_ROOT_URL=${GRAFANA_PROXY_URL:-http://localhost/visualization/}"
+      - "GF_SERVER_SERVE_FROM_SUB_PATH=true"
+      - "GF_AUTH_GENERIC_OAUTH_ENABLED=true"
+      - "GF_AUTH_GENERIC_OAUTH_NAME=Helmholtz AAI"
+      - "GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=true"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID}"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      - "GF_AUTH_GENERIC_OAUTH_SCOPES=email profile eduperson_principal_name"
+      - "GF_AUTH_GENERIC_OAUTH_AUTH_URL=${GF_AUTH_GENERIC_OAUTH_AUTH_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${GF_AUTH_GENERIC_OAUTH_TOKEN_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_API_URL=${GF_AUTH_GENERIC_OAUTH_API_URL}"
+      - "GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=eduperson_principal_name"
+      - "GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC=true"
+    volumes:
+      - "./grafana/provisioning:/etc/grafana/provisioning/"
+      - "./data/grafana/:/var/lib/grafana"
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  tsmdl:
+    image: "registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl:${TSM_DL_IMAGE_TAG:-latest}"
+    restart: "${RESTART:-on-failure}"
+    entrypoint: "/app/start.sh"
+    environment:
+      DB_URL: "postgresql://\
+      ${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:\
+      ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@\
+      ${CREATEDB_POSTGRES_HOST:-database}/\
+      ${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      WEB_CONCURRENCY: 10
+      UVICORN_ARGS: "${UVICORN_ARGS:-} --root-path /tsmdl"
+    depends_on:
+      database:
+        condition: service_healthy
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  frost:
+    build:
+      context: "data/tomcat"
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+    restart: "${RESTART:-on-failure}"
+    volumes:
+      - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
+
