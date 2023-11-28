@@ -57,6 +57,7 @@ services:
       context: "data/postgres"
       args:
         UID: "${UID}"
+        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG:-pg14}"
     ports:
       - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
     environment:

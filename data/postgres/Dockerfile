@@ -1,5 +1,6 @@
 # start from ubuntu based timescale image
-FROM timescale/timescaledb-ha:pg14
+ARG DATABASE_IMAGE_TAG=pg14
+FROM timescale/timescaledb-ha:${DATABASE_IMAGE_TAG}
 
 # switch from postgres/1000 to root and install postgis
 USER root
