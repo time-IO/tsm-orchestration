@@ -141,7 +141,7 @@
                         },
                         {
                           "name": "pandas_read_csv",
-                          "type": "string"
+                          "type": ["string", "null"]
                         }
                       ]
                     }
