@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# check if CV_API_ACCESS is true
 if [ "$CV_API_ACCESS" == "false" ]; then
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -f /sql/sms_cv/sms_cv_ddl.sql
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" <<-EOSQL
