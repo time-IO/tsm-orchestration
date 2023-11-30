@@ -431,6 +431,20 @@ services:
         condition: service_healthy
 
 
+  # Summary
+  # =======
+  # brief: Make services accessible on single address  (eg. tsm.ufz.de)
+  # dir: nginx
+  # see also: ./nginx/*.conf
+  #
+  # Description
+  # ===========
+  # This maps service endpoints to a path on a main URL, mainly
+  #  - the service  frontend       to  URL/frontend
+  #  - the service  object-storage to  URL/object-storage
+  #  - the service  visualization  to  URL/visualization
+  #  - the service  frost          to  URL/sta
+  #  - the service  tsmdl          to  URL/tsmdl
   proxy:
     image: "nginx:${NGINX_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
