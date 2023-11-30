@@ -48,16 +48,17 @@ services:
         context: "cron"
         args:
             UID: "${UID:-1000}"
-            #GID: "${GID:-1000}"
-            USER: "tsm"
     restart: "${RESTART:-on-failure}"
     environment:
+      SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
       CREATEDB_POSTGRES_USER: "${CREATEDB_POSTGRES_USER:-postgres}"
       CREATEDB_POSTGRES_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD:-postgres}"
       CREATEDB_POSTGRES_HOST: "${CREATEDB_POSTGRES_HOST:-database}"
       CREATEDB_POSTGRES_DATABASE: "${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      SMS_API_ACCESS: "${SMS_API_ACCESS:-false}"
       SMS_API_URL: "${SMS_API_URL}"
       SMS_API_TOKEN: "${SMS_API_TOKEN}"
+      CV_API_ACCESS: "${CV_API_ACCESS:-true}"
       CV_API_URL: "${CV_API_URL}"
     healthcheck:
       test: ["CMD-SHELL", "service cron status || exit 1"]

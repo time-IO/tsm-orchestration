@@ -2,14 +2,13 @@ FROM debian:bullseye-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends cron tini python3 python3-pip\
-    && rm -rf /var/lib/apt/
-
-RUN rm -rf /etc/cron.*/*
+    && rm -rf /var/lib/apt/\
+    && rm -rf /etc/cron.*/*
 
 COPY requirements.txt .
 
-# upgrade pip and ensure pip, then install requirements
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 ARG UID=1000
 ARG USER=tsm
@@ -21,8 +20,11 @@ RUN chmod gu+rw /var/run \
 
 USER ${UID}
 
-COPY crontab.txt .
+ENV STDOUT=/proc/1/fd/1
+ENV STDERR=/proc/1/fd/2
+
+COPY cron-entrypoint.sh .
 
 ENTRYPOINT ["tini", "--"]
 
-CMD ["sh", "-c", "(printenv; cat /tmp/crontab.txt) > /tmp/new_crontab.txt && crontab /tmp/new_crontab.txt && cron -f"]
+CMD ["sh", "-c", "./cron-entrypoint.sh"]

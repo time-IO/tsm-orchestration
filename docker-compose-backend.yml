@@ -78,6 +78,7 @@ services:
                                Please define a frontend database user!}"
       FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
                                Please define a frontend database password!}"
+      SMS_API_ACCESS: "${SMS_API_ACCESS:-false}"
       SMS_DB_USER: "${SMS_DB_USER:\
                            ?Please define a SMS postgres user!}"
       SMS_DB_PASSWORD: "${SMS_DB_PASSWORD:\
@@ -88,6 +89,7 @@ services:
                            ?Please define a SMS postgres DB name!}"
       SMS_DB_HOST: "${SMS_DB_HOST:\
                            ?Please define a SMS postgres host!}"
+      CV_API_ACCESS: "${CV_API_ACCESS:-false}"
       CV_DB_USER: "${CV_DB_USER:\
                            ?Please define a SMS_CV postgres user!}"
       CV_DB_PASSWORD: "${CV_DB_PASSWORD:\
@@ -99,13 +101,13 @@ services:
       CV_DB_HOST: "${CV_DB_HOST:\
                            ?Please define a SMS_CV postgres host!}"
     volumes:
-      - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
-      - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
-      - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
-      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/docker-entrypoint-initdb.d/05_sms_cv_ddl.sql"
-      - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql"
+      - "./data/postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql"
+      - "./data/postgres/sms_db/sms_init_tables.sh:/sql/sms/01_sms_init_tables.sh"
+      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"

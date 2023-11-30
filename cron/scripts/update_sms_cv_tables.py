@@ -1,5 +1,6 @@
 import psycopg2
-from psycopg2.extensions import cursor
+from typing import Dict
+from psycopg2.extensions import cursor, connection
 from urllib.request import urlopen
 from urllib.parse import urljoin
 import json
@@ -7,15 +8,15 @@ from os import environ
 import time
 from datetime import datetime
 
-def get_utc_str():
+def get_utc_str() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
-def get_connection():
+def get_connection_from_env() -> connection:
     user = environ.get("CREATEDB_POSTGRES_USER")
     password = environ.get("CREATEDB_POSTGRES_PASSWORD")
     host = environ.get("CREATEDB_POSTGRES_HOST")
     db = environ.get("CREATEDB_POSTGRES_DATABASE")
-    print(f"{get_utc_str()}: Connecting to {db} on {host} as {user} with password {password}")
+    print(f"{get_utc_str()}: Connecting on host '{host}' to db '{db}' as user '{user}' with password '{password}'")
     retries = 4
     sleep = 3
     while retries > 0:
@@ -31,14 +32,14 @@ def get_connection():
     print(f"{get_utc_str()}: Exiting...")
     exit(1)
 
-def get_json_from_url(url: str, endpoint: str):
+def get_json_from_url(url: str, endpoint: str) -> Dict:
     print(f"{get_utc_str()}: Getting data from {urljoin(url, endpoint)}")
     response = urlopen(urljoin(url, endpoint))
     data = json.loads(response.read())
     return data
 
-def update_sms_cv_tables(url: str):
-    db = get_connection()
+def update_sms_cv_tables(url: str) -> None:
+    db = get_connection_from_env()
     with db:
         with db.cursor() as c:
             update_measured_quantity(cursor=c, url=url, endpoint="measuredquantities")
@@ -47,7 +48,8 @@ def update_sms_cv_tables(url: str):
             db.commit()
             print(f"{get_utc_str()}: All tables updated")
 
-def update_measured_quantity(cursor: cursor, url: str, endpoint: str):
+
+def update_measured_quantity(cursor: cursor, url: str, endpoint: str) -> None:
     print(f"{get_utc_str()}: Updating sms_cv_measured_quantity ...")
     # create table if not exists
     cursor.execute(
@@ -82,6 +84,8 @@ def update_measured_quantity(cursor: cursor, url: str, endpoint: str):
     print(f"{get_utc_str()}: Updated sms_cv_measured_quantity!")
 
 
-if __name__ == "__main__":
-    cv_url = environ.get("CV_API_URL")
-    update_sms_cv_tables(cv_url)
+api_access = environ.get("CV_API_ACCESS")
+url = environ.get("CV_API_URL")
+
+if __name__ == "__main__" and api_access == "true":
+    update_sms_cv_tables(url)
