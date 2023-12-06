@@ -367,6 +367,7 @@ services:
       args:
         UID: "${UID:-1000}"
         GID: "${GID:-1000}"
+        TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
     restart: "${RESTART:-on-failure}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"

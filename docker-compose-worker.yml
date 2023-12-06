@@ -264,11 +264,13 @@ services:
     command:
       - "--verbose"
 
+
   cron-scheduler:
     build:
         context: "cron"
         args:
             UID: "${UID:-1000}"
+            DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
     restart: "${RESTART:-on-failure}"
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
