@@ -2,9 +2,8 @@
 version: "3.9"
 
 include:
-  - "docker-compose-backend.yml"
+  - "docker-compose-base.yml"
   - "docker-compose-worker.yml"
-  - "docker-compose-frontend.yml"
 
 services:
 
@@ -42,29 +41,3 @@ services:
       - "/var/run:/var/run:ro"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
-
-  cron:
-    build:
-        context: "cron"
-        args:
-            UID: "${UID:-1000}"
-    restart: "${RESTART:-on-failure}"
-    environment:
-      SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
-      CREATEDB_POSTGRES_USER: "${CREATEDB_POSTGRES_USER:-postgres}"
-      CREATEDB_POSTGRES_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD:-postgres}"
-      CREATEDB_POSTGRES_HOST: "${CREATEDB_POSTGRES_HOST:-database}"
-      CREATEDB_POSTGRES_DATABASE: "${CREATEDB_POSTGRES_DATABASE:-postgres}"
-      SMS_API_ACCESS: "${SMS_API_ACCESS:-false}"
-      SMS_API_URL: "${SMS_API_URL}"
-      SMS_API_TOKEN: "${SMS_API_TOKEN}"
-      CV_API_ACCESS: "${CV_API_ACCESS:-true}"
-      CV_API_URL: "${CV_API_URL}"
-    healthcheck:
-      test: ["CMD-SHELL", "service cron status || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    volumes:
-      - "./cron/crontab.txt:/tmp/crontab.txt:ro"
-      - "./cron/scripts:/home/tsm/scripts:ro"
