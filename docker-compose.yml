@@ -33,9 +33,36 @@ services:
   monitoring:
     image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
-    container_name: "cadvisor"
-    ports:
-      - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
+    depends_on:
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TOPIC: "thing_creation"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER:?Please define a mqtt user!}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      DATABASE_URL: "postgresql://\
+        ${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:\
+        ${CREATEDB_POSTGRES_PASSWORD:?Please define an postgres password!}@\
+        ${CREATEDB_POSTGRES_HOST:-database}/\
+        ${CREATEDB_POSTGRES_DATABASE:-postgres}"
+      SMS_URL: "${SMS_URL}"
+      CV_URL: "${CV_URL}"
+    command:
+      - "run-create-database-schema-action-service"
+
+
+  worker-frost-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    restart: "${RESTART:-on-failure}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_healthy"
+      database:
+        condition: "service_healthy"
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
