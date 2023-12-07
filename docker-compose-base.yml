@@ -78,7 +78,7 @@ services:
                               Please define a frontend database user!}"
       FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
                               Please define a frontend database password!}"
-      SMS_API_ACCESS: "${SMS_API_ACCESS:-false}"
+      SMS_API_ACCESS: "${SMS_API_ACCESS}"
       SMS_DB_USER: "${SMS_DB_USER:\
                           ?Please define a SMS postgres user!}"
       SMS_DB_PASSWORD: "${SMS_DB_PASSWORD:\
@@ -89,7 +89,7 @@ services:
                           ?Please define a SMS postgres DB name!}"
       SMS_DB_HOST: "${SMS_DB_HOST:\
                           ?Please define a SMS postgres host!}"
-      CV_API_ACCESS: "${CV_API_ACCESS:-false}"
+      CV_API_ACCESS: "${CV_API_ACCESS}"
       CV_DB_USER: "${CV_DB_USER:\
                           ?Please define a SMS_CV postgres user!}"
       CV_DB_PASSWORD: "${CV_DB_PASSWORD:\
