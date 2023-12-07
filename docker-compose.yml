@@ -403,6 +403,7 @@ services:
     restart: "${RESTART:-on-failure}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
+      - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
 
   # Summary
   # =======
