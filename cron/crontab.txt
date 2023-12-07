@@ -1,1 +1,1 @@
-* * * * * /usr/bin/python3 $HOME/scripts/update_sms_cv_tables.py > $STDOUT 2>$STDERR
+15,45 * * * * /usr/bin/python3 $HOME/scripts/update_sms_cv_tables.py > $STDOUT 2>$STDERR
