@@ -19,15 +19,13 @@ def get_connection_from_env() -> connection:
     print(f"{get_utc_str()}: Connecting on host '{host}' to db '{db}' as user '{user}' with password '{password}'")
     retries = 4
     sleep = 3
-    while retries > 0:
+    for _ in range(retries):
         try:
-            db = psycopg2.connect(
+            return psycopg2.connect(
                 database=db, user=user, password=password, host=host
             )
-            return db
         except Exception as e:
             print(f"{get_utc_str()}: Retrying...")
-            retries -= 1
             time.sleep(sleep)
     print(f"{get_utc_str()}: Exiting...")
     exit(1)
