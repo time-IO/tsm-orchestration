@@ -11,14 +11,12 @@ from datetime import datetime
 def get_utc_str() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
-def get_connection_from_env() -> connection:
+def get_connection_from_env(retries: int=4, sleep: int=3) -> connection:
     user = environ.get("CREATEDB_POSTGRES_USER")
     password = environ.get("CREATEDB_POSTGRES_PASSWORD")
     host = environ.get("CREATEDB_POSTGRES_HOST")
     db = environ.get("CREATEDB_POSTGRES_DATABASE")
     print(f"{get_utc_str()}: Connecting on host '{host}' to db '{db}' as user '{user}' with password '{password}'")
-    retries = 4
-    sleep = 3
     for _ in range(retries):
         try:
             return psycopg2.connect(
