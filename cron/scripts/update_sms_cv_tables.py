@@ -31,14 +31,14 @@ def get_connection_from_env() -> connection:
     exit(1)
 
 def get_json_from_url(url: str, endpoint: str) -> Dict:
-    print(f"{get_utc_str()}: Getting data from {urljoin(url, endpoint)}")
-    response = urlopen(urljoin(url, endpoint))
+    target = urljoin(url, endpoint)
+    print(f"{get_utc_str()}: Getting data from {target}")
+    response = urlopen(target)
     data = json.loads(response.read())
     return data
 
 def update_sms_cv_tables(url: str) -> None:
-    db = get_connection_from_env()
-    with db:
+    with get_connection_from_env() as db:
         with db.cursor() as c:
             update_measured_quantity(cursor=c, url=url, endpoint="measuredquantities")
             # add more tables here
