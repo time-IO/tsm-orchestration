@@ -220,3 +220,11 @@ Now you're able to access the minio service with `https`. The postgres
 database will enforce encryption but you need to enable
 [`full-verification`](https://stackoverflow.com/questions/14021998/using-psql-to-connect-to-postgresql-in-ssl-mode) mode in client to also check the identity of the
 server.
+
+# Extend or override docker-compose
+- preparations:
+  - copy `docker-compose-dev.example.yml` and rename it to `docker-compose-dev.yml`
+  - add your changes to `docker-compose-dev.yml`
+  - note: changes to `docker-compose-dev.yml` are not added to version control
+- To run locally and override or extend the `docker-compose.yml` you can use the following command:  
+  -  `docker compose -f docker-compose.yml -f docker-compose-dev.yml  up -d`
