@@ -425,6 +425,8 @@ services:
       - "MINIO_FTP_PORT=${MINIO_FTP_PORT:-127.0.0.1:40021}"
       - "MINIO_SFTP_PORT=${MINIO_SFTP_PORT:-127.0.0.1:40022}"
       - "PROXY_URL=${PROXY_URL:-http://localhost:80}"
+      - "ALLOWED_VOS=${ALLOWED_VOS:-}"
+
     depends_on:
       database:
         condition: service_healthy
