@@ -242,6 +242,7 @@ services:
       GRAFANA_URL: "${GRAFANA_URL:-http://visualization:3000}"
       GRAFANA_USER: "${GRAFANA_USER:?Please define a grafana user!}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
+      ALLOWED_VOS: "${ALLOWED_VOS:-}"
     command:
       - "run-create-grafana-user-orgs-service"
 
