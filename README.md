@@ -222,9 +222,26 @@ database will enforce encryption but you need to enable
 server.
 
 # Extend or override docker-compose
+
 - preparations:
   - copy `docker-compose-dev.example.yml` and rename it to `docker-compose-dev.yml`
   - add your changes to `docker-compose-dev.yml`
   - note: changes to `docker-compose-dev.yml` are not added to version control
 - To run locally and override or extend the `docker-compose.yml` you can use the following command:  
   -  `docker compose -f docker-compose.yml -f docker-compose-dev.yml  up -d`
+
+## Mount local repositories into services
+
+If you use the workflow described above (without making changes to `docker-compose-dev.example.env`), it will mount the code of the other local TSM repositories into their respective services. If you now make changes to the code or check out another branch in a repository, it will directly be present inside the services defined in the `docker-compose-dev.example.yml`. This way you don't have to build an image every time you change something in the code.
+
+Please note that this will only work if you have the other TSM respositories in the same parent directory as tsm-orchestration, as shown below.
+
+``` 
+TSM_DIRECTORY (can be any dir)
+├── tsm-orchestration
+├── tsm-dispatcher
+├── tsm-frontend
+├── tsm-basic-demo-scheduler
+├── tsm-extractor
+└── tsm-ufz-tsmdl
+```
