@@ -13,3 +13,4 @@ data/
 !data/mosquitto/config/.gitkeep
 !data/tomcat/context/.gitkeep
 /Pipfile
+docker-compose-dev.yml
