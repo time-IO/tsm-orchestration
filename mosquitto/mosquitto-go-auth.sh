@@ -16,7 +16,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         "id"           bigserial    NOT NULL PRIMARY KEY,
         "project_uuid" uuid         NOT NULL,
         "thing_uuid"   uuid         NOT NULL UNIQUE,
-        "username"     varchar(256) NOT NULL,
+        "username"     varchar(256) NOT NULL UNIQUE,
         "password"     varchar(256) NOT NULL,
         "db_schema"    varchar(256) NOT NULL,
         "description"  text         NULL,
