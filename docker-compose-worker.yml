@@ -6,6 +6,7 @@ services:
   # SETUP worker (topic: thing_creation)
   # =================================================================
 
+  # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "${RESTART}"
@@ -33,6 +34,15 @@ services:
       - "run-create-thing-on-minio-action-service"
 
 
+  # Summary
+  # =======
+  # brief:  create things in project-DB
+  #
+  # Description
+  # ===========
+  # - create a new DB for a project, if not it not already exist
+  # - create/update a thing in DB
+  # - create/update frost view for the thing
   worker-db-setup:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "${RESTART}"
@@ -78,7 +88,7 @@ services:
     command:
       - "run-create-new-frost-server-service"
 
-
+  # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: on-failure
