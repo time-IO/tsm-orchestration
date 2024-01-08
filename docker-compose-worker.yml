@@ -34,7 +34,7 @@ services:
 
 
   worker-db-setup:
-    image: "dispatcher:local"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
