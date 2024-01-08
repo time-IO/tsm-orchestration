@@ -34,7 +34,7 @@ services:
   #     - scripts mentioned in the 'volumes' section below
   # admin login:
   #     - TODO: replace with correct $ENVVARS
-  #     - `psql postgresql:// USER : PASSWORD @ HOST : PORT / DATABASE`
+  #     - `psql postgresql:// POSTGRES_USER : POSTGRES_PASSWORD @ HOST?? : PORT?? / DATABASE??`
   #     - `psql postgresql://postgres:postgres@localhost:5432/postgres`
   #
   # Description
@@ -230,7 +230,12 @@ services:
     tmpfs:
       - "/var/lib/mosquitto/:uid=${UID}"
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t \ '$$SYS/broker/version' -C 1 -u $${MQTT_USER} \ -P $${MQTT_PASSWORD} --id docker-compose-healthcheck"]
+      test: ["CMD-SHELL", "mosquitto_sub \
+        -t '$$SYS/broker/version' \
+        -C 1 \
+        -u $${MQTT_USER} \ 
+        -P $${MQTT_PASSWORD} \
+        --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
       timeout: 10s
       retries: 6
@@ -293,8 +298,10 @@ services:
     entrypoint: "/app/start.sh"
     environment:
       DB_URL: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/${CREATEDB_POSTGRES_DATABASE}"
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
       WEB_CONCURRENCY: 10
       UVICORN_ARGS: "${UVICORN_ARGS} --root-path /tsmdl"
     depends_on:
