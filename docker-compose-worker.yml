@@ -30,11 +30,11 @@ services:
         ${S3MAP_POSTGRES_HOST:-database}/\
         ${S3MAP_POSTGRES_DB:-postgres}"
     command:
-      - "run-create-thing-on-minio-action-service"
+      - "create-thing-in-minio"
 
 
   worker-db-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "dispatcher:local"
     restart: "${RESTART:-on-failure}"
     depends_on:
       mqtt-broker:
@@ -55,7 +55,7 @@ services:
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
     command:
-      - "run-create-database-schema-action-service"
+      - "create-thing-in-postgres"
 
 
   worker-frost-setup:
@@ -76,7 +76,7 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD:?Please define a mqtt password!}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL:-http://localhost/sta/}"
     command:
-      - "run-create-new-frost-server-service"
+      - "create-frost-instance"
 
 
   worker-mqtt-user-creation:
@@ -99,7 +99,7 @@ services:
         ${CREATEDB_POSTGRES_HOST:-database}/\
         ${CREATEDB_POSTGRES_DATABASE:-postgres}"
     command:
-      - run-create-mqtt-user-action-service
+      - "create-mqtt-user"
 
 
   worker-grafana-dashboard:
@@ -121,7 +121,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE:-disable}"
     command:
-      - "run-create-grafana-dashboard-service"
+      - "create-thing-in-grafana"
 
 
   # =================================================================
@@ -165,7 +165,7 @@ services:
       # replaced by SCHED_HOST; remove after dispatcher/MR73 is merged
       SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/extractor/run"
     command:
-      - "run-process-new-file-service"
+      - "schedule-parser-job"
 
 
   worker-run-qaqc:
@@ -194,7 +194,7 @@ services:
       # replaced by SCHED_HOST; remove after dispatcher/MR73 is merged
       SCHED_ENDPOINT_URL: "http://basic-demo-scheduler:5000/qaqc/run"
     command:
-      - "run-qaqc"
+      - "schedule-qaqc-job"
 
 
   worker-mqtt-ingest:
@@ -212,7 +212,7 @@ services:
       MQTT_USER: "${MQTT_INGEST_USER:?Please define a mqtt user!}"
       MQTT_PASSWORD: "${MQTT_INGEST_PASSWORD:?Please define a mqtt password!}"
     command:
-      - parse-data
+      - parse-mqtt-data
       - --target-uri
       - "postgresql://\
         ${CREATEDB_POSTGRES_USER:?Please define an postgres user!}:\
@@ -244,7 +244,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD:?Please define a grafana password!}"
       ALLOWED_VOS: "${ALLOWED_VOS:-}"
     command:
-      - "run-create-grafana-user-orgs-service"
+      - "create-grafana-user"
 
 
   basic-demo-scheduler:
