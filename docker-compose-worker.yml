@@ -7,8 +7,8 @@ services:
   # =================================================================
 
   worker-object-storage-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -34,8 +34,8 @@ services:
 
 
   worker-db-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -59,8 +59,8 @@ services:
 
 
   worker-frost-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -80,7 +80,7 @@ services:
 
 
   worker-mqtt-user-creation:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: on-failure
     depends_on:
       mqtt-broker:
@@ -103,8 +103,8 @@ services:
 
 
   worker-grafana-dashboard:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -129,7 +129,7 @@ services:
   # =================================================================
 
   worker-file-ingest:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -169,7 +169,7 @@ services:
 
 
   worker-run-qaqc:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "on-failure"
     depends_on:
       mqtt-broker:
@@ -198,7 +198,7 @@ services:
 
 
   worker-mqtt-ingest:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: on-failure
     depends_on:
       mqtt-broker:
@@ -226,8 +226,8 @@ services:
   # =================================================================
 
   worker-grafana-user-orgs:
-    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -248,8 +248,8 @@ services:
 
 
   basic-demo-scheduler:
-    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG}"
+    restart: "${RESTART}"
     # prevent blocking/slowing-down of other services
     # if many scheduler jobs occur at the same time
     cpu_count: ${SCHEDULER_CPU_COUNT:-1}
