@@ -8,34 +8,34 @@ include:
 services:
 
   mqtt-cat:
-    restart: "${RESTART:-on-failure}"
-    image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG:-latest}"
+    restart: "${RESTART}"
+    image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG}"
     depends_on:
       mqtt-broker:
         condition: "service_started"
     logging:
       options:
-        max-size: "${MQTT_CAT_LOG_SIZE:-100K}"
-        max-file: "${MQTT_CAT_FILE_COUNT:-10}"
+        max-size: "${MQTT_CAT_LOG_SIZE}"
+        max-file: "${MQTT_CAT_FILE_COUNT}"
     command:
       - "mosquitto_sub"
       - "-h"
       - "mqtt-broker"
       - "--pretty"
       - "-u"
-      - "${MQTT_USER:?Please define a mqtt user!}"
+      - "${MQTT_USER}"
       - "-P"
-      - "${MQTT_PASSWORD:?Please define a mqtt password!}"
+      - "${MQTT_PASSWORD}"
       - "-t"
       - "#"
       - "-v"
 
   monitoring:
-    image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG:-latest}"
-    restart: "${RESTART:-on-failure}"
+    image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG}"
+    restart: "${RESTART}"
     container_name: "cadvisor"
     ports:
-      - "${CADVISOR_PORT:-127.0.0.1:8080}:8080"
+      - "${CADVISOR_PORT}:8080"
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
