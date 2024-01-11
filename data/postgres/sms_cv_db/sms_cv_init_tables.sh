@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-if [ "$CV_API_ACCESS" == "false" ]; then
+if [ "$CV_ACCESS_TYPE" == "db" ]; then
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -f /sql/sms_cv/sms_cv_ddl.sql
+    echo 'setting up sms_cv foreign data wrapper and remote tables'
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" <<-EOSQL
         CREATE extension if not exists postgres_fdw;
         CREATE SERVER sms_cv_db
@@ -13,4 +14,5 @@ if [ "$CV_API_ACCESS" == "false" ]; then
             OPTIONS (user '$CV_DB_USER', password '$CV_DB_PASSWORD');
 EOSQL
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -f /sql/sms_cv/sms_cv_foreign_tables.sql
+    echo 'sms_cv remote tables created'
 fi

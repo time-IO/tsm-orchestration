@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import sql as psysql
 from typing import Dict
 from psycopg2.extensions import cursor, connection
 from urllib.request import urlopen
@@ -8,15 +9,17 @@ from os import environ
 import time
 from datetime import datetime
 
+
 def get_utc_str() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
-def get_connection_from_env(retries: int=4, sleep: int=3) -> connection:
+
+def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
     user = environ.get("CREATEDB_POSTGRES_USER")
     password = environ.get("CREATEDB_POSTGRES_PASSWORD")
     host = environ.get("CREATEDB_POSTGRES_HOST")
     db = environ.get("CREATEDB_POSTGRES_DATABASE")
-    print(f"{get_utc_str()}: Connecting on host '{host}' to db '{db}' as user '{user}' with password '{password}'")
+    print(f"{get_utc_str()}: Connecting on host '{host}' to db '{db}' as user '{user}'")
     for _ in range(retries):
         try:
             return psycopg2.connect(
@@ -28,6 +31,7 @@ def get_connection_from_env(retries: int=4, sleep: int=3) -> connection:
     print(f"{get_utc_str()}: Exiting...")
     exit(1)
 
+
 def get_json_from_url(url: str, endpoint: str) -> Dict:
     target = urljoin(url, endpoint)
     print(f"{get_utc_str()}: Getting data from {target}")
@@ -35,19 +39,45 @@ def get_json_from_url(url: str, endpoint: str) -> Dict:
     data = json.loads(response.read())
     return data
 
+
 def update_sms_cv_tables(url: str) -> None:
     with get_connection_from_env() as db:
         with db.cursor() as c:
-            update_measured_quantity(cursor=c, url=url, endpoint="measuredquantities")
+            # update_configurations(cursor=c, url=url, endpoint="configurations", table_name="sms_configuration")
+            #
             # add more tables here
 
             db.commit()
             print(f"{get_utc_str()}: All tables updated")
 
 
+def drop_table_if_foreign(cursor: cursor, table_name: str) -> None:
+    table_identifier = psysql.Identifier(table_name)
+    with get_connection_from_env() as db:
+        cursor.execute(
+            psysql.SQL(
+                """
+                DO $$
+                BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name = '{table_name}'
+                    AND table_type = 'FOREIGN TABLE'
+                ) THEN 
+                DROP FOREIGN TABLE {table_name};
+                END IF;
+                END $$
+                """
+            ).format(table_name=table_identifier)
+        )
+        db.commit()
+
+
 def update_measured_quantity(cursor: cursor, url: str, endpoint: str) -> None:
+    drop_table_if_foreign(cursor=cursor, table_name="sms_cv_measured_quantity")
     print(f"{get_utc_str()}: Updating sms_cv_measured_quantity ...")
     # create table if not exists
+
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS sms_cv_measured_quantity (
@@ -61,7 +91,8 @@ def update_measured_quantity(cursor: cursor, url: str, endpoint: str) -> None:
     data = get_json_from_url(url, endpoint)
     # insert/update data
     for item in data["data"]:
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO sms_cv_measured_quantity
             (id, term, provenance_uri, definition)
             VALUES (%s, %s, %s, %s)
@@ -80,8 +111,8 @@ def update_measured_quantity(cursor: cursor, url: str, endpoint: str) -> None:
     print(f"{get_utc_str()}: Updated sms_cv_measured_quantity!")
 
 
-api_access = environ.get("CV_API_ACCESS")
+cv_access = environ.get("CV_ACCESS_TYPE")
 url = environ.get("CV_API_URL")
 
-if __name__ == "__main__" and api_access == "true":
+if __name__ == "__main__" and cv_access == "api":
     update_sms_cv_tables(url)

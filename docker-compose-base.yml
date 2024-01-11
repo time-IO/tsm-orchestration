@@ -78,7 +78,7 @@ services:
                               Please define a frontend database user!}"
       FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS:?\
                               Please define a frontend database password!}"
-      SMS_API_ACCESS: "${SMS_API_ACCESS}"
+      SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       SMS_DB_USER: "${SMS_DB_USER:\
                           ?Please define a SMS postgres user!}"
       SMS_DB_PASSWORD: "${SMS_DB_PASSWORD:\
@@ -89,7 +89,7 @@ services:
                           ?Please define a SMS postgres DB name!}"
       SMS_DB_HOST: "${SMS_DB_HOST:\
                           ?Please define a SMS postgres host!}"
-      CV_API_ACCESS: "${CV_API_ACCESS}"
+      CV_ACCESS_TYPE: "${CV_ACCESS_TYPE}"
       CV_DB_USER: "${CV_DB_USER:\
                           ?Please define a SMS_CV postgres user!}"
       CV_DB_PASSWORD: "${CV_DB_PASSWORD:\
@@ -103,7 +103,7 @@ services:
     volumes:
       - "./data/postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql"
       - "./data/postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql"
-      - "./data/postgres/sms_db/sms_init_tables.sh:/sql/sms/01_sms_init_tables.sh"
+      - "./data/postgres/sms_db/sms_init_tables.sh:/docker-entrypoint-initdb.d/01_sms_init_tables.sh"
       - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql"
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
       - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
