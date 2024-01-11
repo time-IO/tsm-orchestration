@@ -31,7 +31,7 @@ services:
         ${S3MAP_POSTGRES_HOST}/\
         ${S3MAP_POSTGRES_DB}"
     command:
-      - "run-create-thing-on-minio-action-service"
+      - "create-thing-in-minio"
 
 
   # Summary
@@ -65,7 +65,7 @@ services:
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
     command:
-      - "run-create-database-schema-action-service"
+      - "create-thing-in-postgres"
 
 
   worker-frost-setup:
@@ -86,7 +86,7 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
     command:
-      - "run-create-new-frost-server-service"
+      - "create-frost-instance"
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
@@ -109,7 +109,7 @@ services:
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
     command:
-      - run-create-mqtt-user-action-service
+      - "create-mqtt-user"
 
 
   worker-grafana-dashboard:
@@ -131,7 +131,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
     command:
-      - "run-create-grafana-dashboard-service"
+      - "create-thing-in-grafana"
 
 
   # =================================================================
@@ -173,7 +173,7 @@ services:
       SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
       SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
     command:
-      - "run-process-new-file-service"
+      - "schedule-parser-job"
 
 
   worker-run-qaqc:
@@ -200,7 +200,7 @@ services:
       SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
       SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
     command:
-      - "run-qaqc"
+      - "schedule-qaqc-job"
 
 
   worker-mqtt-ingest:
@@ -218,7 +218,7 @@ services:
       MQTT_USER: "${MQTT_INGEST_USER}"
       MQTT_PASSWORD: "${MQTT_INGEST_PASSWORD}"
     command:
-      - parse-data
+      - parse-mqtt-data
       - --target-uri
       - "postgresql://\
         ${CREATEDB_POSTGRES_USER}:\
@@ -250,7 +250,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
     command:
-      - "run-create-grafana-user-orgs-service"
+      - "create-grafana-user"
 
 
   basic-demo-scheduler:
