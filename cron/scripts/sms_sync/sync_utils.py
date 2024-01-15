@@ -14,6 +14,8 @@ from operator import getitem
 
 def get_utc_str() -> str:
     return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
+
+
 def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
     user = environ.get("CREATEDB_POSTGRES_USER")
     password = environ.get("CREATEDB_POSTGRES_PASSWORD")
@@ -28,7 +30,6 @@ def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
             print(f"{get_utc_str()}: Retrying...")
             time.sleep(sleep)
     print(f"{get_utc_str()}: Exiting...")
-    db.close()
     exit(1)
 
 

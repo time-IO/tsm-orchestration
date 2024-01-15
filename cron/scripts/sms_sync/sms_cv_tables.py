@@ -16,15 +16,12 @@ if __name__ == "__main__":
     for file_path in file_path_list:
         db = get_connection_from_env()
         try:
-            with db.cursor() as c:
-                with open(file_path, "r") as f:
-                    table_dict = json.load(f)
-                create_table_if_not_exists(c=c, table_dict=table_dict)
-                update_table(c=db.cursor(), url=url, table_dict=table_dict)
-            db.commit()
-            db.close()
+            with db:
+                with db.cursor() as c:
+                    with open(file_path, "r") as f:
+                        table_dict = json.load(f)
+                    create_table_if_not_exists(c=c, table_dict=table_dict)
+                    update_table(c=db.cursor(), url=url, table_dict=table_dict)
             print("Done!")
-        except Exception as e:
-            print(e)
+        finally:
             db.close()
-            exit(1)

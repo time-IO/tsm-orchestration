@@ -57,7 +57,7 @@ services:
       context: "data/postgres"
       args:
         UID: "${UID}"
-        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG:-pg14}"
+        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
@@ -325,10 +325,10 @@ services:
     build:
       context: "data/tomcat"
       args:
-        UID: "${UID:-1000}"
-        GID: "${GID:-1000}"
+        UID: "${UID}"
+        GID: "${GID}"
         TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
-    restart: "${RESTART:-on-failure}"
+    restart: "${RESTART}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
       - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"

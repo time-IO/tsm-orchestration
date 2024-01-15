@@ -276,9 +276,9 @@ services:
     build:
         context: "cron"
         args:
-            UID: "${UID:-1000}"
+            UID: "${UID}"
             DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
-    restart: "${RESTART:-on-failure}"
+    restart: "${RESTART}"
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
       CREATEDB_POSTGRES_USER: "${CRON_CREATEDB_POSTGRES_USER}"
