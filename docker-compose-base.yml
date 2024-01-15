@@ -282,7 +282,6 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=eduperson_principal_name"
       - "GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC=true"
     volumes:
-      - "./grafana/provisioning:/etc/grafana/provisioning/"
       - "./data/grafana/:/var/lib/grafana"
 
 
