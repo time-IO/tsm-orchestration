@@ -1,6 +1,6 @@
 from sync_utils import (
-    create_table_if_not_exists,
-    update_table,
+    create_table,
+    upsert_table,
     get_connection_from_env,
 )
 from os import chdir, environ
@@ -20,8 +20,8 @@ if __name__ == "__main__":
                 with db.cursor() as c:
                     with open(file_path, "r") as f:
                         table_dict = json.load(f)
-                    create_table_if_not_exists(c=c, table_dict=table_dict)
-                    update_table(c=db.cursor(), url=url, table_dict=table_dict)
+                    create_table(c=c, table_dict=table_dict)
+                    upsert_table(c=db.cursor(), url=url, table_dict=table_dict)
             print("Done!")
         finally:
             db.close()

@@ -104,28 +104,24 @@ def _table_create_query(table_dict: dict) -> str:
     return query.rstrip(", ") + ");"
 
 
-def _table_insert_query(table_dict: dict, data: dict) -> str:
-    columns = table_dict["keys"]
-    query = f"INSERT INTO {table_dict['name']} ("
-    for key, value in columns.items():
-        query += f"{key},"
-    query = query.rstrip(",") + ") VALUES ("
-    for key, value in columns.items():
-        query += f"'{reduce(getitem, value['path'], data)}',"
-    return query.rstrip(",") + ");"
+def create_table(c: cursor, table_dict: Dict) -> None:
+    '''
+    creates table based on foo-table.json in ./tables
 
-
-def create_table_if_not_exists(c: cursor, table_dict: Dict) -> None:
+    CREATE TABLE IF NOT EXISTS foo-table
+    (
+        id integer primary key,
+        column_b varchar(255),
+        column_c text,
+        ...
+    )
+    '''
     _drop_foreign_table(c=c, table_name=table_dict["name"])
     create_query = _table_create_query(table_dict)
     c.execute(create_query)
 
 
-def update_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = None) -> None:
-    if token:
-        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
-    else:
-        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
+def _table_upsert_query(table_dict: dict, data: dict) -> str:
     query = f"INSERT INTO {table_dict['name']} ("
     for key in table_dict["keys"]:
         query += f"{key}, "
@@ -146,4 +142,28 @@ def update_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = N
             continue
         query += f"{key} = EXCLUDED.{key}, "
     query = query.rstrip(", ")
+    return query
+
+
+def upsert_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = None) -> None:
+    '''
+    updates table based on foo-table.json in ./tables 
+    with data queried from target
+
+    INSERT INTO TABLE foo-table
+        (id, column_b, column_c, ...)
+    VALUES
+        (1, 'foo', 'bar', ...),
+        (2, 'foot', 'bard', ...),
+        ...
+    ON CONFLICT (id) DO UPDATE SET
+        column_b = EXCLUDED.column_b,
+        column_c = EXCLUDED.column_c,
+        ...
+    '''
+    if token:
+        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
+    else:
+        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
+    query = _table_upsert_query
     c.execute(query)
