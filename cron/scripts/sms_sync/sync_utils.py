@@ -162,7 +162,9 @@ def _table_upsert_query(table_dict: dict, data: dict) -> str:
     return query
 
 
-def upsert_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = None) -> None:
+def upsert_table(
+    c: cursor, url: str, table_dict: dict, token: Optional[str] = None
+) -> None:
     """
     updates table based on table_dict (loaded from foo-table.json in ./tables)
     with data queried from target
@@ -187,4 +189,9 @@ def upsert_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = N
         r = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
     data = r["data"]
     query = _table_upsert_query(table_dict, data)
-    c.execute(query)
+    try:
+        c.execute(query)
+        print(f"Data successfully synced to table {table_dict['name']}")
+    except Exception as e:
+        print(f"Could not sync data to table {table_dict['name']}:\n{e}")
+        raise e

@@ -22,6 +22,5 @@ if __name__ == "__main__":
                         table_dict = json.load(f)
                     create_table(c=c, table_dict=table_dict)
                     upsert_table(c=db.cursor(), url=url, table_dict=table_dict)
-            print("Done!")
         finally:
             db.close()
