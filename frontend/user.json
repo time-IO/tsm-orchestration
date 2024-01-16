@@ -3,7 +3,7 @@
       "model": "auth.group",
       "pk": 1,
       "fields": {
-        "name": "urn:geant:helmholtz.de:group:UFZ-Timeseries-Management:Test#login-dev.helmholtz.de",
+        "name": "urn:geant:helmholtz.de:group:UFZ-Timeseries-Management:DemoGroup#login-dev.helmholtz.de",
         "permissions": [
           29,
           30,

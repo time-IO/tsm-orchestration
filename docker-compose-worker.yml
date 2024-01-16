@@ -270,3 +270,31 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
     command:
       - "--verbose"
+
+
+  cron-scheduler:
+    build:
+        context: "cron"
+        args:
+            UID: "${UID}"
+            DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
+    restart: "${RESTART}"
+    environment:
+      SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
+      CREATEDB_POSTGRES_USER: "${CRON_CREATEDB_POSTGRES_USER}"
+      CREATEDB_POSTGRES_PASSWORD: "${CRON_CREATEDB_POSTGRES_PASSWORD}"
+      CREATEDB_POSTGRES_HOST: "${CRON_CREATEDB_POSTGRES_HOST}"
+      CREATEDB_POSTGRES_DATABASE: "${CRON_CREATEDB_POSTGRES_DATABASE}"
+      SMS_ACCESS_TYPE: "${CRON_SMS_ACCESS_TYPE}"
+      SMS_API_URL: "${CRON_SMS_API_URL}"
+      SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
+      CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
+      CV_API_URL: "${CRON_CV_API_URL}"
+    healthcheck:
+      test: ["CMD-SHELL", "service cron status || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - "./cron/crontab.txt:/tmp/crontab.txt:ro"
+      - "./cron/scripts:/home/tsm/scripts:ro"
