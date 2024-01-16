@@ -55,10 +55,11 @@ def get_data_from_url(url: str, endpoint: str, token: Optional[str] = None) -> D
     return data
 
 
-def _get_value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
+def _value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
     return reduce(getitem, path, dict)
 
-def _value_to_postgres_string(val: Union[str, int, float, bool, None]) -> str:
+
+def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
     if val is None:
         # in postgres None is NULL
         return "NULL"
@@ -81,6 +82,7 @@ def _value_to_postgres_string(val: Union[str, int, float, bool, None]) -> str:
         # return string in single quotes
         # to mark it as a string for postgres
         return f"'{val}'"
+
 
 def _table_is_foreign(c: cursor, table_name: str) -> bool:
     query = psysql.SQL(
@@ -143,9 +145,9 @@ def _table_upsert_query(table_dict: dict, data: dict) -> str:
     query = query.rstrip(", ") + ") VALUES "
     for item in data:
         values = "("
-        for key, v in table_dict["keys"].items():
-            val = _get_value_from_dict(item, v["path"])
-            val_str = _value_to_postgres_string(val)
+        for key, val in table_dict["keys"].items():
+            value = _value_from_dict(item, val["path"])
+            val_str = _to_postgres_str(value)
             values += val_str + ", "
         values = values.rstrip(", ") + "), "
         query += values
