@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2 import sql as psysql
-from typing import Dict, AnyStr, Optional
+from typing import Union, Dict, Optional, Any
 from psycopg2.extensions import cursor, connection
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
@@ -55,19 +55,32 @@ def get_data_from_url(url: str, endpoint: str, token: Optional[str] = None) -> D
     return data
 
 
-def _get_value_from_dict(data: dict, path: list) -> AnyStr:
-    val = reduce(getitem, path, data)
-    try:
-        return f"{int(val)}"
-    except:
-        if type(val) == str:
+def _get_value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
+    return reduce(getitem, path, dict)
+
+def _value_to_postgres_string(val: Union[str, int, float, bool, None]) -> str:
+    if val is None:
+        # in postgres None is NULL
+        return "NULL"
+    if type(val) == bool:
+        return f"{val}"
+    if type(val) == int:
+        return f"{val}"
+    if type(val) == float:
+        return f"{val}"
+    if type(val) == str:
+        try:
+            # try to convert string to int
+            # some integer keys are provided as string by the api
+            # and need to be converted to int for postgres
+            return f"{int(val)}"
+        except:
             # replace single quotes with double single quotes
-            # to make it work with postgres
+            # to escape single quote string termination in postgres
             val = val.replace("'", "''")
         # return string in single quotes
-        # also to make it work with postgres
+        # to mark it as a string for postgres
         return f"'{val}'"
-
 
 def _table_is_foreign(c: cursor, table_name: str) -> bool:
     query = psysql.SQL(
@@ -105,17 +118,19 @@ def _table_create_query(table_dict: dict) -> str:
 
 
 def create_table(c: cursor, table_dict: Dict) -> None:
-    '''
-    creates table based on foo-table.json in ./tables
+    """
+    creates table based on table_dict (loaded from foo-table.json in ./tables)
 
-    CREATE TABLE IF NOT EXISTS foo-table
-    (
+    query is built by _table_create_query()
+
+    e.g.:
+    CREATE TABLE IF NOT EXISTS foo-table (
         id integer primary key,
         column_b varchar(255),
         column_c text,
         ...
     )
-    '''
+    """
     _drop_foreign_table(c=c, table_name=table_dict["name"])
     create_query = _table_create_query(table_dict)
     c.execute(create_query)
@@ -126,13 +141,12 @@ def _table_upsert_query(table_dict: dict, data: dict) -> str:
     for key in table_dict["keys"]:
         query += f"{key}, "
     query = query.rstrip(", ") + ") VALUES "
-    for item in data["data"]:
+    for item in data:
         values = "("
-        for key, value in table_dict["keys"].items():
-            value = _get_value_from_dict(item, value["path"])
-            if value == "None":
-                value = "NULL"
-            values += value + ", "
+        for key, v in table_dict["keys"].items():
+            val = _get_value_from_dict(item, v["path"])
+            val_str = _value_to_postgres_string(val)
+            values += val_str + ", "
         values = values.rstrip(", ") + "), "
         query += values
     query = query.rstrip(", ")
@@ -146,10 +160,13 @@ def _table_upsert_query(table_dict: dict, data: dict) -> str:
 
 
 def upsert_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = None) -> None:
-    '''
-    updates table based on foo-table.json in ./tables 
+    """
+    updates table based on table_dict (loaded from foo-table.json in ./tables)
     with data queried from target
 
+    query is built by _table_upsert_query()
+
+    e.g.:
     INSERT INTO TABLE foo-table
         (id, column_b, column_c, ...)
     VALUES
@@ -160,10 +177,11 @@ def upsert_table(c: cursor, url: str, table_dict: dict, token: Optional[str] = N
         column_b = EXCLUDED.column_b,
         column_c = EXCLUDED.column_c,
         ...
-    '''
+    """
     if token:
-        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
+        r = get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
     else:
-        data = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
-    query = _table_upsert_query
+        r = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
+    data = r["data"]
+    query = _table_upsert_query(table_dict, data)
     c.execute(query)
