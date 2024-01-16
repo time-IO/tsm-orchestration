@@ -21,16 +21,17 @@ def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
     password = environ.get("CREATEDB_POSTGRES_PASSWORD")
     host = environ.get("CREATEDB_POSTGRES_HOST")
     db = environ.get("CREATEDB_POSTGRES_DATABASE")
+    err = None
     for _ in range(retries):
         try:
             return psycopg2.connect(
                 database=db, user=user, password=password, host=host
             )
         except Exception as e:
+            err = e
             print(f"{get_utc_str()}: Retrying...")
             time.sleep(sleep)
-    print(f"{get_utc_str()}: Exiting...")
-    exit(1)
+    raise RuntimeError(f"Could not connect to database") from err
 
 
 def get_data_from_url(url: str, endpoint: str, token: Optional[str] = None) -> Dict:
@@ -79,9 +80,9 @@ def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
             # replace single quotes with double single quotes
             # to escape single quote string termination in postgres
             val = val.replace("'", "''")
-        # return string in single quotes
-        # to mark it as a string for postgres
-        return f"'{val}'"
+            # return string in single quotes
+            # to mark it as a string for postgres
+            return f"'{val}'"
 
 
 def _table_is_foreign(c: cursor, table_name: str) -> bool:
