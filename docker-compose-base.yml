@@ -57,6 +57,7 @@ services:
       context: "data/postgres"
       args:
         UID: "${UID}"
+        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
@@ -74,19 +75,21 @@ services:
       SMS_DB_PORT: "${SMS_DB_PORT}"
       SMS_DB_DB: "${SMS_DB_DB}"
       SMS_DB_HOST: "${SMS_DB_HOST}"
+      SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       CV_DB_USER: "${CV_DB_USER}"
       CV_DB_PASSWORD: "${CV_DB_PASSWORD}"
       CV_DB_PORT: "${CV_DB_PORT}"
       CV_DB_DB: "${CV_DB_DB}"
       CV_DB_HOST: "${CV_DB_HOST}"
+      CV_ACCESS_TYPE: "${CV_ACCESS_TYPE}"
     volumes:
-      - "./data/postgres/sms_db/sms_ddl.sql:/docker-entrypoint-initdb.d/01_sms_ddl.sql"
-      - "./data/postgres/sms_db/sms_fdw.sh:/docker-entrypoint-initdb.d/02_sms_fdw.sh"
-      - "./data/postgres/sms_db/sms_foreign_tables.sql:/docker-entrypoint-initdb.d/03_sms_foreign_tables.sql"
-      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/04_postgis.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/docker-entrypoint-initdb.d/05_sms_cv_ddl.sql"
-      - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
-      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql"
+      - "./data/postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql"
+      - "./data/postgres/sms_db/sms_init_tables.sh:/docker-entrypoint-initdb.d/01_sms_init_tables.sh"
+      - "./data/postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
+      - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
+      - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
@@ -279,7 +282,6 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH=eduperson_principal_name"
       - "GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC=true"
     volumes:
-      - "./grafana/provisioning:/etc/grafana/provisioning/"
       - "./data/grafana/:/var/lib/grafana"
 
 
@@ -324,6 +326,7 @@ services:
       args:
         UID: "${UID}"
         GID: "${GID}"
+        TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
     restart: "${RESTART}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
