@@ -22,6 +22,7 @@ RUN chmod gu+rw /var/run \
 
 USER ${UID}
 
+ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 ENV STDOUT=/proc/1/fd/1
 ENV STDERR=/proc/1/fd/2
 
