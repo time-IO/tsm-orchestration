@@ -34,9 +34,20 @@ issued by
 
 ##  2. Run all the services and have fun
 
-```bash
-docker-compose up -d
-```
+- Preparations:
+  - make scripts executable:
+    - `chmod +x ./up.sh` 
+    - `chmod +x ./up-with-dev.sh` 
+    - `chmod +x ./down.sh` 
+    - `chmod +x ./down-with-dev.sh` 
+- To start the services:
+  - execute `./up.sh`
+- To stop the services:
+  - execute `./down.sh`
+- To start the services including the `docker-compose-dev.yml` (see chapter "Extend or override docker-compose" for more information)
+  - execute `./up-with-dev.sh` 
+- To stop the services including the `docker-compose-dev.yml`
+  - execute `./down-with-dev.sh`  
 
 It will take some seconds until everything is up.
 
