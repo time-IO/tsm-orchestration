@@ -33,7 +33,7 @@ mqtt-service-test:
   script:
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
-    - "docker compose logs mqtt-cat"
+    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml logs mqtt-cat"
   tags:
     - "dind"
 
