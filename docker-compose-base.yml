@@ -106,7 +106,6 @@ services:
       - "./data/postgres/sms_cv_db/sms_cv_fdw.sh:/docker-entrypoint-initdb.d/06_sms_cv_fdw.sh"
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/docker-entrypoint-initdb.d/07_sms_cv_foreign_tables.sql"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
-      - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
       - "./data/postgres/postgres-force-ssl.sh:\
@@ -219,6 +218,8 @@ services:
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG:-latest}"
     depends_on:
       database:
+        condition: "service_healthy"
+      frontend-db:
         condition: "service_healthy"
     command:
       - "/usr/sbin/mosquitto"
@@ -369,6 +370,23 @@ services:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
       - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
 
+  frontend-db:
+    restart: "${RESTART:-on-failure}"
+    image: "postgres:14-alpine"
+    ports:
+      - "${FRONTEND_POSTGRES_PORT:-127.0.0.1:5433}:5432"
+    environment:
+      POSTGRES_USER: "${FRONTEND_POSTGRES_USER:\
+                     ?Please define an postgres user!}"
+      POSTGRES_PASSWORD: "${FRONTEND_POSTGRES_PASS:\
+                         ?Please define an postgres password!}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $FRONTEND_POSTGRES_USER" ]
+      interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
+      timeout: 5s
+      retries: 5
+
+
   # Summary
   # =======
   # brief: A user frontend to add things groups parser etc.
@@ -399,7 +417,8 @@ services:
     #   - "127.0.0.1:8000:8000"
     environment:
       - "POSTGRES_HOST=${FRONTEND_POSTGRES_HOST}"
-      - "POSTGRES_NAME=${FRONTEND_POSTGRES_DB:-postgres}"
+      - "FRONTEND_POSTGRES_HOST=${FRONTEND_POSTGRES_HOST}"
+      - "POSTGRES_NAME=${FRONTEND_POSTGRES_DB}"
       - "POSTGRES_USER=${FRONTEND_POSTGRES_USER}"
       - "POSTGRES_PASSWORD=${FRONTEND_POSTGRES_PASS}"
       - "PUBLISH_THING_TO_BROKER=True"
@@ -428,7 +447,7 @@ services:
       - "ALLOWED_VOS=${ALLOWED_VOS:-}"
 
     depends_on:
-      database:
+      frontend-db:
         condition: service_healthy
       mqtt-broker:
         condition: service_healthy
