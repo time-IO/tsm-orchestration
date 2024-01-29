@@ -49,11 +49,11 @@ def validate_message(msg_json):
 def django_loaddata():
     print("Loading Django fixtures")
     os.system(
-        "docker compose exec -T frontend python3 manage.py loaddata user.json > /dev/null 2>&1"
+        "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec -T frontend python3 manage.py loaddata user.json > /dev/null 2>&1"
     )
     time.sleep(2)
     os.system(
-        "docker compose exec -T frontend python3 manage.py loaddata thing.json > /dev/null 2>&1"
+        "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec -T frontend python3 manage.py loaddata thing.json > /dev/null 2>&1"
     )
     time.sleep(2)
 
