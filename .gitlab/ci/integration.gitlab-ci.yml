@@ -7,7 +7,7 @@ docker-service-test:
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
     - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
-    - "docker compose logs init"
+    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml logs init"
     - "sleep 20"
   script:
     - "docker ps"
