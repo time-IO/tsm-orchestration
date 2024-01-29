@@ -65,7 +65,7 @@ object-storage-e2e:
     - "sleep 2"
     - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 2"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
+    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc"
