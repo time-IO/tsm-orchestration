@@ -53,7 +53,7 @@ proxy-test:
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
     # somehow curl -Isf http://docker/frontend returns 400
     # so for now we curl it from inside the proxy container
-    - "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
+    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
   tags:
     - "dind"
 
