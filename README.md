@@ -36,10 +36,13 @@ issued by
 
 - Preparations:
   - make scripts executable:
+    - `chmod +x ./dc.sh` 
+    - `chmod +x ./dc-with-dev.sh` 
     - `chmod +x ./up.sh` 
     - `chmod +x ./up-with-dev.sh` 
     - `chmod +x ./down.sh` 
-    - `chmod +x ./down-with-dev.sh` 
+    - `chmod +x ./down-with-dev.sh`
+    - alternative short version: `chmod +x *.sh`
 - To start the services:
   - execute `./up.sh`
 - To stop the services:
@@ -47,7 +50,10 @@ issued by
 - To start the services including the `docker-compose-dev.yml` (see chapter "Extend or override docker-compose" for more information)
   - execute `./up-with-dev.sh` 
 - To stop the services including the `docker-compose-dev.yml`
-  - execute `./down-with-dev.sh`  
+  - execute `./down-with-dev.sh`
+- To execute any docker compose command use either
+  -  `./dc.sh` <command>
+  -  `./dc-with-dev.sh` <command>
 
 It will take some seconds until everything is up.
 
