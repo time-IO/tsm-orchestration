@@ -6,8 +6,8 @@ docker-service-test:
     - "apk add --no-cache bash"
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml logs init"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose logs init"
     - "sleep 20"
   script:
     - "docker ps"
@@ -28,12 +28,12 @@ mqtt-service-test:
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install paho-mqtt"
     - "mv .env.example .env"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml logs mqtt-cat"
+    - "docker compose logs mqtt-cat"
   tags:
     - "dind"
 
@@ -44,7 +44,7 @@ proxy-test:
     - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "curl -Isf http://docker -o /dev/null || exit 1"
@@ -53,7 +53,7 @@ proxy-test:
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
     # somehow curl -Isf http://docker/frontend returns 400
     # so for now we curl it from inside the proxy container
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
+    - "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
   tags:
     - "dind"
 
@@ -63,7 +63,7 @@ object-storage-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
   script:
     - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
@@ -76,7 +76,7 @@ database-test:
   before_script:    
     - "apk add --no-cache postgresql-client"
     - "cp .env.example .env"
-    - "docker compose -f docker-compose.yml -f docker-compose-base.yml -f docker-compose-worker.yml up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
     - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
