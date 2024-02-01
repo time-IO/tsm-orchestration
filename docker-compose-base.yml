@@ -91,6 +91,7 @@ services:
       - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
       - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
+      - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
       - "./data/postgres/data:/var/lib/postgresql/data"
       - "./data/postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh"
@@ -197,8 +198,6 @@ services:
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG}"
     depends_on:
       database:
-        condition: "service_healthy"
-      frontend-db:
         condition: "service_healthy"
     command:
       - "/usr/sbin/mosquitto"
@@ -333,22 +332,6 @@ services:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
       - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
 
-  frontend-db:
-    restart: "${RESTART:-on-failure}"
-    image: "postgres:14-alpine"
-    ports:
-      - "${FRONTEND_POSTGRES_PORT:-127.0.0.1:5433}:5432"
-    environment:
-      POSTGRES_USER: "${FRONTEND_POSTGRES_USER:\
-                     ?Please define an postgres user!}"
-      POSTGRES_PASSWORD: "${FRONTEND_POSTGRES_PASS:\
-                         ?Please define an postgres password!}"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $FRONTEND_POSTGRES_USER" ]
-      interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
-      timeout: 5s
-      retries: 5
-
 
   # Summary
   # =======
@@ -407,7 +390,7 @@ services:
       - "ALLOWED_VOS=${ALLOWED_VOS}"
 
     depends_on:
-      frontend-db:
+      database:
         condition: service_healthy
       mqtt-broker:
         condition: service_healthy
