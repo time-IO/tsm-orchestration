@@ -34,15 +34,6 @@ issued by
 
 ##  2. Run all the services and have fun
 
-- Preparations:
-  - make scripts executable:
-    - `chmod +x ./dc.sh` 
-    - `chmod +x ./dc-with-dev.sh` 
-    - `chmod +x ./up.sh` 
-    - `chmod +x ./up-with-dev.sh` 
-    - `chmod +x ./down.sh` 
-    - `chmod +x ./down-with-dev.sh`
-    - alternative short version: `chmod +x *.sh`
 - To start the services:
   - execute `./up.sh`
 - To stop the services:
