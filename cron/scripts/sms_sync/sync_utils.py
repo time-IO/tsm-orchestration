@@ -56,6 +56,16 @@ def get_data_from_url(url: str, endpoint: str, token: Optional[str] = None) -> D
     return data
 
 
+def _remove_id_duplicates(data: list) -> list:
+    seen = set()
+    uniq = []
+    for item in data:
+        if item["id"] not in seen:
+            uniq.append(item)
+            seen.add(item["id"])
+    return uniq
+
+
 def _value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
     return reduce(getitem, path, dict)
 
@@ -187,7 +197,7 @@ def upsert_table(
         r = get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
     else:
         r = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
-    data = r["data"]
+    data = _remove_id_duplicates(r["data"])
     query = _table_upsert_query(table_dict, data)
     try:
         c.execute(query)
