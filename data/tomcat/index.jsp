@@ -21,7 +21,7 @@
                             datasourceNumber += 1;
                             String webappName = webapp.getName();
                             String endpointDisplayName = webappName.substring(0, webappName.indexOf("_"));
-                            String webappURL = scheme + "://" + serverName + ":" + serverPort + "/sta/" + webappName;
+                            String webappURL = scheme + "://" + serverName + ":" + serverPort + "/sta/" + webappName + "/v1.1";
                 %>
                 <li class="endpoint-item-wrapper" style="animation-duration: 0.<%=datasourceNumber + 3%>s;">
                     <a href="<%=webappURL%>">
