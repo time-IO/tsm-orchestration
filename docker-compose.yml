@@ -146,7 +146,7 @@ services:
       MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER}"
       MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD}"
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
-      #      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "<string>"
+      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "${MQTT_QOS}"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
       #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
       #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
@@ -228,6 +228,7 @@ services:
       - "${MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
       - "${MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
       - "./data/mosquitto/auth:/mosquitto-auth/"
+      - "./data/mosquitto/data:/mosquitto-data/"
       - "${MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
       - "${MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
       - "${MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
@@ -459,6 +460,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "object-storage-setup"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       MINIO_SECURE: "${MINIO_SECURE}"
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
@@ -495,6 +499,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "db-setup"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       DATABASE_URL: "postgresql://\
         ${CREATEDB_POSTGRES_USER}:\
         ${CREATEDB_POSTGRES_PASSWORD}@\
@@ -522,6 +529,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "frost-setup"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
     command:
       - "create-frost-instance"
@@ -541,6 +551,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "mqtt-user-creation"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       DATABASE_URL: "postgresql://\
         ${CREATEDB_POSTGRES_USER}:\
         ${CREATEDB_POSTGRES_PASSWORD}@\
@@ -564,6 +577,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "grafana-dashboard"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       GRAFANA_URL: "${GRAFANA_URL}"
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
@@ -592,6 +608,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "file-ingest"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       MINIO_SECURE: "${MINIO_SECURE}"
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
@@ -628,6 +647,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "run-qaqc"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       SCHEDULER: "${SCHEDULER}"
       SCHED_HOST: "${SCHED_HOST}"
       SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
@@ -655,6 +677,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_INGEST_USER}"
       MQTT_PASSWORD: "${MQTT_INGEST_PASSWORD}"
+      MQTT_CLIENT_ID: "mqtt-ingest"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
     command:
       - parse-mqtt-data
       - --target-uri
@@ -683,6 +708,9 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "grafana-user-orgs"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
       GRAFANA_URL: "${GRAFANA_URL}"
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
@@ -706,6 +734,8 @@ services:
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "basic-demo-scheduler"
+      MQTT_QOS: "${MQTT_QOS}"
     command:
       - "--verbose"
 
