@@ -34,9 +34,17 @@ issued by
 
 ##  2. Run all the services and have fun
 
-```bash
-docker-compose up -d
-```
+- To start the services:
+  - execute `./up.sh`
+- To stop the services:
+  - execute `./down.sh`
+- To start the services including the `docker-compose-dev.yml` (see chapter "Extend or override docker-compose" for more information)
+  - execute `./up-with-dev.sh` 
+- To stop the services including the `docker-compose-dev.yml`
+  - execute `./down-with-dev.sh`
+- To execute any docker compose command use either
+  -  `./dc.sh` <command>
+  -  `./dc-with-dev.sh` <command>
 
 It will take some seconds until everything is up.
 
