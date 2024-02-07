@@ -20,7 +20,12 @@
                         if (webapp.isDirectory() && !webapp.getName().equals("ROOT")) {
                             datasourceNumber += 1;
                             String webappName = webapp.getName();
-                            String endpointDisplayName = webappName.substring(0, webappName.indexOf("_"));
+
+                            int firstIdx = webappName.indexOf("_");
+                            int secondIdx = webappName.indexOf("_", firstIdx + 1);
+                            String groupName = webappName.substring(0, firstIdx);
+                            String projectName = webappName.substring(firstIdx + 1, secondIdx);
+                            String endpointDisplayName = groupName + " " + projectName;
                             String webappURL = scheme + "://" + serverName + ":" + serverPort + "/sta/" + webappName + "/v1.1";
                 %>
                 <li class="endpoint-item-wrapper" style="animation-duration: 0.<%=datasourceNumber + 3%>s;">
