@@ -41,7 +41,7 @@ avro-thing-creation-e2e:
     - "source venv/bin/activate"
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
-    - "python3 -m pip install fastavro paho-mqtt"
+    - "python3 -m pip install fastavro paho-mqtt==1.6.1"
     - "cp .env.example .env"
     - "docker compose up -d frontend mqtt-broker --force-recreate -V --quiet-pull"
     - "sleep 20"
