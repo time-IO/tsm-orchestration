@@ -26,7 +26,7 @@ mqtt-service-test:
     - "source venv/bin/activate"
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
-    - "python3 -m pip install paho-mqtt"
+    - "python3 -m pip install paho-mqtt==1.6.1"
     - "mv .env.example .env"
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
