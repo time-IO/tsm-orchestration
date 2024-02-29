@@ -690,6 +690,28 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
 
 
+  worker-crontab-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
+    depends_on:
+        mqtt-broker:
+            condition: "service_healthy"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: "thing_creation"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "grafana-user-orgs"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      CRONTAB_FILE: "${CRONTAB_FILE}"
+    volumes:
+      - "./cron/crontab.txt:${CRONTAB_FILE}:ro"
+    command:
+      - "update_sftp_crontab"
+      -
+
   # =================================================================
   # other worker
   # =================================================================
