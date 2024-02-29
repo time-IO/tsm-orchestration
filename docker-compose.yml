@@ -705,12 +705,10 @@ services:
       MQTT_CLIENT_ID: "grafana-user-orgs"
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      CRONTAB_FILE: "${CRONTAB_FILE}"
     volumes:
-      - "./cron/crontab.txt:${CRONTAB_FILE}:ro"
+      - "./cron/crontab.txt:/tmp/crontab.txt"
     command:
       - "update_sftp_crontab"
-      -
 
   # =================================================================
   # other worker
