@@ -361,6 +361,7 @@ services:
       - "frontend-statics:/home/appuser/app/static"
       - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
       - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
+      - "sftp-private-keys:/home/appuser/app/sftp-private-keys"
     entrypoint: ""
     # ports:
     #   - "127.0.0.1:8000:8000"
@@ -766,6 +767,7 @@ services:
     volumes:
       - "./cron/crontab.txt:/tmp/crontab.txt:ro"
       - "./cron/scripts:/home/tsm/scripts:ro"
+      - "sftp-private-keys:/sftp-private-keys" # TODO: use env path here (?)
 
   mqtt-cat:
     restart: "${RESTART}"
@@ -804,3 +806,4 @@ services:
 
 volumes:
   frontend-statics:
+  sftp-private-keys:
