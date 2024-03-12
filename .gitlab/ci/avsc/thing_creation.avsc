@@ -128,7 +128,7 @@
                           "type": "long"
                         },
                         {
-                          "name": "header",
+                          "name": "skiprows",
                           "type": "long"
                         },
                         {
