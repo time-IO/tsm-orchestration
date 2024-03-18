@@ -13,6 +13,11 @@ body {
     font-family: Tahoma, Verdana, Arial, sans-serif;
 }
 
+a {
+    text-decoration: none;
+    color: black;
+}
+
 #section-container {
     width: 100%;
     text-align: center;
@@ -76,11 +81,6 @@ body {
 .link-card-wrapper:hover {
     background-color: rgba(0,0,50,0.1);
     transform: scale(1.025);
-}
-
-.link-card-wrapper a {
-    text-decoration: none;
-    color: black;
 }
 
 .link-card {
