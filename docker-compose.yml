@@ -456,6 +456,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "thing_creation"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -495,6 +496,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "thing_creation"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -525,6 +527,7 @@ services:
       - "./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "thing_creation"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -547,6 +550,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "thing_creation"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -573,6 +577,7 @@ services:
         condition: "service_started"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "thing_creation"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -604,6 +609,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "object_storage_notification"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -643,6 +649,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "data_parsed"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -673,6 +680,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "mqtt_ingest/#"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_INGEST_USER}"
@@ -704,6 +712,7 @@ services:
         condition: "service_started"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      LOGGING_MQTT_TOPIC: "${LOGGING_MQTT_TOPIC}"
       TOPIC: "user_login"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -717,6 +726,32 @@ services:
       ALLOWED_VOS: "${ALLOWED_VOS}"
     command:
       - "create-grafana-user"
+
+
+  worker-logging-bridge:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
+    depends_on:
+      mqtt-broker:
+        condition: "service_healthy"
+      visualization:
+        condition: "service_started"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: "${LOGGING_MQTT_TOPIC}"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "logging-dispatcher"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      AUTH_DB_URL: "postgresql://\
+        ${MQTT_AUTH_POSTGRES_USER}:\
+        ${MQTT_AUTH_POSTGRES_PASS}@\
+        ${MQTT_AUTH_POSTGRES_HOST}/\
+        ${MQTT_AUTH_POSTGRES_DB}"
+    command:
+      - forward-logging-to-user
 
 
   basic-demo-scheduler:
