@@ -6,57 +6,82 @@ import sys
 from dataclasses import dataclass
 
 import psycopg
-from paramiko import SSHClient
+from paramiko import SSHClient, WarningPolicy, SFTPClient
 
 
 @dataclass
 class FtpMeta:
     uri: str
-    path: str
     username: str
-    password: str = None
-
-    def remote_dir(self) -> str:
-        return f"{self.uri}/{self.path}"
-
-    def need_ssh_key(self):
-        return bool(self.password)
+    sync_dir: str | None
+    password: str | None = None
+    keyfile_path: str = None
 
 
-def connect_internal_ftp():
+class Test:
+    @staticmethod
+    def get_external_ftp(conn, thing_id) -> FtpMeta:
+        return FtpMeta(
+            uri="tsm.intranet.ufz.de",
+            sync_dir="ftp_test",
+            username="bpalm",
+            password=None,
+            keyfile_path=os.environ.get("TEST_KEYFILE_PATH"),
+        )
+
+
+def get_internal_ftp(conn, thing_id) -> FtpMeta:
+    with conn.cursor() as cur:
+        values = cur.execute(
+            "SELECT r.fileserver_uri, r.bucket, r.access_key, r.secret_key "
+            "FROM tsm_thing t JOIN tsm_rawdatastorage r ON t.id = r.thing_id "
+            "WHERE t.thing_id = %s",
+            [thing_id],
+        ).fetchone()
+    return FtpMeta(*values)
+
+
+def get_external_ftp(conn, thing_id) -> FtpMeta:
+    with conn.cursor() as cur:
+        values = cur.execute(
+            "SELECT ext_sftp_uri, ext_sftp_path, ext_sftp_username, ext_sftp_password "
+            "FROM tsm_thing WHERE thing_id = %s",
+            [thing_id],
+        ).fetchone()
+    ftp = FtpMeta(*values)
+    ftp.keyfile_path = os.path.join(os.environ["SSH_KEYFILE_DIR"], f"{thing_id}")
+    return ftp
+
+
+def connect_ftp(ftp: FtpMeta) -> SFTPClient:
+    ssh = SSHClient()
+    ssh.set_missing_host_key_policy(WarningPolicy)
+    ssh.connect(
+        hostname=ftp.uri,
+        username=ftp.username,
+        password=ftp.password or None,
+        key_filename=ftp.keyfile_path or None,
+        look_for_keys=False,
+        compress=True,
+    )
+    sftp = ssh.open_sftp()
+    # might raise FileNotFoundError,
+    # but that is good enough
+    if ftp.sync_dir and sftp:
+        sftp.chdir(ftp.sync_dir)
+    return sftp
+
+
+def sync(source: SFTPClient, target: SFTPClient):
+    # get remote file list
+    # get our file list
+    # files = new files
+    # compare other files by dates
+    # files += newer (by date) files
+    # for f in files:
+    #  download file (theirs)
+    #  upload file (ours)
     pass
-
-
-def connect_external_ftp():
-    pass
-
-
-def get_credentials(dsn, thing_id):
-    with psycopg.connect(dsn) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT r.fileserver_uri, r.bucket, r.access_key, r.secret_key "
-                # fixme
-                # ",t.ext_sftp_uri, t.ext_sftp_path, t.ext_sftp_username, t.ext_sftp_password "
-                "FROM tsm_thing t "
-                "JOIN tsm_rawdatastorage r ON t.id = r.thing_id "
-                "WHERE t.thing_id = %s",
-                [thing_id],
-            )
-            r = cur.fetchone()
-            # fixme
-            if len(r) == 4:
-                r = r + r
-    internal = FtpMeta(*r[:4])
-    external = FtpMeta(*r[4:])
-    return internal, external
-
-
-def connect(ftp: FtpMeta):
-    client = SSHClient()
-    client.load_system_host_keys()
-    client.connect("ssh.example.com")
-    stdin, stdout, stderr = client.exec_command("ls -l")
 
 
 if __name__ == "__main__":
@@ -67,8 +92,10 @@ if __name__ == "__main__":
     for k in ["SSH_PRIV_KEY_PATH", "FTP_AUTH_DB_URI"]:
         if (os.environ.get(k) or None) is None:
             raise EnvironmentError("Environment variable {k} must be set")
-    ssh_key = os.environ["SSH_PRIV_KEY_PATH"]
-    dsn = os.environ["FTP_AUTH_DB_URI"]
+    with psycopg.connect(os.environ["FTP_AUTH_DB_DSN"]) as conn:
+        ftp_int = get_internal_ftp(conn, thing_id)
+        ftp_ext = get_external_ftp(conn, thing_id)
 
-    iftp, eftp = get_credentials(dsn, thing_id)
-    print(iftp)
+    source = connect_ftp(ftp_ext)
+    target = connect_ftp(ftp_int)
+    sync(source, target)
