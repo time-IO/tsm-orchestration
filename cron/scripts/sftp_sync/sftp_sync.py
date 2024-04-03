@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import os
+from os.path import basename
 import sys
+import stat
+import warnings
 from dataclasses import dataclass
 
 import psycopg
 from paramiko import SSHClient, WarningPolicy, SFTPClient
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -16,18 +22,6 @@ class FtpMeta:
     sync_dir: str | None
     password: str | None = None
     keyfile_path: str = None
-
-
-class Test:
-    @staticmethod
-    def get_external_ftp(conn, thing_id) -> FtpMeta:
-        return FtpMeta(
-            uri="tsm.intranet.ufz.de",
-            sync_dir="ftp_test",
-            username="bpalm",
-            password=None,
-            keyfile_path=os.environ.get("TEST_KEYFILE_PATH"),
-        )
 
 
 def get_internal_ftp(conn, thing_id) -> FtpMeta:
@@ -72,19 +66,87 @@ def connect_ftp(ftp: FtpMeta) -> SFTPClient:
     return sftp
 
 
-def sync(source: SFTPClient, target: SFTPClient):
-    # get remote file list
-    # get our file list
-    # files = new files
-    # compare other files by dates
-    # files += newer (by date) files
-    # for f in files:
-    #  download file (theirs)
-    #  upload file (ours)
-    pass
+def sync(src: SFTPClient, dest: SFTPClient):
+
+    def update_file(path, src_attr) -> None:
+        with src.open(path, "rb") as fl:
+            dest.putfo(fl, path)
+            dest.utime(path, (src_attr.st_atime, src_attr.st_atime))
+
+    def sync_file(path, src_attr) -> None:
+        logger.info(f"syncing FILE {path}")
+        try:
+            dest_attr = dest.lstat(path)
+        except FileNotFoundError:
+            update_file(path, src_attr)
+            return
+
+        if (
+            dest_attr.st_size == src_attr.st_size
+            and dest_attr.st_mtime == src_attr.st_mtime
+        ):
+            return
+        update_file(path, src_attr)
+
+    def sync_dir(path) -> None:
+        logger.info(f"syncing DIR  {path}")
+        for filename in src.listdir(path):
+            filepath = f"{path}/{filename}"
+            src_attr = src.lstat(filepath)
+
+            # src is a regular file
+            if stat.S_ISREG(src_attr.st_mode):
+                sync_file(filepath, src_attr)
+                continue
+            # src is not a directory
+            if not stat.S_ISDIR(src_attr.st_mode):
+                warnings.warn(
+                    "Only regular files and dirs "
+                    "are supported for syncing"
+                )  # fmt: skip
+                continue
+            # src is a directory, dest might not exist or
+            # might be a regular file
+            try:
+                dest_attr = dest.lstat(filepath)
+                if not stat.S_ISDIR(dest_attr.st_mode):
+                    dest.remove(filepath)
+            except FileNotFoundError:
+                dest.mkdir(filepath)
+            # src is a directory, dest is a directory
+            # so we recurse
+            sync_dir(filepath)
+
+    sync_dir(".")
+
+
+def test():
+    ftp1 = connect_ftp(
+        FtpMeta(
+            uri="tsm.intranet.ufz.de",
+            sync_dir="ftp_test",
+            username="bpalm",
+            password=None,
+            keyfile_path=os.environ.get("TEST_KEYFILE_PATH"),
+        )
+    )
+    ftp2 = connect_ftp(
+        FtpMeta(
+            uri="tsm.ufz.de",
+            sync_dir="fooo",
+            username="bpalm",
+            password=None,
+            keyfile_path=os.environ.get("TEST_KEYFILE_PATH"),
+        )
+    )
+    sync(ftp1, ftp2)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    test()
+
+    exit(1)
     if len(sys.argv) != 2:
         raise ValueError("Expected a thing_id as first and only argument.")
     thing_id = sys.argv[1]
@@ -93,9 +155,9 @@ if __name__ == "__main__":
         if (os.environ.get(k) or None) is None:
             raise EnvironmentError("Environment variable {k} must be set")
     with psycopg.connect(os.environ["FTP_AUTH_DB_DSN"]) as conn:
-        ftp_int = get_internal_ftp(conn, thing_id)
         ftp_ext = get_external_ftp(conn, thing_id)
+        ftp_int = get_internal_ftp(conn, thing_id)
 
-    source = connect_ftp(ftp_ext)
-    target = connect_ftp(ftp_int)
-    sync(source, target)
+    src = connect_ftp(ftp_ext)
+    dest = connect_ftp(ftp_int)
+    sync(src, dest)
