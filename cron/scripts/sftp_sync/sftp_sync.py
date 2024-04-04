@@ -2,14 +2,10 @@
 from __future__ import annotations
 
 import os
-from os.path import basename
-import sys
 import stat
-import warnings
 from dataclasses import dataclass
 
-import psycopg
-from paramiko import SSHClient, WarningPolicy, SFTPClient
+from paramiko import SSHClient, WarningPolicy, SFTPClient, SFTPAttributes
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,7 +15,7 @@ logger = logging.getLogger(__name__)
 class FtpMeta:
     uri: str
     username: str
-    sync_dir: str | None
+    sync_dir: str | None = None
     password: str | None = None
     keyfile_path: str = None
 
@@ -55,72 +51,93 @@ def connect_ftp(ftp: FtpMeta) -> SFTPClient:
         username=ftp.username,
         password=ftp.password or None,
         key_filename=ftp.keyfile_path or None,
-        look_for_keys=False,
+        look_for_keys=False,  # todo maybe ?
+        allow_agent=False,
         compress=True,
     )
     sftp = ssh.open_sftp()
-    # might raise FileNotFoundError,
-    # but that is good enough
-    if ftp.sync_dir and sftp:
+    if ftp.sync_dir:
+        # might raise FileNotFoundError,
+        # but that is good enough
         sftp.chdir(ftp.sync_dir)
     return sftp
 
 
 def sync(src: SFTPClient, dest: SFTPClient):
 
-    def update_file(path, src_attr) -> None:
+    def is_dir(attrs: SFTPAttributes) -> bool:
+        return stat.S_ISDIR(attrs.st_mode)
+
+    def mk_dir(path) -> None:
+        # force creation of a dir.
+        # delete file with same name
+        # if necessary
+        logger.info(f"CREATE {path}/")
+        try:
+            dest.remove(path)
+        except FileNotFoundError:
+            pass
+        dest.mkdir(path)
+
+    def update_file(path, src_attrs) -> None:
+        logger.info(f"UPDATE {path}")
         with src.open(path, "rb") as fl:
             dest.putfo(fl, path)
-            dest.utime(path, (src_attr.st_atime, src_attr.st_atime))
+            dest.utime(path, (src_attrs.st_atime, src_attrs.st_mtime))
 
-    def sync_file(path, src_attr) -> None:
-        logger.info(f"syncing FILE {path}")
+    def needs_sync(path, src_attrs) -> bool:
+        # for directories:
+        # return True if path exist and
+        # also is a directory on dest
+        # for files:
+        # return True if path exist and
+        # file has same size and mtime on dest
         try:
-            dest_attr = dest.lstat(path)
+            dest_attrs = dest.lstat(path)
         except FileNotFoundError:
-            update_file(path, src_attr)
-            return
+            return True
 
-        if (
-            dest_attr.st_size == src_attr.st_size
-            and dest_attr.st_mtime == src_attr.st_mtime
+        if is_dir(src_attrs) and is_dir(dest_attrs):
+            return False
+        elif is_dir(dest_attrs):
+            return True
+        elif (
+            dest_attrs.st_size == src_attrs.st_size
+            and dest_attrs.st_mtime == src_attrs.st_mtime
         ):
-            return
-        update_file(path, src_attr)
+            return False
+        else:
+            return True
 
-    def sync_dir(path) -> None:
-        logger.info(f"syncing DIR  {path}")
-        for filename in src.listdir(path):
-            filepath = f"{path}/{filename}"
-            src_attr = src.lstat(filepath)
+    def get_files(path) -> dict:
+        # Note that directories always appear
+        # before any files from that directory
+        # appear.
+        files = {}
+        dirs = []
+        # we must avoid calling listdir_iter multiple
+        # times, otherwise it might cause a deadlock.
+        # That's why we do not recurse within the loop.
+        for attrs in src.listdir_iter(path):
+            file_path = f"{path}/{attrs.filename}"
+            if is_dir(attrs):
+                dirs.append(file_path)
+            files[file_path] = attrs
+        for dir_ in dirs:
+            files.update(get_files(dir_))
+        return files
 
-            # src is a regular file
-            if stat.S_ISREG(src_attr.st_mode):
-                sync_file(filepath, src_attr)
-                continue
-            # src is not a directory
-            if not stat.S_ISDIR(src_attr.st_mode):
-                warnings.warn(
-                    "Only regular files and dirs "
-                    "are supported for syncing"
-                )  # fmt: skip
-                continue
-            # src is a directory, dest might not exist or
-            # might be a regular file
-            try:
-                dest_attr = dest.lstat(filepath)
-                if not stat.S_ISDIR(dest_attr.st_mode):
-                    dest.remove(filepath)
-            except FileNotFoundError:
-                dest.mkdir(filepath)
-            # src is a directory, dest is a directory
-            # so we recurse
-            sync_dir(filepath)
-
-    sync_dir(".")
+    for path, attrs in get_files(".").items():
+        if needs_sync(path, attrs):
+            if is_dir(attrs):
+                mk_dir(path)
+            else:
+                update_file(path, attrs)
+        else:
+            logger.info(f"ok    : {path}")
 
 
-def test():
+def my_test():
     ftp1 = connect_ftp(
         FtpMeta(
             uri="tsm.intranet.ufz.de",
@@ -144,7 +161,7 @@ def test():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    test()
+    my_test()
 
     exit(1)
     if len(sys.argv) != 2:
