@@ -46,8 +46,11 @@ def get_external_ftp(conn, thing_id) -> FtpMeta:
 def connect_ftp(ftp: FtpMeta) -> SFTPClient:
     ssh = SSHClient()
     ssh.set_missing_host_key_policy(WarningPolicy)
+    host, *port = ftp.uri.split(":")
+    port = port[0] if port else 22
     ssh.connect(
-        hostname=ftp.uri,
+        hostname=host,
+        port=port,
         username=ftp.username,
         password=ftp.password or None,
         key_filename=ftp.keyfile_path or None,
@@ -61,6 +64,25 @@ def connect_ftp(ftp: FtpMeta) -> SFTPClient:
         # but that is good enough
         sftp.chdir(ftp.sync_dir)
     return sftp
+
+
+def get_files(sftp, path) -> dict:
+    # Note that directories always appear
+    # before any files from that directory
+    # appear.
+    files = {}
+    dirs = []
+    # we must avoid calling listdir_iter multiple
+    # times, otherwise it might cause a deadlock.
+    # That's why we do not recurse within the loop.
+    for attrs in sftp.listdir_iter(path):
+        file_path = f"{path}/{attrs.filename}"
+        if stat.S_ISDIR(attrs.st_mode):
+            dirs.append(file_path)
+        files[file_path] = attrs
+    for dir_ in dirs:
+        files.update(get_files(sftp, dir_))
+    return files
 
 
 def sync(src: SFTPClient, dest: SFTPClient):
@@ -86,15 +108,14 @@ def sync(src: SFTPClient, dest: SFTPClient):
             dest.utime(path, (src_attrs.st_atime, src_attrs.st_mtime))
 
     def needs_sync(path, src_attrs) -> bool:
+        # general:
+        # return True if path not exist on dest
         # for directories:
-        # return True if path exist and
-        # also is a directory on dest
+        # return True if path also is a directory on dest
         # for files:
-        # return True if path exist and
-        # file has same size and mtime on dest
-        try:
-            dest_attrs = dest.lstat(path)
-        except FileNotFoundError:
+        # return True if file has same size and mtime on dest
+        dest_attrs = dest_files.get(path, None)
+        if dest_attrs is None:
             return True
 
         if is_dir(src_attrs) and is_dir(dest_attrs):
@@ -109,25 +130,9 @@ def sync(src: SFTPClient, dest: SFTPClient):
         else:
             return True
 
-    def get_files(path) -> dict:
-        # Note that directories always appear
-        # before any files from that directory
-        # appear.
-        files = {}
-        dirs = []
-        # we must avoid calling listdir_iter multiple
-        # times, otherwise it might cause a deadlock.
-        # That's why we do not recurse within the loop.
-        for attrs in src.listdir_iter(path):
-            file_path = f"{path}/{attrs.filename}"
-            if is_dir(attrs):
-                dirs.append(file_path)
-            files[file_path] = attrs
-        for dir_ in dirs:
-            files.update(get_files(dir_))
-        return files
+    dest_files = get_files(dest, ".")
 
-    for path, attrs in get_files(".").items():
+    for path, attrs in get_files(src, ".").items():
         if needs_sync(path, attrs):
             if is_dir(attrs):
                 mk_dir(path)
