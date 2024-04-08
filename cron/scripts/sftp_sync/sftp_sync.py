@@ -103,12 +103,18 @@ class MinioFS(RemoteFS):
         return path in self.files
 
     def size(self, path: str):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return self.files[path].size
 
     def is_dir(self, path: str):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return self.files[path].is_dir
 
     def last_modified(self, path: str) -> float:
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return time.mktime(self.files[path].last_modified.timetuple())
 
     def put(self, path: str, fo: IO[bytes], size: int):
@@ -118,6 +124,8 @@ class MinioFS(RemoteFS):
 
     @contextmanager
     def open(self, path) -> IO[bytes]:
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         resp = None
         try:
             resp = self.cl.get_object(bucket_name=self.bucket_name, object_name=path)
@@ -193,12 +201,18 @@ class FtpFS(RemoteFS):
         return path in self.files
 
     def size(self, path: str):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return self.files[path].st_size
 
     def is_dir(self, path: str):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return stat.S_ISDIR(self.files[path].st_mode)
 
     def last_modified(self, path: str) -> float:
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         return self.files[path].st_mtime
 
     def put(self, path: str, fo: IO[bytes], size: int):
@@ -210,6 +224,8 @@ class FtpFS(RemoteFS):
 
     @contextmanager
     def open(self, path):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
         with self.cl.open(path, mode="r") as fo:
             yield fo
 
@@ -266,33 +282,8 @@ def sync(src: RemoteFS, trg: RemoteFS):
         logger.info(f"--OK-- {path}")
 
 
-def my_test():
-
-    src = FtpFS.from_credentials(
-        uri="tsm.intranet.ufz.de",
-        username="bpalm",
-        password=None,
-        path="ftp_test",
-        keyfile_path=os.environ.get("TEST_KEYFILE_PATH"),
-        missing_host_key_policy=WarningPolicy,
-    )
-
-    trg = MinioFS.from_credentials(
-        endpoint="localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False,
-        bucket_name="ufz-timese-demogroup-0a308373-ab29-4317-b351-1443e8a1babd",
-    )
-    sync(src, trg)
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    my_test()
-
-    if 1:
-        exit(1)
 
     if len(sys.argv) != 2:
         raise ValueError("Expected a thing_id as first and only argument.")
@@ -309,9 +300,7 @@ if __name__ == "__main__":
         ftp_int = get_internal_ftp(conn, thing_id)
 
     target = MinioFS.from_credentials(*ftp_int, secure=True)
-
     source = FtpFS.from_credentials(
         *ftp_ext, keyfile_path=ssh_priv_key, missing_host_key_policy=WarningPolicy
     )
-
     sync(source, target)
