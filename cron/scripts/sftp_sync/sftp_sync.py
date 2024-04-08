@@ -264,6 +264,8 @@ def sync(src: RemoteFS, trg: RemoteFS):
 
     for path in src.files:
 
+        logger.info(f"SYNCING: {path}")
+
         # dirs
         if src.is_dir(path):
             if not trg.exist(path):
@@ -278,8 +280,6 @@ def sync(src: RemoteFS, trg: RemoteFS):
         ):
             trg.update(src, path)
             continue
-
-        logger.info(f"--OK-- {path}")
 
 
 if __name__ == "__main__":
