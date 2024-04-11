@@ -509,6 +509,8 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
+      SMS_DB_USER: "${SMS_DB_USER}"
+      SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
     command:
       - "create-thing-in-postgres"
 
