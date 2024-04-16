@@ -20,7 +20,7 @@ from paramiko import (
 )
 from paramiko.config import SSH_PORT
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("sftp_sync")
 
 
 class RemoteFS(abc.ABC):
@@ -224,3 +224,25 @@ class FtpFS(RemoteFS):
             raise FileNotFoundError(path)
         with self.cl.open(path, mode="r") as fo:
             yield fo
+
+
+def sync(src: RemoteFS, trg: RemoteFS):
+    """Sync two remote filesystems."""
+
+    for path in src.files:
+        logger.info(f"SYNCING: {path}")
+
+        # dirs
+        if src.is_dir(path):
+            if not trg.exist(path):
+                trg.mkdir(path)
+            continue
+
+        # regular files
+        if (
+            not trg.exist(path)
+            or src.size(path) != trg.size(path)
+            or src.last_modified(path) > trg.last_modified(path)
+        ):
+            trg.update(src, path)
+            continue

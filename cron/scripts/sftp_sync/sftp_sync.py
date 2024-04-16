@@ -5,7 +5,7 @@ import os
 import sys
 import psycopg
 import logging
-from remote_fs import MinioFS, FtpFS, RemoteFS
+from remote_fs import MinioFS, FtpFS, sync
 from paramiko import WarningPolicy
 
 logger = logging.getLogger(__name__)
@@ -32,36 +32,37 @@ def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
         ).fetchone()
 
 
-def sync(src: RemoteFS, trg: RemoteFS):
+USAGE = """
+Usage: sftp_sync.py THING_UUID
+Sync external SFTP files to minio storage.
 
-    for path in src.files:
-        logger.info(f"SYNCING: {path}")
+THING_UUID should be the UUID of the thing.
 
-        # dirs
-        if src.is_dir(path):
-            if not trg.exist(path):
-                trg.mkdir(path)
-            continue
+Additional set the following environment variables:
 
-        # regular files
-        if (
-            not trg.exist(path)
-            or src.size(path) != trg.size(path)
-            or src.last_modified(path) > trg.last_modified(path)
-        ):
-            trg.update(src, path)
-            continue
+  MINIO_SECURE:     Use minio secure connection; [true, false, 1, 0] 
+  SSH_KEYFILE_DIR:  Directory where the ssh keyfile(s) are stored.
+                    The file must be named like THING_UUID.
+  FTP_AUTH_DB_DSN:  DB which store the credentials for the internal 
+                    and external sftp in the format: 
 
+Dsn format: 
+  postgresql://[user[:password]@][netloc][:port][/dbname]
+
+
+
+"""
 
 if __name__ == "__main__":
 
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     if len(sys.argv) != 2:
-        raise ValueError("Expected a thing_id as first and only argument.")
+        print(USAGE)
+        exit(1)
     thing_id = sys.argv[1]
 
-    for k in ["SSH_PRIV_KEY_PATH", "FTP_AUTH_DB_URI", "MINIO_SECURE"]:
+    for k in ["SSH_KEYFILE_DIR", "FTP_AUTH_DB_DSN", "MINIO_SECURE"]:
         if (os.environ.get(k) or None) is None:
             raise EnvironmentError("Environment variable {k} must be set")
     ssh_priv_key = os.path.join(os.environ["SSH_KEYFILE_DIR"], f"{thing_id}")
