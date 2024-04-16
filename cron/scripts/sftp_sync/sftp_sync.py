@@ -8,8 +8,6 @@ import logging
 from remote_fs import MinioFS, FtpFS, sync
 from paramiko import WarningPolicy
 
-logger = logging.getLogger(__name__)
-
 
 def get_minio_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, access_key, secret_key, bucket_name)"""
@@ -40,11 +38,13 @@ THING_UUID should be the UUID of the thing.
 
 Additional set the following environment variables:
 
-  MINIO_SECURE:     Use minio secure connection; [true, false, 1, 0] 
-  SSH_KEYFILE_DIR:  Directory where the ssh keyfile(s) are stored.
+  MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
+  SSH_KEYFILE_DIR   Directory where the ssh keyfile(s) are stored.
                     The file must be named like THING_UUID.
-  FTP_AUTH_DB_DSN:  DB which store the credentials for the internal 
+  FTP_AUTH_DB_DSN   DB which store the credentials for the internal 
                     and external sftp in the format: 
+  LOG_LEVEL         Set the verbosity, defaults to INFO.
+                    [DEBUG, INFO, WARNING, ERROR, CRITICAL]
 
 Dsn format: 
   postgresql://[user[:password]@][netloc][:port][/dbname]
@@ -54,12 +54,11 @@ Dsn format:
 """
 
 if __name__ == "__main__":
-
-    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
-
     if len(sys.argv) != 2:
         print(USAGE)
         exit(1)
+
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
     thing_id = sys.argv[1]
 
     for k in ["SSH_KEYFILE_DIR", "FTP_AUTH_DB_DSN", "MINIO_SECURE"]:
