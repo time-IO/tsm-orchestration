@@ -31,40 +31,37 @@ def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
 
 
 USAGE = """
-Usage: sftp_sync.py THING_UUID
+Usage: sftp_sync.py THING_UUID KEYFILE
 Sync external SFTP files to minio storage.
 
-THING_UUID should be the UUID of the thing.
+Arguments
+  THING_UUID        UUID of the thing.
+  KEYFILE           SSH private key file to authenticate at the sftp server.
 
 Additional set the following environment variables:
 
   MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
-  SSH_KEYFILE_DIR   Directory where the ssh keyfile(s) are stored.
-                    The file must be named like THING_UUID.
   FTP_AUTH_DB_DSN   DB which store the credentials for the internal 
-                    and external sftp in the format: 
+                    and external sftp server. See also DSN format below. 
   LOG_LEVEL         Set the verbosity, defaults to INFO.
                     [DEBUG, INFO, WARNING, ERROR, CRITICAL]
 
-Dsn format: 
+DSN format: 
   postgresql://[user[:password]@][netloc][:port][/dbname]
-
-
-
 """
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print(USAGE)
         exit(1)
 
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
     thing_id = sys.argv[1]
+    ssh_priv_key = sys.argv[2]
 
-    for k in ["SSH_KEYFILE_DIR", "FTP_AUTH_DB_DSN", "MINIO_SECURE"]:
+    for k in ["FTP_AUTH_DB_DSN", "MINIO_SECURE"]:
         if (os.environ.get(k) or None) is None:
             raise EnvironmentError("Environment variable {k} must be set")
-    ssh_priv_key = os.path.join(os.environ["SSH_KEYFILE_DIR"], f"{thing_id}")
     dsn = os.environ["FTP_AUTH_DB_DSN"]
     minio_secure = (  # ensure True as default
         False if os.environ["MINIO_SECURE"].lower() in ["false", "0"] else True
