@@ -778,6 +778,14 @@ services:
       SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
       CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
       CV_API_URL: "${CRON_CV_API_URL}"
+      # The following is needed for sftp sync jobs
+      LOG_LEVEL: "${LOG_LEVEL}"
+      MINIO_SECURE: "${MINIO_SECURE}"
+      FTP_AUTH_DB_DSN: "postgresql://\
+        ${FRONTEND_POSTGRES_USER}:\
+        ${FRONTEND_POSTGRES_PASS}@\
+        ${FRONTEND_POSTGRES_HOST}/\
+        ${FRONTEND_POSTGRES_DB}"
     healthcheck:
       test: [ "CMD-SHELL", "service cron status || exit 1" ]
       interval: 5s
