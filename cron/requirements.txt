@@ -2,3 +2,4 @@ psycopg2-binary~=2.9.2
 psycopg
 minio
 paramiko
+python-crontab~=3.0.0
