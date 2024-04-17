@@ -3,7 +3,7 @@ ARG DEBIAN_IMAGE_TAG
 FROM debian:${DEBIAN_IMAGE_TAG}
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends cron tini python3 python3-pip\
+    && apt-get install -y --no-install-recommends cron tini python3 python3-pip inotify-tools\
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
