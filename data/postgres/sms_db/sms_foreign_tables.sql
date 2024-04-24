@@ -18,7 +18,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration (
     description             text,
     persistent_identifier    varchar(256),
     status                  varchar(256),
-    project                 varchar(256)
+    project                 varchar(256),
+    is_internal         boolean,
+    is_public           boolean
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration');
 
@@ -68,7 +70,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device (
     manufacturer_name   varchar(256),
     model               varchar(256),
     serial_number       varchar(256),
-    persistent_identifier varchar(256)
+    persistent_identifier varchar(256),
+    is_internal         boolean,
+    is_public           boolean
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device');
 
