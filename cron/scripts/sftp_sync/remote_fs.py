@@ -6,6 +6,7 @@ import logging
 import os
 import stat
 import time
+from urllib.parse import urlparse
 from typing import IO
 from contextlib import contextmanager
 
@@ -152,14 +153,21 @@ class FtpFS(RemoteFS):
         keyfile_path=None,
         missing_host_key_policy: MissingHostKeyPolicy | None = None,
     ):
-        host = uri.split(":")[0]
-        port = int(f"{uri}:".split(":")[1] or SSH_PORT)
+        # with urlparse(uri, scheme="sftp") the uri
+        # is interpreted as relative path
+        uri_parts = urlparse(uri if "://" in uri else f"sftp://{uri}")
+        if uri_parts.scheme != "sftp":
+            logger.warning(
+                f"Expected URI to start with sftp://... , "
+                f"not with {uri_parts.scheme}://... '",
+                uri_parts,
+            )
         ssh = SSHClient()
         if missing_host_key_policy is not None:
             ssh.set_missing_host_key_policy(missing_host_key_policy)
         ssh.connect(
-            hostname=host,
-            port=int(port),
+            hostname=uri_parts.hostname,
+            port=uri_parts.port or SSH_PORT,
             username=username,
             password=password or None,
             key_filename=keyfile_path,

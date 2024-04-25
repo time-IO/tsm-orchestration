@@ -69,9 +69,13 @@ if __name__ == "__main__":
 
     with psycopg.connect(dsn) as conn:
         ftp_ext = get_external_ftp_credentials(conn, thing_id)
-        ftp_int = get_minio_credentials(conn, thing_id)
+        storage = get_minio_credentials(conn, thing_id)
 
-    target = MinioFS.from_credentials(*ftp_int, secure=minio_secure)
+    if ftp_ext[0] is None:
+        raise RuntimeError("Got no external SFTP server from database")
+    if storage[0] is None:
+        raise RuntimeError("Got no object storage from database")
+    target = MinioFS.from_credentials(*storage, secure=minio_secure)
     source = FtpFS.from_credentials(
         *ftp_ext, keyfile_path=ssh_priv_key, missing_host_key_policy=WarningPolicy()
     )
