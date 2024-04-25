@@ -166,6 +166,8 @@ class FtpFS(RemoteFS):
         ssh = SSHClient()
         if missing_host_key_policy is not None:
             ssh.set_missing_host_key_policy(missing_host_key_policy)
+        if password:  # either pwd or keyfile
+            keyfile_path = None
         ssh.connect(
             hostname=uri_parts.hostname,
             port=uri_parts.port or SSH_PORT,
