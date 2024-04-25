@@ -12,22 +12,32 @@ from paramiko import WarningPolicy
 def get_minio_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, access_key, secret_key, bucket_name)"""
     with conn.cursor() as cur:
-        return cur.execute(
-            "SELECT r.fileserver_uri, r.access_key, r.secret_key, r.bucket "
+        a, s, b = cur.execute(
+            "SELECT r.access_key, r.secret_key, r.bucket "
             "FROM tsm_thing t JOIN tsm_rawdatastorage r ON t.id = r.thing_id "
             "WHERE t.thing_id = %s",
             [thing_id],
         ).fetchone()
+        if not a:
+            raise RuntimeError(
+                "No object storage credentials found in frontend database"
+            )
+        return os.environ["MINIO_URL"], a, s, b
 
 
 def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, username, password, path)"""
     with conn.cursor() as cur:
-        return cur.execute(
+        ur, us, pw, pa = cur.execute(
             "SELECT ext_sftp_uri, ext_sftp_username, ext_sftp_password, ext_sftp_path "
             "FROM tsm_thing WHERE thing_id = %s",
             [thing_id],
         ).fetchone()
+        if "" in [ur, us] or None in [ur, us]:
+            raise RuntimeError(
+                "No object external sftp credentials found in frontend database"
+            )
+        return ur, us, pw, pa
 
 
 USAGE = """
@@ -59,9 +69,9 @@ if __name__ == "__main__":
     thing_id = sys.argv[1]
     ssh_priv_key = sys.argv[2]
 
-    for k in ["FTP_AUTH_DB_DSN", "MINIO_SECURE"]:
-        if (os.environ.get(k) or None) is None:
-            raise EnvironmentError("Environment variable {k} must be set")
+    for k in ["FTP_AUTH_DB_DSN", "MINIO_URL", "MINIO_SECURE"]:
+        if not os.environ.get(k):
+            raise EnvironmentError(f"Environment variable {k} must be set")
     dsn = os.environ["FTP_AUTH_DB_DSN"]
     minio_secure = (  # ensure True as default
         False if os.environ["MINIO_SECURE"].lower() in ["false", "0"] else True
@@ -71,10 +81,6 @@ if __name__ == "__main__":
         ftp_ext = get_external_ftp_credentials(conn, thing_id)
         storage = get_minio_credentials(conn, thing_id)
 
-    if ftp_ext[0] is None:
-        raise RuntimeError("Got no external SFTP server from database")
-    if storage[0] is None:
-        raise RuntimeError("Got no object storage from database")
     target = MinioFS.from_credentials(*storage, secure=minio_secure)
     source = FtpFS.from_credentials(
         *ftp_ext, keyfile_path=ssh_priv_key, missing_host_key_policy=WarningPolicy()

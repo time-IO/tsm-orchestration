@@ -73,6 +73,7 @@ class MinioFS(RemoteFS):
         bucket_name: str | None = None,
         secure: bool = True,
     ):
+        logger.warning(str(locals()))
         cl = minio.Minio(
             endpoint=endpoint,
             access_key=access_key,
