@@ -359,6 +359,7 @@ services:
     user: "appuser"
     volumes:
       - "frontend-statics:/home/appuser/app/static"
+      - "sftp-private-keys:/home/appuser/app/sftp-private-keys"
       - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
       - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
     entrypoint: ""
@@ -780,6 +781,7 @@ services:
       CV_API_URL: "${CRON_CV_API_URL}"
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
+      MINIO_URL: "${MINIO_HOST}"
       MINIO_SECURE: "${MINIO_SECURE}"
       FTP_AUTH_DB_DSN: "postgresql://\
         ${FRONTEND_POSTGRES_USER}:\
@@ -793,7 +795,8 @@ services:
       retries: 5
     volumes:
       - "./cron/crontab.txt:/tmp/crontab.txt:ro"
-      - "./cron/scripts:/home/tsm/scripts:ro"
+      - "./cron/scripts:/home/appuser/scripts:ro"
+      - "sftp-private-keys:/sftp-private-keys:ro"
 
   mqtt-cat:
     restart: "${RESTART}"
@@ -832,3 +835,4 @@ services:
 
 volumes:
   frontend-statics:
+  sftp-private-keys:
