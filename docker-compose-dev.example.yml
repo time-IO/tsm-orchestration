@@ -38,6 +38,10 @@ services:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
+  worker-crontab-setup:
+    volumes:
+      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+
 
   basic-demo-scheduler:
     volumes:

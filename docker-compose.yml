@@ -359,6 +359,7 @@ services:
     user: "appuser"
     volumes:
       - "frontend-statics:/home/appuser/app/static"
+      - "sftp-private-keys:/home/appuser/app/sftp-private-keys"
       - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
       - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
     entrypoint: ""
@@ -690,6 +691,26 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
 
 
+  worker-crontab-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    restart: "${RESTART}"
+    depends_on:
+        mqtt-broker:
+            condition: "service_healthy"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: "thing_creation"
+      MQTT_BROKER: "mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "crontab-setup"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+    volumes:
+      - "./cron/crontab.txt:/tmp/crontab.txt"
+    command:
+      - "update-sftp-crontab"
+
   # =================================================================
   # other worker
   # =================================================================
@@ -758,6 +779,15 @@ services:
       SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
       CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
       CV_API_URL: "${CRON_CV_API_URL}"
+      # The following is needed for sftp sync jobs
+      LOG_LEVEL: "${LOG_LEVEL}"
+      MINIO_URL: "${MINIO_HOST}"
+      MINIO_SECURE: "${MINIO_SECURE}"
+      FTP_AUTH_DB_DSN: "postgresql://\
+        ${FRONTEND_POSTGRES_USER}:\
+        ${FRONTEND_POSTGRES_PASS}@\
+        ${FRONTEND_POSTGRES_HOST}/\
+        ${FRONTEND_POSTGRES_DB}"
     healthcheck:
       test: [ "CMD-SHELL", "service cron status || exit 1" ]
       interval: 5s
@@ -765,7 +795,8 @@ services:
       retries: 5
     volumes:
       - "./cron/crontab.txt:/tmp/crontab.txt:ro"
-      - "./cron/scripts:/home/tsm/scripts:ro"
+      - "./cron/scripts:/scripts:ro"
+      - "sftp-private-keys:/sftp-private-keys:ro"
 
   mqtt-cat:
     restart: "${RESTART}"
@@ -804,3 +835,4 @@ services:
 
 volumes:
   frontend-statics:
+  sftp-private-keys:
