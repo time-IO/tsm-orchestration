@@ -1,1 +1,0 @@
-15,45 * * * * /usr/bin/python3 /scripts/sms_sync/sms_cv_tables.py > $STDOUT 2>$STDERR
