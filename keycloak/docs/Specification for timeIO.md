@@ -9,6 +9,9 @@ DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:8081/realms/demo/.well-known/openi
 
 ALLOWED_VOS=UFZ-Timeseries-Management, VO
 ```
+ __IMPORTANT NOTE FOR ORCHESTRATION:__
+- `DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:8081/realms/demo/.well-known/openid-configuration`
+  - this is the internal portal of the container, so adapt to your `KEYCLOAK_PORT`
 
 ## Created groups:
 
