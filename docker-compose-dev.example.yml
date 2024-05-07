@@ -61,7 +61,7 @@ services:
   keycloak:
     image: "quay.io/keycloak/keycloak:24.0.3"
     ports:
-      - "${KEYCLOAK_PORT}:8080"
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     environment:
       KEYCLOAK_ADMIN: "admin"
@@ -77,6 +77,7 @@ services:
     command:
       - start-dev
       - --import-realm
+      - --http-port=${KEYCLOAK_PORT}
     depends_on:
       keycloak-postgres:
         condition: service_healthy
