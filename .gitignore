@@ -14,3 +14,4 @@ data/
 !data/tomcat/context/.gitkeep
 /Pipfile
 docker-compose-dev.yml
+cron/crontab.txt
