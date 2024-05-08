@@ -23,3 +23,9 @@ chmod a+x /home/tsm/html/images
 chmod -R a+r /home/tsm/html
 
 tree -pugfi /home/tsm/html
+
+# Create crontab.txt if it not already exists
+if [ ! -f "/tmp/cron/crontab.txt" ]; then
+    touch "/tmp/cron/crontab.txt"
+    chmod 666 "/tmp/cron/crontab.txt"
+fi
