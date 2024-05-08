@@ -1,18 +1,25 @@
+#!/usr/bin/python3
+
 from sync_utils import (
     create_table,
     upsert_table,
     get_connection_from_env,
 )
-from os import chdir, environ
+import os
 import json
 
-url = environ.get("CV_API_URL")
-home = environ.get("HOME")
-chdir(home)
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
-file_path_list = ["scripts/sms_sync/tables/sms_cv_measured_quantity.json"]
+file_names = [
+    "sms_cv_measured_quantity.json"
+]
+
+file_path_list = [os.path.join(script_dir, "tables", file_name) for file_name in file_names]
 
 if __name__ == "__main__":
+    url = os.environ.get("CV_API_URL")
+    home = os.environ.get("HOME")
+    os.chdir(home)
     for file_path in file_path_list:
         db = get_connection_from_env()
         try:
