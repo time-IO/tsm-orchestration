@@ -25,6 +25,7 @@ services:
     volumes:
       - "./data/minio/certs/:/tmp/certs"
       - "./nginx/html/:/home/tsm/html"
+      - "./cron:/tmp/cron"
 
 
   # Summary
