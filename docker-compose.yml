@@ -698,6 +698,8 @@ services:
     depends_on:
         mqtt-broker:
             condition: "service_healthy"
+        init:
+          condition: "service_completed_successfully"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: "thing_creation"
@@ -708,7 +710,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
     volumes:
-      - "./cron/crontab.txt:/tmp/crontab.txt"
+      - "./cron/crontab.txt:/home/appuser/crontab.txt"
     command:
       - "update-sftp-crontab"
 
@@ -789,6 +791,9 @@ services:
         ${FRONTEND_POSTGRES_PASS}@\
         ${FRONTEND_POSTGRES_HOST}/\
         ${FRONTEND_POSTGRES_DB}"
+    depends_on:
+      init:
+        condition: "service_completed_successfully"
     healthcheck:
       test: [ "CMD-SHELL", "service cron status || exit 1" ]
       interval: 5s
