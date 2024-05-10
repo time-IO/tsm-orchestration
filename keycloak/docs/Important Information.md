@@ -16,4 +16,4 @@ With important information we mean theses kind of information you'll need to con
   - Go to `realm settings` in left menu
   - in the current `general` tab you find the `Endpoints`
   - Select the `OpenID Endpoint Configuration`
-  - e.g. `http://keycloak:8080/realms/demo/.well-known/openid-configuration`
+  - e.g. `http://keycloak:KEYCLOAK_PORT/realms/demo/.well-known/openid-configuration`

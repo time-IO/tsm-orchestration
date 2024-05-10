@@ -5,14 +5,13 @@
 ```
 DJANGO_HELMHOLTZ_CLIENT_ID=timeIO-client
 DJANGO_HELMHOLTZ_CLIENT_SECRET=pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ
-DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:8081/realms/demo/.well-known/openid-configuration
+DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:KEYCLOAK_PORT/realms/demo/.well-known/openid-configuration
 
 ALLOWED_VOS=UFZ-Timeseries-Management, VO
 ```
  __IMPORTANT NOTE FOR ORCHESTRATION:__
-- `DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:8081/realms/demo/.well-known/openid-configuration`
+- `DJANGO_HELMHOLTZ_AAI_CONF_URL=http://keycloak:KEYCLOAK_PORT/realms/demo/.well-known/openid-configuration`
   - this is the internal portal of the container, so adapt to your `KEYCLOAK_PORT`
-
 ## Created groups:
 
   - `a:a:a:group:VO:Group1#`
