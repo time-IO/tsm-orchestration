@@ -13,7 +13,7 @@
 
   - `docker compose up -d`
 
-- visit: http://keycloak:8080 (__NOTE:__ the PORT depends on your setting of `KEYCLOAK_PORT`)
+- visit: http://keycloak:`KEYCLOAK_PORT`
   - login using 
     - username: `admin` 
     - password: `admin`
