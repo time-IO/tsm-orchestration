@@ -91,6 +91,7 @@
   - __After save__: Go to the `Mapper` tab of the saved scope
   - click `Configure a new mapper`
   - Select `user property`
+  - Property: `id`
   - Fill in the form:
     - Name: `Mapper eduperson_unique_id`
     - token claim name: `eduperson_unique_id`
