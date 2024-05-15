@@ -346,7 +346,7 @@ services:
   # Description
   # ===========
   # TODO
-  frontend:
+  frontend2:
     image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${FRONTEND_IMAGE_TAG}"
     restart: "${RESTART}"
     command: >
@@ -430,7 +430,7 @@ services:
       - "${PROXY_TLS_CERT_PATH}:/etc/ssl/public.crt:ro"
       - "${PROXY_TLS_KEY_PATH}:/etc/ssl/private.key:ro"
     depends_on:
-      frontend:
+      frontend2:
         condition: "service_started"
       visualization:
         condition: "service_started"
