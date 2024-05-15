@@ -845,3 +845,7 @@ services:
 volumes:
   frontend-statics:
   sftp-private-keys:
+
+networks:
+  sms-docker-network:
+    external: true
