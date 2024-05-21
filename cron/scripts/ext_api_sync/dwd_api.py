@@ -41,7 +41,8 @@ def parse_brighstky_response(origin: str) -> list[Observation]:
     out = []
 
     for obs in observation_data:
-        timestamp = obs.pop("timestamp").strptime(timestamp, '%Y-%m-%dT%H:%M:%S%z')
+        timestamp = obs.pop("timestamp")
+        timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S%z')
         del obs["source_id"]
         for parameter, value in obs.items():
             try:
