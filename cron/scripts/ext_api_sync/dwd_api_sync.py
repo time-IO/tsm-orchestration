@@ -1,9 +1,9 @@
 import requests
 import sys
 import os
-import json
 import logging
 
+from ast import literal_eval
 from datetime import datetime, timedelta
 from typing import cast
 
@@ -13,7 +13,7 @@ from tsm_datastore_lib.Observation import Observation
 
 
 thing_uuid = sys.argv[1]
-properties = json.loads(sys.argv[2])
+properties = literal_eval(sys.argv[2])
 target_uri = sys.argv[3]
 brightsky_base_url = "https://api.brightsky.dev/weather"
 
