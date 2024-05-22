@@ -23,9 +23,10 @@ services:
     restart: "no"
     user: "${UID}:${GID}"
     volumes:
-      - "./data/minio/certs/:/tmp/certs"
-      - "./nginx/html/:/home/tsm/html"
-      - "./cron:/tmp/cron"
+      - "minio:/tmp/minio"
+      - "crontab:/tmp/cron"
+      - "mosquitto-auth:/tmp/mosquitto-auth"
+      - "mosquitto-data:/tmp/mosquitto-data"
 
 
   # Summary
@@ -55,7 +56,6 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${RESTART}"
-    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG-pg14}
     build:
       context: "data/postgres"
       args:
@@ -96,10 +96,10 @@ services:
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
-      - "./data/postgres/data:/var/lib/postgresql/data"
       - "./data/postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh"
       - "${POSTGRES_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
       - "${POSTGRES_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
+      - "postgres-data:/var/lib/postgresql/data/pgdata"
     user: "${UID}:${GID}"
     command: "${POSTGRES_EXTRA_PARAMS}"
     healthcheck:
@@ -149,17 +149,9 @@ services:
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
       MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "${MQTT_QOS}"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "60s"
-      #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
-      #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
-      #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL}"
     volumes:
-      - "./data/minio/vol0:/vol0"
-      # FTP server tls key and cert
-      - "${MINIO_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
-      - "${MINIO_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
-      # SSH Server key to provide constant ssh host key
-      - "${MINIO_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
+      - "minio:/minio"
     user: "${UID}:${GID}"
     command:
       - "server"
@@ -172,13 +164,13 @@ services:
       - "--sftp"
       - "address=:22"
       - "--sftp"
-      - "ssh-private-key=/certs/id_ed25519"
+      - "ssh-private-key=/minio/certs/id_ed25519"
       - "--ftp"
-      - "tls-private-key=/certs/minio-ftp.key"
+      - "tls-private-key=/minio/certs/minio-ftp.key"
       - "--ftp"
-      - "tls-public-cert=/certs/minio-ftp.crt"
+      - "tls-public-cert=/minio/certs/minio-ftp.crt"
       - "--json"
-      - "/vol0"
+      - "/minio/vol0"
     healthcheck:
       test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
       interval: "${MINIO_HEALTHCHECK_INTERVAL}"
@@ -228,8 +220,8 @@ services:
     volumes:
       - "${MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
       - "${MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
-      - "./data/mosquitto/auth:/mosquitto-auth/"
-      - "./data/mosquitto/data:/mosquitto-data/"
+      - "mosquitto-auth:/mosquitto-auth"
+      - "mosquitto-data:/mosquitto-data"
       - "${MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
       - "${MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
       - "${MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
@@ -364,8 +356,6 @@ services:
       - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
       - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
     entrypoint: ""
-    # ports:
-    #   - "127.0.0.1:8000:8000"
     environment:
       - "POSTGRES_HOST=${FRONTEND_POSTGRES_HOST}"
       - "POSTGRES_NAME=${FRONTEND_POSTGRES_DB}"
@@ -710,7 +700,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
     volumes:
-      - "./cron/crontab.txt:/home/appuser/crontab.txt"
+      - "crontab:/tmp/cron"
     command:
       - "update-sftp-crontab"
 
@@ -803,7 +793,7 @@ services:
       timeout: 3s
       retries: 5
     volumes:
-      - "./cron/crontab.txt:/tmp/crontab.txt:ro"
+      - "crontab:/tmp:ro"
       - "./cron/scripts:/scripts:ro"
       - "sftp-private-keys:/sftp-private-keys:ro"
 
@@ -845,3 +835,9 @@ services:
 volumes:
   frontend-statics:
   sftp-private-keys:
+  minio:
+  crontab:
+  tomcat-context:
+  postgres-data:
+  mosquitto-auth:
+  mosquitto-data:
