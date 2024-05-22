@@ -65,5 +65,9 @@ if __name__ == "__main__":
     observation_list = parse_brighstky_response("dwd_data")
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     datastore = cast(SqlAlchemyDatastore, datastore)
-    datastore.store_observations(observation_list)
-    datastore.session.commit()
+    try:
+        datastore.store_observations(observation_list)
+        datastore.insert_commit_chunk()
+    except Exception:
+        datastore.session.rollback()
+        raise
