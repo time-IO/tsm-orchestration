@@ -91,9 +91,9 @@
   - __After save__: Go to the `Mapper` tab of the saved scope
   - click `Configure a new mapper`
   - Select `user property`
-  - Property: `id`
   - Fill in the form:
     - Name: `Mapper eduperson_unique_id`
+    - Property: `id`
     - token claim name: `eduperson_unique_id`
     ![1012](./../media/1012.png)
 
@@ -160,6 +160,21 @@ If the cookie is disabled, you have to enter a password everytime you login. Thi
 
 ![1017](./../media/1017.png)
 ![1018](./../media/1018.png)
+
+### Update SSO Session Max
+- go to `Realm Settings` in left menu
+- click on tab `Sessions`
+- Set `SSO Session Max` to `10` `Seconds`
+
+__Reason for doing this__: 
+There was a problem, when you logged in with one user in the sms and then  logged out and tried to login with another user:
+
+```
+You are already authenticated as different user 'user1' in this session. Please sign out first.
+```
+This change fixes this.
+
+![1019](./../media/1019.png)
 
 ### Export the settings to an file
   - this file can be used to start the keycloak server and fill it with some initial data    
