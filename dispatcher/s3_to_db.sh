@@ -12,11 +12,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL ON SCHEMA $S3MAP_POSTGRES_USER TO $S3MAP_POSTGRES_USER;
 
     CREATE TABLE "mapping" (
-        "id"           bigserial    NOT NULL PRIMARY KEY,
-        "bucket_name"  varchar(256) NOT NULL UNIQUE,
-        "thing_uuid"   uuid         NOT NULL,
-        "thing_name"   varchar(256) NOT NULL,
-        "db_url"       varchar(256) NOT NULL
+        "id"                bigserial    NOT NULL PRIMARY KEY,
+        "bucket_name"       varchar(256) NOT NULL UNIQUE,
+        "thing_uuid"        uuid         NOT NULL,
+        "thing_name"        varchar(256) NOT NULL,
+        "db_url"            varchar(256) NOT NULL,
+        "filename_pattern"  varchar(256) NOT NULL
     );
 
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA $S3MAP_POSTGRES_USER TO $S3MAP_POSTGRES_USER;
