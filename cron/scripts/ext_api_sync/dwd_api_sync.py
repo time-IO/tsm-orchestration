@@ -20,7 +20,7 @@ brightsky_base_url = "https://api.brightsky.dev/weather"
 
 def fetch_brightsky_data() -> dict:
     """ Returns DWD data with hourly resolution of yesterday"""
-    yesterday = datetime.now() - timedelta(1)
+    yesterday = datetime.now() - timedelta(days=1)
     yesterday_start = datetime.strftime(yesterday, '%Y-%m-%d:00:00:00')
     yesterday_end = datetime.strftime(yesterday, '%Y-%m-%d:23:55:00')
     params = {"dwd_station_id": properties["station_id"],
