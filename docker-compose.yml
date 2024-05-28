@@ -541,7 +541,7 @@ services:
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
-    restart: on-failure
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -596,7 +596,7 @@ services:
 
   worker-file-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
-    restart: "on-failure"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -637,7 +637,7 @@ services:
 
   worker-run-qaqc:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
-    restart: "on-failure"
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
@@ -667,7 +667,7 @@ services:
 
   worker-mqtt-ingest:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
-    restart: on-failure
+    restart: "${RESTART}"
     depends_on:
       mqtt-broker:
         condition: "service_healthy"
