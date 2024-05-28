@@ -11,7 +11,7 @@ visualization-e2e:
   script:
     - "docker compose config visualization"
     - "docker compose logs visualization"
-    - "docker compose logs ps"
+    - "docker compose ps"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
