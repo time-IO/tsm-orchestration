@@ -9,6 +9,7 @@ visualization-e2e:
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
+    - "docker compose logs visualization"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
