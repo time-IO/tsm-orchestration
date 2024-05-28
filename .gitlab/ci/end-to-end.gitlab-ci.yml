@@ -31,6 +31,7 @@ visualization-e2e:
     - "[ \"$TEAMS_UID\" == \"$GROUP_UID\" ] || exit 1"
   tags:
     - "dind"
+    - "hifis"
 
 avro-thing-creation-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
