@@ -11,7 +11,6 @@ visualization-e2e:
   script:
     - "docker compose config visualization"
     - "docker compose logs visualization"
-    - "docker compose ps"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 2"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
@@ -24,6 +23,7 @@ visualization-e2e:
     - "GROUP_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${GROUP_ID}))\")"
     - "echo $GROUP_UID"
     - "GF_API=http://docker/visualization/api"
+    - "docker compose ps"
     - "curl -Isf -u grafana:grafana ${GF_API}/dashboards/uid/${THING_UID} || exit 1"
     - "curl -Isf -u grafana:grafana ${GF_API}/dashboards/uid/${GROUP_UID} || exit 1"
     - "curl -Isf -u grafana:grafana ${GF_API}/datasources/uid/${GROUP_UID} || exit 1"
