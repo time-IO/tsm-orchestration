@@ -253,3 +253,16 @@ TSM_DIRECTORY (can be any dir)
 ├── tsm-extractor
 └── tsm-ufz-tsmdl
 ```
+
+# Keycloak as identity provider in development environment
+
+## Admin console
+
+- http://localhost:8081/admin/master/console/#/demo/ 
+  - or: http://keycloak:8081/admin/master/console/#/demo/ (if you updated /etc/hosts)
+  - or: http://keycloak:KEYCLOAK_PORT/admin/master/console/#/demo/ || http://localhost:KEYCLOAK_PORT/admin/master/console/#/demo/ (if you changed the port to something other than 8081) 
+- Credentials:
+  - User: `admin`
+  - Password: `admin`
+
+See [here](./keycloak/README.md) for further information regarding configuration and setup.
