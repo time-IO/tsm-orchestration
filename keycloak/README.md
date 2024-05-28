@@ -2,7 +2,7 @@
 
 ## Purpose
 The purpose of this keycloak is to avoid the dependency to the [Helmholtz AAI](https://hifis.net/aai/) and to mock its behavior.
- 
+
 ## Documents
 
 - [Configuration.md](./keycloak/docs/Configration.md)
