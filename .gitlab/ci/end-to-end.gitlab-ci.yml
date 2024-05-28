@@ -14,8 +14,6 @@ visualization-e2e:
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
     - "sleep 5"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
-    - "sleep 20"
-    - "docker compose logs mqtt-cat"
     - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id)"
     - "echo $THING_UID"
     - "GROUP_ID=$(cat thing_dump.json | jq -r .[].fields.group)"
