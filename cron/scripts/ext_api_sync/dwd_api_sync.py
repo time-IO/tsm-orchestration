@@ -33,7 +33,7 @@ def fetch_brightsky_data() -> dict:
     return response_data
 
 
-def parse_brighstky_response(origin: str) -> list[Observation]:
+def parse_brightsky_response(origin: str) -> list[Observation]:
     """ Parses Brightsky response and returns list of tsm-datastore-lib Observations"""
     payload = fetch_brightsky_data()
     observation_data = payload["weather"]
@@ -62,7 +62,7 @@ def parse_brighstky_response(origin: str) -> list[Observation]:
 if __name__ == "__main__":
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
-    observation_list = parse_brighstky_response("dwd_data")
+    observation_list = parse_brightsky_response("dwd_data")
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     datastore = cast(SqlAlchemyDatastore, datastore)
     try:
