@@ -347,7 +347,7 @@ services:
   # ===========
   # TODO
   frontend:
-    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:58-add-external-http-resources-as-ingest-type"
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${FRONTEND_IMAGE_TAG}"
     restart: "${RESTART}"
     command: >
       bash -c "python3 manage.py migrate
