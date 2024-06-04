@@ -2,3 +2,4 @@ psycopg2-binary~=2.9.2
 psycopg[binary]
 minio
 paramiko
+tsm-datastore-lib>=0.8.0
