@@ -27,17 +27,16 @@ def fetch_brightsky_data() -> dict:
               "date": yesterday_start,
               "last_date": yesterday_end,
               "units": "dwd"}
-    response = requests.get(url=brightsky_base_url, params=params)
-    response_data = response.json()
+    brightsky_response = requests.get(url=brightsky_base_url, params=params)
+    response_data = brightsky_response.json()
 
     return response_data
 
 
-def parse_brightsky_response(origin: str) -> list[Observation]:
-    """ Parses Brightsky response and returns list of tsm-datastore-lib Observations"""
-    payload = fetch_brightsky_data()
-    observation_data = payload["weather"]
-    source = payload["sources"][0]
+def parse_brightsky_response(resp, origin: str) -> list[Observation]:
+    """ Uses Brightsky Response and returns a list of tsm-datastore-lib Observations"""
+    observation_data = resp["weather"]
+    source = resp["sources"][0]
     out = []
 
     for obs in observation_data:
@@ -62,7 +61,8 @@ def parse_brightsky_response(origin: str) -> list[Observation]:
 if __name__ == "__main__":
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
-    observation_list = parse_brightsky_response("dwd_data")
+    response = fetch_brightsky_data()
+    observation_list = parse_brightsky_response(response, origin="dwd_data")
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     datastore = cast(SqlAlchemyDatastore, datastore)
     try:
