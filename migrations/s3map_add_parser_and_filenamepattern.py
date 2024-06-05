@@ -35,15 +35,15 @@ Adds columns 'filename_pattern' and 'parser' to s3map.mapping
 and fills them with data from the frontend.
 
     S3_DSN  is the full fledged database connection string to 
-            the s3map_db with admin privileges (alter tables).
+            the s3map_db with ** admin privileges ** (alter tables).
 
     FE_DB   is the full fledged database connection string to 
             the frontenddb (read)
 
 Example:
-    DSL1=postgresql://postgres:postgres@localhost/postgres
-    DSL2=postgresql://frontenddb:frontenddb@localhost/postgres
-    python {os.path.basename(__file__)} $DSL1 $DSL2
+    S3DB=postgresql://postgres:postgres@localhost/postgres
+    FEDB=postgresql://frontenddb:frontenddb@localhost/postgres
+    python {os.path.basename(__file__)} $S3DB $FEDB
 """
 
 
