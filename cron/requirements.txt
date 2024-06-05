@@ -1,6 +1,8 @@
+Click
 psycopg2-binary~=2.9.2
 psycopg[binary]
 minio
 paramiko
 --extra-index-url https://git.ufz.de/api/v4/projects/2886/packages/pypi/simple
 tsm-datastore-lib>=0.8.0
+requests
