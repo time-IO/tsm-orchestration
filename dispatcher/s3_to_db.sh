@@ -17,8 +17,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         "thing_uuid"        uuid         NOT NULL,
         "thing_name"        varchar(256) NOT NULL,
         "db_url"            varchar(256) NOT NULL,
-        "filename_pattern"  varchar(256),
-        "parser"            varchar(256)
+        "filename_pattern"  varchar(256) NULL,
+        "parser"            varchar(256) NULL
     );
 
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA $S3MAP_POSTGRES_USER TO $S3MAP_POSTGRES_USER;
