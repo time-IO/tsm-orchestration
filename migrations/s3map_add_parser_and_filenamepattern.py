@@ -25,11 +25,6 @@ ALTER_TABLE_SQL = (
 )
 FETCH_THING_IDS = "SELECT distinct thing_uuid FROM s3map.mapping"
 FETCH_THING_IDS2 = "SELECT distinct thing_uuid FROM mapping"
-ADD_CONSTRAINS_SQL = (
-    "ALTER TABLE s3map.mapping "
-    "ALTER COLUMN filename_pattern SET NOT NULL, "
-    "ALTER COLUMN parser SET NOT NULL"
-)
 
 GET_PATTERN_PARSER_BY_THING_ID = ()
 
@@ -54,10 +49,10 @@ Example:
 
 def get_parser_and_pattern(cur, thing_id):
     return cur.execute(
-        "SELECT th.sftp_filename_pattern, pt.name FROM frontenddb.tsm_thing th "
-        "JOIN frontenddb.tsm_thing_parser t2p ON th.id = t2p.thing_id "
-        "JOIN frontenddb.tsm_parser p ON t2p.parser_id = p.id "
-        "JOIN frontenddb.tsm_parsertype pt on p.type_id = pt.id "
+        "SELECT pt.name, th.sftp_filename_pattern FROM tsm_thing th "
+        "JOIN tsm_thing_parser t2p ON th.id = t2p.thing_id "
+        "JOIN tsm_parser p ON t2p.parser_id = p.id "
+        "JOIN tsm_parsertype pt on p.type_id = pt.id "
         "WHERE th.thing_id = %s",
         (thing_id,),
     ).fetchone()
@@ -79,6 +74,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     with psycopg.connect(sys.argv[1]) as s3, psycopg.connect(sys.argv[2]) as fe:
+        early_exit = False
         with s3.cursor() as c:
             for col in ["filename_pattern", "parser"]:
                 if has_column(c, "mapping", col):
@@ -94,7 +90,10 @@ if __name__ == "__main__":
             thing_ids = wc.execute(FETCH_THING_IDS).fetchall()
             for thing_id in thing_ids:
                 thing_id = thing_id[0]
-                par, pat = get_parser_and_pattern(rc, thing_id)
+                pp = get_parser_and_pattern(rc, thing_id)
+                if pp is None:
+                    par = pat = None
+                else:
+                    par, pat = pp
                 update_parser_and_pattern(wc, thing_id, par, pat)
-            wc.execute(ADD_CONSTRAINS_SQL)
             s3.commit()
