@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import ast
 import json
 import logging
 
@@ -29,7 +28,7 @@ def cleanupJson(string: str) -> str:
 def main(thing_uuid: str, parameters: str, target_uri: str):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
-    params = ast.literal_eval(parameters)
+    params = json.loads(parameters.replace("'", '"'))
 
     res = requests.get(
         params["endpoint_uri"],
