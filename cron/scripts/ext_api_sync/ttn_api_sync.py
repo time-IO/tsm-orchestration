@@ -60,7 +60,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                     )
                 except Exception as e:
                     logging.warning(
-                        f"failed to integrate key '{k}' at timestamp '{timestamp}'"
+                        f"failed to integrate key '{k}' at timestamp '{timestamp}' with exception {e}"
                     )
 
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
