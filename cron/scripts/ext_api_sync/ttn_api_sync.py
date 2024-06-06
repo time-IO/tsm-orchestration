@@ -33,7 +33,10 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
 
     res = requests.get(
         params["endpoint_uri"],
-        headers={"Authorization": f"Bearer {params['api_key']}", "Accept": "text/event-stream"}
+        headers={
+            "Authorization": f"Bearer {params['api_key']}",
+            "Accept": "text/event-stream",
+        },
     )
 
     rep = cleanupJson(res.text)
@@ -48,10 +51,18 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
             if v:
                 try:
                     observations.append(
-                        Observation(timestamp=timestamp, value=float(v), origin=params["endpoint_uri"], position=k, header=k)
+                        Observation(
+                            timestamp=timestamp,
+                            value=float(v),
+                            origin=params["endpoint_uri"],
+                            position=k,
+                            header=k,
+                        )
                     )
                 except Exception as e:
-                    logging.warning(f"failed to integrate key '{k}' at timestamp '{timestamp}'")
+                    logging.warning(
+                        f"failed to integrate key '{k}' at timestamp '{timestamp}'"
+                    )
 
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     try:
@@ -59,9 +70,9 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         datastore.insert_commit_chunk()
     except Exception as e:
         datastore.session.rollback()
-        logging.warning(f"failed to write to data, with exception {e}")
+        logging.warning(f"failed to write data, because of {e}")
         raise
+
 
 if __name__ == "__main__":
     main()
-
