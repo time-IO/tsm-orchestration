@@ -16,6 +16,7 @@ from tsm_datastore_lib.Observation import Observation
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
 
+
 def get_nm_station_data(
     station: str, resolution: int, start_date: datetime, end_date: datetime
 ) -> list[Observation]:
@@ -59,27 +60,20 @@ def get_nm_station_data(
     return observations
 
 
-def get_datastreams(
-    uri: str, thing_uuid: str, stations: list[str]
-) -> dict[str, int]:
+def get_datastreams(uri: str, thing_uuid: str, stations: list[str]) -> dict[str, int]:
 
-    datastream_ids = {s: None for s in stations}
     with psycopg.connect(uri) as conn:
         with conn.cursor() as cur:
-            # TODO: join both queries
             cur.execute(
                 """
-                SELECT id FROM thing WHERE uuid = %s
+                SELECT position, datastream.id FROM datastream
+                JOIN thing ON thing.id = datastream.thing_id
+                WHERE thing.uuid = %s
+                AND datastream.position = ANY(%s)
                 """,
-                (thing_uuid,),
+                (thing_uuid, stations),
             )
-            thing_id = cur.fetchone()[0]
-
-            cur.execute(
-                "SELECT position, id FROM datastream WHERE position = ANY(%s) AND thing_id = %s",
-                (stations, thing_id),
-            )
-            datastream_ids = {**datastream_ids, **dict(cur.fetchall())}
+            datastream_ids = {**{s: None for s in stations}, **dict(cur.fetchall())}
     return datastream_ids
 
 

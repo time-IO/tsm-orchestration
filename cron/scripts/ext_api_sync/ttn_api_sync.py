@@ -46,7 +46,9 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         msg = entry["result"]["uplink_message"]
         timestamp = msg["received_at"]
         values = msg["decoded_payload"]
-        for k, v in values.items():
+        for i, (k, v) in enumerate(values.items()):
+            if i == 1:
+                break
             if v:
                 try:
                     observations.append(
