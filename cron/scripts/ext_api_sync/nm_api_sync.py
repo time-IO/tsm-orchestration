@@ -1,11 +1,13 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
 import re
 import logging
+import json
 from datetime import datetime
 
+import click
 import requests
 import psycopg
 
@@ -14,63 +16,9 @@ from tsm_datastore_lib.Observation import Observation
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
 
-URI = "postgresql://ufztimese_demogroup_656c65d5c8df47e9a02f51e26f8f9f40:G9xzojdyX0Cfr3gaqgK1flcd@localhost/postgres"
-THING = "6b7e0abb-7f70-4014-a5d4-665289350301"
-
-
-def get_or_insert_datastreams(
-    uri: str, thing_uuid: str, stations: list[str]
-) -> dict[str, int]:
-
-    with psycopg.connect(uri) as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, name FROM thing WHERE uuid = %s
-                """,
-                (thing_uuid,),
-            )
-            thing_id, thing_name = cur.fetchone()
-
-            for s in stations:
-                cur.execute(
-                    """
-                    INSERT INTO datastream(name, position, thing_id)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (position, thing_id) DO NOTHING
-                    """,
-                    (f"{thing_name}/{s}", s, thing_id),
-                )
-            conn.commit()
-            cur.execute(
-                "SELECT position, id FROM datastream WHERE position = ANY(%s) AND thing_id = %s",
-                (stations, thing_id),
-            )
-            datastream_ids = dict(cur.fetchall())
-    return datastream_ids
-
-
-def get_latest_observations(
-    uri: str, datastream_ids: dict[str, int]
-) -> dict[str, datetime]:
-    with psycopg.connect(uri) as conn:
-        with conn.cursor() as cur:
-            dates = {}
-            for station, datastream_id in datastream_ids.items():
-                cur.execute(
-                    """
-                    SELECT max(result_time) FROM observation WHERE datastream_id = %s
-                    """,
-                    (datastream_id,),
-                )
-            dates[station] = cur.fetchone()[0] or datetime(2000, 1, 1)
-    return dates
-
-
 def get_nm_station_data(
     station: str, resolution: int, start_date: datetime, end_date: datetime
 ) -> list[Observation]:
-    start_date = datetime(2024, 1, 1)
     params = {
         "wget": 1,
         "stations[]": station,
@@ -111,18 +59,71 @@ def get_nm_station_data(
     return observations
 
 
-def main(stations: str | list[str], resolution: int):
+def get_datastreams(
+    uri: str, thing_uuid: str, stations: list[str]
+) -> dict[str, int]:
+
+    datastream_ids = {s: None for s in stations}
+    with psycopg.connect(uri) as conn:
+        with conn.cursor() as cur:
+            # TODO: join both queries
+            cur.execute(
+                """
+                SELECT id FROM thing WHERE uuid = %s
+                """,
+                (thing_uuid,),
+            )
+            thing_id = cur.fetchone()[0]
+
+            cur.execute(
+                "SELECT position, id FROM datastream WHERE position = ANY(%s) AND thing_id = %s",
+                (stations, thing_id),
+            )
+            datastream_ids = {**datastream_ids, **dict(cur.fetchall())}
+    return datastream_ids
+
+
+def get_latest_observations(
+    uri: str, datastream_ids: dict[str, int]
+) -> dict[str, datetime]:
+
+    dates = {s: datetime(2000, 1, 1) for s in datastream_ids.keys()}
+
+    with psycopg.connect(uri) as conn:
+        with conn.cursor() as cur:
+            for station, datastream_id in datastream_ids.items():
+                cur.execute(
+                    """
+                    SELECT max(result_time) FROM observation WHERE datastream_id = %s
+                    """,
+                    (datastream_id,),
+                )
+                date = cur.fetchone()[0]
+                if date:
+                    dates[station] = date
+    return dates
+
+
+@click.command()
+@click.argument("thing_uuid")
+@click.argument("parameters")
+@click.argument("target_uri")
+def main(thing_uuid: str, parameters: str, target_uri: str):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
+    params = json.loads(parameters.replace("'", '"'))
+
+    resolution = params["time_resolution"]
+    stations = params["station_id"]
     if isinstance(stations, str):
         stations = [
             stations,
         ]
 
-    datastream_ids = get_or_insert_datastreams(
-        uri=URI, thing_uuid=THING, stations=stations
+    datastream_ids = get_datastreams(
+        uri=target_uri, thing_uuid=thing_uuid, stations=stations
     )
-    start_dates = get_latest_observations(uri=URI, datastream_ids=datastream_ids)
+    start_dates = get_latest_observations(uri=target_uri, datastream_ids=datastream_ids)
 
     observations = []
     for station in stations:
@@ -135,7 +136,7 @@ def main(stations: str | list[str], resolution: int):
             )
         )
 
-    datastore = tsm_datastore_lib.get_datastore(URI, THING)
+    datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     try:
         datastore.store_observations(observations)
         datastore.insert_commit_chunk()
@@ -146,4 +147,4 @@ def main(stations: str | list[str], resolution: int):
 
 
 if __name__ == "__main__":
-    main("JUNG", 60)
+    main()
