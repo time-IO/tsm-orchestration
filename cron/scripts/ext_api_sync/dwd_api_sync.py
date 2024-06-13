@@ -65,9 +65,10 @@ if __name__ == "__main__":
     observation_list = parse_brightsky_response(response, origin="dwd_data")
     datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
     datastore = cast(SqlAlchemyDatastore, datastore)
-    try:
-        datastore.store_observations(observation_list)
-        datastore.insert_commit_chunk()
-    except Exception:
-        datastore.session.rollback()
-        raise
+    for o in observation_list:
+        try:
+            datastore.store_observation(o)
+            datastore.insert_commit_chunk()
+        except Exception:
+            datastore.session.rollback()
+            raise
