@@ -353,6 +353,7 @@ services:
       bash -c "python3 manage.py migrate
       && python3 manage.py loaddata admin_interface_theme_foundation.json
       && python3 manage.py loaddata ufz_theme.json
+      && python3 manage.py loaddata nm_station.json
       && python3 manage.py createsuperuser --noinput
       || echo 'Superuser already created'
       && python3 manage.py collectstatic --noinput
@@ -363,6 +364,7 @@ services:
       - "sftp-private-keys:/home/appuser/app/sftp-private-keys"
       - "./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json"
       - "./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json"
+      - "./frontend/nm_station.json:/home/appuser/app/tsm/fixtures/nm_station.json"
     entrypoint: ""
     # ports:
     #   - "127.0.0.1:8000:8000"
