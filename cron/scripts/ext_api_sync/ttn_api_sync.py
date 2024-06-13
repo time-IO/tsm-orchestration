@@ -49,6 +49,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         for i, (k, v) in enumerate(values.items()):
             if i == 1:
                 break
+        for k, v in values.items():
             if v:
                 try:
                     observations.append(
