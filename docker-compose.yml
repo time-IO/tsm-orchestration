@@ -712,7 +712,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
     volumes:
-      - "./cron/crontab.txt:/home/appuser/crontab.txt"
+      - "./cron/crontab.txt:/tmp/cron/crontab.txt"
     command:
       - "update-sftp-crontab"
 
