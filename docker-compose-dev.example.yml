@@ -61,6 +61,7 @@ services:
 
   visualization:
     environment:
+      - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
       - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
       - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
       - "GF_AUTH_GENERIC_OAUTH_AUTH_URL=${GF_AUTH_GENERIC_OAUTH_AUTH_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/auth}"
