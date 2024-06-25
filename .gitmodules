@@ -1,0 +1,3 @@
+[submodule "helm/tsm-orchestration"]
+	path = helm/tsm-orchestration
+	url = codebase:ufz-tsm/tsm-orchestration
