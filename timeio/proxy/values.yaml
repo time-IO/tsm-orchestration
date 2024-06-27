@@ -1,0 +1,15 @@
+replicaCount: 1
+
+image:
+  repository: "nginx"
+  tag: latest
+  pullPolicy: Always
+name: proxy
+
+ref:
+  institute:
+    link: "https://www.ufz.de"
+    name: "Helmholtz-Centre for Environmental Research"
+  department:
+    link: "https://www.ufz.de/index.php?en=45348"
+    name: "Research Data Management"

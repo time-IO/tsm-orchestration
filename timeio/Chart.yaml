@@ -1,0 +1,14 @@
+apiVersion: v2
+name: timeio
+description: A Helm chart for time.IO
+version: 0.0.2
+dependencies:
+  - name: database
+    version: 0.0.1
+    repository: "file://./database"
+  - name: mqtt
+    version: 0.0.1
+    repository: "file://./mqtt"
+  - name: proxy
+    version: 0.0.1
+    repository: "file://./proxy"

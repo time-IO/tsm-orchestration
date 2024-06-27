@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "eclipse-mosquitto"
+  tag: latest
+  pullPolicy: Always
+name: mqtt
