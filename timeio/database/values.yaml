@@ -1,0 +1,8 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/timeio-images/database"
+  tag: latest
+  pullPolicy: Always
+name: database
+port: 5432

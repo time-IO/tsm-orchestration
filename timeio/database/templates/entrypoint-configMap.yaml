@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-entrypoint
+data:
+  015_sms_init_tables.sh: {{ .Files.Get "conf/sh/sms_init_tables.sh" | quote }}
+  015_sms_cv_init_tables.sh: {{ .Files.Get "conf/sh/sms_cv_init_tables.sh" | quote }}
+  020_frontend-database.sh: {{ .Files.Get "conf/sh/frontend-database.sh" | quote }}
+  030_mosquitto-go-auth.sh: {{ .Files.Get "conf/sh/mosquitto-go-auth.sh" | quote }}
+  040_postgis.sh: {{ .Files.Get "conf/sh/postgis.sh" | quote }}
+  050_s3_to_db.sh: {{ .Files.Get "conf/sh/s3_to_db.sh" | quote }}
+  060_postgres-force-ssl.sh: {{ .Files.Get "conf/sh/postgres-force-ssl.sh" | quote }}

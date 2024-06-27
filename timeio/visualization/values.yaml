@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "grafana/grafana"
+  tag: latest
+  pullPolicy: Always
+name: visualization

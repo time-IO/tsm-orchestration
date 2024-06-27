@@ -1,0 +1,8 @@
+replicaCount: 1
+
+image:
+  repository: "iegomez/mosquitto-go-auth"
+  tag: latest
+  pullPolicy: Always
+name: mqtt
+port: 1883

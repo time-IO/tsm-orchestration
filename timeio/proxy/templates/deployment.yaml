@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Values.name }}-html
+              mountPath: /usr/share/nginx/html
+            - name: {{ .Values.name }}-css
+              mountPath: /usr/share/nginx/html/css
+            - name: {{ .Values.name }}-default
+              mountPath: /etc/nginx/conf.d/
+            - name: {{ .Values.name }}-locs
+              mountPath: /etc/nginx/locations
+      volumes:
+        - name: {{ .Values.name }}-html
+          configMap:
+            name: {{ .Values.name }}-html
+        - name: {{ .Values.name }}-css
+          configMap:
+            name: {{ .Values.name }}-css
+        - name: {{ .Values.name }}-default
+          configMap:
+            name: {{ .Values.name }}-default
+        - name: {{ .Values.name }}-locs
+          configMap:
+            name: {{ .Values.name }}-locs

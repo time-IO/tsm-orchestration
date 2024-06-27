@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+spec:
+  selector:
+    app: {{ .Values.name }}
+  ports:
+    - name: s3
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: console
+      protocol: TCP
+      port: 9001
+      targetPort: 9001
+    - name: ftp
+      protocol: TCP
+      port: 21
+      targetPort: 40021
+    - name: sftp
+      protocol: TCP
+      port: 22
+      targetPort: 40022

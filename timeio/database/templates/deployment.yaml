@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment
+  labels:
+    app: {{ .Values.name}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name}}
+    spec:
+      containers:
+        - name: {{ .Values.name}}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          envFrom:
+          - secretRef:
+              name: {{ .Values.name }}-secret
+          volumeMounts:
+            - name: {{ .Values.name }}-entrypoint
+              mountPath: /docker-entrypoint-initdb.d
+            - name: {{ .Values.name }}-sql-sms
+              mountPath: /sql/sms
+            - name: {{ .Values.name }}-sql-sms-cv
+              mountPath: /sql/sms_cv
+      volumes:
+        - name: {{ .Values.name }}-entrypoint
+          configMap:
+            name: {{ .Values.name }}-entrypoint
+        - name: {{ .Values.name }}-sql-sms
+          configMap:
+            name: {{ .Values.name }}-sql-sms
+        - name: {{ .Values.name }}-sql-sms-cv
+          configMap:
+            name: {{ .Values.name }}-sql-sms-cv

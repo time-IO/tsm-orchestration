@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-sql-sms
+data:
+  sms_ddl.sql: {{ .Files.Get "conf/sql/sms_ddl.sql" | quote }}
+  sms_foreign_tables.sql: {{ .Files.Get "conf/sql/sms_foreign_tables.sql" | quote }}
