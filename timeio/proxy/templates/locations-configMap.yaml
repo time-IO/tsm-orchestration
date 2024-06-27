@@ -4,3 +4,4 @@ metadata:
   name: {{ .Values.name }}-locs
 data:
   locations.conf: {{ .Files.Get "conf/locations.conf" | quote }}
+  locations.9000.conf: {{ .Files.Get "conf/locations.9000.conf" | quote }}

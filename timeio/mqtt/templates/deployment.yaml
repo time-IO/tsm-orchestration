@@ -24,7 +24,7 @@ spec:
                 name: {{ .Values.name }}-secret
           volumeMounts:
             - mountPath: /mosquitto-data
-              name: {{ .Values.name }}-pvc
+              name: {{ .Values.name }}-pv
             - mountPath: /entrypoint
               name: {{ .Values.name }}-entrypoint
             - mountPath: /etc/mosquitto/config
@@ -32,7 +32,7 @@ spec:
             - mountPath: /etc/mosquitto/config/tls
               name: {{ .Values.name }}-tls-config
       volumes:
-        - name: {{ .Values.name }}-pvc
+        - name: {{ .Values.name }}-pv
           persistentVolumeClaim:
             claimName: {{ .Values.name }}-pvc
         - name: {{ .Values.name }}-entrypoint

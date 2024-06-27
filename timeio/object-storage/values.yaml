@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "minio/minio"
+  tag: latest
+  pullPolicy: Always
+name: object-storage
