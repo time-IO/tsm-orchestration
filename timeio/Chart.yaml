@@ -12,3 +12,6 @@ dependencies:
   - name: proxy
     version: 0.0.1
     repository: "file://./proxy"
+  - name: visualization
+    version: 0.0.1
+    repository: "file://./visualization"

@@ -23,6 +23,10 @@ spec:
               mountPath: /usr/share/nginx/html
             - name: {{ .Values.name }}-css
               mountPath: /usr/share/nginx/html/css
+            - name: {{ .Values.name }}-default
+              mountPath: /etc/nginx/conf.d/
+            - name: {{ .Values.name }}-locs
+              mountPath: /etc/nginx/locations
       volumes:
         - name: {{ .Values.name }}-html
           configMap:
@@ -30,3 +34,9 @@ spec:
         - name: {{ .Values.name }}-css
           configMap:
             name: {{ .Values.name }}-css
+        - name: {{ .Values.name }}-default
+          configMap:
+            name: {{ .Values.name }}-default
+        - name: {{ .Values.name }}-locs
+          configMap:
+            name: {{ .Values.name }}-locs
