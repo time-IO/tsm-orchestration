@@ -19,15 +19,14 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
-            - name: index-html
+            - name: {{ .Values.name }}-html
               mountPath: /usr/share/nginx/html
-            - name: style-css
+            - name: {{ .Values.name }}-css
               mountPath: /usr/share/nginx/html/css
       volumes:
-        - name: index-html
+        - name: {{ .Values.name }}-html
           configMap:
-            name: {{ .Values.name }}-index-html
-        - name: style-css
+            name: {{ .Values.name }}-html
+        - name: {{ .Values.name }}-css
           configMap:
-            name: {{ .Values.name }}-style-css
-
+            name: {{ .Values.name }}-css
