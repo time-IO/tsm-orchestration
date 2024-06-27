@@ -18,3 +18,29 @@ spec:
         - name: {{ .Values.name }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "/entrypoint/docker-entrypoint.sh", "/usr/sbin/mosquitto", "-c", "/var/lib/mosquitto/mosquitto.conf"]
+          envFrom:
+            - secretRef:
+                name: {{ .Values.name }}-secret
+          volumeMounts:
+            - mountPath: /mosquitto-data
+              name: {{ .Values.name }}-pvc
+            - mountPath: /entrypoint
+              name: {{ .Values.name }}-entrypoint
+            - mountPath: /etc/mosquitto/config
+              name: {{ .Values.name }}-config
+            - mountPath: /etc/mosquitto/config/tls
+              name: {{ .Values.name }}-tls-config
+      volumes:
+        - name: {{ .Values.name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .Values.name }}-pvc
+        - name: {{ .Values.name }}-entrypoint
+          configMap:
+            name: {{ .Values.name }}-entrypoint
+        - name: {{ .Values.name }}-config
+          configMap:
+            name: {{ .Values.name }}-config
+        - name: {{ .Values.name }}-tls-config
+          configMap:
+            name: {{ .Values.name }}-tls-config

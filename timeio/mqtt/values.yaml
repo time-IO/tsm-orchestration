@@ -1,7 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: "eclipse-mosquitto"
+  repository: "iegomez/mosquitto-go-auth"
   tag: latest
   pullPolicy: Always
 name: mqtt
+port: 1883

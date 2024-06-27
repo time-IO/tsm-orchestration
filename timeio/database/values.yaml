@@ -5,3 +5,4 @@ image:
   tag: latest
   pullPolicy: Always
 name: database
+port: 5432
