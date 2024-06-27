@@ -22,22 +22,9 @@ spec:
           - secretRef:
               name: {{ .Values.name }}-secret
           volumeMounts:
-            - name: postgis-sh
-              mountPath: /docker-entrypoint-initdb.d/postgis.sh
-              subPath: postgis.sh
-            - name: mosquitto-go-auth-sh
-              mountPath: /docker-entrypoint-initdb.d/mosquitto-go-auth.sh
-              subPath: mosquitto-go-auth.sh
-            - name: frontend-database-sh
-              mountPath: /docker-entrypoint-initdb.d/frontend-database.sh
-              subPath: frontend-database.sh
+            - name: {{ .Values.name }}-config
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
-        - name: postgis-sh
+        - name: {{ .Values.name }}-config
           configMap:
-            name: {{ .Values.name }}-postgis-sh
-        - name: mosquitto-go-auth-sh
-          configMap:
-            name: {{ .Values.name }}-mosquitto-go-auth-sh
-        - name: frontend-database-sh
-          configMap:
-            name: {{ .Values.name }}-frontend-database-sh
+            name: {{ .Values.name }}-config

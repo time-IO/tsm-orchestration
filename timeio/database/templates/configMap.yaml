@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-config
+data:
+  frontend-database.sh: {{ .Files.Get "conf/frontend-database.sh" | quote }}
+  mosquitto-go-auth.sh: {{ .Files.Get "conf/mosquitto-go-auth.sh" | quote }}
+  postgis.sh: {{ .Files.Get "conf/postgis.sh" | quote }}
+  s3_to_db.sh: {{ .Files.Get "conf/s3_to_db.sh" | quote }}
