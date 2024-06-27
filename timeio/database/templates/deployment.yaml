@@ -21,3 +21,17 @@ spec:
           envFrom:
           - secretRef:
               name: {{ .Values.name }}-secret
+          volumeMounts:
+            - name: postgis-sh
+              mountPath: /docker-entrypoint-initdb.d/postgis.sh
+              subPath: postgis.sh
+            - name: mosquitto-go-auth-sh
+              mountPath: /docker-entrypoint-initdb.d/mosquitto-go-auth.sh
+              subPath: mosquitto-go-auth.sh
+      volumes:
+        - name: postgis-sh
+          configMap:
+            name: {{ .Values.name }}-postgis-sh
+        - name: mosquitto-go-auth-sh
+          configMap:
+            name: {{ .Values.name }}-mosquitto-go-auth-sh
