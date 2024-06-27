@@ -28,6 +28,9 @@ spec:
             - name: mosquitto-go-auth-sh
               mountPath: /docker-entrypoint-initdb.d/mosquitto-go-auth.sh
               subPath: mosquitto-go-auth.sh
+            - name: frontend-database-sh
+              mountPath: /docker-entrypoint-initdb.d/frontend-database.sh
+              subPath: frontend-database.sh
       volumes:
         - name: postgis-sh
           configMap:
@@ -35,3 +38,6 @@ spec:
         - name: mosquitto-go-auth-sh
           configMap:
             name: {{ .Values.name }}-mosquitto-go-auth-sh
+        - name: frontend-database-sh
+          configMap:
+            name: {{ .Values.name }}-frontend-database-sh
