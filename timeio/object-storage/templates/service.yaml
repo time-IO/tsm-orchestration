@@ -16,9 +16,49 @@ spec:
       targetPort: 9001
     - name: ftp
       protocol: TCP
-      port: 21
+      port: 40021
       targetPort: 40021
     - name: sftp
       protocol: TCP
-      port: 22
+      port: 40022
       targetPort: 40022
+    - name: pasv0
+      protocol: TCP
+      port: 30000
+      targetPort: 30000
+    - name: pasv1
+      protocol: TCP
+      port: 30001
+      targetPort: 30001
+    - name: pasv2
+      protocol: TCP
+      port: 30002
+      targetPort: 30002
+    - name: pasv3
+      protocol: TCP
+      port: 30003
+      targetPort: 30003
+    - name: pasv4
+      protocol: TCP
+      port: 30004
+      targetPort: 30004
+    - name: pasv5
+      protocol: TCP
+      port: 30005
+      targetPort: 30005
+    - name: pasv6
+      protocol: TCP
+      port: 30006
+      targetPort: 30006
+    - name: pasv7
+      protocol: TCP
+      port: 30007
+      targetPort: 30007
+    - name: pasv8
+      protocol: TCP
+      port: 30008
+      targetPort: 30008
+    - name: pasv9
+      protocol: TCP
+      port: 30009
+      targetPort: 30009

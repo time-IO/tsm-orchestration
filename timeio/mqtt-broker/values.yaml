@@ -4,5 +4,5 @@ image:
   repository: "iegomez/mosquitto-go-auth"
   tag: latest
   pullPolicy: Always
-name: mqtt
+name: mqtt-broker
 port: 1883

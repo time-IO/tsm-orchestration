@@ -27,6 +27,8 @@ spec:
               mountPath: /etc/nginx/conf.d/
             - name: {{ .Values.name }}-locs
               mountPath: /etc/nginx/locations
+            - name: {{ .Values.name }}-certs
+              mountPath: /etc/ssl
       volumes:
         - name: {{ .Values.name }}-html
           configMap:
@@ -40,3 +42,6 @@ spec:
         - name: {{ .Values.name }}-locs
           configMap:
             name: {{ .Values.name }}-locs
+        - name : {{ .Values.name }}-certs
+          configMap:
+            name: {{ .Values.name }}-certs

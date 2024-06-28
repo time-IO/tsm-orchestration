@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-certs
-data:
-  ca.crt: {{ .Files.Get "conf/ca.crt"}}
-  server.crt: {{ .Files.Get "conf/server.crt"}}
-  server.key: {{ .Files.Get "conf/server.key"}}
