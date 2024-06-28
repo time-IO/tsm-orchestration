@@ -36,3 +36,9 @@ dependencies:
   - name: worker-frost-setup
     version: 0.0.1
     repository: "file://./worker-frost-setup"
+  - name: worker-mqtt-user-creation
+    version: 0.0.1
+    repository: "file://./worker-mqtt-user-creation"
+  - name: worker-grafana-dashboard
+    version: 0.0.1
+    repository: "file://./worker-grafana-dashboard"

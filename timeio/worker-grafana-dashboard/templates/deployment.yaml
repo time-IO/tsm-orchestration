@@ -21,7 +21,7 @@ spec:
           command:
             - python3
             - main.py
-            - create-thing-in-minio
+            - create-thing-in-grafana
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret
