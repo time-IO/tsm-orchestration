@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-default
 data:
-  default.conf: {{ .Files.Get (tpl .Values.configFileName .) | quote }}
+  default.conf: {{ .Files.Get "conf/tsm.dev.conf" | quote }}

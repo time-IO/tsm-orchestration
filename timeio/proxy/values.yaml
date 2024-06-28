@@ -5,7 +5,7 @@ image:
   tag: latest
   pullPolicy: Always
 name: proxy
-configFileName: "conf/tsm.tsl.conf"
+
 
 ref:
   institute:
