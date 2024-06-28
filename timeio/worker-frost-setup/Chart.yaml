@@ -1,0 +1,4 @@
+apiVersion: v2
+name: worker-frost-setup
+version: 0.0.1
+description: A Helm chart for the worker-frost-setup service

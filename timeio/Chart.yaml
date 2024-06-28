@@ -30,3 +30,9 @@ dependencies:
   - name: worker-db-setup
     version: 0.0.1
     repository: "file://./worker-db-setup"
+  - name: worker-object-storage-setup
+    version: 0.0.1
+    repository: "file://./worker-object-storage-setup"
+  - name: worker-frost-setup
+    version: 0.0.1
+    repository: "file://./worker-frost-setup"
