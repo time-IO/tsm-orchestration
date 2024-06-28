@@ -2,8 +2,10 @@
 timeio/charts
 timeio/Chart.lock
 timeio/.env
-timeio/object-storage/conf/id_ed2551*
-timeio/object-storage/conf/minio-ftp.*
+timeio/object-storage/conf/id_ed25519
+timeio/object-storage/conf/id_ed25519.pub
+timeio/object-storage/conf/minio-ftp.crt
+timeio/object-storage/conf/minio-ftp.key
 timeio/proxy/conf/private.key
 timeio/proxy/conf/public.crt
 timeio/prod-values.yaml
