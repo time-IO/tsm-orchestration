@@ -24,3 +24,6 @@ dependencies:
   - name: tsmdl
     version: 0.0.1
     repository: "file://./tsmdl"
+  - name: frost
+    version: 0.0.1
+    repository: "file://./frost"

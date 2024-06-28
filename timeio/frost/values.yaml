@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/timeio-images/frost"
+  tag: latest
+  pullPolicy: Always
+name: frost

@@ -28,6 +28,8 @@ spec:
               mountPath: /sql/sms
             - name: {{ .Values.name }}-sql-sms-cv
               mountPath: /sql/sms_cv
+            - name: {{ .Values.name }}-data
+              mountPath: /var/lib/postgresql/data
       volumes:
         - name: {{ .Values.name }}-entrypoint
           configMap:
@@ -38,3 +40,6 @@ spec:
         - name: {{ .Values.name }}-sql-sms-cv
           configMap:
             name: {{ .Values.name }}-sql-sms-cv
+        - name: {{ .Values.name }}-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.name }}-data
