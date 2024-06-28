@@ -1,0 +1,9 @@
+.idea/
+timeio/charts
+timeio/Chart.lock
+timeio/.env
+timeio/object-storage/conf/id_ed2551*
+timeio/object-storage/conf/minio-ftp.*
+timeio/proxy/conf/private.key
+timeio/proxy/conf/public.crt
+timeio/prod-values.yaml
