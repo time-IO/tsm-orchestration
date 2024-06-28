@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
+  tag: latest
+  pullPolicy: Always
+name: worker-file-ingest

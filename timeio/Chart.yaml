@@ -42,3 +42,9 @@ dependencies:
   - name: worker-grafana-dashboard
     version: 0.0.1
     repository: "file://./workers/worker-grafana-dashboard"
+  - name: worker-mqtt-ingest
+    version: 0.0.1
+    repository: "file://./workers/worker-mqtt-ingest"
+  - name: worker-file-ingest
+    version: 0.0.1
+    repository: "file://./workers/worker-file-ingest"

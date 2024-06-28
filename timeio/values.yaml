@@ -124,3 +124,9 @@ global:
     DJANGO_BASE_PATH: "/frontend/"
     DJANGO_ALLOWED_HOSTS: ".localhost,127.0.0.1,[::1]"
     DJANGO_POSTGRES_SSLMODE: "disable"
+    SCHEDULER: "BasicScheduler"
+    SCHED_HOST: "http://basic-demo-scheduler:5000"
+    SCHED_SLURM_RESTAPI_VERSION: v0.0.38
+    SCHED_JOB_LOG_LEVEL: "DEBUG"
+    SCHED_SLURM_USER: ""
+    SCHED_SLURM_JWT_TOKEN: ""
