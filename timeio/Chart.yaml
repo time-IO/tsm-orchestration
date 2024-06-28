@@ -27,3 +27,6 @@ dependencies:
   - name: frost
     version: 0.0.1
     repository: "file://./frost"
+  - name: worker-db-setup
+    version: 0.0.1
+    repository: "file://./worker-db-setup"
