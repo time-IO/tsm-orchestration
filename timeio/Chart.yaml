@@ -27,6 +27,9 @@ dependencies:
   - name: frost
     version: 0.0.1
     repository: "file://./frost"
+  - name: basic-demo-scheduler
+    version: 0.0.1
+    repository: "file://./basic-demo-scheduler"
   - name: worker-db-setup
     version: 0.0.1
     repository: "file://./workers/worker-db-setup"

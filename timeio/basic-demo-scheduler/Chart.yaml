@@ -1,0 +1,4 @@
+apiVersion: v2
+name: basic-demo-scheduler
+version: 0.0.1
+description: A Helm chart for the basic-demo-scheduler service
