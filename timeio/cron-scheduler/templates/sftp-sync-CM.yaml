@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-sftp-sync
+data:
+  sftp_sync.py: {{ .Files.Get "conf/sftp_sync/sftp_sync.py" | quote }}
+  remote_fs.py: {{ .Files.Get "conf/sftp_sync/remote_fs.py" | quote }}
