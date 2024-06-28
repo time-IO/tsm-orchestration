@@ -90,7 +90,7 @@ global:
     GRAFANA_PASSWORD: "grafana"
     GRAFANA_URL: "http://visualization:3000"
     GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "disable"
-    OIDC_CONF_URL: "https://login-dev.helmholtz.de/.well-known/openid-configuration"
+    OIDC_CONF_URL: "https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration"
     OIDC_AUTH_URL: "https://login-dev.helmholtz.de/oauth2-as/oauth2-authz"
     OIDC_TOKEN_URL: "https://login-dev.helmholtz.de/oauth2/token"
     OIDC_API_URL: "https://login-dev.helmholtz.de/oauth2/userinfo"
