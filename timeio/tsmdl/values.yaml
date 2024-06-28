@@ -1,0 +1,7 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl"
+  tag: latest
+  pullPolicy: Always
+name: tsmdl

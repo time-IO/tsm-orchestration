@@ -21,3 +21,6 @@ dependencies:
   - name: frontend
     version: 0.0.1
     repository: "file://./frontend"
+  - name: tsmdl
+    version: 0.0.1
+    repository: "file://./tsmdl"
