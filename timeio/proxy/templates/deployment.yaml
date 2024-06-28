@@ -20,15 +20,17 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
             - name: {{ .Values.name }}-html
-              mountPath: /usr/share/nginx/html
+              mountPath: /usr/share/nginx/html/
             - name: {{ .Values.name }}-css
-              mountPath: /usr/share/nginx/html/css
+              mountPath: /usr/share/nginx/html/css/
             - name: {{ .Values.name }}-default
               mountPath: /etc/nginx/conf.d/
             - name: {{ .Values.name }}-locs
-              mountPath: /etc/nginx/locations
+              mountPath: /etc/nginx/locations/
             - name: {{ .Values.name }}-certs
-              mountPath: /etc/ssl
+              mountPath: /etc/ssl/
+            - name: {{ .Values.name }}-statics
+              mountPath: /home/appuser/app/static/
       volumes:
         - name: {{ .Values.name }}-html
           configMap:
@@ -45,3 +47,6 @@ spec:
         - name : {{ .Values.name }}-certs
           configMap:
             name: {{ .Values.name }}-certs
+        - name: {{ .Values.name }}-statics
+          persistentVolumeClaim:
+            claimName: frontend-statics-pvc
