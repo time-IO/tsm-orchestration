@@ -21,7 +21,7 @@ spec:
           command:
             - python3
             - main.py
-            - schedule-parser-job
+            - schedule-qaqc-job
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret

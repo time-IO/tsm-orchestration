@@ -43,4 +43,3 @@ spec:
         - name: {{ .Values.name }}-data
           persistentVolumeClaim:
             claimName: {{ .Values.name }}-data-pvc
-        -

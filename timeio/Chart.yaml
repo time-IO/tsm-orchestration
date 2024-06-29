@@ -30,24 +30,36 @@ dependencies:
   - name: basic-demo-scheduler
     version: 0.0.1
     repository: "file://./basic-demo-scheduler"
+  - name: cron-scheduler
+    version: 0.0.1
+    repository: "file://./cron-scheduler"
+  - name: worker-crontab-setup
+    version: 0.0.1
+    repository: "file://./workers/worker-crontab-setup"
   - name: worker-db-setup
     version: 0.0.1
     repository: "file://./workers/worker-db-setup"
-  - name: worker-object-storage-setup
-    version: 0.0.1
-    repository: "file://./workers/worker-object-storage-setup"
-  - name: worker-frost-setup
-    version: 0.0.1
-    repository: "file://./workers/worker-frost-setup"
-  - name: worker-mqtt-user-creation
-    version: 0.0.1
-    repository: "file://./workers/worker-mqtt-user-creation"
-  - name: worker-grafana-dashboard
-    version: 0.0.1
-    repository: "file://./workers/worker-grafana-dashboard"
-  - name: worker-mqtt-ingest
-    version: 0.0.1
-    repository: "file://./workers/worker-mqtt-ingest"
   - name: worker-file-ingest
     version: 0.0.1
     repository: "file://./workers/worker-file-ingest"
+  - name: worker-frost-setup
+    version: 0.0.1
+    repository: "file://./workers/worker-frost-setup"
+  - name: worker-grafana-dashboard
+    version: 0.0.1
+    repository: "file://./workers/worker-grafana-dashboard"
+  - name: worker-grafana-user-orgs
+    version: 0.0.1
+    repository: "file://./workers/worker-grafana-user-orgs"
+  - name: worker-mqtt-ingest
+    version: 0.0.1
+    repository: "file://./workers/worker-mqtt-ingest"
+  - name: worker-mqtt-user-creation
+    version: 0.0.1
+    repository: "file://./workers/worker-mqtt-user-creation"
+  - name: worker-object-storage-setup
+    version: 0.0.1
+    repository: "file://./workers/worker-object-storage-setup"
+  - name: worker-run-qaqc
+    version: 0.0.1
+    repository: "file://./workers/worker-run-qaqc"

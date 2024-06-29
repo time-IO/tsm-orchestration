@@ -1,4 +1,4 @@
 apiVersion: v2
-name: tsmdl
+name: cron-scheduler
 version: 0.0.1
-description: A Helm chart for the tsmdl service
+description: A Helm chart for the cron-scheduler service

@@ -19,7 +19,11 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
-            - /app/start.sh
+            - tini
+            - --
+            - /bin/sh
+            - -c
+            - ./cron-entrypoint.sh
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret
@@ -33,13 +37,15 @@ spec:
             - mountPath: /scripts/ext_api_sync
               name: {{ .Values.name }}-ext-api
               readOnly: true
-            - mountPath: /tmp/crontab.txt
-              name: {{ .Values.name }}-crontab
-              subPath: crontab.txt
-              readOnly: true
             - mountPath: /sftp-private-keys
               name: {{ .Values.name }}-sftp-private-keys
               readOnly: true
+            - mountPath: /tmp
+              name: {{ .Values.name }}-crontab
+              readOnly: false
+            - mountPath: /cron-entrypoint.sh
+              name: {{ .Values.name }}-entrypoint
+              subPath: cron-entrypoint.sh
       volumes:
         - name: {{ .Values.name }}-sms-sync
           configMap:
@@ -53,9 +59,17 @@ spec:
           configMap:
             name: {{ .Values.name }}-ext-api
             defaultMode: 0775
-        - name: {{ .Values.name }}-crontab
-          persistentVolumeClaim:
-            claimName: crontab-pvc
         - name: {{ .Values.name }}-sftp-private-keys
           persistentVolumeClaim:
             claimName: sftp-private-keys-pvc
+        - name: {{ .Values.name }}-crontab
+          persistentVolumeClaim:
+            claimName: crontab-pvc
+        - name: {{ .Values.name }}-crontab-txt
+          configMap:
+            name: {{ .Values.name }}-crontab-txt
+            defaultMode: 0777
+        - name: {{ .Values.name }}-entrypoint
+          configMap:
+            name: {{ .Values.name }}-entrypoint
+            defaultMode: 0775
