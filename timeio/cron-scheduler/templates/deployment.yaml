@@ -68,7 +68,7 @@ spec:
         - name: {{ .Values.name }}-crontab-txt
           configMap:
             name: {{ .Values.name }}-crontab-txt
-            defaultMode: 0777
+            defaultMode: 0666
         - name: {{ .Values.name }}-entrypoint
           configMap:
             name: {{ .Values.name }}-entrypoint
