@@ -23,3 +23,39 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret
+          volumeMounts:
+            - mountPath: /scripts/sms_sync
+              name: {{ .Values.name }}-sms-sync
+              readOnly: true
+            - mountPath: /scripts/sftp_sync
+              name: {{ .Values.name }}-sftp-sync
+              readOnly: true
+            - mountPath: /scripts/ext_api_sync
+              name: {{ .Values.name }}-ext-api
+              readOnly: true
+            - mountPath: /tmp/crontab.txt
+              name: {{ .Values.name }}-crontab
+              subPath: crontab.txt
+              readOnly: true
+            - mountPath: /sftp-private-keys
+              name: {{ .Values.name }}-sftp-private-keys
+              readOnly: true
+      volumes:
+        - name: {{ .Values.name }}-sms-sync
+          configMap:
+            name: {{ .Values.name }}-sms-sync
+            defaultMode: 0775
+        - name: {{ .Values.name }}-sftp-sync
+          configMap:
+            name: {{ .Values.name }}-sftp-sync
+            defaultMode: 0775
+        - name: {{ .Values.name }}-ext-api
+          configMap:
+            name: {{ .Values.name }}-ext-api
+            defaultMode: 0775
+        - name: {{ .Values.name }}-crontab
+          persistentVolumeClaim:
+            claimName: crontab-pvc
+        - name: {{ .Values.name }}-sftp-private-keys
+          persistentVolumeClaim:
+            claimName: sftp-private-keys-pvc

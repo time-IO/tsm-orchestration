@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tomcat-context
+  name: tomcat-context-pvc
 spec:
   accessModes:
     - ReadWriteMany

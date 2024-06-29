@@ -31,4 +31,4 @@ spec:
       volumes:
         - name: {{ .Values.name }}-context
           persistentVolumeClaim:
-            claimName: tomcat-context
+            claimName: tomcat-context-pvc

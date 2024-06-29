@@ -42,4 +42,5 @@ spec:
             name: {{ .Values.name }}-sql-sms-cv
         - name: {{ .Values.name }}-data
           persistentVolumeClaim:
-            claimName: {{ .Values.name }}-data
+            claimName: {{ .Values.name }}-data-pvc
+        -
