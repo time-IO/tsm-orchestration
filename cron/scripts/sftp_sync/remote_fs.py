@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import abc
@@ -72,7 +72,7 @@ class MinioFS(RemoteFS):
         secret_key: str,
         bucket_name: str | None = None,
         secure: bool = True,
-    ):
+    ) -> MinioFS:
         logger.warning(str(locals()))
         cl = minio.Minio(
             endpoint=endpoint,
@@ -153,7 +153,7 @@ class FtpFS(RemoteFS):
         path,
         keyfile_path=None,
         missing_host_key_policy: MissingHostKeyPolicy | None = None,
-    ):
+    ) -> FtpFS:
         # with urlparse(uri, scheme="sftp") the uri
         # is interpreted as relative path
         uri_parts = urlparse(uri if "://" in uri else f"sftp://{uri}")
