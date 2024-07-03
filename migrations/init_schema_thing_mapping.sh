@@ -4,7 +4,7 @@ set -e
 echo 'Create schema-thing-mapping table if not exists'
 psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" <<-EOSQL
     CREATE TABLE IF NOT EXISTS public."schema_thing_mapping"(
-	  "schema"		VARCHAR(100) NOT NULL,
+	  "schema"		  VARCHAR(100) NOT NULL,
     "thing_uuid"	UUID NOT NULL,
 	  UNIQUE("schema", "thing_uuid"));
 EOSQL
