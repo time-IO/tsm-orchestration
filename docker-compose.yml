@@ -107,7 +107,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # Summary
   # =======
@@ -246,7 +246,7 @@ services:
         --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
       timeout: 10s
-      retries: 6
+      retries: 12
     logging:
       options:
         max-size: "${MQTT_BROKER_LOG_SIZE}"
