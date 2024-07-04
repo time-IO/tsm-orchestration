@@ -93,6 +93,7 @@ services:
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
       - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
       - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
+      - "./migrations/init_schema_thing_mapping.sh:/docker-entrypoint-initdb.d/04_schema_thing_mapping.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
@@ -106,7 +107,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
       interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # Summary
   # =======
@@ -245,7 +246,7 @@ services:
         --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
       timeout: 10s
-      retries: 6
+      retries: 12
     logging:
       options:
         max-size: "${MQTT_BROKER_LOG_SIZE}"
