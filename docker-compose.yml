@@ -751,7 +751,8 @@ services:
     restart: "${RESTART}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 1.0
+    cpus: 0.5
+    mem_limit: "4g"
     healthcheck:
       test: [ "CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1" ]
       interval: 10s
@@ -776,7 +777,8 @@ services:
     restart: "${RESTART}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 1.0
+    cpus: 0.5
+    mem_limit: "4g"
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
       CREATEDB_POSTGRES_USER: "${CRON_CREATEDB_POSTGRES_USER}"
