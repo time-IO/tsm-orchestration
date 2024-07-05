@@ -325,7 +325,7 @@ services:
   # ===========
   # TODO
   timeio-db-api:
-    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:latest"
+    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
     restart: "${RESTART}"
     ports:
       - "8001:8001"
