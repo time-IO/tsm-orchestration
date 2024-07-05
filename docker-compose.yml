@@ -315,6 +315,31 @@ services:
       database:
         condition: service_healthy
 
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  timeio-db-api:
+    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:latest"
+    restart: "${RESTART}"
+    ports:
+      - "8001:8001"
+    entrypoint: "sh /app/start.sh"
+    environment:
+      DB_URL: "postgresql://\
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
+      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /db_api"
+    depends_on:
+      database:
+        condition: service_healthy
 
   # Summary
   # =======
