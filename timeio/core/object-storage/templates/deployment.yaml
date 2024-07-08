@@ -50,5 +50,5 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.name }}-data-pvc
         - name: {{ .Values.name }}-certs
-          configMap:
-            name: {{ .Values.name }}-certs
+          secret:
+            secretName: {{ .Values.name }}-certs

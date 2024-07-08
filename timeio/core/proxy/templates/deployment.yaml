@@ -45,8 +45,8 @@ spec:
           configMap:
             name: {{ .Values.name }}-locs
         - name : {{ .Values.name }}-certs
-          configMap:
-            name: {{ .Values.name }}-certs
+          secret:
+            secretName: {{ .Values.name }}-certs
         - name: {{ .Values.name }}-statics
           persistentVolumeClaim:
             claimName: frontend-statics-pvc

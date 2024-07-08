@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.name }}-certs
+data:
+  public.crt: {{ .Files.Get "conf/public.crt" | b64enc }}
+  private.key: {{ .Files.Get "conf/private.key" | b64enc }}

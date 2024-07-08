@@ -4,6 +4,8 @@ ingress:
   service:
     name: proxy
     port: 80
+  tls:
+    secretName: ingress-tls
 
 global:
   secrets:
@@ -13,7 +15,7 @@ global:
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
     PROXY_HOST: "localhost"
-    PROXY_URL: "http://localhost"
+    PROXY_URL: "https://localhost"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
@@ -97,14 +99,11 @@ global:
     OIDC_CLIENT_ID: "ufz-tsm"
     OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
     ALLOWED_VOS: "UFZ-TSM"
-    GRAFANA_PROXY_URL: "http://localhost/visualization/"
     MINIO_ROOT_USER: "minioadmin"
     MINIO_ROOT_PASSWORD: "minioadmin"
-    MINIO_SERVER_URL: "http://localhost:9000"
     MINIO_PORT: "9000"
     MINIO_HOST: "object-storage:9000"
     MINIO_SECURE: "false"
-    MINIO_BROWSER_REDIRECT_URL: "http://localhost/object-storage/"
     MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
     MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
     MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "object_storage_notification"
@@ -120,7 +119,6 @@ global:
     FRONTEND_DJANGO_SUPERUSER_EMAIL: "example@example.com"
     DJANGO_SECRET_KEY: "NlnjUaFieRyzPnGfYGvEsHCCfU0ilDv3VRsXcSmbJ85EXjBgx1xYjvzqt7B0q12Q"
     DJANGO_DEBUG: "1"
-    DJANGO_TRUSTED_ORIGINS: "http://localhost,https://localhost"
     DJANGO_BASE_PATH: "/frontend/"
     DJANGO_ALLOWED_HOSTS: ".localhost,127.0.0.1,[::1]"
     DJANGO_POSTGRES_SSLMODE: "disable"

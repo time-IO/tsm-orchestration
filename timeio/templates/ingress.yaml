@@ -3,6 +3,10 @@ kind: Ingress
 metadata:
   name: {{ .Values.ingress.service.name }}-ingress
 spec:
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tls.secretName }}
   rules:
   - host: {{ .Values.ingress.host }}
     http:

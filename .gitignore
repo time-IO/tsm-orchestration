@@ -9,3 +9,4 @@ timeio/core/object-storage/conf/minio-ftp.key
 timeio/core/proxy/conf/private.key
 timeio/core/proxy/conf/public.crt
 timeio/prod-values.yaml
+timeio/certs

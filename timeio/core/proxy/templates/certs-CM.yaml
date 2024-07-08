@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-certs
-data:
-  public.crt: {{ .Files.Get "conf/public.crt" | quote}}
-  private.key: {{ .Files.Get "conf/private.key" | quote}}
