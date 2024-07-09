@@ -8,6 +8,14 @@ import psycopg
 import sys
 
 
+ALTER_TABLE_SQL = (
+    "ALTER TABLE s3map.mapping "
+    "ADD COLUMN filename_pattern varchar(256), "
+    "ADD COLUMN parser varchar(256)"
+)
+FETCH_THING_IDS = "SELECT distinct thing_uuid FROM s3map.mapping"
+
+
 def has_column(cur, table, column):
     records = cur.execute(
         "SELECT column_name FROM information_schema.columns "
@@ -16,35 +24,6 @@ def has_column(cur, table, column):
         (table, column),
     ).fetchall()
     return len(records) > 0
-
-
-ALTER_TABLE_SQL = (
-    "ALTER TABLE s3map.mapping "
-    "ADD COLUMN filename_pattern varchar(256), "
-    "ADD COLUMN parser varchar(256)"
-)
-FETCH_THING_IDS = "SELECT distinct thing_uuid FROM s3map.mapping"
-FETCH_THING_IDS2 = "SELECT distinct thing_uuid FROM mapping"
-
-GET_PATTERN_PARSER_BY_THING_ID = ()
-
-
-usage = f"""{os.path.basename(__file__)} S3_DSN FE_DSN
-
-Adds columns 'filename_pattern' and 'parser' to s3map.mapping
-and fills them with data from the frontend.
-
-    S3_DSN  is the full fledged database connection string to 
-            the s3map_db with ** admin privileges ** (alter tables).
-
-    FE_DB   is the full fledged database connection string to 
-            the frontenddb (read)
-
-Example:
-    S3DB=postgresql://postgres:postgres@localhost/postgres
-    FEDB=postgresql://frontenddb:frontenddb@localhost/postgres
-    python {os.path.basename(__file__)} $S3DB $FEDB
-"""
 
 
 def get_parser_and_pattern(cur, thing_id):
@@ -66,6 +45,24 @@ def update_parser_and_pattern(cur, thing_id, parser, pattern):
         "WHERE thing_uuid = %s",
         (pattern, parser, thing_id),
     )
+
+
+usage = f"""{os.path.basename(__file__)} S3_DSN FE_DSN
+
+Adds columns 'filename_pattern' and 'parser' to s3map.mapping
+and fills them with data from the frontend.
+
+    S3_DSN  is the full fledged database connection string to 
+            the s3map_db with ** admin privileges ** (alter tables).
+
+    FE_DB   is the full fledged database connection string to 
+            the frontenddb (read)
+
+Example:
+    S3DB=postgresql://postgres:postgres@localhost/postgres
+    FEDB=postgresql://frontenddb:frontenddb@localhost/postgres
+    python {os.path.basename(__file__)} $S3DB $FEDB
+"""
 
 
 if __name__ == "__main__":
