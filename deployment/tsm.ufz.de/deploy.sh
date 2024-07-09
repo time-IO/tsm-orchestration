@@ -1,10 +1,9 @@
 #!/bin/bash
 cd "$(dirname "$0")/../.."
 
-export TAG=$SSH_ORIGINAL_COMMAND
-export RELEASE_ENV_FILE="./releases/${TAG}.env"
+export RELEASE_ENV_FILE="./releases/${$SSH_ORIGINAL_COMMAND}.env"
 
-if [ ! -f "$TAG_ENV" ]; then
+if [ ! -f "$RELEASE_ENV_FILE" ]; then
     echo "Release environment file not found: ${RELEASE_ENV_FILE}"
     exit 1
 fi
