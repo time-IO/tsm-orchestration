@@ -1,31 +1,20 @@
 #!/bin/bash
 cd "$(dirname "$0")/../.."
 
-export TAG=$SSH_ORIGINAL_COMMAND
-export RELEASE_ENV_FILE="./releases/${TAG}.env"
+export RELEASE_ENV_FILE="releases/${SSH_ORIGINAL_COMMAND}.env"
 
-if [ ! -f "$TAG_ENV" ]; then
+if [ ! -f "$RELEASE_ENV_FILE" ]; then
     echo "Release environment file not found: ${RELEASE_ENV_FILE}"
     exit 1
 fi
 
 git pull
 
-DC="docker compose --env-file .env --env-file ${RELEASE_ENV_FILE}"
-
-# remove after testing
-
-echo "$DC pull --quiet"
-echo "$DC build --quiet"
-echo "$DC up -d --force-recreate"
-echo "sleep 10"
-echo "$DC ps"
-
-# uncomment after testing
+DC="sudo docker compose --env-file .env --env-file ${RELEASE_ENV_FILE}"
 
 # Deploy time.IO with the tag env file
-#$DC pull --quiet
-#$DC build --quiet
-#$DC up -d --force-recreate
-#sleep 10
-#$DC ps
+$DC pull --quiet
+$DC build --quiet
+$DC up -d --force-recreate
+sleep 10
+$DC ps
