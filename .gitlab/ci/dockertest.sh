@@ -1,6 +1,6 @@
 #!/bin/bash
 running="$(docker compose ps --services --filter status=running | sort)"
-services="$(docker compose config --services | grep -v init | sort)"
+services="$(docker compose config --services | grep -v -e init -e flyway | sort)"
 if [ "$running" != "$services" ]; then
     echo "Following services are not running:"
     # Bash specific
