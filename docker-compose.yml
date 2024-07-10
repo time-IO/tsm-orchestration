@@ -327,8 +327,6 @@ services:
   timeio-db-api:
     image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
     restart: "${RESTART}"
-    ports:
-      - "8001:8001"
     entrypoint: "sh /app/start.sh"
     environment:
       DB_URL: "postgresql://\
