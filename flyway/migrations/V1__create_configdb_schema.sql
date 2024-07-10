@@ -1,0 +1,1 @@
+CREATE SCHEMA "config_db";

@@ -93,7 +93,6 @@ services:
       - "./data/postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql"
       - "./data/postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh"
       - "./data/postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh"
-      - "./migrations/init_schema_thing_mapping.sh:/docker-entrypoint-initdb.d/04_schema_thing_mapping.sh"
       - "./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro"
       - "./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro"
       - "./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro"
@@ -336,6 +335,31 @@ services:
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
       - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  flyway:
+    image: flyway/flyway:7
+    command: -configFiles=/flyway/conf/flyway.conf migrate
+    volumes:
+      - ./flyway/migrations:/flyway/sql
+      - ./flyway/flyway.conf:/flyway/conf/flyway.conf
+    environment:
+      FLYWAY_URL: "jdbc:postgresql://${CREATEDB_POSTGRES_HOST}/${CREATEDB_POSTGRES_DATABASE}"
+      FLYWAY_USER: "${CREATEDB_POSTGRES_USER}"
+      FLYWAY_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD}"
+      TEST_ROLE: "test_role"
+    depends_on:
+      database:
+        condition: service_healthy
 
 
   # Summary
