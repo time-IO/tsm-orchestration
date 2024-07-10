@@ -356,7 +356,8 @@ services:
       FLYWAY_URL: "jdbc:postgresql://${CREATEDB_POSTGRES_HOST}/${CREATEDB_POSTGRES_DATABASE}"
       FLYWAY_USER: "${CREATEDB_POSTGRES_USER}"
       FLYWAY_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD}"
-      TEST_ROLE: "test_role"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "configdb_user"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "configdb_password"
     depends_on:
       database:
         condition: service_healthy
