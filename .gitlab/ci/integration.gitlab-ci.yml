@@ -11,6 +11,7 @@ docker-service-test:
     - "sleep 20"
   script:
     - "docker ps"
+    - "docker compose logs flyway"
     - "cd .gitlab/ci"
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
