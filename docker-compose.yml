@@ -347,7 +347,7 @@ services:
   # ===========
   # TODO
   flyway:
-    image: flyway/flyway:7
+    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
     command: -configFiles=/flyway/conf/flyway.conf migrate
     volumes:
       - ./flyway/migrations:/flyway/sql
