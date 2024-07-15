@@ -348,6 +348,7 @@ services:
   # TODO
   flyway:
     image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf migrate
     volumes:
       - ./flyway/migrations:/flyway/sql
