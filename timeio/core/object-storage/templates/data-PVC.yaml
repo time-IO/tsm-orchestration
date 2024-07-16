@@ -8,4 +8,4 @@ spec:
   resources:
     requests:
       storage: 1G
-  storageClassName: {{ .Values.pvc.storageClassName }}
+  storageClassName: {{ .Values.global.pvcstorageClassName }}
