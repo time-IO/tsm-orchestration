@@ -22,10 +22,10 @@ build:
   script:
     - cd timeio
     - helm dep build
-    - helm package . -d ../
+    - helm package . -d .
   artifacts:
     paths:
-      - "*.tgz"
+      - "./*.tgz"
   only:
     - main
 
