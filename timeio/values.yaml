@@ -7,8 +7,8 @@ ingress:
   tls:
     secretName: ingress-tls
 
-storageClass:
-  name: "standard"
+pvc:
+  storageClassName: "microk8s-hostpath"
 
 envvars:
   RESTART: "unless-stopped"

@@ -8,3 +8,4 @@ spec:
   resources:
     requests:
       storage: 10M
+  storageClassName: {{ .Values.pvc.storageClassName }}
