@@ -1,1 +1,38 @@
-include: '.gitlab/ci/*.yml'
+stages:
+  - build
+  - release
+
+variables:
+  HELM_PACKAGE_NAME: "timeio"
+  PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
+  PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
+
+  # Define the common helm_install_script
+.helm_install_script: &helm_install_script
+  - apk add --no-cache curl bash 
+  - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+  - chmod 700 ./get_helm.sh
+  - ./get_helm.sh
+
+build:
+  stage: build
+  before_script:
+    <<: *helm_install_script
+  script:
+    - helm package timeio/ -d ./
+  artifacts:
+    paths:
+      - "*.tgz"
+
+release:
+  stage: release
+  dependencies:
+    - build
+  before_script:
+    <<: *helm_install_script
+  script:
+    - helm repo index . --url $PACKAGE_REGISTRY
+    - curl --header "JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN" --upload-file ./${HELM_PACKAGE_NAME}*.tgz ${PACKAGE_REGISTRY}/${HELM_PACKAGE_NAME}*.tgz
+    - curl --header "JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN" --upload-file ./index.yaml ${PACKAGE_REGISTRY}/index.yaml
+  only:
+    - main
