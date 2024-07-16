@@ -21,7 +21,7 @@ build:
   before_script:
     - *helm_install_script
   script:
-    - helm package timeio/ -d ./
+    - helm package .
   artifacts:
     paths:
       - "*.tgz"
