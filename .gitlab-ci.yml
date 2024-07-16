@@ -32,7 +32,7 @@ release:
     - *helm_install_script
   script:
     - helm repo index . --url $PACKAGE_REGISTRY
-    - curl --header "JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN" --upload-file ./${HELM_PACKAGE_NAME}*.tgz ${PACKAGE_REGISTRY}/${HELM_PACKAGE_NAME}*.tgz
-    - curl --header "JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN" --upload-file ./index.yaml ${PACKAGE_REGISTRY}/index.yaml
+    - "curl --header \"JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN\" --upload-file ./${HELM_PACKAGE_NAME}*.tgz ${PACKAGE_REGISTRY}/${HELM_PACKAGE_NAME}*.tgz"
+    - "curl --header \"JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN\" --upload-file ./index.yaml ${PACKAGE_REGISTRY}/index.yaml"
   only:
     - main
