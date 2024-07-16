@@ -17,7 +17,7 @@ variables:
 build:
   stage: build
   before_script:
-    <<: *helm_install_script
+    - *helm_install_script
   script:
     - helm package timeio/ -d ./
   artifacts:
@@ -29,7 +29,7 @@ release:
   dependencies:
     - build
   before_script:
-    <<: *helm_install_script
+    - *helm_install_script
   script:
     - helm repo index . --url $PACKAGE_REGISTRY
     - curl --header "JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN" --upload-file ./${HELM_PACKAGE_NAME}*.tgz ${PACKAGE_REGISTRY}/${HELM_PACKAGE_NAME}*.tgz
