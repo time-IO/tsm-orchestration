@@ -1,0 +1,9 @@
+build:
+  stage: build
+  before_script:
+    <<: *helm_install_script
+  script:
+    - helm package timeio/ -d ./
+  artifacts:
+    paths:
+      - "*.tgz"
