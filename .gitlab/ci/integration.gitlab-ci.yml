@@ -6,6 +6,7 @@ docker-service-test:
     - "apk add --no-cache bash"
     - "mv .env.example .env"
     - "cp .env .gitlab/ci/.env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "docker compose logs init"
     - "sleep 20"
@@ -29,6 +30,7 @@ mqtt-service-test:
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install paho-mqtt==1.6.1"
     - "mv .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
@@ -45,6 +47,7 @@ proxy-test:
     - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
     - "apk add --no-cache curl"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
@@ -64,6 +67,7 @@ object-storage-test:
   before_script:
     - "apk add --no-cache curl"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 30"
   script:
@@ -77,6 +81,7 @@ database-test:
   before_script:    
     - "apk add --no-cache postgresql-client"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:

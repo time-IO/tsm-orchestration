@@ -6,6 +6,7 @@ visualization-e2e:
     - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
     - "cp .env .gitlab/ci/.env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
@@ -44,6 +45,7 @@ avro-thing-creation-e2e:
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install fastavro paho-mqtt==1.6.1"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d frontend mqtt-broker --force-recreate -V --quiet-pull"
     - "sleep 20"
   script:
@@ -59,6 +61,7 @@ object-storage-e2e:
   before_script:
     - "apk add --no-cache curl jq"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 20"
   script:
@@ -84,6 +87,7 @@ database-e2e:
   before_script:
     - "apk add --no-cache postgresql-client jq"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 20"
   script:
@@ -107,6 +111,7 @@ frost-e2e:
   before_script:
     - "apk add --no-cache curl jq"
     - "cp .env.example .env"
+    - "echo \"$TSMDL_REGISTRY_TOKEN\" | docker login -u \"$CI_REGISTRY_USER\" --password-stdin \"$TSMDL_REGISTRY\""
     - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 20"
   script:
