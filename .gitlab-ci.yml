@@ -30,7 +30,7 @@ build:
   script:
     - helm dependency build timeio
     - VERSION=1.0.0
-    - FULL_VERSION="${VERSION}-${CI_JOB_DATE}""
+    - FULL_VERSION="${VERSION}-${CI_JOB_DATE}"
     - echo "Building chart version $FULL_VERSION"
     - helm package timeio --version $FULL_VERSION
   artifacts:
