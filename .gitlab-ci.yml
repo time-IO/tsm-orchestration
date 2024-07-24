@@ -13,7 +13,8 @@ build:
   before_script:
     - apk add yq
   script:
-    - VERSION=$(helm show chart $PROXY_CHART_PATH | yq .version | tr -d '\n')
+    - helm dep build timeio
+    - VERSION=$(helm show chart | yq .version | tr -d '\n')
     - FULL_VERSION="$VERSION-${CI_COMMIT_BRANCH:-${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}}-$CI_COMMIT_SHORT_SHA"
     - echo "Building chart version $FULL_VERSION"
     - helm package timeio --version $FULL_VERSION
