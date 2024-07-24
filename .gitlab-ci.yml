@@ -1,4 +1,5 @@
 stages:
+  - freeze
   - build
   - push
 
@@ -7,6 +8,17 @@ variables:
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
   HELM_IMAGE_TAG: "latest"
+
+freeze-tag:
+  stage: freeze
+  image: alpine
+  artifacts:
+      expire_in: 6 weeks
+      reports:
+        dotenv:
+          - ci-job-date.env
+  script:
+    - echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" >> ci-job-date.env
 
 build:
   image: 
@@ -18,7 +30,7 @@ build:
   script:
     - helm dependency build timeio
     - VERSION=1.0.0
-    - FULL_VERSION="$VERSION-${CI_COMMIT_BRANCH:-${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}}-$CI_COMMIT_SHORT_SHA"
+    - FULL_VERSION="${VERSION}-${CI_JOB_DATE}""
     - echo "Building chart version $FULL_VERSION"
     - helm package timeio --version $FULL_VERSION
   artifacts:
@@ -27,22 +39,13 @@ build:
   only:
     - main
 
+
 push:
-  image: 
-    name: alpine/helm:${HELM_IMAGE_TAG}
-    entrypoint: [""]
+  image: curlimages/curl:latest
   stage: push
-  dependencies:
-    - build
+  before_script:
+    - CHART=ls(./*.tgz)
   script:
-    - ls -la *.tgz
-    - ls -la
-    - helm repo index . --url $PACKAGE_REGISTRY
-    - helm repo ls
-    - echo $PACKAGE_REGISTRY_TOKEN
-    - echo $HELM_PACKAGE_NAME
-    - echo $PACKAGE_REGISTRY
-    #- "curl --header \"JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN\" --upload-file ./${HELM_PACKAGE_NAME}*.tgz ${PACKAGE_REGISTRY}/${HELM_PACKAGE_NAME}*.tgz"
-    #- "curl --header \"JOB-TOKEN: $PACKAGE_REGISTRY_TOKEN\" --upload-file ./index.yaml ${PACKAGE_REGISTRY}/index.yaml"
+    - 'curl --fail-with-body --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@${CHART}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"'
   only:
     - main
