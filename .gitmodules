@@ -1,3 +1,0 @@
-[submodule "timeio/tsm-orchestration"]
-	path = tsm-orchestration
-	url = codebase:ufz-tsm/tsm-orchestration
