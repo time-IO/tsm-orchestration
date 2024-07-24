@@ -6,9 +6,12 @@ variables:
   HELM_PACKAGE_NAME: "timeio"
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
+  HELM_IMAGE_TAG: "latest"
 
 build:
-  image: alpine/helm
+  image: 
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
   stage: build
   before_script:
     - apk add yq
@@ -25,7 +28,9 @@ build:
     - main
 
 push:
-  image: alpine/helm
+  image: 
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
   stage: push
   dependencies:
     - build
