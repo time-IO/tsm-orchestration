@@ -18,8 +18,8 @@ build:
     - apk add yq
     - CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)
     - helm dependency build timeio
-    - VERSION=1.0.0
-    - FULL_VERSION="${VERSION}"
+    - VERSION=$(helm show chart timeio | yq .version | tr -d '\n')
+    - FULL_VERSION="${VERSION}-${CI_JOB_DATE}"
     - echo "Building chart version $FULL_VERSION"
     - helm package timeio --version $FULL_VERSION
   artifacts:
