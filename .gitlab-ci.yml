@@ -8,7 +8,6 @@ variables:
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
   HELM_IMAGE_TAG: "latest"
-echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" >> ci-job-date.env
 
 build:
   image: 
