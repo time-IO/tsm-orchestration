@@ -41,11 +41,16 @@ build:
 
 
 push:
-  image: curlimages/curl:latest
+  image: 
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
   stage: push
   before_script:
     - CHART=$(ls ./*.tgz)
   script:
-    - 'curl --fail-with-body --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@${CHART}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"'
+    - echo $CI_API_V$_URL
+    - echo $CI_PROJECT_NAME
+    - 'helm repo add --username gitlab-ci-token --password ${CI_JOB_TOKEN} ${CI_PROJECT_NAME} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm'
+    - 'helm push ${CHART} ${CI_PROJECT_NAME}'
   only:
     - main
