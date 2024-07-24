@@ -44,7 +44,7 @@ push:
   image: curlimages/curl:latest
   stage: push
   before_script:
-    - CHART=ls(./*.tgz)
+    - CHART=$(ls ./*.tgz)
   script:
     - 'curl --fail-with-body --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@${CHART}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"'
   only:
