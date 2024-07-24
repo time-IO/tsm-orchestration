@@ -1,41 +1,35 @@
 stages:
   - build
-  - release
+  - push
 
 variables:
   HELM_PACKAGE_NAME: "timeio"
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
 
-  # Define the common helm_install_script
-.helm_install_script: &helm_install_script
-  - apt-get update && apt-get install -y curl bash
-  - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-  - chmod 700 ./get_helm.sh
-  - ./get_helm.sh
-
-
 build:
+  image: alpine/helm
   stage: build
   before_script:
-    - *helm_install_script
+    - apk add yq
   script:
-    - cd timeio
-    - helm dep build
-    - helm package . -d .
+    - VERSION=$(helm show chart $PROXY_CHART_PATH | yq .version | tr -d '\n')
+    - FULL_VERSION="$VERSION-${CI_COMMIT_BRANCH:-${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}}-$CI_COMMIT_SHORT_SHA"
+    - echo "Building chart version $FULL_VERSION"
+    - helm package timeio --version $FULL_VERSION
   artifacts:
     paths:
       - "./*.tgz"
   only:
     - main
 
-release:
-  stage: release
+push:
+  image: alpine/helm
+  stage: push
   dependencies:
     - build
-  before_script:
-    - *helm_install_script
   script:
+    - ls -la *.tgz
     - ls -la
     - helm repo index . --url $PACKAGE_REGISTRY
     - helm repo ls
