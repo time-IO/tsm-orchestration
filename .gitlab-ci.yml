@@ -8,29 +8,19 @@ variables:
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
   HELM_IMAGE_TAG: "latest"
-
-freeze-tag:
-  stage: freeze
-  image: alpine
-  artifacts:
-      expire_in: 6 weeks
-      reports:
-        dotenv:
-          - ci-job-date.env
-  script:
-    - echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" >> ci-job-date.env
+echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" >> ci-job-date.env
 
 build:
   image: 
     name: alpine/helm:${HELM_IMAGE_TAG}
     entrypoint: [""]
   stage: build
-  before_script:
-    - apk add yq
   script:
+    - apk add yq
+    - CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)
     - helm dependency build timeio
     - VERSION=1.0.0
-    - FULL_VERSION="${VERSION}-${CI_JOB_DATE}"
+    - FULL_VERSION="${VERSION}"
     - echo "Building chart version $FULL_VERSION"
     - helm package timeio --version $FULL_VERSION
   artifacts:
@@ -41,17 +31,12 @@ build:
 
 
 push:
-  image: 
-    name: alpine/helm:${HELM_IMAGE_TAG}
-    entrypoint: [""]
+  image: alpine
   stage: push
   before_script:
+    - apk add curl
     - CHART=$(ls ./*.tgz)
   script:
-    - 'echo ${CI_API_V4_URL}'
-    - 'echo ${CI_PROJECT_NAME}'
-    - 'helm repo add --username gitlab-ci-token --password ${CI_JOB_TOKEN} ${CI_PROJECT_NAME} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/stable'
-    - 'helm plugin install https://github.com/chartmuseum/helm-push'
-    - 'helm cm-push ${CHART} ${CI_PROJECT_NAME}'
+    - curl --fail-with-body --request POST --user gitlab-ci-token:${CI_JOB_TOKEN} --form chart=@${CHART} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts
   only:
     - main
