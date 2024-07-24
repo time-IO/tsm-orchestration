@@ -17,11 +17,11 @@ build:
   script:
     - apk add yq
     - CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)
-    - helm dependency build .
+    - helm dependency build timeio
     - VERSION=$(helm show chart timeio | yq .version | tr -d '\n')
     - FULL_VERSION="${VERSION}"
     - echo "Building chart version $FULL_VERSION"
-    - helm package . --version $FULL_VERSION
+    - helm package timeio --version $FULL_VERSION
   artifacts:
     paths:
       - "./*.tgz"
