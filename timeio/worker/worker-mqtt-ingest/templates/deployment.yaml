@@ -23,7 +23,7 @@ spec:
             - main.py
             - parse-mqtt-data
             - --target-uri
-            - "postgresql://{{  .Values.global.secrets.CREATEDB_POSTGRES_USER}}:{{  .Values.global.secrets.CREATEDB_POSTGRES_PASSWORD}}@{{  .Values.global.secrets.CREATEDB_POSTGRES_HOST}}/{{  .Values.global.secrets.CREATEDB_POSTGRES_DATABASE}}"
+            - "postgresql://{{  .Values.global.secrets.POSTGRES_USER}}:{{  .Values.global.secrets.POSTGRES_PASSWORD}}@{{  .Values.global.secrets.CREATEDB_POSTGRES_HOST}}/{{  .Values.global.secrets.CREATEDB_POSTGRES_DATABASE}}"
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret
