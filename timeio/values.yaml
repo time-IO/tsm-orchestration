@@ -92,7 +92,7 @@ global:
     CV_DB_HOST: "database"
     CV_URL: "https://sms-cv.helmholtz.cloud/sms/cv/"
     CV_ACCESS_TYPE: "db"
-    GRAFANA_IMAGE_TAG: "latest"
+    GRAFANA_IMAGE_TAG: "10.4.5"
     GRAFANA_USER: "grafana"
     GRAFANA_PASSWORD: "grafana"
     GRAFANA_URL: "http://visualization:3000"
