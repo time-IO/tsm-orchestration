@@ -1,15 +1,18 @@
-ingress:
-  enabled: true
-  host: localhost
-  service:
-    name: proxy
-    port: 80
-  tls:
-    secretName: ingress-tls
-
 global:
+
   pvc:
     storageClassName: "microk8s-hostpath"
+
+  ingress:
+    enabled: true
+    host: localhost
+    url: https://localhost
+    service:
+      name: proxy
+      port: 80
+    tls:
+        secretName: ingress-tls
+
   secrets:
     RESTART: "unless-stopped"
     LOG_LEVEL: "INFO"
