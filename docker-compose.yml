@@ -308,7 +308,8 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
-      WEB_CONCURRENCY: 10
+      STA_ENDPOINT_URL: "${TOMCAT_PROXY_URL}"
+      UVICORN_ARGS: "${UVICORN_ARGS}"
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
     depends_on:
