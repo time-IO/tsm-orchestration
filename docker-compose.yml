@@ -316,6 +316,29 @@ services:
       database:
         condition: service_healthy
 
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  timeio-db-api:
+    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
+    restart: "${RESTART}"
+    entrypoint: "sh /app/start.sh"
+    environment:
+      DB_URL: "postgresql://\
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
+      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /db_api"
+    depends_on:
+      database:
+        condition: service_healthy
 
   # Summary
   # =======
@@ -350,6 +373,7 @@ services:
   # TODO
   flyway:
     image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf migrate
     volumes:
       - ./flyway/migrations:/flyway/sql
