@@ -68,10 +68,6 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${GF_AUTH_GENERIC_OAUTH_TOKEN_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/token}"
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${GF_AUTH_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
 
-  tsmdl:
-    volumes:
-      - "${DEV_TSMDL_SRC_DIR:-../tsm-ufz-tsmdl/app}:/app"
-
   proxy:
     volumes:
       - "./nginx/tsm.dev.keycloak.conf:/etc/nginx/conf.d/default.conf:ro"
