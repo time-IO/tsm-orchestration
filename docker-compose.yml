@@ -500,6 +500,30 @@ services:
   # SETUP worker (topic: thing_creation)
   # =================================================================
 
+  # fills and updates the config-db from setup mqtt-messages
+  # (e.g. topic: frontend-thing-update)
+  worker-configdb-update:
+#    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/store_thing_in_configdb:${STORE_THING_IN_CONFIGDB_IMAGE_TAG}"
+    build:
+      context: ../tsm-dispatcher/configdb_updater/
+    environment:
+      MQTT_BROKER_HOST: "mqtt-broker"
+      MQTT_BROKER_PORT: "1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: "configdb-updater"
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_SUBSCRIBE_TOPIC: "frontend_thing_update"
+      MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
+      MQTT_PUBLISH_TOPIC: "todotodotodo"
+      MQTT_PUBLISH_QOS: "${MQTT_QOS}"
+      CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}/\
+        ${CONFIGDB_DB}"
+
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
