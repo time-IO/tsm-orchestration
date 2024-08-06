@@ -69,7 +69,7 @@ CREATE TABLE "ext_sftp"
     "uri"           VARCHAR(200) NOT NULL,
     "path"          VARCHAR(200) NOT NULL,
     "user"          VARCHAR(200) NOT NULL,
-    "password"      VARCHAR(200) NOT NULL,
+    "password"      VARCHAR(200) NULL,
     "ssh_priv_key"  TEXT         NOT NULL,
     "ssh_pub_key"   TEXT         NOT NULL,
     "sync_interval" INT          NOT NULL,
@@ -88,9 +88,8 @@ CREATE TABLE "mqtt"
     "user"                VARCHAR(200) NOT NULL,
     "password"            VARCHAR(200) NOT NULL,
     "password_hashed"     TEXT         NOT NULL,
-    "topic"               VARCHAR(200) NOT NULL,
-    "mqtt_device_type_id" BIGINT       NOT NULL
-
+    "topic"               VARCHAR(200) NULL,
+    "mqtt_device_type_id" BIGINT       NULL
 );
 
 ALTER TABLE "mqtt"
