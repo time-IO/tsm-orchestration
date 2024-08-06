@@ -507,6 +507,7 @@ services:
     build:
       context: ../tsm-dispatcher/configdb_updater/
     environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
       MQTT_BROKER_HOST: "mqtt-broker"
       MQTT_BROKER_PORT: "1883"
       MQTT_USER: "${MQTT_USER}"
@@ -515,14 +516,14 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_SUBSCRIBE_TOPIC: "frontend_thing_update"
       MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
-      MQTT_PUBLISH_TOPIC: "todotodotodo"
+      MQTT_PUBLISH_TOPIC: "todotodotodo"  # todo
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
       CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}/\
-        ${CONFIGDB_DB}"
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
 
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
