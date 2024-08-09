@@ -36,7 +36,7 @@
                                 scheme, serverName, serverPort, webappName
                             );
                 %>
-                <li class="endpoint-item-wrapper" style="animation-duration: 0.<%=datasourceNumber + 3%>s;">
+                <li class="endpoint-item-wrapper" style="animation-duration: <%= (datasourceNumber + 3) * 0.1 %>s;">
                     <a href="<%=webappURL%>">
                         <div class="endpoint-item">
                             <span class="endpoint-title"><%=endpointDisplayName%></span>
@@ -111,6 +111,10 @@
                 border-radius: .4em;
                 transition: all .1s;
                 animation: cardFadeIn 1s ease-out;
+            }
+
+            .endpoint-item-wrapper:last-of-type {
+                margin-bottom: 60px;
             }
 
             .endpoint-item-wrapper:hover {
