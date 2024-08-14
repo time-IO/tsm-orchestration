@@ -59,9 +59,9 @@ def parse_api_response(response: list, origin: str):
                     header=source,
                 )
             except Exception as e:
+                logging.exception(f'Creation of observation with timestamp {timestamp} and parameter {parameter} failed')
                 continue
             out.append(observation)
-
     return out
 
 
