@@ -17,7 +17,6 @@ def basic_auth(username, password):
     b_encoded_credential = base64.b64encode(encoded_credential)
     b_encoded_credential = b_encoded_credential.decode('ascii')
     b_auth = b_encoded_credential
-
     return 'Basic %s' % b_auth
 
 
@@ -32,7 +31,6 @@ def make_request(server_url, user, password, post_data=None):
     handle = urlopen(r)
     content = handle.read().decode('utf8')
     response = json.loads(content)
-
     return response
 
 
@@ -41,7 +39,6 @@ def get_utc_timestamps(period: int):
     now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     timestamp_from = now_utc - timedelta(minutes=period)
     timestamp_from_str = timestamp_from.strftime("%Y-%m-%dT%H:%M:%SZ")
-
     return timestamp_from_str, now_str
 
 
@@ -86,8 +83,7 @@ def main(thing_uuid, parameters, target_uri):
         datastore.insert_commit_chunk()
     except Exception as e:
         datastore.session.rollback()
-        logging.warning(f"failed to write data, because of {e}")
-        raise
+        raise RuntimeError("failed to store data in database") from e
 
 
 if __name__ == "__main__":
