@@ -24,6 +24,7 @@ if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
     echo "topic readwrite thing_creation"
     echo "topic readwrite logging/#"
     echo "topic readwrite object_storage_notification"
+    echo "topic readwrite configdb_update/#"
     echo ""
     echo "# Each user has its own topic and logging namespace"
     echo "pattern readwrite mqtt_ingest/%u/#"

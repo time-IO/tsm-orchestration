@@ -502,10 +502,14 @@ services:
 
   # fills and updates the config-db from setup mqtt-messages
   # (e.g. topic: frontend-thing-update)
-  worker-configdb-update:
-#    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/store_thing_in_configdb:${STORE_THING_IN_CONFIGDB_IMAGE_TAG}"
-    build:
-      context: ../tsm-dispatcher/configdb_updater/
+  worker-configdb-updater:
+    image: "registry.hzdr.de/ufz-tsm/timeio-configdb-updater/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
+    restart: "${RESTART}"
+    depends_on:
+      database:
+        condition: "service_healthy"
+      mqtt-broker:
+        condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       MQTT_BROKER_HOST: "mqtt-broker"
@@ -516,7 +520,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_SUBSCRIBE_TOPIC: "frontend_thing_update"
       MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
-      MQTT_PUBLISH_TOPIC: "todotodotodo"  # todo
+      MQTT_PUBLISH_TOPIC: "configdb_update"
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
       CONFIGDB_DSN: "postgresql://\
