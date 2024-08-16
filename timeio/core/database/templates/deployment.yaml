@@ -18,6 +18,9 @@ spec:
         - name: {{ .Values.name}}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: True
           envFrom:
           - secretRef:
               name: {{ .Values.name }}-secret

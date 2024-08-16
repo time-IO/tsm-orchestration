@@ -5,3 +5,10 @@ image:
   tag: latest
   pullPolicy: Always
 name: frost
+
+worker:
+  image:
+    repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
+    tag: latest
+    pullPolicy: Always
+  name: worker-frost-setup

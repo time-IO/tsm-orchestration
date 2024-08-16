@@ -15,9 +15,30 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
+        - name: {{ .Values.worker.name }}
+          image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 3000
+            fsGroup: 2000
+          command:
+            - python3
+            - main.py
+            - update-sftp-crontab
+          envFrom:
+            - secretRef:
+                name: {{ .Values.worker.name }}-secret
+          volumeMounts:
+            - mountPath: /tmp/cron
+              name: {{ .Values.name }}-crontab
         - name: {{ .Values.name }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 3000
+            fsGroup: 2000
           command:
             - tini
             - --
@@ -37,12 +58,6 @@ spec:
             - mountPath: /scripts/ext_api_sync
               name: {{ .Values.name }}-ext-api
               readOnly: true
-            - mountPath: /sftp-private-keys
-              name: {{ .Values.name }}-sftp-private-keys
-              readOnly: true
-            - mountPath: /tmp
-              name: {{ .Values.name }}-crontab
-              readOnly: false
             - mountPath: /cron-entrypoint.sh
               name: {{ .Values.name }}-entrypoint
               subPath: cron-entrypoint.sh
@@ -59,16 +74,9 @@ spec:
           configMap:
             name: {{ .Values.name }}-ext-api
             defaultMode: 0775
-        - name: {{ .Values.name }}-sftp-private-keys
-          persistentVolumeClaim:
-            claimName: sftp-private-keys-pvc
         - name: {{ .Values.name }}-crontab
           persistentVolumeClaim:
             claimName: crontab-pvc
-        - name: {{ .Values.name }}-crontab-txt
-          configMap:
-            name: {{ .Values.name }}-crontab-txt
-            defaultMode: 0666
         - name: {{ .Values.name }}-entrypoint
           configMap:
             name: {{ .Values.name }}-entrypoint
