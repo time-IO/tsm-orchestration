@@ -2,7 +2,7 @@ apiVersion: v2
 name: timeio
 description: A Helm chart for timeio
 type: application
-version: 0.1.1
+version: 0.2.0
 dependencies:
 - name: database
   repository: file://./core/database
@@ -58,6 +58,3 @@ dependencies:
 - name: worker-run-qaqc
   repository: file://./worker/worker-run-qaqc
   version: "0.0.1"
-- name: constants
-  version: "0.1.0"
-  repository: "file://../../global/constants/"
