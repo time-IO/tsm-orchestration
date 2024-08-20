@@ -24,3 +24,6 @@ RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
     && chown -R tomcat /share
 
 USER tomcat
+
+RUN mkdir /home/tomcat/.postgresql \
+    && cp /etc/ssl/certs/ca-certificates.crt /home/tomcat/.postgresql/root.crt
