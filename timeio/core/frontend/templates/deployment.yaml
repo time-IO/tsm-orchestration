@@ -18,6 +18,9 @@ spec:
         - name: {{ .Values.name }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: True
           envFrom:
             - secretRef:
                 name: {{ .Values.name }}-secret
@@ -33,19 +36,9 @@ spec:
             && python3 manage.py collectstatic --noinput
             && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
           volumeMounts:
-            - mountPath: /home/appuser/app/static
-              name: {{ .Values.name }}-statics
-            - mountPath: /home/appuser/app/sftp-private-keys
-              name: {{ .Values.name }}-sftp-private-keys
             - mountPath: /home/appuser/app/tsm/fixtures
               name: {{ .Values.name }}-fixtures
       volumes:
-        - name: {{ .Values.name }}-statics
-          persistentVolumeClaim:
-            claimName: frontend-statics-pvc
-        - name: {{ .Values.name }}-sftp-private-keys
-          persistentVolumeClaim:
-            claimName: sftp-private-keys-pvc
         - name: {{ .Values.name }}-fixtures
           configMap:
             name: {{ .Values.name }}-fixtures

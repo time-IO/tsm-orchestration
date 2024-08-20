@@ -5,13 +5,15 @@ global:
 
   ingress:
     enabled: true
+    class: nginx
     host: localhost
     url: https://localhost
     service:
       name: proxy
       port: 80
     tls:
-        secretName: ingress-tls
+      enabled: false
+      secretName: ingress-tls
 
   secrets:
     RESTART: "unless-stopped"

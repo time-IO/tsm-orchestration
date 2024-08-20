@@ -1,65 +1,60 @@
 apiVersion: v2
 name: timeio
-description: A Helm chart for time.IO
-version: 0.0.1
+description: A Helm chart for timeio
+type: application
+version: 0.2.0
 dependencies:
-  - name: database
-    version: 0.0.1
-    repository: "file://./core/database"
-  - name: mqtt-broker
-    version: 0.0.1
-    repository: "file://./core/mqtt-broker"
-  - name: proxy
-    version: 0.0.1
-    repository: "file://./core/proxy"
-  - name: visualization
-    version: 0.0.1
-    repository: "file://./core/visualization"
-  - name: object-storage
-    version: 0.0.1
-    repository: "file://./core/object-storage"
-  - name: frontend
-    version: 0.0.1
-    repository: "file://./core/frontend"
-  - name: tsmdl
-    version: 0.0.1
-    repository: "file://./core/tsmdl"
-  - name: frost
-    version: 0.0.1
-    repository: "file://./core/frost"
-  - name: basic-demo-scheduler
-    version: 0.0.1
-    repository: "file://./core/basic-demo-scheduler"
-  - name: cron-scheduler
-    version: 0.0.1
-    repository: "file://./core/cron-scheduler"
-  - name: worker-crontab-setup
-    version: 0.0.1
-    repository: "file://./worker/worker-crontab-setup"
-  - name: worker-db-setup
-    version: 0.0.1
-    repository: "file://./worker/worker-db-setup"
-  - name: worker-file-ingest
-    version: 0.0.1
-    repository: "file://./worker/worker-file-ingest"
-  - name: worker-frost-setup
-    version: 0.0.1
-    repository: "file://./worker/worker-frost-setup"
-  - name: worker-grafana-dashboard
-    version: 0.0.1
-    repository: "file://./worker/worker-grafana-dashboard"
-  - name: worker-grafana-user-orgs
-    version: 0.0.1
-    repository: "file://./worker/worker-grafana-user-orgs"
-  - name: worker-mqtt-ingest
-    version: 0.0.1
-    repository: "file://./worker/worker-mqtt-ingest"
-  - name: worker-mqtt-user-creation
-    version: 0.0.1
-    repository: "file://./worker/worker-mqtt-user-creation"
-  - name: worker-object-storage-setup
-    version: 0.0.1
-    repository: "file://./worker/worker-object-storage-setup"
-  - name: worker-run-qaqc
-    version: 0.0.1
-    repository: "file://./worker/worker-run-qaqc"
+- name: database
+  repository: file://./core/database
+  version: "0.0.1"
+- name: mqtt-broker
+  repository: file://./core/mqtt-broker
+  version: "0.0.1"
+- name: proxy
+  repository: file://./core/proxy
+  version: "0.0.1"
+- name: visualization
+  repository: file://./core/visualization
+  version: "0.0.1"
+- name: object-storage
+  repository: file://./core/object-storage
+  version: "0.0.1"
+- name: frontend
+  repository: file://./core/frontend
+  version: "0.0.1"
+- name: tsmdl
+  repository: file://./core/tsmdl
+  version: "0.0.1"
+- name: frost
+  repository: file://./core/frost
+  version: "0.0.1"
+- name: basic-demo-scheduler
+  repository: file://./core/basic-demo-scheduler
+  version: "0.0.1"
+- name: cron-scheduler
+  repository: file://./core/cron-scheduler
+  version: "0.0.1"
+- name: worker-db-setup
+  repository: file://./worker/worker-db-setup
+  version: "0.0.1"
+- name: worker-file-ingest
+  repository: file://./worker/worker-file-ingest
+  version: "0.0.1"
+- name: worker-grafana-dashboard
+  repository: file://./worker/worker-grafana-dashboard
+  version: "0.0.1"
+- name: worker-grafana-user-orgs
+  repository: file://./worker/worker-grafana-user-orgs
+  version: "0.0.1"
+- name: worker-mqtt-ingest
+  repository: file://./worker/worker-mqtt-ingest
+  version: "0.0.1"
+- name: worker-mqtt-user-creation
+  repository: file://./worker/worker-mqtt-user-creation
+  version: "0.0.1"
+- name: worker-object-storage-setup
+  repository: file://./worker/worker-object-storage-setup
+  version: "0.0.1"
+- name: worker-run-qaqc
+  repository: file://./worker/worker-run-qaqc
+  version: "0.0.1"

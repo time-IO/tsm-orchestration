@@ -24,6 +24,19 @@ spec:
             - mountPath: /usr/local/tomcat/webapps/ROOT/index.jsp
               name: {{ .Values.name }}-index
               subPath: index.jsp
+        - name: {{ .Values.worker.name }}
+          image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          command:
+            - python3
+            - main.py
+            - create-frost-instance
+          envFrom:
+            - secretRef:
+                name: {{ .Values.worker.name }}-secret
+          volumeMounts:
+            - mountPath: /home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files
+              name: {{ .Values.name }}-context
       volumes:
         - name: {{ .Values.name }}-context
           persistentVolumeClaim:

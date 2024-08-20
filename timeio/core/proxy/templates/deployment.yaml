@@ -29,8 +29,6 @@ spec:
               mountPath: /etc/nginx/locations/
             - name: {{ .Values.name }}-certs
               mountPath: /etc/ssl/
-            - name: {{ .Values.name }}-statics
-              mountPath: /home/appuser/app/static/
       volumes:
         - name: {{ .Values.name }}-html
           configMap:
@@ -47,6 +45,3 @@ spec:
         - name : {{ .Values.name }}-certs
           secret:
             secretName: {{ .Values.name }}-certs
-        - name: {{ .Values.name }}-statics
-          persistentVolumeClaim:
-            claimName: frontend-statics-pvc
