@@ -1,29 +1,44 @@
+#!/usr/bin/env python3
+
 import click
 import base64
 import json
 import os
 import logging
+import requests
 
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
 
-import tsm_datastore_lib
-from tsm_datastore_lib.Observation import Observation
+api_base_url = "http://localhost:8001"
+
+PARAMETER_MAPPING = {
+    "CO_3_CORR": 1,
+    "ESP_0_RH_AVG": 1,
+    "ESP_0_TEMP_AVG": 1,
+    "ES_0_PRESS": 1,
+    "NO2_1_CORR": 1,
+    "O3_0_CORR": 1,
+    "PS_0_PM10_CORR": 1,
+    "PS_0_PM2P5_CORR": 1,
+    "SO2_2_CORR": 1,
+    "SO2_2_CORR_1hr": 1
+}
+
+RESULT_TYPE_MAPPING = {1: "result_number",
+                       2: "result_string",
+                       3: "result_boolean",
+                       4: "result_json"}
 
 
 def basic_auth(username, password):
     credential = f"{username}:{password}"
-    encoded_credential = credential.encode('ascii')
-    b_encoded_credential = base64.b64encode(encoded_credential)
-    b_encoded_credential = b_encoded_credential.decode('ascii')
-    b_auth = b_encoded_credential
-    return 'Basic %s' % b_auth
-
+    b_encoded_credential = base64.b64encode(credential.encode('ascii')).decode('ascii')
+    return f"Basic {b_encoded_credential}"
 
 def make_request(server_url, user, password, post_data=None):
     r = Request(server_url)
-    auth = basic_auth(user, password)
-    r.add_header('Authorization', auth)
+    r.add_header('Authorization',  basic_auth(user, password))
     r.add_header('Content-Type', 'application/json')
     r.add_header('Accept', 'application/json')
     r_data = post_data
@@ -33,7 +48,6 @@ def make_request(server_url, user, password, post_data=None):
     response = json.loads(content)
     return response
 
-
 def get_utc_timestamps(period: int):
     now_utc = datetime.now(timezone.utc)
     now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -41,29 +55,25 @@ def get_utc_timestamps(period: int):
     timestamp_from_str = timestamp_from.strftime("%Y-%m-%dT%H:%M:%SZ")
     return timestamp_from_str, now_str
 
-
 def parse_api_response(response: list, origin: str):
-    out = []
+    bodies = []
     for entry in response:
         obs = entry["payload"]
         source = {"sensor_id": obs.pop("deviceID"),
                   "observation_type": obs.pop("Type")}
         timestamp = obs.pop("UTC")
         for parameter, value in obs.items():
-            try:
-                observation = Observation(
-                    timestamp=timestamp,
-                    value=value,
-                    position=parameter,
-                    origin=origin,
-                    header=source,
-                )
-            except Exception as e:
-                logging.exception(f'Creation of observation with timestamp {timestamp} and parameter {parameter} failed')
-                continue
-            out.append(observation)
-    return out
-
+            if value:
+                result_type = PARAMETER_MAPPING[parameter]
+                body = {
+                    "result_time": timestamp,
+                    "result_type": result_type,
+                    "datastream_pos": parameter,
+                    RESULT_TYPE_MAPPING[result_type]: value,
+                    "parameters": json.dumps({"origin": "bosch_data", "column_header": source})
+                }
+                bodies.append(body)
+    return {"observations": bodies}
 
 @click.command()
 @click.argument("thing_uuid")
@@ -76,15 +86,12 @@ def main(thing_uuid, parameters, target_uri):
     timestamp_from, timestamp_to = get_utc_timestamps(params["period"])
     url = f"""{params["endpoint"]}/{params["sensor_id"]}/{timestamp_from}/{timestamp_to}"""
     response = make_request(url, params["username"], params["password"])
-    observation_list = parse_api_response(response, origin="bosch_data")
-    datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
-    try:
-        datastore.store_observations(observation_list)
-        datastore.insert_commit_chunk()
-    except Exception as e:
-        datastore.session.rollback()
-        raise RuntimeError("failed to store data in database") from e
-
+    parsed_observations = parse_api_response(response, origin="bosch_data")
+    req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
+                        json=parsed_observations,
+                        headers = {'Content-type': 'application/json'})
+    if req.status_code != 201:
+       logging.error(f"{req.text}")
 
 if __name__ == "__main__":
     main()
