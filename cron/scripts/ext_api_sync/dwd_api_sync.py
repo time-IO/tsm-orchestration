@@ -8,7 +8,7 @@ import click
 
 from datetime import datetime, timedelta
 
-api_base_url = "http://localhost:8001"
+api_base_url = os.environ.get("DB_API_BASE_URL")
 
 PARAMETER_MAPPING = {
     "cloud_cover": 1,
@@ -82,8 +82,11 @@ def main(thing_uuid, parameters, target_uri):
     req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
                         json=parsed_observations,
                         headers = {'Content-type': 'application/json'})
-    if req.status_code != 201:
-       logging.error(f"{req.text}")
+    if req.status_code == 201:
+        logging.info(
+            f"""Successfully inserted {len(parsed_observations["observations"])} observations for thing {thing_uuid} from DWD API into TimeIO DB""")
+    else:
+        logging.error(f"{req.text}")
 
 
 if __name__ == "__main__":

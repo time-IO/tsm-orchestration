@@ -849,6 +849,7 @@ services:
         ${FRONTEND_POSTGRES_PASS}@\
         ${FRONTEND_POSTGRES_HOST}/\
         ${FRONTEND_POSTGRES_DB}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     depends_on:
       init:
         condition: "service_completed_successfully"
