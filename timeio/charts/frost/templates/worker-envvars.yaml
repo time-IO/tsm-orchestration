@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.worker.name }}-envvars
+data:
+  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  TOPIC: "thing_creation"
+  MQTT_BROKER: "mqtt-broker:1883"
+  MQTT_CLIENT_ID: ""
+  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  TOMCAT_PROXY_URL: "{{  .Values.global.ingress.url }}/sta/"

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - python3
+            - main.py
+            - parse-mqtt-data
+            - --target-uri
+            - "postgresql://{{  .Values.global.secrets.POSTGRES_USER}}:{{  .Values.global.secrets.POSTGRES_PASSWORD}}@{{  .Values.global.envvars.CREATEDB_POSTGRES_HOST}}/{{  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE}}"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.name }}-envvars
+            - secretRef:
+                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}

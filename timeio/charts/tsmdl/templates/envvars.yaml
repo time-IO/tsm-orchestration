@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  WEB_CONCURRENCY: "20"
+  UVICORN_ARGS: ""

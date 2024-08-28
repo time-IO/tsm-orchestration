@@ -1,0 +1,13 @@
+{{- if .Values.global.pvc.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: crontab-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1M
+  storageClassName: {{ .Values.global.pvc.storageClassName }}
+{{- end }}

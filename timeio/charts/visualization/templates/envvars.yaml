@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  GF_SERVER_ROOT_URL: "{{  .Values.global.ingress.url}}/{{ .Values.name }}/"
+  GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+  GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+  GF_AUTH_GENERIC_OAUTH_NAME: "OpenID Connect"
+  GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+  GF_AUTH_GENERIC_OAUTH_SCOPES: "email profile eduperson_principal_name"
+  GF_AUTH_GENERIC_OAUTH_AUTH_URL: "{{  .Values.global.envvars.OIDC_AUTH_URL }}"
+  GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "{{  .Values.global.envvars.OIDC_TOKEN_URL }}"
+  GF_AUTH_GENERIC_OAUTH_API_URL: "{{  .Values.global.envvars.OIDC_API_URL }}"
+  GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: "eduperson_principal_name"
+  GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: "true"

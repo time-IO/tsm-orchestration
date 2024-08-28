@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  MQTT_AUTH_POSTGRES_HOST: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_HOST }}"
+  MQTT_AUTH_POSTGRES_PORT: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_PORT }}"
+  MQTT_AUTH_POSTGRES_DB: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_DB }}"
+  MQTT_AUTH_PG_TLSMODE: "{{  .Values.global.envvars.MQTT_AUTH_PG_TLSMODE }}"
+  MQTT_BROKER_IMAGE_TAG: "{{  .Values.global.envvars.MQTT_BROKER_IMAGE_TAG }}"
+  MOSQUITTO_PORT: "{{  .Values.global.envvars.MOSQUITTO_PORT }}"
+  MOSQUITTO_PORT_SECURE: "{{  .Values.global.envvars.MOSQUITTO_PORT_SECURE }}"
+  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_BROKER_LOG_SIZE: "{{  .Values.global.envvars.MQTT_BROKER_LOG_SIZE }}"
+  MQTT_BROKER_FILE_COUNT: "{{  .Values.global.envvars.MQTT_BROKER_FILE_COUNT }}"
+  MQTT_CAT_LOG_SIZE: "{{  .Values.global.envvars.MQTT_CAT_LOG_SIZE }}"
+  MQTT_CAT_FILE_COUNT: "{{  .Values.global.envvars.MQTT_CAT_FILE_COUNT }}"
+  MOSQUITTO_CONFIG: "{{  .Values.global.envvars.MOSQUITTO_CONFIG }}"
+  MOSQUITTO_TLS_CONFIG: "{{  .Values.global.envvars.MOSQUITTO_TLS_CONFIG }}"
+  MOSQUITTO_TLS_CERT_PATH: "{{  .Values.global.envvars.MOSQUITTO_TLS_CERT_PATH }}"
+  MOSQUITTO_TLS_KEY_PATH: "{{  .Values.global.envvars.MOSQUITTO_TLS_KEY_PATH }}"
+  MOSQUITTO_TLS_CA_PATH: "{{  .Values.global.envvars.MOSQUITTO_TLS_CA_PATH }}"
+  FRONTEND_MQTT_HOST: "{{  .Values.global.envvars.FRONTEND_MQTT_HOST }}"
+  FRONTEND_MQTT_PORT: "{{  .Values.global.envvars.FRONTEND_MQTT_PORT }}"

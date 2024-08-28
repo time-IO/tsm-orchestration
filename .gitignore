@@ -1,5 +1,4 @@
 .idea/
-timeio/charts
 timeio/Chart.lock
 timeio/.env
 timeio/core/object-storage/conf/id_ed25519

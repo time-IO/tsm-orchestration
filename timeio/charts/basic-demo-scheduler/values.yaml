@@ -1,0 +1,8 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler"
+  tag: "latest"
+  pullPolicy: Always
+
+name: "basic-demo-scheduler"

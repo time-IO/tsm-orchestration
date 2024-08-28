@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}-statefulset
+  labels:
+    app: {{ .Values.name}}
+spec:
+  serviceName: {{ .Values.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name}}
+    spec:
+      containers:
+        - name: {{ .Values.name}}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: True
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.name }}-envvars
+            - secretRef:
+                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+          volumeMounts:
+            - name: {{ .Values.name }}-entrypoint
+              mountPath: /docker-entrypoint-initdb.d
+            - name: {{ .Values.name }}-sql-sms
+              mountPath: /sql/sms
+            - name: {{ .Values.name }}-sql-sms-cv
+              mountPath: /sql/sms_cv
+            - name: {{ .Values.name }}-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: {{ .Values.name }}-entrypoint
+          configMap:
+            name: {{ .Values.name }}-entrypoint
+        - name: {{ .Values.name }}-sql-sms
+          configMap:
+            name: {{ .Values.name }}-sql-sms
+        - name: {{ .Values.name }}-sql-sms-cv
+          configMap:
+            name: {{ .Values.name }}-sql-sms-cv
+        - name: {{ .Values.name }}-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.name }}-data-pvc

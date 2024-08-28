@@ -1,0 +1,13 @@
+{{- if .Values.global.pvc.createPVC }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.name }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10M
+  storageClassName: {{ .Values.global.pvc.storageClassName }}
+{{- end }}
