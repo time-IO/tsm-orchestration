@@ -45,6 +45,10 @@ services:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
+  tsm-extractor:
+    image: "registry.hzdr.de/ufz-tsm/tsm-extractor/extractor:${EXTRACTOR_IMAGE_TAG}"
+    build:
+      context: "../tsm-extractor"
 
   basic-demo-scheduler:
     volumes:
@@ -52,10 +56,15 @@ services:
       - "${DEV_SCHEDULER_SRC_DIR:-../tsm-basic-demo-scheduler/src}:/home/appuser/app/basic_demo_scheduler"
     ports:
       - "127.0.0.1:5000:5000"
+    environment:
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    build:
+      context: "../tsm-basic-demo-scheduler"
+      args:
+        EXTRACTOR_IMAGE_TAG: "${EXTRACTOR_IMAGE_TAG}"
 
   frontend:
     environment:
-
       - "DJANGO_HELMHOLTZ_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
       - "DJANGO_HELMHOLTZ_CLIENT_SECRET=${DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
       - "DJANGO_HELMHOLTZ_AAI_CONF_URL=${DJANGO_HELMHOLTZ_AAI_CONF_URL:-http://keycloak:8081/keycloak/realms/demo/.well-known/openid-configuration}"
@@ -115,6 +124,10 @@ services:
       interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 5
+
+  timeio-db-api:
+    ports:
+      - "127.0.0.1:8001:8001"
 
 volumes:
   keycloak-data:
