@@ -181,13 +181,13 @@ worker-file-ingest:
   existingSecret: ""
 
 worker-grafana-dashboard:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-grafana-user-orgs:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-mqtt-ingest:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-mqtt-user-creation:
   existingSecret: ""
