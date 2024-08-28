@@ -1,6 +1,10 @@
 ---
 services:
 
+  worker-configdb-updater:
+    volumes:
+      - "${DEV_CONFIGDB_UPDATER_SRC_DIR:-../timeio-configdb-updater/src}:/usr/src/app"
+
   worker-object-storage-setup:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
