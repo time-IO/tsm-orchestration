@@ -73,7 +73,6 @@ class MinioFS(RemoteFS):
         bucket_name: str | None = None,
         secure: bool = True,
     ) -> MinioFS:
-        logger.warning(str(locals()))
         cl = minio.Minio(
             endpoint=endpoint,
             access_key=access_key,
@@ -240,20 +239,29 @@ class FtpFS(RemoteFS):
 def sync(src: RemoteFS, trg: RemoteFS):
     """Sync two remote filesystems."""
 
-    for path in src.files:
-        logger.info(f"SYNCING: {path}")
+    path = None
+    try:
+        logging.info(f"{len(src.files)} files found in source directory")
+        logging.info(f"{len(trg.files)} files found in target directory")
+        synced = 0
+        for path in src.files:
+            # dirs
+            if src.is_dir(path):
+                if not trg.exist(path):
+                    trg.mkdir(path)
+                continue
 
-        # dirs
-        if src.is_dir(path):
-            if not trg.exist(path):
-                trg.mkdir(path)
-            continue
-
-        # regular files
-        if (
-            not trg.exist(path)
-            or src.size(path) != trg.size(path)
-            or src.last_modified(path) > trg.last_modified(path)
-        ):
-            trg.update(src, path)
-            continue
+            # regular files
+            if (
+                not trg.exist(path)
+                or src.size(path) != trg.size(path)
+                or src.last_modified(path) > trg.last_modified(path)
+            ):
+                trg.update(src, path)
+                synced += 1
+                continue
+    except Exception:
+        logger.error(f"failed sync path: {path}")
+        raise
+    else:
+        logging.info(f"{synced} files synced")
