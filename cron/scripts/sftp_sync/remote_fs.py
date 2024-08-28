@@ -245,6 +245,8 @@ def sync(src: RemoteFS, trg: RemoteFS):
         logging.info(f"{len(trg.files)} files found in target directory")
         synced = 0
         for path in src.files:
+            logger.debug(f"SYNCING: {path}")
+
             # dirs
             if src.is_dir(path):
                 if not trg.exist(path):
