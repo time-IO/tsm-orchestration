@@ -15,30 +15,28 @@ if [ ! -f "/mosquitto-auth/mosquitto.passwd" ]; then
   echo `echo -n "$FRONTEND_MQTT_USER:" && /mosquitto/pw -p "$FRONTEND_MQTT_PASS"` >> /mosquitto-auth/mosquitto.passwd
 fi
 
-# create acl file when not present
-if [ ! -f /mosquitto-auth/mosquitto.acl ]; then
-  {
-    echo "user $MQTT_USER"
-    echo "topic readwrite #"
-    echo "topic read \$SYS/#"
-    echo "topic readwrite thing_creation"
-    echo "topic readwrite logging/#"
-    echo "topic readwrite object_storage_notification"
-    echo "topic readwrite configdb_update/#"
-    echo ""
-    echo "# Each user has its own topic and logging namespace"
-    echo "pattern readwrite mqtt_ingest/%u/#"
-    echo "pattern readwrite logging/%u/#"
-    echo ""
-    echo "user $MQTT_INGEST_USER"
-    echo "topic read mqtt_ingest/#"
-    echo ""
-    echo "user $FRONTEND_MQTT_USER"
-    echo "topic readwrite thing_creation/#"
-    echo "topic readwrite frontend_thing_update/#"
-    echo "topic readwrite user_login/#"
-  } >>/mosquitto-auth/mosquitto.acl
-fi
+# always update acl file
+{
+  echo "user $MQTT_USER"
+  echo "topic readwrite #"
+  echo "topic read \$SYS/#"
+  echo "topic readwrite thing_creation"
+  echo "topic readwrite logging/#"
+  echo "topic readwrite object_storage_notification"
+  echo "topic readwrite configdb_update/#"
+  echo ""
+  echo "# Each user has its own topic and logging namespace"
+  echo "pattern readwrite mqtt_ingest/%u/#"
+  echo "pattern readwrite logging/%u/#"
+  echo ""
+  echo "user $MQTT_INGEST_USER"
+  echo "topic read mqtt_ingest/#"
+  echo ""
+  echo "user $FRONTEND_MQTT_USER"
+  echo "topic readwrite thing_creation/#"
+  echo "topic readwrite frontend_thing_update/#"
+  echo "topic readwrite user_login/#"
+} >>/mosquitto-auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
 then
