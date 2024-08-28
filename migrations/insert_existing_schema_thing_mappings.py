@@ -54,11 +54,5 @@ if __name__ == "__main__":
     with psycopg.connect(sys.argv[1]) as conn:
         with conn.cursor(row_factory=dict_row) as cursor:
             schemas_things = get_schema_thing_dict(cursor)
-            try:
-                cursor.executemany(INSERT_QUERY, schemas_things)
-                conn.commit()
-                print("Data inserted successfully")
-
-            except Exception as error:
-                conn.rollback()
-                print(f"Failed to insert data: {error}")
+            cursor.executemany(INSERT_QUERY, schemas_things)
+    print("Data inserted successfully")
