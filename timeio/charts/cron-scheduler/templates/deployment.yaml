@@ -15,73 +15,91 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Values.worker.name }}
-          image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
-          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 3000
-            fsGroup: 2000
-          command:
-            - python3
-            - main.py
-            - update-sftp-crontab
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.worker.name }}-envvars
-            - secretRef:
-                name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
-          volumeMounts:
-            - mountPath: /tmp/cron
-              name: {{ .Values.name }}-crontab
-        - name: {{ .Values.name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 3000
-            fsGroup: 2000
-          command:
-            - tini
-            - --
-            - /bin/sh
-            - -c
-            - ./cron-entrypoint.sh
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.name }}-envvars
-            - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
-          volumeMounts:
-            - mountPath: /scripts/sms_sync
-              name: {{ .Values.name }}-sms-sync
-              readOnly: true
-            - mountPath: /scripts/sftp_sync
-              name: {{ .Values.name }}-sftp-sync
-              readOnly: true
-            - mountPath: /scripts/ext_api_sync
-              name: {{ .Values.name }}-ext-api
-              readOnly: true
-            - mountPath: /cron-entrypoint.sh
-              name: {{ .Values.name }}-entrypoint
-              subPath: cron-entrypoint.sh
+      - name: {{ .Values.worker.name }}
+        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+          fsGroup: 2000
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+        - python3
+        - main.py
+        - update-sftp-crontab
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.worker.name }}-envvars
+        - secretRef:
+            name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
+        volumeMounts:
+        - mountPath: /tmp/cron
+          name: crontab-pv
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+          fsGroup: 2000
+          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.worker.securityContext.seccompProfile.type }}
+        command:
+        - tini
+        - --
+        - /bin/sh
+        - -c
+        - ./cron-entrypoint.sh
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-envvars
+        - secretRef:
+            name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+        volumeMounts:
+        - mountPath: /scripts/sms_sync
+          name: {{ .Values.name }}-sms-sync
+          readOnly: true
+        - mountPath: /scripts/sftp_sync
+          name: {{ .Values.name }}-sftp-sync
+          readOnly: true
+        - mountPath: /scripts/ext_api_sync
+          name: {{ .Values.name }}-ext-api
+          readOnly: true
+        - mountPath: /cron-entrypoint.sh
+          name: {{ .Values.name }}-entrypoint
+          subPath: cron-entrypoint.sh
+        - mountPath: /tmp/crontab.txt
+          name: crontab-pv
+          readOnly: true
+          subPath: crontab.txt
       volumes:
-        - name: {{ .Values.name }}-sms-sync
-          configMap:
-            name: {{ .Values.name }}-sms-sync
-            defaultMode: 0775
-        - name: {{ .Values.name }}-sftp-sync
-          configMap:
-            name: {{ .Values.name }}-sftp-sync
-            defaultMode: 0775
-        - name: {{ .Values.name }}-ext-api
-          configMap:
-            name: {{ .Values.name }}-ext-api
-            defaultMode: 0775
-        - name: {{ .Values.name }}-crontab
-          persistentVolumeClaim:
-            claimName: crontab-pvc
-        - name: {{ .Values.name }}-entrypoint
-          configMap:
-            name: {{ .Values.name }}-entrypoint
-            defaultMode: 0775
+      - name: {{ .Values.name }}-sms-sync
+        configMap:
+          name: {{ .Values.name }}-sms-sync
+          defaultMode: 0775
+      - name: {{ .Values.name }}-sftp-sync
+        configMap:
+          name: {{ .Values.name }}-sftp-sync
+          defaultMode: 0775
+      - name: {{ .Values.name }}-ext-api
+        configMap:
+          name: {{ .Values.name }}-ext-api
+          defaultMode: 0775
+      - name: crontab-pv
+        persistentVolumeClaim:
+          claimName: crontab-pvc
+      - name: {{ .Values.name }}-entrypoint
+        configMap:
+          name: {{ .Values.name }}-entrypoint
+          defaultMode: 0775

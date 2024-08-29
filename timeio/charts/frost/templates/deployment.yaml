@@ -15,34 +15,50 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Values.name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          volumeMounts:
-            - mountPath: /usr/local/tomcat/conf/Catalina/localhost
-              name: {{ .Values.name }}-context
-            - mountPath: /usr/local/tomcat/webapps/ROOT/index.jsp
-              name: {{ .Values.name }}-index
-              subPath: index.jsp
-        - name: {{ .Values.worker.name }}
-          image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
-          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
-          command:
-            - python3
-            - main.py
-            - create-frost-instance
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.worker.name }}-envvars
-            - secretRef:
-                name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
-          volumeMounts:
-            - mountPath: /home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files
-              name: {{ .Values.name }}-context
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        volumeMounts:
+        - mountPath: /usr/local/tomcat/conf/Catalina/localhost
+          name: {{ .Values.name }}-context
+        - mountPath: /usr/local/tomcat/webapps/ROOT/index.jsp
+          name: {{ .Values.name }}-index
+          subPath: index.jsp
+      - name: {{ .Values.worker.name }}
+        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.worker.securityContext.seccompProfile.type }}
+        command:
+        - python3
+        - main.py
+        - create-frost-instance
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.worker.name }}-envvars
+        - secretRef:
+            name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
+        volumeMounts:
+        - mountPath: /home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files
+          name: {{ .Values.name }}-context
       volumes:
-        - name: {{ .Values.name }}-context
-          persistentVolumeClaim:
-            claimName: tomcat-context-pvc
-        - name: {{ .Values.name }}-index
-          configMap:
-            name: {{ .Values.name }}-index
+      - name: {{ .Values.name }}-context
+        persistentVolumeClaim:
+          claimName: tomcat-context-pvc
+      - name: {{ .Values.name }}-index
+        configMap:
+          name: {{ .Values.name }}-index

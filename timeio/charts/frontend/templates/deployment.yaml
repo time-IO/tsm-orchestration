@@ -15,32 +15,38 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Values.name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          securityContext:
-            runAsUser: 1000
-            allowPrivilegeEscalation: True
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.name }}-envvars
-            - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
-          command:
-            - /bin/sh
-            - -c
-            - "python3 manage.py migrate
-            && python3 manage.py loaddata admin_interface_theme_foundation.json
-            && python3 manage.py loaddata ufz_theme.json
-            && python3 manage.py loaddata nm_station.json
-            && python3 manage.py createsuperuser --noinput
-            || echo 'Superuser already created'
-            && python3 manage.py collectstatic --noinput
-            && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
-          volumeMounts:
-            - mountPath: /home/appuser/app/tsm/fixtures
-              name: {{ .Values.name }}-fixtures
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          runAsUser: 1000
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+              type: {{ .Values.securityContext.seccompProfile.type }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-envvars
+        - secretRef:
+            name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+        command:
+        - /bin/sh
+        - -c
+        - "python3 manage.py migrate
+        && python3 manage.py loaddata admin_interface_theme_foundation.json
+        && python3 manage.py loaddata ufz_theme.json
+        && python3 manage.py loaddata nm_station.json
+        && python3 manage.py createsuperuser --noinput
+        || echo 'Superuser already created'
+        && python3 manage.py collectstatic --noinput
+        && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
+        volumeMounts:
+        - mountPath: /home/appuser/app/tsm/fixtures
+          name: {{ .Values.name }}-fixtures
       volumes:
-        - name: {{ .Values.name }}-fixtures
-          configMap:
-            name: {{ .Values.name }}-fixtures
+      - name: {{ .Values.name }}-fixtures
+        configMap:
+          name: {{ .Values.name }}-fixtures

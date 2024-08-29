@@ -6,3 +6,12 @@ image:
   pullPolicy: Always
 
 name: "basic-demo-scheduler"
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

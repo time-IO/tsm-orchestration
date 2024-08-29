@@ -5,3 +5,12 @@ image:
   tag: latest
   pullPolicy: Always
 name: object-storage
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

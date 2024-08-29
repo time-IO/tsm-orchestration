@@ -15,15 +15,23 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Values.name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - python3
-            - main.py
-            - create-grafana-user
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.name }}-envvars
-            - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+        - python3
+        - main.py
+        - create-grafana-user
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-envvars
+        - secretRef:
+            name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}

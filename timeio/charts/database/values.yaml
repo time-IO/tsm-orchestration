@@ -6,3 +6,12 @@ image:
   pullPolicy: Always
 name: database
 port: 5432
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

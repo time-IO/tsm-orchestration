@@ -1,7 +1,7 @@
 global:
 
   pvc:
-    storageClassName: "microk8s-hostpath"
+    storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:

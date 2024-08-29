@@ -6,7 +6,6 @@ image:
   pullPolicy: Always
 name: proxy
 
-
 ref:
   institute:
     link: "https://www.ufz.de"
@@ -14,3 +13,12 @@ ref:
   department:
     link: "https://www.ufz.de/index.php?en=45348"
     name: "Research Data Management"
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

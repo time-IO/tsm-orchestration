@@ -15,30 +15,38 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-        - name: {{ .Values.name }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - "minio"
-            - "server"
-            - "--console-address"
-            - ":9001"
-            - "--json"
-            - "/vol0"
-          envFrom:
-            - configMapRef:
-                name: {{ .Values.name }}-envvars
-            - secretRef:
-                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
-          volumeMounts:
-            - mountPath: /vol0
-              name: {{ .Values.name }}-pv
-            - mountPath: /certs
-              name: {{ .Values.name }}-certs
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+        - "minio"
+        - "server"
+        - "--console-address"
+        - ":9001"
+        - "--json"
+        - "/vol0"
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-envvars
+        - secretRef:
+            name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+        volumeMounts:
+        - mountPath: /vol0
+          name: {{ .Values.name }}-pv
+        - mountPath: /certs
+          name: {{ .Values.name }}-certs
       volumes:
-        - name: {{ .Values.name }}-pv
-          persistentVolumeClaim:
-            claimName: {{ .Values.name }}-data-pvc
-        - name: {{ .Values.name }}-certs
-          secret:
-            secretName: {{ .Values.name }}-certs
+      - name: {{ .Values.name }}-pv
+        persistentVolumeClaim:
+          claimName: {{ .Values.name }}-data-pvc
+      - name: {{ .Values.name }}-certs
+        secret:
+          secretName: {{ .Values.name }}-certs

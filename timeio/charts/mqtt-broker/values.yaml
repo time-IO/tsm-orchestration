@@ -6,3 +6,12 @@ image:
   pullPolicy: Always
 name: mqtt-broker
 port: 1883
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

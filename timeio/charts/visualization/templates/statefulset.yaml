@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Values.name }}-deployment
   labels:
     app: {{ .Values.name }}
 spec:
+  serviceName: {{ .Values.name }}
   replicas: 1
   selector:
     matchLabels:
@@ -26,12 +27,15 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-        - python3
-        - main.py
-        - schedule-parser-job
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
             name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+        volumeMounts:
+        - name: {{ .Values.name }}-pv
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: {{ .Values.name }}-pv
+        persistentVolumeClaim:
+          claimName: {{ .Values.name }}-pvc
