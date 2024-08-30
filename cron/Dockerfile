@@ -18,6 +18,7 @@ ARG USER=tsm
 RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER}
 
 RUN chmod ugo+rw /var/run \
+    && chmod ugo+rw /var/spool/cron \
     && chmod ugo+s /usr/sbin/cron
 
 USER ${UID}
