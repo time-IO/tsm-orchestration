@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-entrypoint
-data:
-  cron-entrypoint.sh: {{ .Files.Get "conf/cron-entrypoint.sh" | quote }}

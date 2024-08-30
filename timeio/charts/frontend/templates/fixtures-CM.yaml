@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-fixtures
-data:
-  user.json: {{ .Files.Get "conf/user.json" | quote }}
-  thing.json: {{ .Files.Get "conf/thing.json" | quote }}
-  nm_station.json: {{ .Files.Get "conf/nm_station.json" | quote }}
-  ufz_theme.json: {{ .Files.Get "conf/ufz_theme.json" | quote }}

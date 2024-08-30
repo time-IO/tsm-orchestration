@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-index
-data:
-  index.jsp: {{ .Files.Get "conf/index.jsp" | quote }}

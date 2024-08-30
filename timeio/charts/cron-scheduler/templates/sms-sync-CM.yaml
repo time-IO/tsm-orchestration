@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-sms-sync
-data:
-  sms_cv_tables.py: {{ .Files.Get "conf/sms_sync/sms_cv_tables.py" | quote }}
-  sync_utils.py: {{ .Files.Get "conf/sms_sync/sync_utils.py" | quote }}
-  sms_cv_measured_quantity.json: {{ .Files.Get "conf/sms_sync/sms_cv_measured_quantity.json" | quote }}

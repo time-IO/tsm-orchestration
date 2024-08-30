@@ -2,29 +2,36 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Values.global.ingress.service.name }}-ingress
-  {{ if .Values.global.ingress.tls.enabled }}
+  name: timeio-ingress
   annotations:
-    nignx.ingress.kubernetes.io/force-ssl-redirect: 'true'
-    nginx.ingress.kubernetes.io/backend-protocol: http
-  {{end}}
+    {{- range $key, $value := .Values.global.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
-  ingressClassName: {{ .Values.global.ingress.class }}
-  {{ if .Values.global.ingress.tls.enabled }}
-  tls:
-  - hosts:
-    - {{ .Values.global.ingress.host }}
-    secretName: {{ .Values.global.ingress.tls.secretName }}
-  {{ end }}
+  ingressClassName: {{ .Values.global.ingress.className }}
   rules:
-  - host: {{ .Values.global.ingress.host }}
+  {{- range .Values.global.ingress.hosts }}
+  - host: {{ .host  | quote }}
     http:
       paths:
-      - pathType: Prefix
-        path: "/"
+      {{- range .paths}}
+      - pathType: {{ .pathType | quote }}
+        path: {{ .path }}
         backend:
           service:
-            name: {{ .Values.global.ingress.service.name }}
+            name: {{ .serviceName | quote }}
             port:
-              number: {{ .Values.global.ingress.service.port | int }}
-{{ end }}
+              number: {{ .servicePort | int }}
+      {{- end }}
+  {{- end }}
+  {{ if .Values.global.ingress.enableTLS }}
+  tls:
+  {{- range .Values.global.ingress.tls }}
+  - hosts:
+    {{- range .hosts }}
+    - {{ . | quote }}
+    {{- end }}
+    secretName: {{ .secretName | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}

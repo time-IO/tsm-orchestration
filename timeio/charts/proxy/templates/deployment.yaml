@@ -26,21 +26,15 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-          - "nginx"
-          - "-g"
-          - "daemon off;"
         volumeMounts:
         - name: {{ .Values.name }}-html
-          mountPath: /usr/share/nginx/html/
+          mountPath: /app
         - name: {{ .Values.name }}-css
-          mountPath: /usr/share/nginx/html/css/
+          mountPath: /app/css
         - name: {{ .Values.name }}-default
-          mountPath: /etc/nginx/conf.d/
+          mountPath: /opt/bitnami/nginx/conf.d/
         - name: {{ .Values.name }}-locs
-          mountPath: /etc/nginx/locations/
-        - name: {{ .Values.name }}-certs
-          mountPath: /etc/ssl/
+          mountPath: /opt/bitnami/nginx/locations/
       volumes:
       - name: {{ .Values.name }}-html
         configMap:
@@ -54,6 +48,3 @@ spec:
       - name: {{ .Values.name }}-locs
         configMap:
           name: {{ .Values.name }}-locs
-      - name : {{ .Values.name }}-certs
-        secret:
-          secretName: {{ .Values.name }}-certs

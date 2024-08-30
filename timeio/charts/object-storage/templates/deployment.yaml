@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -23,6 +25,7 @@ spec:
           capabilities:
             drop: {{ .Values.securityContext.capabilities.drop }}
           runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
