@@ -28,10 +28,10 @@ spec:
         - secretRef:
             name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
         securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
           allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop:
-            - ALL
+            drop: {{ .Values.securityContext.capabilities.drop }}
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}

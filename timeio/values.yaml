@@ -1,7 +1,7 @@
 global:
 
   pvc:
-    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: ""
     createPVC: true
 
   ingress:
@@ -46,7 +46,6 @@ global:
     MINIO_ROOT_PASSWORD: "minioadmin"
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin"
-    FRONTEND_DJANGO_SUPERUSER_EMAIL: "example@example.com"
     DJANGO_SECRET_KEY: "NlnjUaFieRyzPnGfYGvEsHCCfU0ilDv3VRsXcSmbJ85EXjBgx1xYjvzqt7B0q12Q"
     MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "mqtt"
     MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "mqtt"
@@ -133,6 +132,7 @@ global:
     DJANGO_BASE_PATH: "/frontend/"
     DJANGO_ALLOWED_HOSTS: "localhost,.localhost,127.0.0.1,[::1]"
     DJANGO_POSTGRES_SSLMODE: "disable"
+    FRONTEND_DJANGO_SUPERUSER_EMAIL: "example@example.com"
     SCHEDULER: "BasicScheduler"
     SCHED_HOST: "http://basic-demo-scheduler:5000"
     SCHED_SLURM_RESTAPI_VERSION: v0.0.38
@@ -147,13 +147,10 @@ cron-scheduler:
   existingSecret: ""
   worker:
     existingSecret: ""
-
 database:
   existingSecret: ""
-
 frontend:
   existingSecret: ""
-
 frost:
   existingSecret: ""
   worker:

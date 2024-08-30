@@ -15,43 +15,14 @@ spec:
         app: {{ .Values.name }}
     spec:
       containers:
-      - name: {{ .Values.worker.name }}
-        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
-        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 3000
-          fsGroup: 2000
-          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
-          capabilities:
-            drop:
-            - ALL
-          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
-          seccompProfile:
-            type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-        - python3
-        - main.py
-        - update-sftp-crontab
-        envFrom:
-        - configMapRef:
-            name: {{ .Values.worker.name }}-envvars
-        - secretRef:
-            name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
-        volumeMounts:
-        - mountPath: /tmp/cron
-          name: crontab-pv
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext:
-          runAsUser: 1000
-          runAsGroup: 3000
-          fsGroup: 2000
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
           allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop:
-            - ALL
+            drop: {{ .Values.worker.securityContext.capabilities.drop }}
           runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.worker.securityContext.seccompProfile.type }}
@@ -79,10 +50,31 @@ spec:
         - mountPath: /cron-entrypoint.sh
           name: {{ .Values.name }}-entrypoint
           subPath: cron-entrypoint.sh
-        - mountPath: /tmp/crontab.txt
+        - mountPath: /tmp
           name: crontab-pv
-          readOnly: true
-          subPath: crontab.txt
+      - name: {{ .Values.worker.name }}
+        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+          - python3
+          - main.py
+          - update-sftp-crontab
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.worker.name }}-envvars
+          - secretRef:
+              name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
+        volumeMounts:
+          - mountPath: /tmp/cron
+            name: crontab-pv
       volumes:
       - name: {{ .Values.name }}-sms-sync
         configMap:

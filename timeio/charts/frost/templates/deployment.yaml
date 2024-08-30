@@ -21,8 +21,8 @@ spec:
         securityContext:
           allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop:
-            - ALL
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
@@ -38,8 +38,8 @@ spec:
         securityContext:
           allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop:
-            - ALL
+            drop: {{ .Values.worker.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
           runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.worker.securityContext.seccompProfile.type }}

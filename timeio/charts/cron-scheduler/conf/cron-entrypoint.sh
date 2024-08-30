@@ -28,7 +28,9 @@ update_crontab() {
   # to be able to pass them to cron jobs
   (filter_env_vars; cat "$CRONTAB_FILE") > /tmp/new_crontab.txt
   # Use /tmp/new_crontab.txt as crontab
-  crontab /tmp/new_crontab.txt
+  echo "i would like to update the crontab now with the following content:"
+  cat /tmp/new_crontab.txt
+  #crontab /tmp/new_crontab.txt
 }
 
 # Check and create /tmp/crontab.txt if it doesn't exist
@@ -43,7 +45,10 @@ if [ "$SETUP_SERVICE" == "true" ]; then
     inotifywait -e modify "$CRONTAB_FILE"
   done &
   sleep 1
-  cron -f || exit 1
+  # Start cron service
+  # cron -f || echo "Cron service failed to start."
+  # Start debugging shell
+  sleep 1000
 else
   echo "SETUP_SERVICE has value '$SETUP_SERVICE' - skipping cron setup."
   echo "To start cron setup, set SETUP_SERVICE to 'true' in .env file."

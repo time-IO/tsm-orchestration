@@ -22,12 +22,12 @@ spec:
         securityContext:
           allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop:
-            - ALL
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command: ["/bin/sh", "/entrypoint/docker-entrypoint.sh", "/usr/sbin/mosquitto", "-c", "/var/lib/mosquitto/mosquitto.conf"]
+        command: ["/bin/sh", "/entrypoint/docker-entrypoint.sh", "/usr/sbin/mosquitto", "-c", "/tmp/mosquitto-conf/mosquitto.conf"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

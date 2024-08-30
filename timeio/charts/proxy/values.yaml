@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: "nginx"
+  repository: "bitnami/nginx"
   tag: latest
   pullPolicy: Always
 name: proxy
@@ -17,8 +17,8 @@ ref:
 securityContext:
   allowPrivilegeEscalation: False
   capabilities:
-    drop:
-      - ALL
+    drop: ["ALL"]
+  runAsUser: 1001
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault

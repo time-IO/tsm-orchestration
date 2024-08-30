@@ -10,8 +10,8 @@ name: "basic-demo-scheduler"
 securityContext:
   allowPrivilegeEscalation: False
   capabilities:
-    drop:
-      - ALL
+    drop: ["ALL"]
+  runAsUser: 1000
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
