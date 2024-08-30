@@ -21,6 +21,8 @@ RUN chmod ugo+rw /var/run \
     && chmod ugo+rw /var/spool/cron \
     && chmod ugo+s /usr/sbin/cron
 
+RUN echo "${USER} ALL=(ALL) NOPASSWD: /usr/sbin/cron" >> /etc/sudoers
+
 USER ${UID}
 
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
