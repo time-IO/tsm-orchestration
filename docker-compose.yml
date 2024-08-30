@@ -1,6 +1,4 @@
 ---
-version: "3.9"
-
 services:
 
 
@@ -299,17 +297,19 @@ services:
   # ===========
   # TODO
   tsmdl:
-    image: "registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl:${TSM_DL_IMAGE_TAG}"
+    image: "registry.hzdr.de/hub-terra/tsmdl-time-series-management-decoupling-layer/tsmdl-api:${TSM_DL_IMAGE_TAG}"
     restart: "${RESTART}"
-    entrypoint: "/app/start.sh"
+    entrypoint: "/app/start.${TSM_DL_ENVIRONMENT}.sh"
     environment:
-      DB_URL: "postgresql://\
+      UFZ_DB_URL: "postgresql://\
         ${CREATEDB_POSTGRES_USER}:\
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
-      WEB_CONCURRENCY: 10
-      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /tsmdl"
+      STA_ENDPOINT_URL: "${TOMCAT_PROXY_URL}"
+      UVICORN_ARGS: "${UVICORN_ARGS}"
+      ROOT_PATH: /tsmdl
+      ORGANISATION: ufz
     depends_on:
       database:
         condition: service_healthy
@@ -381,6 +381,8 @@ services:
       FLYWAY_USER: "${CREATEDB_POSTGRES_USER}"
       FLYWAY_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD}"
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_USER}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
     depends_on:
       database:
         condition: service_healthy
