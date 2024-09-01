@@ -238,10 +238,11 @@ services:
       test: ["CMD-SHELL", "mosquitto_sub \
         -t '$$SYS/broker/version' \
         -C 1 \
-        -u $${MQTT_USER} \ 
+        -u $${MQTT_USER} \
         -P $${MQTT_PASSWORD} \
         --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
+      start_period: 20s
       timeout: 10s
       retries: 12
     logging:
@@ -676,7 +677,7 @@ services:
   # Ingest worker (incoming observations)
   # =================================================================
 
-  worker-file-ingest:
+  worker-file-ingest-1:
     image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "${RESTART}"
     depends_on:
@@ -688,6 +689,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      # TOPIC: "$$shared/file-workers/object_storage_notification"
       TOPIC: "object_storage_notification"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -710,11 +712,61 @@ services:
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
       SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
-      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
-      SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
-      SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
+      CONFIGDB_HOST: "${CONFIGDB_HOST}"
+      CONFIGDB_PORT: "${CONFIGDB_PORT}"
+      CONFIGDB_DB: "${CONFIGDB_DB}"
+      CONFIGDB_USER: "${CONFIGDB_USER}"
+      CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "schedule-parser-job"
+
+  # worker-file-ingest-2:
+  #   image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
+  #   restart: "${RESTART}"
+  #   depends_on:
+  #     mqtt-broker:
+  #       condition: "service_healthy"
+  #     object-storage:
+  #       condition: "service_healthy"
+  #     basic-demo-scheduler:
+  #       condition: "service_healthy"
+  #   environment:
+  #     LOG_LEVEL: "${LOG_LEVEL}"
+  #     TOPIC: "$$shared/file-workers/object_storage_notification"
+  #     MQTT_BROKER: "mqtt-broker:1883"
+  #     MQTT_USER: "${MQTT_USER}"
+  #     MQTT_PASSWORD: "${MQTT_PASSWORD}"
+  #     MQTT_CLIENT_ID: "file-ingest"
+  #     MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+  #     MQTT_QOS: "${MQTT_QOS}"
+  #     MINIO_SECURE: "${MINIO_SECURE}"
+  #     MINIO_URL: "${MINIO_HOST}"
+  #     MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
+  #     MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
+  #     S3MAP_DB_URL: "postgresql://\
+  #       ${S3MAP_POSTGRES_USER}:\
+  #       ${S3MAP_POSTGRES_PASS}@\
+  #       ${S3MAP_POSTGRES_HOST}/\
+  #       ${S3MAP_POSTGRES_DB}"
+  #     SCHEDULER: "${SCHEDULER}"
+  #     SCHED_HOST: "${SCHED_HOST}"
+  #     SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
+  #     SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
+  #     SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
+  #     SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
+  #     # SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
+  #     # SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
+  #     # SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
+  #     CONFIGDB_HOST: "${CONFIGDB_HOST}"
+  #     CONFIGDB_PORT: "${CONFIGDB_PORT}"
+  #     CONFIGDB_DB: "${CONFIGDB_DB}"
+  #     CONFIGDB_USER: "${CONFIGDB_USER}"
+  #     CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
+  #     DB_API_BASE_URL: "${DB_API_BASE_URL}"
+  #   command:
+  #     - "schedule-parser-job"
+
 
 
   worker-run-qaqc:
