@@ -895,11 +895,8 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: "basic-demo-scheduler"
       MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_HOST: "${CONFIGDB_HOST}"
-      CONFIGDB_PORT: "${CONFIGDB_PORT}"
-      CONFIGDB_DB: "${CONFIGDB_DB}"
-      CONFIGDB_USER: "${CONFIGDB_USER}"
-      CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
+      CONFIGDB_DSN: "${CONFIGDB_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "--verbose"
 
