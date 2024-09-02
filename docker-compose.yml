@@ -843,6 +843,8 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: "basic-demo-scheduler"
       MQTT_QOS: "${MQTT_QOS}"
+      CONFIGDB_DSN: "${CONFIGDB_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "--verbose"
 
