@@ -11,15 +11,12 @@ import click
 import requests
 import psycopg
 
-import tsm_datastore_lib
-from tsm_datastore_lib.Observation import Observation
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
+api_base_url = os.environ.get("DB_API_BASE_URL")
 
 
-def get_nm_station_data(
-    station: str, resolution: int, start_date: datetime, end_date: datetime
-) -> list[Observation]:
+def get_nm_station_data(station: str, resolution: int, start_date: datetime, end_date: datetime) -> dict:
     params = {
         "wget": 1,
         "stations[]": station,
@@ -42,60 +39,49 @@ def get_nm_station_data(
     }
     res = requests.get(URL, params=params)
     rows = [r.split(";") for r in re.findall(r"^\d.*", res.text, flags=re.MULTILINE)]
-    observations = []
+    bodies = []
+    header = {"sensor_id": station, "resolution": resolution, "nm_api_url": URL}
     for timestamp, value in rows:
-        try:
-            observations.append(
-                Observation(
-                    timestamp=datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S"),
-                    value=float(value),
-                    origin=URL,
-                    position=station,
-                )
-            )
-        except Exception as e:
-            logging.warning(
-                f"failed to integrate data for station '{station}' at timestamp '{timestamp}' with exception {e}"
-            )
-    return observations
+         if value:
+            bodies.append({
+                "result_time": timestamp,
+                "result_type": 1,
+                "datastream_pos": station,
+                "result_number": float(value),
+                "parameters": json.dumps({"origin": "nm_data", "column_header": header})
+                })
+    return {"observations": bodies}
 
 
-def get_datastreams(uri: str, thing_uuid: str, stations: list[str]) -> dict[str, int]:
-
+def get_datastream(uri: str, thing_uuid: str) -> int:
     with psycopg.connect(uri) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT position, datastream.id FROM datastream
+                SELECT datastream.id FROM datastream
                 JOIN thing ON thing.id = datastream.thing_id
                 WHERE thing.uuid = %s
-                AND datastream.position = ANY(%s)
                 """,
-                (thing_uuid, stations),
+                (thing_uuid,),
             )
-            datastream_ids = {**{s: None for s in stations}, **dict(cur.fetchall())}
-    return datastream_ids
+            datastream_id = cur.fetchone()[0]
+    return datastream_id
 
 
-def get_latest_observations(
-    uri: str, datastream_ids: dict[str, int]
-) -> dict[str, datetime]:
-
-    dates = {s: datetime(2000, 1, 1) for s in datastream_ids.keys()}
-
+def get_latest_observation(uri: str, datastream_id: int) -> datetime:
+    start_date = datetime(2000, 1, 1)
     with psycopg.connect(uri) as conn:
         with conn.cursor() as cur:
-            for station, datastream_id in datastream_ids.items():
-                cur.execute(
-                    """
-                    SELECT max(result_time) FROM observation WHERE datastream_id = %s
-                    """,
-                    (datastream_id,),
-                )
-                date = cur.fetchone()[0]
-                if date:
-                    dates[station] = date
-    return dates
+            cur.execute(
+                """
+                SELECT max(result_time) FROM observation WHERE datastream_id = %s
+                """,
+                (datastream_id,),
+            )
+            date = cur.fetchone()[0]
+            if date:
+                start_date = date
+    return start_date
 
 
 @click.command()
@@ -108,36 +94,27 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
     params = json.loads(parameters.replace("'", '"'))
 
     resolution = params["time_resolution"]
-    stations = params["station_id"]
-    if isinstance(stations, str):
-        stations = [
-            stations,
-        ]
+    station_id = params["station_id"]
 
-    datastream_ids = get_datastreams(
-        uri=target_uri, thing_uuid=thing_uuid, stations=stations
+    datastream_id = get_datastream(uri=target_uri, thing_uuid=thing_uuid)
+    start_date = get_latest_observation(uri=target_uri, datastream_id=datastream_id)
+    parsed_observations = get_nm_station_data(
+        station=station_id,
+        resolution=resolution,
+        start_date=start_date,
+        end_date=datetime.now(),
     )
-    start_dates = get_latest_observations(uri=target_uri, datastream_ids=datastream_ids)
 
-    observations = []
-    for station in stations:
-        observations.extend(
-            get_nm_station_data(
-                station=station,
-                resolution=resolution,
-                start_date=start_dates[station],
-                end_date=datetime.now(),
-            )
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
+                        json=parsed_observations,
+                        headers = {'Content-type': 'application/json'})
+    if req.status_code == 201:
+        logging.info(
+            f"Successfully inserted {len(parsed_observations['observations'])} "
+            f"observations for thing {thing_uuid} from NM API into TimeIO DB"
         )
-
-    datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
-    try:
-        datastore.store_observations(observations)
-        datastore.insert_commit_chunk()
-    except Exception as e:
-        datastore.session.rollback()
-        logging.warning(f"failed to write data, because of {e}")
-        raise
+    else:
+       logging.error(f"{req.text}")
 
 
 if __name__ == "__main__":
