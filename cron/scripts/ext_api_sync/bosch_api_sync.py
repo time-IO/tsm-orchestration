@@ -87,7 +87,7 @@ def main(thing_uuid, parameters, target_uri):
     url = f"""{params["endpoint"]}/{params["sensor_id"]}/{timestamp_from}/{timestamp_to}"""
     response = make_request(url, params["username"], params["password"])
     parsed_observations = parse_api_response(response, origin="bosch_data")
-    req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
                         json=parsed_observations,
                         headers = {'Content-type': 'application/json'})
     if req.status_code == 201:

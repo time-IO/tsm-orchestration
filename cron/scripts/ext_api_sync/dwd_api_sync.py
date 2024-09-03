@@ -79,7 +79,7 @@ def main(thing_uuid, parameters, target_uri):
     params = json.loads(parameters.replace("'", '"'))
     response = fetch_brightsky_data(params["station_id"])
     parsed_observations = parse_brightsky_response(response)
-    req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
                         json=parsed_observations,
                         headers = {'Content-type': 'application/json'})
     if req.status_code == 201:

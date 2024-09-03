@@ -56,7 +56,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                 bodies.append(body)
     post_data = {"observations": bodies}
 
-    req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
                         json=post_data,
                         headers={'Content-type': 'application/json'})
     if req.status_code == 201:

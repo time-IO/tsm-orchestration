@@ -105,7 +105,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         end_date=datetime.now(),
     )
 
-    req = requests.post(f"{api_base_url}/observations/{thing_uuid}",
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
                         json=parsed_observations,
                         headers = {'Content-type': 'application/json'})
     if req.status_code == 201:
