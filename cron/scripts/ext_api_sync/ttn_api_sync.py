@@ -61,7 +61,9 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                         headers={'Content-type': 'application/json'})
     if req.status_code == 201:
         logging.info(
-            f"""Successfully inserted {len(post_data["observations"])} observations for thing {thing_uuid} from TTN API into TimeIO DB""")
+            f"Successfully inserted {len(post_data['observations'])} "
+            f"observations for thing {thing_uuid} from TTN API into TimeIO DB"
+        )
     else:
         logging.error(f"{req.text}")
 

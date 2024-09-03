@@ -109,7 +109,10 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                         json=parsed_observations,
                         headers = {'Content-type': 'application/json'})
     if req.status_code == 201:
-        logging.info(f"""Successfully inserted {len(parsed_observations["observations"])} observations for thing {thing_uuid} from NM API into TimeIO DB""")
+        logging.info(
+            f"Successfully inserted {len(parsed_observations['observations'])} "
+            f"observations for thing {thing_uuid} from NM API into TimeIO DB"
+        )
     else:
        logging.error(f"{req.text}")
 
