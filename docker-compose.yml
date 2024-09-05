@@ -238,10 +238,11 @@ services:
       test: ["CMD-SHELL", "mosquitto_sub \
         -t '$$SYS/broker/version' \
         -C 1 \
-        -u $${MQTT_USER} \ 
+        -u $${MQTT_USER} \
         -P $${MQTT_PASSWORD} \
         --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
+      start_period: 20s
       timeout: 10s
       retries: 12
     logging:
@@ -688,6 +689,7 @@ services:
         condition: "service_healthy"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
+      # TOPIC: "$$shared/file-workers/object_storage_notification"
       TOPIC: "object_storage_notification"
       MQTT_BROKER: "mqtt-broker:1883"
       MQTT_USER: "${MQTT_USER}"
@@ -710,9 +712,8 @@ services:
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
       SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
-      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
-      SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
-      SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
+      CONFIGDB_DSN: "${CONFIGDB_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "schedule-parser-job"
 
