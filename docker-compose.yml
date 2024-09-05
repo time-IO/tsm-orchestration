@@ -848,8 +848,10 @@ services:
         ${CONFIGDB_PASSWORD}@\
         ${CONFIGDB_HOST}:\
         ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DATABASE}"
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
+      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
     command:
       - "--verbose"
 
