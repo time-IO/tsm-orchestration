@@ -848,7 +848,7 @@ services:
         ${CONFIGDB_PASSWORD}@\
         ${CONFIGDB_HOST}:\
         ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DATABASE}"
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "--verbose"
