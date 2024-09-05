@@ -843,7 +843,12 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: "basic-demo-scheduler"
       MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "${CONFIGDB_DSN}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "--verbose"
