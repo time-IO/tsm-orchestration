@@ -28,6 +28,10 @@ a {
     margin: 0 5vw;
 }
 
+#section-links p {
+    animation: fadeIn .8s ease-out;
+}
+
 #link-card-list {
     width: 100%;
     display: flex;
@@ -64,12 +68,16 @@ a {
     height: 3em;
 }
 
+#img-title {
+    height: 9em;
+}
+
 .link-card-wrapper {
     flex-direction: column;
     flex-grow: 1;
     margin: .3em;
     text-align: left;
-    background-color: rgba(0,0,50,0.05);
+    background-color: rgba(0, 0, 50, 0.05);
     border-radius: .4em;
     transition: all .1s;
     color: black;
@@ -80,13 +88,12 @@ a {
 }
 
 .link-card-wrapper:hover {
-    background-color: rgba(0,0,50,0.1);
+    background-color: rgba(0, 0, 50, 0.1);
     transform: scale(1.025);
 }
 
 .link-card {
-    padding: 1.5em;
-    padding-bottom: 0;
+    padding: 1.5em 1.5em 0;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -115,16 +122,62 @@ a {
     bottom: 2em;
 }
 
+#section-footer-links {
+    margin-top: 20px;
+    text-align: center;
+    animation: fadeIn 1s ease-out;
+}
+
+#footer-links-list {
+    list-style: none;
+    padding: 0;
+}
+
+#footer-links-list li {
+    display: inline;
+    margin: 0 15px;
+}
+
+.footer-link a {
+    text-decoration: none;
+    color: #666;
+    font-size: 1em;
+    transition: color .1s;
+}
+
+.footer-link a:hover {
+    color: black;
+    transition: color .1s;
+}
+
+/* keyframes */
+
 @keyframes cardFadeIn {
-    0% {left: 1em; opacity: 0;}
-    50% {left: .9em; opacity: 0;}
-    100% {left: 0em; opacity: 1;}  
+    0% {
+        left: 1em;
+        opacity: 0;
+    }
+    50% {
+        left: .9em;
+        opacity: 0;
+    }
+    100% {
+        left: 0em;
+        opacity: 1;
+    }
 }
 
 @keyframes fadeIn {
-    0% { opacity: 0;}
-    50% { opacity: 0; transform: scale(0.975);}
-    100% { opacity: 1;}  
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0;
+        transform: scale(0.975);
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 /* mobile */
