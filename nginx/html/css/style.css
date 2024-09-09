@@ -28,6 +28,10 @@ a {
     margin: 0 5vw;
 }
 
+#section-links p {
+    animation: fadeIn .8s ease-out;
+}
+
 #link-card-list {
     width: 100%;
     display: flex;
