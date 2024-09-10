@@ -13,7 +13,7 @@ ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.5
 RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
     && apt-get update && apt-get install wget \
     && apt-get clean \
-    && addgroup --system --gid ${GID} tomcat \
+    && addgroup --system --gid ${GID} --home /home/tomcat tomcat \
     && adduser --system --uid ${UID} --gid ${GID} tomcat \
     && mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
     && wget --show-progress=off -O $CATALINA_HOME/lib/postgis-jdbc.jar $POSTGIS_JDBC_URL \
