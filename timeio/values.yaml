@@ -6,10 +6,11 @@ global:
 
   ingress:
     enabled: true
-    enableTLS: false
+    enableTLS: true
     className: nginx
     annotations:
-      nignx.ingress.kubernetes.io/force-ssl-redirect: 'false'
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'false'
+      nginx.ingress.kubernetes.io/rewrite-target: '/'
       nginx.ingress.kubernetes.io/backend-protocol: http
       cert-manager.io/cluster-issuer: "cert-manager-acme"
       cert-manager.io/private-key-algorithm: "ECDSA"
@@ -28,7 +29,7 @@ global:
         servicePort: 80
     url: "https://timeio.web-intern-stage.app.ufz.de"
     tls:
-    - secretName: "timeio-web-intern-stage-app-ufz-de"
+    - secretName: "timeio-web-intern-stage-tls"
       hosts:
         - "timeio.web-intern-stage.app.ufz.de"
 
@@ -51,7 +52,7 @@ global:
     S3MAP_POSTGRES_PASS: "secret"
     SMS_DB_USER: "postgres"
     SMS_DB_PASSWORD: "postgres"
-    SMS_API_TOKEM: "secret"
+    SMS_API_TOKEN: "secret"
     CV_DB_USER: "postgres"
     CV_DB_PASSWORD: "postgres"
     GRAFANA_USER: "grafana"
@@ -62,7 +63,7 @@ global:
     MINIO_ROOT_PASSWORD: "minioadmin"
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin"
-    DJANGO_SECRET_KEY: "NlnjUaFieRyzPnGfYGvEsHCCfU0ilDv3VRsXcSmbJ85EXjBgx1xYjvzqt7B0q12Q"
+    DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
     MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "mqtt"
     MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "mqtt"
 
@@ -72,8 +73,8 @@ global:
     UID: "1000"
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
-    PROXY_HOST: "localhost"
-    PROXY_URL: "https://localhost"
+    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
+    PROXY_URL: "https://timeio.web-intern-stage.app.ufz.de"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
@@ -166,6 +167,8 @@ cron-scheduler:
 database:
   existingSecret: ""
 frontend:
+  existingSecret: ""
+frontend-proxy:
   existingSecret: ""
 frost:
   existingSecret: ""

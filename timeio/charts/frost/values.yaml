@@ -1,0 +1,32 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/timeio-images/frost"
+  tag: latest
+  pullPolicy: Always
+name: frost
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+worker:
+  image:
+    repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
+    tag: latest
+    pullPolicy: Always
+  name: worker-frost-setup
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: ["ALL"]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault

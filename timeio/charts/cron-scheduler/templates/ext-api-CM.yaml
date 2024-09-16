@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-ext-api
+data:
+  dwd_api_sync.py: {{ .Files.Get "conf/ext_api_sync/dwd_api_sync.py" | quote }}
+  nm_api_sync.py: {{ .Files.Get "conf/ext_api_sync/nm_api_sync.py" | quote }}
+  ttn_api_sync.py: {{ .Files.Get "conf/ext_api_sync/ttn_api_sync.py" | quote }}
