@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}-deployment
+  name: {{ .Values.name }}
   labels:
     app: {{ .Values.name }}
 spec:
@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -23,6 +25,7 @@ spec:
           capabilities:
             drop: {{ .Values.securityContext.capabilities.drop }}
           runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}

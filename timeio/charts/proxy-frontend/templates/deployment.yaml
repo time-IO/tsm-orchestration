@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicaCount}}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+      - name: {{ .Values.proxy.name }}
+        image: {{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}
+        imagePullPolicy: {{ .Values.proxy.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+        volumeMounts:
+        - name: {{ .Values.name }}-html
+          #mountPath: /app
+          mountPath: /usr/share/nginx/html
+        - name: {{ .Values.name }}-css
+          #mountPath: /app/css
+          mountPath: /usr/share/nginx/html/css
+        - name: {{ .Values.name }}-default
+          #mountPath: /opt/bitnami/nginx/conf.d/
+          mountPath: /etc/nginx/conf.d
+        - name: {{ .Values.name }}-locs
+          #mountPath: /opt/bitnami/nginx/locations/
+          mountPath: /etc/nginx/locations
+        - name: {{ .Values.name }}-static
+          mountPath: /home/appuser/app/static
+          readOnly: true
+
+      - name: {{ .Values.frontend.name }}
+        image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.name }}-envvars
+          - secretRef:
+              name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+        command:
+          - /bin/sh
+          - -c
+          - "python3 manage.py migrate
+        && python3 manage.py loaddata admin_interface_theme_foundation.json
+        && python3 manage.py loaddata ufz_theme.json
+        && python3 manage.py loaddata nm_station.json
+        && python3 manage.py createsuperuser --noinput
+        || echo 'Superuser already created'
+        && python3 manage.py collectstatic --noinput
+        && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
+        volumeMounts:
+          - name: {{ .Values.name }}-static
+            mountPath: "/home/appuser/app/static"
+            readOnly: false
+      volumes:
+      - name: {{ .Values.name }}-html
+        configMap:
+          name: {{ .Values.name }}-html
+      - name: {{ .Values.name }}-css
+        configMap:
+          name: {{ .Values.name }}-css
+      - name: {{ .Values.name }}-default
+        configMap:
+          name: {{ .Values.name }}-default
+      - name: {{ .Values.name }}-locs
+        configMap:
+          name: {{ .Values.name }}-locs
+      - name: {{ .Values.name }}-static
+        persistentVolumeClaim:
+          claimName: {{ .Values.name }}-static-pvc

@@ -1,10 +1,11 @@
 replicaCount: 1
 
+name: worker-grafana-dashboard
+
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
   tag: latest
   pullPolicy: Always
-name: worker-grafana-dashboard
 
 securityContext:
   allowPrivilegeEscalation: False

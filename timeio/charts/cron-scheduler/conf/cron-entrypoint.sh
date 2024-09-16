@@ -2,7 +2,7 @@
 
 set -e
 
-CRONTAB_FILE="/tmp/crontab.txt"
+CRONTAB_FILE="/tmp/cron/crontab.txt"
 
 # Function to filter and output environment variables
 filter_env_vars() {
@@ -14,27 +14,17 @@ filter_env_vars() {
   done
 }
 
-# Function to create /tmp/crontab.txt if it doesn't exist
-create_crontab_file() {
-  if [ ! -f "$CRONTAB_FILE" ]; then
-    touch "$CRONTAB_FILE"
-    chmod 666 "$CRONTAB_FILE"
-  fi
-}
-
 # Function to update crontab from crontab.txt
 update_crontab() {
   # Prepend filtered environment variables to /tmp/new_crontab.txt
   # to be able to pass them to cron jobs
   (filter_env_vars; cat "$CRONTAB_FILE") > /tmp/new_crontab.txt
-  # Use /tmp/new_crontab.txt as crontab
-  echo "i would like to update the crontab now with the following content:"
-  cat /tmp/new_crontab.txt
-  #crontab /tmp/new_crontab.txt
+  # Use /tmp/cron/new_crontab.txt as crontab
+  crontab /tmp/new_crontab.txt
 }
 
 # Check and create /tmp/crontab.txt if it doesn't exist
-create_crontab_file
+#create_crontab_file
 
 if [ "$SETUP_SERVICE" == "true" ]; then
   echo "SETUP_SERVICE has value '$SETUP_SERVICE' - starting cron setup."
@@ -46,9 +36,8 @@ if [ "$SETUP_SERVICE" == "true" ]; then
   done &
   sleep 1
   # Start cron service
-  # cron -f || echo "Cron service failed to start."
-  # Start debugging shell
-  sleep 1000
+  # this does not work currently, as user is not permitted to start cron service
+  cron -f || exit 1
 else
   echo "SETUP_SERVICE has value '$SETUP_SERVICE' - skipping cron setup."
   echo "To start cron setup, set SETUP_SERVICE to 'true' in .env file."

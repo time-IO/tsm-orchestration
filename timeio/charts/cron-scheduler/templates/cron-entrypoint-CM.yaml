@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-entrypoint
 data:
-  cron-entrypoint.sh: {{ .Files.Get "conf/cron-entrypoint.sh" | quote }}
+  cron-entrypoint.sh: {{ .Files.Get "conf/supercronic-entrypoint.sh" | quote }}

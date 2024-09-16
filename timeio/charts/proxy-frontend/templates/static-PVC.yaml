@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: tomcat-context-pvc
+  name: {{ .Values.name }}-static-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10M
+      storage: 100M
   storageClassName: {{ .Values.global.pvc.storageClassName }}
 {{- end }}

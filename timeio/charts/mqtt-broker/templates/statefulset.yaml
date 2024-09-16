@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Values.name }}-statefulset
+  name: {{ .Values.name }}
   labels:
     app: {{ .Values.name }}
 spec:

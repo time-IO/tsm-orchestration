@@ -15,7 +15,7 @@ data:
   DJANGO_DEBUG: "{{  .Values.global.envvars.DJANGO_DEBUG }}"
   DJANGO_TRUSTED_ORIGINS: "{{  .Values.global.ingress.url }}"
   DJANGO_BASE_PATH: "{{  .Values.global.envvars.DJANGO_BASE_PATH }}"
-  DJANGO_ALLOWED_HOSTS: "{{  .Values.global.envvars.DJANGO_ALLOWED_HOSTS }},{{ .Values.global.ingress.host }}"
+  DJANGO_ALLOWED_HOSTS: "{{  .Values.global.envvars.DJANGO_ALLOWED_HOSTS }},{{ .Values.global.envvars.PROXY_HOST }}"
   POSTGRES_SSLMODE: "{{  .Values.global.envvars.DJANGO_POSTGRES_SSLMODE }}"
   DJANGO_HELMHOLTZ_AAI_CONF_URL: "{{  .Values.global.envvars.OIDC_CONF_URL }}"
   MINIO_FTP_PORT: "{{  .Values.global.envvars.MINIO_FTP_PORT }}"

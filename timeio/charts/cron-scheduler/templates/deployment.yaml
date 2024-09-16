@@ -1,11 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: {{ .Values.name }}-deployment
+  name: {{ .Values.name }}
   labels:
     app: {{ .Values.name }}
 spec:
   replicas: 1
+  serviceName: {{ .Values.name }}
   selector:
     matchLabels:
       app: {{ .Values.name }}
@@ -14,24 +15,27 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext:
-          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
-          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop: {{ .Values.worker.securityContext.capabilities.drop }}
-          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
-            type: {{ .Values.worker.securityContext.seccompProfile.type }}
+            type: {{ .Values.securityContext.seccompProfile.type }}
         command:
         - tini
         - --
         - /bin/sh
         - -c
-        - ./cron-entrypoint.sh
+        - /tmp/entrypoint/cron-entrypoint.sh
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars
@@ -47,22 +51,25 @@ spec:
         - mountPath: /scripts/ext_api_sync
           name: {{ .Values.name }}-ext-api
           readOnly: true
-        - mountPath: /cron-entrypoint.sh
+        - mountPath: /tmp/entrypoint/cron-entrypoint.sh
           name: {{ .Values.name }}-entrypoint
           subPath: cron-entrypoint.sh
-        - mountPath: /tmp
+          readOnly: true
+        - mountPath: /tmp/cron/crontab.txt
           name: crontab-pv
+          subPath: crontab.txt
+          readOnly: true
       - name: {{ .Values.worker.name }}
         image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
         imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
         securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
           capabilities:
-            drop: {{ .Values.securityContext.capabilities.drop }}
-          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            drop: {{ .Values.worker.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
           seccompProfile:
-            type: {{ .Values.securityContext.seccompProfile.type }}
+            type: {{ .Values.worker.securityContext.seccompProfile.type }}
         command:
           - python3
           - main.py
@@ -75,6 +82,27 @@ spec:
         volumeMounts:
           - mountPath: /tmp/cron
             name: crontab-pv
+      initContainers:
+        - name: crontab-file-init
+          image: busybox
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+            capabilities:
+              drop: {{ .Values.worker.securityContext.capabilities.drop }}
+            runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+            runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.worker.securityContext.seccompProfile.type }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ ! -f /tmp/cron/crontab.txt ]; then
+                touch /tmp/cron/crontab.txt
+              fi
+          volumeMounts:
+            - mountPath: /tmp/cron
+              name: crontab-pv
       volumes:
       - name: {{ .Values.name }}-sms-sync
         configMap:
@@ -88,10 +116,10 @@ spec:
         configMap:
           name: {{ .Values.name }}-ext-api
           defaultMode: 0775
-      - name: crontab-pv
-        persistentVolumeClaim:
-          claimName: crontab-pvc
       - name: {{ .Values.name }}-entrypoint
         configMap:
           name: {{ .Values.name }}-entrypoint
           defaultMode: 0775
+      - name: crontab-pv
+        persistentVolumeClaim:
+          claimName: crontab-pvc
