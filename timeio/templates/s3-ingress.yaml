@@ -1,0 +1,37 @@
+{{ if .Values.global.s3ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: timeio-s3-ingress
+  annotations:
+    {{- range $key, $value := .Values.global.s3ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.global.s3ingress.className }}
+  rules:
+  {{- range .Values.global.s3ingress.hosts }}
+  - host: {{ .host  | quote }}
+    http:
+      paths:
+      {{- range .paths}}
+      - pathType: {{ .pathType | quote }}
+        path: {{ .path }}
+        backend:
+          service:
+            name: {{ .serviceName | quote }}
+            port:
+              number: {{ .servicePort | int }}
+      {{- end }}
+  {{- end }}
+  {{ if .Values.global.s3ingress.enableTLS }}
+  tls:
+  {{- range .Values.global.s3ingress.tls }}
+  - hosts:
+    {{- range .hosts }}
+    - {{ . | quote }}
+    {{- end }}
+    secretName: {{ .secretName | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
