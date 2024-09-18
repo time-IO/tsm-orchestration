@@ -45,7 +45,7 @@ def get_nm_station_data(station: str, resolution: int, start_date: datetime, end
          if value:
             bodies.append({
                 "result_time": timestamp,
-                "result_type": 1,
+                "result_type": 0,
                 "datastream_pos": station,
                 "result_number": float(value),
                 "parameters": json.dumps({"origin": "nm_data", "column_header": header})
