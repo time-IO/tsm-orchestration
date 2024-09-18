@@ -13,22 +13,22 @@ from urllib.request import Request, urlopen
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 PARAMETER_MAPPING = {
-    "CO_3_CORR": 1,
-    "ESP_0_RH_AVG": 1,
-    "ESP_0_TEMP_AVG": 1,
-    "ES_0_PRESS": 1,
-    "NO2_1_CORR": 1,
-    "O3_0_CORR": 1,
-    "PS_0_PM10_CORR": 1,
-    "PS_0_PM2P5_CORR": 1,
-    "SO2_2_CORR": 1,
-    "SO2_2_CORR_1hr": 1
+    "CO_3_CORR": 0,
+    "ESP_0_RH_AVG": 0,
+    "ESP_0_TEMP_AVG": 0,
+    "ES_0_PRESS": 0,
+    "NO2_1_CORR": 0,
+    "O3_0_CORR": 0,
+    "PS_0_PM10_CORR": 0,
+    "PS_0_PM2P5_CORR": 0,
+    "SO2_2_CORR": 0,
+    "SO2_2_CORR_1hr": 0
 }
 
-RESULT_TYPE_MAPPING = {1: "result_number",
-                       2: "result_string",
-                       3: "result_boolean",
-                       4: "result_json"}
+RESULT_TYPE_MAPPING = {0: "result_number",
+                       1: "result_string",
+                       2: "result_json",
+                       3: "result_boolean"}
 
 
 def basic_auth(username, password):
