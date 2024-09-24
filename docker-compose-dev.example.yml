@@ -17,10 +17,6 @@ services:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
-  worker-file-ingest-2:
-    volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
-
   worker-frost-setup:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
