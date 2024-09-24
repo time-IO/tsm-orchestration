@@ -8,9 +8,7 @@ import logging
 import requests
 import click
 
-import tsm_datastore_lib
-from tsm_datastore_lib.Observation import Observation
-
+api_base_url = os.environ.get("DB_API_BASE_URL")
 
 def cleanupJson(string: str) -> str:
     """
@@ -41,36 +39,33 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
     rep = cleanupJson(res.text)
     payload = json.loads(rep)
 
-    observations = []
+    bodies = []
     for entry in payload:
         msg = entry["result"]["uplink_message"]
         timestamp = msg["received_at"]
         values = msg["decoded_payload"]
         for k, v in values.items():
             if v:
-                try:
-                    observations.append(
-                        Observation(
-                            timestamp=timestamp,
-                            value=float(v),
-                            origin=params["endpoint_uri"],
-                            position=k,
-                            header=k,
-                        )
-                    )
-                except Exception as e:
-                    logging.warning(
-                        f"failed to integrate key '{k}' at timestamp '{timestamp}' with exception {e}"
-                    )
+                body = {
+                    "result_time": timestamp,
+                    "result_type": 0,
+                    "datastream_pos": k,
+                    "result_number": float(v),
+                    "parameters": json.dumps({"origin": params["endpoint_uri"], "column_header": k})
+                }
+                bodies.append(body)
+    post_data = {"observations": bodies}
 
-    datastore = tsm_datastore_lib.get_datastore(target_uri, thing_uuid)
-    try:
-        datastore.store_observations(observations)
-        datastore.insert_commit_chunk()
-    except Exception as e:
-        datastore.session.rollback()
-        logging.warning(f"failed to write data, because of {e}")
-        raise
+    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
+                        json=post_data,
+                        headers={'Content-type': 'application/json'})
+    if req.status_code == 201:
+        logging.info(
+            f"Successfully inserted {len(post_data['observations'])} "
+            f"observations for thing {thing_uuid} from TTN API into TimeIO DB"
+        )
+    else:
+        logging.error(f"{req.text}")
 
 
 if __name__ == "__main__":

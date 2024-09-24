@@ -883,8 +883,15 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: "basic-demo-scheduler"
       MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "${CONFIGDB_DSN}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
+      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
     command:
       - "--verbose"
 
@@ -920,6 +927,7 @@ services:
         ${FRONTEND_POSTGRES_PASS}@\
         ${FRONTEND_POSTGRES_HOST}/\
         ${FRONTEND_POSTGRES_DB}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     depends_on:
       init:
         condition: "service_completed_successfully"
