@@ -238,10 +238,11 @@ services:
       test: ["CMD-SHELL", "mosquitto_sub \
         -t '$$SYS/broker/version' \
         -C 1 \
-        -u $${MQTT_USER} \ 
+        -u $${MQTT_USER} \
         -P $${MQTT_PASSWORD} \
         --id docker-compose-healthcheck"]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
+      start_period: 20s
       timeout: 10s
       retries: 12
     logging:
@@ -710,9 +711,13 @@ services:
       SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
       SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
       SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
-      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
-      SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
-      SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${S3MAP_POSTGRES_DB}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
     command:
       - "schedule-parser-job"
 
