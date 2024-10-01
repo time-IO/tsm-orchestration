@@ -168,7 +168,7 @@ CREATE TABLE "ext_sftp"
     "path"          VARCHAR(200) NOT NULL,
     "user"          VARCHAR(200) NOT NULL,
     "password"      VARCHAR(200) NULL,
-    "ssh_priv_key"  TEXT         NOT NULL,
+    "ssh_priv_key"  TEXT         NULL,
     "ssh_pub_key"   TEXT         NOT NULL,
     "sync_interval" INT          NOT NULL,
     "sync_enabled"  boolean      NOT NULL
