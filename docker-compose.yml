@@ -476,8 +476,9 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginx:${NGINX_IMAGE_TAG}"
+    image: "nginxinc/nginx-unprivileged:${NGINX_IMAGE_TAG}"
     restart: "${RESTART}"
+    user: "${UID}:${GID}"
     ports:
       - "${PROXY_PLAIN_PORT}"
       - "${PROXY_TLS_PORT}"
