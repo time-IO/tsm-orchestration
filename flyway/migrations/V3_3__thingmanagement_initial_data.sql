@@ -16,4 +16,5 @@ VALUES ('campbell_cr6'::varchar(200)),
 INSERT INTO thing_management.ext_api_type (name)
 VALUES ('ttn'::varchar(200)),
        ('dwd'::varchar(200)),
-       ('nm'::varchar(200));
+       ('nm'::varchar(200)),
+       ('bosch'::varchar(200));
