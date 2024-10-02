@@ -10,9 +10,6 @@ update_crontab() {
   else
     echo "New crontab file is invalid. Not using it..."
   fi
-  # Start supercronic with crontab file
-  supercronic -split-logs /tmp/crontab.txt  &
-  SUPERCRONIC_PID=$!
 }
 
 if [ "$SETUP_SERVICE" == "true" ]; then
