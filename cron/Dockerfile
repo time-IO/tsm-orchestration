@@ -7,13 +7,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
-    && chmod 755 supercronic-linux-amd64 \
-    && mv supercronic-linux-amd64 /usr/local/bin/supercronic
-
 COPY requirements.txt .
 COPY supercronic-entrypoint.sh .
 COPY supercronic-health.sh .
+
+RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
+    && chmod 755 supercronic-linux-amd64 \
+    && mv supercronic-linux-amd64 /usr/local/bin/supercronic \
+    && chmod 755 /supercronic-entrypoint.sh
 
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
