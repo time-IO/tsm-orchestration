@@ -15,6 +15,7 @@ RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32
     && chmod 755 supercronic-linux-amd64 \
     && mv supercronic-linux-amd64 /usr/local/bin/supercronic \
     && chmod 755 /supercronic-entrypoint.sh
+    && chmod 755 /supercronic-health.sh
 
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
