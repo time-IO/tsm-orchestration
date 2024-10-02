@@ -2,30 +2,32 @@
 
 set -e
 
-start_supercronic() {
-  echo "Starting supercronic with: /tmp/cron/crontab.txt"
-  # Start supercronic with crontab file
-  supercronic -split-logs /tmp/cron/crontab.txt  &
-  SUPERCRONIC_PID=$!
-}
-
-stop_supercronic() {
-  if [ $SUPERCRONIC_PID -ne 0 ]; then
-    echo "Stopping supercronic with PID: $SUPERCRONIC_PID"
-    kill -s SIGTERM $SUPERCRONIC_PID
-    wait $SUPERCRONIC_PID
+update_crontab() {
+  # check if crontab file is valid
+  if supercronic -test /tmp/cron/crontab.txt; then
+    cp /tmp/cron/crontab.txt /tmp/crontab.txt
+    echo "Starting supercronic with crontab /tmp/crontab.txt"
+  else
+    echo "New crontab file is invalid. Not using it..."
   fi
+  # Start supercronic with crontab file
+  supercronic -split-logs /tmp/crontab.txt  &
+  SUPERCRONIC_PID=$!
 }
 
 if [ "$SETUP_SERVICE" == "true" ]; then
   echo "SETUP_SERVICE has value '$SETUP_SERVICE' - starting cron setup."
   # Monitor crontab.txt for changes and update crontab if they occur
   # run loop in background to start cron service
+  # check mounted crontab file and copy to /tmp/crontab.txt if valid
+  update_crontab
+  # start supercronic in background and wait for changes in /tmp/crontab.txt
+  supercronic -inotify -split-logs /tmp/crontab.txt &
   while true; do
-    start_supercronic
+    # wait for changes of mounted crontab file
     inotifywait -e modify /tmp/cron/crontab.txt
-    echo "Crontab file is modified, restarting supercronic."
-    stop_supercronic || echo "Failed to stop supercronic."
+    # and update crontab if they are valid
+    update_crontab
   done
 else
   echo "SETUP_SERVICE has value '$SETUP_SERVICE' - skipping cron setup."

@@ -904,7 +904,7 @@ services:
       init:
         condition: "service_completed_successfully"
     healthcheck:
-      test: [ "CMD-SHELL", "service cron status || exit 1" ]
+      test: [ "CMD-SHELL", "/supercronic-health.sh || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 5
