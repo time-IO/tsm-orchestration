@@ -476,8 +476,9 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginx:${NGINX_IMAGE_TAG}"
+    image: "nginxinc/nginx-unprivileged:${NGINX_IMAGE_TAG}"
     restart: "${RESTART}"
+    user: "${UID}:${GID}"
     ports:
       - "${PROXY_PLAIN_PORT}"
       - "${PROXY_TLS_PORT}"
@@ -903,12 +904,12 @@ services:
       init:
         condition: "service_completed_successfully"
     healthcheck:
-      test: [ "CMD-SHELL", "service cron status || exit 1" ]
+      test: [ "CMD-SHELL", "/supercronic-health.sh || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 5
     volumes:
-      - "./cron/crontab.txt:/tmp/crontab.txt:ro"
+      - "./cron/crontab.txt:/tmp/cron/crontab.txt:ro"
       - "./cron/scripts:/scripts:ro"
       - "sftp-private-keys:/sftp-private-keys:ro"
 
