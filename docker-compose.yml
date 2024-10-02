@@ -909,7 +909,7 @@ services:
       timeout: 3s
       retries: 5
     volumes:
-      - "./cron/crontab.txt:/tmp/crontab.txt:ro"
+      - "./cron/crontab.txt:/tmp/cron/crontab.txt:ro"
       - "./cron/scripts:/scripts:ro"
       - "sftp-private-keys:/sftp-private-keys:ro"
 
