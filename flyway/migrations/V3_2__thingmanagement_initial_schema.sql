@@ -91,6 +91,7 @@ CREATE TABLE "thing"
     "description"       VARCHAR(1000)               NULL,
     "project_id"        BIGINT                      NOT NULL,
     "ingest_type_id"    BIGINT                      NOT NULL,
+    "raw_data_storage"  BOOLEAN                     NOT NULL,
     "created_at"        TIMESTAMP WITH TIME ZONE    NOT NULL,
     "created_by"        BIGINT                      NOT NULL
 
