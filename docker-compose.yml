@@ -725,6 +725,9 @@ services:
         ${CONFIGDB_PORT}/\
         ${S3MAP_POSTGRES_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
+      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
     command:
       - "schedule-parser-job"
 
