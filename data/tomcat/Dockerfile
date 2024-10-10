@@ -1,4 +1,4 @@
-ARG TOMCAT_IMAGE_TAG:9
+ARG TOMCAT_IMAGE_TAG=9
 
 FROM tomcat:${TOMCAT_IMAGE_TAG}
 
@@ -8,7 +8,7 @@ ARG UID=1000
 ARG GID=1000
 ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/2.4.2/FROST-Server.HTTP-2.4.2.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2024.1.0/postgis-jdbc-2024.1.0.jar
-ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
+ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.4.jar
 
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info
