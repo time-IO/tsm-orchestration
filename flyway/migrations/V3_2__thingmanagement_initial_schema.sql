@@ -159,7 +159,7 @@ CREATE TABLE ext_api_ingest
 ALTER TABLE ext_api_ingest
     ADD CONSTRAINT "fk_ext_api_ext_api_type" FOREIGN KEY ("api_type_id") REFERENCES "ext_api_type" ("id") DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE ext_api_ingest
-    ADD CONSTRAINT "fk_ext_api_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_ext_api_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE ext_sftp_ingest
 (
@@ -176,7 +176,7 @@ CREATE TABLE ext_sftp_ingest
 );
 
 ALTER TABLE ext_sftp_ingest
-    ADD CONSTRAINT "fk_ext_sftp_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_ext_sftp_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE "nm_stations"
 (
