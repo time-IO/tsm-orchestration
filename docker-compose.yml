@@ -55,7 +55,7 @@ services:
     restart: "${RESTART}"
     # image: timescale/timescaledb:${DATABASE_IMAGE_TAG-pg14}
     build:
-      context: "data/postgres"
+      context: "postgres"
       args:
         UID: "${UID}"
         DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
