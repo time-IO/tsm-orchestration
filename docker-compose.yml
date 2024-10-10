@@ -349,7 +349,7 @@ services:
   # TODO
   frost:
     build:
-      context: "data/tomcat"
+      context: "tomcat"
       args:
         UID: "${UID}"
         GID: "${GID}"
@@ -358,7 +358,7 @@ services:
     user: "${UID}:${GID}"
     volumes:
       - "./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro"
-      - "./data/tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
+      - "./tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp"
 
 
   # Summary
