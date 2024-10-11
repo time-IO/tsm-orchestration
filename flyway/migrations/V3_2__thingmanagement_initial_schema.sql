@@ -115,7 +115,7 @@ CREATE TABLE "rawdatastorage"
 );
 
 ALTER TABLE "rawdatastorage"
-    ADD CONSTRAINT "fk_rawdatastorage_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_rawdatastorage_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE "mqtt_device_type"
 (
@@ -129,14 +129,14 @@ CREATE TABLE mqtt_ingest
     "thing_id"            BIGINT UNIQUE NOT NULL,
     "user"                VARCHAR(200)  NOT NULL,
     "password"            VARCHAR(200)  NOT NULL,
-    "password_hashed"     TEXT          NOT NULL,
+    "password_hashed"     VARCHAR(256)  NOT NULL,
     "topic"               VARCHAR(200)  NULL,
     "uri"                 VARCHAR(1000) NOT NULL,
     "mqtt_device_type_id" BIGINT        NULL
 );
 
 ALTER TABLE mqtt_ingest
-    ADD CONSTRAINT "fk_mqtt_ingest_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_mqtt_ingest_thing" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE mqtt_ingest
     ADD CONSTRAINT "fk_mqtt_ingest_mqtt_device_type" FOREIGN KEY ("mqtt_device_type_id") REFERENCES "mqtt_device_type" ("id") DEFERRABLE INITIALLY DEFERRED;
 
