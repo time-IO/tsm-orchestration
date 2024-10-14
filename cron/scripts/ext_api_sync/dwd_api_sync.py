@@ -11,29 +11,30 @@ from datetime import datetime, timedelta
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 PARAMETER_MAPPING = {
-    "cloud_cover": 1,
-    "condition": 2,
-    "dew_point": 1,
-    "icon": 2,
-    "precipitation": 1,
-    "precipitation_probability": 1,
-    "precipitation_probability_6h": 1,
-    "pressure_msl": 1,
-    "relative_humidity": 1,
-    "solar": 1,
-    "sunshine": 1,
-    "temperature": 1,
-    "visibility": 1,
-    "wind_direction": 1,
-    "wind_speed": 1,
-    "wind_gust_direction": 1,
-    "wind_gust_speed": 1
+    "cloud_cover": 0,
+    "condition": 1,
+    "dew_point": 0,
+    "icon": 1,
+    "precipitation": 0,
+    "precipitation_probability": 0,
+    "precipitation_probability_6h": 0,
+    "pressure_msl": 0,
+    "relative_humidity": 0,
+    "solar": 0,
+    "sunshine": 0,
+    "temperature": 0,
+    "visibility": 0,
+    "wind_direction": 0,
+    "wind_speed": 0,
+    "wind_gust_direction": 0,
+    "wind_gust_speed": 0
 }
 
-RESULT_TYPE_MAPPING = {1: "result_number",
-                       2: "result_string",
-                       3: "result_boolean",
-                       4: "result_json"}
+RESULT_TYPE_MAPPING = {0: "result_number",
+                       1: "result_string",
+                       2: "result_json",
+                       3: "result_boolean"}
+
 
 def fetch_brightsky_data(station_id: str, brightsky_base_url = "https://api.brightsky.dev/weather") -> dict:
     """ Returns DWD data with hourly resolution of yesterday"""

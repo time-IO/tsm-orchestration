@@ -48,7 +48,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
             if v:
                 body = {
                     "result_time": timestamp,
-                    "result_type": 1,
+                    "result_type": 0,
                     "datastream_pos": k,
                     "result_number": float(v),
                     "parameters": json.dumps({"origin": params["endpoint_uri"], "column_header": k})
