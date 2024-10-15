@@ -347,6 +347,34 @@ services:
   # Description
   # ===========
   # TODO
+  thing-mgt-api:
+    image: "thing-mgt-api:local"
+    ports:
+      - "8002:8002"
+    restart: "${RESTART}"
+    entrypoint: "sh /app/start.sh"
+    environment:
+      DB_URL: "postgresql://\
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
+      POSTGRES_HOST: "${CREATEDB_POSTGRES_HOST}"
+      MINIO_SFTP_PORT: "${MINIO_SFTP_PORT}"
+      PROXY_URL: "${PROXY_URL}"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
   frost:
     build:
       context: "data/tomcat"
