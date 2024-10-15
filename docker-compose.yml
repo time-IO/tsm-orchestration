@@ -170,8 +170,8 @@ services:
     restart: "${RESTART}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG}"
     depends_on:
-      database:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     command:
       - /usr/sbin/mosquitto
       - -c
@@ -258,6 +258,9 @@ services:
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
     volumes:
       - ./data/grafana/:/var/lib/grafana
+    healthcheck:
+      test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      start_period: 10s
 
 
   # Summary
@@ -284,8 +287,8 @@ services:
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
     depends_on:
-      database:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
 
   # Summary
   # =======
@@ -308,8 +311,8 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       UVICORN_ARGS: "${UVICORN_ARGS} --root-path /db_api"
     depends_on:
-      database:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     healthcheck:
       test: >
         wget -q http://0.0.0.0:8001/dbhealth -O /dev/null || exit 1
@@ -445,8 +448,6 @@ services:
       ALLOWED_VOS: "${ALLOWED_VOS}"
 
     depends_on:
-      database:
-        condition: service_healthy
       mqtt-broker:
         condition: service_healthy
 
@@ -493,6 +494,9 @@ services:
         condition: service_started
       init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      start_period: 10s
 
   # =================================================================
   # SETUP worker (topic: thing_creation)
@@ -504,8 +508,6 @@ services:
     image: "registry.hzdr.de/ufz-tsm/timeio-configdb-updater/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
     restart: "${RESTART}"
     depends_on:
-      database:
-        condition: service_healthy
       mqtt-broker:
         condition: service_healthy
     environment:
@@ -573,8 +575,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -601,8 +601,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
     volumes:
       - ./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
     environment:
@@ -624,8 +622,6 @@ services:
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -652,7 +648,7 @@ services:
       mqtt-broker:
         condition: service_healthy
       visualization:
-        condition: service_started
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -758,8 +754,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: mqtt_ingest/#
@@ -784,7 +778,7 @@ services:
     restart: "${RESTART}"
     depends_on:
         mqtt-broker:
-            condition: service_healthy
+          condition: service_healthy
         init:
           condition: service_completed_successfully
     environment:
@@ -812,7 +806,7 @@ services:
       mqtt-broker:
         condition: service_healthy
       visualization:
-        condition: service_started
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: user_login
