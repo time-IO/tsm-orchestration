@@ -1,11 +1,11 @@
-CREATE ROLE ${s3map_user} WITH LOGIN PASSWORD '${s3map_password}';
-GRANT ${s3map_user} TO ${flyway:user};
-CREATE SCHEMA IF NOT EXISTS ${s3map_user} AUTHORIZATION ${s3map_user};
-SET search_path TO ${s3map_user};
-GRANT CONNECT ON DATABASE ${flyway:database} TO ${s3map_user};
-ALTER ROLE ${s3map_user} SET search_path to ${s3map_user};
-GRANT USAGE ON SCHEMA ${s3map_user} TO ${s3map_user};
-GRANT ALL ON SCHEMA ${s3map_user} TO ${s3map_user};
+CREATE ROLE ${s3map_db_user} WITH LOGIN PASSWORD '${s3map_db_password}';
+GRANT ${s3map_db_user} TO ${flyway:user};
+CREATE SCHEMA IF NOT EXISTS ${s3map_db_user} AUTHORIZATION ${s3map_db_user};
+SET search_path TO ${s3map_db_user};
+GRANT CONNECT ON DATABASE ${flyway:database} TO ${s3map_db_user};
+ALTER ROLE ${s3map_db_user} SET search_path to ${s3map_db_user};
+GRANT USAGE ON SCHEMA ${s3map_db_user} TO ${s3map_db_user};
+GRANT ALL ON SCHEMA ${s3map_db_user} TO ${s3map_db_user};
 
 CREATE TABLE "mapping" (
     "id"                bigserial    NOT NULL PRIMARY KEY,
@@ -17,5 +17,5 @@ CREATE TABLE "mapping" (
     "parser"            varchar(256) NULL
 );
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${s3map_user} TO ${s3map_user};
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${s3map_user} TO ${s3map_user};
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${s3map_db_user} TO ${s3map_db_user};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${s3map_db_user} TO ${s3map_db_user};
