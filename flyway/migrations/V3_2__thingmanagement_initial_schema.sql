@@ -38,9 +38,9 @@ CREATE TABLE "project"
 );
 
 ALTER TABLE "project"
-    ADD CONSTRAINT "fk_project_db" FOREIGN KEY ("database_id") REFERENCES "database" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_project_db" FOREIGN KEY ("database_id") REFERENCES "database" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE "project"
-    ADD CONSTRAINT "fk_project_mqtt" FOREIGN KEY ("mqtt_id") REFERENCES "mqtt" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_project_mqtt" FOREIGN KEY ("mqtt_id") REFERENCES "mqtt" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE "lnk_project_user"
 (
@@ -51,7 +51,7 @@ CREATE TABLE "lnk_project_user"
 );
 
 ALTER TABLE "lnk_project_user"
-    ADD CONSTRAINT "fk_lnk_project_user_project" FOREIGN KEY ("project_id") REFERENCES "project" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_lnk_project_user_project" FOREIGN KEY ("project_id") REFERENCES "project" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE "lnk_project_user"
     ADD CONSTRAINT "fk_lnk_project_user_user" FOREIGN KEY ("user_id") REFERENCES "user" ("id") DEFERRABLE INITIALLY DEFERRED;
 
@@ -75,7 +75,7 @@ CREATE TABLE "file_parser"
 ALTER TABLE "file_parser"
     ADD CONSTRAINT "fk_file_parser_file_parser_type" FOREIGN KEY ("file_parser_type_id") REFERENCES "file_parser_type" ("id") DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE "file_parser"
-    ADD CONSTRAINT "fk_file_parser_project" FOREIGN KEY ("project_id") REFERENCES "project" ("id") DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT "fk_file_parser_project" FOREIGN KEY ("project_id") REFERENCES "project" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE "ingest_type"
 (
