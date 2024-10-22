@@ -380,7 +380,7 @@ services:
   flyway:
     image: flyway/flyway:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf migrate
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
       - ./flyway/migrations:/flyway/sql
       - ./flyway/flyway.conf:/flyway/conf/flyway.conf
