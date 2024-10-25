@@ -1,7 +1,7 @@
 global:
 
   pvc:
-    storageClassName: ""
+    storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      restartPolicy: {{ .Values.restartPolicy }}
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - migrate
+          volumeMounts:
+            - mountPath: /flyway/sql
+              name: {{ .Values.name }}-migrations
+              readOnly: true
+            - mountPath: /flyway/conf
+              name: {{ .Values.name }}-conf
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.name }}-envvars
+            - secretRef:
+                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            capabilities:
+              drop: {{ .Values.securityContext.capabilities.drop }}
+            runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.securityContext.seccompProfile.type }}
+      volumes:
+        - name: {{ .Values.name }}-migrations
+          configMap:
+            name: {{ .Values.name }}-migrations
+        - name: {{ .Values.name }}-conf
+          configMap:
+            name: {{ .Values.name }}-conf
