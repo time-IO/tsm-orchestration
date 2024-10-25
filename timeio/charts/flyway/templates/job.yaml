@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyway-migration-job
+  #annotations:
+  #  "helm.sh/hook": pre-install,pre-upgrade
+  #  "helm.sh/hook-weight": "-5"
+spec:
+  backoffLimit: 6  # Set the number of retries on failure
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: {{ .Values.name }}-migration
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          volumeMounts:
+            - mountPath: /flyway/sql
+              name: {{ .Values.name }}-migrations
+              readOnly: true
+            - mountPath: /flyway/conf
+              name: {{ .Values.name }}-conf
+              readOnly: true
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.name }}-envvars
+            - secretRef:
+                name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
+          args:
+            - migrate
+      volumes:
+        - name: {{ .Values.name }}-migrations
+          configMap:
+            name: {{ .Values.name }}-migrations
+        - name: {{ .Values.name }}-conf
+          configMap:
+            name: {{ .Values.name }}-conf

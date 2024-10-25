@@ -79,6 +79,8 @@ global:
     FRONTEND_MQTT_PASS: "frontendbus"
     S3MAP_POSTGRES_USER: "s3map"
     S3MAP_POSTGRES_PASS: "secret"
+    CONFIGDB_POSTGRES_USER: "configdb"
+    CONFIGDB_POSTGRES_PASSWORD: "configdb"
     SMS_DB_USER: "postgres"
     SMS_DB_PASSWORD: "postgres"
     SMS_API_TOKEN: "secret"
@@ -186,6 +188,7 @@ global:
     SCHED_SLURM_USER: ""
     SCHED_SLURM_JWT_TOKEN: ""
     CRON_SETUP_SERVICE: "true"
+    FLYWAY_BASELINE_VERSION: "1.0"
 
 
 database:

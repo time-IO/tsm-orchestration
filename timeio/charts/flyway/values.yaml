@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: "flyway/flyway"
+  tag: "10"
+  pullPolicy: Always
+name: flyway
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault

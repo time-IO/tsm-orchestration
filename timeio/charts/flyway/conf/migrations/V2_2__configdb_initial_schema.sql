@@ -1,19 +1,3 @@
-#!/bin/bash
-set -e
-
-echo 'Create $CONFIGDB_USER user and config_db schema'
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    CREATE ROLE $CONFIGDB_USER WITH LOGIN PASSWORD '$CONFIGDB_PASSWORD';
-    GRANT $CONFIGDB_USER TO $CREATEDB_POSTGRES_USER;
-    CREATE SCHEMA IF NOT EXISTS config_db AUTHORIZATION $CONFIGDB_USER;
-    GRANT CONNECT ON DATABASE $CREATEDB_POSTGRES_DATABASE TO $CONFIGDB_USER;
-    ALTER ROLE $CONFIGDB_USER SET search_path TO config_db;
-    GRANT USAGE ON SCHEMA config_db TO $CONFIGDB_USER;
-    GRANT SELECT ON ALL TABLES IN SCHEMA config_db TO $CONFIGDB_USER;
-EOSQL
-
-echo 'Create config_db tables'
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 SET search_path TO config_db;
 
 CREATE TABLE "database"
@@ -57,9 +41,7 @@ CREATE TABLE "qaqc_test"
     "qaqc_id"  BIGINT       NOT NULL,
     "function" VARCHAR(200) NOT NULL,
     "args"     jsonb        NULL,
-    "position" INT          NULL,
-    "name"     VARCHAR(200) NULL,
-    "streams"  jsonb        NULL
+    "position" INT          NULL
 );
 
 alter TABLE "qaqc_test"
@@ -158,7 +140,7 @@ CREATE TABLE "thing"
     "name"           VARCHAR(200)  NOT NULL,
     "project_id"     BIGINT        NOT NULL,
     "ingest_type_id" BIGINT        NOT NULL,
-    "s3_store_id"    BIGINT UNIQUE NULL,
+    "s3_store_id"    BIGINT UNIQUE NOT NULL,
     "mqtt_id"        BIGINT UNIQUE NOT NULL,
     "ext_sftp_id"    BIGINT UNIQUE NULL,
     "ext_api_id"     BIGINT UNIQUE NULL
@@ -178,31 +160,5 @@ ALTER TABLE "thing"
 ALTER TABLE "thing"
     ADD CONSTRAINT "fk_thing_ext_api" FOREIGN KEY ("ext_api_id") REFERENCES "ext_api" ("id") DEFERRABLE INITIALLY DEFERRED;
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA config_db TO $CONFIGDB_USER;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA config_db TO $CONFIGDB_USER;
-
-EOSQL
-
-echo 'Insert initial values'
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-INSERT INTO config_db.ingest_type (name)
-VALUES ('sftp'::varchar(200)),
-       ('mqtt'::varchar(200)),
-       ('extsftp'::varchar(200)),
-       ('extapi'::varchar(200));
-
-INSERT INTO config_db.file_parser_type (name)
-VALUES ('csvparser'::varchar(200));
-
-INSERT INTO config_db.mqtt_device_type (name)
-VALUES ('campbell_cr6'::varchar(200)),
-       ('brightsky_dwd_api'::varchar(200)),
-       ('ydoc_ml417'::varchar(200)),
-       ('sine_dummy'::varchar(200));
-
-INSERT INTO config_db.ext_api_type (name)
-VALUES ('ttn'::varchar(200)),
-       ('dwd'::varchar(200)),
-       ('nm'::varchar(200)),
-       ('bosch'::varchar(200));
-EOSQL
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA config_db TO ${configdb_user};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA config_db TO ${configdb_user};
