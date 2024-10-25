@@ -2,4 +2,4 @@ apiVersion: v2
 name: timeio
 description: "A Helm chart for time.IO"
 type: application
-version: 0.5.0
+version: 0.6.0
