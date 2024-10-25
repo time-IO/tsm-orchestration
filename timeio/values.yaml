@@ -63,8 +63,6 @@ global:
         - "s3.timeio.web-intern-stage.app.ufz.de"
 
   secrets:
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "postgres"
     CREATEDB_POSTGRES_USER: "postgres"
     CREATEDB_POSTGRES_PASSWORD: "postgres"
     MQTT_AUTH_POSTGRES_USER: "mqtt_auth"
@@ -79,6 +77,8 @@ global:
     FRONTEND_MQTT_PASS: "frontendbus"
     S3MAP_POSTGRES_USER: "s3map"
     S3MAP_POSTGRES_PASS: "secret"
+    CONFIGDB_POSTGRES_USER: "configdb"
+    CONFIGDB_POSTGRES_PASSWORD: "configdb"
     SMS_DB_USER: "postgres"
     SMS_DB_PASSWORD: "postgres"
     SMS_API_TOKEN: "secret"
@@ -86,15 +86,13 @@ global:
     CV_DB_PASSWORD: "postgres"
     GRAFANA_USER: "grafana"
     GRAFANA_PASSWORD: "grafana"
-    OIDC_CLIENT_ID: "ufz-tsm"
-    OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
     MINIO_ROOT_USER: "minioadmin"
     MINIO_ROOT_PASSWORD: "minioadmin"
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin"
     DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-    MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "mqtt"
-    MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "mqtt"
+    OIDC_CLIENT_ID: "ufz-tsm"
+    OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
 
   envvars:
     RESTART: "unless-stopped"
@@ -186,37 +184,38 @@ global:
     SCHED_SLURM_USER: ""
     SCHED_SLURM_JWT_TOKEN: ""
     CRON_SETUP_SERVICE: "true"
+    FLYWAY_BASELINE_VERSION: "1.0"
 
 
-
-cron-scheduler:
-  existingSecret: ""
-  worker:
-    existingSecret: ""
 database:
   existingSecret: ""
-frontend:
-  existingSecret: ""
-frontend-proxy:
-  existingSecret: ""
-frost:
-  existingSecret: ""
-  worker:
-    existingSecret: ""
 
 mqtt-broker:
-  existingSecret: ""
-
-object-storage:
   existingSecret: ""
 
 proxy:
   existingSecret: ""
 
-tsmdl:
+object-storage:
   existingSecret: ""
 
 visualization:
+  existingSecret: ""
+
+frost:
+  existingSecret: ""
+  worker:
+    existingSecret: ""
+
+tsmdl:
+  existingSecret: ""
+
+cron-scheduler:
+  existingSecret: ""
+  worker:
+    existingSecret: ""
+
+basic-demo-scheduler:
   existingSecret: ""
 
 worker-db-setup:
@@ -242,5 +241,3 @@ worker-object-storage-setup:
 
 worker-run-qaqc:
   existingSecret: ""
-
-

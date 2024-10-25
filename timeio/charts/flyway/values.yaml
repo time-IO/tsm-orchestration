@@ -1,11 +1,10 @@
 replicaCount: 1
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler"
-  tag: "2024-09-20-113655"
+  repository: "flyway/flyway"
+  tag: "10"
   pullPolicy: Always
-
-name: "basic-demo-scheduler"
+name: flyway
 
 securityContext:
   allowPrivilegeEscalation: False
@@ -15,3 +14,5 @@ securityContext:
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
+
+restartPolicy: Always

@@ -26,10 +26,6 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        ports:
-          - containerPort: 8000
-        command:
-        - /app/start.sh
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

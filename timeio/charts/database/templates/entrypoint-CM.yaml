@@ -13,4 +13,3 @@ data:
   020_frontend-database.sh: {{ .Files.Get "conf/sh/frontend-database.sh" | quote }}
   030_mosquitto-go-auth.sh: {{ .Files.Get "conf/sh/mosquitto-go-auth.sh" | quote }}
   040_s3_to_db.sh: {{ .Files.Get "conf/sh/s3_to_db.sh" | quote }}
-  050_schema_thing_mapping.sh: {{ .Files.Get "conf/sh/init_schema_thing_mapping.sh" | quote }}
