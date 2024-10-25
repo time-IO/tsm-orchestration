@@ -1,11 +1,10 @@
 replicaCount: 1
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler"
-  tag: "2024-09-20-113655"
+  repository: "registry.hzdr.de/ufz-tsm/timeio-configdb-updater/configdb-updater"
+  tag: "latest"
   pullPolicy: Always
-
-name: "basic-demo-scheduler"
+name: worker-configdb-updater
 
 securityContext:
   allowPrivilegeEscalation: False

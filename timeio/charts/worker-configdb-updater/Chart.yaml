@@ -1,0 +1,4 @@
+apiVersion: v2
+name: worker-configdb-updater
+version: 0.0.1
+description: A Helm chart for the worker-configdb-updater service

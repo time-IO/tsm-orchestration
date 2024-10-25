@@ -1,7 +1,7 @@
 global:
 
   pvc:
-    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: ""
     createPVC: true
 
   ingress:
@@ -188,35 +188,35 @@ global:
     CRON_SETUP_SERVICE: "true"
 
 
-
-cron-scheduler:
-  existingSecret: ""
-  worker:
-    existingSecret: ""
 database:
   existingSecret: ""
-frontend:
-  existingSecret: ""
-frontend-proxy:
-  existingSecret: ""
-frost:
-  existingSecret: ""
-  worker:
-    existingSecret: ""
 
 mqtt-broker:
-  existingSecret: ""
-
-object-storage:
   existingSecret: ""
 
 proxy:
   existingSecret: ""
 
-tsmdl:
+object-storage:
   existingSecret: ""
 
 visualization:
+  existingSecret: ""
+
+frost:
+  existingSecret: ""
+  worker:
+    existingSecret: ""
+
+tsmdl:
+  existingSecret: ""
+
+cron-scheduler:
+  existingSecret: ""
+  worker:
+    existingSecret: ""
+
+basic-demo-scheduler:
   existingSecret: ""
 
 worker-db-setup:
@@ -242,5 +242,3 @@ worker-object-storage-setup:
 
 worker-run-qaqc:
   existingSecret: ""
-
-
