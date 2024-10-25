@@ -63,8 +63,6 @@ global:
         - "s3.timeio.web-intern-stage.app.ufz.de"
 
   secrets:
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "postgres"
     CREATEDB_POSTGRES_USER: "postgres"
     CREATEDB_POSTGRES_PASSWORD: "postgres"
     MQTT_AUTH_POSTGRES_USER: "mqtt_auth"
@@ -95,8 +93,6 @@ global:
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin"
     DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-    MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "mqtt"
-    MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "mqtt"
 
   envvars:
     RESTART: "unless-stopped"
