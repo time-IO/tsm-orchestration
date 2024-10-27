@@ -3,13 +3,10 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-entrypoint
 data:
-  000_install_timescaledb.sh: {{ .Files.Get "conf/sh/install_timescaledb.sh" | quote }}
-  001_timescaledb_tune.sh: {{ .Files.Get "conf/sh/timescaledb_tune.sh" | quote }}
-  010_install_timescaledb_toolkit.sh: {{ .Files.Get "conf/sh/install_timescaledb_toolkit.sh" | quote }}
-  011_postgres-force-ssl.sh: {{ .Files.Get "conf/sh/postgres-force-ssl.sh" | quote }}
-  012_postgis.sh: {{ .Files.Get "conf/sh/postgis.sh" | quote }}
-  015_sms_init_tables.sh: {{ .Files.Get "conf/sh/sms_init_tables.sh" | quote }}
-  015_sms_cv_init_tables.sh: {{ .Files.Get "conf/sh/sms_cv_init_tables.sh" | quote }}
-  020_frontend-database.sh: {{ .Files.Get "conf/sh/frontend-database.sh" | quote }}
-  030_mosquitto-go-auth.sh: {{ .Files.Get "conf/sh/mosquitto-go-auth.sh" | quote }}
-  040_s3_to_db.sh: {{ .Files.Get "conf/sh/s3_to_db.sh" | quote }}
+  postgres-force-ssl.sh: {{ .Files.Get "conf/sh/postgres-force-ssl.sh" | quote }}
+  postgis.sh: {{ .Files.Get "conf/sh/postgis.sh" | quote }}
+  sms_init_tables.sh: {{ .Files.Get "conf/sh/sms_init_tables.sh" | quote }}
+  sms_cv_init_tables.sh: {{ .Files.Get "conf/sh/sms_cv_init_tables.sh" | quote }}
+  frontend-database.sh: {{ .Files.Get "conf/sh/frontend-database.sh" | quote }}
+  mosquitto-go-auth.sh: {{ .Files.Get "conf/sh/mosquitto-go-auth.sh" | quote }}
+  s3_to_db.sh: {{ .Files.Get "conf/sh/s3_to_db.sh" | quote }}

@@ -1,7 +1,8 @@
 global:
 
   pvc:
-    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    #storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: "microk8s-hostpath"
     createPVC: true
 
   ingress:
@@ -63,35 +64,37 @@ global:
         - "s3.timeio.web-intern-stage.app.ufz.de"
 
   secrets:
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "postgres"
     CREATEDB_POSTGRES_USER: "postgres"
     CREATEDB_POSTGRES_PASSWORD: "postgres"
     MQTT_AUTH_POSTGRES_USER: "mqtt_auth"
-    MQTT_AUTH_POSTGRES_PASS: "secret"
-    MQTT_USER: "mqtt"
-    MQTT_PASSWORD: "mqtt"
+    MQTT_AUTH_POSTGRES_PASS: "mqtt_auth"
+    MQTT_USER: "mqtt_dispatcher"
+    MQTT_PASSWORD: "mqtt_dispatcher"
     MQTT_INGEST_USER: "mqtt_ingest"
     MQTT_INGEST_PASSWORD: "mqtt_ingest"
-    FRONTEND_POSTGRES_USER: "frontenddb"
-    FRONTEND_POSTGRES_PASS: "frontenddb"
-    FRONTEND_MQTT_USER: "frontendbus"
-    FRONTEND_MQTT_PASS: "frontendbus"
-    S3MAP_POSTGRES_USER: "s3map"
-    S3MAP_POSTGRES_PASS: "secret"
-    CONFIGDB_POSTGRES_USER: "configdb"
-    CONFIGDB_POSTGRES_PASSWORD: "configdb"
+    FRONTEND_POSTGRES_USER: "db_frontend"
+    FRONTEND_POSTGRES_PASS: "db_frontend"
+    FRONTEND_MQTT_USER: "mqtt_frontend"
+    FRONTEND_MQTT_PASS: "mqtt_frontend"
+    S3MAP_POSTGRES_USER: "db_s3map"
+    S3MAP_POSTGRES_PASS: "db_s3map"
+    CONFIGDB_POSTGRES_USER: "db_config"
+    CONFIGDB_POSTGRES_PASSWORD: "db_config"
     SMS_DB_USER: "postgres"
     SMS_DB_PASSWORD: "postgres"
-    SMS_API_TOKEN: "secret"
+    SMS_API_TOKEN: ""
     CV_DB_USER: "postgres"
     CV_DB_PASSWORD: "postgres"
-    GRAFANA_USER: "grafana"
-    GRAFANA_PASSWORD: "grafana"
-    MINIO_ROOT_USER: "minioadmin"
-    MINIO_ROOT_PASSWORD: "minioadmin"
-    FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin"
-    FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin"
+    GRAFANA_USER: "admin_grafana"
+    GRAFANA_PASSWORD: "admin_grafana"
+    MINIO_ROOT_USER: "admin_minio"
+    MINIO_ROOT_PASSWORD: "admin_minio"
+    FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin_django"
+    FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin_django"
     DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-    OIDC_CLIENT_ID: "ufz-tsm"
+    OIDC_CLIENT_ID: "timeio_oidc_client"
     OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
 
   envvars:
@@ -202,6 +205,9 @@ object-storage:
 visualization:
   existingSecret: ""
 
+flyway:
+  existingSecret: ""
+
 frost:
   existingSecret: ""
   worker:
@@ -210,13 +216,16 @@ frost:
 tsmdl:
   existingSecret: ""
 
+timeio-db-api:
+  existingSecret: ""
+
+basic-demo-scheduler:
+  existingSecret: ""
+
 cron-scheduler:
   existingSecret: ""
   worker:
     existingSecret: ""
-
-basic-demo-scheduler:
-  existingSecret: ""
 
 worker-db-setup:
   existingSecret: ""
