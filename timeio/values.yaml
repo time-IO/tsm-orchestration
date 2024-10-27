@@ -191,62 +191,62 @@ global:
 
 
 database:
-  existingSecret: "db-secret"
+  existingSecret: ""
 
 mqtt-broker:
-  existingSecret: "mosquitto-secret"
+  existingSecret: ""
 
 proxy:
-  existingSecret: "django-secret"
+  existingSecret: ""
 
 object-storage:
-  existingSecret: "minio-secret"
+  existingSecret: ""
 
 visualization:
-  existingSecret: "grafana-secret"
+  existingSecret: ""
 
 flyway:
-  existingSecret: "db-control-secret"
+  existingSecret: ""
 
 frost:
   existingSecret: ""
   worker:
-    existingSecret: "worker-secret"
+    existingSecret: ""
 
 tsmdl:
-  existingSecret: "db-api-secret"
+  existingSecret: ""
 
 timeio-db-api:
-  existingSecret: "db-api-secret"
+  existingSecret: ""
 
 basic-demo-scheduler:
-  existingSecret: "file-scheduler-secret"
+  existingSecret: ""
 
 cron-scheduler:
-  existingSecret: "cron-secret"
+  existingSecret: ""
   worker:
-    existingSecret: "worker-secret"
+    existingSecret: ""
 
 worker-db-setup:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-file-ingest:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-grafana-dashboard:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-grafana-user-orgs:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-mqtt-ingest:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-mqtt-user-creation:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-object-storage-setup:
-  existingSecret: "worker-secret"
+  existingSecret: ""
 
 worker-run-qaqc:
-  existingSecret: "worker-secret"
+  existingSecret: ""
