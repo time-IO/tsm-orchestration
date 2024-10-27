@@ -9,3 +9,8 @@ timeio/core/proxy/conf/private.key
 timeio/core/proxy/conf/public.crt
 timeio/prod-values.yaml
 timeio/certs
+secrets-base64
+stage
+timeio/*.yaml
+!timeio/values.yaml
+!timeio/Chart.yaml

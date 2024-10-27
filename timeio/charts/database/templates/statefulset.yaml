@@ -37,7 +37,20 @@ spec:
             name: {{ .Values.existingSecret | default (printf "%s-secret" .Values.name) }}
         volumeMounts:
         - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d
+          mountPath: /docker-entrypoint-initdb.d/012_postgres-force-ssl.sh
+          subPath: postgres-force-ssl.sh
+        - name: {{ .Values.name }}-entrypoint
+          mountPath: /docker-entrypoint-initdb.d/013_postgis.sh
+          subPath: postgis.sh
+        - name: {{ .Values.name }}-entrypoint
+          mountPath: /docker-entrypoint-initdb.d/020_frontend-database.sh
+          subPath: frontend-database.sh
+        - name: {{ .Values.name }}-entrypoint
+          mountPath: /docker-entrypoint-initdb.d/021_mosquitto-go-auth.sh
+          subPath: mosquitto-go-auth.sh
+        - name: {{ .Values.name }}-entrypoint
+          mountPath: /docker-entrypoint-initdb.d/022_s3_to_db.sh
+          subPath: s3_to_db.sh
         - name: {{ .Values.name }}-sql-sms
           mountPath: /sql/sms
         - name: {{ .Values.name }}-sql-sms-cv
