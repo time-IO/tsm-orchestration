@@ -30,3 +30,5 @@ worker:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+
+existingSecret: ""
