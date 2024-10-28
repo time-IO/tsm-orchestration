@@ -25,8 +25,8 @@ spec:
               name: {{ .Values.name }}-conf
               readOnly: true
           envFrom:
-            - configMapRef:
-                name: {{ .Values.name }}-envvars
+          - configMapRef:
+              name: {{ .Values.name }}-envvars
           - secretRef:
               name: {{ if .Values.global.createSecrets }}
                        {{ printf "%s-secret" .Values.name }}
