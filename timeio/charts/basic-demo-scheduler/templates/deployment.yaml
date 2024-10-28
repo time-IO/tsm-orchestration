@@ -26,11 +26,7 @@ spec:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}
-                     {{ printf "%s-secret" .Values.name }}
-                   {{ else }}
-                     {{ .Values.existingSecret }}
-                   {{ end }}
+            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ .Values.existingSecret }}{{ end }}
         securityContext:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
