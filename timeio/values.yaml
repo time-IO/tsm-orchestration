@@ -63,6 +63,7 @@ global:
       hosts:
         - "s3.timeio.web-intern-stage.app.ufz.de"
 
+  createSecrets: true
   secrets:
     POSTGRES_USER: "postgres"
     POSTGRES_PASSWORD: "postgres"
