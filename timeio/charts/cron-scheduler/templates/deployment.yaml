@@ -78,7 +78,7 @@ spec:
           - configMapRef:
               name: {{ .Values.worker.name }}-envvars
           - secretRef:
-              name: {{ .Values.worker.existingSecret | default (printf "%s-secret" .Values.worker.name) }}
+              name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.worker.name }}{{ else }}{{ index .Values.global .Values.worker.name "existingSecret" }}{{ end }}
         volumeMounts:
           - mountPath: /tmp/cron
             name: crontab-pv
