@@ -207,6 +207,14 @@ create table public.datastream_link
 );
 
 
+create table public.device_contact_role (
+    id          serial primary key,
+    role_uri    varchar(256) not null,
+    role_name   varchar(256) not null,
+    contact_id  integer not null,
+    device_id   integer not null
+);
+
 COMMIT;
 
 -- public.contact foreign keys
