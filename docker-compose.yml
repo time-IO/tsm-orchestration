@@ -726,9 +726,7 @@ services:
 
 
   worker-run-qaqc:
-#    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
-    build:
-      context: ../timeio-qaqc
+    image: "registry.hzdr.de/ufz-tsm/timeio-qaqc/timeio-qaqc:${TIMEIO_QAQC_IMAGE_TAG}"
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
