@@ -758,11 +758,10 @@ services:
       MQTT_PUBLISH_TOPIC: qaqc_done
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
 
