@@ -693,8 +693,6 @@ services:
         condition: service_healthy
       object-storage:
         condition: service_healthy
-      basic-demo-scheduler:
-        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: object_storage_notification
@@ -713,12 +711,6 @@ services:
         ${S3MAP_POSTGRES_PASS}@\
         ${S3MAP_POSTGRES_HOST}/\
         ${S3MAP_POSTGRES_DB}"
-      SCHEDULER: "${SCHEDULER}"
-      SCHED_HOST: "${SCHED_HOST}"
-      SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
-      SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
-      SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
-      SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
       CONFIGDB_DSN: "postgresql://\
         ${CONFIGDB_USER}:\
         ${CONFIGDB_PASSWORD}@\
@@ -842,37 +834,6 @@ services:
       ALLOWED_VOS: "${ALLOWED_VOS}"
     command:
       - create-grafana-user
-
-
-  basic-demo-scheduler:
-    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG}"
-    restart: "${RESTART}"
-    # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
-    # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 0.5
-    mem_limit: 4g
-    healthcheck:
-      test: [ "CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1" ]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    environment:
-      MQTT_BROKER: mqtt-broker:1883
-      MQTT_USER: "${MQTT_USER}"
-      MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: basic-demo-scheduler
-      MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
-      DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
-      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
-    command:
-      - --verbose
 
 
   cron-scheduler:

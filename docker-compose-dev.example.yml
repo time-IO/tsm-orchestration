@@ -46,22 +46,6 @@ services:
     volumes:
       - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
 
-  tsm-extractor:
-    image: "registry.hzdr.de/ufz-tsm/tsm-extractor/extractor:${EXTRACTOR_IMAGE_TAG}"
-    build:
-      context: "../tsm-extractor"
-
-  basic-demo-scheduler:
-    volumes:
-      - "${DEV_EXTRACTOR_SRC_DIR:-../tsm-extractor/src}:/home/appuser/app/src"
-      - "${DEV_SCHEDULER_SRC_DIR:-../tsm-basic-demo-scheduler/src}:/home/appuser/app/basic_demo_scheduler"
-    ports:
-      - "127.0.0.1:5000:5000"
-    build:
-      context: "../tsm-basic-demo-scheduler"
-      args:
-        EXTRACTOR_IMAGE_TAG: "${EXTRACTOR_IMAGE_TAG}"
-
   frontend:
     environment:
       - "DJANGO_HELMHOLTZ_CLIENT_ID=${DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
