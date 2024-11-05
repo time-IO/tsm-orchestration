@@ -123,4 +123,15 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_datastream_link (
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'datastream_link');
 
+
+CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_contact_role (
+    id          integer not null,
+    role_uri    varchar(256) not null,
+    role_name   varchar(256) not null,
+    contact_id  integer not null,
+    device_id   integer not null
+)
+    SERVER sms_db OPTIONS (schema_name 'public', table_name 'device_contact_role');
+
+
 COMMIT;
