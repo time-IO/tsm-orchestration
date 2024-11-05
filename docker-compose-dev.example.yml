@@ -23,7 +23,8 @@ services:
 
   worker-run-qaqc:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - "${DEV_QAQC_SRC_DIR:-../timeio-qaqc/timeio_qaqc}:/app/timeio_qaqc"
+      - "${DEV_QAQC_SRC_DIR:-../timeio-qaqc/app.py}:/app/app.py"
 
   worker-mqtt-ingest:
     volumes:
