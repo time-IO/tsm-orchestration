@@ -16,18 +16,21 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration (
     id                      integer not null,
     label                   varchar(256),
     description             text,
-    persistent_identifier    varchar(256),
+    persistent_identifier   varchar(256),
     status                  varchar(256),
     project                 varchar(256),
-    is_internal         boolean,
-    is_public           boolean
+    is_internal             boolean,
+    is_public               boolean
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration');
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_contact_role (
+    id                  integer not null,
     configuration_id    integer not null,
-    contact_id          integer not null
+    contact_id          integer not null,
+    role_uri            varchar(256) not null,
+    role_name           varchar(256) not null,
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_contact_role');
 
@@ -63,16 +66,16 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_static_location_begi
 
 
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device (
-    id                  integer not null,
-    short_name          varchar(256),
-    description         text,
-    device_type_name    varchar(256),
-    manufacturer_name   varchar(256),
-    model               varchar(256),
-    serial_number       varchar(256),
-    persistent_identifier varchar(256),
-    is_internal         boolean,
-    is_public           boolean
+    id                      integer not null,
+    short_name              varchar(256),
+    description             text,
+    device_type_name        varchar(256),
+    manufacturer_name       varchar(256),
+    model                   varchar(256),
+    serial_number           varchar(256),
+    persistent_identifier   varchar(256),
+    is_internal             boolean,
+    is_public               boolean
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device');
 
@@ -108,22 +111,6 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_property (
     SERVER sms_db OPTIONS(schema_name 'public', table_name 'device_property');
 
 
-CREATE FOREIGN TABLE IF NOT EXISTS public.sms_datastream_link (
-    id                  integer not null,
-    thing_id            uuid,
-    device_property_id  integer not null,
-    device_mount_action_id  integer not null,
-    datasource_id       varchar(256),
-    datastream_id       integer not null,
-    begin_date          timestamp with time zone,
-    end_date            timestamp with time zone,
-    aggregation_period  double precision,
-    license_uri         varchar(256),
-    license_name        varchar(256)
-)
-    SERVER sms_db OPTIONS (schema_name 'public', table_name 'datastream_link');
-
-
 CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_contact_role (
     id          integer not null,
     role_uri    varchar(256) not null,
@@ -132,6 +119,22 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_contact_role (
     device_id   integer not null
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device_contact_role');
+
+
+CREATE FOREIGN TABLE IF NOT EXISTS public.sms_datastream_link (
+    id                      integer not null,
+    thing_id                uuid,
+    device_property_id      integer not null,
+    device_mount_action_id  integer not null,
+    datasource_id           varchar(256),
+    datastream_id           integer not null,
+    begin_date              timestamp with time zone,
+    end_date                timestamp with time zone,
+    aggregation_period      double precision,
+    license_uri             varchar(256),
+    license_name            varchar(256)
+)
+    SERVER sms_db OPTIONS (schema_name 'public', table_name 'datastream_link');
 
 
 COMMIT;
