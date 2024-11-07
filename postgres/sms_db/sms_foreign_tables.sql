@@ -30,7 +30,7 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_configuration_contact_role (
     configuration_id    integer not null,
     contact_id          integer not null,
     role_uri            varchar(256) not null,
-    role_name           varchar(256) not null,
+    role_name           varchar(256) not null
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'configuration_contact_role');
 
@@ -70,7 +70,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device (
     short_name              varchar(256),
     description             text,
     device_type_name        varchar(256),
+    device_type_uri         varchar(256),
     manufacturer_name       varchar(256),
+    manufacturer_uri        varchar(256),
     model                   varchar(256),
     serial_number           varchar(256),
     persistent_identifier   varchar(256),
