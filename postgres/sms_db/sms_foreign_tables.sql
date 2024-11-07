@@ -88,7 +88,9 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_mount_action (
     offset_y            double precision,
     offset_z            double precision,
     begin_date          timestamp with time zone not null,
-    end_date            timestamp with time zone
+    end_date            timestamp with time zone,
+    begin_description   text,
+    label               varchar(256)
 )
     SERVER sms_db OPTIONS (schema_name 'public', table_name 'device_mount_action');
 
@@ -103,10 +105,15 @@ CREATE FOREIGN TABLE IF NOT EXISTS public.sms_device_property (
     unit_uri                varchar(256),
     resolution              double precision,
     resolution_unit_name    varchar(256),
+    resolution_unit_uri     varchar(256),
     accuracy                double precision,
     measuring_range_min     double precision,
     measuring_range_max     double precision,
-    aggregation_type_name   varchar(256)
+    aggregation_type_name   varchar(256),
+    aggregation_type_uri    varchar(256),
+    accuracy_unit_name      varchar(256),
+    accuracy_unit_uri       varchar(256)
+
 )
     SERVER sms_db OPTIONS(schema_name 'public', table_name 'device_property');
 

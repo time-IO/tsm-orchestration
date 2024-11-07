@@ -150,7 +150,8 @@ create table public.device_mount_action
     updated_by_id      integer,
     end_date           timestamp with time zone,
     end_description    text,
-    end_contact_id     integer
+    end_contact_id     integer,
+    label              varchar(256)
 );
 
 
@@ -179,7 +180,10 @@ create table public.device_property
     created_by_id         integer,
     updated_by_id         integer,
     aggregation_type_uri  varchar(256),
-    aggregation_type_name varchar(256)
+    aggregation_type_name varchar(256),
+    accuracy_unit_name    varchar(256),
+    accuracy_unit_uri     varchar(256)
+
 );
 
 
