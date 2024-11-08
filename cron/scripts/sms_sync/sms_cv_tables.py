@@ -13,7 +13,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 file_names = [
     "sms_cv_measured_quantity.json",
     "sms_cv_license.json",
-    "sms_cv_aggragation_type.json",
+    "sms_cv_aggregation_type.json",
     "sms_cv_unit.json",
 ]
 
