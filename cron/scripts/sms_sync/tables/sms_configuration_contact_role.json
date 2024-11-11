@@ -1,0 +1,26 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "role_name": {
+      "type": "VARCHAR not null",
+      "path": ["attributes", "role_name"]
+    },
+    "role_uri": {
+      "type": "VARCHAR(256) not null",
+      "path": ["attributes", "role_uri"]
+    },
+    "contact_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "contact", "data","id"]
+    },
+    "configuration_id": {
+      "type": "int4 not null",
+      "path": ["relationships","configuration", "data", "id"]
+    }
+  },
+  "name": "sms_configuration_contact_role",
+  "endpoint": "configuration-contact-roles"
+}

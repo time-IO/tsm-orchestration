@@ -11,16 +11,22 @@ import json
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 file_names = [
-    "sms_cv_measured_quantity.json",
-    "sms_cv_license.json",
-    "sms_cv_aggregation_type.json",
-    "sms_cv_unit.json",
+    "sms_configuration.json",
+    "sms_configuration_contact_role.json",
+    "sms_configuration_dynamic_location_begin_action.json",
+    "sms_configuration_static_location_begin_action.json",
+    "sms_contact.json",
+    "sms_datastream_link.json",
+    "sms_device.json",
+    "sms_device_contact_role.json",
+    "sms_device_mount_action.json",
+    "sms_device_property.json",
 ]
 
 file_path_list = [os.path.join(script_dir, "tables", file_name) for file_name in file_names]
 
 if __name__ == "__main__":
-    url = os.environ.get("CV_API_URL")
+    url = os.environ.get("SMS_API_URL")
     home = os.environ.get("HOME")
     os.chdir(home)
     for file_path in file_path_list:

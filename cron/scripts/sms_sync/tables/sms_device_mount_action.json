@@ -1,0 +1,102 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "begin_date": {
+      "type": "timestamp with time zone not null",
+      "path": ["attributes", "begin_date"]
+    },
+    "begin_description": {
+      "type": "text",
+      "path": ["attributes", "begin_description"]
+    },
+    "offset_x": {
+      "type": "double precision",
+      "path": ["attributes", "offset_x"]
+    },
+    "offset_y": {
+      "type": "double precision",
+      "path": ["attributes", "offset_y"]
+    },
+    "offset_z": {
+      "type": "double precision",
+      "path": ["attributes", "offset_z"]
+    },
+    "end_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "end_date"]
+    },
+    "end_description": {
+      "type": "text",
+      "path": ["attributes", "end_description"]
+    },
+    "x": {
+      "type": "double precision",
+      "path": ["attributes", "x"]
+    },
+    "y": {
+      "type": "double precision",
+      "path": ["attributes", "y"]
+    },
+    "z": {
+      "type": "double precision",
+      "path": ["attributes", "z"]
+    },
+    "epsg_code": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "epsg_code"]
+    },
+    "elevation_datum_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "elevation_datum_name"]
+    },
+    "elevation_datum_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "elevation_datum_uri"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    },
+    "begin_contact_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "begin_contact", "data", "id"]
+    },
+    "end_contact_id": {
+      "type": "int4",
+      "path": ["relationships", "end_contact", "data", "id"]
+    },
+    "configuration_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "configuration", "data", "id"]
+    },
+    "device_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "device", "data", "id"]
+    },
+    "parent_platform_id": {
+      "type": "int4",
+      "path": ["relationships", "parent_platform", "data", "id"]
+    },
+    "parent_device_id": {
+      "type": "int4",
+      "path": ["relationships", "parent_device", "data", "id"]
+    },
+  },
+  "name": "sms_device_mount_action",
+  "endpoint": "device-mount-actions"
+}

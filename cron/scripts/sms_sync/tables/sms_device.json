@@ -1,0 +1,114 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "description": {
+      "type": "text",
+      "path": ["attributes", "description"]
+    },
+    "short_name": {
+      "type": "VARCHAR(256) not null",
+      "path": ["attributes", "short_name"]
+    },
+    "long_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "long_name"]
+    },
+    "serial_number": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "serial_number"]
+    },
+    "manufacturer_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "manufacturer_uri"]
+    },
+    "manufacturer_name": {
+      "type": "VARCHAR(256) not null",
+      "path": ["attributes", "manufacturer_name"]
+    },
+    "device_type_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "device_type_uri"]
+    },
+    "device_type_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "device_type_name"]
+    },
+    "status_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "status_uri"]
+    },
+    "status_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "status_name"]
+    },
+    "model": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "model"]
+    },
+    "inventory_number": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "inventory_number"]
+    },
+    "persistent_identifier": {
+      "type": "VARCHAR(256) unique",
+      "path": ["attributes", "persistent_identifier"]
+    },
+    "website": {
+      "type": "VARCHAR(1024)",
+      "path": ["attributes", "website"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "group_ids": {
+      "type": "character varying[]",
+      "path": ["attributes", "group_ids"]
+    },
+    "is_private": {
+      "type": "boolean",
+      "path": ["attributes", "is_private"]
+    },
+    "is_internal": {
+      "type": "boolean",
+      "path": ["attributes", "is_internal"]
+    },
+    "is_public": {
+      "type": "boolean",
+      "path": ["attributes", "is_public"]
+    },
+    "archived": {
+      "type": "boolean",
+      "path": ["attributes", "archived"]
+    },
+    "update_description": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "update_description"]
+    },
+    "keywords": {
+      "type": "character varying[]",
+      "path": ["attributes", "keywords"]
+    },
+    "country": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "country"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    }
+  },
+  "name": "sms_device",
+  "endpoint": "devices"
+}

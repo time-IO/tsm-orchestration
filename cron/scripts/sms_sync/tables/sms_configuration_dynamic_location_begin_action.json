@@ -1,0 +1,74 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "label": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "label"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "begin_date": {
+      "type": "timestamp with time zone not null",
+      "path": ["attributes", "begin_date"]
+    },
+    "begin_description": {
+      "type": "text",
+      "path": ["attributes", "begin_description"]
+    },
+    "end_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "end_date"]
+    },
+    "end_description": {
+      "type": "text",
+      "path": ["attributes", "end_description"]
+    },
+    "x_property_id": {
+      "type": "int4",
+      "path": ["attributes", "x_property_id"]
+    },
+    "y_property_id": {
+      "type": "int4",
+      "path": ["attributes", "y_property_id"]
+    },
+    "z_property_id": {
+      "type": "int4",
+      "path": ["attributes", "z_property_id"]
+    },
+    "epsg_code": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "epsg_code"]
+    },
+    "elevation_datum_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "elevation_datum_name"]
+    },
+    "elevation_datum_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "elevation_datum_uri"]
+    },
+    "begin_contact_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "begin_contact", "data", "id"]
+    },
+    "end_contact_id": {
+      "type": "int4",
+      "path": ["relationships", "end_contact", "data", "id"]
+    },
+    "configuration_id": {
+      "type": "int4 not null",
+      "path": ["relationships", "configuration", "data", "id"]
+    }
+  },
+  "name": "sms_configuration_dynamic_location_begin_action",
+  "endpoint": "dynamic-location-actions"
+}

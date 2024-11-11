@@ -1,0 +1,54 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "given_name": {
+      "type": "VARCHAR(256) not null",
+      "path": ["attributes", "given_name"]
+    },
+    "family_name": {
+      "type": "VARCHAR(256) not null",
+      "path": ["attributes", "family_name"]
+    },
+    "website": {
+      "type": "VARCHAR(1024)",
+      "path": ["attributes", "website"]
+    },
+    "organization": {
+      "type":  "varchar(1024)",
+      "path": ["attributes", "organization"]
+    },
+    "orcid": {
+      "type":  "varchar(32)",
+      "path": ["attributes", "orcid"]
+    },
+    "email": {
+      "type": "VARCHAR(256) not null unique",
+      "path": ["attributes", "email"]
+    },
+    "active": {
+      "type": "boolean",
+      "path": ["attributes", "active"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    }
+  },
+  "name": "sms_contact",
+  "endpoint": "contacts"
+}

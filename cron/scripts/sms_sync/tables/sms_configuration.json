@@ -1,0 +1,86 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "start_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "start_date"]
+    },
+    "end_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "end_date"]
+    },
+    "label": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "label"]
+    },
+    "project": {
+      "type": "varchar(256)",
+      "path": ["attributes", "project"]
+    },
+    "campaign": {
+      "type": "varchar(256)",
+      "path": ["attributes", "campaign"]
+    },
+    "description": {
+      "type": "text",
+      "path": ["attributes", "description"]
+    },
+    "status": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "status"]
+    },
+    "cfg_permission_group": {
+      "type": "VARCHAR",
+      "path": ["attributes", "cfg_permission_group"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "is_internal": {
+      "type": "boolean",
+      "path": ["attributes", "is_internal"]
+    },
+    "is_public": {
+      "type": "boolean",
+      "path": ["attributes", "is_public"]
+    },
+    "archived": {
+      "type": "boolean",
+      "path": ["attributes", "archived"]
+    },
+    "update_description": {
+      "type": "varchar(256)",
+      "path": ["attributes", "update_description"]
+    },
+    "keywords": {
+      "type": "character varying[]",
+      "path": ["attributes", "keywords"]
+    },
+    "persistent_identifier": {
+      "type": "varchar(256)",
+      "path": ["attributes", "persistent_identifier unique"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    },
+    "site_id": {
+      "type": "int4",
+      "path": ["relationships", "site", "data", "id"]
+    }
+  },
+  "name": "sms_configuration",
+  "endpoint": "configurations"
+}

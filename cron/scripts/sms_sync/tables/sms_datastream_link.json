@@ -1,0 +1,82 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "datasource_id": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "datasource_id"]
+    },
+    "thing_id": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "thing_id"]
+    },
+    "datastream_id": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "datastream_id"]
+    },
+    "begin_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "begin_date"]
+    },
+    "end_date": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "end_date"]
+    },
+    "datasource_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "datasource_name"]
+    },
+    "thing_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "thing_name"]
+    },
+    "datastream_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "datastream_name"]
+    },
+    "license_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "license_uri"]
+    },
+    "license_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "license_name"]
+    },
+    "aggregation_period": {
+      "type": "double precision",
+      "path": ["attributes", "aggregation_period"]
+    },
+    "device_property_id": {
+      "type": "int4",
+      "path": ["relationships", "device_property", "data", "id"]
+    },
+    "device_mount_action_id": {
+      "type": "int4",
+      "path": ["relationships", "device_mount_action", "data", "id"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    },
+    "tsm_endpoint_id": {
+      "type": "int4",
+      "path": ["relationships", "tsm_endpoint", "data", "id"]
+    }
+  },
+  "name": "sms_datastream_link",
+  "endpoint": "datastream-links"
+}

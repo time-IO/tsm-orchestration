@@ -1,0 +1,114 @@
+{
+  "keys": {
+    "id": {
+      "type": "int4 primary key not null",
+      "path": ["id"]
+    },
+    "measuring_range_min": {
+      "type": "double precision",
+      "path": ["attributes", "measuring_range_min"]
+    },
+    "measuring_range_max": {
+      "type": "double precision",
+      "path": ["attributes", "measuring_range_max"]
+    },
+    "failure_value": {
+      "type": "double precision",
+      "path": ["attributes", "failure_value"]
+    },
+    "accuracy": {
+      "type": "double precision",
+      "path": ["attributes", "accuracy"]
+    },
+    "label": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "label"]
+    },
+    "unit_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "unit_uri"]
+    },
+    "unit_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "unit_name"]
+    },
+    "compartment_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "compartment_uri"]
+    },
+    "compartment_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "compartment_name"]
+    },
+    "property_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "property_uri"]
+    },
+    "property_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "property_name"]
+    },
+    "sampling_media_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "sampling_media_uri"]
+    },
+    "sampling_media_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "sampling_media_name"]
+    },
+    "resolution": {
+      "type": "double precision",
+      "path": ["attributes", "resolution"]
+    },
+    "resolution_unit_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "resolution_unit_name"]
+    },
+    "resolution_unit_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "resolution_unit_uri"]
+    },
+    "created_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "created_at"]
+    },
+    "updated_at": {
+      "type": "timestamp with time zone",
+      "path": ["attributes", "updated_at"]
+    },
+    "aggregation_type_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "aggregation_type_uri"]
+    },
+    "aggregation_type_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "aggregation_type_name"]
+    },
+    "description": {
+      "type": "text",
+      "path": ["attributes", "description"]
+    },
+    "accuracy_unit_uri": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "accuracy_unit_uri"]
+    },
+    "accuracy_unit_name": {
+      "type": "VARCHAR(256)",
+      "path": ["attributes", "accuracy_unit_name"]
+    },
+    "device_id": {
+      "type": "int4",
+      "path": ["relationships", "device", "data", "id"]
+    },
+    "created_by_id": {
+      "type": "int4",
+      "path": ["relationships", "created_by", "data", "id"]
+    },
+    "updated_by_id": {
+      "type": "int4",
+      "path": ["relationships", "updated_by", "data", "id"]
+    }
+  },
+  "name": "sms_device_property",
+  "endpoint": "device-properties"
+}
