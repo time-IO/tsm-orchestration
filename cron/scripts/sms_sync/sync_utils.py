@@ -1,7 +1,7 @@
-import psycopg2
-from psycopg2 import sql as psysql
+import psycopg
+from psycopg import sql as psysql
 from typing import Union, Dict, Optional, Any
-from psycopg2.extensions import cursor, connection
+from psycopg import cursor, connection
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
 import json
@@ -24,8 +24,8 @@ def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
     err = None
     for _ in range(retries):
         try:
-            return psycopg2.connect(
-                database=db, user=user, password=password, host=host
+            return psycopg.connect(
+                f"postgresql://{user}:{password}@{host}/{db}"
             )
         except Exception as e:
             err = e
