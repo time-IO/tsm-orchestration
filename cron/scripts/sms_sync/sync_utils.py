@@ -67,8 +67,11 @@ def _remove_id_duplicates(data: list) -> list:
 
 
 def _value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
-    return reduce(getitem, path, dict)
-
+    # return None if path is empty
+    try:
+        return reduce(getitem, path, dict)
+    except:
+        return None
 
 def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
     if val is None:
@@ -80,6 +83,11 @@ def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
         return f"{val}"
     if type(val) == float:
         return f"{val}"
+    if type(val) == list:
+        if len(val)>0:
+            return "'{" + ",".join([f'{v}' for v in val]) + "}'"
+        else:
+            return "Null"
     if type(val) == str:
         try:
             # try to convert string to int
@@ -150,7 +158,12 @@ def create_table(c: cursor, table_dict: Dict) -> None:
 
 
 def _table_upsert_query(table_dict: dict, data: dict) -> str:
+    if len (data) == 0:
+        return ""
     query = f"INSERT INTO {table_dict['name']} ("
+    #print(f"data:\n{data}")
+    #print(f"keys:\n{table_dict['keys'].keys()}")
+    #print(f"data:\n{data}")
     for key in table_dict["keys"]:
         query += f"{key}, "
     query = query.rstrip(", ") + ") VALUES "
@@ -199,6 +212,10 @@ def upsert_table(
         r = get_data_from_url(url=url, endpoint=table_dict["endpoint"])
     data = _remove_id_duplicates(r["data"])
     query = _table_upsert_query(table_dict, data)
+    print(query)
+    if query == "":
+        print(f"No data to sync to table {table_dict['name']}")
+        return
     try:
         c.execute(query)
         print(f"Data successfully synced to table {table_dict['name']}")

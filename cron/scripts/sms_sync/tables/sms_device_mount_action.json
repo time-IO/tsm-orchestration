@@ -95,7 +95,7 @@
     "parent_device_id": {
       "type": "int4",
       "path": ["relationships", "parent_device", "data", "id"]
-    },
+    }
   },
   "name": "sms_device_mount_action",
   "endpoint": "device-mount-actions"

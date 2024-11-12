@@ -65,8 +65,8 @@
       "path": ["attributes", "keywords"]
     },
     "persistent_identifier": {
-      "type": "varchar(256)",
-      "path": ["attributes", "persistent_identifier unique"]
+      "type": "varchar(256) unique",
+      "path": ["attributes", "persistent_identifier"]
     },
     "created_by_id": {
       "type": "int4",

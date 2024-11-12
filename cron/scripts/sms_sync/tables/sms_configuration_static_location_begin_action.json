@@ -41,7 +41,7 @@
       "path": ["attributes", "y"]
     },
     "z": {
-      "type": "double_precision",
+      "type": "double precision",
       "path": ["attributes", "z"]
     },
     "epsg_code": {
