@@ -120,6 +120,8 @@ global:
     CREATEDB_POSTGRES_HOST: "database"
     CREATEDB_POSTGRES_PORT: "5432"
     CREATEDB_POSTGRES_DATABASE: "postgres"
+    CONFIGDB_POSTGRES_HOST: "database"
+    CONFIGDB_POSTGRES_DATABASE: "postgres"
     MQTT_AUTH_POSTGRES_HOST: "database"
     MQTT_AUTH_POSTGRES_PORT: "5432"
     MQTT_AUTH_POSTGRES_DB: "postgres"
@@ -188,4 +190,5 @@ global:
     SCHED_SLURM_JWT_TOKEN: ""
     CRON_SETUP_SERVICE: "true"
     FLYWAY_BASELINE_VERSION: "1.0"
+    DB_API_BASE_URL: "http://timeio-db-api:8001"
 

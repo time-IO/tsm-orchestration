@@ -13,3 +13,4 @@ data:
   LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
   MINIO_URL: "{{  .Values.global.envvars.MINIO_HOST }}"
   MIINO_SECURE: "{{  .Values.global.envvars.MINIO_SECURE }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"

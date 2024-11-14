@@ -27,11 +27,9 @@ spec:
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
         command:
-        - python3
-        - main.py
-        - parse-mqtt-data
-        - --target-uri
-        - "postgresql://{{  .Values.global.secrets.POSTGRES_USER}}:{{  .Values.global.secrets.POSTGRES_PASSWORD}}@{{  .Values.global.envvars.CREATEDB_POSTGRES_HOST}}/{{  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE}}"
+          - sh
+          - -c
+          - 'python3 main.py parse-mqtt-data --target-uri ${DATABASE_URL}'
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

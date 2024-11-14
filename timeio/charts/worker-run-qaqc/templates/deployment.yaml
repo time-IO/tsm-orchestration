@@ -27,9 +27,8 @@ spec:
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
         command:
-        - python3
-        - main.py
-        - schedule-qaqc-job
+        - python
+        - /app/app.py
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars
