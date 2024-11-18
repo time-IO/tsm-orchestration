@@ -626,8 +626,8 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
-    command:
-      - create-frost-instance
+    entrypoint: ["python3", "frost_handler.py"]
+
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
