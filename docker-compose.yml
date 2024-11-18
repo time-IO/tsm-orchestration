@@ -615,7 +615,7 @@ services:
       database:
         condition: service_healthy
     volumes:
-      - ./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
+      - ./data/tomcat/context:/home/appuser/app/src/frost_context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
