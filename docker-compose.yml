@@ -710,7 +710,7 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-    entrypoint: ["python3", "parse_file_data.py"]
+    entrypoint: ["python3", "file_ingest.py"]
 
 
   worker-run-qaqc:
@@ -768,7 +768,7 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-    entrypoint: ["python3", "parse_mqtt_data.py"]
+    entrypoint: ["python3", "mqtt_ingest.py"]
 
 
   worker-crontab-setup:
