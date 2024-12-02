@@ -24,18 +24,10 @@ variables:
 services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
 
-
-fooooooooooo:
-  stage: check
-  script:
-    - echo CI_PIPELINE_SOURCE = $CI_PIPELINE_SOURCE
-
-
 check-protected-files:
   stage: check
   script:
-    - echo "existing files in flyway/migrations should not be altered 
-            in any way, please undo your changes and commit again."
+    - echo "Files in flyway/migrations MUST NOT be altered! Undo your changes and commit again."
     - exit 1
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
