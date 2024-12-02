@@ -26,6 +26,7 @@ services:
 
 
 check-protected-files:
+  stage: check
   script:
     - echo "existing files in flyway/migrations should not be altered 
             in any way, please undo your changes and commit again."
