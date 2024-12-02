@@ -25,6 +25,12 @@ services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
 
 
+fooooooooooo:
+  stage: check
+  script:
+    - echo CI_PIPELINE_SOURCE = $CI_PIPELINE_SOURCE
+
+
 check-protected-files:
   stage: check
   script:
