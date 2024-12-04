@@ -734,12 +734,11 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_QC_DONE: qaqc_done
       TOPIC_QC_DONE_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
+      DATABASE_DSN: "postgresql://\
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
     entrypoint: ["python3", "run_qc.py"]
 
