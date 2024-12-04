@@ -159,8 +159,7 @@ class FtpFS(RemoteFS):
         if uri_parts.scheme != "sftp":
             logger.warning(
                 f"Expected URI to start with sftp://... , "
-                f"not with {uri_parts.scheme}://... '",
-                uri_parts,
+                f"not with {uri_parts.scheme}://... '"
             )
         ssh = SSHClient()
         if missing_host_key_policy is not None:

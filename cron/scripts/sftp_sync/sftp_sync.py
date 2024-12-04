@@ -12,32 +12,33 @@ from paramiko import WarningPolicy
 def get_minio_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, access_key, secret_key, bucket_name)"""
     with conn.cursor() as cur:
-        a, s, b = cur.execute(
+        res = cur.execute(
             "SELECT r.access_key, r.secret_key, r.bucket "
             "FROM tsm_thing t JOIN tsm_rawdatastorage r ON t.id = r.thing_id "
             "WHERE t.thing_id = %s",
             [thing_id],
         ).fetchone()
-        if not a:
+        if res is None or not res[0]:
             raise RuntimeError(
                 "No object storage credentials found in frontend database"
             )
+        a, s, b = res
         return os.environ["MINIO_URL"], a, s, b
 
 
 def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, username, password, path)"""
     with conn.cursor() as cur:
-        ur, us, pw, pa = cur.execute(
+        res = cur.execute(
             "SELECT ext_sftp_uri, ext_sftp_username, ext_sftp_password, ext_sftp_path "
             "FROM tsm_thing WHERE thing_id = %s",
             [thing_id],
         ).fetchone()
-        if "" in [ur, us] or None in [ur, us]:
+        if res is None or res[0] in ["", None] or res[1] in ["", None]:
             raise RuntimeError(
-                "No object external sftp credentials found in frontend database"
+                "No external sftp credentials present in frontend database"
             )
-        return ur, us, pw, pa
+        return res
 
 
 USAGE = """
@@ -76,6 +77,8 @@ if __name__ == "__main__":
     minio_secure = (  # ensure True as default
         False if os.environ["MINIO_SECURE"].lower() in ["false", "0"] else True
     )
+
+    logging.getLogger("sftp_sync").info("Thing UUID: %s", thing_id)
 
     with psycopg.connect(dsn) as conn:
         ftp_ext = get_external_ftp_credentials(conn, thing_id)
