@@ -560,13 +560,8 @@ services:
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
-      S3MAP_DB_URL: "postgresql://\
-        ${S3MAP_POSTGRES_USER}:\
-        ${S3MAP_POSTGRES_PASS}@\
-        ${S3MAP_POSTGRES_HOST}/\
-        ${S3MAP_POSTGRES_DB}"
-    command:
-      - create-thing-in-minio
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "minio_setup.py"]
 
 
   # Summary
@@ -602,8 +597,8 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
-    command:
-      - create-thing-in-postgres
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "db_setup.py"]
 
 
   worker-frost-setup:
@@ -626,8 +621,9 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
-    command:
-      - create-frost-instance
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "frost_setup.py"]
+
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
@@ -652,8 +648,8 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
-    command:
-      - create-mqtt-user
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "mqtt_user_setup.py"]
 
 
   worker-grafana-dashboard:
@@ -677,8 +673,8 @@ services:
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
-    command:
-      - create-thing-in-grafana
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "grafana_dashboard_setup.py"]
 
 
   # =================================================================
@@ -702,15 +698,11 @@ services:
       MQTT_CLIENT_ID: file-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       MINIO_SECURE: "${MINIO_SECURE}"
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
-      S3MAP_DB_URL: "postgresql://\
-        ${S3MAP_POSTGRES_USER}:\
-        ${S3MAP_POSTGRES_PASS}@\
-        ${S3MAP_POSTGRES_HOST}/\
-        ${S3MAP_POSTGRES_DB}"
       CONFIGDB_DSN: "postgresql://\
         ${CONFIGDB_USER}:\
         ${CONFIGDB_PASSWORD}@\
@@ -718,15 +710,11 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
-      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
-      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
-    command:
-      - schedule-parser-job
+    entrypoint: ["python3", "file_ingest.py"]
 
 
   worker-run-qaqc:
-    image: "registry.hzdr.de/ufz-tsm/timeio-qaqc/timeio-qaqc:${TIMEIO_QAQC_IMAGE_TAG}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher:${DISPATCHER_IMAGE_TAG}"
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
@@ -737,23 +725,22 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      MQTT_BROKER_HOST: mqtt-broker
-      MQTT_BROKER_PORT: 1883
+      TOPIC: "${TOPIC_DATA_PARSED}"
+      MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_CLIENT_ID: worker-qaqc
-      MQTT_SUBSCRIBE_TOPIC: data_parsed
-      MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
-      MQTT_PUBLISH_TOPIC: qaqc_done
-      MQTT_PUBLISH_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "postgresql://\
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_QC_DONE: qaqc_done
+      TOPIC_QC_DONE_QOS: "${MQTT_QOS}"
+      DATABASE_DSN: "postgresql://\
         ${CREATEDB_POSTGRES_USER}:\
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
+    entrypoint: ["python3", "run_qc.py"]
 
 
   worker-mqtt-ingest:
@@ -773,14 +760,14 @@ services:
       MQTT_CLIENT_ID: mqtt-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-    command:
-      - parse-mqtt-data
-      - --target-uri
-      - "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DB}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "mqtt_ingest.py"]
 
 
   worker-crontab-setup:
@@ -800,10 +787,10 @@ services:
       MQTT_CLIENT_ID: crontab-setup
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "crontab_setup.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
-    command:
-      - update-sftp-crontab
 
   # =================================================================
   # other worker
@@ -830,8 +817,8 @@ services:
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
-    command:
-      - create-grafana-user
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+    entrypoint: ["python3", "grafana_user_setup.py"]
 
 
   cron-scheduler:
