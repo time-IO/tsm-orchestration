@@ -816,7 +816,11 @@ services:
       GRAFANA_URL: "${GRAFANA_URL}"
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
+      GF_ROLE_FROM_VO_ROLE: "${GF_ROLE_FROM_VO_ROLE}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
+      VO_GROUP_KEY: "${VO_GROUP_KEY}"
+      VO_LOGIN_KEY: "${VO_LOGIN_KEY}"
+      VO_ADMIN_SUBGROUP: "${VO_ADMIN_SUBGROUP}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
     entrypoint: ["python3", "grafana_user_setup.py"]
 
