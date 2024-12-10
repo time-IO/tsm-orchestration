@@ -1,5 +1,6 @@
 ---
 stages:
+  - "check"
   - "integration"
   - "end-to-end"
 
@@ -22,3 +23,19 @@ variables:
 
 services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
+
+check-protected-files:
+  stage: check
+  script:
+    - echo "Files in flyway/migrations MUST NOT be altered! Undo your changes and commit again."
+    - exit 1
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - flyway/migrations/V1_1__create_schema_thing_mapping.sql
+        - flyway/migrations/V2_1__configdb_add_schema_and_role.sql
+        - flyway/migrations/V2_2__configdb_initial_schema.sql
+        - flyway/migrations/V2_3__configdb_initial_data.sql
+        - flyway/migrations/V2_4__configdb_add_bosch.sql
+        - flyway/migrations/V2_5__configdb_drop_S3_not_null.sql
+        - flyway/migrations/V2_6__configdb_modify_qaqc_test.sql
