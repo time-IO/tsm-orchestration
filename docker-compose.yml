@@ -454,7 +454,6 @@ services:
       MINIO_SFTP_PORT: "${MINIO_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
-
     depends_on:
       database:
         condition: service_healthy
