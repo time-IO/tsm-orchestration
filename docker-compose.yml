@@ -460,6 +460,8 @@ services:
         condition: service_healthy
       mqtt-broker:
         condition: service_healthy
+      worker-configdb-updater:
+        condition: service_started
 
 
   # Summary
@@ -547,6 +549,8 @@ services:
         condition: service_healthy
       object-storage:
         condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -561,6 +565,7 @@ services:
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "minio_setup.py"]
 
 
@@ -581,6 +586,8 @@ services:
         condition: service_healthy
       database:
         condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -598,6 +605,7 @@ services:
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "db_setup.py"]
 
 
@@ -608,6 +616,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     volumes:
       - ./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
@@ -622,6 +632,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "frost_setup.py"]
 
 
@@ -633,6 +644,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -649,6 +662,7 @@ services:
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "mqtt_user_setup.py"]
 
 
@@ -660,6 +674,8 @@ services:
         condition: service_healthy
       visualization:
         condition: service_started
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -674,6 +690,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "grafana_dashboard_setup.py"]
 
 
@@ -688,6 +705,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       object-storage:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -710,6 +729,7 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "file_ingest.py"]
 
 
@@ -740,6 +760,7 @@ services:
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_qc.py"]
 
 
@@ -750,6 +771,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -767,6 +790,7 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "mqtt_ingest.py"]
 
 
@@ -778,6 +802,8 @@ services:
             condition: service_healthy
         init:
           condition: service_completed_successfully
+        timeio-db-api:
+          condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -788,6 +814,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "crontab_setup.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
@@ -804,6 +831,8 @@ services:
         condition: service_healthy
       visualization:
         condition: service_started
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: user_login
@@ -818,6 +847,7 @@ services:
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "grafana_user_setup.py"]
 
 
