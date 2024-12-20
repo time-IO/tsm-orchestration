@@ -4,7 +4,7 @@ import os
 import psycopg
 import requests
 import pytest
-from tests_setup import *
+from environment import *
 
 
 @pytest.mark.parametrize(
