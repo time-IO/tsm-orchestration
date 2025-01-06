@@ -80,9 +80,10 @@ def mk_dsn(protocol, host, usr=None, pw=None, port=None, sub=None):
     if sub is not None:
         host = f"{host}/{sub}"
     if usr is not None:
-        host = f"{usr}@{host}"
-        if pw is not None:
-            host = f"{pw}:{host}"
+        if pw is None:
+            host = f"{usr}@{host}"
+        else:
+            host = f"{usr}:{pw}@{host}"
     return f"{protocol}://{host}"
 
 
