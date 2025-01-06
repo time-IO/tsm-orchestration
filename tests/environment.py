@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 from common import getenv, mk_postgres_dsn
 
+
 SMS_DB = None
 SMS_API_URL = None
 SMS_ACCESS_TYPE = getenv("SMS_ACCESS_TYPE")
 
 if SMS_ACCESS_TYPE == "api":
-    SMS_API_URL = getenv("SMS_URL") + "backend/api/v1/"  # TODO: missing var SMS_API_URL in .env
+    SMS_API_URL = (
+        getenv("SMS_URL") + "backend/api/v1/"
+    )  # TODO: missing var SMS_API_URL in .env
 if SMS_ACCESS_TYPE == "db":
     SMS_DB = mk_postgres_dsn(
         getenv("SMS_DB_USER"),
@@ -53,5 +56,3 @@ FE_DB = mk_postgres_dsn(
     getenv("FRONTEND_POSTGRES_PORT", 5432, cast_to=int),  # TODO: missing var in .env !
     getenv("FRONTEND_POSTGRES_DB"),
 )
-
-
