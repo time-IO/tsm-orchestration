@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+import os
+
 from common import getenv, mk_postgres_dsn
+import socket
 
 
-SMS_DB = None
+LOCAL = socket.gethostname() != 'tsm'
+
+
+SMS_DB_DSN = None
 SMS_API_URL = None
 SMS_ACCESS_TYPE = getenv("SMS_ACCESS_TYPE")
 
@@ -11,7 +17,7 @@ if SMS_ACCESS_TYPE == "api":
         getenv("SMS_URL") + "backend/api/v1/"
     )  # TODO: missing var SMS_API_URL in .env
 if SMS_ACCESS_TYPE == "db":
-    SMS_DB = mk_postgres_dsn(
+    SMS_DB_DSN = mk_postgres_dsn(
         getenv("SMS_DB_USER"),
         getenv("SMS_DB_PASSWORD"),
         getenv("SMS_DB_HOST"),
@@ -19,14 +25,14 @@ if SMS_ACCESS_TYPE == "db":
         getenv("SMS_DB_DB"),
     )
 
-CV_DB = None
+CV_DB_DSN = None
 CV_API_URL = None
 CV_ACCESS_TYPE = getenv("CV_ACCESS_TYPE")
 
 if CV_ACCESS_TYPE == "api":
     CV_API_URL = getenv("CV_URL") + "api/v1"  # TODO: missing var CV_API_URL in .env
 if CV_ACCESS_TYPE == "db":
-    CV_DB = mk_postgres_dsn(
+    CV_DB_DSN = mk_postgres_dsn(
         getenv("CV_DB_USER"),
         getenv("CV_DB_PASSWORD"),
         getenv("CV_DB_HOST"),
@@ -34,7 +40,7 @@ if CV_ACCESS_TYPE == "db":
         getenv("CV_DB_DB"),
     )
 
-OBS_DB = mk_postgres_dsn(
+OBS_DB_DSN = mk_postgres_dsn(
     getenv("CREATEDB_POSTGRES_USER"),
     getenv("CREATEDB_POSTGRES_PASSWORD"),
     getenv("CREATEDB_POSTGRES_HOST"),
@@ -42,14 +48,14 @@ OBS_DB = mk_postgres_dsn(
     getenv("CREATEDB_POSTGRES_DATABASE"),
 )
 
-CONF_DB = mk_postgres_dsn(
+CONF_DB_DSN = mk_postgres_dsn(
     getenv("CONFIGDB_USER"),
     getenv("CONFIGDB_PASSWORD"),
     getenv("CONFIGDB_HOST"),
     getenv("CONFIGDB_PORT", cast_to=int),
     getenv("CONFIGDB_DB"),
 )
-FE_DB = mk_postgres_dsn(
+FE_DB_DSN = mk_postgres_dsn(
     getenv("FRONTEND_POSTGRES_USER"),
     getenv("FRONTEND_POSTGRES_PASS"),
     getenv("FRONTEND_POSTGRES_HOST"),
