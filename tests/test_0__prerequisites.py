@@ -65,8 +65,6 @@ def test_cv_api_online():
     resp.raise_for_status()
 
 
-
-
 @pytest.fixture(scope="session")
 def docker() -> docker_sdk.DockerClient:
     return docker_sdk.from_env()
@@ -99,7 +97,7 @@ DC_CONTAINER = [
     f"{ORCHESTRATION_DIR}-frost-1",
     f"{ORCHESTRATION_DIR}-visualization-1",
     f"{ORCHESTRATION_DIR}-database-1",
-    "cadvisor"  # set by 'container_name' in service monitoring
+    "cadvisor",  # set by 'container_name' in service monitoring
 ]
 
 

@@ -1,15 +1,14 @@
 
 ## prerequisite
-- test if external services are up, running and reachable
-   - Databases: observationDB, configDB, FE-DB, (SMS-DB), (CV-DB)
-   - APIs: CV-API, SMS-API
-- test if docker project (tsm-orchestration) is up and running
-   - `python-on-whales`
+- [DONE] test if external services are up, running and reachable
+   - [DONE] Databases: observationDB, configDB, FE-DB, (SMS-DB), (CV-DB)
+   - [DONE] APIs: CV-API, SMS-API
+- [DONE] test if docker project (tsm-orchestration) is up and running
 
 ## tests
 
 1. public endpoints reachable
-   - ...
+   - how? 
 2. user login test
     - EXPECT grafana permissions were updated
 3. thing creation in existing project
