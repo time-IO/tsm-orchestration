@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
+import os.path
+import pathlib
+
 import psycopg
 import requests
 import pytest
 from environment import *
-import python_on_whales
+import docker as docker_sdk
 import warnings
 
 
@@ -61,54 +65,47 @@ def test_cv_api_online():
     resp.raise_for_status()
 
 
-DC_PROJECT = "tsm-orchestration"
 
 
 @pytest.fixture(scope="session")
-def docker() -> python_on_whales.DockerClient:
-    for proj in python_on_whales.docker.compose.ls():
-        if proj.name == DC_PROJECT:
-            break
-    else:
-        pytest.exit(
-            f"No running docker compose project with name {DC_PROJECT!r} found. "
-            f"Stopping further pytesting",
-            returncode=2,
-        )
-    return python_on_whales.DockerClient(compose_files=proj.config_files)
+def docker() -> docker_sdk.DockerClient:
+    return docker_sdk.from_env()
 
 
+ORCHESTRATION_DIR = pathlib.Path(__file__).parents[1].name
+# docker compose constructs names by using the compose file
+# directory and the service name and an increasing number,
+# unless a service specifies 'container_name'.
 DC_CONTAINER = [
-    "tsm-orchestration-proxy-1",
-    "tsm-orchestration-frontend-1",
-    "tsm-orchestration-worker-file-ingest-1",
-    "tsm-orchestration-worker-object-storage-setup-1",
-    "tsm-orchestration-worker-mqtt-ingest-1",
-    "tsm-orchestration-worker-grafana-dashboard-1",
-    "tsm-orchestration-worker-crontab-setup-1",
-    "tsm-orchestration-worker-run-qaqc-1",
-    "tsm-orchestration-worker-frost-setup-1",
-    "tsm-orchestration-mqtt-cat-1",
-    "tsm-orchestration-worker-grafana-user-orgs-1",
-    "tsm-orchestration-object-storage-1",
-    "tsm-orchestration-worker-configdb-updater-1",
-    "tsm-orchestration-worker-db-setup-1",
-    "tsm-orchestration-worker-mqtt-user-creation-1",
-    "tsm-orchestration-tsmdl-1",
-    "tsm-orchestration-cron-scheduler-1",
-    "tsm-orchestration-timeio-db-api-1",
-    "tsm-orchestration-mqtt-broker-1",
-    "tsm-orchestration-frost-1",
-    "tsm-orchestration-visualization-1",
-    "tsm-orchestration-database-1",
-    "cadvisor"
+    f"{ORCHESTRATION_DIR}-proxy-1",
+    f"{ORCHESTRATION_DIR}-frontend-1",
+    f"{ORCHESTRATION_DIR}-worker-file-ingest-1",
+    f"{ORCHESTRATION_DIR}-worker-object-storage-setup-1",
+    f"{ORCHESTRATION_DIR}-worker-mqtt-ingest-1",
+    f"{ORCHESTRATION_DIR}-worker-grafana-dashboard-1",
+    f"{ORCHESTRATION_DIR}-worker-crontab-setup-1",
+    f"{ORCHESTRATION_DIR}-worker-run-qaqc-1",
+    f"{ORCHESTRATION_DIR}-worker-frost-setup-1",
+    f"{ORCHESTRATION_DIR}-mqtt-cat-1",
+    f"{ORCHESTRATION_DIR}-worker-grafana-user-orgs-1",
+    f"{ORCHESTRATION_DIR}-object-storage-1",
+    f"{ORCHESTRATION_DIR}-worker-configdb-updater-1",
+    f"{ORCHESTRATION_DIR}-worker-db-setup-1",
+    f"{ORCHESTRATION_DIR}-worker-mqtt-user-creation-1",
+    f"{ORCHESTRATION_DIR}-tsmdl-1",
+    f"{ORCHESTRATION_DIR}-cron-scheduler-1",
+    f"{ORCHESTRATION_DIR}-timeio-db-api-1",
+    f"{ORCHESTRATION_DIR}-mqtt-broker-1",
+    f"{ORCHESTRATION_DIR}-frost-1",
+    f"{ORCHESTRATION_DIR}-visualization-1",
+    f"{ORCHESTRATION_DIR}-database-1",
+    "cadvisor"  # set by 'container_name' in service monitoring
 ]
 
 
 def test_docker_unknown_container(docker):
-    containers = docker.container.list()
     unknown = []
-    for c in containers:
+    for c in docker.containers.list():
         if c.name not in DC_CONTAINER:
             unknown.append(c.name)
     if unknown:
@@ -117,7 +114,7 @@ def test_docker_unknown_container(docker):
 
 @pytest.mark.parametrize("name", DC_CONTAINER)
 def test_docker_services_running(docker, name):
-    container = docker.container.inspect(name)
-    assert container.state.status == "running"
-    if container.state.health is not None:
-        assert container.state.health.status == "healthy"
+    container = docker.containers.get(name)
+    assert container.status == "running"
+    # Note that health is unknown if no healthcheck is defined.
+    assert container.health in ["healthy", "unknown"]

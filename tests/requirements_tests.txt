@@ -3,4 +3,4 @@ click
 requests
 psycopg
 python-dotenv
-python-on-whales
+docker
