@@ -1,5 +1,11 @@
+import os
+from unittest import mock
+
 import pytest
-import dotenv
+import dotenv as dotenv_lib
+
+dc_environ = {}
+dotenvs = []
 
 
 # Here we add the '--env' option to pytest.
@@ -17,8 +23,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-# Merge files (--env FILE1 --env FILE2 ...) into os.environ
+# Process --env options
+# Store variables from dotenv files in a global
+# environment, for later use (see environment.py)
 def pytest_configure(config: pytest.Config):
     files = config.getoption("file", []) or []
     for file in files:
-        dotenv.load_dotenv(file, override=True)
+        dotenvs.append(file)
+        dc_environ.update(dotenv_lib.dotenv_values(file))
