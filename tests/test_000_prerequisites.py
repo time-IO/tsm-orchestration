@@ -60,37 +60,39 @@ def test_cv_api_online():
     resp.raise_for_status()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def docker() -> docker_sdk.DockerClient:
-    return docker_sdk.from_env()
+    cl = docker_sdk.from_env()
+    yield cl
+    cl.close()
 
 
 # docker compose constructs names by using the compose file
 # directory and the service name and an increasing number,
 # unless a service specifies 'container_name'.
 DC_CONTAINER = [
-    f"tsm-orchestration-proxy-1",
-    f"tsm-orchestration-frontend-1",
-    f"tsm-orchestration-worker-file-ingest-1",
-    f"tsm-orchestration-worker-object-storage-setup-1",
-    f"tsm-orchestration-worker-mqtt-ingest-1",
-    f"tsm-orchestration-worker-grafana-dashboard-1",
-    f"tsm-orchestration-worker-crontab-setup-1",
-    f"tsm-orchestration-worker-run-qaqc-1",
-    f"tsm-orchestration-worker-frost-setup-1",
-    f"tsm-orchestration-mqtt-cat-1",
-    f"tsm-orchestration-worker-grafana-user-orgs-1",
-    f"tsm-orchestration-object-storage-1",
-    f"tsm-orchestration-worker-configdb-updater-1",
-    f"tsm-orchestration-worker-db-setup-1",
-    f"tsm-orchestration-worker-mqtt-user-creation-1",
-    f"tsm-orchestration-tsmdl-1",
-    f"tsm-orchestration-cron-scheduler-1",
-    f"tsm-orchestration-timeio-db-api-1",
-    f"tsm-orchestration-mqtt-broker-1",
-    f"tsm-orchestration-frost-1",
-    f"tsm-orchestration-visualization-1",
-    f"tsm-orchestration-database-1",
+    "tsm-orchestration-proxy-1",
+    "tsm-orchestration-frontend-1",
+    "tsm-orchestration-worker-file-ingest-1",
+    "tsm-orchestration-worker-object-storage-setup-1",
+    "tsm-orchestration-worker-mqtt-ingest-1",
+    "tsm-orchestration-worker-grafana-dashboard-1",
+    "tsm-orchestration-worker-crontab-setup-1",
+    "tsm-orchestration-worker-run-qaqc-1",
+    "tsm-orchestration-worker-frost-setup-1",
+    "tsm-orchestration-mqtt-cat-1",
+    "tsm-orchestration-worker-grafana-user-orgs-1",
+    "tsm-orchestration-object-storage-1",
+    "tsm-orchestration-worker-configdb-updater-1",
+    "tsm-orchestration-worker-db-setup-1",
+    "tsm-orchestration-worker-mqtt-user-creation-1",
+    "tsm-orchestration-tsmdl-1",
+    "tsm-orchestration-cron-scheduler-1",
+    "tsm-orchestration-timeio-db-api-1",
+    "tsm-orchestration-mqtt-broker-1",
+    "tsm-orchestration-frost-1",
+    "tsm-orchestration-visualization-1",
+    "tsm-orchestration-database-1",
     "cadvisor",  # set by 'container_name' in service monitoring
 ]
 
