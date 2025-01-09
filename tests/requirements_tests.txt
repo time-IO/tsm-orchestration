@@ -4,3 +4,10 @@ requests
 psycopg
 python-dotenv
 docker
+psycopg2-binary
+click
+paho-mqtt
+PyYAML
+grafana-client
+requests
+python-crontab

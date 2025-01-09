@@ -15,11 +15,13 @@ dotenvs = []
 # with docker-compose and not on the host system.
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
-        "--env",
-        dest="file",
+        "-E",
+        "--dc-env-file",
+        metavar="FILE",  # argument name in help message
+        dest="dotenv",  # internal name
         action="append",
         required=True,
-        help="Use environment variables from `FILE` (mandatory, multi-allowed)",
+        help="The docker compose dotenv file (mandatory, multi-allowed)",
     )
 
 
@@ -27,7 +29,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 # Store variables from dotenv files in a global
 # environment, for later use (see environment.py)
 def pytest_configure(config: pytest.Config):
-    files = config.getoption("file", []) or []
+    files = config.getoption("dotenv", []) or []
     for file in files:
         dotenvs.append(file)
         dc_environ.update(dotenv_lib.dotenv_values(file))
