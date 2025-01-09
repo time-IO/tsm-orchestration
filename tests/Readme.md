@@ -2,6 +2,11 @@
 
 ## Run on stage 
 
+We provide a script that runs the test suite. 
+```bash
+./run_tests.sh
+```
+
 ```bash
 cd /home/tsm-orchestration/tsm-orchestration
 source ../tests_venv/bin/activate
