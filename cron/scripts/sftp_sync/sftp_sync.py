@@ -71,7 +71,13 @@ if __name__ == "__main__":
     thing_id = sys.argv[1]
     ssh_priv_key = sys.argv[2]
 
-    for k in ["CONFIGDB_DSN", "MINIO_URL", "MINIO_SECURE"]:
+    for k in [
+        "CONFIGDB_DSN",
+        "MINIO_URL",
+        "MINIO_USER",
+        "MINIO_PASSWORD",
+        "MINIO_SECURE",
+    ]:
         if not os.environ.get(k):
             raise EnvironmentError(f"Environment variable {k} must be set")
     dsn = os.environ["CONFIGDB_DSN"]
