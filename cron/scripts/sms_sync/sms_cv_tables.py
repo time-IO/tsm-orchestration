@@ -17,7 +17,9 @@ file_names = [
     "sms_cv_unit.json",
 ]
 
-file_path_list = [os.path.join(script_dir, "tables", file_name) for file_name in file_names]
+file_path_list = [
+    os.path.join(script_dir, "tables", file_name) for file_name in file_names
+]
 
 if __name__ == "__main__":
     url = os.environ.get("CV_API_URL")
