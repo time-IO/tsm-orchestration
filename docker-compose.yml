@@ -448,6 +448,8 @@ services:
       MINIO_SFTP_PORT: "${MINIO_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
+      STA_ROOT_URL: "${STA_ROOT_URL}"
+      QAQC_SETTING_SAQC_VERSION: "${QAQC_SETTING_SAQC_VERSION}"
     depends_on:
       database:
         condition: service_healthy
