@@ -871,6 +871,8 @@ services:
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
       MINIO_URL: "${MINIO_HOST}"
+      MINIO_USER: "${MINIO_ROOT_USER}"
+      MINIO_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_SECURE: "${MINIO_SECURE}"
       CONFIGDB_DSN: "postgresql://\
         ${CONFIGDB_USER}:\
