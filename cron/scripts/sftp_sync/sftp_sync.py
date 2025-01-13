@@ -52,7 +52,7 @@ Arguments
 Additional set the following environment variables:
 
   MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
-  FTP_AUTH_DB_DSN   DB which store the credentials for the internal 
+  CONFIGDB_DSN      DB which store the credentials for the internal 
                     and external sftp server. See also DSN format below. 
   LOG_LEVEL         Set the verbosity, defaults to INFO.
                     [DEBUG, INFO, WARNING, ERROR, CRITICAL]
@@ -70,10 +70,10 @@ if __name__ == "__main__":
     thing_id = sys.argv[1]
     ssh_priv_key = sys.argv[2]
 
-    for k in ["FTP_AUTH_DB_DSN", "MINIO_URL", "MINIO_SECURE"]:
+    for k in ["CONFIGDB_DSN", "MINIO_URL", "MINIO_SECURE"]:
         if not os.environ.get(k):
             raise EnvironmentError(f"Environment variable {k} must be set")
-    dsn = os.environ["FTP_AUTH_DB_DSN"]
+    dsn = os.environ["CONFIGDB_DSN"]
     minio_secure = (  # ensure True as default
         False if os.environ["MINIO_SECURE"].lower() in ["false", "0"] else True
     )
