@@ -48,7 +48,7 @@ def run_in_container(container, script) -> ExecResult:
             message="^This is a rather awkward situation.*urllib3.*",
             category=DeprecationWarning,
         )
-        return container.exec_run(f"bash -c 'python3 - <<EOF{script}EOF'")
+        return container.exec_run(f"""bash -c 'python3 - <<"EOF"{script}EOF'""")
 
 
 @pytest.mark.parametrize(

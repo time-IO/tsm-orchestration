@@ -1,5 +1,5 @@
 [pytest]
 env =
-    FRONTEND_USER=DemoUser
-    FRONTEND_PASS=DemoUser
+    TESTSUITE_USER=DemoUser
+    TESTSUITE_PASS=DemoUser
     PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt

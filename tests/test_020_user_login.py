@@ -10,7 +10,9 @@ from environment import LOCAL
 @pytest.fixture(scope="module")
 def session():
     """Session to maintain cookies"""
-    return requests.Session()
+    s = requests.Session()
+    yield s
+    s.close()
 
 
 # Base URL of the Django app running in Docker
@@ -31,8 +33,8 @@ def login_data():
         }
     else:
         return {
-            "username": os.environ["FRONTEND_USER"],
-            "password": os.environ["FRONTEND_PASS"],
+            "username": os.environ["TESTSUITE_USER"],
+            "password": os.environ["TESTSUITE_PASS"],
         }
 
 
@@ -65,3 +67,10 @@ def test_frontend_login(session, base_url, login_data, user_name):
     soup = BeautifulSoup(overview_page.text, "html.parser")
     assert overview_page.status_code == 200
     assert soup.body.i.text == f"Logged in as {user_name}"
+
+
+# todo: test login via AAI
+#   assert that MQTT message is send on topic user_login
+# def test_frontend_login_aai(_):
+#     ...
+#     ...
