@@ -524,7 +524,8 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: configdb-updater
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
-      MQTT_SUBSCRIBE_TOPIC: frontend_thing_update
+      MQTT_THING_UPDATE_TOPIC: frontend_thing_update
+      MQTT_QAQC_UPDATE_TOPIC: qaqc_settings_update
       MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
       MQTT_PUBLISH_TOPIC: configdb_update
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
