@@ -871,12 +871,15 @@ services:
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
       MINIO_URL: "${MINIO_HOST}"
+      MINIO_USER: "${MINIO_ROOT_USER}"
+      MINIO_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_SECURE: "${MINIO_SECURE}"
-      FTP_AUTH_DB_DSN: "postgresql://\
-        ${FRONTEND_POSTGRES_USER}:\
-        ${FRONTEND_POSTGRES_PASS}@\
-        ${FRONTEND_POSTGRES_HOST}/\
-        ${FRONTEND_POSTGRES_DB}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
     depends_on:
       init:

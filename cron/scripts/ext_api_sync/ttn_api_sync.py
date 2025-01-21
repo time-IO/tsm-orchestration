@@ -10,6 +10,7 @@ import click
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
+
 def cleanupJson(string: str) -> str:
     """
     The json string from the TTN Endpoint is erroneous
@@ -51,14 +52,18 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                     "result_type": 0,
                     "datastream_pos": k,
                     "result_number": float(v),
-                    "parameters": json.dumps({"origin": params["endpoint_uri"], "column_header": k})
+                    "parameters": json.dumps(
+                        {"origin": params["endpoint_uri"], "column_header": k}
+                    ),
                 }
                 bodies.append(body)
     post_data = {"observations": bodies}
 
-    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
-                        json=post_data,
-                        headers={'Content-type': 'application/json'})
+    req = requests.post(
+        f"{api_base_url}/observations/upsert/{thing_uuid}",
+        json=post_data,
+        headers={"Content-type": "application/json"},
+    )
     if req.status_code == 201:
         logging.info(
             f"Successfully inserted {len(post_data['observations'])} "

@@ -14,13 +14,11 @@ def get_schemas_with_things(cur):
     return cur.execute(
         """SELECT schemaname FROM pg_tables
            WHERE tablename = 'thing';"""
-        ).fetchall()
+    ).fetchall()
 
 
 def get_things(cur, schema):
-    return cur.execute(
-        f"""SELECT uuid::varchar from {schema}.thing;"""
-    ).fetchall()
+    return cur.execute(f"""SELECT uuid::varchar from {schema}.thing;""").fetchall()
 
 
 def get_schema_thing_dict(cur):
@@ -29,8 +27,9 @@ def get_schema_thing_dict(cur):
     for schema in schemas:
         things = get_things(cur, schema["schemaname"])
         for thing in things:
-            schemas_things_dict.append({"schema_name": schema["schemaname"],
-                                        "thing_uuid": thing["uuid"]})
+            schemas_things_dict.append(
+                {"schema_name": schema["schemaname"], "thing_uuid": thing["uuid"]}
+            )
     return schemas_things_dict
 
 
