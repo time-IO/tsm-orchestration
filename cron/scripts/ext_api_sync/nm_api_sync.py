@@ -10,6 +10,7 @@ from datetime import datetime
 import click
 import requests
 import psycopg
+import mqtt
 
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
@@ -111,18 +112,21 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         end_date=datetime.now(),
     )
 
-    req = requests.post(
+    resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    if req.status_code == 201:
-        logging.info(
-            f"Successfully inserted {len(parsed_observations['observations'])} "
-            f"observations for thing {thing_uuid} from NM API into TimeIO DB"
-        )
-    else:
-        logging.error(f"{req.text}")
+    if resp.status_code != 201:
+        logging.error(f"{resp.text}")
+        resp.raise_for_status()
+        # exit
+
+    logging.info(
+        f"Successfully inserted {len(parsed_observations['observations'])} "
+        f"observations for thing {thing_uuid} from NM API into TimeIO DB"
+    )
+    mqtt.send_mqtt_info(json.dumps({"thing": thing_uuid}))
 
 
 if __name__ == "__main__":

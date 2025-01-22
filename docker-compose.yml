@@ -880,6 +880,12 @@ services:
         ${CONFIGDB_PORT}/\
         ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: cron-scheduler
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
     depends_on:
       init:
         condition: service_completed_successfully

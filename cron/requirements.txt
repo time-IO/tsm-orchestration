@@ -4,3 +4,4 @@ psycopg[binary]
 minio
 paramiko
 requests
+paho-mqtt
