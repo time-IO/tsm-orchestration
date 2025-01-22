@@ -109,7 +109,7 @@ def main(thing_uuid, parameters, target_uri):
         f"Successfully inserted {len(parsed_observations['observations'])} "
         f"observations for thing {thing_uuid} from Bosch API into TimeIO DB"
     )
-    mqtt.send_mqtt_info(json.dumps({"thing": thing_uuid}))
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing": thing_uuid}))
 
 
 if __name__ == "__main__":

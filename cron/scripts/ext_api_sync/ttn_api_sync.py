@@ -74,7 +74,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         f"Successfully inserted {len(post_data['observations'])} "
         f"observations for thing {thing_uuid} from TTN API into TimeIO DB"
     )
-    mqtt.send_mqtt_info(json.dumps({"thing": thing_uuid}))
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing": thing_uuid}))
 
 
 if __name__ == "__main__":
