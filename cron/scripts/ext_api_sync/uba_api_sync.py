@@ -46,7 +46,7 @@ def get_station_info(station_id: str) -> list:
         return station_info
 
 
-def request_uba_api(
+def request_measure_endpoint(
     station_id: str,
     component_id: int,
     scope_id: int,
@@ -75,19 +75,20 @@ def request_uba_api(
             return response_json
 
 
-def combine_uba_responses(
+def combine_measure_responses(
     station_id: str,
     date_from: str,
     date_to: str,
     time_from: int,
     time_to: int,
+    components: dict,
+    scopes: dict,
 ) -> list:
     """Combine uba respones for all component/scope combinations into one object"""
-    uba_data = list()
+    measure_data = list()
     station_info = get_station_info(station_id)
-    components, scopes = get_components_and_scopes()
     for entry in station_info:
-        response = request_uba_api(
+        response = request_measure_endpoint(
             station_id,
             entry["component"],
             entry["scope"],
@@ -97,21 +98,21 @@ def combine_uba_responses(
             time_to,
         )
         for k, v in response.items():
-            uba_data.append(
+            measure_data.append(
                 {
                     "timestamp": v[3],
                     "value": v[2],
-                    "parameter": f"{components[entry['component']]} {scopes[entry['scope']]}",
+                    "measure": f"{components[entry['component']]} {scopes[entry['scope']]}",
                 }
             )
-    return uba_data
+    return measure_data
 
 
-def parse_uba_data(uba_data: list, station_id: str) -> dict:
+def parse_measure_data(measure_data: list, station_id: str) -> list:
     """Creates POST body from combined uba data"""
     bodies = []
     source = {"uba_station_id": station_id}
-    for entry in uba_data:
+    for entry in measure_data:
         if entry["timestamp"][11:13] == "24":
             entry["timestamp"] = (
                 entry["timestamp"][:11] + "00" + entry["timestamp"][13:]
@@ -121,13 +122,72 @@ def parse_uba_data(uba_data: list, station_id: str) -> dict:
                 "result_time": entry["timestamp"],
                 "result_type": 0,
                 "result_number": entry["value"],
-                "datastream_pos": entry["parameter"],
+                "datastream_pos": entry["measure"],
                 "parameters": json.dumps(
                     {"origin": "uba_data", "column_header": source}
                 ),
             }
             bodies.append(body)
-    return {"observations": bodies}
+    return bodies
+
+
+def get_airquality_data(
+    station_id: str,
+    date_from: str,
+    date_to: str,
+    time_from: int,
+    time_to: int,
+    components: dict,
+) -> list:
+    params = {
+        "date_from": date_from,
+        "date_to": date_to,
+        "time_from": time_from,
+        "time_to": time_to,
+        "station": station_id,
+    }
+    response = requests.get(
+        "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json", params=params
+    )
+    response_data = response.json()["data"][station_id]
+    aqi_data = list()
+    for k, v in response_data.items():
+        pollutant_info = list()
+        for i in range(3, len(v)):
+            entry = {"component": components[v[i][0]], "airquality_index": v[i][2]}
+            pollutant_info.append(entry)
+        aqi_data.append(
+            {
+                "timestamp": v[0],
+                "airquality_index": v[1],
+                "data_complete": v[2],
+                "pollutant_info": pollutant_info,
+            }
+        )
+    return aqi_data
+
+
+def parse_aqi_data(aqi_data: list, station_id: str) -> list:
+    bodies = []
+    for entry in aqi_data:
+        source = {
+            "uba_station_id": station_id,
+            "endpoint": "/airquality",
+            "pollutant_info": entry["pollutant_info"],
+        }
+        if entry["timestamp"][11:13] == "24":
+            entry["timestamp"] = (
+                entry["timestamp"][:11] + "00" + entry["timestamp"][13:]
+            )
+        body = {
+            "result_time": entry["timestamp"],
+            "result_type": 0,
+            "result_number": entry["airquality_index"],
+            "datastream_pos": "AQI",
+            "parameters": json.dumps({"origin": "uba_data", "column_header": source}),
+        }
+        bodies.append(body)
+    return bodies
 
 
 @click.command()
@@ -138,8 +198,16 @@ def main(thing_uuid, parameters, target_uri):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     params = json.loads(parameters.replace("'", '"'))
-    uba_data = combine_uba_responses(params["station_id"])
-    parsed_observations = parse_uba_data(uba_data, params["station_id"])
+    components, scopes = get_components_and_scopes()
+    measure_data = combine_measure_responses(
+        params["station_id"], date_from, date_to, time_from, time_to, components, scopes
+    )
+    aqi_data = get_airquality_data(
+        params["station_id"], date_from, date_to, time_from, time_to, components
+    )
+    parsed_measure_data = parse_measure_data(measure_data, params["station_id"])
+    parsed_aqi_data = parse_aqi_data(aqi_data, params["station_id"])
+    parsed_observations = {"observations": parsed_measure_data + parsed_aqi_data}
     req = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",
         json=parsed_observations,
