@@ -21,7 +21,7 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
-      - ./data/minio/certs/:/tmp/certs
+      - "${MINIO_DIR}/certs/:/tmp/certs"
       - ./nginx/html/:/home/tsm/html
       - ./cron:/tmp/cron
 
@@ -152,7 +152,7 @@ services:
       #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL}"
     volumes:
-      - ./data/minio/vol0:/vol0
+      - "${MINIO_DIR}/vol0:/vol0"
       # FTP server tls key and cert
       - "${MINIO_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
       - "${MINIO_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
