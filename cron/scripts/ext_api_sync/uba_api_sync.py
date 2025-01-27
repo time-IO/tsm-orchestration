@@ -144,7 +144,10 @@ def combine_measure_responses(
 def parse_measure_data(measure_data: list, station_id: str) -> list:
     """Creates POST body from combined uba data"""
     bodies = []
-    source = {"uba_station_id": station_id}
+    source = {
+        "uba_station_id": station_id,
+        "endpoint": "/measures",
+    }
     for entry in measure_data:
         if entry["timestamp"][11:13] == "24":
             entry["timestamp"] = adjust_datetime(entry["timestamp"])
