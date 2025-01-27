@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+# UBA API docs: https://www.umweltbundesamt.de/daten/luft/luftdaten/doc
+
 import requests
 import os
 import logging
