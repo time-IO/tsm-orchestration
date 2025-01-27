@@ -221,7 +221,9 @@ def parse_aqi_data(aqi_data: list, station_id: str) -> list:
                 "result_type": 0,
                 "result_number": entry["airquality_index"],
                 "datastream_pos": "AQI",
-                "parameters": json.dumps({"origin": "uba_data", "column_header": source}),
+                "parameters": json.dumps(
+                    {"origin": "uba_data", "column_header": source}
+                ),
             }
             bodies.append(body)
     return bodies
