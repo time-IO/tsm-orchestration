@@ -6,8 +6,39 @@ import logging
 import json
 import click
 
+from datetime import datetime, timedelta
+
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
+
+
+def adjust_datetime(datetime_str: str) -> str:
+    """UBA API returns datetime format with hours from 1 to 24 so it has to be parsed for timeIO DB API"""
+    date = datetime.strptime(datetime_str[0:10], "%Y-%m-%d")
+    date_adjusted = date + timedelta(days=1)
+
+    return date_adjusted.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_timerange_parameters():
+    """UBA API expects time_from/time_to in the range of 1 to 24"""
+    datetime_now = datetime.now()
+    datetime_from = datetime_now - timedelta(hours=1)
+    if datetime_now.hour == 0:
+        time_to = 24
+        date_to = (datetime_now - timedelta(days=1)).strftime("%Y-%m-%d")
+    else:
+        time_to = datetime_now.hour
+        date_to = datetime_now.strftime("%Y-%m-%d")
+
+    if datetime_from.hour == 0:
+        time_from = 24
+        date_from = (datetime_from - timedelta(days=1)).strftime("%Y-%m-%d")
+    else:
+        time_from = datetime_from.hour
+        date_from = datetime_from.strftime("%Y-%m-%d")
+
+    return date_from, time_from, date_to, time_to
 
 
 def get_components_and_scopes():
@@ -70,9 +101,11 @@ def request_measure_endpoint(
         params=params,
     )
     if response.status_code == 200:
-        response_json = response.json()["data"][station_id]
-        if response_json:
-            return response_json
+        response_json = response.json()
+        if response_json["data"]:
+            return response_json["data"][station_id]
+        else:
+            return response_json["data"]
 
 
 def combine_measure_responses(
@@ -114,9 +147,7 @@ def parse_measure_data(measure_data: list, station_id: str) -> list:
     source = {"uba_station_id": station_id}
     for entry in measure_data:
         if entry["timestamp"][11:13] == "24":
-            entry["timestamp"] = (
-                entry["timestamp"][:11] + "00" + entry["timestamp"][13:]
-            )
+            entry["timestamp"] = adjust_datetime(entry["timestamp"])
         if entry["value"]:
             body = {
                 "result_time": entry["timestamp"],
@@ -198,6 +229,7 @@ def main(thing_uuid, parameters, target_uri):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     params = json.loads(parameters.replace("'", '"'))
+    date_from, time_from, date_to, time_to = get_timerange_parameters()
     components, scopes = get_components_and_scopes()
     measure_data = combine_measure_responses(
         params["station_id"], date_from, date_to, time_from, time_to, components, scopes
