@@ -144,7 +144,7 @@ def combine_measure_responses(
 
 
 def parse_measure_data(measure_data: list, station_id: str) -> list:
-    """Creates POST body from combined uba data"""
+    """Creates POST body from combined uba measures data"""
     bodies = []
     source = {
         "uba_station_id": station_id,
@@ -175,6 +175,7 @@ def get_airquality_data(
     time_to: int,
     components: dict,
 ) -> list:
+    """Request uba api airquality endpoint for a given station_id and time range"""
     params = {
         "date_from": date_from,
         "date_to": date_to,
@@ -204,6 +205,7 @@ def get_airquality_data(
 
 
 def parse_aqi_data(aqi_data: list, station_id: str) -> list:
+    """Creates POST body from uba air quality data"""
     bodies = []
     for entry in aqi_data:
         source = {
@@ -212,17 +214,16 @@ def parse_aqi_data(aqi_data: list, station_id: str) -> list:
             "pollutant_info": entry["pollutant_info"],
         }
         if entry["timestamp"][11:13] == "24":
-            entry["timestamp"] = (
-                entry["timestamp"][:11] + "00" + entry["timestamp"][13:]
-            )
-        body = {
-            "result_time": entry["timestamp"],
-            "result_type": 0,
-            "result_number": entry["airquality_index"],
-            "datastream_pos": "AQI",
-            "parameters": json.dumps({"origin": "uba_data", "column_header": source}),
-        }
-        bodies.append(body)
+            entry["timestamp"] = adjust_datetime(entry["timestamp"])
+        if entry["airquality_index"]:
+            body = {
+                "result_time": entry["timestamp"],
+                "result_type": 0,
+                "result_number": entry["airquality_index"],
+                "datastream_pos": "AQI",
+                "parameters": json.dumps({"origin": "uba_data", "column_header": source}),
+            }
+            bodies.append(body)
     return bodies
 
 
