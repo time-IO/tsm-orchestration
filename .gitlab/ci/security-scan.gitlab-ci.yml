@@ -1,6 +1,6 @@
 --
 scan-docker-images:
-  image: "docker:24-cli"
+  image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "scan"
   before_script:
     # Install Trivy in the pipeline environment
