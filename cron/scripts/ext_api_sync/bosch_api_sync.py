@@ -6,6 +6,7 @@ import json
 import os
 import logging
 import requests
+import mqtt
 
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
@@ -94,18 +95,21 @@ def main(thing_uuid, parameters, target_uri):
     url = f"""{params["endpoint"]}/{params["sensor_id"]}/{timestamp_from}/{timestamp_to}"""
     response = make_request(url, params["username"], params["password"])
     parsed_observations = parse_api_response(response, origin="bosch_data")
-    req = requests.post(
+    resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    if req.status_code == 201:
-        logging.info(
-            f"Successfully inserted {len(parsed_observations['observations'])} "
-            f"observations for thing {thing_uuid} from Bosch API into TimeIO DB"
-        )
-    else:
-        logging.error(f"{req.text}")
+    if resp.status_code != 201:
+        logging.error(f"{resp.text}")
+        resp.raise_for_status()
+        # exit
+
+    logging.info(
+        f"Successfully inserted {len(parsed_observations['observations'])} "
+        f"observations for thing {thing_uuid} from Bosch API into TimeIO DB"
+    )
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":
