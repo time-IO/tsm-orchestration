@@ -93,8 +93,8 @@ docker-image-scan:
     - "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2"
     - "cp .env.example .env"
   script:
+    - "docker compose build"
     - "docker compose pull -q"
-    - "docker compose build -q"
     - "docker images --format '{{.Repository}}:{{.Tag}}'"
   tags:
     - "dind"
