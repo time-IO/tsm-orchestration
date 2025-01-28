@@ -47,7 +47,9 @@ def get_timerange_parameters():
 
 
 def get_components_and_scopes():
-    """Get components (i.e measured quantites) and scopes (aggregation infos) for later mapping"""
+    """Get components (i.e measured quantites) and scopes
+    (aggregation infos) for later mapping
+    """
     response_components = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
     )
@@ -69,7 +71,9 @@ def get_components_and_scopes():
 
 
 def get_station_info(station_id: str) -> list:
-    """Get all available components and scope combinations of a given station"""
+    """Get all available components and scope combinations of a given
+    station
+    """
     station_info = list()
     response = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
@@ -91,7 +95,9 @@ def request_measure_endpoint(
     time_from: int,
     time_to: int,
 ) -> dict:
-    """Request uba api measure endpoint for a given component and scope and a given time range"""
+    """Request uba api measure endpoint for a given component and scope
+    and a given time range
+    """
     params = {
         "date_from": date_from,
         "date_to": date_to,
@@ -122,7 +128,9 @@ def combine_measure_responses(
     components: dict,
     scopes: dict,
 ) -> list:
-    """Combine uba respones for all component/scope combinations into one object"""
+    """Combine uba respones for all component/scope combinations into
+    one object
+    """
     measure_data = list()
     station_info = get_station_info(station_id)
     for entry in station_info:
@@ -178,7 +186,9 @@ def get_airquality_data(
     time_to: int,
     components: dict,
 ) -> list:
-    """Request uba api airquality endpoint for a given station_id and time range"""
+    """Request uba api airquality endpoint for a given station_id and
+    time range
+    """
     params = {
         "date_from": date_from,
         "date_to": date_to,
