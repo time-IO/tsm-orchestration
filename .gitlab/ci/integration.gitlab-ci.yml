@@ -83,3 +83,17 @@ database-test:
     - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
   tags:
     - "dind"
+
+docker-image-scan:
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  stage: "integration"
+  before_script:
+    # Install Trivy in the pipeline environment
+    - "apk add --no-cache curl"
+    - "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2"
+  script:
+    - "docker compose pull -q"
+    - "docker compose build -q"
+    - "docker images --format '{{.Repository}}:{{.Tag}}'"
+  tags:
+    - "dind"
