@@ -16,7 +16,9 @@ api_base_url = os.environ.get("DB_API_BASE_URL")
 
 
 def adjust_datetime(datetime_str: str) -> str:
-    """UBA API returns datetime format with hours from 1 to 24 so it has to be parsed for timeIO DB API"""
+    """UBA API returns datetime format with hours from 1 to 24 so it
+    has to be parsed for timeIO DB API
+    """
     date = datetime.strptime(datetime_str[0:10], "%Y-%m-%d")
     date_adjusted = date + timedelta(days=1)
 
@@ -121,7 +123,7 @@ def combine_measure_responses(
     scopes: dict,
 ) -> list:
     """Combine uba respones for all component/scope combinations into one object"""
-    measure_data = []
+    measure_data = list()
     station_info = get_station_info(station_id)
     for entry in station_info:
         response = request_measure_endpoint(
