@@ -53,21 +53,22 @@ def get_components_and_scopes():
     response_components = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
     )
+    response_components.raise_for_status()
     response_scopes = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/scopes/json"
     )
-    if response_components.status_code == 200 and response_scopes.status_code == 200:
-        components = {
-            int(v[0]): v[1]
-            for k, v in response_components.json().items()
-            if k not in ["count", "indices"]
-        }
-        scopes = {
-            int(v[0]): v[1]
-            for k, v in response_scopes.json().items()
-            if k not in ["count", "indices"]
-        }
-        return components, scopes
+    response_scopes.raise_for_status()
+    components = {
+        int(v[0]): v[1]
+        for k, v in response_components.json().items()
+        if k not in ["count", "indices"]
+    }
+    scopes = {
+        int(v[0]): v[1]
+        for k, v in response_scopes.json().items()
+        if k not in ["count", "indices"]
+    }
+    return components, scopes
 
 
 def get_station_info(station_id: str) -> list:
@@ -78,12 +79,12 @@ def get_station_info(station_id: str) -> list:
     response = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
     )
-    if response.status_code == 200:
-        response_json = response.json()["data"]
-        for k, v in response_json.items():
-            if v[2] == station_id:
-                station_info.append({"scope": int(v[0]), "component": int(v[1])})
-        return station_info
+    response.raise_for_status()
+    response_json = response.json()["data"]
+    for k, v in response_json.items():
+        if v[2] == station_id:
+            station_info.append({"scope": int(v[0]), "component": int(v[1])})
+    return station_info
 
 
 def request_measure_endpoint(
@@ -111,12 +112,12 @@ def request_measure_endpoint(
         url="https://www.umweltbundesamt.de/api/air_data/v3/measures/json",
         params=params,
     )
-    if response.status_code == 200:
-        response_json = response.json()
-        if response_json["data"]:
-            return response_json["data"][station_id]
-        else:
-            return response_json["data"]
+    response.raise_for_status()
+    response_json = response.json()
+    if response_json["data"]:
+        return response_json["data"][station_id]
+    else:
+        return response_json["data"]
 
 
 def combine_measure_responses(
@@ -199,6 +200,7 @@ def get_airquality_data(
     response = requests.get(
         "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json", params=params
     )
+    response.raise_for_status()
     response_data = response.json()["data"][station_id]
     aqi_data = list()
     for k, v in response_data.items():
