@@ -96,7 +96,9 @@ docker-image-scan:
     - "docker compose pull -q flyway mqtt-cat"
     - |
       for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
-        echo $image;
+        echo "Scanning $image";
+        trivy image $image -q --severity CRITICAL >> trivy.out;
       done
+    -"cat trivy.out"
   tags:
     - "dind"
