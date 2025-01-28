@@ -100,5 +100,8 @@ docker-image-scan:
         trivy image $image -q --severity CRITICAL >> trivy.out;
       done
     - "cat trivy.out"
+  artifacts:
+    paths:
+      - "trivy.out"
   tags:
     - "dind"
