@@ -86,15 +86,17 @@ database-test:
 
 docker-image-scan:
   image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "integration"
+  stage: "scan"
   before_script:
     # Install Trivy in the pipeline environment
     - "apk add --no-cache curl"
     - "curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.58.2"
     - "cp .env.example .env"
   script:
-    - "docker compose build"
-    - "docker compose pull -q"
-    - "docker images --format '{{.Repository}}:{{.Tag}}'"
+    - "docker compose pull -q flyway mqtt-cat"
+    - |
+      for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
+        echo $image;
+      done
   tags:
     - "dind"
