@@ -121,7 +121,7 @@ def combine_measure_responses(
     scopes: dict,
 ) -> list:
     """Combine uba respones for all component/scope combinations into one object"""
-    measure_data = list()
+    measure_data = []
     station_info = get_station_info(station_id)
     for entry in station_info:
         response = request_measure_endpoint(
