@@ -1,6 +1,6 @@
 --
 scan-docker-images:
-  image: "docker:$24-cli"
+  image: "docker:24-cli"
   stage: "scan"
   before_script:
     # Install Trivy in the pipeline environment
@@ -9,17 +9,6 @@ scan-docker-images:
   script:
     - "docker compose pull -q"
     - "docker compose build -q"
-    #- for image in $(docker images --format "{{.Repository}}:{{.Tag}}"); do echo "Scanning $image ..."; trivy image $image --severity critical --exit-code 0 >> ./trivy.out; done
-  #artifacts:
-  #  when: on_success
-  #  paths:
-  #    - ./trivy.out
-  #  rules:
-  #    - if: $CI_COMMIT_BRANCH == "main"
-  #     expire_in: 30 days
-  #     when: always
-  #   - if: $CI_COMMIT_BRANCH != "main"
-  #    expire_in: 2 days
-  #    when: always
+    - "docker images --format '{{.Repository}}:{{.Tag}}'"
   tags:
     - "dind"
