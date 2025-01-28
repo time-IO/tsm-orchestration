@@ -99,6 +99,6 @@ docker-image-scan:
         echo "Scanning $image";
         trivy image $image -q --severity CRITICAL >> trivy.out;
       done
-    -"cat trivy.out"
+    - "cat trivy.out"
   tags:
     - "dind"
