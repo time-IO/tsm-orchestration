@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+# DWD Brightsky API docs: https://brightsky.dev/docs/#/operations/getWeather
+
 import requests
 import os
 import logging
