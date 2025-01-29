@@ -100,11 +100,21 @@ docker-image-scan:
     - |
       for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
         echo "Scanning $image";
-        trivy image $image -q --severity CRITICAL >> trivy.out;
+        trivy image $image -q --severity CRITICAL >> critical_cves.out;
+        trivy image $image -q --severity CRITICAL --ignore-unfixed >> critical_cves_fixed.out;
+        trivy image $image -q --severity HIGH >> hig_cves.out;
+        trivy image $image -q --severity HIGH --ignore-unfixed >> high_cves_fixed.out; 
       done
     - "cat trivy.out"
   artifacts:
     paths:
-      - "trivy.out"
+      - "*.out"
+    rules:
+      - if: $CI_COMMIT_BRANCH == "main"
+        expire_in: 30 days
+        when: always
+      - if: $CI_COMMIT_BRANCH != "main"
+        expire_in: 2 days
+        when: always
   tags:
     - "dind"
