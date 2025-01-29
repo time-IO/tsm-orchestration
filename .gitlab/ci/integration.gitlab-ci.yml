@@ -110,7 +110,7 @@ docker-image-scan:
       - "*.cve"
     expire_in: 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH && $CI_MERGE_REQUEST_ID == null
-      when: always
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+  when: always
   tags:
     - "dind"
