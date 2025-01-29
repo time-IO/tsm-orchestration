@@ -109,12 +109,12 @@ docker-image-scan:
   artifacts:
     paths:
       - "*.out"
-    rules:
-      - if: $CI_COMMIT_BRANCH == "main"
-        expire_in: 30 days
-        when: always
-      - if: $CI_COMMIT_BRANCH != "main"
-        expire_in: 2 days
-        when: always
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      expire_in: 30 days
+      when: always
+    - if: $CI_COMMIT_BRANCH != "main"
+      expire_in: 2 days
+      when: always
   tags:
     - "dind"
