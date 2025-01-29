@@ -98,23 +98,19 @@ docker-image-scan:
     - "docker compose pull -q"
     - "docker compose build -q"
     - |
-      for image in $(docker images --format '{{.Repository}}:{{.Tag}}'); do
+      for image in $(docker images --format "{{.Repository}}:{{.Tag}}"); do
         echo "Scanning $image";
-        trivy image $image -q --severity CRITICAL >> critical_cves.out;
-        trivy image $image -q --severity CRITICAL --ignore-unfixed >> critical_cves_fixed.out;
-        trivy image $image -q --severity HIGH >> hig_cves.out;
-        trivy image $image -q --severity HIGH --ignore-unfixed >> high_cves_fixed.out; 
+        trivy image $image -q --severity CRITICAL >> critical_all.cve;
+        trivy image $image -q --severity CRITICAL --ignore-unfixed >> critical_fixed.cve;
+        trivy image $image -q --severity HIGH >> high_all.cve;
+        trivy image $image -q --severity HIGH --ignore-unfixed >> high_fixed.cve; 
       done
-    - "cat trivy.out"
   artifacts:
     paths:
-      - "*.out"
+      - "*.cve"
+    expire_in: 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      expire_in: 30 days
-      when: always
     - if: $CI_COMMIT_BRANCH != "main"
-      expire_in: 2 days
       when: always
   tags:
     - "dind"
