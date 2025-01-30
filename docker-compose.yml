@@ -277,6 +277,7 @@ services:
       GF_AUTH_GENERIC_OAUTH_API_URL: "${GF_AUTH_GENERIC_OAUTH_API_URL}"
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
+      GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
     volumes:
       - ./data/grafana/:/var/lib/grafana
 
