@@ -9,6 +9,8 @@ import requests
 import click
 import mqtt
 
+from decrypt import decrypt
+
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 
@@ -29,11 +31,12 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     params = json.loads(parameters.replace("'", '"'))
+    api_key_dec = decrypt(params["api_key"])
 
     res = requests.get(
         params["endpoint_uri"],
         headers={
-            "Authorization": f"Bearer {params['api_key']}",
+            "Authorization": f"Bearer {api_key_dec}",
             "Accept": "text/event-stream",
         },
     )
