@@ -629,6 +629,7 @@ services:
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     entrypoint: ["python3", "frost_setup.py"]
 
 
