@@ -451,6 +451,7 @@ services:
       ALLOWED_VOS: "${ALLOWED_VOS}"
       STA_ROOT_URL: "${STA_ROOT_URL}"
       QAQC_SETTING_SAQC_VERSION: "${QAQC_SETTING_SAQC_VERSION}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
       database:
         condition: service_healthy
@@ -601,6 +602,7 @@ services:
       CV_URL: "${CV_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     entrypoint: ["python3", "db_setup.py"]
 
 
@@ -628,6 +630,7 @@ services:
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     entrypoint: ["python3", "frost_setup.py"]
 
 
@@ -686,6 +689,7 @@ services:
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     entrypoint: ["python3", "grafana_dashboard_setup.py"]
 
 
