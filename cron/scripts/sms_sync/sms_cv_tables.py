@@ -11,10 +11,15 @@ import json
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 file_names = [
-    "sms_cv_measured_quantity.json"
+    "sms_cv_measured_quantity.json",
+    "sms_cv_license.json",
+    "sms_cv_aggregation_type.json",
+    "sms_cv_unit.json",
 ]
 
-file_path_list = [os.path.join(script_dir, "tables", file_name) for file_name in file_names]
+file_path_list = [
+    os.path.join(script_dir, "tables", file_name) for file_name in file_names
+]
 
 if __name__ == "__main__":
     url = os.environ.get("CV_API_URL")

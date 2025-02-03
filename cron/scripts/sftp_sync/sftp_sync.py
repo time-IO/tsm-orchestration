@@ -9,35 +9,33 @@ from remote_fs import MinioFS, FtpFS, sync
 from paramiko import WarningPolicy
 
 
-def get_minio_credentials(conn, thing_id) -> tuple[str, str, str, str]:
-    """Returns (uri, access_key, secret_key, bucket_name)"""
+def get_minio_bucket_name(conn, thing_id) -> str:
+    """Returns bucket_name from configdb."""
     with conn.cursor() as cur:
-        a, s, b = cur.execute(
-            "SELECT r.access_key, r.secret_key, r.bucket "
-            "FROM tsm_thing t JOIN tsm_rawdatastorage r ON t.id = r.thing_id "
-            "WHERE t.thing_id = %s",
+        res = cur.execute(
+            "select s3.bucket from config_db.s3_store s3 "
+            "join config_db.thing t on s3.id = t.s3_store_id "
+            "where t.uuid = %s",
             [thing_id],
         ).fetchone()
-        if not a:
-            raise RuntimeError(
-                "No object storage credentials found in frontend database"
-            )
-        return os.environ["MINIO_URL"], a, s, b
+        if res is None or not res[0]:
+            raise RuntimeError(f"No S3 bucket found for thing {thing_id!r}")
+        return res[0]
 
 
 def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
     """Returns (uri, username, password, path)"""
     with conn.cursor() as cur:
-        ur, us, pw, pa = cur.execute(
-            "SELECT ext_sftp_uri, ext_sftp_username, ext_sftp_password, ext_sftp_path "
-            "FROM tsm_thing WHERE thing_id = %s",
+        res = cur.execute(
+            'select ftp.uri, ftp."user", ftp.password, ftp.path '
+            "from config_db.ext_sftp ftp join config_db.thing t "
+            "on ftp.id = t.ext_sftp_id "
+            "where t.uuid = %s",
             [thing_id],
         ).fetchone()
-        if "" in [ur, us] or None in [ur, us]:
-            raise RuntimeError(
-                "No object external sftp credentials found in frontend database"
-            )
-        return ur, us, pw, pa
+        if res is None or res[0] in ["", None] or res[1] in ["", None]:
+            raise RuntimeError(f"No Ext-sFTP credentials found for thing {thing_id!r}")
+        return res
 
 
 USAGE = """
@@ -48,11 +46,15 @@ Arguments
   THING_UUID        UUID of the thing.
   KEYFILE           SSH private key file to authenticate at the sftp server.
 
-Additional set the following environment variables:
+Additional set the following nvironment variables:
 
+  MINIO_URL         Minio URL to sync to.
+  MINIO_USER        Minio user with r/w privileges 
+  MINIO_PASSWORD    Password for minio user above.
   MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
-  FTP_AUTH_DB_DSN   DB which store the credentials for the internal 
-                    and external sftp server. See also DSN format below. 
+  CONFIGDB_DSN      DB which stores the credentials for the external sftp server 
+                    (source of sync) and also the (existing) bucket-name for the 
+                    target S3 storage. See also DSN format below. 
   LOG_LEVEL         Set the verbosity, defaults to INFO.
                     [DEBUG, INFO, WARNING, ERROR, CRITICAL]
 
@@ -69,19 +71,33 @@ if __name__ == "__main__":
     thing_id = sys.argv[1]
     ssh_priv_key = sys.argv[2]
 
-    for k in ["FTP_AUTH_DB_DSN", "MINIO_URL", "MINIO_SECURE"]:
+    for k in [
+        "CONFIGDB_DSN",
+        "MINIO_URL",
+        "MINIO_USER",
+        "MINIO_PASSWORD",
+        "MINIO_SECURE",
+    ]:
         if not os.environ.get(k):
             raise EnvironmentError(f"Environment variable {k} must be set")
-    dsn = os.environ["FTP_AUTH_DB_DSN"]
+    dsn = os.environ["CONFIGDB_DSN"]
     minio_secure = (  # ensure True as default
         False if os.environ["MINIO_SECURE"].lower() in ["false", "0"] else True
     )
 
+    logging.getLogger("sftp_sync").info("Thing UUID: %s", thing_id)
+
     with psycopg.connect(dsn) as conn:
         ftp_ext = get_external_ftp_credentials(conn, thing_id)
-        storage = get_minio_credentials(conn, thing_id)
+        bucket = get_minio_bucket_name(conn, thing_id)
 
-    target = MinioFS.from_credentials(*storage, secure=minio_secure)
+    target = MinioFS.from_credentials(
+        endpoint=os.environ["MINIO_URL"],
+        access_key=os.environ["MINIO_USER"],
+        secret_key=os.environ["MINIO_PASSWORD"],
+        bucket_name=bucket,
+        secure=minio_secure,
+    )
     source = FtpFS.from_credentials(
         *ftp_ext, keyfile_path=ssh_priv_key, missing_host_key_policy=WarningPolicy()
     )

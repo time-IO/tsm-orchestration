@@ -1,10 +1,13 @@
 #! /usr/bin/env python3
 
+# DWD Brightsky API docs: https://brightsky.dev/docs/#/operations/getWeather
+
 import requests
 import os
 import logging
 import json
 import click
+import mqtt
 
 from datetime import datetime, timedelta
 
@@ -27,30 +30,37 @@ PARAMETER_MAPPING = {
     "wind_direction": 0,
     "wind_speed": 0,
     "wind_gust_direction": 0,
-    "wind_gust_speed": 0
+    "wind_gust_speed": 0,
 }
 
-RESULT_TYPE_MAPPING = {0: "result_number",
-                       1: "result_string",
-                       2: "result_json",
-                       3: "result_boolean"}
+RESULT_TYPE_MAPPING = {
+    0: "result_number",
+    1: "result_string",
+    2: "result_json",
+    3: "result_boolean",
+}
 
 
-def fetch_brightsky_data(station_id: str, brightsky_base_url = "https://api.brightsky.dev/weather") -> dict:
-    """ Returns DWD data with hourly resolution of yesterday"""
+def fetch_brightsky_data(
+    station_id: str, brightsky_base_url="https://api.brightsky.dev/weather"
+) -> dict:
+    """Returns DWD data with hourly resolution of yesterday"""
     yesterday = datetime.now() - timedelta(days=1)
-    yesterday_start = datetime.strftime(yesterday, '%Y-%m-%d:00:00:00')
-    yesterday_end = datetime.strftime(yesterday, '%Y-%m-%d:23:55:00')
-    params = {"dwd_station_id": station_id,
-              "date": yesterday_start,
-              "last_date": yesterday_end,
-              "units": "dwd"}
+    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%d:00:00:00")
+    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%d:23:55:00")
+    params = {
+        "dwd_station_id": station_id,
+        "date": yesterday_start,
+        "last_date": yesterday_end,
+        "units": "dwd",
+    }
     brightsky_response = requests.get(url=brightsky_base_url, params=params)
     response_data = brightsky_response.json()
     return response_data
 
+
 def parse_brightsky_response(resp) -> dict:
-    """ Uses Brightsky Response and returns body for POST request"""
+    """Uses Brightsky Response and returns body for POST request"""
     observation_data = resp["weather"]
     source = resp["sources"][0]
     bodies = []
@@ -65,10 +75,13 @@ def parse_brightsky_response(resp) -> dict:
                     "result_type": result_type,
                     "datastream_pos": parameter,
                     RESULT_TYPE_MAPPING[result_type]: value,
-                    "parameters": json.dumps({"origin": "dwd_data", "column_header": source})
+                    "parameters": json.dumps(
+                        {"origin": "dwd_data", "column_header": source}
+                    ),
                 }
                 bodies.append(body)
     return {"observations": bodies}
+
 
 @click.command()
 @click.argument("thing_uuid")
@@ -80,18 +93,22 @@ def main(thing_uuid, parameters, target_uri):
     params = json.loads(parameters.replace("'", '"'))
     response = fetch_brightsky_data(params["station_id"])
     parsed_observations = parse_brightsky_response(response)
-    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
-                        json=parsed_observations,
-                        headers = {'Content-type': 'application/json'})
-    if req.status_code == 201:
-        logging.info(
-            f"Successfully inserted {len(parsed_observations['observations'])} "
-            f"observations for thing {thing_uuid} from DWD API into TimeIO DB"
-        )
-    else:
-        logging.error(f"{req.text}")
+    resp = requests.post(
+        f"{api_base_url}/observations/upsert/{thing_uuid}",
+        json=parsed_observations,
+        headers={"Content-type": "application/json"},
+    )
+    if resp.status_code != 201:
+        logging.error(f"{resp.text}")
+        resp.raise_for_status()
+        # exit
+
+    logging.info(
+        f"Successfully inserted {len(parsed_observations['observations'])} "
+        f"observations for thing {thing_uuid} from DWD API into TimeIO DB"
+    )
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":
     main()
-

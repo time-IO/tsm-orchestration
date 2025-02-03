@@ -24,12 +24,14 @@ def on_connect(client, userdata, flags, rc):
         global connected
         connected = True
 
+
 def on_message(client, userdata, msg):
     global is_valid
     print(msg.topic + " " + str(msg.payload))
     msg_json = json.loads(msg.payload)
     if validate_message(msg_json):
         is_valid = True
+
 
 def validate_message(msg_json):
     avsc_file = "./.gitlab/ci/avsc/thing_creation.avsc"
@@ -46,6 +48,7 @@ def validate_message(msg_json):
         print(f"Message not valid. Returning exception:\n{e}")
         return False
 
+
 def django_loaddata():
     print("Loading Django fixtures")
     os.system(
@@ -57,12 +60,14 @@ def django_loaddata():
     )
     time.sleep(2)
 
+
 def build_client():
     clt = mqtt.Client()
     clt.on_connect = on_connect
     clt.on_message = on_message
     clt.username_pw_set(username, password)
     return clt
+
 
 def connect_and_listen():
     client = build_client()

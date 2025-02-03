@@ -21,7 +21,7 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
-      - ./data/minio/certs/:/tmp/certs
+      - "${MINIO_DIR}/certs/:/tmp/certs"
       - ./nginx/html/:/home/tsm/html
       - ./cron:/tmp/cron
 
@@ -124,31 +124,24 @@ services:
       #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${MINIO_SERVER_URL}"
     volumes:
-      - ./data/minio/vol0:/vol0
+      - "${MINIO_DIR}/vol0:/vol0"
       # FTP server tls key and cert
       - "${MINIO_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
       - "${MINIO_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
       # SSH Server key to provide constant ssh host key
       - "${MINIO_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
     user: "${UID}:${GID}"
-    command:
-      - server
-      - --console-address
-      - :9001
-      - --ftp
-      - address=:21
-      - --ftp
-      - passive-port-range=30000-30010
-      - --sftp
-      - address=:22
-      - --sftp
-      - ssh-private-key=/certs/id_ed25519
-      - --ftp
-      - tls-private-key=/certs/minio-ftp.key
-      - --ftp
-      - tls-public-cert=/certs/minio-ftp.crt
-      - --json
-      - /vol0
+    command: >
+      server
+      --console-address :9001
+      --ftp address=:21
+      --ftp passive-port-range=30000-30010
+      --sftp address=:22
+      --sftp ssh-private-key=/certs/id_ed25519
+      --ftp tls-private-key=/certs/minio-ftp.key
+      --ftp tls-public-cert=/certs/minio-ftp.crt
+      --json 
+      /vol0
     healthcheck:
       test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
       interval: "${MINIO_HEALTHCHECK_INTERVAL}"
@@ -170,12 +163,11 @@ services:
     restart: "${RESTART}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG}"
     depends_on:
-      flyway:
-        condition: service_completed_successfully
-    command:
-      - /usr/sbin/mosquitto
-      - -c
-      - /var/lib/mosquitto/mosquitto.conf
+      database:
+        condition: service_healthy
+    command: >
+      /usr/sbin/mosquitto 
+      -c /var/lib/mosquitto/mosquitto.conf
     entrypoint:
       - /docker-entrypoint.sh
     user: "${UID}:${GID}"
@@ -207,12 +199,13 @@ services:
     tmpfs:
       - /var/lib/mosquitto/:uid=${UID}
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub \
-        -t '$$SYS/broker/version' \
-        -C 1 \
-        -u $${MQTT_USER} \
-        -P $${MQTT_PASSWORD} \
-        --id docker-compose-healthcheck"]
+      test: >
+        mosquitto_sub 
+        -C 1 
+        -t '$$SYS/broker/version'
+        -u "${MQTT_USER}"
+        -P "${MQTT_PASSWORD}"
+        --id docker-compose-healthcheck
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
       start_period: 20s
       timeout: 10s
@@ -256,6 +249,7 @@ services:
       GF_AUTH_GENERIC_OAUTH_API_URL: "${GF_AUTH_GENERIC_OAUTH_API_URL}"
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
+      GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
     volumes:
       - ./data/grafana/:/var/lib/grafana
     healthcheck:
@@ -355,7 +349,7 @@ services:
   flyway:
     image: flyway/flyway:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf migrate
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
       - ./flyway/migrations:/flyway/sql
       - ./flyway/flyway.conf:/flyway/conf/flyway.conf
@@ -431,6 +425,7 @@ services:
       MQTT_BROKER_HOST: "${FRONTEND_MQTT_HOST}"
       MQTT_USER: "${FRONTEND_MQTT_USER}"
       MQTT_PASSWORD: "${FRONTEND_MQTT_PASS}"
+      MQTT_CLIENT_ID: frontend
       DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME}"
       DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD}"
       DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL}"
@@ -447,10 +442,14 @@ services:
       MINIO_SFTP_PORT: "${MINIO_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
-
+      STA_ROOT_URL: "${STA_ROOT_URL}"
+      QAQC_SETTING_SAQC_VERSION: "${QAQC_SETTING_SAQC_VERSION}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
+      worker-configdb-updater:
+        condition: service_started
 
 
   # Summary
@@ -519,7 +518,6 @@ services:
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: configdb-updater
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
-      MQTT_SUBSCRIBE_TOPIC: frontend_thing_update
       MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
       MQTT_PUBLISH_TOPIC: configdb_update
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
@@ -539,6 +537,8 @@ services:
         condition: service_healthy
       object-storage:
         condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -552,13 +552,9 @@ services:
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
-      S3MAP_DB_URL: "postgresql://\
-        ${S3MAP_POSTGRES_USER}:\
-        ${S3MAP_POSTGRES_PASS}@\
-        ${S3MAP_POSTGRES_HOST}/\
-        ${S3MAP_POSTGRES_DB}"
-    command:
-      - create-thing-in-minio
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "minio_setup.py"]
 
 
   # Summary
@@ -576,6 +572,10 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -592,8 +592,10 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
-    command:
-      - create-thing-in-postgres
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "db_setup.py"]
 
 
   worker-frost-setup:
@@ -601,6 +603,10 @@ services:
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     volumes:
       - ./data/tomcat/context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
@@ -614,8 +620,11 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
-    command:
-      - create-frost-instance
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "frost_setup.py"]
+
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
@@ -623,6 +632,10 @@ services:
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -638,8 +651,9 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
-    command:
-      - create-mqtt-user
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "mqtt_user_setup.py"]
 
 
   worker-grafana-dashboard:
@@ -649,6 +663,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       visualization:
+        condition: service_started
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -663,8 +679,10 @@ services:
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
-    command:
-      - create-thing-in-grafana
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "grafana_dashboard_setup.py"]
 
 
   # =================================================================
@@ -679,7 +697,7 @@ services:
         condition: service_healthy
       object-storage:
         condition: service_healthy
-      basic-demo-scheduler:
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -690,33 +708,20 @@ services:
       MQTT_CLIENT_ID: file-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       MINIO_SECURE: "${MINIO_SECURE}"
       MINIO_URL: "${MINIO_HOST}"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
-      S3MAP_DB_URL: "postgresql://\
-        ${S3MAP_POSTGRES_USER}:\
-        ${S3MAP_POSTGRES_PASS}@\
-        ${S3MAP_POSTGRES_HOST}/\
-        ${S3MAP_POSTGRES_DB}"
-      SCHEDULER: "${SCHEDULER}"
-      SCHED_HOST: "${SCHED_HOST}"
-      SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
-      SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
-      SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
-      SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
       CONFIGDB_DSN: "postgresql://\
         ${CONFIGDB_USER}:\
         ${CONFIGDB_PASSWORD}@\
         ${CONFIGDB_HOST}:\
         ${CONFIGDB_PORT}/\
-        ${S3MAP_POSTGRES_DB}"
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
-      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
-      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
-    command:
-      - schedule-parser-job
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "file_ingest.py"]
 
 
   worker-run-qaqc:
@@ -725,28 +730,29 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      basic-demo-scheduler:
+      database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: data_parsed
+      TOPIC: "${TOPIC_DATA_PARSED}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: run-qaqc
+      MQTT_CLIENT_ID: worker-qaqc
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      SCHEDULER: "${SCHEDULER}"
-      SCHED_HOST: "${SCHED_HOST}"
-      SCHED_MQTT_BROKER: "${SCHED_MQTT_BROKER}"
-      SCHED_MQTT_USER: "${SCHED_MQTT_USER}"
-      SCHED_MQTT_PASSWORD: "${SCHED_MQTT_PASSWORD}"
-      SCHED_JOB_LOG_LEVEL: "${SCHED_JOB_LOG_LEVEL}"
-      SCHED_SLURM_RESTAPI_VERSION: "${SCHED_SLURM_RESTAPI_VERSION}"
-      SCHED_SLURM_USER: "${SCHED_SLURM_USER}"
-      SCHED_SLURM_JWT_TOKEN: "${SCHED_SLURM_JWT_TOKEN}"
-    command:
-      - schedule-qaqc-job
+      TOPIC_QC_DONE: qaqc_done
+      TOPIC_QC_DONE_QOS: "${MQTT_QOS}"
+      DATABASE_DSN: "postgresql://\
+        ${CREATEDB_POSTGRES_USER}:\
+        ${CREATEDB_POSTGRES_PASSWORD}@\
+        ${CREATEDB_POSTGRES_HOST}/\
+        ${CREATEDB_POSTGRES_DATABASE}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "run_qc.py"]
 
 
   worker-mqtt-ingest:
@@ -754,6 +760,10 @@ services:
     restart: "${RESTART}"
     depends_on:
       mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -764,14 +774,15 @@ services:
       MQTT_CLIENT_ID: mqtt-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-    command:
-      - parse-mqtt-data
-      - --target-uri
-      - "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DB}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "mqtt_ingest.py"]
 
 
   worker-crontab-setup:
@@ -782,6 +793,8 @@ services:
           condition: service_healthy
         init:
           condition: service_completed_successfully
+        timeio-db-api:
+          condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -791,10 +804,11 @@ services:
       MQTT_CLIENT_ID: crontab-setup
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "crontab_setup.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
-    command:
-      - update-sftp-crontab
 
   # =================================================================
   # other worker
@@ -807,6 +821,8 @@ services:
       mqtt-broker:
         condition: service_healthy
       visualization:
+        condition: service_started
+      timeio-db-api:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
@@ -821,39 +837,9 @@ services:
       GRAFANA_USER: "${GRAFANA_USER}"
       GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
       ALLOWED_VOS: "${ALLOWED_VOS}"
-    command:
-      - create-grafana-user
-
-
-  basic-demo-scheduler:
-    image: "registry.hzdr.de/ufz-tsm/tsm-basic-demo-scheduler/basic_demo_scheduler:${SCHEDULER_IMAGE_TAG}"
-    restart: "${RESTART}"
-    # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
-    # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 0.5
-    mem_limit: 4g
-    healthcheck:
-      test: [ "CMD-SHELL", "curl --fail http://localhost:5000/health || exit 1" ]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    environment:
-      MQTT_BROKER: mqtt-broker:1883
-      MQTT_USER: "${MQTT_USER}"
-      MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: basic-demo-scheduler
-      MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      DATABASE_HOST: "${CREATEDB_POSTGRES_HOST}"
-      DATABASE_NAME: "${CREATEDB_POSTGRES_DATABASE}"
-    command:
-      - --verbose
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "grafana_user_setup.py"]
 
 
   cron-scheduler:
@@ -881,18 +867,27 @@ services:
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
       MINIO_URL: "${MINIO_HOST}"
+      MINIO_USER: "${MINIO_ROOT_USER}"
+      MINIO_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_SECURE: "${MINIO_SECURE}"
-      FTP_AUTH_DB_DSN: "postgresql://\
-        ${FRONTEND_POSTGRES_USER}:\
-        ${FRONTEND_POSTGRES_PASS}@\
-        ${FRONTEND_POSTGRES_HOST}/\
-        ${FRONTEND_POSTGRES_DB}"
+      CONFIGDB_DSN: "postgresql://\
+        ${CONFIGDB_USER}:\
+        ${CONFIGDB_PASSWORD}@\
+        ${CONFIGDB_HOST}:\
+        ${CONFIGDB_PORT}/\
+        ${CONFIGDB_DB}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: cron-scheduler
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
     depends_on:
       init:
         condition: service_completed_successfully
     healthcheck:
-      test: [ "CMD-SHELL", "/supercronic-health.sh || exit 1" ]
+      test: /supercronic-health.sh || exit 1
       interval: 5s
       timeout: 3s
       retries: 5
@@ -911,18 +906,13 @@ services:
       options:
         max-size: "${MQTT_CAT_LOG_SIZE}"
         max-file: "${MQTT_CAT_FILE_COUNT}"
-    command:
-      - mosquitto_sub
-      - -h
-      - mqtt-broker
-      - --pretty
-      - -u
-      - "${MQTT_USER}"
-      - -P
-      - "${MQTT_PASSWORD}"
-      - -t
-      - "#"
-      - -v
+    command: >
+      mosquitto_sub --pretty -v 
+      -h mqtt-broker  
+      -t "#" 
+      -u "${MQTT_USER}" 
+      -P "${MQTT_PASSWORD}"
+      --id "mqtt-cat"
 
   monitoring:
     image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG}"

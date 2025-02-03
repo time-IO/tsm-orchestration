@@ -10,13 +10,16 @@ from datetime import datetime
 import click
 import requests
 import psycopg
+import mqtt
 
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 
-def get_nm_station_data(station: str, resolution: int, start_date: datetime, end_date: datetime) -> dict:
+def get_nm_station_data(
+    station: str, resolution: int, start_date: datetime, end_date: datetime
+) -> dict:
     params = {
         "wget": 1,
         "stations[]": station,
@@ -42,14 +45,18 @@ def get_nm_station_data(station: str, resolution: int, start_date: datetime, end
     bodies = []
     header = {"sensor_id": station, "resolution": resolution, "nm_api_url": URL}
     for timestamp, value in rows:
-         if value:
-            bodies.append({
-                "result_time": timestamp,
-                "result_type": 0,
-                "datastream_pos": station,
-                "result_number": float(value),
-                "parameters": json.dumps({"origin": "nm_data", "column_header": header})
-                })
+        if value:
+            bodies.append(
+                {
+                    "result_time": timestamp,
+                    "result_type": 0,
+                    "datastream_pos": station,
+                    "result_number": float(value),
+                    "parameters": json.dumps(
+                        {"origin": "nm_data", "column_header": header}
+                    ),
+                }
+            )
     return {"observations": bodies}
 
 
@@ -105,16 +112,21 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         end_date=datetime.now(),
     )
 
-    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
-                        json=parsed_observations,
-                        headers = {'Content-type': 'application/json'})
-    if req.status_code == 201:
-        logging.info(
-            f"Successfully inserted {len(parsed_observations['observations'])} "
-            f"observations for thing {thing_uuid} from NM API into TimeIO DB"
-        )
-    else:
-       logging.error(f"{req.text}")
+    resp = requests.post(
+        f"{api_base_url}/observations/upsert/{thing_uuid}",
+        json=parsed_observations,
+        headers={"Content-type": "application/json"},
+    )
+    if resp.status_code != 201:
+        logging.error(f"{resp.text}")
+        resp.raise_for_status()
+        # exit
+
+    logging.info(
+        f"Successfully inserted {len(parsed_observations['observations'])} "
+        f"observations for thing {thing_uuid} from NM API into TimeIO DB"
+    )
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":

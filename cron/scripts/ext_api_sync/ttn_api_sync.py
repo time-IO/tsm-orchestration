@@ -7,8 +7,10 @@ import logging
 
 import requests
 import click
+import mqtt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
+
 
 def cleanupJson(string: str) -> str:
     """
@@ -51,21 +53,28 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
                     "result_type": 0,
                     "datastream_pos": k,
                     "result_number": float(v),
-                    "parameters": json.dumps({"origin": params["endpoint_uri"], "column_header": k})
+                    "parameters": json.dumps(
+                        {"origin": params["endpoint_uri"], "column_header": k}
+                    ),
                 }
                 bodies.append(body)
     post_data = {"observations": bodies}
 
-    req = requests.post(f"{api_base_url}/observations/upsert/{thing_uuid}",
-                        json=post_data,
-                        headers={'Content-type': 'application/json'})
-    if req.status_code == 201:
-        logging.info(
-            f"Successfully inserted {len(post_data['observations'])} "
-            f"observations for thing {thing_uuid} from TTN API into TimeIO DB"
-        )
-    else:
-        logging.error(f"{req.text}")
+    resp = requests.post(
+        f"{api_base_url}/observations/upsert/{thing_uuid}",
+        json=post_data,
+        headers={"Content-type": "application/json"},
+    )
+    if resp.status_code != 201:
+        logging.error(f"{resp.text}")
+        resp.raise_for_status()
+        # exit
+
+    logging.info(
+        f"Successfully inserted {len(post_data['observations'])} "
+        f"observations for thing {thing_uuid} from TTN API into TimeIO DB"
+    )
+    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":
