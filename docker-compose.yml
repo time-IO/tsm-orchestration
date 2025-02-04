@@ -511,7 +511,10 @@ services:
   # fills and updates the config-db from setup mqtt-messages
   # (e.g. topic: frontend-thing-update)
   worker-configdb-updater:
-    image: "registry.hzdr.de/ufz-tsm/timeio-configdb-updater/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: confdb_updater/Dockerfile
     restart: "${RESTART}"
     depends_on:
       database:
