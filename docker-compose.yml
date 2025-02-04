@@ -356,7 +356,6 @@ services:
     restart: "${RESTART}"
     volumes:
       - tomcat:/usr/local/tomcat/conf/Catalina/localhost:ro
-      - ./tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp
 
 
   # Summary
