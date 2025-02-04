@@ -892,6 +892,7 @@ services:
       MQTT_CLIENT_ID: cron-scheduler
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
       init:
         condition: service_completed_successfully
