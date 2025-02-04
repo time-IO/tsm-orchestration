@@ -3,47 +3,47 @@ services:
 
   worker-configdb-updater:
     volumes:
-      - "${DEV_CONFIGDB_UPDATER_SRC_DIR:-../timeio-configdb-updater/src}:/usr/src/app"
+      - ./src:/usr/src/app
 
   worker-object-storage-setup:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-db-setup:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-file-ingest:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-frost-setup:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-run-qaqc:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-mqtt-ingest:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-mqtt-user-creation:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-grafana-dashboard:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-grafana-user-orgs:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   worker-crontab-setup:
     volumes:
-      - src:/home/appuser/app/src
+      - ./src:/home/appuser/app/src
 
   frontend:
     environment:
