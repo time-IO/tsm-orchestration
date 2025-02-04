@@ -7,9 +7,13 @@ import os
 import logging
 import requests
 import mqtt
+import sys
 
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from decrypt import decrypt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
@@ -91,9 +95,10 @@ def main(thing_uuid, parameters, target_uri):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     params = json.loads(parameters.replace("'", '"'))
+    pw_dec = decrypt(params["password"])
     timestamp_from, timestamp_to = get_utc_timestamps(params["period"])
     url = f"""{params["endpoint"]}/{params["sensor_id"]}/{timestamp_from}/{timestamp_to}"""
-    response = make_request(url, params["username"], params["password"])
+    response = make_request(url, params["username"], pw_dec)
     parsed_observations = parse_api_response(response, origin="bosch_data")
     resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",

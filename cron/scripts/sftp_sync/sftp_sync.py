@@ -5,8 +5,12 @@ import os
 import sys
 import psycopg
 import logging
+
 from remote_fs import MinioFS, FtpFS, sync
 from paramiko import WarningPolicy
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from decrypt import decrypt
 
 
 def get_minio_bucket_name(conn, thing_id) -> str:
@@ -35,7 +39,9 @@ def get_external_ftp_credentials(conn, thing_id) -> tuple[str, str, str, str]:
         ).fetchone()
         if res is None or res[0] in ["", None] or res[1] in ["", None]:
             raise RuntimeError(f"No Ext-sFTP credentials found for thing {thing_id!r}")
-        return res
+        res_list = list(res)
+        res_list[2] = decrypt(res_list[2])
+        return tuple(res_list)
 
 
 USAGE = """

@@ -6,8 +6,12 @@ import logging
 import json
 import os
 import mqtt
+import sys
 
 from datetime import datetime, timedelta, timezone
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from decrypt import decrypt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
 tsystems_base_url = (
@@ -94,8 +98,9 @@ def main(thing_uuid, parameters, target_uri):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 
     params = json.loads(parameters.replace("'", '"'))
+    pw_dec = decrypt(params["password"])
     response = request_tsystems_api(
-        params["group"], params["station_id"], params["username"], params["password"]
+        params["group"], params["station_id"], params["username"], pw_dec
     )
     parsed_observations = parse_api_response(response)
     resp = requests.post(
