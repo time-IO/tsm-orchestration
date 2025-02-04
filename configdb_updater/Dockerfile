@@ -19,7 +19,7 @@ USER appuser
 # enable sslmode verify-full
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python3"]
 
 
 # RUN apk update && apk add bash gcc musl-dev libpq-dev

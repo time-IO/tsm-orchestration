@@ -514,7 +514,7 @@ services:
     image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: confdb_updater/Dockerfile
+      dockerfile: configdb_updater/Dockerfile
     restart: "${RESTART}"
     depends_on:
       database:
@@ -538,6 +538,7 @@ services:
         ${CREATEDB_POSTGRES_PASSWORD}@\
         ${CREATEDB_POSTGRES_HOST}/\
         ${CREATEDB_POSTGRES_DATABASE}"
+    entrypoint: ["python3", "run_configdb_updater.py"]
 
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
