@@ -562,6 +562,7 @@ services:
       MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     entrypoint: ["python3", "minio_setup.py"]
 
 
