@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import frost
+import timeio
 
 
 class Database:
@@ -195,7 +195,7 @@ class Thing:
             ) from e
 
     def setup_frost(self, tomcat_proxy_url: str):
-        frost.write_context_file(
+        timeio.frost.write_context_file(
             schema=self.database.username.lower(),
             user=f"sta_{self.database.ro_username.lower()}",
             password=self.database.ro_password,

@@ -5,10 +5,10 @@ import logging
 
 import psycopg2
 
-from base_handler import AbstractHandler, MQTTMessage
-from thing import Thing
-from utils import get_envvar, setup_logging
-from utils.journaling import Journal
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.thing import Thing
+from timeio.common import get_envvar, setup_logging
+from timeio.journaling import Journal
 
 logger = logging.getLogger("mqtt-user-setup")
 journal = Journal("System")

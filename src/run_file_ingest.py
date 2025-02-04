@@ -9,11 +9,11 @@ import warnings
 from minio import Minio
 from minio.commonconfig import Tags
 
-import databases
-from base_handler import AbstractHandler, MQTTMessage
-from utils import get_envvar, setup_logging
-from utils.errors import UserInputError, ParsingError
-from utils.journaling import Journal
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.common import get_envvar, setup_logging
+from timeio.errors import UserInputError, ParsingError
+from timeio.journaling import Journal
+from timeio.databases import DBapi, ConfigDB
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
@@ -40,8 +40,8 @@ class ParserJobHandler(AbstractHandler):
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
-        self.dbapi = databases.DBapi(get_envvar("DB_API_BASE_URL"))
-        self.confdb = databases.ConfigDB(get_envvar("CONFIGDB_DSN"))
+        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.confdb = ConfigDB(get_envvar("CONFIGDB_DSN"))
 
     def act(self, content: dict, message: MQTTMessage):
 

@@ -10,12 +10,11 @@ from abc import ABC, abstractmethod
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTMessage
 
-from utils.errors import (
+from timeio.errors import (
     UserInputError,
     DataNotFoundError,
     ParsingError,
     NoDataWarning,
-    ProcessingError,
 )
 
 logger = logging.getLogger("mqtt-handler")
@@ -176,10 +175,10 @@ class AbstractHandler(ABC):
         Subclasses must overwrite this function.
 
         The calling function will handle the following exceptions:
-         - utils.errors.ParsingError
-         - utils.errors.UserInputError
-         - utils.errors.DataNotFoundError
-         - utils.errors.NoDataWarning
+         - timeio.errors.ParsingError
+         - timeio.errors.UserInputError
+         - timeio.errors.DataNotFoundError
+         - timeio.errors.NoDataWarning
 
          Other exceptions will lead to a system exit.
         """

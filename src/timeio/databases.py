@@ -14,8 +14,8 @@ import requests
 from psycopg import Connection, conninfo
 from psycopg.rows import dict_row
 
-import parsing
-from utils.errors import DataNotFoundError
+import timeio.parser as parser
+from timeio.errors import DataNotFoundError
 
 
 class Database:
@@ -45,7 +45,7 @@ class Database:
 class ConfigDB(Database):
     name = "configDB"
 
-    def get_parser(self, thing_uuid) -> parsing.FileParser:
+    def get_parser(self, thing_uuid) -> parser.FileParser:
         """Returns parser-type-name and parser-parameter"""
         query = (
             "select fpt.name, fp.params from thing t "
@@ -56,9 +56,9 @@ class ConfigDB(Database):
         )
         with self.connection() as conn:
             p_type, p_params = conn.execute(query, [thing_uuid]).fetchone()  # noqa
-        return parsing.get_parser(p_type, p_params)
+        return parser.get_parser(p_type, p_params)
 
-    def get_mqtt_parser(self, thing_uuid) -> parsing.MqttDataParser:
+    def get_mqtt_parser(self, thing_uuid) -> parser.MqttDataParser:
         query = (
             "select mdt.name from thing t join mqtt m on t.mqtt_id = m.id "
             "join mqtt_device_type mdt on m.mqtt_device_type_id = mdt.id "
@@ -67,7 +67,7 @@ class ConfigDB(Database):
         with self.connection() as conn:
             dev_type = conn.execute(query, [thing_uuid]).fetchone()  # noqa
 
-        return parsing.get_parser(dev_type, None)
+        return parser.get_parser(dev_type, None)
 
     def get_thing_uuid(self, by: Literal["bucket", "mqtt_user"], value) -> str | None:
         # fmt: off

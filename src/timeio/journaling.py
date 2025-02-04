@@ -11,7 +11,7 @@ from typing import Literal
 from urllib import request
 from urllib.error import HTTPError
 
-from .common import get_envvar, get_envvar_as_bool
+from timeio.common import get_envvar, get_envvar_as_bool
 
 __all__ = ["Journal"]
 logger = logging.getLogger("journaling")

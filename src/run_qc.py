@@ -7,12 +7,12 @@ import logging
 
 from paho.mqtt.client import MQTTMessage
 
-import databases
-from base_handler import AbstractHandler
-from qualcontrol import QualityControl
-from utils import get_envvar, setup_logging
-from utils.errors import DataNotFoundError, UserInputError, NoDataWarning
-from utils.journaling import Journal
+from timeio.mqtt import AbstractHandler
+from timeio.qualcontrol import QualityControl
+from timeio.common import get_envvar, setup_logging
+from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
+from timeio.journaling import Journal
+from timeio.databases import Database, DBapi
 
 logger = logging.getLogger("run-quality-control")
 journal = Journal("QualityControl")
@@ -31,8 +31,8 @@ class QcHandler(AbstractHandler):
         )
         self.publish_topic = get_envvar("TOPIC_QC_DONE")
         self.publish_qos = get_envvar("TOPIC_QC_DONE_QOS", cast_to=int)
-        self.db = databases.Database(get_envvar("DATABASE_DSN"))
-        self.dbapi = databases.DBapi(get_envvar("DB_API_BASE_URL"))
+        self.db = Database(get_envvar("DATABASE_DSN"))
+        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
 
     def act(self, content: dict, message: MQTTMessage):
         if (thing_uuid := content.get("thing_uuid")) is None:

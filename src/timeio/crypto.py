@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import os
 
 from cryptography.fernet import Fernet
-from .common import get_envvar as _get_envvar
+
+from timeio.common import get_envvar as _get_envvar
 
 
 def get_crypt_key() -> str:

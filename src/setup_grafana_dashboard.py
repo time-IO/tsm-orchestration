@@ -4,10 +4,10 @@ from urllib.parse import urlparse
 from grafana_client import GrafanaApi
 from grafana_client.client import GrafanaException
 
-from base_handler import AbstractHandler, MQTTMessage
-from thing import Thing
-from utils import get_envvar, setup_logging
-from utils.crypto import decrypt, get_crypt_key
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.thing import Thing
+from timeio.common import get_envvar, setup_logging
+from timeio.crypto import decrypt, get_crypt_key
 
 logger = logging.getLogger("grafana-dashboard-setup")
 

@@ -16,10 +16,10 @@ from typing import Any, TypedDict, TypeVar, cast
 import pandas as pd
 from typing_extensions import Required
 
-from utils.common import ObservationResultType
-from utils.errors import ParsingError, ParsingWarning
-from utils.types import JsonT
-from utils.journaling import Journal
+from timeio.common import ObservationResultType
+from timeio.errors import ParsingError, ParsingWarning
+from timeio.journaling import Journal
+from timeio.types import JsonT
 
 parsedT = TypeVar("parsedT")
 journal = Journal("Parser")

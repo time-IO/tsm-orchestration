@@ -8,9 +8,8 @@ from typing import Literal
 import grafana_client.api
 from grafana_client.client import GrafanaException
 
-from base_handler import AbstractHandler, MQTTMessage
-from utils import get_envvar, setup_logging
-from utils.journaling import Journal
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.common import get_envvar, setup_logging
 
 logger = logging.getLogger("grafana-user-setup")
 

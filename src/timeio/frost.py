@@ -5,7 +5,8 @@ import logging
 import pathlib
 import xml.etree.ElementTree as ET  # noqa
 from urllib.parse import urlparse, urlunparse
-from utils.crypto import decrypt, get_crypt_key
+
+from timeio.crypto import decrypt, get_crypt_key
 
 logger = logging.getLogger(__name__)
 

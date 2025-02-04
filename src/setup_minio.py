@@ -4,10 +4,10 @@ import logging
 
 from minio_cli_wrapper.mc import Mc
 
-from base_handler import AbstractHandler, MQTTMessage
-from thing import Thing
-from utils import get_envvar, setup_logging
-from utils.crypto import decrypt, get_crypt_key
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.thing import Thing
+from timeio.common import get_envvar, setup_logging
+from timeio.crypto import decrypt, get_crypt_key
 
 logger = logging.getLogger("minio-setup")
 

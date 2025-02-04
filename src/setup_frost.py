@@ -1,8 +1,8 @@
 import logging
 
-from base_handler import AbstractHandler, MQTTMessage
-from thing import Thing
-from utils import get_envvar, setup_logging
+from timeio.mqtt import AbstractHandler, MQTTMessage
+from timeio.thing import Thing
+from timeio.common import get_envvar, setup_logging
 
 logger = logging.getLogger("frost-setup")
 
