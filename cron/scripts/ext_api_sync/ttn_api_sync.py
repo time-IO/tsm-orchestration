@@ -4,11 +4,13 @@
 import os
 import json
 import logging
+import sys
 
 import requests
 import click
 import mqtt
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from decrypt import decrypt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")

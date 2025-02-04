@@ -6,9 +6,11 @@ import logging
 import json
 import os
 import mqtt
+import sys
 
 from datetime import datetime, timedelta, timezone
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from decrypt import decrypt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")

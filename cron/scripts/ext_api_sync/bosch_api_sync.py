@@ -7,10 +7,12 @@ import os
 import logging
 import requests
 import mqtt
+import sys
 
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from decrypt import decrypt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
