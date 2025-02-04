@@ -1,0 +1,78 @@
+from __future__ import annotations
+
+import json
+import logging
+
+import psycopg2
+
+from base_handler import AbstractHandler, MQTTMessage
+from thing import Thing
+from utils import get_envvar, setup_logging
+from utils.journaling import Journal
+
+logger = logging.getLogger("mqtt-user-setup")
+journal = Journal("System")
+
+
+class CreateMqttUserHandler(AbstractHandler):
+    def __init__(self):
+        super().__init__(
+            topic=get_envvar("TOPIC"),
+            mqtt_broker=get_envvar("MQTT_BROKER"),
+            mqtt_user=get_envvar("MQTT_USER"),
+            mqtt_password=get_envvar("MQTT_PASSWORD"),
+            mqtt_client_id=get_envvar("MQTT_CLIENT_ID"),
+            mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
+            mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
+        )
+        self.db = psycopg2.connect(get_envvar("DATABASE_URL"))
+
+    def act(self, content: dict, message: MQTTMessage):
+        thing = Thing.get_instance(content)
+        if content["mqtt_authentication_credentials"]:
+            user = content["mqtt_authentication_credentials"]["username"]
+            pw = content["mqtt_authentication_credentials"]["password_hash"]
+
+            logger.info(f"create user. {user=}")
+            created = self.create_user(thing, user, pw)
+            action = "Created" if created else "Updated"
+            journal.info(f"{action} MQTT user {user}", thing.uuid)
+        else:
+            logger.warning(f"no 'mqtt_authentication_credentials' present")
+
+    def create_user(self, thing, user, pw) -> bool:
+        """Returns True for insert and False for update"""
+        sql = (
+            "INSERT INTO mqtt_auth.mqtt_user (project_uuid, thing_uuid, username, "
+            "password, description,properties, db_schema) "
+            "VALUES (%s, %s, %s, %s ,%s ,%s, %s) "
+            "ON CONFLICT (thing_uuid) "
+            "DO UPDATE SET"
+            " project_uuid = EXCLUDED.project_uuid,"
+            " username = EXCLUDED.username,"
+            " password=EXCLUDED.password,"
+            " description = EXCLUDED.description,"
+            " properties = EXCLUDED.properties,"
+            " db_schema = EXCLUDED.db_schema "
+            "RETURNING (xmax = 0)"
+        )
+        with self.db:
+            with self.db.cursor() as c:
+                c.execute(
+                    sql,
+                    (
+                        thing.project.uuid,
+                        thing.uuid,
+                        user,
+                        pw,
+                        thing.description,
+                        json.dumps(thing.properties),
+                        thing.database.username,
+                    ),
+                )
+                return c.fetchone()[0]
+
+
+if __name__ == "__main__":
+    setup_logging(get_envvar("LOG_LEVEL", "INFO"))
+    CreateMqttUserHandler().run_loop()
