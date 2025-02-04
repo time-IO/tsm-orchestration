@@ -1,0 +1,14 @@
+psycopg2-binary~=2.9.2
+psycopg[binary]==3.2.1
+click>=8.0.3
+pwgen>=0.8.2.post0
+paho-mqtt==2.1.0
+--index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
+minio-cli-wrapper>=0.0.16
+PyYAML==6.0.2
+grafana-client>=3.6.0
+requests~=2.32.3
+python-crontab~=3.0.0
+pandas~=2.1.4
+saqc==2.6.0
+cryptography>=43.0.0

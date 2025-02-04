@@ -36,9 +36,7 @@ _TEMPLATE = """\
 </Context>
 """
 CONTEXT_FILES_DIR = (
-    pathlib.Path(__file__)
-    .resolve()
-    .parent.joinpath("CreateNewFrostInstanceAction/tomcat/context_files")
+    pathlib.Path(__file__).resolve().parent.joinpath("frost_context_files")
 )
 
 

@@ -163,11 +163,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
 
     def deploy_ddl(self, thing):
-        file = os.path.join(
-            os.path.dirname(__file__),
-            "CreateThingInDatabaseAction",
-            "postgres-ddl.sql",
-        )
+        file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
         with open(file) as fh:
             query = fh.read()
 
@@ -214,11 +210,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
 
     def deploy_dml(self):
-        file = os.path.join(
-            os.path.dirname(__file__),
-            "CreateThingInDatabaseAction",
-            "postgres-dml.sql",
-        )
+        file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
         with self.db:
@@ -289,9 +281,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
 
     def create_frost_views(self, thing, user_prefix: str = "sta_"):
-        base_path = os.path.join(
-            os.path.dirname(__file__), "CreateThingInDatabaseAction", "sta"
-        )
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta")
         files = [
             os.path.join(base_path, "schema_context.sql"),
             os.path.join(base_path, "thing.sql"),

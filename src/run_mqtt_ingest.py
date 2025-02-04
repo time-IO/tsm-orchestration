@@ -7,11 +7,11 @@ import typing
 
 from paho.mqtt.client import MQTTMessage
 
-import databases
 from timeio.mqtt import AbstractHandler
 from timeio.common import get_envvar, setup_logging
 from timeio.errors import UserInputError
 from timeio.journaling import Journal
+from timeio.databases import ConfigDB, DBapi
 
 logger = logging.getLogger("mqtt-ingest")
 journal = Journal("Parser")
@@ -29,8 +29,8 @@ class ParseMqttDataHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-        self.confdb = databases.ConfigDB(get_envvar("CONFIGDB_DSN"))
-        self.dbapi = databases.DBapi(get_envvar("DB_API_BASE_URL"))
+        self.confdb = ConfigDB(get_envvar("CONFIGDB_DSN"))
+        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
 
     def act(self, content: typing.Any, message: MQTTMessage):
         topic = message.topic
