@@ -33,4 +33,4 @@ RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
 RUN mkdir ${HOME}/.postgresql \
     && cp /etc/ssl/certs/ca-certificates.crt ${HOME}/.postgresql/root.crt
 
-USER UID
+USER ${UID}
