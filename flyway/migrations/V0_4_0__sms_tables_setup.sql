@@ -205,6 +205,15 @@ create table public.device_property
 );
 
 
+create table public.device_contact_role (
+    id          serial primary key,
+    role_uri    varchar(256) not null,
+    role_name   varchar(256) not null,
+    contact_id  integer not null,
+    device_id   integer not null
+);
+
+
 create table public.datastream_link
 (
     created_at             timestamp with time zone,
