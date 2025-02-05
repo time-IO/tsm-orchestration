@@ -57,6 +57,6 @@ USER appuser
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 WORKDIR /home/appuser/app/src
 
-COPY src .
+COPY --chown=appuser src .
 
 ENTRYPOINT ["python3"]
