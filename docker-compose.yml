@@ -614,7 +614,7 @@ services:
       timeio-db-api:
         condition: service_healthy
     volumes:
-      - tomcat-context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
+      - tomcat-context:/home/appuser/app/src/frost_context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
