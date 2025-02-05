@@ -7,7 +7,6 @@ import os
 import traceback
 import typing
 from abc import ABC, abstractmethod
-from warnings import deprecated
 
 import paho.mqtt.publish
 import paho.mqtt.client as mqtt
@@ -212,7 +211,3 @@ def publish_single(topic, payload: str):
     """
     paho.mqtt.publish.single(**_get_settings_from_env(), topic=topic, payload=payload)
 
-
-@deprecated
-def send_mqtt_info(topic, payload: str):
-    return publish_single(topic, payload)
