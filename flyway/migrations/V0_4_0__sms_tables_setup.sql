@@ -199,9 +199,9 @@ create table public.device_property
     updated_by_id         integer,
     aggregation_type_uri  varchar(256),
     aggregation_type_name varchar(256),
-    aggregation_type_name varchar(256),
     accuracy_unit_name    varchar(256),
     accuracy_unit_uri     varchar(256)
+
 );
 
 
@@ -236,6 +236,7 @@ create table public.datastream_link
     aggregation_period     double precision,
     tsm_endpoint_id        integer
 );
+
 
 COMMIT;
 
