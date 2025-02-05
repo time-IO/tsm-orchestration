@@ -1,0 +1,175 @@
+BEGIN;
+
+--
+-- Create model Thing
+--
+CREATE TABLE IF NOT EXISTS "thing"
+(
+    "id"          bigserial    NOT NULL PRIMARY KEY,
+    "name"        varchar(200) NOT NULL,
+    "uuid"        uuid         NOT NULL UNIQUE,
+    "description" text         NULL,
+    "properties"  jsonb        NULL
+);
+
+
+--
+-- Create model Journal
+--
+CREATE TABLE IF NOT EXISTS "journal"
+(
+    "id"        bigserial                NOT NULL PRIMARY KEY,
+    "timestamp" timestamp                NOT NULL,
+--  Added below by ALTER TABLE
+--  "timestamp" timestamp with time zone NOT NULL,
+    "level"     varchar(30)              NOT NULL,
+    "message"   text                     NULL,
+    "extra"     jsonb                    NULL,
+    "thing_id"  bigint                   NOT NULL,
+--  Added below by ALTER TABLE
+--  "origin"       varchar(200) NULL
+
+    CONSTRAINT "journal_thing_id_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
+);
+ALTER TABLE "journal"
+    ADD COLUMN IF NOT EXISTS "origin" varchar(200) NULL;
+ALTER TABLE "journal"
+    ALTER COLUMN "timestamp" TYPE timestamp with time zone;
+-- Conditionally create the index if it does not exist
+DO
+$$
+    BEGIN
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'journal'
+                         AND indexname = 'journal_thing_id') THEN
+            EXECUTE 'CREATE INDEX "journal_thing_id" ON "journal" ("thing_id")';
+        END IF;
+    END
+$$;
+
+
+--
+-- Create model Datastream
+--
+CREATE TABLE IF NOT EXISTS "datastream"
+(
+    "id"          bigserial    NOT NULL PRIMARY KEY,
+    "name"        varchar(200) NOT NULL,
+    "description" text         NULL,
+    "properties"  jsonb        NULL,
+    "position"    varchar(200) NOT NULL,
+    "thing_id"    bigint       NOT NULL,
+
+    CONSTRAINT "datastream_thing_id_position_9f2cfe68_uniq" UNIQUE ("thing_id", "position"),
+    CONSTRAINT "datastream_thing_id_f55522a4_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
+);
+-- Conditionally create the index if it does not exist
+DO
+$$
+    BEGIN
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'datastream'
+                         AND indexname = 'datastream_thing_id_f55522a4') THEN
+            EXECUTE 'CREATE INDEX "datastream_thing_id_f55522a4" ON "datastream" ("thing_id")';
+        END IF;
+    END
+$$;
+
+
+--
+-- Create model Observation
+--
+CREATE TABLE IF NOT EXISTS "observation"
+(
+--     "id"                    bigserial                NOT NULL PRIMARY KEY,
+    "phenomenon_time_start" timestamp with time zone NULL,
+    "phenomenon_time_end"   timestamp with time zone NULL,
+    "result_time"           timestamp with time zone NOT NULL,
+    "result_type"           smallint                 NOT NULL,
+    "result_number"         double precision         NULL,
+    "result_string"         varchar(200)             NULL,
+    "result_json"           jsonb                    NULL,
+    "result_boolean"        boolean                  NULL,
+    "result_latitude"       double precision         NULL,
+    "result_longitude"      double precision         NULL,
+    "result_altitude"       double precision         NULL,
+    "result_quality"        jsonb                    NULL,
+    "valid_time_start"      timestamp with time zone NULL,
+    "valid_time_end"        timestamp with time zone NULL,
+    "parameters"            jsonb                    NULL,
+    "datastream_id"         bigint                   NOT NULL,
+
+    CONSTRAINT "observation_datastream_id_result_time_1d043396_uniq" UNIQUE ("datastream_id", "result_time"),
+    CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
+);
+-- -- Conditionally make a TimescaleDB hypertable if not already done
+-- DO
+-- $$
+--     BEGIN
+--         IF NOT EXISTS (SELECT 1
+--                        FROM timescaledb_information.hypertables
+--                        WHERE hypertable_name = 'observation'
+--                          AND hypertable_schema = current_schema()) THEN
+--             -- The table is not a hypertable, so create it
+--             PERFORM public.create_hypertable('observation', 'result_time');
+--         END IF;
+--     END
+-- $$;
+-- Conditionally create the index if it does not exist
+DO
+$$
+    BEGIN
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'observation'
+                         AND indexname = 'observation_datastream_id_77f5c4fb') THEN
+            EXECUTE 'CREATE INDEX "observation_datastream_id_77f5c4fb" ON "observation" ("datastream_id")';
+        END IF;
+    END
+$$;
+
+
+--
+-- Create model Relation role
+--
+CREATE TABLE IF NOT EXISTS relation_role
+(
+    id                 bigint GENERATED BY DEFAULT AS IDENTITY,
+    name               varchar(200) NOT NULL,
+    definition         text         NULL,
+    inverse_name       varchar(200) NOT NULL,
+    inverse_definition text         NULL,
+    description        text         NULL,
+    properties         jsonb        NULL,
+
+    CONSTRAINT relation_role_pk PRIMARY KEY (id),
+    CONSTRAINT relation_role_pk_2 UNIQUE (name),
+    CONSTRAINT relation_role_pk_3 UNIQUE (inverse_name)
+);
+
+
+--
+-- Create model Related datastreams
+--
+CREATE TABLE IF NOT EXISTS related_datastream
+(
+    id            bigint GENERATED ALWAYS AS IDENTITY,
+    datastream_id bigint NOT NULL,
+    role_id       bigint NOT NULL,
+    target_id     bigint NOT NULL,
+
+    CONSTRAINT related_datastream_pk PRIMARY KEY (id),
+    CONSTRAINT related_datastream_pk_2 UNIQUE (datastream_id, role_id, target_id),
+    CONSTRAINT related_datastream_datastream_id_fk FOREIGN KEY (datastream_id) REFERENCES datastream (id) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT related_datastream_datastream_id_fk_2 FOREIGN KEY (target_id) REFERENCES datastream (id) DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT related_datastream_relation_role_id_fk FOREIGN KEY (role_id) REFERENCES relation_role (id) DEFERRABLE INITIALLY DEFERRED
+);
+-- cannot be done inside the CREATE TABLE statement but is idempotent
+COMMENT ON COLUMN related_datastream.datastream_id IS 'Domain, source or set of departure of the relation.';
+COMMENT ON COLUMN related_datastream.role_id IS 'The type of the relation.';
+COMMENT ON COLUMN related_datastream.target_id IS 'Codomain, target  or set of destination of the relation.';
+
+
+COMMIT;

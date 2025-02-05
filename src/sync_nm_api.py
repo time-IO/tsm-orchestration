@@ -10,7 +10,7 @@ from datetime import datetime
 import click
 import requests
 import psycopg
-import mqtt
+import timeio.mqtt as mqtt
 
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
@@ -126,7 +126,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         f"Successfully inserted {len(parsed_observations['observations'])} "
         f"observations for thing {thing_uuid} from NM API into TimeIO DB"
     )
-    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
+    mqtt.publish_single("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":

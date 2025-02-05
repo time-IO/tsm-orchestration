@@ -7,9 +7,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY requirements.txt .
-COPY supercronic-entrypoint.sh .
-COPY supercronic-health.sh .
+COPY src/requirements.txt .
+COPY cron/supercronic-entrypoint.sh .
+COPY cron/supercronic-health.sh .
 
 RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
     && chmod 755 supercronic-linux-amd64 \
