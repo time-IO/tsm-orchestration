@@ -201,22 +201,26 @@ def get_airquality_data(
         "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json", params=params
     )
     response.raise_for_status()
-    response_data = response.json()["data"][station_id]
-    aqi_data = list()
-    for k, v in response_data.items():
-        pollutant_info = list()
-        for i in range(3, len(v)):
-            entry = {"component": components[v[i][0]], "airquality_index": v[i][2]}
-            pollutant_info.append(entry)
-        aqi_data.append(
-            {
-                "timestamp": v[0],
-                "airquality_index": v[1],
-                "data_complete": v[2],
-                "pollutant_info": pollutant_info,
-            }
-        )
-    return aqi_data
+    response_json = response.json()
+    if response_json["data"]:
+        response_data = response_json["data"][station_id]
+        aqi_data = list()
+        for k, v in response_data.items():
+            pollutant_info = list()
+            for i in range(3, len(v)):
+                entry = {"component": components[v[i][0]], "airquality_index": v[i][2]}
+                pollutant_info.append(entry)
+            aqi_data.append(
+                {
+                    "timestamp": v[0],
+                    "airquality_index": v[1],
+                    "data_complete": v[2],
+                    "pollutant_info": pollutant_info,
+                }
+            )
+        return aqi_data
+    else:
+        return []
 
 
 def parse_aqi_data(aqi_data: list, station_id: str) -> list:
@@ -278,6 +282,7 @@ def main(thing_uuid, parameters, target_uri):
         f"observations for thing {thing_uuid} from UBA API into TimeIO DB"
     )
     mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
+
 
 if __name__ == "__main__":
     main()
