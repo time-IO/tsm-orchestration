@@ -37,7 +37,9 @@ _TEMPLATE = """\
 """
 CONTEXT_FILES_DIR = (
     # tsm-orchestration/src/frost_context_files
-    pathlib.Path(__file__).resolve().parent.parent.joinpath("frost_context_files")
+    pathlib.Path(__file__)
+    .resolve()
+    .parent.parent.joinpath("frost_context_files")
 )
 
 

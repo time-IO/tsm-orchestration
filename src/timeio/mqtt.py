@@ -210,4 +210,3 @@ def publish_single(topic, payload: str):
     Publish a single mqtt message to a broker, then disconnect cleanly.
     """
     paho.mqtt.publish.single(**_get_settings_from_env(), topic=topic, payload=payload)
-
