@@ -1,6 +1,6 @@
 ---
 
-push-to-registry:
+deploy-images-to-registry:
   stage: release
   rules:
     - if: $CI_COMMIT_REF_SLUG == $CI_DEFAULT_BRANCH
@@ -9,6 +9,9 @@ push-to-registry:
         - src/**/*
         - dispatcher/**/*
         - configdb_updater/**/*
+    - if: $CI_COMMIT_REF_SLUG != $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
     - cp .env.example .env
