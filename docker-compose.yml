@@ -65,36 +65,8 @@ services:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       PGDATA: /var/lib/postgresql/data/pgdata
-      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER}"
-      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
-      S3MAP_POSTGRES_USER: "${S3MAP_POSTGRES_USER}"
-      S3MAP_POSTGRES_PASS: "${S3MAP_POSTGRES_PASS}"
-      FRONTEND_POSTGRES_USER: "${FRONTEND_POSTGRES_USER}"
-      FRONTEND_POSTGRES_PASS: "${FRONTEND_POSTGRES_PASS}"
-      SMS_DB_USER: "${SMS_DB_USER}"
-      SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
-      SMS_DB_PORT: "${SMS_DB_PORT}"
-      SMS_DB_DB: "${SMS_DB_DB}"
-      SMS_DB_HOST: "${SMS_DB_HOST}"
-      SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
-      CV_DB_USER: "${CV_DB_USER}"
-      CV_DB_PASSWORD: "${CV_DB_PASSWORD}"
-      CV_DB_PORT: "${CV_DB_PORT}"
-      CV_DB_DB: "${CV_DB_DB}"
-      CV_DB_HOST: "${CV_DB_HOST}"
-      CV_ACCESS_TYPE: "${CV_ACCESS_TYPE}"
     volumes:
-      - ./postgres/sms_db/sms_ddl.sql:/sql/sms/sms_ddl.sql
-      - ./postgres/sms_db/sms_foreign_tables.sql:/sql/sms/sms_foreign_tables.sql
-      - ./postgres/sms_db/sms_init_tables.sh:/docker-entrypoint-initdb.d/01_sms_init_tables.sh
-      - ./postgres/sms_cv_db/sms_cv_ddl.sql:/sql/sms_cv/sms_cv_ddl.sql
-      - ./postgres/sms_cv_db/sms_cv_foreign_tables.sql:/sql/sms_cv/sms_cv_foreign_tables.sql
-      - ./postgres/sms_cv_db/sms_cv_init_tables.sh:/docker-entrypoint-initdb.d/02_sms_cv_init_tables.sh
       - ./postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
-      - ./postgres/postgis.sh:/docker-entrypoint-initdb.d/03_postgis.sh
-      - ./mosquitto/mosquitto-go-auth.sh:/docker-entrypoint-initdb.d/mosquitto-go-auth.sh:ro
-      - ./frontend/frontend-database.sh:/docker-entrypoint-initdb.d/frontend-database.sh:ro
-      - ./dispatcher/s3_to_db.sh:/docker-entrypoint-initdb.d/s3_to_db.sh:ro
       - ./data/postgres/data:/var/lib/postgresql/data
       - "${POSTGRES_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
       - "${POSTGRES_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
@@ -193,6 +165,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     command: >
       /usr/sbin/mosquitto 
       -c /var/lib/mosquitto/mosquitto.conf
@@ -280,6 +254,9 @@ services:
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
     volumes:
       - ./data/grafana/:/var/lib/grafana
+    healthcheck:
+      test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      start_period: 10s
 
 
   # Summary
@@ -306,8 +283,8 @@ services:
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
     depends_on:
-      database:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
 
   # Summary
   # =======
@@ -330,8 +307,8 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       UVICORN_ARGS: "${UVICORN_ARGS} --root-path /db_api"
     depends_on:
-      database:
-        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     healthcheck:
       test: >
         wget -q http://0.0.0.0:8001/dbhealth -O /dev/null || exit 1
@@ -385,6 +362,24 @@ services:
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_USER}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_S3MAP_DB_USER: "${S3MAP_POSTGRES_USER}"
+      FLYWAY_PLACEHOLDERS_S3MAP_DB_PASSWORD: "${S3MAP_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
+      FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${FRONTEND_POSTGRES_USER}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${FRONTEND_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_PORT: "${SMS_DB_PORT}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_DB: "${SMS_DB_DB}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_HOST: "${SMS_DB_HOST}"
+      FLYWAY_PLACEHOLDERS_CV_ACCESS_TYPE: "${CV_ACCESS_TYPE}"
+      FLYWAY_PLACEHOLDERS_CV_DB_USER: "${CV_DB_USER}"
+      FLYWAY_PLACEHOLDERS_CV_DB_PASSWORD: "${CV_DB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_CV_DB_PORT: "${CV_DB_PORT}"
+      FLYWAY_PLACEHOLDERS_CV_DB_DB: "${CV_DB_DB}"
+      FLYWAY_PLACEHOLDERS_CV_DB_HOST: "${CV_DB_HOST}"
     depends_on:
       database:
         condition: service_healthy
@@ -453,8 +448,6 @@ services:
       QAQC_SETTING_SAQC_VERSION: "${QAQC_SETTING_SAQC_VERSION}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
-      database:
-        condition: service_healthy
       mqtt-broker:
         condition: service_healthy
       worker-configdb-updater:
@@ -503,6 +496,9 @@ services:
         condition: service_started
       init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      start_period: 10s
 
   # =================================================================
   # SETUP worker (topic: thing_creation)
@@ -517,8 +513,6 @@ services:
       dockerfile: configdb_updater/Dockerfile
     restart: "${RESTART}"
     depends_on:
-      database:
-        condition: service_healthy
       mqtt-broker:
         condition: service_healthy
     environment:
@@ -830,7 +824,7 @@ services:
     restart: "${RESTART}"
     depends_on:
         mqtt-broker:
-            condition: service_healthy
+          condition: service_healthy
         init:
           condition: service_completed_successfully
         timeio-db-api:
