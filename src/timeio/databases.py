@@ -14,7 +14,7 @@ import requests
 from psycopg import Connection, conninfo
 from psycopg.rows import dict_row
 
-import timeio.parser as parser
+import timeio.parser as parsing
 from timeio.errors import DataNotFoundError
 
 
@@ -45,20 +45,27 @@ class Database:
 class ConfigDB(Database):
     name = "configDB"
 
-    def get_parser(self, thing_uuid) -> parser.FileParser:
+    def get_parser(self, thing_uuid, file_date) -> parsing.Parser:
         """Returns parser-type-name and parser-parameter"""
-        query = (
-            "select fpt.name, fp.params from thing t "
-            "join s3_store s3 on t.s3_store_id = s3.id "
-            "join file_parser fp on s3.file_parser_id = fp.id "
-            "join file_parser_type fpt on fp.file_parser_type_id = fpt.id "
-            "where t.uuid = %s"
-        )
-        with self.connection() as conn:
-            p_type, p_params = conn.execute(query, [thing_uuid]).fetchone()  # noqa
-        return parser.get_parser(p_type, p_params)
+        query = """
+        SELECT fpt.name, fp.params FROM thing_parser tp
+          JOIN thing t ON tp.thing_id = t.id
+          JOIN file_parser fp ON tp.file_parser_id = fp.id
+          JOIN file_parser_type fpt ON fp.file_parser_type_id = fpt.id
+        WHERE
+          t.uuid = %(uuid)s
+          AND tp.valid_from is NULL AND tp.valid_to is NULL
+          OR tp.valid_from <= %(date)s AND tp.valid_to is NULL
+          OR tp.valid_from <= %(date)s AND tp.valid_to > %(date)s;
+        """
 
-    def get_mqtt_parser(self, thing_uuid) -> parser.MqttDataParser:
+        with self.connection() as conn:
+            p_type, p_params = conn.execute(
+                query, {"uuid": thing_uuid, "date": str(file_date)}
+            ).fetchone()  # noqa
+        return parsing.get_parser(p_type, p_params)
+
+    def get_mqtt_parser(self, thing_uuid) -> parsing.MqttDataParser:
         query = (
             "select mdt.name from thing t join mqtt m on t.mqtt_id = m.id "
             "join mqtt_device_type mdt on m.mqtt_device_type_id = mdt.id "
@@ -67,7 +74,7 @@ class ConfigDB(Database):
         with self.connection() as conn:
             dev_type = conn.execute(query, [thing_uuid]).fetchone()  # noqa
 
-        return parser.get_parser(dev_type, None)
+        return parsing.get_parser(dev_type, None)
 
     def get_thing_uuid(self, by: Literal["bucket", "mqtt_user"], value) -> str | None:
         # fmt: off
@@ -89,14 +96,14 @@ class ConfigDB(Database):
                 return uuid
         raise ValueError("Argument 'by' must be one of 'bucket' or 'mqtt_user'")
 
-    def get_s3_store(self, thing_uuid):
+    def get_s3_store(self, thing_uuid) -> dict:
         query = (
             "select s3s.* from config_db.s3_store s3s join "
             "thing t on s3s.id = t.s3_store_id where t.uuid = %s"
         )
         with self.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cur:
-                return cur.execute(query, [thing_uuid]).fetchone()
+                return cur.execute(query, [thing_uuid]).fetchone() or {}
 
 
 class DBapi:

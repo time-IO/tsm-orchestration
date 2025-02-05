@@ -4,16 +4,19 @@ import fnmatch
 import json
 import logging
 from datetime import datetime
+from typing import Tuple, cast
 import warnings
+
+import pandas as pd
 
 from minio import Minio
 from minio.commonconfig import Tags
 
+from timeio.databases import DBapi, ConfigDB
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.errors import UserInputError, ParsingError
 from timeio.journaling import Journal
-from timeio.databases import DBapi, ConfigDB
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
@@ -60,26 +63,23 @@ class ParserJobHandler(AbstractHandler):
             return
 
         source_uri = f"{bucket_name}/{filename}"
-
-        logger.debug(f"loading parser for {thing_uuid}")
-        parser = self.confdb.get_parser(thing_uuid)
-
         logger.debug(f"reading raw data file {source_uri}")
-        rawdata = self.read_file(bucket_name, filename)
+        rawdata, file_date = self.read_file(bucket_name, filename)
+
+        parser = self.confdb.get_parser(thing_uuid, file_date)
 
         logger.info(f"parsing rawdata ... ")
-        file = source_uri
         with warnings.catch_warnings() as w:
             try:
                 df = parser.do_parse(rawdata)
                 obs = parser.to_observations(df, source_uri)
             except ParsingError as e:
                 journal.error(
-                    f"Parsing failed. Detail: {e}. File: {file!r}", thing_uuid
+                    f"Parsing failed. Detail: {e}. File: {source_uri!r}", thing_uuid
                 )
                 raise e
             except Exception as e:
-                journal.error(f"Parsing failed for file {file!r}", thing_uuid)
+                journal.error(f"Parsing failed for file {source_uri!r}", thing_uuid)
                 raise UserInputError("Parsing failed") from e
             if w:
                 journal.warning(w[0].message, thing_uuid)
@@ -91,13 +91,13 @@ class ParserJobHandler(AbstractHandler):
             # Tell the user that his parsing was successful
             journal.error(
                 f"Parsing was successful, but storing data "
-                f"in database failed. File: {file!r}",
+                f"in database failed. File: {source_uri!r}",
                 thing_uuid,
             )
             raise e
 
         # Now everything is fine and we tell the user
-        journal.info(f"Parsed file {file}", thing_uuid)
+        journal.info(f"Parsed file {source_uri}", thing_uuid)
 
         object_tags = Tags.new_object_tags()
         object_tags["parsed_at"] = datetime.now().isoformat()
@@ -114,7 +114,7 @@ class ParserJobHandler(AbstractHandler):
             "s3:ObjectCreated:CompleteMultipartUpload",
         )
 
-    def read_file(self, bucket_name, object_name) -> str:
+    def read_file(self, bucket_name, object_name) -> Tuple[str, pd.Timestamp]:
         stat = self.minio.stat_object(bucket_name, object_name)
         if stat.size > _FILE_MAX_SIZE:
             raise IOError("Maximum filesize of 256M exceeded")
@@ -125,7 +125,7 @@ class ParserJobHandler(AbstractHandler):
             # remove the ASCII control character ETX (end-of-text)
             .rstrip("\x03")
         )
-        return rawdata
+        return rawdata, cast(pd.Timestamp, pd.Timestamp(stat.last_modified, unit="s"))
 
 
 if __name__ == "__main__":
