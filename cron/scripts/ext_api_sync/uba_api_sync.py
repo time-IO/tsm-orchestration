@@ -202,25 +202,25 @@ def get_airquality_data(
     )
     response.raise_for_status()
     response_json = response.json()
-    if response_json["data"]:
-        response_data = response_json["data"][station_id]
-        aqi_data = []
-        for k, v in response_data.items():
-            pollutant_info = list()
-            for i in range(3, len(v)):
-                entry = {"component": components[v[i][0]], "airquality_index": v[i][2]}
-                pollutant_info.append(entry)
-            aqi_data.append(
-                {
-                    "timestamp": v[0],
-                    "airquality_index": v[1],
-                    "data_complete": v[2],
-                    "pollutant_info": pollutant_info,
-                }
-            )
-        return aqi_data
-    else:
+    if not response_json["data"]:
         return []
+
+    response_data = response_json["data"][station_id]
+    aqi_data = []
+    for k, v in response_data.items():
+        pollutant_info = list()
+        for i in range(3, len(v)):
+            entry = {"component": components[v[i][0]], "airquality_index": v[i][2]}
+            pollutant_info.append(entry)
+        aqi_data.append(
+            {
+                "timestamp": v[0],
+                "airquality_index": v[1],
+                "data_complete": v[2],
+                "pollutant_info": pollutant_info,
+            }
+        )
+    return aqi_data
 
 
 def parse_aqi_data(aqi_data: list, station_id: str) -> list:
