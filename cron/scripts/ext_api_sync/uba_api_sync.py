@@ -204,7 +204,7 @@ def get_airquality_data(
     response_json = response.json()
     if response_json["data"]:
         response_data = response_json["data"][station_id]
-        aqi_data = list()
+        aqi_data = []
         for k, v in response_data.items():
             pollutant_info = list()
             for i in range(3, len(v)):
