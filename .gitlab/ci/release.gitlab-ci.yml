@@ -1,0 +1,24 @@
+---
+
+push-to-registry:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_REF_SLUG == $CI_DEFAULT_BRANCH
+      changes:
+        - .env.example
+        - src/**/*
+        - dispatcher/**/*
+        - configdb_updater/**/*
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  before_script:
+    - cp .env.example .env
+  script:
+    - export BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    # build and push dispatcher
+    - DISPATCHER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
+    - DISPATCHER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
+    # build and push dispatcher
+    - CONFIGDB_UPDATER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
+    - CONFIGDB_UPDATER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
+    - docker logout
