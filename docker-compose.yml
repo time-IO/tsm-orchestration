@@ -355,7 +355,7 @@ services:
         TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
     restart: "${RESTART}"
     volumes:
-      - tomcat:/usr/local/tomcat/conf/Catalina/localhost:ro
+      - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
 
 
   # Summary
@@ -614,7 +614,7 @@ services:
       timeio-db-api:
         condition: service_healthy
     volumes:
-      - tomcat:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
+      - tomcat-context:/home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -935,4 +935,4 @@ services:
 volumes:
   frontend-statics:
   sftp-private-keys:
-  tomcat:
+  tomcat-context:
