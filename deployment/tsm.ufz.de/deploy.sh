@@ -21,8 +21,7 @@ fi
 DC="sudo docker compose --env-file .env --env-file ${RELEASE_ENV_FILE}"
 
 # Deploy time.IO with the tag env file
-$DC build -q
-$DC pull -q
-$DC up -d --force-recreate
+$DC create --build
+$DC up -d
 sleep 10
 $DC ps
