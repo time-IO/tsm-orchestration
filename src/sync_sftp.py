@@ -6,11 +6,9 @@ import sys
 import psycopg
 import logging
 
-from remote_fs import MinioFS, FtpFS, sync
 from paramiko import WarningPolicy
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from decrypt import decrypt
+from timeio.crypto import decrypt
+from timeio.remote_fs import MinioFS, FtpFS, sync
 
 
 def get_minio_bucket_name(conn, thing_id) -> str:

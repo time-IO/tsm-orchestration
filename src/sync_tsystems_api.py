@@ -5,13 +5,11 @@ import click
 import logging
 import json
 import os
-import mqtt
 import sys
 
 from datetime import datetime, timedelta, timezone
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from decrypt import decrypt
+from timeio.crypto import decrypt
+import timeio.mqtt as mqtt
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
 tsystems_base_url = (
@@ -117,7 +115,7 @@ def main(thing_uuid, parameters, target_uri):
         f"Successfully inserted {len(parsed_observations['observations'])} "
         f"observations for thing {thing_uuid} from TSystems API into TimeIO DB"
     )
-    mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
+    mqtt.publish_single("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
 if __name__ == "__main__":

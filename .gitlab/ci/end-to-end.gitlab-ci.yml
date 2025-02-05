@@ -6,7 +6,7 @@ visualization-e2e:
     - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
     - "cp .env .gitlab/ci/.env"
-    - "docker compose up -d --force-recreate -V --quiet-pull"
+    - "docker compose up -d --force-recreate -V --quiet-pull --build"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"

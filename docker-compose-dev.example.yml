@@ -3,48 +3,47 @@ services:
 
   worker-configdb-updater:
     volumes:
-      - "${DEV_CONFIGDB_UPDATER_SRC_DIR:-../timeio-configdb-updater/src}:/usr/src/app"
+      - ./src:/usr/src/app
 
   worker-object-storage-setup:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-db-setup:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-file-ingest:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-frost-setup:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-run-qaqc:
     volumes:
-      - "${DEV_QAQC_SRC_DIR:-../timeio-qaqc/timeio_qaqc}:/app/timeio_qaqc"
-      - "${DEV_QAQC_SRC_DIR:-../timeio-qaqc/app.py}:/app/app.py"
+      - ./src:/home/appuser/app/src
 
   worker-mqtt-ingest:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-mqtt-user-creation:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-grafana-dashboard:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-grafana-user-orgs:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   worker-crontab-setup:
     volumes:
-      - "${DEV_DISPATCHER_SRC_DIR:-../tsm-dispatcher/src}:/home/appuser/app/src"
+      - ./src:/home/appuser/app/src
 
   frontend:
     environment:

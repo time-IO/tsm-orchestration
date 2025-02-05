@@ -1,7 +1,0 @@
-Click
-psycopg2-binary~=2.9.2
-psycopg[binary]
-minio
-paramiko
-requests
-paho-mqtt
