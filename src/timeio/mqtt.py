@@ -3,10 +3,13 @@ from __future__ import annotations
 import json
 import logging
 import sys
+import os
 import traceback
 import typing
 from abc import ABC, abstractmethod
+from warnings import deprecated
 
+import paho.mqtt.publish
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import MQTTMessage
 
@@ -184,3 +187,32 @@ class AbstractHandler(ABC):
         """
 
         raise NotImplementedError
+
+
+def _get_settings_from_env():
+    try:
+        _broker = os.environ["MQTT_BROKER"]
+        return {
+            "qos": int(os.environ["MQTT_QOS"]),
+            "hostname": _broker.split(":")[0],
+            "port": int(_broker.split(":")[1]),
+            "client_id": os.environ["MQTT_QOS"],
+            "auth": {
+                "username": os.environ["MQTT_USER"],
+                "password": os.environ["MQTT_PASSWORD"],
+            },
+        }
+    except KeyError as e:
+        raise EnvironmentError(f"Missing environment variable {e}")
+
+
+def publish_single(topic, payload: str):
+    """
+    Publish a single mqtt message to a broker, then disconnect cleanly.
+    """
+    paho.mqtt.publish.single(**_get_settings_from_env(), topic=topic, payload=payload)
+
+
+@deprecated
+def send_mqtt_info(topic, payload: str):
+    return publish_single(topic, payload)

@@ -7,9 +7,9 @@ import os
 import logging
 import json
 import click
-import mqtt
 
 from datetime import datetime, timedelta
+import timeio.mqtt as mqtt
 
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
@@ -278,6 +278,7 @@ def main(thing_uuid, parameters, target_uri):
         f"observations for thing {thing_uuid} from UBA API into TimeIO DB"
     )
     mqtt.send_mqtt_info("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
+
 
 if __name__ == "__main__":
     main()

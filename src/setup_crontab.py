@@ -58,7 +58,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.external_sftp is not None:
             interval = int(thing.external_sftp.sync_interval)
             schedule = cls.get_schedule(interval)
-            script = "/scripts/sftp_sync/sftp_sync.py"
+            script = "/scripts/sync_sftp.py"
             keyfile = thing.external_sftp.private_key_path
             command = f"{script} {uuid} {keyfile} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.external_sftp.enabled)
@@ -69,7 +69,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.external_api is not None:
             interval = int(thing.external_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            script = f"/scripts/ext_api_sync/{thing.external_api.api_type}_api_sync.py"
+            script = f"/scripts/sync_{thing.external_api.api_type}_api.py"
             target_uri = thing.database.url
             command = f"""{script} {uuid} "{thing.external_api.settings}" {target_uri} > $STDOUT 2> $STDERR"""
             job.enable(enabled=thing.external_api.enabled)

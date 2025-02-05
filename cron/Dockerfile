@@ -7,7 +7,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY requirements.txt .
+COPY src/requirements.txt .
 COPY supercronic-entrypoint.sh .
 COPY supercronic-health.sh .
 

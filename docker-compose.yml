@@ -631,7 +631,7 @@ services:
       timeio-db-api:
         condition: service_healthy
     volumes:
-      - ./data/tomcat/context:/home/appuser/app/src/timeio/frost_context_files:rw
+      - ./data/tomcat/context:/home/appuser/app/src/frost_context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -937,7 +937,7 @@ services:
       retries: 5
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt:ro
-      - ./cron/scripts:/scripts:ro
+      - ./src:/scripts:ro
       - sftp-private-keys:/sftp-private-keys:ro
 
   mqtt-cat:
