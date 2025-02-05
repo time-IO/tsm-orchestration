@@ -3,7 +3,6 @@ DO $$
 BEGIN
     IF '${cv_access_type}' = 'db' THEN
         RAISE NOTICE 'Creating foreign server sms_cv_db';
-        CREATE extension IF NOT EXISTS postgres_fdw;
         CREATE SERVER sms_cv_db
             FOREIGN DATA WRAPPER postgres_fdw
             OPTIONS (host '${cv_db_host}', dbname '${cv_db_db}', port '${cv_db_port}');
@@ -15,11 +14,8 @@ BEGIN
     END IF;
 END $$;
 
+
 -- Purpose: Create local tables to mock the SMS-CV database
-BEGIN;
-
--- public.contact definition
-
 CREATE TABLE public.measured_quantity (
 	id              serial4 NOT NULL PRIMARY KEY,
 	term            varchar(255) NOT NULL,
@@ -48,7 +44,6 @@ CREATE TABLE public.unit (
     provenance          text
 );
 
-COMMIT;
 
 -- Purpose: Create foreign tables for the SMS-CV database.
 DO $$

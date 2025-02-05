@@ -3,7 +3,6 @@ DO $$
 BEGIN
     IF '${sms_access_type}' = 'db' THEN
         RAISE NOTICE 'Creating foreign server sms_db';
-        CREATE extension IF NOT EXISTS postgres_fdw;
         CREATE SERVER sms_db
             FOREIGN DATA WRAPPER postgres_fdw
             OPTIONS (host '${sms_db_host}', dbname '${sms_db_db}', port '${sms_db_port}');
@@ -15,9 +14,8 @@ BEGIN
     END IF;
 END $$;
 
--- Purpose: Create local tables to mock the sms database
-BEGIN;
 
+-- Purpose: Create local tables to mock the sms database
 create table public.contact
 (
     id            serial primary key,
@@ -237,8 +235,6 @@ create table public.datastream_link
     tsm_endpoint_id        integer
 );
 
-
-COMMIT;
 
 -- Purpose: Create foreign tables for the SMS database.
 DO $$
