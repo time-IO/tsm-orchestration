@@ -34,6 +34,7 @@ create table public.contact
     orcid         varchar(32) unique
 );
 
+
 create table public.configuration
 (
     created_at            timestamp with time zone,
@@ -57,6 +58,7 @@ create table public.configuration
         unique
 );
 
+
 create table public.configuration_contact_role
 (
     role_name        varchar      not null,
@@ -66,15 +68,16 @@ create table public.configuration_contact_role
     configuration_id integer      not null
 );
 
+
 create table public.configuration_dynamic_location_begin_action
 (
     created_at           timestamp with time zone,
     updated_at           timestamp with time zone,
     id                   serial primary key,
-    configuration_id     integer                  not null,
+    configuration_id     integer not null,
     begin_date           timestamp with time zone not null,
     begin_description    text,
-    begin_contact_id     integer                  not null,
+    begin_contact_id     integer not null,
     x_property_id        integer,
     y_property_id        integer,
     z_property_id        integer,
@@ -89,15 +92,16 @@ create table public.configuration_dynamic_location_begin_action
     label                varchar(256)
 );
 
+
 create table public.configuration_static_location_begin_action
 (
     created_at           timestamp with time zone,
     updated_at           timestamp with time zone,
     id                   serial primary key,
-    configuration_id     integer                  not null,
+    configuration_id     integer not null,
     begin_date           timestamp with time zone not null,
     begin_description    text,
-    begin_contact_id     integer                  not null,
+    begin_contact_id     integer not null,
     x                    double precision,
     y                    double precision,
     z                    double precision,
@@ -111,6 +115,7 @@ create table public.configuration_static_location_begin_action
     end_contact_id       integer,
     label                varchar(256)
 );
+
 
 create table public.device
 (
@@ -144,17 +149,18 @@ create table public.device
     schema_version        varchar(256)
 );
 
+
 create table public.device_mount_action
 (
     created_at         timestamp with time zone,
     updated_at         timestamp with time zone,
     id                 serial primary key,
-    configuration_id   integer                  not null,
-    device_id          integer                  not null,
+    configuration_id   integer not null,
+    device_id          integer not null,
     parent_platform_id integer,
     begin_date         timestamp with time zone not null,
     begin_description  text,
-    begin_contact_id   integer                  not null,
+    begin_contact_id   integer not null,
     offset_x           double precision,
     offset_y           double precision,
     offset_z           double precision,
@@ -162,8 +168,10 @@ create table public.device_mount_action
     updated_by_id      integer,
     end_date           timestamp with time zone,
     end_description    text,
-    end_contact_id     integer
+    end_contact_id     integer,
+    label              varchar(256)
 );
+
 
 create table public.device_property
 (
@@ -181,7 +189,7 @@ create table public.device_property
     property_name         varchar(256) not null,
     sampling_media_uri    varchar(256),
     sampling_media_name   varchar(256),
-    device_id             integer      not null,
+    device_id             integer not null,
     resolution            double precision,
     resolution_unit_name  varchar(256),
     resolution_unit_uri   varchar(256),
@@ -190,16 +198,20 @@ create table public.device_property
     created_by_id         integer,
     updated_by_id         integer,
     aggregation_type_uri  varchar(256),
-    aggregation_type_name varchar(256)
+    aggregation_type_name varchar(256),
+    aggregation_type_name varchar(256),
+    accuracy_unit_name    varchar(256),
+    accuracy_unit_uri     varchar(256)
 );
+
 
 create table public.datastream_link
 (
     created_at             timestamp with time zone,
     updated_at             timestamp with time zone,
     id                     serial primary key,
-    device_property_id     integer      not null,
-    device_mount_action_id integer      not null,
+    device_property_id     integer not null,
+    device_mount_action_id integer not null,
     datasource_id          varchar(256) not null,
     thing_id               varchar(256) not null,
     datastream_id          varchar(256) not null,
