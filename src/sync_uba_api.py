@@ -201,8 +201,12 @@ def get_airquality_data(
         "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json", params=params
     )
     response.raise_for_status()
-    response_data = response.json()["data"][station_id]
-    aqi_data = list()
+    response_json = response.json()
+    if not response_json["data"]:
+        return []
+
+    response_data = response_json["data"][station_id]
+    aqi_data = []
     for k, v in response_data.items():
         pollutant_info = list()
         for i in range(3, len(v)):
@@ -278,6 +282,7 @@ def main(thing_uuid, parameters, target_uri):
         f"observations for thing {thing_uuid} from UBA API into TimeIO DB"
     )
     mqtt.publish_single("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
+
 
 
 if __name__ == "__main__":
