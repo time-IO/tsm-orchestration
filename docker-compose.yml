@@ -329,14 +329,10 @@ services:
     build:
       context: tomcat
       args:
-        UID: "${UID}"
-        GID: "${GID}"
         TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
     restart: "${RESTART}"
-    user: "${UID}:${GID}"
     volumes:
-      - ./data/tomcat/context:/usr/local/tomcat/conf/Catalina/localhost:ro
-      - ./tomcat/index.jsp:/usr/local/tomcat/webapps/ROOT/index.jsp
+      - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
 
 
   # Summary
@@ -625,7 +621,7 @@ services:
       timeio-db-api:
         condition: service_healthy
     volumes:
-      - ./data/tomcat/context:/home/appuser/app/src/frost_context_files:rw
+      - tomcat-context:/home/appuser/app/src/frost_context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: thing_creation
@@ -968,3 +964,4 @@ services:
 volumes:
   frontend-statics:
   sftp-private-keys:
+  tomcat-context:
