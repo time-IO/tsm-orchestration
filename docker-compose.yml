@@ -887,7 +887,8 @@ services:
 
   cron-scheduler:
     build:
-      context: cron
+      context: .
+      dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
         DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
