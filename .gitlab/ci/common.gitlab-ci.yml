@@ -51,3 +51,12 @@ black:
   script:
     - black --check src/ tests/
 
+pytest:
+  stage: check
+  needs: []
+  image: python:3.11
+  before_script:
+    - pip install -r src/requirements.txt  pytest
+  script:
+    - python3 -m pytest tests
+
