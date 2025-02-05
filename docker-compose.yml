@@ -165,6 +165,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     command: >
       /usr/sbin/mosquitto 
       -c /var/lib/mosquitto/mosquitto.conf
