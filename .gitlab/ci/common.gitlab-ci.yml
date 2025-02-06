@@ -51,4 +51,6 @@ test_change_manual:
 othertest:
   stage: integration
   script:
-    echo success
+    - echo "CI_PIPELINE_SOURCE=$CI_PIPELINE_SOURCE"
+    - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
+    - echo "CI_DEFAULT_BRANCH=$CI_DEFAULT_BRANCH"
