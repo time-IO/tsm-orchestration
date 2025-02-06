@@ -26,3 +26,12 @@ variables:
 
 services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
+
+
+test_change_manual:
+  stage: check
+  script:
+    - echo "CI_PIPELINE_SOURCE=$CI_PIPELINE_SOURCE"
+    - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
+    - echo "CI_DEFAULT_BRANCH=$CI_DEFAULT_BRANCH"
+

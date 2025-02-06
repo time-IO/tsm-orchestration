@@ -9,6 +9,8 @@ deploy-images-to-registry:
         - src/**/*
         - dispatcher/**/*
         - configdb_updater/**/*
+    - when: manual
+      allow_failure: true
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
     - cp .env.example .env
