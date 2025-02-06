@@ -35,7 +35,9 @@ test_change_manual:
     - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
     - echo "CI_DEFAULT_BRANCH=$CI_DEFAULT_BRANCH"
   rules:
-    - if: $CI_COMMIT_REF_SLUG == ci_test
+    - if: $CI_COMMIT_REF_SLUG == "ci_test"
       changes:
         - foo.txt
+    - when: manual
+      allow_failure: true
 
