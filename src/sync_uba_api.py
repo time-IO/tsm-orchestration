@@ -284,6 +284,5 @@ def main(thing_uuid, parameters, target_uri):
     mqtt.publish_single("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
 
-
 if __name__ == "__main__":
     main()
