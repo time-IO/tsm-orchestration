@@ -36,8 +36,6 @@ test_change_manual:
     - echo "CI_DEFAULT_BRANCH=$CI_DEFAULT_BRANCH"
   rules:
     # Rules are evaluated in order until the first match
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-      when: never
     - if: $CI_COMMIT_BRANCH == "ci_test"
       changes:
         - foo.txt
