@@ -38,12 +38,12 @@ test_change_manual:
     # Rules are evaluated in order until the first match
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       when: never
-    - if: $CI_COMMIT_REF_SLUG == "ci_test"
+    - if: $CI_COMMIT_BRANCH == "ci_test"
       changes:
         - foo.txt
       when: always
       allow_failure: false
-    - if: $CI_COMMIT_REF_SLUG == "ci_test"
+    - if: $CI_COMMIT_BRANCH == "ci_test"
       when: manual
       allow_failure: true
 
