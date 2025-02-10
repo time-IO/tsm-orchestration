@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-envvars
-data:
-  MQTT_BROKER: "mqtt-broker:1883"
-  MQTT_CLIENT_ID: ""
-  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
