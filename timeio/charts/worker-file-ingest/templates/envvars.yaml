@@ -16,4 +16,6 @@ data:
   SCHED_MQTT_BROKER: "mqtt-broker:1883"
   SCHED_JOB_LOG_LEVEL: "{{  .Values.global.envvars.SCHED_JOB_LOG_LEVEL }}"
   SCHED_SLURM_RESTAPI_VERSION: "{{  .Values.global.envvars.SCHED_SLURM_RESTAPI_VERSION }}"
+  TOPIC_DATA_PARSED: "data_parsed"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

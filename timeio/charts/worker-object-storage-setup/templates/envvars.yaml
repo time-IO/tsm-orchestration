@@ -11,3 +11,5 @@ data:
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
   MINIO_SECURE: "{{  .Values.global.envvars.MINIO_SECURE }}"
   MINIO_URL: "{{  .Values.global.envvars.MINIO_HOST }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

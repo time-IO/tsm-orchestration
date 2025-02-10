@@ -3,7 +3,7 @@ replicaCount: 1
 name: worker-grafana-dashboard
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
   tag: latest
   pullPolicy: Always
 

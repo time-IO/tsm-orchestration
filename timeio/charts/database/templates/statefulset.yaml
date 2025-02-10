@@ -37,36 +37,12 @@ spec:
             name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
         volumeMounts:
         - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d/012_postgres-force-ssl.sh
+          mountPath: /docker-entrypoint-initdb.d/01_postgres-force-ssl.sh
           subPath: postgres-force-ssl.sh
-        - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d/013_postgis.sh
-          subPath: postgis.sh
-        - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d/020_frontend-database.sh
-          subPath: frontend-database.sh
-        - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d/021_mosquitto-go-auth.sh
-          subPath: mosquitto-go-auth.sh
-        - name: {{ .Values.name }}-entrypoint
-          mountPath: /docker-entrypoint-initdb.d/022_s3_to_db.sh
-          subPath: s3_to_db.sh
-        - name: {{ .Values.name }}-sql-sms
-          mountPath: /sql/sms
-        - name: {{ .Values.name }}-sql-sms-cv
-          mountPath: /sql/sms_cv
-        - name: {{ .Values.name }}-data
-          mountPath: /var/lib/postgresql/data
       volumes:
       - name: {{ .Values.name }}-entrypoint
         configMap:
           name: {{ .Values.name }}-entrypoint
-      - name: {{ .Values.name }}-sql-sms
-        configMap:
-          name: {{ .Values.name }}-sql-sms
-      - name: {{ .Values.name }}-sql-sms-cv
-        configMap:
-          name: {{ .Values.name }}-sql-sms-cv
       - name: {{ .Values.name }}-data
         persistentVolumeClaim:
           claimName: {{ .Values.name }}-data-pvc

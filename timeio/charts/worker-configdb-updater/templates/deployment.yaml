@@ -26,6 +26,7 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
+        command: ["python3", "run_configdb_updater.py"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

@@ -10,3 +10,5 @@ data:
   MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
   TOMCAT_PROXY_URL: "{{  .Values.global.ingress.url }}/sta/"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

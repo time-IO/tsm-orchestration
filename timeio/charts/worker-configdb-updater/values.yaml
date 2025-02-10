@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/timeio-configdb-updater/configdb-updater"
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater"
   tag: "latest"
   pullPolicy: Always
 name: worker-configdb-updater

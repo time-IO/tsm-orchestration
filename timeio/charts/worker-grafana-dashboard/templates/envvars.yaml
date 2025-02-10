@@ -11,3 +11,5 @@ data:
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
   GRAFANA_URL: "{{  .Values.global.envvars.GRAFANA_URL }}"
   GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "{{  .Values.global.envvars.GRAFANA_DEFAULT_DATASOURCE_SSLMODE }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

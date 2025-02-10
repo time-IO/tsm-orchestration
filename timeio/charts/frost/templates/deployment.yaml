@@ -47,10 +47,7 @@ spec:
           runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.worker.securityContext.seccompProfile.type }}
-        command:
-        - python3
-        - main.py
-        - create-frost-instance
+        command: ["python3", "setup_frost.py"]
         envFrom:
         - configMapRef:
             name: {{ .Values.worker.name }}-envvars

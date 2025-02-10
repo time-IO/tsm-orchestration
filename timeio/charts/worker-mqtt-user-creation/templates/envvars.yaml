@@ -9,3 +9,5 @@ data:
   MQTT_CLIENT_ID: ""
   MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

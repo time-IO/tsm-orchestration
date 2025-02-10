@@ -26,10 +26,7 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-        - python3
-        - main.py
-        - create-thing-in-minio
+        command: ["python3", "setup_minio.py"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

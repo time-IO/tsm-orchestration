@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/tsm-ufz-tsmdl/tsm-ufz-tsmdl"
-  tag: "4-restart-service-or-retry-connection-when-database-initially-not-available"
+  repository: "registry.hzdr.de/ufz-tsm/timeio-and-sms/tsmdl"
+  tag: "latest"
   pullPolicy: Always
 name: tsmdl
 

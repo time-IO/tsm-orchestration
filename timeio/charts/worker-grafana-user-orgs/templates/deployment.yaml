@@ -26,10 +26,7 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-        - python3
-        - main.py
-        - create-grafana-user
+        command: ["python3", "setup_grafana_user.py"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

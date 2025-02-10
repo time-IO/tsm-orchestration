@@ -63,6 +63,8 @@ global:
       hosts:
         - "s3.timeio.web-intern-stage.app.ufz.de"
 
+  enableKeycloak: true
+
   createSecrets: true
   secrets:
     POSTGRES_USER: "postgres"
@@ -94,6 +96,10 @@ global:
     MINIO_ROOT_PASSWORD: "admin_minio"
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin_django"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin_django"
+    KEYCLOAK_POSTGRES_USER: "db_keycloak"
+    KEYCLOAK_POSTGRES_PASS: "db_keycloak"
+    KEYCLOAK_ADMIN: "admin_keycloak"
+    KEYCLOAK_ADMIN_PASSWORD: "admin_keycloak"
     DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
     OIDC_CLIENT_ID: "timeio_oidc_client"
     OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
@@ -159,6 +165,9 @@ global:
     CV_DB_HOST: "database"
     CV_URL: "https://sms-cv.helmholtz.cloud/sms/cv/"
     CV_ACCESS_TYPE: "db"
+    KC_DB: "postgres"
+    KC_DB_URL_DATABASE: "postgres"
+    KC_DB_URL: "jdbc:postgresql://database/postgres"
     GRAFANA_IMAGE_TAG: "10.4.5"
     GRAFANA_URL: "http://visualization:3000"
     GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "disable"
@@ -190,6 +199,10 @@ global:
     SCHED_SLURM_USER: ""
     SCHED_SLURM_JWT_TOKEN: ""
     CRON_SETUP_SERVICE: "true"
-    FLYWAY_BASELINE_VERSION: "1.0"
+    FLYWAY_BASELINE_VERSION: "0.0.1"
     DB_API_BASE_URL: "http://timeio-db-api:8001"
-
+    ##KEYCLOAK_PORT: "8080"
+    ##KC_HTTP_RELATIVE_PATH: "/keycloak"
+    ##KC_HTTP_ENABLED: "true"
+    ##KC_PROXY_HEADERS: "xforwarded"
+    ##KC_PROXY_PROTOCOL_ENABLED: "true"

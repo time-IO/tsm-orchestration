@@ -11,3 +11,5 @@ data:
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
   SMS_URL: "{{ .Values.global.envvars.SMS_URL }}"
   CV_URL: "{{ .Values.global.envvars.CV_URL }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

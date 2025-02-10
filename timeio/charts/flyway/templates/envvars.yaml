@@ -4,3 +4,12 @@ metadata:
   name: {{ .Values.name }}-envvars
 data:
   FLYWAY_URL: "jdbc:postgresql://{{-  .Values.global.envvars.CREATEDB_POSTGRES_HOST -}}/{{-  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE -}}"
+  FLYWAY_BASELINE_VERSION: {{ .Values.global.envvars.FLYWAY_BASELINE_VERSION | quote }}
+  FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: {{ .Values.global.envvars.SMS_ACCESS_TYPE | quote }}
+  FLYWAY_PLACEHOLDERS_SMS_DB_PORT: {{ .Values.global.envvars.SMS_DB_PORT | quote }}
+  FLYWAY_PLACEHOLDERS_SMS_DB_DB: {{ .Values.global.envvars.SMS_DB_DB | quote }}
+  FLYWAY_PLACEHOLDERS_SMS_DB_HOST: {{ .Values.global.envvars.SMS_DB_HOST | quote }}
+  FLYWAY_PLACEHOLDERS_CV_ACCESS_TYPE: {{ .Values.global.envvars.CV_ACCESS_TYPE | quote }}
+  FLYWAY_PLACEHOLDERS_CV_DB_PORT: {{ .Values.global.envvars.CV_DB_PORT | quote }}
+  FLYWAY_PLACEHOLDERS_CV_DB_DB: {{ .Values.global.envvars.CV_DB_DB | quote }}
+  FLYWAY_PLACEHOLDERS_CV_DB_HOST: {{ .Values.global.envvars.CV_DB_HOST | quote }}

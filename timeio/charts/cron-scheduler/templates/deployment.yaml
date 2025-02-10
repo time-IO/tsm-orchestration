@@ -42,15 +42,6 @@ spec:
         - secretRef:
             name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
         volumeMounts:
-        - mountPath: /scripts/sms_sync
-          name: {{ .Values.name }}-sms-sync
-          readOnly: true
-        - mountPath: /scripts/sftp_sync
-          name: {{ .Values.name }}-sftp-sync
-          readOnly: true
-        - mountPath: /scripts/ext_api_sync
-          name: {{ .Values.name }}-ext-api
-          readOnly: true
         - mountPath: /tmp/entrypoint/cron-entrypoint.sh
           name: {{ .Values.name }}-entrypoint
           subPath: cron-entrypoint.sh
@@ -70,10 +61,7 @@ spec:
           runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.worker.securityContext.seccompProfile.type }}
-        command:
-          - python3
-          - main.py
-          - update-sftp-crontab
+        command: ["python3", "setup_crontab.py"]
         envFrom:
           - configMapRef:
               name: {{ .Values.worker.name }}-envvars
@@ -104,18 +92,6 @@ spec:
             - mountPath: /tmp/cron
               name: crontab-pv
       volumes:
-      - name: {{ .Values.name }}-sms-sync
-        configMap:
-          name: {{ .Values.name }}-sms-sync
-          defaultMode: 0775
-      - name: {{ .Values.name }}-sftp-sync
-        configMap:
-          name: {{ .Values.name }}-sftp-sync
-          defaultMode: 0775
-      - name: {{ .Values.name }}-ext-api
-        configMap:
-          name: {{ .Values.name }}-ext-api
-          defaultMode: 0775
       - name: {{ .Values.name }}-entrypoint
         configMap:
           name: {{ .Values.name }}-entrypoint

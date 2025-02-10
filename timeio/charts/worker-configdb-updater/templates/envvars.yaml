@@ -13,3 +13,4 @@ data:
   LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
   MQTT_BROKER_HOST: "mqtt-broker"
   MQTT_BROKER_PORT: "1883"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

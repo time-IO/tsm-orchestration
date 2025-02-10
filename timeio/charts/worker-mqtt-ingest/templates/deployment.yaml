@@ -26,10 +26,7 @@ spec:
           runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
-        command:
-          - sh
-          - -c
-          - 'python3 main.py parse-mqtt-data --target-uri ${DATABASE_URL}'
+        command: ["python3", "run_mqtt_ingest.py"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars
