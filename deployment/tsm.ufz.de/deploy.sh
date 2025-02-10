@@ -4,6 +4,10 @@ cd "$(dirname "$0")/../.."
 # save current HEAD as fallback when release file does not exist
 PREV_COMMIT=$(git rev-parse HEAD)
 
+# todo: checkout origin main .env.example into temp.env
+# run check using temp.env 
+./compare_dotenv_files.py .env.example .env
+
 # fetch new commits but don't checkout on main
 git fetch
 # check out git TAG
