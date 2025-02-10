@@ -336,7 +336,7 @@ def upsert_table_ext_sftp(conn: Connection, values: dict, extftp_id) -> int:
     #         "password": thing.ext_sftp_password or None
     #         "sync_interval": thing.ext_sftp_sync_interval,
     #         "public_key": thing.ext_sftp_public_key,
-    #         "private_key": None,
+    #         "private_key": encrypted private ssh key or "" (empty string),
     v = values.copy()
     id_ = _upsert(
         conn,

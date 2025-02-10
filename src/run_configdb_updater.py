@@ -46,9 +46,6 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
                 parser.setdefault("name", "no-parser-name")  # missing
 
     elif data["version"] == 5:
-        # tsm-frontend/GL71
-        if d := data.get("external_sftp"):
-            d["private_key"] = "no-key-in-message-version-4"  # always None
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
         if d := data.get("database"):
