@@ -801,6 +801,7 @@ services:
       MQTT_CLIENT_ID: mqtt-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       CONFIGDB_DSN: "postgresql://\
         ${CONFIGDB_USER}:\
         ${CONFIGDB_PASSWORD}@\
