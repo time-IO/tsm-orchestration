@@ -37,11 +37,11 @@ def main(check_dotenv_path: str, lookup_dotenv_path: str):
     missing_in_lookup_file = set(lookup_envvars) - set(check_envvars)
 
     if not missing_in_lookup_file:
-        logging.info("No missing envvars in lookup .env File")
+        logging.info("No missing envvars in checked .env file")
         sys.exit(0)
     else:
         logging.error(
-            f"The following envvars are not in the lookup .env file: {missing_in_lookup_file}"
+            f"The following envvars are not in the checked .env file:\n{missing_in_lookup_file}"
         )
         sys.exit(1)
 
