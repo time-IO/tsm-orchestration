@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import json
 import logging
 import typing
 
@@ -31,24 +32,35 @@ class ParseMqttDataHandler(AbstractHandler):
 
         self.confdb = ConfigDB(get_envvar("CONFIGDB_DSN"))
         self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
 
     def act(self, content: typing.Any, message: MQTTMessage):
-        topic = message.topic
-        origin = f"{self.mqtt_broker}/{topic}"
+        origin = f"{self.mqtt_broker}/{message.topic}"
+
         logger.info(f"get thing")
-        mqtt_user = topic.split("/")[1]
+        mqtt_user = message.topic.split("/")[1]
         thing_uuid = self.confdb.get_thing_uuid("mqtt_user", mqtt_user)
+
         logger.info(f"get parser")
         parser = self.confdb.get_mqtt_parser(thing_uuid)
+
         logger.info(f"parsing rawdata")
         try:
             data = parser.do_parse(content, origin)
             observations = parser.to_observations(data, thing_uuid)
         except Exception as e:
             raise UserInputError("Parsing data failed") from e
+
         logger.info(f"store observations")
         self.dbapi.upsert_observations(thing_uuid, observations)
         journal.info(f"parsed mqtt data from {origin}", thing_uuid)
+
+        logger.info(f"send mqtt message")
+        self.mqtt_client.publish(
+            topic=self.pub_topic,
+            payload=json.dumps({"thing_uuid": str(thing_uuid)}),
+            qos=self.mqtt_qos,
+        )
 
 
 if __name__ == "__main__":
