@@ -65,15 +65,6 @@ data:
                                 </div>
                             </a>
                         </li>
-                        <li class="link-card-wrapper" style="animation-duration: 1s;">
-                            <a href="keycloak/">
-                                <div class="link-card">
-                                    <div class="link-card-header">keycloak</div>
-                                    <div class="link-card-text">User Management</div>
-                                    <div class="link-card-arrow">&nearr;</div>
-                                </div>
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </div>
