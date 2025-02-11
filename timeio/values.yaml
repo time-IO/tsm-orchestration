@@ -96,6 +96,7 @@ global:
     CV_DB_PASSWORD: "postgres"
     OIDC_CLIENT_ID: "timeio_oidc_client"
     OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
+    FERNET_ENCRYPTION_SECRET: "tl6rVmqwjRn3PDuAjxppMYxpDEv0UKuCgqFr8Q5p8_4="
 
   envvars:
     RESTART: "unless-stopped"
@@ -180,3 +181,4 @@ global:
     CRON_SETUP_SERVICE: "true"
     FLYWAY_BASELINE_VERSION: "0.0.1"
     DB_API_BASE_URL: "http://timeio-db-api:8001"
+    JOURNALING: "true"
