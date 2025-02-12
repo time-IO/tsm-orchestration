@@ -28,8 +28,7 @@ spec:
             type: {{ .Values.securityContext.seccompProfile.type }}
         ports:
           - containerPort: 8000
-        command:
-        - /app/start.sh
+        command: ["/app/start.{{ .Values.global.envvars.TSM_DL_ENVIRONMENT }}.sh"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars

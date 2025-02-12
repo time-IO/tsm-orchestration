@@ -3,5 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  WEB_CONCURRENCY: "20"
+  STA_ENDPOINT_URL: "{{ .Values.global.ingress.url }}/sta/"
   UVICORN_ARGS: ""
+  ROOT_PATH: "/tsmdl"
+  ORGANIZATION: "ufz"
+  IDP_USERINFO_URL: {{ .Values.global.envvars.OIDC_API_URL | quote }}
