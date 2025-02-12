@@ -13,7 +13,6 @@ from timeio.crypto import decrypt
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
-logger = logging.getLogger("extApi_ingest.bosch")
 journal = Journal("CronJob")
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
@@ -93,8 +92,10 @@ def parse_api_response(response: list, origin: str):
 @click.argument("parameters")
 @click.argument("target_uri")
 def main(thing_uuid, parameters, target_uri):
-    logger.info(f"Start fetching Bosch data for thing {thing_uuid}")
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.bosch")
 
+    logger.info(f"Start fetching Bosch data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     pw_dec = decrypt(params["password"])
     timestamp_from, timestamp_to = get_utc_timestamps(params["period"])

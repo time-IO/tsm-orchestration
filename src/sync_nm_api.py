@@ -13,7 +13,6 @@ import psycopg
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
-logger = logging.getLogger("extApi_ingest.nm")
 journal = Journal("CronJob")
 
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
@@ -99,8 +98,10 @@ def get_latest_observation(uri: str, datastream_id: int) -> datetime:
 @click.argument("parameters")
 @click.argument("target_uri")
 def main(thing_uuid: str, parameters: str, target_uri: str):
-    logger.info(f"Start fetching NM data for thing {thing_uuid}")
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.nm")
 
+    logger.info(f"Start fetching NM data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
 
     resolution = params["time_resolution"]

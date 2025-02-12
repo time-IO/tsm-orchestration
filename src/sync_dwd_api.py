@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
-logger = logging.getLogger("extApi_ingest.dwd")
 journal = Journal("CronJob")
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
@@ -92,8 +91,10 @@ def parse_brightsky_response(resp) -> dict:
 @click.argument("parameters")
 @click.argument("target_uri")
 def main(thing_uuid, parameters, target_uri):
-    logger.info(f"Start fetching DWD data for thing {thing_uuid}")
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.dwd")
 
+    logger.info(f"Start fetching DWD data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     response = fetch_brightsky_data(params["station_id"])
     parsed_observations = parse_brightsky_response(response)

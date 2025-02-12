@@ -13,7 +13,6 @@ import timeio.mqtt as mqtt
 
 from timeio.journaling import Journal
 
-logger = logging.getLogger("extApi_ingest.uba")
 journal = Journal("CronJob")
 
 
@@ -258,8 +257,10 @@ def parse_aqi_data(aqi_data: list, station_id: str) -> list:
 @click.argument("parameters")
 @click.argument("target_uri")
 def main(thing_uuid, parameters, target_uri):
-    logger.info(f"Start fetching UBA data for thing {thing_uuid}")
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.uba")
 
+    logger.info(f"Start fetching UBA data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     date_from, time_from, date_to, time_to = get_timerange_parameters()
     components, scopes = get_components_and_scopes()

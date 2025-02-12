@@ -11,7 +11,6 @@ from timeio.crypto import decrypt
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
-logger = logging.getLogger("extApi_ingest.ttn")
 journal = Journal("CronJob")
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
@@ -31,8 +30,10 @@ def cleanupJson(string: str) -> str:
 @click.argument("parameters")
 @click.argument("target_uri")
 def main(thing_uuid: str, parameters: str, target_uri: str):
-    logger.info(f"Start fetching TTN data for thing {thing_uuid}")
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.ttn")
 
+    logger.info(f"Start fetching TTN data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     api_key_dec = decrypt(params["api_key"])
 
