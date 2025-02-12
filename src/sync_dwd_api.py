@@ -13,7 +13,6 @@ import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
 journal = Journal("CronJob")
-
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 PARAMETER_MAPPING = {
@@ -104,7 +103,7 @@ def main(thing_uuid, parameters, target_uri):
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    if resp.status_code != 201:
+    if resp.status_code != 200:
         journal.error(
             f"Failed to insert DWD data into timeIO DB: {resp.text}", thing_uuid
         )

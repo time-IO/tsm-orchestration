@@ -14,8 +14,6 @@ import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
 journal = Journal("CronJob")
-
-
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
 
@@ -273,13 +271,13 @@ def main(thing_uuid, parameters, target_uri):
     parsed_measure_data = parse_measure_data(measure_data, params["station_id"])
     parsed_aqi_data = parse_aqi_data(aqi_data, params["station_id"])
     parsed_observations = {"observations": parsed_measure_data + parsed_aqi_data}
+    logger.info(f"Finished fetching UBA data for thing {thing_uuid}")
     resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    logger.info(f"Finished fetching UBA data for thing {thing_uuid}")
-    if resp.status_code != 201:
+    if resp.status_code != 200:
         journal.error(
             f"Failed to insert UBA data into timeIO DB: {resp.text}", thing_uuid
         )

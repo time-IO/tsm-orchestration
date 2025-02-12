@@ -14,7 +14,6 @@ import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
 journal = Journal("CronJob")
-
 URL = "http://www.nmdb.eu/nest/draw_graph.php"
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
@@ -121,7 +120,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    if resp.status_code != 201:
+    if resp.status_code != 200:
         journal.error(
             f"Failed to insert NM data into timeIO DB: {resp.text}", thing_uuid
         )
