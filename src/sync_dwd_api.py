@@ -14,7 +14,7 @@ import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
 logger = logging.getLogger("extApi_ingest.dwd")
-journal = Journal("ExtAPI")
+journal = Journal("CronJob")
 
 api_base_url = os.environ.get("DB_API_BASE_URL")
 
