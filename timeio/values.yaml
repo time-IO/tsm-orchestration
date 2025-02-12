@@ -182,3 +182,4 @@ global:
     FLYWAY_BASELINE_VERSION: "0.0.1"
     DB_API_BASE_URL: "http://timeio-db-api:8001"
     JOURNALING: "true"
+    TSM_DL_ENVIRONMENT: "staging"
