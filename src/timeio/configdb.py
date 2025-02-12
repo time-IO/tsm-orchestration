@@ -502,6 +502,7 @@ def upsert_table_qaqc(
     #   type : "SaQC",
     #   name: "MyConfig",
     #   context_window: str or int,
+    #   default: bool
     #   tests: [...]  # we ignore those for now
     v = values.copy()
     v.pop("tests", None)  # v1
@@ -509,8 +510,8 @@ def upsert_table_qaqc(
     id_ = _upsert(
         conn,
         table="qaqc",
-        columns=("name", "project_id", "context_window"),
-        values=(v.pop("name"), proj_id, v.pop("context_window")),
+        columns=("name", "project_id", "context_window", "default"),
+        values=(v.pop("name"), proj_id, v.pop("context_window"), v.pop("default")),
         id=qaqc_id,
     )
     maybe_inform_unused_keys(v)
@@ -603,11 +604,16 @@ def store_qaqc_config(conn: Connection, data: dict):
         for i, test in enumerate(tests):
             check_keys(test, i + 1, ["name", "func_id", "kwargs", "datastreams"])
 
+    elif version == 3:
+        data: MqttPayload.QaqcConfigV3_T
+        tests = data["functions"]
+        for i, test in enumerate(tests):
+            check_keys(test, i + 1, ["name", "func_id", "kwargs", "datastreams"])
+
     else:
         raise NotImplementedError(
             f"Qaqc config protokoll version {version} is not yet implemented."
         )
-
     pid = fetch_project_id(conn, proj_uuid)
     qid = fetch_qaqc_id(conn, pid, qaqc_name)
     qid = upsert_table_qaqc(conn, data, pid, qid)

@@ -75,7 +75,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
     section = "decoding or parsing"
     data = None
     try:
-        data: MqttPayload.QaqcConfigV2_T = json.loads(msg.payload.decode())
+        data: MqttPayload.QaqcConfigV3_T = json.loads(msg.payload.decode())
         if (name := data.get("name")) is None:
             raise ValueError("mandatory field 'name' is not present in data")
         if (version := data.get("version")) is None:

@@ -30,6 +30,14 @@ class MqttPayload:
         context_window: str
         functions: list[MqttPayload.QaqcFunctionT]
 
+    class QaqcConfigV3_T(_t.TypedDict):
+        version: _t.Literal[3]
+        default: bool
+        name: str
+        project_uuid: str
+        context_window: str
+        functions: list[MqttPayload.QaqcFunctionT]
+
     class QaqcTestT(_t.TypedDict, total=True):
         function: str
         kwargs: dict[str, _t.Any]
