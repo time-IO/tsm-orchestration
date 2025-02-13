@@ -264,13 +264,12 @@ def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
                 continue
     except Exception:
         journal.error(
-            f"SFTP sync job failed for path: {path} and for thing {thing_id}",
-            thing_id
+            f"SFTP sync job failed for path: {path} and for thing {thing_id}", thing_id
         )
         raise
     else:
         journal.info(
             f"SFTP sync job ran successfully. {synced} files synced for "
             f"thing {thing_id}",
-            thing_id
+            thing_id,
         )
