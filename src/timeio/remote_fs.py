@@ -243,7 +243,6 @@ def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
     path = None
     try:
         logging.info(f"{len(src.files)} files found in source directory")
-        logging.info(f"{len(trg.files)} files found in target directory")
         synced = 0
         for path in src.files:
             logger.debug(f"SYNCING: {path}")
@@ -264,7 +263,14 @@ def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
                 synced += 1
                 continue
     except Exception:
-        journal.error(f"failed sync path: {path} for thing {thing_id}", thing_id)
+        journal.error(
+            f"SFTP sync job failed for path: {path} and for thing {thing_id}",
+            thing_id
+        )
         raise
     else:
-        journal.info(f"{synced} files synced for thing {thing_id}", thing_id)
+        journal.info(
+            f"SFTP sync job ran successfully. {synced} files synced for "
+            f"thing {thing_id}",
+            thing_id
+        )
