@@ -105,4 +105,4 @@ if __name__ == "__main__":
     source = FtpFS.from_credentials(
         *ftp_ext, keyfile_path=ssh_priv_key, missing_host_key_policy=WarningPolicy()
     )
-    sync(source, target)
+    sync(source, target, thing_id)

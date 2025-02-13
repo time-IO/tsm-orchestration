@@ -20,7 +20,9 @@ from paramiko import (
     MissingHostKeyPolicy,
 )
 from paramiko.config import SSH_PORT
+from journaling import Journal
 
+journal = Journal("CronJob")
 logger = logging.getLogger("sftp_sync")
 
 
@@ -235,13 +237,12 @@ class FtpFS(RemoteFS):
             yield fo
 
 
-def sync(src: RemoteFS, trg: RemoteFS):
+def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
     """Sync two remote filesystems."""
 
     path = None
     try:
         logging.info(f"{len(src.files)} files found in source directory")
-        logging.info(f"{len(trg.files)} files found in target directory")
         synced = 0
         for path in src.files:
             logger.debug(f"SYNCING: {path}")
@@ -262,7 +263,13 @@ def sync(src: RemoteFS, trg: RemoteFS):
                 synced += 1
                 continue
     except Exception:
-        logger.error(f"failed sync path: {path}")
+        journal.error(
+            f"SFTP sync job failed for path: {path} and for thing {thing_id}", thing_id
+        )
         raise
     else:
-        logging.info(f"{synced} files synced")
+        journal.info(
+            f"SFTP sync job ran successfully. {synced} files synced for "
+            f"thing {thing_id}",
+            thing_id,
+        )

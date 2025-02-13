@@ -10,7 +10,9 @@ import sys
 from datetime import datetime, timedelta, timezone
 from timeio.crypto import decrypt
 import timeio.mqtt as mqtt
+from timeio.journaling import Journal
 
+journal = Journal("CronJob")
 api_base_url = os.environ.get("DB_API_BASE_URL")
 tsystems_base_url = (
     "https://moc.caritc.de/sensorstation-management/api/measurements/average"
@@ -94,26 +96,32 @@ def parse_api_response(response: list) -> dict:
 @click.argument("target_uri")
 def main(thing_uuid, parameters, target_uri):
     logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
+    logger = logging.getLogger("extApi_sync.tsystems")
 
+    logger.info(f"Start fetching TSystems data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     pw_dec = decrypt(params["password"])
     response = request_tsystems_api(
         params["group"], params["station_id"], params["username"], pw_dec
     )
     parsed_observations = parse_api_response(response)
+    logger.info(f"Finished fetching TSystems data for thing {thing_uuid}")
     resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing_uuid}",
         json=parsed_observations,
         headers={"Content-type": "application/json"},
     )
-    if resp.status_code != 201:
-        logging.error(f"{resp.text}")
+    if resp.status_code != 200:
+        journal.error(
+            f"Failed to insert TSystems data into timeIO DB: {resp.text}", thing_uuid
+        )
         resp.raise_for_status()
         # exit
 
-    logging.info(
+    journal.info(
         f"Successfully inserted {len(parsed_observations['observations'])} "
-        f"observations for thing {thing_uuid} from TSystems API into TimeIO DB"
+        f"observations for thing {thing_uuid} from TSystems API into timeIO DB",
+        thing_uuid,
     )
     mqtt.publish_single("data_parsed", json.dumps({"thing_uuid": thing_uuid}))
 
