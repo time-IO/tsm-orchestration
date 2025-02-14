@@ -91,7 +91,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         payload = json.dumps({"qaqc": data["name"]})
         client.publish(topic=pub_topic, payload=payload, qos=pub_qos)
     except Exception:
-        if data is None:
+        if data is not None:
             detail = f"Message content: {data}"
         else:
             detail = f"msg.payload: {msg.payload!r}"

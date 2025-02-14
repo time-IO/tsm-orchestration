@@ -507,6 +507,10 @@ def upsert_table_qaqc(
     v = values.copy()
     v.pop("tests", None)  # v1
     v.pop("functions", None)  # v2
+    # in versions < 3 we don't have the default field,
+    # and each new QC Settings are considered to be
+    # the new default
+    v.setdefault('default', True)
     id_ = _upsert(
         conn,
         table="qaqc",
