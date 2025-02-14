@@ -39,6 +39,8 @@ spec:
         - name: {{ .Values.name }}-entrypoint
           mountPath: /docker-entrypoint-initdb.d/01_postgres-force-ssl.sh
           subPath: postgres-force-ssl.sh
+        - name: {{ .Values.name }}-data
+          mountPath: /var/lib/postgresql/data
       volumes:
       - name: {{ .Values.name }}-entrypoint
         configMap:
