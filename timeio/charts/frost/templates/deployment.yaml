@@ -54,7 +54,7 @@ spec:
         - secretRef:
             name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.worker.name }}{{ else }}{{ index .Values.global .Values.name "worker" "existingSecret" }}{{ end }}
         volumeMounts:
-        - mountPath: /home/appuser/app/src/CreateNewFrostInstanceAction/tomcat/context_files
+        - mountPath: /home/appuser/app/src/frost_context_files
           name: {{ .Values.name }}-context
       volumes:
       - name: {{ .Values.name }}-context
