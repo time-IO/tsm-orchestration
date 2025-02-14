@@ -243,11 +243,16 @@ class QualityControl:
         return (int(t), int(ds[0])) if ds else (None, None)
 
     def fetch_qaqc_config(self, thing_uuid) -> ConfDB.QaqcT | None:
+        # Normally only one configuration should have the default
+        # flag set, but if multiple configurations have it set,
+        # we use the last updated (ORDER BY).
         q = (
             "SELECT q.* FROM config_db.qaqc q "
             "JOIN config_db.project p ON q.project_id = p.id "
             "JOIN config_db.thing t ON p.id = t.project_id "
-            "WHERE t.uuid = %s ORDER BY q.id DESC "  # we want the last config
+            "WHERE t.uuid = %s "
+            "AND q.default = true "
+            "ORDER BY q.id DESC "
         )
         with self.conn.cursor(row_factory=dict_row) as cur:
             return cur.execute(cast(Literal, q), [thing_uuid]).fetchone()
