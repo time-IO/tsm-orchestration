@@ -3,3 +3,64 @@ name: timeio
 description: "A Helm chart for time.IO"
 type: application
 version: 0.1.1
+
+icon: https://tsm.ufz.de/images/timeio.svg
+
+dependencies:
+  - name: cron-scheduler
+    version: 0.0.1
+    repository: "file://charts/cron-scheduler"
+  - name: database
+    version: 0.0.1
+    repository: "file://charts/database"
+  - name: flyway
+    version: 0.0.1
+    repository: "file://charts/flyway"
+  - name: frost
+    version: 0.0.1
+    repository: "file://charts/frost"
+  - name: mqtt-broker
+    version: 0.0.1
+    repository: "file://charts/mqtt-broker"
+  - name: object-storage
+    version: 0.0.1
+    repository: "file://charts/object-storage"
+  - name: proxy
+    version: 0.0.1
+    repository: "file://charts/proxy"
+  - name: timeio-db-api
+    version: 0.0.1
+    repository: "file://charts/timeio-db-api"
+  - name: tsmdl
+    version: 0.0.1
+    repository: "file://charts/tsmdl"
+  - name: visualization
+    version: 0.0.1
+    repository: "file://charts/visualization"
+  - name: worker-configdb-updater
+    version: 0.0.1
+    repository: "file://charts/worker-configdb-updater"
+  - name: worker-db-setup
+    version: 0.0.1
+    repository: "file://charts/worker-db-setup"
+  - name: worker-file-ingest
+    version: 0.0.1
+    repository: "file://charts/worker-file-ingest"
+  - name: worker-grafana-dashboard
+    version: 0.0.1
+    repository: "file://charts/worker-grafana-dashboard"
+  - name: worker-grafana-user-orgs
+    version: 0.0.1
+    repository: "file://charts/worker-grafana-user-orgs"
+  - name: worker-mqtt-ingest
+    version: 0.0.1
+    repository: "file://charts/worker-mqtt-ingest"
+  - name: worker-mqtt-user-creation
+    version: 0.0.1
+    repository: "file://charts/worker-mqtt-user-creation"
+  - name: worker-object-storage-setup
+    version: 0.0.1
+    repository: "file://charts/worker-object-storage-setup"
+  - name: worker-run-qaqc
+    version: 0.0.1
+    repository: "file://charts/worker-run-qaqc"
