@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import atexit
-from functools import lru_cache
-from typing import Any, Self
+from typing import Any, Self, TypeVar, Type, Generic, Callable
 
-import pandas as pd
 import psycopg
 from psycopg import Connection, conninfo
 from psycopg.rows import dict_row
@@ -16,10 +14,10 @@ logger = logging.getLogger("frontend-AL")
 """
 FEAL - Front End Abstraction Layer
 
-This file provide a convenient way to access the (meta) data 
-from the frontend. Currently this is a simple wrapper to access
-the configDB, but this will most probalbly change in the near 
-future.
+This file provide a convenient way to access the (meta-) data 
+from the frontend (Thing, Project, QC-Settings, etc.) Currently 
+this is a simple wrapper to access the configDB, but this will 
+most probably change in the near future.
 """
 
 
@@ -27,41 +25,25 @@ class ObjectNotFound(Exception):
     pass
 
 
-def to_camelcase(s: str) -> str:
-    return "".join(map(str.capitalize, s.split("_")))  # type: ignore
-
-
-def _property(query: str, attr: str, cls: type[Base]):
+def _property(query: str, id_attr: str, cls: type[Base]):
     """Return a property, with a getter that returns another Model"""
 
     class Getter(property):
 
-        def __init__(self):
-            self._cache_miss = False
-            super().__init__()
-
-        @lru_cache()
-        def _get_cached(self, instance, owner: type | None = None):
-            self._cache_miss = True
-            return self._get(instance, owner)
-
-        def _get(self, instance, owner: type | None = None):
-            res = instance._fetchone(instance._conn, query, getattr(instance, attr))
+        def __get__(self, obj: Base, owner: type[Base] | None = None):
+            rhs_id = getattr(obj, id_attr)
+            key = (cls, rhs_id)
+            if cached := obj._cache_get(key):
+                return cached
+            res = obj._fetchone(obj._conn, query, rhs_id)
             if not res:
-                raise ObjectNotFound(f"No {cls.__name__} found for {instance}")
-            return cls.from_parent(res, instance)
-
-        def __get__(self, instance, owner: type | None = None):
-            if instance._cache:
-                self._cache_miss = False
-                res = self._get_cached(instance, owner)
-                logger.debug(
-                    f"CACHE %s: %s",
-                    "MISS" if self._cache_miss else "HIT",
-                    cls._table_name,
+                raise ObjectNotFound(
+                    f"No entry found for '{obj._table_name}.{cls._table_name}', "
+                    f"with {obj}"
                 )
-                return res
-            return self._get(instance, owner)
+            inst = cls._from_parent(res, obj)
+            obj._cache_set(key, inst)
+            return inst
 
     return Getter()
 
@@ -76,36 +58,47 @@ class Base:
     _table_name: str = "<not set>"
     _protected_attrs = frozenset()
 
-    def __init__(self, attrs, conn: Connection, cache: bool):
+    def __init__(self, attrs, conn: Connection, caching: bool):
+        """ Constructor for creating a new instance from scratch.
+
+        See also Base._from_parent(), which create a new instance
+        from and existing instance, in other words, from within
+        an instance-method you should call _from_parent.
+        """
         self._attrs = attrs
         self._conn = conn
-        self._cache = cache
+        self._cache = {} if caching else None
+        self._root = True
 
     @classmethod
-    def from_parent(cls, res, parent: Base):
-        return cls(res, parent._conn, parent._cache)
+    def _from_parent(cls, res, parent: Base) -> Base:
+        """ Constructor for creating an instance from an existing instance.
+
+        For creating a new instance from scratch, in other words,
+        from within a classmethod call __init__, but from within
+        an instance-method call this.
+        """
+        # Only the root class (Thing or
+        instance = cls(res, parent._conn, False)
+        instance._cache = parent._cache
+        instance._root = False
+        return instance
 
     def __repr__(self):
         attrs = self._attrs.copy()
         attrs.update({k: "*****" for k in self._protected_attrs})
         return f"{self.__class__.__name__}({str(attrs)[1:-1]})"
 
-    def clear_cache(self):
-        pass
-
-    def get_conninfo(self):
-        if self._conn is not None:
-            return self._conn.info
-        if self._dsn is not None:
-            return conninfo.conninfo_to_dict(self._dsn)
-        return None
+    def __del__(self):
+        if self._root:
+            logger.debug(f"closing db connection {self._conn}")
+            self._conn.close()
 
     @classmethod
     def _get_connection(cls, dsn: str | None = None) -> Connection:
         # The user want a connection
         if dsn is not None:
             conn = psycopg.connect(dsn)
-            atexit.register(lambda: conn.close() or logger.debug(f"closed {conn}"))
             return conn
         # Check for an existing class connection
         if conn := getattr(Base, "__connection", None):
@@ -121,23 +114,37 @@ class Base:
         atexit.register(lambda: conn.close() or logger.debug(f"closed {conn}"))
         return Base.__connection
 
-    @classmethod
-    def _fetchall(cls, conn: Connection, query, *params):
-        logger.debug("fetchall(%s, %s)", query, params)
+    @staticmethod
+    def _fetchall(conn: Connection, query, *params):
+        logging.getLogger("al-cache").debug("fetchall(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchall()
 
-    @classmethod
-    def _fetchone(cls, conn: Connection, query, *params):
+    @staticmethod
+    def _fetchone(conn: Connection, query, *params):
         logger.debug("fetchone(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchone()
 
+    def _cache_get(self, key):
+        if self._cache:
+            hit = key in self._cache
+            logger.debug("cache %s: %s", "HIT" if hit else "MISS", key)
+            return self._cache.get(key, None)
+        return None
+
+    def _cache_set(self, key, value):
+        if self._cache is not None:
+            self._cache[key] = value
+
+    def clear_cache(self):
+        if self._cache:
+            self._cache.clear()
+
     def to_dict(self) -> dict[str, Any]:
         return self._attrs.copy()
-
 
 
 class Database(Base):
@@ -237,39 +244,43 @@ class Project(Base):
     database: Database = _property("SELECT * FROM config_db.database WHERE id = %s", "database_id", Database)  # fmt: skip
 
     @classmethod
-    def from_uuid(cls, uuid: str, dsn: str | None = None, cache:bool=True):
+    def from_uuid(cls, uuid: str, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.project where uuid::text = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, uuid)):
             raise ObjectNotFound(f"No Project found with {uuid=}")
-        return Thing(res, conn, cache)
+        return Project(res, conn, caching)
 
     @classmethod
-    def from_name(cls, name: str, dsn: str | None = None, cache:bool=True):
+    def from_name(cls, name: str, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.project where name = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, name)):
             raise ObjectNotFound(f"No Project found with {name=}")
-        return Thing(res, conn, cache)
+        return Project(res, conn, caching)
 
     @classmethod
-    def from_id(cls, id: int, dsn: str | None = None, cache:bool=True):
+    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.project where id = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, id)):
             raise ObjectNotFound(f"No Project found with {id=}")
-        return Thing(res, conn, cache)
+        return Project(res, conn, caching)
 
     def get_things(self) -> list[Thing]:
         query = "select * from config_db.thing where project_id = %s"
         conn = self._conn
         return [
-            Thing.from_parent(attr, self) for attr in self._fetchall(conn, query, self.id)
+            Thing._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
         ]
 
     def get_qaqcs(self) -> list[QAQC]:
         query = "select * from config_db.qaqc where project_id = %s"
-        return [QAQC.from_parent(attr, self) for attr in self._fetchall(self._conn, query, self.id)]
+        return [
+            QAQC._from_parent(attr, self)
+            for attr in self._fetchall(self._conn, query, self.id)
+        ]
 
 
 class QAQC(Base):
@@ -284,7 +295,8 @@ class QAQC(Base):
         query = "select * from config_db.qaqc_test where qaqc_id = %s"
         conn = self._conn
         return [
-            QAQCTest.from_parent(attr, self) for attr in self._fetchall(conn, query, self.id)
+            QAQCTest._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
         ]
 
 
@@ -331,41 +343,37 @@ class Thing(Base):
     ext_api: ExtAPI = _property("select * from config_db.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
 
     @classmethod
-    def from_uuid(cls, uuid: str, dsn: str | None = None, cache:bool=True):
+    def from_uuid(cls, uuid: str, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.thing where uuid::text = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, uuid)):
             raise ObjectNotFound(f"No Thing found with {uuid=}")
-        return Thing(res, conn, cache)
+        return Thing(res, conn, caching)
 
     @classmethod
-    def from_name(cls, name: str, dsn: str | None = None, cache:bool=True):
+    def from_name(cls, name: str, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.thing where name = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, name)):
             raise ObjectNotFound(f"No Thing found with {name=}")
-        return Thing(res, conn, cache)
+        return Thing(res, conn, caching)
 
     @classmethod
-    def from_id(cls, id: int, dsn: str | None = None, cache:bool=True):
+    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True):
         query = "select * from config_db.thing where id = %s"
         conn = cls._get_connection(dsn)
         if not (res := cls._fetchone(conn, query, id)):
             raise ObjectNotFound(f"No Thing found with {id=}")
-        return Thing(res, conn, cache)
+        return Thing(res, conn, caching)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level="DEBUG")
-    # b = B()
-    # b.a()
-    # print(C.cget())
-    # print(C().cget())
-    #
     dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     set_global_dsn(dsn)
     t = Thing.from_id(1)
-    t = Thing.from_id(1, dsn=dsn).clear_cache()
+    # t = Thing.from_id(1)
+    # t = Thing.from_id(1, dsn=dsn, caching=False)
+    # t = Thing.from_id(1, dsn=dsn)
     print(t.project.database)
-    print(t.project.database)
-    print(t.ext_sftp)
+    print(t.project.database.id)
