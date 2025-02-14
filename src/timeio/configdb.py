@@ -510,7 +510,7 @@ def upsert_table_qaqc(
     # in versions < 3 we don't have the default field,
     # and each new QC Settings are considered to be
     # the new default
-    v.setdefault('default', True)
+    v.setdefault("default", True)
     id_ = _upsert(
         conn,
         table="qaqc",
