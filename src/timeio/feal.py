@@ -25,6 +25,13 @@ class ObjectNotFound(Exception):
     pass
 
 
+def from_x(cls, query: str, x: int, dsn: str | None = None, caching: bool = True):
+    conn = cls._get_connection(dsn)
+    if not (res := cls._fetchone(conn, query, x)):
+        raise ObjectNotFound(f"No {cls.__name__} found with {id=}")
+    return cls(res, conn, caching)
+
+
 def _property(query: str, id_attr: str, cls: type[Base]):
     """Return a property, with a getter that returns another Model"""
 
@@ -59,7 +66,7 @@ class Base:
     _protected_attrs = frozenset()
 
     def __init__(self, attrs, conn: Connection, caching: bool):
-        """ Constructor for creating a new instance from scratch.
+        """Constructor for creating a new instance from scratch.
 
         See also Base._from_parent(), which create a new instance
         from and existing instance, in other words, from within
@@ -72,7 +79,7 @@ class Base:
 
     @classmethod
     def _from_parent(cls, res, parent: Base) -> Base:
-        """ Constructor for creating an instance from an existing instance.
+        """Constructor for creating an instance from an existing instance.
 
         For creating a new instance from scratch, in other words,
         from within a classmethod call __init__, but from within
@@ -146,6 +153,39 @@ class Base:
     def to_dict(self) -> dict[str, Any]:
         return self._attrs.copy()
 
+    @classmethod
+    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True) -> Thing:
+        table = cls._table_name
+        return from_x(cls, f"select * from config_db.{table} where id = %s", id, dsn, caching)  # fmt: skip
+
+
+class FromNameMixin:
+    @classmethod
+    def from_name(
+        cls: Type[Self], name: str, dsn: str | None = None, caching: bool = True
+    ) -> Self:
+        tab = cls._table_name
+        query = f"select * from config_db.{tab} where name = %s"
+        conn = cls._get_connection(dsn)
+        if not (res := cls._fetchall(conn, query, name)):
+            raise ObjectNotFound(f"No {cls.__name__} found with {name=}")
+        assert len(res) == 1  # TODO
+        return cls(res[0], conn, caching)
+
+
+class FromUUIDMixin:
+    @classmethod
+    def from_uuid(
+        cls: Type[Self], uuid: str, dsn: str | None = None, caching: bool = True
+    ) -> Self:
+        tab = cls._table_name
+        query = f"select * from config_db.{tab} where uuid::text = %s"
+        conn = cls._get_connection(dsn)
+        if not (res := cls._fetchall(conn, query, uuid)):
+            raise ObjectNotFound(f"No {cls.__name__} found with {uuid=}")
+        assert len(res) == 1  # TODO
+        return cls(res[0], conn, caching)
+
 
 class Database(Base):
     _table_name = "database"
@@ -158,7 +198,7 @@ class Database(Base):
     ro_password = property(lambda self: self._attrs["ro_password"])
 
 
-class ExtAPIType(Base):
+class ExtAPIType(Base, FromNameMixin):
     _table_name = "ext_api_type"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
@@ -188,7 +228,7 @@ class ExtSFTP(Base):
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
 
 
-class FileParserType(Base):
+class FileParserType(Base, FromNameMixin):
     _table_name = "file_parser_type"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
@@ -207,13 +247,13 @@ class FileParser(Base):
     )
 
 
-class IngestType(Base):
+class IngestType(Base, FromNameMixin):
     _table_name = "ingest_type"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
 
 
-class MQTTDeviceType(Base):
+class MQTTDeviceType(Base, FromNameMixin):
     _table_name = "mqtt_device_type"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
@@ -235,37 +275,13 @@ class MQTT(Base):
     )
 
 
-class Project(Base):
+class Project(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "project"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
     uuid = property(lambda self: self._attrs["uuid"])
     database_id: int = property(lambda self: self._attrs["database_id"])
     database: Database = _property("SELECT * FROM config_db.database WHERE id = %s", "database_id", Database)  # fmt: skip
-
-    @classmethod
-    def from_uuid(cls, uuid: str, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.project where uuid::text = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, uuid)):
-            raise ObjectNotFound(f"No Project found with {uuid=}")
-        return Project(res, conn, caching)
-
-    @classmethod
-    def from_name(cls, name: str, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.project where name = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, name)):
-            raise ObjectNotFound(f"No Project found with {name=}")
-        return Project(res, conn, caching)
-
-    @classmethod
-    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.project where id = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, id)):
-            raise ObjectNotFound(f"No Project found with {id=}")
-        return Project(res, conn, caching)
 
     def get_things(self) -> list[Thing]:
         query = "select * from config_db.thing where project_id = %s"
@@ -324,7 +340,7 @@ class S3Store(Base):
     file_parser: FileParser = _property("select * from config_db.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
 
 
-class Thing(Base):
+class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
     id: int = property(lambda self: self._attrs["id"])
     uuid = property(lambda self: self._attrs["uuid"])
@@ -342,38 +358,17 @@ class Thing(Base):
     ext_sftp: ExtSFTP = _property("select * from config_db.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
     ext_api: ExtAPI = _property("select * from config_db.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
 
-    @classmethod
-    def from_uuid(cls, uuid: str, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.thing where uuid::text = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, uuid)):
-            raise ObjectNotFound(f"No Thing found with {uuid=}")
-        return Thing(res, conn, caching)
-
-    @classmethod
-    def from_name(cls, name: str, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.thing where name = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, name)):
-            raise ObjectNotFound(f"No Thing found with {name=}")
-        return Thing(res, conn, caching)
-
-    @classmethod
-    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True):
-        query = "select * from config_db.thing where id = %s"
-        conn = cls._get_connection(dsn)
-        if not (res := cls._fetchone(conn, query, id)):
-            raise ObjectNotFound(f"No Thing found with {id=}")
-        return Thing(res, conn, caching)
-
 
 if __name__ == "__main__":
     logging.basicConfig(level="DEBUG")
     dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     set_global_dsn(dsn)
     t = Thing.from_id(1)
+    t = Thing.from_name("DemoThing")
+    t = Thing.from_uuid("0a308373-ab29-4317-b351-1443e8a1babd")
+
     # t = Thing.from_id(1)
     # t = Thing.from_id(1, dsn=dsn, caching=False)
     # t = Thing.from_id(1, dsn=dsn)
-    print(t.project.database)
+    print(t.uuid)
     print(t.project.database.id)
