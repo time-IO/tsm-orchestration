@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import atexit
+import warnings
 from typing import Any, Self, TypeVar, Type, Generic, Callable
 
 import psycopg
-from psycopg import Connection, conninfo
+from psycopg import Connection, sql
 from psycopg.rows import dict_row
 
 import logging
 
-logger = logging.getLogger("frontend-AL")
+logger = logging.getLogger("feta")
 
 """
 FETA - Front End Thing Abstraction 
@@ -20,16 +21,11 @@ this is a simple wrapper to access the configDB, but this will
 most probably change in the near future.
 """
 
+_cfgdb = "config_db"
+
 
 class ObjectNotFound(Exception):
     pass
-
-
-def from_x(cls, query: str, x: int, dsn: str | None = None, caching: bool = True):
-    conn = cls._get_connection(dsn)
-    if not (res := cls._fetchone(conn, query, x)):
-        raise ObjectNotFound(f"No {cls.__name__} found with {id=}")
-    return cls(res, conn, caching)
 
 
 def _property(query: str, id_attr: str, cls: type[Base]):
@@ -42,13 +38,19 @@ def _property(query: str, id_attr: str, cls: type[Base]):
             key = (cls, rhs_id)
             if cached := obj._cache_get(key):
                 return cached
-            res = obj._fetchone(obj._conn, query, rhs_id)
+            res = obj._fetchall(obj._conn, query, rhs_id)
             if not res:
                 raise ObjectNotFound(
                     f"No entry found for '{obj._table_name}.{cls._table_name}', "
                     f"with {obj}"
                 )
-            inst = cls._from_parent(res, obj)
+            if len(res) > 1:
+                warnings.warn(
+                    f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                    f"for {id_attr}={rhs_id}. The returned object will be "
+                    f"created from the first result."
+                )
+            inst = cls._from_parent(res[0], obj)
             obj._cache_set(key, inst)
             return inst
 
@@ -102,10 +104,10 @@ class Base:
             self._conn.close()
 
     @classmethod
-    def _get_connection(cls, dsn: str | None = None) -> Connection:
+    def _get_connection(cls, dsn: str | None = None, **kwargs) -> Connection:
         # The user want a connection
         if dsn is not None:
-            conn = psycopg.connect(dsn)
+            conn = psycopg.connect(dsn, **kwargs)
             return conn
         # Check for an existing class connection
         if conn := getattr(Base, "__connection", None):
@@ -123,7 +125,7 @@ class Base:
 
     @staticmethod
     def _fetchall(conn: Connection, query, *params):
-        logging.getLogger("al-cache").debug("fetchall(%s, %s)", query, params)
+        logger.debug("fetchall(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchall()
@@ -138,7 +140,9 @@ class Base:
     def _cache_get(self, key):
         if self._cache:
             hit = key in self._cache
-            logger.debug("cache %s: %s", "HIT" if hit else "MISS", key)
+            logging.getLogger("feta-cache").debug(
+                "cache %s: %s", "HIT" if hit else "MISS", key
+            )
             return self._cache.get(key, None)
         return None
 
@@ -153,37 +157,110 @@ class Base:
     def to_dict(self) -> dict[str, Any]:
         return self._attrs.copy()
 
+    # Each table has a PK column, that is named 'id'. That
+    # is why we can safely add this to EVERY subclass.
     @classmethod
-    def from_id(cls, id: int, dsn: str | None = None, caching: bool = True) -> Thing:
-        table = cls._table_name
-        return from_x(cls, f"select * from config_db.{table} where id = %s", id, dsn, caching)  # fmt: skip
+    def from_id(
+        cls: Type[Self],
+        id_: int,
+        dsn: str | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Fetch a new object by its ID.
+
+        :param id_: The id of the object.
+        :param dsn: Postgres connection string to make a DB connection
+            with `psycopg..connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where id = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, id_)):
+            raise ObjectNotFound(f"No {cls.__name__} found for id={id_}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for id={id_}. The returned object will be created from "
+                f"the first result."
+            )
+        assert len(res) == 1  # TODO
+        return cls(res[0], conn, caching)
 
 
 class FromNameMixin:
     @classmethod
     def from_name(
-        cls: Type[Self], name: str, dsn: str | None = None, caching: bool = True
+        cls: Type[Self],
+        name: str,
+        dsn: str | None = None,
+        caching: bool = True,
+        **kwargs,
     ) -> Self:
-        tab = cls._table_name
-        query = f"select * from config_db.{tab} where name = %s"
-        conn = cls._get_connection(dsn)
+        """
+        Create a new object from its name.
+
+        :param name: The name of the object.
+        :param dsn: Postgres connection string to make a DB connection
+            with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where name = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, name)):
             raise ObjectNotFound(f"No {cls.__name__} found with {name=}")
-        assert len(res) == 1  # TODO
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for {name=}. The returned object will be created from "
+                f"the first result."
+            )
         return cls(res[0], conn, caching)
 
 
 class FromUUIDMixin:
     @classmethod
     def from_uuid(
-        cls: Type[Self], uuid: str, dsn: str | None = None, caching: bool = True
+        cls: Type[Self],
+        uuid: str,
+        dsn: str | None = None,
+        caching: bool = True,
+        **kwargs,
     ) -> Self:
-        tab = cls._table_name
-        query = f"select * from config_db.{tab} where uuid::text = %s"
-        conn = cls._get_connection(dsn)
+        """
+        Create a new object by its UUID.
+
+        :param uuid: The UUID of the object.
+        :param dsn: Postgres connection string to make a DB connection
+            with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where uuid::text = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, uuid)):
-            raise ObjectNotFound(f"No {cls.__name__} found with {uuid=}")
-        assert len(res) == 1  # TODO
+            raise ObjectNotFound(f"No {cls.__name__} found for {uuid=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for {uuid=}. The returned object will be created from "
+                f"the first result."
+            )
         return cls(res[0], conn, caching)
 
 
@@ -211,7 +288,7 @@ class ExtAPI(Base):
     sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
     settings = property(lambda self: self._attrs["settings"])
-    api_type: ExtAPIType = _property("SELECT * FROM config_db.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType)  # fmt: skip
+    api_type: ExtAPIType = _property(f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType)  # fmt: skip
 
 
 class ExtSFTP(Base):
@@ -241,7 +318,7 @@ class FileParser(Base):
     params = property(lambda self: self._attrs["params"])
     file_parser_type_id: int = property(lambda self: self._attrs["file_parser_type_id"])
     file_parser_type: FileParserType = _property(
-        "SELECT * FROM config_db.file_parser_type WHERE id = %s",
+        f"SELECT * FROM {_cfgdb}.file_parser_type WHERE id = %s",
         "file_parser_type_id",
         FileParserType,
     )
@@ -269,7 +346,7 @@ class MQTT(Base):
     topic = property(lambda self: self._attrs["topic"])
     mqtt_device_type_id: int = property(lambda self: self._attrs["mqtt_device_type_id"])
     mqtt_device_type: MQTTDeviceType = _property(
-        "SELECT * FROM config_db.mqtt_device_type WHERE id = %s",
+        f"SELECT * FROM {_cfgdb}.mqtt_device_type WHERE id = %s",
         "mqtt_device_type_id",
         MQTTDeviceType,
     )
@@ -281,10 +358,10 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     name = property(lambda self: self._attrs["name"])
     uuid = property(lambda self: self._attrs["uuid"])
     database_id: int = property(lambda self: self._attrs["database_id"])
-    database: Database = _property("SELECT * FROM config_db.database WHERE id = %s", "database_id", Database)  # fmt: skip
+    database: Database = _property(f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database)  # fmt: skip
 
     def get_things(self) -> list[Thing]:
-        query = "select * from config_db.thing where project_id = %s"
+        query = f"select * from {_cfgdb}.thing where project_id = %s"
         conn = self._conn
         return [
             Thing._from_parent(attr, self)
@@ -292,7 +369,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
         ]
 
     def get_qaqcs(self) -> list[QAQC]:
-        query = "select * from config_db.qaqc where project_id = %s"
+        query = f"select * from {_cfgdb}.qaqc where project_id = %s"
         return [
             QAQC._from_parent(attr, self)
             for attr in self._fetchall(self._conn, query, self.id)
@@ -305,10 +382,10 @@ class QAQC(Base):
     name = property(lambda self: self._attrs["name"])
     project_id: int = property(lambda self: self._attrs["project_id"])
     context_window = property(lambda self: self._attrs["context_window"])
-    project: Project = _property("select * from config_db.project where id = %s", "project_id", Project)  # fmt: skip
+    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
 
     def get_tests(self) -> list[QAQCTest]:
-        query = "select * from config_db.qaqc_test where qaqc_id = %s"
+        query = f"select * from {_cfgdb}.qaqc_test where qaqc_id = %s"
         conn = self._conn
         return [
             QAQCTest._from_parent(attr, self)
@@ -325,7 +402,7 @@ class QAQCTest(Base):
     position = property(lambda self: self._attrs["position"])
     name = property(lambda self: self._attrs["name"])
     streams = property(lambda self: self._attrs["streams"])
-    qaqc: QAQC = _property("select * from config_db.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
+    qaqc: QAQC = _property(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
 
 
 class S3Store(Base):
@@ -337,7 +414,7 @@ class S3Store(Base):
     bucket = property(lambda self: self._attrs["bucket"])
     filename_pattern = property(lambda self: self._attrs["filename_pattern"])
     file_parser_id: int = property(lambda self: self._attrs["file_parser_id"])
-    file_parser: FileParser = _property("select * from config_db.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
+    file_parser: FileParser = _property(f"select * from {_cfgdb}.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
 
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
@@ -351,12 +428,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     mqtt_id: int = property(lambda self: self._attrs["mqtt_id"])
     ext_sftp_id: int = property(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int = property(lambda self: self._attrs["ext_api_id"])
-    project: Project = _property("select * from config_db.project where id = %s", "project_id", Project)  # fmt: skip
-    ingest_type: IngestType = _property("select * from config_db.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
-    s3_store: S3Store = _property("select * from config_db.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
-    mqtt: MQTT = _property("select * from config_db.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
-    ext_sftp: ExtSFTP = _property("select * from config_db.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
-    ext_api: ExtAPI = _property("select * from config_db.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
+    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
+    ingest_type: IngestType = _property(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
+    s3_store: S3Store = _property(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
+    mqtt: MQTT = _property(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
+    ext_sftp: ExtSFTP = _property(f"select * from {_cfgdb}.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
+    ext_api: ExtAPI = _property(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
 
 
 if __name__ == "__main__":
