@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger("frontend-AL")
 
 """
-FEAL - Front End Abstraction Layer
+FETA - Front End Thing Abstraction 
 
 This file provide a convenient way to access the (meta-) data 
 from the frontend (Thing, Project, QC-Settings, etc.) Currently 
