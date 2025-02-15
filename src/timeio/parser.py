@@ -19,7 +19,7 @@ from typing_extensions import Required
 from timeio.common import ObservationResultType
 from timeio.errors import ParsingError, ParsingWarning
 from timeio.journaling import Journal
-from timeio.types import JsonT
+from timeio.typehints import JsonT
 
 parsedT = TypeVar("parsedT")
 journal = Journal("Parser")
