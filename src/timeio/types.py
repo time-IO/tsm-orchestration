@@ -54,6 +54,17 @@ class MqttPayload:
         thing_sta_id: int | None
         sta_stream_id: int | None
 
+    class DataParsedV1:
+        version: _t.Literal[1] | None
+        thing_uuid: str
+
+    class DataParsedV2:
+        version: _t.Literal[2]
+        thing_uuid: str
+        qc_settings_name: str
+        start_date: str
+        end_date: str
+
 
 class ConfDB:
 
