@@ -54,13 +54,13 @@ class MqttPayload:
         thing_sta_id: int | None
         sta_stream_id: int | None
 
-    class DataParsedV1:
+    class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
 
-    class DataParsedV2:
+    class DataParsedV2(_t.TypedDict):
         version: _t.Literal[2]
-        thing_uuid: str
+        project_uuid: str
         qc_settings_name: str
         start_date: str
         end_date: str
@@ -149,6 +149,7 @@ class ConfDB:
         arg_name: str
         sta_thing_id: int | None
         sta_stream_id: int | None
+        alias: str
 
     class S3_StoreT(_t.TypedDict):
         id: int
@@ -168,3 +169,11 @@ class ConfDB:
         mqtt_id: int
         ext_sftp_id: int | None
         ext_api_id: int | None
+
+
+def check_dict_by_TypedDict(value: dict, expected: type[_t.TypedDict], name: str):
+    missing = expected.__required_keys__ - value.keys()
+    if missing:
+        raise KeyError(f"{', '.join(missing)} are a mandatory keys for {name!r}")
+
+
