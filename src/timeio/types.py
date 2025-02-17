@@ -175,5 +175,3 @@ def check_dict_by_TypedDict(value: dict, expected: type[_t.TypedDict], name: str
     missing = expected.__required_keys__ - value.keys()
     if missing:
         raise KeyError(f"{', '.join(missing)} are a mandatory keys for {name!r}")
-
-
