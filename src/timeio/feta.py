@@ -33,7 +33,9 @@ def _property(query: str, id_attr: str, cls: type[Base]):
 
     class Getter(property):
 
-        def __get__(self, obj: Base, owner: type[Base] | None = None):
+        def __get__(self, obj: Base | None, owner: type[Base] | None = None):
+            if obj is None:
+                return self
             rhs_id = getattr(obj, id_attr)
             key = (cls, rhs_id)
             if cached := obj._cache_get(key):
@@ -57,21 +59,20 @@ def _property(query: str, id_attr: str, cls: type[Base]):
     return Getter()
 
 
-def set_global_dsn(dsn: str):
-    Base._dsn = dsn
+def connect(dsn: str, **kwargs):
+    Base._set_global_connection(dsn, **kwargs)
 
 
 class Base:
-    _dsn: str | None = None
-    __connection: Connection
+    __cls_connection: Connection | None = None
     _table_name: str = "<not set>"
-    _protected_attrs = frozenset()
+    _protected_values = frozenset()
 
     def __init__(self, attrs, conn: Connection, caching: bool):
-        """Constructor for creating a new instance from scratch.
+        """Constructor for creating a new Base instance from scratch.
 
         See also Base._from_parent(), which create a new instance
-        from and existing instance, in other words, from within
+        from and existing Base instance, in other words, from within
         an instance-method you should call _from_parent.
         """
         self._attrs = attrs
@@ -81,13 +82,13 @@ class Base:
 
     @classmethod
     def _from_parent(cls, res, parent: Base) -> Base:
-        """Constructor for creating an instance from an existing instance.
+        """Constructor for creating an instance from an existing Base instance.
 
         For creating a new instance from scratch, in other words,
         from within a classmethod call __init__, but from within
         an instance-method call this.
         """
-        # Only the root class (Thing or
+        # Only the root class
         instance = cls(res, parent._conn, False)
         instance._cache = parent._cache
         instance._root = False
@@ -95,13 +96,29 @@ class Base:
 
     def __repr__(self):
         attrs = self._attrs.copy()
-        attrs.update({k: "*****" for k in self._protected_attrs})
+        attrs.update({k: "*****" for k in self._protected_values})
         return f"{self.__class__.__name__}({str(attrs)[1:-1]})"
 
     def __del__(self):
         if self._root:
-            logger.debug(f"closing db connection {self._conn}")
+            # The class connection is registered with atexit
+            # to be closed on program exit.
+            # see also Base._set_global_connection()
+            if self._conn == self.__cls_connection:
+                return
+            logger.debug(f"Closing instance connection {self._conn}")
             self._conn.close()
+
+    @classmethod
+    def _set_global_connection(cls, dsn, **kwargs):
+        cls.__cls_connection = conn = psycopg.connect(dsn, **kwargs)
+        logger.debug(f"Opened global DB connection {conn}")
+
+        def close_global_connection():
+            conn.close()
+            logger.debug(f"Closed global DB connection {conn}")
+
+        atexit.register(close_global_connection)
 
     @classmethod
     def _get_connection(cls, dsn: str | None = None, **kwargs) -> Connection:
@@ -110,18 +127,13 @@ class Base:
             conn = psycopg.connect(dsn, **kwargs)
             return conn
         # Check for an existing class connection
-        if conn := getattr(Base, "__connection", None):
-            return conn
-        # Create a class connection if possible
-        if Base._dsn is None:
-            raise ValueError(
-                f"Either pass a psycopg.Connection by the keyword 'conn', "
-                f"or use the function set_global_dsn() to set a DSN for "
-                f"the whole python session."
-            )
-        Base.__connection = conn = psycopg.connect(Base._dsn)
-        atexit.register(lambda: conn.close() or logger.debug(f"closed {conn}"))
-        return Base.__connection
+        if cls.__cls_connection is not None:
+            return cls.__cls_connection
+        raise ValueError(
+            f"Either pass the keyword argument 'dsn', or use the "
+            f"function feta.connect() to set a global connection "
+            f"for all FETA classes."
+        )
 
     @staticmethod
     def _fetchall(conn: Connection, query, *params):
@@ -172,7 +184,7 @@ class Base:
 
         :param id_: The id of the object.
         :param dsn: Postgres connection string to make a DB connection
-            with `psycopg..connect()`
+            with `psycopg.connect()`
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
@@ -264,21 +276,39 @@ class FromUUIDMixin:
         return cls(res[0], conn, caching)
 
 
-class Database(Base):
-    _table_name = "database"
-    _protected_attrs = frozenset({"password", "ro_password"})
+class IngestType(Base, FromNameMixin):
+    _table_name = "ingest_type"
     id: int = property(lambda self: self._attrs["id"])
-    schema = property(lambda self: self._attrs["schema"])
-    user = property(lambda self: self._attrs["user"])
-    password = property(lambda self: self._attrs["password"])
-    ro_user = property(lambda self: self._attrs["ro_user"])
-    ro_password = property(lambda self: self._attrs["ro_password"])
+    name = property(lambda self: self._attrs["name"])
+
+
+class FileParserType(Base, FromNameMixin):
+    _table_name = "file_parser_type"
+    id: int = property(lambda self: self._attrs["id"])
+    name = property(lambda self: self._attrs["name"])
+
+
+class MQTTDeviceType(Base, FromNameMixin):
+    _table_name = "mqtt_device_type"
+    id: int = property(lambda self: self._attrs["id"])
+    name = property(lambda self: self._attrs["name"])
 
 
 class ExtAPIType(Base, FromNameMixin):
     _table_name = "ext_api_type"
     id: int = property(lambda self: self._attrs["id"])
     name = property(lambda self: self._attrs["name"])
+
+
+class Database(Base):
+    _table_name = "database"
+    _protected_values = frozenset({"password", "ro_password"})
+    id: int = property(lambda self: self._attrs["id"])
+    schema = property(lambda self: self._attrs["schema"])
+    user = property(lambda self: self._attrs["user"])
+    password = property(lambda self: self._attrs["password"])
+    ro_user = property(lambda self: self._attrs["ro_user"])
+    ro_password = property(lambda self: self._attrs["ro_password"])
 
 
 class ExtAPI(Base):
@@ -293,7 +323,7 @@ class ExtAPI(Base):
 
 class ExtSFTP(Base):
     _table_name = "ext_sftp"
-    _protected_attrs = frozenset({"password", "ssh_priv_key"})
+    _protected_values = frozenset({"password", "ssh_priv_key"})
     id: int = property(lambda self: self._attrs["id"])
     uri = property(lambda self: self._attrs["uri"])
     path = property(lambda self: self._attrs["path"])
@@ -303,12 +333,6 @@ class ExtSFTP(Base):
     ssh_pub_key = property(lambda self: self._attrs["ssh_pub_key"])
     sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
-
-
-class FileParserType(Base, FromNameMixin):
-    _table_name = "file_parser_type"
-    id: int = property(lambda self: self._attrs["id"])
-    name = property(lambda self: self._attrs["name"])
 
 
 class FileParser(Base):
@@ -324,21 +348,9 @@ class FileParser(Base):
     )
 
 
-class IngestType(Base, FromNameMixin):
-    _table_name = "ingest_type"
-    id: int = property(lambda self: self._attrs["id"])
-    name = property(lambda self: self._attrs["name"])
-
-
-class MQTTDeviceType(Base, FromNameMixin):
-    _table_name = "mqtt_device_type"
-    id: int = property(lambda self: self._attrs["id"])
-    name = property(lambda self: self._attrs["name"])
-
-
 class MQTT(Base):
     _table_name = "mqtt"
-    _protected_attrs = frozenset({"password", "password_hashed"})
+    _protected_values = frozenset({"password", "password_hashed"})
     id: int = property(lambda self: self._attrs["id"])
     user = property(lambda self: self._attrs["user"])
     password = property(lambda self: self._attrs["password"])
@@ -350,6 +362,47 @@ class MQTT(Base):
         "mqtt_device_type_id",
         MQTTDeviceType,
     )
+
+
+class S3Store(Base):
+    _table_name = "s3_store"
+    _protected_values = frozenset({"password"})
+    id: int = property(lambda self: self._attrs["id"])
+    user: str = property(lambda self: self._attrs["user"])
+    password: str = property(lambda self: self._attrs["password"])
+    bucket = property(lambda self: self._attrs["bucket"])
+    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
+    file_parser_id: int = property(lambda self: self._attrs["file_parser_id"])
+    file_parser: FileParser = _property(f"select * from {_cfgdb}.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
+
+
+class QAQCTest(Base):
+    _table_name = "qaqc_test"
+    id: int = property(lambda self: self._attrs["id"])
+    qaqc_id: int = property(lambda self: self._attrs["qaqc_id"])
+    function = property(lambda self: self._attrs["function"])
+    args = property(lambda self: self._attrs["args"])
+    position = property(lambda self: self._attrs["position"])
+    name = property(lambda self: self._attrs["name"])
+    streams = property(lambda self: self._attrs["streams"])
+    qaqc: QAQC = _property(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
+
+
+class QAQC(Base):
+    _table_name = "qaqc"
+    id: int = property(lambda self: self._attrs["id"])
+    name = property(lambda self: self._attrs["name"])
+    project_id: int = property(lambda self: self._attrs["project_id"])
+    context_window = property(lambda self: self._attrs["context_window"])
+    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
+
+    def get_tests(self) -> list[QAQCTest]:
+        query = f"select * from {_cfgdb}.qaqc_test where qaqc_id = %s"
+        conn = self._conn
+        return [
+            QAQCTest._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
+        ]
 
 
 class Project(Base, FromNameMixin, FromUUIDMixin):
@@ -376,47 +429,6 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
         ]
 
 
-class QAQC(Base):
-    _table_name = "qaqc"
-    id: int = property(lambda self: self._attrs["id"])
-    name = property(lambda self: self._attrs["name"])
-    project_id: int = property(lambda self: self._attrs["project_id"])
-    context_window = property(lambda self: self._attrs["context_window"])
-    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
-
-    def get_tests(self) -> list[QAQCTest]:
-        query = f"select * from {_cfgdb}.qaqc_test where qaqc_id = %s"
-        conn = self._conn
-        return [
-            QAQCTest._from_parent(attr, self)
-            for attr in self._fetchall(conn, query, self.id)
-        ]
-
-
-class QAQCTest(Base):
-    _table_name = "qaqc_test"
-    id: int = property(lambda self: self._attrs["id"])
-    qaqc_id: int = property(lambda self: self._attrs["qaqc_id"])
-    function = property(lambda self: self._attrs["function"])
-    args = property(lambda self: self._attrs["args"])
-    position = property(lambda self: self._attrs["position"])
-    name = property(lambda self: self._attrs["name"])
-    streams = property(lambda self: self._attrs["streams"])
-    qaqc: QAQC = _property(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
-
-
-class S3Store(Base):
-    _table_name = "s3_store"
-    _protected_attrs = frozenset({"password"})
-    id: int = property(lambda self: self._attrs["id"])
-    user: str = property(lambda self: self._attrs["user"])
-    password: str = property(lambda self: self._attrs["password"])
-    bucket = property(lambda self: self._attrs["bucket"])
-    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
-    file_parser_id: int = property(lambda self: self._attrs["file_parser_id"])
-    file_parser: FileParser = _property(f"select * from {_cfgdb}.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
-
-
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
     id: int = property(lambda self: self._attrs["id"])
@@ -428,6 +440,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     mqtt_id: int = property(lambda self: self._attrs["mqtt_id"])
     ext_sftp_id: int = property(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int = property(lambda self: self._attrs["ext_api_id"])
+
     project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
     ingest_type: IngestType = _property(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
     s3_store: S3Store = _property(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
@@ -439,13 +452,15 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
 if __name__ == "__main__":
     logging.basicConfig(level="DEBUG")
     dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    set_global_dsn(dsn)
+    connect(dsn)
     t = Thing.from_id(1)
-    t = Thing.from_name("DemoThing")
-    t = Thing.from_uuid("0a308373-ab29-4317-b351-1443e8a1babd")
-
+    print(t.s3_store)
+    print(repr(t.s3_store))
+    # t = Thing.from_name("DemoThing")
+    # t = Thing.from_uuid("0a308373-ab29-4317-b351-1443e8a1babd")
+    #
     # t = Thing.from_id(1)
     # t = Thing.from_id(1, dsn=dsn, caching=False)
     # t = Thing.from_id(1, dsn=dsn)
-    print(t.uuid)
-    print(t.project.database.id)
+    # print(t.uuid)
+    # print(t.project.database.id)
