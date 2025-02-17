@@ -18,3 +18,5 @@ deploy-images-to-registry:
     # build and push configdb-updater
     - CONFIGDB_UPDATER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
     - CONFIGDB_UPDATER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
+  tags:
+    - "dind"
