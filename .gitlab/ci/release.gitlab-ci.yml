@@ -6,12 +6,12 @@ deploy-images-to-registry:
   before_script:
     - cp .env.example .env
     - export BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
   after_script:
     - docker logout
   script:
     # build and push dispatcher
     - unset DOCKER_HOST  # fixes error with upload to wrong host
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - DISPATCHER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
     - DISPATCHER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
     # build and push configdb-updater
