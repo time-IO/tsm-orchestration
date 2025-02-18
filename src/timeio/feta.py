@@ -7,7 +7,6 @@ from typing import Any, Self, TypeVar, Type, Generic, Callable
 import psycopg
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
-
 import logging
 
 logger = logging.getLogger("feta")
@@ -60,6 +59,17 @@ def _property(query: str, id_attr: str, cls: type[Base]):
 
 
 def connect(dsn: str, **kwargs):
+    """
+    Globally connect feta with a DB.
+
+    The connection i valid for the whole python session,
+    to create a connection on creation of objects, use
+    the dsn argument with the classmethods.
+    For example `Thing.from_id(1, dsn=...)`
+
+    :param dsn: connection string
+    :param kwargs: kwargs are directly passed to psycopg.connect()
+    """
     Base._set_global_connection(dsn, **kwargs)
 
 
@@ -472,20 +482,3 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     external_sftp = ext_sftp
     external_api = ext_api
     description = None  # TODO: missing in configDB
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level="DEBUG")
-    dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    connect(dsn)
-    t = Thing.from_id(1)
-    print(t.database)
-    print(repr(t.raw_data_storage))
-    # t = Thing.from_name("DemoThing")
-    # t = Thing.from_uuid("0a308373-ab29-4317-b351-1443e8a1babd")
-    #
-    # t = Thing.from_id(1)
-    # t = Thing.from_id(1, dsn=dsn, caching=False)
-    # t = Thing.from_id(1, dsn=dsn)
-    # print(t.uuid)
-    # print(t.project.database.id)
