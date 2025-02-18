@@ -27,7 +27,7 @@ except ImportError:
 
 from timeio.common import ObservationResultType
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
-from timeio.types import ConfDB, DbRowT, JsonObjectT
+from timeio.typehints import ConfDB, DbRowT, JsonObjectT
 from timeio.journaling import Journal
 
 try:

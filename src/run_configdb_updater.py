@@ -8,7 +8,7 @@ from typing import Any, cast, Literal
 
 import paho.mqtt.client as mqtt
 from psycopg_pool import ConnectionPool
-from timeio.types import MqttPayload
+from timeio.typehints import MqttPayload
 from timeio.common import get_envvar
 from timeio.configdb import store_qaqc_config, store_thing_config
 from timeio.version import __version__ as timeio_version

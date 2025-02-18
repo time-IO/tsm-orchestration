@@ -9,7 +9,7 @@ from psycopg import Connection, sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from timeio.common import get_envvar, get_envvar_as_bool
-from timeio.types import MqttPayload
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("configdb-updater")
 
