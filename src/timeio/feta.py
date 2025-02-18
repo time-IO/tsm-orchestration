@@ -30,9 +30,7 @@ complete[1]) drop-in replacement for classes in thing.py.
     the DB. One should use `feta.ExtSFTP.ssh_priv_key` 
     instead.
 - `thing.Thing.properties` is not supported, because we 
-    don't use/need it anymore. Nothing is and will be 
-    stored there.
-    
+    don't use/need it anymore. 
 """
 
 _cfgdb = "config_db"
