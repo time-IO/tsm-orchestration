@@ -202,7 +202,6 @@ class Base:
                 f"for id={id_}. The returned object will be created from "
                 f"the first result."
             )
-        assert len(res) == 1  # TODO
         return cls(res[0], conn, caching)
 
 
@@ -306,33 +305,47 @@ class Database(Base):
     id: int = property(lambda self: self._attrs["id"])
     schema = property(lambda self: self._attrs["schema"])
     user = property(lambda self: self._attrs["user"])
-    password = property(lambda self: self._attrs["password"])
     ro_user = property(lambda self: self._attrs["ro_user"])
+
+    # thing.Datebase interface
+    username = user
+    password = property(lambda self: self._attrs["password"])
+    ro_username = ro_user
     ro_password = property(lambda self: self._attrs["ro_password"])
+    # url = None  # TODO: missing in configDB
+    # ro_url = None  # TODO: missing in configDB
 
 
 class ExtAPI(Base):
     _table_name = "ext_api"
     id: int = property(lambda self: self._attrs["id"])
     api_type_id: int = property(lambda self: self._attrs["api_type_id"])
-    sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
-    settings = property(lambda self: self._attrs["settings"])
+
+    # thing.ExternalApi interface
+    enabled = sync_enabled
     api_type: ExtAPIType = _property(f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType)  # fmt: skip
+    sync_interval = property(lambda self: self._attrs["sync_interval"])
+    settings = property(lambda self: self._attrs["settings"])
 
 
 class ExtSFTP(Base):
     _table_name = "ext_sftp"
     _protected_values = frozenset({"password", "ssh_priv_key"})
     id: int = property(lambda self: self._attrs["id"])
-    uri = property(lambda self: self._attrs["uri"])
-    path = property(lambda self: self._attrs["path"])
     user = property(lambda self: self._attrs["user"])
-    password = property(lambda self: self._attrs["password"])
     ssh_priv_key = property(lambda self: self._attrs["ssh_priv_key"])
     ssh_pub_key = property(lambda self: self._attrs["ssh_pub_key"])
-    sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
+
+    # thing.ExternalSFTP interface
+    enabled = sync_enabled
+    uri = property(lambda self: self._attrs["uri"])
+    path = property(lambda self: self._attrs["path"])
+    username = user
+    password = property(lambda self: self._attrs["password"])
+    sync_interval = property(lambda self: self._attrs["sync_interval"])
+    public_key = ssh_pub_key
 
 
 class FileParser(Base):
@@ -369,23 +382,41 @@ class S3Store(Base):
     _protected_values = frozenset({"password"})
     id: int = property(lambda self: self._attrs["id"])
     user: str = property(lambda self: self._attrs["user"])
-    password: str = property(lambda self: self._attrs["password"])
     bucket = property(lambda self: self._attrs["bucket"])
-    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
     file_parser_id: int = property(lambda self: self._attrs["file_parser_id"])
     file_parser: FileParser = _property(f"select * from {_cfgdb}.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
 
+    # thing.RawDataStorage interface
+    username = user
+    password: str = property(lambda self: self._attrs["password"])
+    bucket_name = bucket
+    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
 
-class QAQCTest(Base):
-    _table_name = "qaqc_test"
+
+class Project(Base, FromNameMixin, FromUUIDMixin):
+    _table_name = "project"
     id: int = property(lambda self: self._attrs["id"])
-    qaqc_id: int = property(lambda self: self._attrs["qaqc_id"])
-    function = property(lambda self: self._attrs["function"])
-    args = property(lambda self: self._attrs["args"])
-    position = property(lambda self: self._attrs["position"])
+    database_id: int = property(lambda self: self._attrs["database_id"])
+    database: Database = _property(f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database)  # fmt: skip
+
+    # thing.Project interface
+    uuid = property(lambda self: self._attrs["uuid"])
     name = property(lambda self: self._attrs["name"])
-    streams = property(lambda self: self._attrs["streams"])
-    qaqc: QAQC = _property(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
+
+    def get_things(self) -> list[Thing]:
+        query = f"select * from {_cfgdb}.thing where project_id = %s"
+        conn = self._conn
+        return [
+            Thing._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
+        ]
+
+    def get_qaqcs(self) -> list[QAQC]:
+        query = f"select * from {_cfgdb}.qaqc where project_id = %s"
+        return [
+            QAQC._from_parent(attr, self)
+            for attr in self._fetchall(self._conn, query, self.id)
+        ]
 
 
 class QAQC(Base):
@@ -405,48 +436,42 @@ class QAQC(Base):
         ]
 
 
-class Project(Base, FromNameMixin, FromUUIDMixin):
-    _table_name = "project"
+class QAQCTest(Base):
+    _table_name = "qaqc_test"
     id: int = property(lambda self: self._attrs["id"])
+    qaqc_id: int = property(lambda self: self._attrs["qaqc_id"])
+    function = property(lambda self: self._attrs["function"])
+    args = property(lambda self: self._attrs["args"])
+    position = property(lambda self: self._attrs["position"])
     name = property(lambda self: self._attrs["name"])
-    uuid = property(lambda self: self._attrs["uuid"])
-    database_id: int = property(lambda self: self._attrs["database_id"])
-    database: Database = _property(f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database)  # fmt: skip
-
-    def get_things(self) -> list[Thing]:
-        query = f"select * from {_cfgdb}.thing where project_id = %s"
-        conn = self._conn
-        return [
-            Thing._from_parent(attr, self)
-            for attr in self._fetchall(conn, query, self.id)
-        ]
-
-    def get_qaqcs(self) -> list[QAQC]:
-        query = f"select * from {_cfgdb}.qaqc where project_id = %s"
-        return [
-            QAQC._from_parent(attr, self)
-            for attr in self._fetchall(self._conn, query, self.id)
-        ]
+    streams = property(lambda self: self._attrs["streams"])
+    qaqc: QAQC = _property(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)  # fmt: skip
 
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
-    id: int = property(lambda self: self._attrs["id"])
-    uuid = property(lambda self: self._attrs["uuid"])
-    name = property(lambda self: self._attrs["name"])
     project_id: int = property(lambda self: self._attrs["project_id"])
-    ingest_type_id: int = property(lambda self: self._attrs["ingest_type_id"])
     s3_store_id: int = property(lambda self: self._attrs["s3_store_id"])
+    ingest_type_id: int = property(lambda self: self._attrs["ingest_type_id"])
     mqtt_id: int = property(lambda self: self._attrs["mqtt_id"])
     ext_sftp_id: int = property(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int = property(lambda self: self._attrs["ext_api_id"])
-
-    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
     ingest_type: IngestType = _property(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
     s3_store: S3Store = _property(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
     mqtt: MQTT = _property(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
     ext_sftp: ExtSFTP = _property(f"select * from {_cfgdb}.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
     ext_api: ExtAPI = _property(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
+
+    # thing.Thing interface
+    id: int = property(lambda self: self._attrs["id"])
+    uuid = property(lambda self: self._attrs["uuid"])
+    name = property(lambda self: self._attrs["name"])
+    project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
+    database: Database = property(lambda self: self.project.database)
+    raw_data_storage = s3_store
+    external_sftp = ext_sftp
+    external_api = ext_api
+    description = None  # TODO: missing in configDB
 
 
 if __name__ == "__main__":
@@ -454,8 +479,8 @@ if __name__ == "__main__":
     dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     connect(dsn)
     t = Thing.from_id(1)
-    print(t.s3_store)
-    print(repr(t.s3_store))
+    print(t.database)
+    print(repr(t.raw_data_storage))
     # t = Thing.from_name("DemoThing")
     # t = Thing.from_uuid("0a308373-ab29-4317-b351-1443e8a1babd")
     #
