@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import atexit
 import warnings
-from typing import Any, Self, TypeVar, Type, Generic, Callable
+from typing import Any
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import psycopg
 from psycopg import Connection, sql
@@ -16,8 +21,18 @@ FETA - Front End Thing Abstraction
 
 This file provide a convenient way to access the (meta-) data 
 from the frontend (Thing, Project, QC-Settings, etc.) Currently 
-this is a simple wrapper to access the configDB, but this will 
-most probably change in the near future.
+this is a simple wrapper around the configDB, but also a (nearly 
+complete[1]) drop-in replacement for classes in thing.py. 
+
+[1]
+- `thing.ExternalSFTP.private_key_path` is not supported, 
+    because now we store the private ssh key directly in 
+    the DB. One should use `feta.ExtSFTP.ssh_priv_key` 
+    instead.
+- `thing.Thing.properties` is not supported, because we 
+    don't use/need it anymore. Nothing is and will be 
+    stored there.
+    
 """
 
 _cfgdb = "config_db"
@@ -183,7 +198,7 @@ class Base:
     # is why we can safely add this to EVERY subclass.
     @classmethod
     def from_id(
-        cls: Type[Self],
+        cls: type[Self],
         id_: int,
         dsn: str | None = None,
         caching: bool = True,
@@ -218,7 +233,7 @@ class Base:
 class FromNameMixin:
     @classmethod
     def from_name(
-        cls: Type[Self],
+        cls: type[Self],
         name: str,
         dsn: str | None = None,
         caching: bool = True,
@@ -253,7 +268,7 @@ class FromNameMixin:
 class FromUUIDMixin:
     @classmethod
     def from_uuid(
-        cls: Type[Self],
+        cls: type[Self],
         uuid: str,
         dsn: str | None = None,
         caching: bool = True,
@@ -315,46 +330,55 @@ class Database(Base):
     id: int = property(lambda self: self._attrs["id"])
     schema = property(lambda self: self._attrs["schema"])
     user = property(lambda self: self._attrs["user"])
-    ro_user = property(lambda self: self._attrs["ro_user"])
-
-    # thing.Datebase interface
-    username = user
     password = property(lambda self: self._attrs["password"])
-    ro_username = ro_user
+    ro_user = property(lambda self: self._attrs["ro_user"])
     ro_password = property(lambda self: self._attrs["ro_password"])
     url = property(lambda self: self._attrs["url"])
     ro_url = property(lambda self: self._attrs["ro_url"])
+
+    # thing.Datebase interface
+    # password url, ro_password, ro_url
+    # are already defined above
+    username = user
+    ro_username = ro_user
 
 
 class ExtAPI(Base):
     _table_name = "ext_api"
     id: int = property(lambda self: self._attrs["id"])
     api_type_id: int = property(lambda self: self._attrs["api_type_id"])
+    sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
+    settings = property(lambda self: self._attrs["settings"])
+    api_type: ExtAPIType = _property(f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType)  # fmt: skip
 
     # thing.ExternalApi interface
+    # sync_interval, settings
+    # are already defined above
     enabled = sync_enabled
-    api_type: ExtAPIType = _property(f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType)  # fmt: skip
-    sync_interval = property(lambda self: self._attrs["sync_interval"])
-    settings = property(lambda self: self._attrs["settings"])
+    api_type_name = property(lambda self: self.api_type.name)
 
 
 class ExtSFTP(Base):
     _table_name = "ext_sftp"
     _protected_values = frozenset({"password", "ssh_priv_key"})
     id: int = property(lambda self: self._attrs["id"])
+    uri = property(lambda self: self._attrs["uri"])
+    path = property(lambda self: self._attrs["path"])
     user = property(lambda self: self._attrs["user"])
+    password = property(lambda self: self._attrs["password"])
     ssh_priv_key = property(lambda self: self._attrs["ssh_priv_key"])
     ssh_pub_key = property(lambda self: self._attrs["ssh_pub_key"])
+    sync_interval = property(lambda self: self._attrs["sync_interval"])
     sync_enabled = property(lambda self: self._attrs["sync_enabled"])
 
     # thing.ExternalSFTP interface
+    # uri, path, password, sync_interval
+    # are already defined above
+    # Note that `private_key_path` from thing.py is not supported,
+    # see also the module description.
     enabled = sync_enabled
-    uri = property(lambda self: self._attrs["uri"])
-    path = property(lambda self: self._attrs["path"])
     username = user
-    password = property(lambda self: self._attrs["password"])
-    sync_interval = property(lambda self: self._attrs["sync_interval"])
     public_key = ssh_pub_key
 
 
@@ -392,26 +416,29 @@ class S3Store(Base):
     _protected_values = frozenset({"password"})
     id: int = property(lambda self: self._attrs["id"])
     user: str = property(lambda self: self._attrs["user"])
+    password: str = property(lambda self: self._attrs["password"])
     bucket = property(lambda self: self._attrs["bucket"])
+    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
     file_parser_id: int = property(lambda self: self._attrs["file_parser_id"])
     file_parser: FileParser = _property(f"select * from {_cfgdb}.file_parser where id = %s", "file_parser_id", FileParser)  # fmt: skip
 
     # thing.RawDataStorage interface
+    # password, filename_pattern
+    # are already defined above
     username = user
-    password: str = property(lambda self: self._attrs["password"])
     bucket_name = bucket
-    filename_pattern = property(lambda self: self._attrs["filename_pattern"])
 
 
 class Project(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "project"
     id: int = property(lambda self: self._attrs["id"])
+    name = property(lambda self: self._attrs["name"])
+    uuid = property(lambda self: self._attrs["uuid"])
     database_id: int = property(lambda self: self._attrs["database_id"])
     database: Database = _property(f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database)  # fmt: skip
 
     # thing.Project interface
-    uuid = property(lambda self: self._attrs["uuid"])
-    name = property(lambda self: self._attrs["name"])
+    # uuid and name are already defines above
 
     def get_things(self) -> list[Thing]:
         query = f"select * from {_cfgdb}.thing where project_id = %s"
@@ -460,12 +487,16 @@ class QAQCTest(Base):
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
+    id: int = property(lambda self: self._attrs["id"])
+    uuid = property(lambda self: self._attrs["uuid"])
+    name = property(lambda self: self._attrs["name"])
     project_id: int = property(lambda self: self._attrs["project_id"])
-    s3_store_id: int = property(lambda self: self._attrs["s3_store_id"])
     ingest_type_id: int = property(lambda self: self._attrs["ingest_type_id"])
+    s3_store_id: int = property(lambda self: self._attrs["s3_store_id"])
     mqtt_id: int = property(lambda self: self._attrs["mqtt_id"])
     ext_sftp_id: int = property(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int = property(lambda self: self._attrs["ext_api_id"])
+    description = property(lambda self: self._attrs["description"])
     ingest_type: IngestType = _property(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
     s3_store: S3Store = _property(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
     mqtt: MQTT = _property(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
@@ -473,12 +504,11 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_api: ExtAPI = _property(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
 
     # thing.Thing interface
-    id: int = property(lambda self: self._attrs["id"])
-    uuid = property(lambda self: self._attrs["uuid"])
-    name = property(lambda self: self._attrs["name"])
+    # uuid, name, description are already defined above
+    # Note that thing.properties is not supported, because
+    # we don't use/need it anymore
     project: Project = _property(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
     database: Database = property(lambda self: self.project.database)
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
-    description = property(lambda self: self._attrs["description"])
