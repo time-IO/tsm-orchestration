@@ -53,6 +53,10 @@ class MqttPayload:
         arg_name: str
         thing_sta_id: int | None
         sta_stream_id: int | None
+        
+    class ConfigDBUpdate(_t.TypedDict):
+        version: _t.Literal[1] | None
+        thing: str  # UUID of the thing
 
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
@@ -75,6 +79,8 @@ class ConfDB:
         password: str
         ro_user: str
         re_password: str
+        url: str
+        ro_url: str
 
     class ExtApiT(_t.TypedDict):
         id: int

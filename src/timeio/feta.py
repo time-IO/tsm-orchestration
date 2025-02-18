@@ -322,8 +322,8 @@ class Database(Base):
     password = property(lambda self: self._attrs["password"])
     ro_username = ro_user
     ro_password = property(lambda self: self._attrs["ro_password"])
-    # url = None  # TODO: missing in configDB
-    # ro_url = None  # TODO: missing in configDB
+    url = property(lambda self: self._attrs["url"])
+    ro_url = property(lambda self: self._attrs["ro_url"])
 
 
 class ExtAPI(Base):
