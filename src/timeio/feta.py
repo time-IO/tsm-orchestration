@@ -481,4 +481,4 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
-    description = None  # TODO: missing in configDB
+    description = property(lambda self: self._attrs["description"])

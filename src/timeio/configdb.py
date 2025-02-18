@@ -411,6 +411,7 @@ def upsert_table_thing(
     sftp_id: int,
     api_id: int,
     thing_id: int | None,
+    description: str,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -424,8 +425,19 @@ def upsert_table_thing(
             "mqtt_id",
             "ext_sftp_id",
             "ext_api_id",
+            "description",
         ),
-        values=(uuid, name, proj_id, ingest_type_id, s3_id, mqtt_id, sftp_id, api_id),
+        values=(
+            uuid,
+            name,
+            proj_id,
+            ingest_type_id,
+            s3_id,
+            mqtt_id,
+            sftp_id,
+            api_id,
+            description,
+        ),
         id=thing_id,
     )
     return id_
@@ -490,6 +502,7 @@ def store_thing_config(conn: Connection, data: dict):
         sftp_id,
         api_id,
         ids["thing_id"],
+        data["description"],
     )
 
 
