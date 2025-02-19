@@ -178,12 +178,12 @@ class QualityControl:
         conn: Connection,
         dbapi_url: str,
         project_uuid: str,
-        qc_id: int | None,
+        qc_id: int,
     ):
         self.conn: Connection = conn
         self.api_url = dbapi_url
         self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
-        if qc_id is None or not (confs := self.proj.get_qaqcs(id=qc_id)):
+        if not (confs := self.proj.get_qaqcs(id=qc_id)):
             raise NoDataWarning(f"No qaqc config present in project {self.proj.name}")
         self.schema = self.proj.database.schema
         self.tests = confs[0].get_tests()
@@ -200,19 +200,26 @@ class QualityControl:
     ):
         proj = feta.Project.from_uuid(uuid, dsn=conn)
         if config_name is None:
-            qc_id = qc.id if (qc := proj.get_default_qaqc()) else None
+            if (qc := proj.get_default_qaqc()) is None:
+                raise NoDataWarning(
+                    f"No default QC-Settings active in project {proj.name}"
+                )
         else:
-            qcs = proj.get_qaqcs(name=config_name)
-            if not qcs:
-                raise DataNotFoundError(f"No QC-Settings with name {config_name}")
-            qc_id = qcs[0].id
-        return cls(conn, dbapi_url, uuid, qc_id)
+            if not (qcs := proj.get_qaqcs(name=config_name)):
+                raise DataNotFoundError(
+                    f"No QC-Settings with name {config_name} "
+                    f"present in project {proj.name}"
+                )
+            qc = qcs[0]
+        return cls(conn, dbapi_url, uuid, qc.id)
 
     @classmethod
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
         thing = feta.Thing.from_uuid(uuid, dsn=conn)
-        qc_id = qc.id if (qc := thing.project.get_default_qaqc()) else None
-        return cls(conn, dbapi_url, thing.project.uuid, qc_id)
+        proj = thing.project
+        if (qc := proj.get_default_qaqc()) is None:
+            raise NoDataWarning(f"No default QC-Settings active in project {proj.name}")
+        return cls(conn, dbapi_url, proj.uuid, qc.id)
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:
