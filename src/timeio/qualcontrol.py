@@ -201,9 +201,6 @@ class QualityControl:
         proj = feta.Project.from_uuid(uuid, dsn=conn)
         if config_name is None:
             qc_id = qc.id if (qc := proj.get_default_qaqc()) else None
-            # Normally only one configuration should have the default
-            # flag set, but if multiple configurations have it set,
-            # we use the last updated (ORDER BY).
         else:
             qcs = proj.get_qaqcs(name=config_name)
             if not qcs:
@@ -214,7 +211,8 @@ class QualityControl:
     @classmethod
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
         thing = feta.Thing.from_uuid(uuid, dsn=conn)
-        return cls.from_project(conn, dbapi_url, thing.project.uuid, config_name=None)
+        qc_id = qc.id if (qc := thing.project.get_default_qaqc()) else None
+        return cls(conn, dbapi_url, thing.project.uuid, qc_id)
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:
