@@ -536,10 +536,3 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level="DEBUG")
-    t = Thing.from_id(1, dsn="postgresql://postgres:postgres@localhost/postgres")
-    print(t.database)
-    print(t.ext_api)
