@@ -158,11 +158,14 @@ class Base:
         atexit.register(close_global_connection)
 
     @classmethod
-    def _get_connection(cls, dsn: str | None = None, **kwargs) -> Connection:
-        # The user want a connection
+    def _get_connection(
+        cls, dsn: str | Connection | None = None, **kwargs
+    ) -> Connection:
+        # The user passed a connection or a dsn
         if dsn is not None:
-            conn = psycopg.connect(dsn, **kwargs)
-            return conn
+            if isinstance(dsn, Connection):
+                return dsn
+            return psycopg.connect(dsn, **kwargs)
         # Check for an existing class connection
         if cls.__cls_connection is not None:
             return cls.__cls_connection
@@ -212,7 +215,7 @@ class Base:
     def from_id(
         cls: type[Self],
         id_: int,
-        dsn: str | None = None,
+        dsn: str | Connection | None = None,
         caching: bool = True,
         **kwargs,
     ) -> Self:
@@ -220,8 +223,8 @@ class Base:
         Fetch a new object by its ID.
 
         :param id_: The id of the object.
-        :param dsn: Postgres connection string to make a DB connection
-            with `psycopg.connect()`
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
@@ -247,7 +250,7 @@ class FromNameMixin:
     def from_name(
         cls: type[Self],
         name: str,
-        dsn: str | None = None,
+        dsn: str | Connection | None = None,
         caching: bool = True,
         **kwargs,
     ) -> Self:
@@ -255,8 +258,8 @@ class FromNameMixin:
         Create a new object from its name.
 
         :param name: The name of the object.
-        :param dsn: Postgres connection string to make a DB connection
-            with `psycopg.connect()`
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
@@ -282,7 +285,7 @@ class FromUUIDMixin:
     def from_uuid(
         cls: type[Self],
         uuid: str,
-        dsn: str | None = None,
+        dsn: str | Connection | None = None,
         caching: bool = True,
         **kwargs,
     ) -> Self:
@@ -290,8 +293,8 @@ class FromUUIDMixin:
         Create a new object by its UUID.
 
         :param uuid: The UUID of the object.
-        :param dsn: Postgres connection string to make a DB connection
-            with `psycopg.connect()`
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
@@ -376,8 +379,25 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
             for attr in self._fetchall(conn, query, self.id)
         ]
 
-    def get_qaqcs(self) -> list[QAQC]:
-        query = f"select * from {_cfgdb}.qaqc where project_id = %s"
+    def get_default_qaqc(self) -> QAQC | None:
+        query = (
+            f"select * from {_cfgdb}.qaqc q "
+            f"where q.project_id = %s and q.default = true "
+            f"order by q.id desc"
+        )
+        if res := self._fetchone(self._conn, query, self.id):
+            return QAQC._from_parent(res, self)
+        return None
+
+    def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
+        params = [self.id]
+        query = f"select * from {_cfgdb}.qaqc where project_id = %s "
+        if id is not None:
+            query += "and id = %s "
+            params += [id]
+        if name is not None:
+            query += "and name = %s "
+            params += [name]
         return [
             QAQC._from_parent(attr, self)
             for attr in self._fetchall(self._conn, query, self.id)
@@ -536,3 +556,73 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
+
+    @classmethod
+    def from_s3_bucket_name(
+        cls: type[Self],
+        bucket_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing from its bucket name in the s3-storage.
+
+        :param bucket_name: The S3 bucket_name.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = (
+            f"select t.* from {_cfgdb}.thing t join s3_store s3 on "
+            "t.s3_store_id = s3.id where s3.bucket = %s",
+        )
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, bucket_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.thing for "
+                f"{bucket_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)
+
+    @classmethod
+    def from_mqtt_user_name(
+            cls: type[Self],
+            mqtt_user_name: str,
+            dsn: str | Connection | None = None,
+            caching: bool = True,
+            **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing from its bucket name in the s3-storage.
+
+        :param mqtt_user_name: a MQTT username.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = (
+            f"select t.* from {_cfgdb}.thing t join mqtt m on "
+            "t.mqtt_id = m.id where m.user = %s",
+        )
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, mqtt_user_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {mqtt_user_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.thing for "
+                f"{mqtt_user_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)
