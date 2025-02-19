@@ -184,9 +184,7 @@ class QualityControl:
         self.api_url = dbapi_url
         self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
         if qc_id is None or not (confs := self.proj.get_qaqcs(id=qc_id)):
-            raise NoDataWarning(
-                f"No qaqc config present in project {self.proj.name}"
-            )
+            raise NoDataWarning(f"No qaqc config present in project {self.proj.name}")
         self.schema = self.proj.database.schema
         self.tests = confs[0].get_tests()
         self.window = self.parse_ctx_window(self.conf["context_window"])
