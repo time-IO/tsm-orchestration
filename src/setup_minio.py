@@ -31,9 +31,10 @@ class CreateThingInMinioHandler(AbstractHandler):
             secret_key=get_envvar("MINIO_SECURE_KEY"),
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"])
+        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         user = thing.raw_data_storage.username
         passw = decrypt(thing.raw_data_storage.password, get_crypt_key())
         bucket = thing.raw_data_storage.bucket_name
