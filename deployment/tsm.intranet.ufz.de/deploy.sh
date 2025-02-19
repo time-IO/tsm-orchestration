@@ -18,6 +18,6 @@ rm $TEMP_ENV_FILE
 
 git checkout origin/main
 rm remove-all-data.sh
-sudo docker create --build
+sudo docker compose create --build
 sudo docker compose up -d
 sudo docker compose ps
