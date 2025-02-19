@@ -29,6 +29,7 @@ from timeio.common import ObservationResultType
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
 from timeio.typehints import ConfDB, DbRowT, JsonObjectT
 from timeio.journaling import Journal
+from timeio import feta
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -165,10 +166,10 @@ class KwargsScheme(saqc.core.core.FloatScheme):
 class QualityControl:
     conn: Connection
     api_url: str
-    proj: ConfDB.ProjectT
+    proj: feta.Project
     schema: str
-    conf: ConfDB.QaqcT
-    tests: list[ConfDB.QaqcTestT]
+    conf: feta.QAQC
+    tests: list[feta.QAQCTest]
     window: pd.Timedelta | int
     legacy: bool
 
@@ -177,20 +178,19 @@ class QualityControl:
         conn: Connection,
         dbapi_url: str,
         project_uuid: str,
-        qc_id: str,
+        qc_id: int | None,
     ):
         self.conn: Connection = conn
         self.api_url = dbapi_url
-        self.schema = self.fetch_schema(project_uuid)
-        self.proj = self.fetch_project(project_uuid)
-        self.conf = self.fetch_qc_config(qc_id)
-        if not self.conf:
+        self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
+        if qc_id is None or not (confs := self.proj.get_qaqcs(id=qc_id)):
             raise NoDataWarning(
-                f"No qaqc config present in project {self.proj['name']}"
+                f"No qaqc config present in project {self.proj.name}"
             )
-        self.tests = self.fetch_qaqc_tests(self.conf["id"])
+        self.schema = self.proj.database.schema
+        self.tests = confs[0].get_tests()
         self.window = self.parse_ctx_window(self.conf["context_window"])
-        self.legacy = any(map(lambda t: t.get("position") is not None, self.tests))
+        self.legacy = any((t.position is not None) for t in self.tests)
 
     @classmethod
     def from_project(
@@ -199,39 +199,24 @@ class QualityControl:
         dbapi_url: str,
         uuid: str,
         config_name: str | None = None,
-        start_date: str | None = None,
-        end_date: str | None = None,
     ):
-        q = (
-            "SELECT q.id FROM config_db.qaqc q "
-            "JOIN config_db.project p ON q.project_id = p.id "
-            "WHERE p.uuid::text = %s "
-        )
+        proj = feta.Project.from_uuid(uuid, dsn=conn)
         if config_name is None:
+            qc_id = qc.id if (qc := proj.get_default_qaqc()) else None
             # Normally only one configuration should have the default
             # flag set, but if multiple configurations have it set,
             # we use the last updated (ORDER BY).
-            q += "AND q.default = true ORDER BY q.id DESC "
-            params = [uuid]
         else:
-            q += "AND q.name = %s ORDER BY q.id DESC "
-            params = [uuid, config_name]
-        with conn.cursor() as cur:
-            qc_id = cur.execute(cast(Literal, q), params).fetchone()
-        if qc_id is None and config_name is not None:
-            raise DataNotFoundError(f"No QC-Settings with name {config_name}")
-        return cls(conn, dbapi_url, uuid, qc_id[0], start_date, end_date)
+            qcs = proj.get_qaqcs(name=config_name)
+            if not qcs:
+                raise DataNotFoundError(f"No QC-Settings with name {config_name}")
+            qc_id = qcs[0].id
+        return cls(conn, dbapi_url, uuid, qc_id)
 
     @classmethod
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
-        q = (
-            "SELECT p.uuid FROM config_db.project p "
-            "JOIN config_db.thing t ON p.id = t.project_id "
-            "WHERE t.uuid::text = %s"
-        )
-        with conn.cursor() as cur:
-            proj_uuid = cur.execute(cast(Literal, q), [uuid]).fetchone()
-        return cls.from_project(conn, dbapi_url, proj_uuid[0], config_name=None)
+        thing = feta.Thing.from_uuid(uuid, dsn=conn)
+        return cls.from_project(conn, dbapi_url, thing.project.uuid, config_name=None)
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:
@@ -284,30 +269,6 @@ class QualityControl:
         name = name[1:]  # rm 'T'
         t, *ds = name.split("S", maxsplit=1)
         return (int(t), int(ds[0])) if ds else (None, None)
-
-    def fetch_qc_config(self, qc_id) -> ConfDB.QaqcT | None:
-        q = "SELECT q.* FROM config_db.qaqc q WHERE q.id = %s "
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [qc_id]).fetchone()
-
-    def fetch_qaqc_tests(self, qaqc_id: int) -> list[ConfDB.QaqcTestT]:
-        q = "SELECT * FROM config_db.qaqc_test qt WHERE qt.qaqc_id = %s"
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [qaqc_id]).fetchall()
-
-    def fetch_project(self, project_uuid: str) -> ConfDB.ProjectT:
-        """Returns project UUID and project name for a given thing."""
-        q = "SELECT p.* FROM config_db.project p WHERE p.uuid:text = %s"
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [project_uuid]).fetchone()
-
-    def fetch_schema(self, proj_uuid) -> str:
-        query = (
-            "select d.schema from config_db.database d "
-            "join config_db.project p on d.id = p.database_id "
-            "where p.uuid::text = %s"
-        )
-        return self.conn.execute(cast(Literal, query), [proj_uuid]).fetchone()[0]
 
     def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
         q = (
