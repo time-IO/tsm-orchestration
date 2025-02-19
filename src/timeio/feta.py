@@ -566,7 +566,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         **kwargs,
     ) -> Self:
         """
-        Create a new Thing from its bucket name in the s3-storage.
+        Create a new Thing instance from an existing S3-bucket name.
 
         :param bucket_name: The S3 bucket_name.
         :param dsn: Postgres connection or connection string to make a DB
@@ -574,7 +574,8 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
-        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
         :return: Returns a feta.Thing instance.
         """
         query = (
@@ -594,14 +595,14 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
 
     @classmethod
     def from_mqtt_user_name(
-            cls: type[Self],
-            mqtt_user_name: str,
-            dsn: str | Connection | None = None,
-            caching: bool = True,
-            **kwargs,
+        cls: type[Self],
+        mqtt_user_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
     ) -> Self:
         """
-        Create a new Thing from its bucket name in the s3-storage.
+        Create a new Thing instance from an existing mqtt username.
 
         :param mqtt_user_name: a MQTT username.
         :param dsn: Postgres connection or connection string to make a DB
@@ -609,7 +610,8 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :param caching: If `True` (default) the object is cached and
             subsequently lookups will use the cached object. If `False`,
             the object is always fetched from its source (DB table).
-        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
         :return: Returns a feta.Thing instance.
         """
         query = (
