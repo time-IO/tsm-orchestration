@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
+
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
 JsonObjectT = dict[str, "JsonT"]
