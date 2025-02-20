@@ -1,5 +1,7 @@
 SET search_path TO config_db;
 
+CREATE TABLE file_parser_backup AS TABLE file_parser WITH DATA;
+
 UPDATE file_parser
    SET params = jsonb_set(
      params,
@@ -14,11 +16,11 @@ UPDATE file_parser
        )
      )
    )
- WHERE params ? 'index_col'
-   AND params ? 'date_format'
+ WHERE params ? 'timestamp_column'
+   AND params ? 'timestamp_format'
    AND NOT params ? 'timestamp_columns';
 
 UPDATE file_parser
-   SET params = params - 'index_col' - 'date_format'
- WHERE params ? 'index_col' OR params ? 'date_format';
+   SET params = params - 'timestamp_column' - 'timestamp_format'
+ WHERE params ? 'timestamp_column' OR params ? 'timestamp_format';
 
