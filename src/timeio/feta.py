@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import atexit
 import warnings
-from typing import Any
+from typing import Any, TypedDict
 
 try:
     from typing import Self
@@ -35,6 +35,13 @@ complete[1]) drop-in replacement for classes in thing.py.
 """
 
 _cfgdb = "config_db"
+
+
+class QcStreamT(TypedDict):
+    arg_name: str
+    sta_thing_id: int | None
+    sta_stream_id: int | None
+    alias: str
 
 
 class ObjectNotFound(Exception):
@@ -301,6 +308,7 @@ class FromUUIDMixin:
         :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
         :return: Returns an instance of a subclass of `feta.Base`
         """
+        uuid = str(uuid)  # prevent UUID object
         tab = sql.Identifier(_cfgdb, cls._table_name)
         query = sql.SQL("select * from {tab} where uuid::text = %s").format(tab=tab)
         conn = cls._get_connection(dsn, **kwargs)
@@ -362,7 +370,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "project"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
-    uuid: str = _prop(lambda self: self._attrs["uuid"])
+    uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
     database_id: int = _prop(lambda self: self._attrs["database_id"])
     database: Database = _fetch(
         f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database
@@ -400,7 +408,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
             params += [name]
         return [
             QAQC._from_parent(attr, self)
-            for attr in self._fetchall(self._conn, query, self.id)
+            for attr in self._fetchall(self._conn, query, *params)
         ]
 
 
@@ -503,7 +511,7 @@ class QAQCTest(Base):
     args: JsonT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    streams: JsonT | None = _prop(lambda self: self._attrs["streams"])
+    streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
     qaqc: QAQC = _fetch(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)
 
 
@@ -532,7 +540,7 @@ class S3Store(Base):
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
     id: int = _prop(lambda self: self._attrs["id"])
-    uuid = _prop(lambda self: self._attrs["uuid"])
+    uuid = _prop(lambda self: str(self._attrs["uuid"]))
     name = _prop(lambda self: self._attrs["name"])
     project_id: int = _prop(lambda self: self._attrs["project_id"])
     ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
