@@ -580,7 +580,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         """
         query = (
             f"select t.* from {_cfgdb}.thing t join s3_store s3 on "
-            "t.s3_store_id = s3.id where s3.bucket = %s",
+            "t.s3_store_id = s3.id where s3.bucket = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, bucket_name)):
