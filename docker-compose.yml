@@ -1,0 +1,928 @@
+---
+services:
+
+
+  # Summary
+  # =======
+  # brief: create certificates
+  # dir: init
+  # see also: init/Dockerfile
+  #
+  # Description
+  # ===========
+  # This service run init/init.sh, which create and install
+  # ssl certificates for minio and sftp
+  init:
+    build:
+      context: init
+      args:
+        UID: "${UID}"
+        GID: "${GID}"
+    restart: no
+    user: "${UID}:${GID}"
+    volumes:
+      - "${OBJECT_STORAGE_DIR}/certs/:/tmp/certs"
+      - ./nginx/html/:/home/tsm/html
+      - ./cron:/tmp/cron
+
+
+  # Summary
+  # =======
+  # brief: central database
+  # dir: data/postgres mosquitto frontend dispatcher
+  # see also:
+  #     - data/postgres/Dockerfile,
+  #     - scripts mentioned in the 'volumes' section below
+  # admin login:
+  #     - TODO: replace with correct $ENVVARS
+  #     - `psql postgresql:// POSTGRES_USER : POSTGRES_PASSWORD @ HOST?? : PORT?? / DATABASE??`
+  #     - `psql postgresql://postgres:postgres@localhost:5432/postgres`
+  #
+  # Description
+  # ===========
+  # This service provide database(s) for other services, namely
+  # 1. a database for each group/project to store the things and the observations
+  # 2. 'mqtt_auth' database for the service 'mqtt-broker'. It holds the mqtt-user,
+  #   which are allowed to send data to the broker
+  # 3. 's3map_db' database, for some worker-services. It maps group specific
+  #   object-storage buckets to things and corresponding databases (see 1.)
+  # 4. the 'frontenddb' database for the service 'frontend', which use django
+  # 5. SMS: TODO
+  # 6. SMS_CV: TODO
+  # To see how and where the creation of each db is defined see in the volumes section
+  # for the scripts, which gets mounted and executed on startup.
+  database:
+    restart: "${SERVICE_RESTART_POLICY}"
+    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG-pg14}
+    build:
+      context: postgres
+      args:
+        UID: "${UID}"
+        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
+    ports:
+      - "${DATABASE_URL}:5432"
+    environment:
+      POSTGRES_USER: "${DATABASE_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
+      - ./data/postgres/data:/var/lib/postgresql/data
+      - "${DATABASE_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
+      - "${DATABASE_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
+    user: "${UID}:${GID}"
+    command: "${DATABASE_POSTGRES_EXTRA_PARAMS}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $DATABASE_USER"]
+      interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
+      timeout: 5s
+      retries: 10
+
+  # Summary
+  # =======
+  # brief: raw storage for observation files
+  # dir: none
+  # see also: none
+  # mqtt-topics: "object_storage_notification" (send)
+  # admin login:
+  #     -> http://localhost/object-storage/login
+  #     -> user, pass: $MINIO_ROOT_USER, $MINIO_ROOT_PASSWORD  (default: minioadmin)
+  #
+  # Description
+  # ===========
+  # The 'object-storage' aka. 'raw-data-storage' (or simply 'the minio' or 'S3') is
+  # a file based storage for the users to upload raw data files (e.g. some
+  # observations as a CSV).
+  # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
+  # sends mqtt messages to the broker on file upload (and other events).
+  object-storage:
+    image: "minio/minio:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    ports:
+      - "${OBJECT_STORAGE_SFTP_URL}:22"
+      - "${OBJECT_STORAGE_FTP_URL}:21"
+      - "${OBJECT_STORAGE_FTP_PASV_URL}"
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      init:
+        condition: service_completed_successfully
+    environment:
+      MINIO_ROOT_USER: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      MINIO_BROWSER_REDIRECT_URL: "${OBJECT_STORAGE_BROWSER_REDIRECT_URL}"
+      MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: on
+      MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: tcp://mqtt-broker:1883
+      MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: object_storage_notification
+      MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER: "${MQTT_USER}"
+      MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER: "${MQTT_PASSWORD}"
+      MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: 60s
+      MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "${MQTT_QOS}"
+      MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: 60s
+      #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
+      #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
+      MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
+    volumes:
+      - "${OBJECT_STORAGE_DIR}/vol0:/vol0"
+      # FTP server tls key and cert
+      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
+      # SSH Server key to provide constant ssh host key
+      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
+    user: "${UID}:${GID}"
+    command: >
+      server
+      --console-address :9001
+      --ftp address=:21
+      --ftp passive-port-range=30000-30010
+      --sftp address=:22
+      --sftp ssh-private-key=/certs/id_ed25519
+      --ftp tls-private-key=/certs/minio-ftp.key
+      --ftp tls-public-cert=/certs/minio-ftp.crt
+      --json 
+      /vol0
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: "${OBJECT_STORAGE_HEALTHCHECK_INTERVAL}"
+      timeout: 5s
+      retries: 15
+
+
+  # Summary
+  # =======
+  # brief: central mqtt message bus / broker
+  # dir: mosquitto
+  # see also: mosquitto/docker-entrypoint.sh
+  #
+  # Description
+  # ===========
+  # This is the main message bus, all mqtt messages are send here. Services can
+  # subscribe to topics and will receive messages that was sent to them.
+  mqtt-broker:
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    command: >
+      /usr/sbin/mosquitto 
+      -c /var/lib/mosquitto/mosquitto.conf
+    entrypoint:
+      - /docker-entrypoint.sh
+    user: "${UID}:${GID}"
+    environment:
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_INGEST_USER: "${MQTT_INGEST_USER}"
+      MQTT_INGEST_PASSWORD: "${MQTT_INGEST_PASSWORD}"
+      MQTT_AUTH_POSTGRES_HOST: "${MQTT_AUTH_POSTGRES_HOST}"
+      MQTT_AUTH_POSTGRES_PORT: "${MQTT_AUTH_POSTGRES_PORT}"
+      MQTT_AUTH_POSTGRES_USER: "${MQTT_AUTH_POSTGRES_USER}"
+      MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
+      MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
+      MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
+      FRONTEND_MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      FRONTEND_MQTT_PASS: "${THING_MANAGEMENT_MQTT_PASS}"
+    ports:
+      - "${MQTT_URL}:1883"
+      - "${MQTT_URL_SECURE}:8883"
+    volumes:
+      - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
+      - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
+      - ./data/mosquitto/auth:/mosquitto-auth/
+      - ./data/mosquitto/data:/mosquitto-data/
+      - "${MQTT_MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
+      - "${MQTT_MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
+      - "${MQTT_MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
+      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh
+    tmpfs:
+      - /var/lib/mosquitto/:uid=${UID}
+    healthcheck:
+      test: >
+        mosquitto_sub 
+        -C 1 
+        -t '$$SYS/broker/version'
+        -u "${MQTT_USER}"
+        -P "${MQTT_PASSWORD}"
+        --id docker-compose-healthcheck
+      interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL}"
+      start_period: 20s
+      timeout: 10s
+      retries: 12
+    logging:
+      options:
+        max-size: "${MQTT_BROKER_LOG_SIZE}"
+        max-file: "${MQTT_BROKER_FILE_COUNT}"
+
+
+
+  # Summary
+  # =======
+  # brief: visualisation of observations stored in the -> database
+  # dir: grafana
+  # see also: none
+  # admin login:
+  #     -> http://localhost/visualization/login
+  #     -> user, pass: $GRAFANA_USER, $GRAFANA_PASSWORD  (default: grafana)
+  #
+  # Description
+  # ===========
+  # This visualize observations of a group or project that are stored in the database.
+  visualization:
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "grafana/grafana:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    user: "${UID}:${GID}"
+    environment:
+      GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
+      GF_SECURITY_ADMIN_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      GF_SERVER_ROOT_URL: "${VISUALIZATION_PROXY_URL}"
+      GF_SERVER_SERVE_FROM_SUB_PATH: true
+      GF_AUTH_GENERIC_OAUTH_ENABLED: true
+      GF_AUTH_GENERIC_OAUTH_NAME: "Helmholtz AAI"
+      GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: true
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      GF_AUTH_GENERIC_OAUTH_SCOPES: "email profile eduperson_principal_name"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "${VISUALIZATION_GENERIC_OAUTH_AUTH_URL}"
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL}"
+      GF_AUTH_GENERIC_OAUTH_API_URL: "${VISUALIZATION_GENERIC_OAUTH_API_URL}"
+      GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
+      GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
+      GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
+    volumes:
+      - ./data/grafana/:/var/lib/grafana
+    healthcheck:
+      test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      start_period: 10s
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  tsmdl:
+    image: "registry.hzdr.de/hub-terra/tsmdl-time-series-management-decoupling-layer/tsmdl-api:${TSMDL_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    entrypoint: "/app/start.${TSMDL_ENVIRONMENT}.sh"
+    environment:
+      UFZ_DB_URL: "${DATABASE_ADMIN_DSN}"
+      STA_ENDPOINT_URL: "${STA_PROXY_URL}"
+      UVICORN_ARGS: "${TSMDL_UVICORN_ARGS}"
+      ROOT_PATH: /tsmdl
+      ORGANISATION: ufz
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  timeio-db-api:
+    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    entrypoint: "sh /app/start.sh"
+    environment:
+      DB_URL: "${DATABASE_ADMIN_DSN}"
+      UVICORN_ARGS: "${DB_API_UVICORN_ARGS} --root-path /db_api"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    healthcheck:
+      test: >
+        wget -q http://0.0.0.0:8001/dbhealth -O /dev/null || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  frost:
+    build:
+      context: tomcat
+      args:
+        TOMCAT_IMAGE_TAG: "${STA_TOMCAT_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    volumes:
+      - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  flyway:
+    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    volumes:
+      - ./flyway/migrations:/flyway/sql
+      - ./flyway/flyway.conf:/flyway/conf/flyway.conf
+    environment:
+      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      FLYWAY_USER: "${DATABASE_ADMIN_USER}"
+      FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_READONLY_USER}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_READONLY_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_S3MAP_DB_USER: "${S3MAP_POSTGRES_USER}"
+      FLYWAY_PLACEHOLDERS_S3MAP_DB_PASSWORD: "${S3MAP_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
+      FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_PORT: "${SMS_DB_PORT}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_DB: "${SMS_DB_DB}"
+      FLYWAY_PLACEHOLDERS_SMS_DB_HOST: "${SMS_DB_HOST}"
+      FLYWAY_PLACEHOLDERS_CV_ACCESS_TYPE: "${CV_ACCESS_TYPE}"
+      FLYWAY_PLACEHOLDERS_CV_DB_USER: "${CV_DB_USER}"
+      FLYWAY_PLACEHOLDERS_CV_DB_PASSWORD: "${CV_DB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_CV_DB_PORT: "${CV_DB_PORT}"
+      FLYWAY_PLACEHOLDERS_CV_DB_DB: "${CV_DB_DB}"
+      FLYWAY_PLACEHOLDERS_CV_DB_HOST: "${CV_DB_HOST}"
+    depends_on:
+      database:
+        condition: service_healthy
+
+
+  # Summary
+  # =======
+  # brief: A user frontend to add things groups parser etc.
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  frontend:
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    command: >
+      bash -c "python3 manage.py migrate
+      && python3 manage.py loaddata admin_interface_theme_foundation.json
+      && python3 manage.py loaddata ufz_theme.json
+      && python3 manage.py loaddata nm_station.json
+      && python3 manage.py createsuperuser --noinput
+      || echo 'Superuser already created'
+      && python3 manage.py collectstatic --noinput
+      && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
+    user: appuser
+    volumes:
+      - frontend-statics:/home/appuser/app/static
+      - sftp-private-keys:/home/appuser/app/sftp-private-keys
+      - ./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json
+      - ./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json
+      - ./frontend/nm_station.json:/home/appuser/app/tsm/fixtures/nm_station.json
+    entrypoint: ""
+    # ports:
+    #   - "127.0.0.1:8000:8000"
+    environment:
+      POSTGRES_HOST: "${THING_MANAGEMENT_DATABASE_HOST}"
+      POSTGRES_NAME: "${THING_MANAGEMENT_DATABASE_DB_NAME}"
+      POSTGRES_USER: "${THING_MANAGEMENT_DATABASE_USER}"
+      POSTGRES_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
+      PUBLISH_THING_TO_BROKER: True
+      CREATEDB_POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
+      CREATEDB_POSTGRES_DATABASE: "${DATABASE_ADMIN_DB_NAME}"
+      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
+      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
+      MQTT_CLIENT_ID: frontend
+      DJANGO_SUPERUSER_USERNAME: "${THING_MANAGEMENT_DJANGO_SUPERUSER_USERNAME}"
+      DJANGO_SUPERUSER_PASSWORD: "${THING_MANAGEMENT_DJANGO_SUPERUSER_PASSWORD}"
+      DJANGO_SUPERUSER_EMAIL: "${THING_MANAGEMENT_DJANGO_SUPERUSER_EMAIL}"
+      DJANGO_SECRET_KEY: "${THING_MANAGEMENT_DJANGO_SECRET_KEY}"
+      DJANGO_DEBUG: "${THING_MANAGEMENT_DJANGO_DEBUG}"
+      DJANGO_TRUSTED_ORIGINS: "${THING_MANAGEMENT_DJANGO_TRUSTED_ORIGINS}"
+      DJANGO_BASE_PATH: "${THING_MANAGEMENT_DJANGO_BASE_PATH}"
+      DJANGO_ALLOWED_HOSTS: "${THING_MANAGEMENT_DJANGO_ALLOWED_HOSTS}"
+      POSTGRES_SSLMODE: "${THING_MANAGEMENT_DJANGO_POSTGRES_SSLMODE}"
+      DJANGO_HELMHOLTZ_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
+      MINIO_FTP_PORT: "${OBJECT_STORAGE_FTP_URL}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_URL}"
+      PROXY_URL: "${PROXY_URL}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
+      STA_ROOT_URL: "${THING_MANAGEMENT_STA_ROOT_URL}"
+      QAQC_SETTING_SAQC_VERSION: "${THING_MANAGEMENT_QAQC_SETTING_SAQC_VERSION}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      worker-configdb-updater:
+        condition: service_started
+
+
+  # Summary
+  # =======
+  # brief: Make services accessible on single address  (eg. tsm.ufz.de)
+  # dir: nginx
+  # see also: ./nginx/*.conf
+  #
+  # Description
+  # ===========
+  # This maps service endpoints to a path on a main URL, mainly
+  #  - the service  frontend       to  URL/frontend
+  #  - the service  object-storage to  URL/object-storage
+  #  - the service  visualization  to  URL/visualization
+  #  - the service  frost          to  URL/sta
+  #  - the service  tsmdl          to  URL/tsmdl
+  proxy:
+    image: "nginxinc/nginx-unprivileged:${PROXY_NGINX_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    user: "${UID}:${GID}"
+    ports:
+      - "${PROXY_HOST}:${PROXY_PLAIN_PORT}:80"
+      - "${PROXY_HOST}:${PROXY_TLS_PORT}:443"
+      - "${PROXY_HOST}:${PROXY_MINIO_PORT}:9000"
+    volumes:
+      - frontend-statics:/home/appuser/app/static
+      - ./nginx/html:/usr/share/nginx/html
+      - "./nginx/${PROXY_SITE_CONFIG_FILE}:/etc/nginx/conf.d/default.conf:ro"
+      - ./nginx/locations:/etc/nginx/locations:ro
+      - "${PROXY_TLS_CERT_PATH}:/etc/ssl/public.crt:ro"
+      - "${PROXY_TLS_KEY_PATH}:/etc/ssl/private.key:ro"
+    depends_on:
+      frontend:
+        condition: service_started
+      visualization:
+        condition: service_started
+      object-storage:
+        condition: service_started
+      tsmdl:
+        condition: service_started
+      frost:
+        condition: service_started
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
+      start_period: 10s
+
+  # =================================================================
+  # SETUP worker (topic: thing_creation)
+  # =================================================================
+
+  # fills and updates the config-db from setup mqtt-messages
+  # (e.g. topic: frontend-thing-update)
+  worker-configdb-updater:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: configdb_updater/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      MQTT_BROKER_HOST: mqtt-broker
+      MQTT_BROKER_PORT: 1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: configdb-updater
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
+      MQTT_PUBLISH_TOPIC: configdb_update
+      MQTT_PUBLISH_QOS: "${MQTT_QOS}"
+      CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
+      CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
+    entrypoint: ["python3", "run_configdb_updater.py"]
+
+  # brief: create a new bucket for a Thing in S3 storage
+  worker-object-storage-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: object-storage-setup
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "setup_minio.py"]
+
+
+  # Summary
+  # =======
+  # brief:  create things in project-DB
+  #
+  # Description
+  # ===========
+  # - create a new DB for a project, if not it not already exist
+  # - create/update a thing in DB
+  # - create/update frost view for the thing
+  worker-db-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: db-setup
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DATABASE_URL: "${DATABASE_ADMIN_DSN}"
+      SMS_URL: "${SMS_URL}"
+      CV_URL: "${CV_URL}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "setup_user_database.py"]
+
+
+  worker-frost-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    volumes:
+      - tomcat-context:/home/appuser/app/src/frost_context_files:rw
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: frost-setup
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "setup_frost.py"]
+
+
+  # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
+  worker-mqtt-user-creation:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: mqtt-user-creation
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DATABASE_URL: "${DATABASE_ADMIN_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "setup_mqtt_user.py"]
+
+
+  worker-grafana-dashboard:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      visualization:
+        condition: service_started
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: grafana-dashboard
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      GRAFANA_URL: "${VISUALIZATION_URL}"
+      GRAFANA_USER: "${VISUALIZATION_USER}"
+      GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${VISUALIZATION_DEFAULT_DATASOURCE_SSLMODE}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    entrypoint: ["python3", "setup_grafana_dashboard.py"]
+
+
+  # =================================================================
+  # Ingest worker (incoming observations)
+  # =================================================================
+
+  worker-file-ingest:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: object_storage_notification
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: file-ingest
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "run_file_ingest.py"]
+
+
+  worker-run-qaqc:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: "${TOPIC_DATA_PARSED}"
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: worker-qaqc
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_QC_DONE: qaqc_done
+      TOPIC_QC_DONE_QOS: "${MQTT_QOS}"
+      DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "run_qc.py"]
+
+
+  worker-mqtt-ingest:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: mqtt_ingest/#
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_INGEST_USER}"
+      MQTT_PASSWORD: "${MQTT_INGEST_PASSWORD}"
+      MQTT_CLIENT_ID: mqtt-ingest
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "run_mqtt_ingest.py"]
+
+
+  worker-crontab-setup:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+        mqtt-broker:
+          condition: service_healthy
+        init:
+          condition: service_completed_successfully
+        timeio-db-api:
+          condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: thing_creation
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: crontab-setup
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "setup_crontab.py"]
+    volumes:
+      - ./cron/crontab.txt:/tmp/cron/crontab.txt
+
+  # =================================================================
+  # other worker
+  # =================================================================
+
+  worker-grafana-user-orgs:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      visualization:
+        condition: service_started
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: user_login
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: grafana-user-orgs
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      GRAFANA_URL: "${VISUALIZATION_URL}"
+      GRAFANA_USER: "${VISUALIZATION_USER}"
+      GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+    entrypoint: ["python3", "setup_grafana_user.py"]
+
+
+  cron-scheduler:
+    build:
+      context: .
+      dockerfile: cron/Dockerfile
+      args:
+        UID: "${UID}"
+        DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
+    # the same time. Cap the processing power to equivalent of one CPU of the system.
+    cpus: 0.5
+    mem_limit: 4g
+    environment:
+      SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
+      CREATEDB_POSTGRES_USER: "${CRON_DATABASE_ADMIN_USER}"
+      CREATEDB_POSTGRES_PASSWORD: "${CRON_DATABASE_ADMIN_PASSWORD}"
+      CREATEDB_POSTGRES_HOST: "${CRON_DATABASE_ADMIN_HOST}"
+      CREATEDB_POSTGRES_DATABASE: "${CRON_DATABASE_ADMIN_DB_NAME}"
+      SMS_ACCESS_TYPE: "${CRON_SMS_ACCESS_TYPE}"
+      SMS_API_URL: "${CRON_SMS_API_URL}"
+      SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
+      CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
+      CV_API_URL: "${CRON_CV_API_URL}"
+      # The following is needed for sftp sync jobs
+      LOG_LEVEL: "${LOG_LEVEL}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: cron-scheduler
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: /supercronic-health.sh || exit 1
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - ./cron/crontab.txt:/tmp/cron/crontab.txt:ro
+      - ./src:/scripts:ro
+      - sftp-private-keys:/sftp-private-keys:ro
+
+  mqtt-cat:
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "eclipse-mosquitto:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    logging:
+      options:
+        max-size: "${MQTT_CAT_LOG_SIZE}"
+        max-file: "${MQTT_CAT_FILE_COUNT}"
+    command: >
+      mosquitto_sub --pretty -v 
+      -h mqtt-broker  
+      -t "#" 
+      -u "${MQTT_USER}" 
+      -P "${MQTT_PASSWORD}"
+      --id "mqtt-cat"
+
+  monitoring:
+    image: "gcr.io/cadvisor/cadvisor:${MONITORING_CADVISOR_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    container_name: cadvisor
+    ports:
+      - "${MONITORING_URL}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+volumes:
+  frontend-statics:
+  sftp-private-keys:
+  tomcat-context:
