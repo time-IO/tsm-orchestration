@@ -3,8 +3,8 @@
 trigger_stage_deployment:
   stage: notify
   script:
-    - curl -X POST "https://git.ufz.de/api/v4/projects/3977/ref/main/trigger/pipeline"
+    - curl -X POST "https://git.ufz.de/api/v4/projects/3977/ref/main/trigger/pipeline" \
       -F "token=$PIPELINE_TOKEN"
-  only:
-    - main
+#  only:
+#    - main
   when: on_success
