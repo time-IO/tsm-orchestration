@@ -52,7 +52,9 @@ class QcHandler(AbstractHandler):
             _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message")
             logger.info(f"QC was triggered by user (in frontend). {content=}")
         else:
-            raise NotImplementedError(f"data_parsed payload version {version}")
+            raise NotImplementedError(
+                f"data_parsed payload version {version} is not supported yet."
+            )
 
         self.dbapi.ping_dbapi()
         with self.db.connection() as conn:
@@ -71,8 +73,6 @@ class QcHandler(AbstractHandler):
                     self.dbapi.base_url,
                     uuid=content["project_uuid"],
                     config_name=content["qc_settings_name"],
-                    start_date=content["start_date"],
-                    end_date=content["end_date"],
                 )
             try:
                 if qc.legacy:
@@ -82,10 +82,7 @@ class QcHandler(AbstractHandler):
                     assert version == 1 and thing_uuid is not None
                     some = qc.run_legacy(thing_uuid)
                 else:
-                    start_date: str | None = (None,)
-                    end_date: str | None = (None,)
-
-                    some = qc.run()
+                    some = qc.run(content.get("start_date"), content.get("end_date"))
             except UserInputError as e:
                 if thing_uuid is not None:
                     journal.error(str(e), thing_uuid)
