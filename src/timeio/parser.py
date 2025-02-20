@@ -7,14 +7,15 @@ import logging
 import math
 import re
 import warnings
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 from io import StringIO
 from typing import Any, TypedDict, TypeVar, cast
 
 import pandas as pd
-from pandas.io.gbq import import_optional_dependency
 from typing_extensions import Required
 
 from timeio.common import ObservationResultType
@@ -131,15 +132,19 @@ class FileParser(Parser):
 
 class CsvParser(FileParser):
     def _set_index(self, df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-        from functools import reduce
 
-        index_cols = []
-        date_formats = []
-        for d in timestamp_columns:
-            index_cols.append(df.pop(d["column"]).fillna("").astype(str).str.strip())
-            date_formats.append(d['format'].strip())
-        index = reduce(lambda x, y: x + " " + y, index_cols)
-        date_format = " ".join(date_formats)
+        date_columns = [d["column"] for d in timestamp_columns]
+        date_format = " ".join([d["format"] for d in timestamp_columns])
+
+        for c in date_columns:
+            if c not in df.columns:
+                raise ParsingError(f"Timestamp column {c} does not exist. ")
+
+        index = reduce(
+            lambda x, y: x + " " + y,
+            [df[c].fillna("").astype(str).str.strip() for c in date_columns],
+        )
+        df = df.drop(columns=date_columns)
 
         index = pd.to_datetime(index, format=date_format, errors="coerce")
         if index.isna().any():
@@ -160,7 +165,6 @@ class CsvParser(FileParser):
         rawdata: the unparsed content
         NOTE:
             we need to preserve the original column numbering
-            and check for the date index column
         """
         settings = self.settings.copy()
         self.logger.info(settings)
@@ -182,12 +186,6 @@ class CsvParser(FileParser):
         df = df.dropna(axis=1, how="all")
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
-
-        for d in timestamp_columns:
-            if d["column"] not in df.columns:
-                raise ParsingError(
-                    f"Timestamp column {d['column']} does not exist. "
-                )
 
         df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
