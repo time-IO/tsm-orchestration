@@ -1,0 +1,630 @@
+from __future__ import annotations
+
+import atexit
+import warnings
+from typing import Any
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
+import psycopg
+from psycopg import Connection, sql
+from psycopg.rows import dict_row
+import logging
+from timeio.typehints import JsonT
+
+logger = logging.getLogger("feta")
+
+"""
+FETA - Front End Thing Abstraction 
+
+This file provide a convenient way to access the (meta-) data 
+from the frontend (Thing, Project, QC-Settings, etc.) Currently 
+this is a simple wrapper around the configDB, but also a (nearly 
+complete[1]) drop-in replacement for classes in thing.py. 
+
+[1]
+- `thing.ExternalSFTP.private_key_path` is not supported, 
+    because now we store the private ssh key directly in 
+    the DB. One should use `feta.ExtSFTP.ssh_priv_key` 
+    instead.
+- `thing.Thing.properties` is not supported, because we 
+    don't use/need it anymore. 
+"""
+
+_cfgdb = "config_db"
+
+
+class ObjectNotFound(Exception):
+    pass
+
+
+def _prop(f):
+    # this is a simple wrapper that allow the typehints from
+    # the class to be recognized
+    return property(f)
+
+
+def _fetch(query: str, id_attr: str, cls: type[Base]):
+    """
+    Return a property, with a getter that returns another Model
+
+    :param query: The query to execute on request of the property
+    :param id_attr: The attr on the `cls` to put in the query
+    :param cls: The final class to create from the restult of the query
+    """
+
+    def fetch(self: Base) -> None | Base:
+        id_value = getattr(self, id_attr)
+        if id_value is None:
+            return None
+        key = (cls, id_value)
+        if cached := self._cache_get(key):
+            return cached
+        res = self._fetchall(self._conn, query, id_value)
+        if not res:
+            raise ObjectNotFound(
+                f"Could not create {cls.__qualname__}"
+                f"(table={_cfgdb}.{cls._table_name}) "
+                f"with {id_attr}={id_value} from {self}"
+            )
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"with {id_attr}={id_value}. Creating {cls.__qualname__} "
+                f"from the first result only.",
+                UserWarning,
+                stacklevel=2,
+            )
+        inst = cls._from_parent(res[0], self)
+        self._cache_set(key, inst)
+        return inst
+
+    return property(fetch)
+
+
+def connect(dsn: str, **kwargs):
+    """
+    Globally connect feta with a DB.
+
+    The connection i valid for the whole python session,
+    to create a connection on creation of objects, use
+    the dsn argument with the classmethods.
+    For example `Thing.from_id(1, dsn=...)`
+
+    :param dsn: connection string
+    :param kwargs: kwargs are directly passed to psycopg.connect()
+    """
+    Base._set_global_connection(dsn, **kwargs)
+
+
+class Base:
+    __cls_connection: Connection | None = None
+    _table_name: str = "<not set>"
+    _protected_values = frozenset()
+
+    def __init__(self, attrs, conn: Connection, caching: bool):
+        """Constructor for creating a new Base instance from scratch.
+
+        See also Base._from_parent(), which create a new instance
+        from and existing Base instance, in other words, from within
+        an instance-method you should call _from_parent.
+        """
+        self._attrs = attrs
+        self._conn = conn
+        self._cache = {} if caching else None
+        self._root = True
+
+    @classmethod
+    def _from_parent(cls, res, parent: Base) -> Base:
+        """Constructor for creating an instance from an existing Base instance.
+
+        For creating a new instance from scratch, in other words,
+        from within a classmethod call __init__, but from within
+        an instance-method call this.
+        """
+        # Only the root class
+        instance = cls(res, parent._conn, False)
+        instance._cache = parent._cache
+        instance._root = False
+        return instance
+
+    def __repr__(self):
+        attrs = self._attrs.copy()
+        attrs.update({k: "*****" for k in self._protected_values})
+        return f"{self.__class__.__name__}({str(attrs)[1:-1]})"
+
+    def __del__(self):
+        if self._root:
+            # The class connection is registered with atexit
+            # to be closed on program exit.
+            # see also Base._set_global_connection()
+            if self._conn == self.__cls_connection:
+                return
+            logger.debug(f"Closing instance connection {self._conn}")
+            self._conn.close()
+
+    @classmethod
+    def _set_global_connection(cls, dsn, **kwargs):
+        cls.__cls_connection = conn = psycopg.connect(dsn, **kwargs)
+        logger.debug(f"Opened global DB connection {conn}")
+
+        def close_global_connection():
+            conn.close()
+            logger.debug(f"Closed global DB connection {conn}")
+
+        atexit.register(close_global_connection)
+
+    @classmethod
+    def _get_connection(
+        cls, dsn: str | Connection | None = None, **kwargs
+    ) -> Connection:
+        # The user passed a connection or a dsn
+        if dsn is not None:
+            if isinstance(dsn, Connection):
+                return dsn
+            return psycopg.connect(dsn, **kwargs)
+        # Check for an existing class connection
+        if cls.__cls_connection is not None:
+            return cls.__cls_connection
+        raise ValueError(
+            f"Either pass the keyword argument 'dsn', or use the "
+            f"function feta.connect() to set a global connection "
+            f"for all FETA classes."
+        )
+
+    @staticmethod
+    def _fetchall(conn: Connection, query, *params):
+        logger.debug("fetchall(%s, %s)", query, params)
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(query, params)
+            return cur.fetchall()
+
+    @staticmethod
+    def _fetchone(conn: Connection, query, *params):
+        logger.debug("fetchone(%s, %s)", query, params)
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(query, params)
+            return cur.fetchone()
+
+    def _cache_get(self, key):
+        if self._cache:
+            hit = key in self._cache
+            logging.getLogger("feta-cache").debug(
+                "cache %s: %s", "HIT" if hit else "MISS", key
+            )
+            return self._cache.get(key, None)
+        return None
+
+    def _cache_set(self, key, value):
+        if self._cache is not None:
+            self._cache[key] = value
+
+    def clear_cache(self):
+        if self._cache:
+            self._cache.clear()
+
+    def to_dict(self) -> dict[str, Any]:
+        return self._attrs.copy()
+
+    # Each table has a PK column, that is named 'id'. That
+    # is why we can safely add this to EVERY subclass.
+    @classmethod
+    def from_id(
+        cls: type[Self],
+        id_: int,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Fetch a new object by its ID.
+
+        :param id_: The id of the object.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where id = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, id_)):
+            raise ObjectNotFound(f"No {cls.__name__} found for id={id_}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for id={id_}. The returned object will be created from "
+                f"the first result."
+            )
+        return cls(res[0], conn, caching)
+
+
+class FromNameMixin:
+    @classmethod
+    def from_name(
+        cls: type[Self],
+        name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new object from its name.
+
+        :param name: The name of the object.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where name = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, name)):
+            raise ObjectNotFound(f"No {cls.__name__} found with {name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for {name=}. The returned object will be created from "
+                f"the first result."
+            )
+        return cls(res[0], conn, caching)
+
+
+class FromUUIDMixin:
+    @classmethod
+    def from_uuid(
+        cls: type[Self],
+        uuid: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new object by its UUID.
+
+        :param uuid: The UUID of the object.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
+        :return: Returns an instance of a subclass of `feta.Base`
+        """
+        tab = sql.Identifier(_cfgdb, cls._table_name)
+        query = sql.SQL("select * from {tab} where uuid::text = %s").format(tab=tab)
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, uuid)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {uuid=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"for {uuid=}. The returned object will be created from "
+                f"the first result."
+            )
+        return cls(res[0], conn, caching)
+
+
+class IngestType(Base, FromNameMixin):
+    _table_name = "ingest_type"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+
+
+class FileParserType(Base, FromNameMixin):
+    _table_name = "file_parser_type"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+
+
+class MQTTDeviceType(Base, FromNameMixin):
+    _table_name = "mqtt_device_type"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+
+
+class ExtAPIType(Base, FromNameMixin):
+    _table_name = "ext_api_type"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+
+
+class Database(Base):
+    _table_name = "database"
+    _protected_values = frozenset({"password", "ro_password"})
+    id: int = _prop(lambda self: self._attrs["id"])
+    schema: str = _prop(lambda self: self._attrs["schema"])
+    user: str = _prop(lambda self: self._attrs["user"])
+    password: str = _prop(lambda self: self._attrs["password"])
+    ro_user: str = _prop(lambda self: self._attrs["ro_user"])
+    ro_password: str = _prop(lambda self: self._attrs["ro_password"])
+    url: str | None = _prop(lambda self: self._attrs["url"])
+    ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
+
+    # thing.Datebase interface
+    # password url, ro_password, ro_url
+    # are already defined above
+    username = user
+    ro_username = ro_user
+
+
+class Project(Base, FromNameMixin, FromUUIDMixin):
+    _table_name = "project"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+    uuid: str = _prop(lambda self: self._attrs["uuid"])
+    database_id: int = _prop(lambda self: self._attrs["database_id"])
+    database: Database = _fetch(
+        f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database
+    )
+
+    # thing.Project interface
+    # uuid and name are already defines above
+
+    def get_things(self) -> list[Thing]:
+        query = f"select * from {_cfgdb}.thing where project_id = %s"
+        conn = self._conn
+        return [
+            Thing._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
+        ]
+
+    def get_default_qaqc(self) -> QAQC | None:
+        query = (
+            f"select * from {_cfgdb}.qaqc q "
+            f"where q.project_id = %s and q.default = true "
+            f"order by q.id desc"
+        )
+        if res := self._fetchone(self._conn, query, self.id):
+            return QAQC._from_parent(res, self)
+        return None
+
+    def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
+        params = [self.id]
+        query = f"select * from {_cfgdb}.qaqc where project_id = %s "
+        if id is not None:
+            query += "and id = %s "
+            params += [id]
+        if name is not None:
+            query += "and name = %s "
+            params += [name]
+        return [
+            QAQC._from_parent(attr, self)
+            for attr in self._fetchall(self._conn, query, self.id)
+        ]
+
+
+class ExtAPI(Base):
+    _table_name = "ext_api"
+    id: int = _prop(lambda self: self._attrs["id"])
+    api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
+    sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
+    sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
+    settings: JsonT | None = _prop(lambda self: self._attrs["settings"])
+    api_type: ExtAPIType = _fetch(
+        f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType
+    )
+
+    # thing.ExternalApi interface
+    # sync_interval, settings
+    # are already defined above
+    enabled = sync_enabled
+    api_type_name: str = _prop(lambda self: self.api_type.name)
+
+
+class ExtSFTP(Base):
+    _table_name = "ext_sftp"
+    _protected_values = frozenset({"password", "ssh_priv_key"})
+    id: int = _prop(lambda self: self._attrs["id"])
+    uri: str = _prop(lambda self: self._attrs["uri"])
+    path: str = _prop(lambda self: self._attrs["path"])
+    user: str = _prop(lambda self: self._attrs["user"])
+    password: str | None = _prop(lambda self: self._attrs["password"])
+    ssh_priv_key: str = _prop(lambda self: self._attrs["ssh_priv_key"])
+    ssh_pub_key: str = _prop(lambda self: self._attrs["ssh_pub_key"])
+    sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
+    sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
+
+    # thing.ExternalSFTP interface
+    # uri, path, password, sync_interval
+    # are already defined above
+    # Note that `private_key_path` from thing.py is not supported,
+    # see also the module description.
+    enabled = sync_enabled
+    username = user
+    public_key = ssh_pub_key
+
+
+class FileParser(Base):
+    _table_name = "file_parser"
+    id: int = _prop(lambda self: self._attrs["id"])
+    file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+    params: JsonT | None = _prop(lambda self: self._attrs["params"])
+    file_parser_type: FileParserType = _fetch(
+        f"SELECT * FROM {_cfgdb}.file_parser_type WHERE id = %s",
+        "file_parser_type_id",
+        FileParserType,
+    )
+
+
+class MQTT(Base):
+    _table_name = "mqtt"
+    _protected_values = frozenset({"password", "password_hashed"})
+    id: int = _prop(lambda self: self._attrs["id"])
+    user = _prop(lambda self: self._attrs["user"])
+    password = _prop(lambda self: self._attrs["password"])
+    password_hashed = _prop(lambda self: self._attrs["password_hashed"])
+    topic: str | None = _prop(lambda self: self._attrs["topic"])
+    mqtt_device_type_id: int | None = _prop(
+        lambda self: self._attrs["mqtt_device_type_id"]
+    )
+    mqtt_device_type: MQTTDeviceType | None = _fetch(
+        f"SELECT * FROM {_cfgdb}.mqtt_device_type WHERE id = %s",
+        "mqtt_device_type_id",
+        MQTTDeviceType,
+    )
+
+
+class QAQC(Base):
+    _table_name = "qaqc"
+    id: int = _prop(lambda self: self._attrs["id"])
+    name: str = _prop(lambda self: self._attrs["name"])
+    project_id: int = _prop(lambda self: self._attrs["project_id"])
+    context_window: str = _prop(lambda self: self._attrs["context_window"])
+    project: Project = _fetch(
+        f"select * from {_cfgdb}.project where id = %s", "project_id", Project
+    )
+
+    def get_tests(self) -> list[QAQCTest]:
+        query = f"select * from {_cfgdb}.qaqc_test where qaqc_id = %s"
+        conn = self._conn
+        return [
+            QAQCTest._from_parent(attr, self)
+            for attr in self._fetchall(conn, query, self.id)
+        ]
+
+
+class QAQCTest(Base):
+    _table_name = "qaqc_test"
+    id: int = _prop(lambda self: self._attrs["id"])
+    qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
+    function: str = _prop(lambda self: self._attrs["function"])
+    args: JsonT | None = _prop(lambda self: self._attrs["args"])
+    position: int | None = _prop(lambda self: self._attrs["position"])
+    name: str | None = _prop(lambda self: self._attrs["name"])
+    streams: JsonT | None = _prop(lambda self: self._attrs["streams"])
+    qaqc: QAQC = _fetch(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)
+
+
+class S3Store(Base):
+    _table_name = "s3_store"
+    _protected_values = frozenset({"password"})
+    id: int = _prop(lambda self: self._attrs["id"])
+    user: str = _prop(lambda self: self._attrs["user"])
+    password: str = _prop(lambda self: self._attrs["password"])
+    bucket: str = _prop(lambda self: self._attrs["bucket"])
+    filename_pattern: str | None = _prop(lambda self: self._attrs["filename_pattern"])
+    file_parser_id: int = _prop(lambda self: self._attrs["file_parser_id"])
+    file_parser: FileParser = _fetch(
+        f"select * from {_cfgdb}.file_parser where id = %s",
+        "file_parser_id",
+        FileParser,
+    )
+
+    # thing.RawDataStorage interface
+    # password, filename_pattern
+    # are already defined above
+    username = user
+    bucket_name = bucket
+
+
+class Thing(Base, FromNameMixin, FromUUIDMixin):
+    _table_name = "thing"
+    id: int = _prop(lambda self: self._attrs["id"])
+    uuid = _prop(lambda self: self._attrs["uuid"])
+    name = _prop(lambda self: self._attrs["name"])
+    project_id: int = _prop(lambda self: self._attrs["project_id"])
+    ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
+    s3_store_id: int | None = _prop(lambda self: self._attrs["s3_store_id"])
+    mqtt_id: int = _prop(lambda self: self._attrs["mqtt_id"])
+    ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
+    ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
+    description: str | None = _prop(lambda self: self._attrs["description"])
+    project: Project = _fetch(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
+    ingest_type: IngestType = _fetch(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
+    s3_store: S3Store | None = _fetch(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
+    mqtt: MQTT = _fetch(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
+    ext_sftp: ExtSFTP | None = _fetch(f"select * from {_cfgdb}.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
+    ext_api: ExtAPI | None = _fetch(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
+
+    # thing.Thing interface
+    # uuid, name, project, description are already defined above
+    # Note that thing.properties is not supported, because
+    # we don't use/need it anymore
+    database: Database = _prop(lambda self: self.project.database)
+    raw_data_storage = s3_store
+    external_sftp = ext_sftp
+    external_api = ext_api
+
+    @classmethod
+    def from_s3_bucket_name(
+        cls: type[Self],
+        bucket_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing instance from an existing S3-bucket name.
+
+        :param bucket_name: The S3 bucket_name.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = (
+            f"select t.* from {_cfgdb}.thing t join s3_store s3 on "
+            "t.s3_store_id = s3.id where s3.bucket = %s",
+        )
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, bucket_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.thing for "
+                f"{bucket_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)
+
+    @classmethod
+    def from_mqtt_user_name(
+        cls: type[Self],
+        mqtt_user_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing instance from an existing mqtt username.
+
+        :param mqtt_user_name: a MQTT username.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = (
+            f"select t.* from {_cfgdb}.thing t join mqtt m on "
+            "t.mqtt_id = m.id where m.user = %s",
+        )
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, mqtt_user_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {mqtt_user_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {_cfgdb}.thing for "
+                f"{mqtt_user_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)

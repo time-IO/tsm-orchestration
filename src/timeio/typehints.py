@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
+
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
 JsonObjectT = dict[str, "JsonT"]
@@ -54,6 +55,10 @@ class MqttPayload:
         thing_sta_id: int | None
         sta_stream_id: int | None
 
+    class ConfigDBUpdate(_t.TypedDict):
+        version: _t.Literal[1] | None
+        thing: str  # UUID of the thing
+
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
@@ -75,6 +80,8 @@ class ConfDB:
         password: str
         ro_user: str
         re_password: str
+        url: str
+        ro_url: str
 
     class ExtApiT(_t.TypedDict):
         id: int
@@ -169,6 +176,7 @@ class ConfDB:
         mqtt_id: int
         ext_sftp_id: int | None
         ext_api_id: int | None
+        description: str | None
 
 
 def check_dict_by_TypedDict(value: dict, expected: type[_t.TypedDict], name: str):

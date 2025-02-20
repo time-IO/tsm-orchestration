@@ -125,7 +125,7 @@ class ExternalApi:
         self, enabled: bool, api_type: str, sync_interval: int, settings: dict
     ):
         self.enabled = enabled
-        self.api_type = api_type
+        self.api_type_name = api_type
         self.sync_interval = sync_interval
         self.settings = settings
 

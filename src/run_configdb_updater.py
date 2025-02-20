@@ -39,8 +39,6 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
             d.setdefault("topic", d.get("description"))  # missing
         if d := data.get("database"):
             d.setdefault("schema", d.get("username"))  # missing
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
         if d := data.get("parsers", {}).get("parsers"):
             for parser in d:
                 parser.setdefault("name", "no-parser-name")  # missing
@@ -48,16 +46,10 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
     elif data["version"] == 5:
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
-        if d := data.get("database"):
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
 
     elif data["version"] == 6:
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
-        if d := data.get("database"):
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
     else:
         NotImplementedError(
             f"Content version {data['version']} is not implemented yet."

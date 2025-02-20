@@ -13,7 +13,7 @@ from timeio.common import get_envvar, setup_logging
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
 from timeio.journaling import Journal
 from timeio.databases import Database, DBapi
-from timeio.types import MqttPayload, check_dict_by_TypedDict as _chkmsg
+from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
 journal = Journal("QualityControl")

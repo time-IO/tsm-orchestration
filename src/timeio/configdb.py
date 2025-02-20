@@ -218,13 +218,23 @@ def upsert_table_database(conn: Connection, values: dict, db_id: int | None) -> 
     id_ = _upsert(
         conn,
         table="database",
-        columns=["schema", "user", "password", "ro_user", "ro_password"],
+        columns=[
+            "schema",
+            "user",
+            "password",
+            "ro_user",
+            "ro_password",
+            "url",
+            "ro_url",
+        ],
         values=[
             v.pop("schema"),
             v.pop("username"),
             v.pop("password"),
             v.pop("ro_username"),
             v.pop("ro_password"),
+            v.pop("url"),
+            v.pop("ro_url"),
         ],
         id=db_id,
     )
@@ -401,6 +411,7 @@ def upsert_table_thing(
     sftp_id: int,
     api_id: int,
     thing_id: int | None,
+    description: str,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -414,8 +425,19 @@ def upsert_table_thing(
             "mqtt_id",
             "ext_sftp_id",
             "ext_api_id",
+            "description",
         ),
-        values=(uuid, name, proj_id, ingest_type_id, s3_id, mqtt_id, sftp_id, api_id),
+        values=(
+            uuid,
+            name,
+            proj_id,
+            ingest_type_id,
+            s3_id,
+            mqtt_id,
+            sftp_id,
+            api_id,
+            description,
+        ),
         id=thing_id,
     )
     return id_
@@ -480,6 +502,7 @@ def store_thing_config(conn: Connection, data: dict):
         sftp_id,
         api_id,
         ids["thing_id"],
+        data["description"],
     )
 
 
