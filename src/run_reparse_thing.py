@@ -89,8 +89,6 @@ def main(
                 logger.warning(
                     f"Failed to deliver reprocessing message for file: {message['Key']}"
                 )
-        if i == 0:
-            break
 
     mqtt.loop_stop()
     mqtt.disconnect()
