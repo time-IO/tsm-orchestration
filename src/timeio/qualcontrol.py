@@ -27,7 +27,7 @@ except ImportError:
 
 from timeio.common import ObservationResultType
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
-from timeio.typehints import ConfDB, DbRowT, JsonObjectT
+from timeio.typehints import DbRowT, JsonObjectT
 from timeio.journaling import Journal
 from timeio import feta
 
@@ -182,12 +182,18 @@ class QualityControl:
     ):
         self.conn: Connection = conn
         self.api_url = dbapi_url
-        self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
+
+        if isinstance(project_uuid, feta.Project):
+            self.proj = project_uuid
+        else:
+            self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
+
         if not (confs := self.proj.get_qaqcs(id=qc_id)):
             raise NoDataWarning(f"No qaqc config present in project {self.proj.name}")
+        self.conf = confs[0]
         self.schema = self.proj.database.schema
-        self.tests = confs[0].get_tests()
-        self.window = self.parse_ctx_window(self.conf["context_window"])
+        self.tests = self.conf.get_tests()
+        self.window = self.parse_ctx_window(self.conf.context_window)
         self.legacy = any((t.position is not None) for t in self.tests)
 
     @classmethod
@@ -211,7 +217,7 @@ class QualityControl:
                     f"present in project {proj.name}"
                 )
             qc = qcs[0]
-        return cls(conn, dbapi_url, uuid, qc.id)
+        return cls(conn, dbapi_url, proj, qc)  # noqa
 
     @classmethod
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
@@ -219,7 +225,7 @@ class QualityControl:
         proj = thing.project
         if (qc := proj.get_default_qaqc()) is None:
             raise NoDataWarning(f"No default QC-Settings active in project {proj.name}")
-        return cls(conn, dbapi_url, proj.uuid, qc.id)
+        return cls(conn, dbapi_url, proj, qc)  # noqa
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:
@@ -499,9 +505,7 @@ class QualityControl:
             else:
                 data_index = data.index[data.index.slice_indexer(earlier, later)]
             meta = pd.DataFrame(index=data_index)
-            meta.attrs = {
-                "repr_name": f"Datastream {ds['name']} of Thing {self.thing['name']}"
-            }
+            meta.attrs = {"repr_name": f"Datastream {ds['name']} of Thing {thing_uuid}"}
             meta["thing_uuid"] = thing_uuid
             meta["datastream_id"] = ds["id"]
             return data, meta
@@ -509,18 +513,18 @@ class QualityControl:
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
         for i, test in enumerate(self.tests):
-            test: ConfDB.QaqcTestT
-            origin = f"QA/QC Test #{i+1}: {self.conf['name']}/{test['name']}"
+            test: feta.QAQCTest
+            origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
 
             # Raise for bad function, before fetching all the data
-            attr = test["function"]
+            attr = test.function
             try:
                 func = getattr(qc, attr)
             except AttributeError:
                 raise UserInputError(f"{origin}: Unknown SaQC function {attr}")
 
-            kwargs: dict = test.get("args", {}).copy()
-            if (position := test.get("position", None)) is not None:
+            kwargs: dict = (test.args or {}).copy()
+            if (position := test.position) is not None:
                 if (name := str(position)) not in qc:
                     data, meta = fetch_data(position)
                     qc[name] = data
@@ -578,20 +582,20 @@ class QualityControl:
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
         for i, test in enumerate(self.tests):
-            test: ConfDB.QaqcTestT
-            origin = f"QA/QC Test #{i+1}: {self.conf['name']}/{test['name']}"
+            test: feta.QAQCTest
+            origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
 
             # Raise for bad function, before fetching all the data
-            attr = test["function"]
+            attr = test.function
             try:
                 func = getattr(qc, attr)
             except AttributeError:
                 raise UserInputError(f"{origin}: Unknown SaQC function {attr}")
 
             # fetch the relevant data
-            kwargs: dict = test.get("args", {}).copy()
-            for stream in test["streams"]:
-                stream: ConfDB.QaqcTestStreamT
+            kwargs: dict = (test.args or {}).copy()
+            for stream in test.streams or []:
+                stream: feta.QcStreamT
                 arg_name = stream["arg_name"]
                 tid, sid = stream["sta_thing_id"], stream["sta_stream_id"]
                 alias = stream["alias"]
@@ -621,7 +625,7 @@ class QualityControl:
         """
         if not self.tests:
             raise NoDataWarning(
-                f"No quality functions present in config {self.conf['name']!r}",
+                f"No quality functions present in config {self.conf.name!r}",
             )
         start_date = timestamp_from_string(start_date)
         end_date = timestamp_from_string(end_date)
@@ -635,7 +639,7 @@ class QualityControl:
 
         Returns the number of observation that was updated and/or created.
         """
-        logger.info(f"Execute qaqc config {self.conf['name']!r}")
+        logger.info(f"Execute qaqc config {self.conf.name!r}")
         qc, meta = self.qaqc_legacy(thing_uuid)
         # ============= legacy dataproducts =============
         # Data products must be created before quality labels are uploaded.
@@ -673,7 +677,7 @@ class QualityControl:
             flags_frame["datastream_id"] = meta[name]["datastream_id"]
 
             for uuid, group in flags_frame.groupby("thing_uuid", sort=False):
-                labels = self._create_quality_labels(group, self.conf["id"])
+                labels = self._create_quality_labels(group, self.conf.id)
 
                 try:
                     self._upload_quality_labels(uuid, labels)
@@ -794,7 +798,7 @@ class QualityControl:
             if df.empty:
                 logger.debug(f"no data for data product {name}")
                 continue
-            obs = self._create_dataproduct_legacy(df, name, self.conf["id"])
+            obs = self._create_dataproduct_legacy(df, name, self.conf.id)
             self._upload_dataproduct(thing_uuid, obs)
             logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
             total += len(obs)

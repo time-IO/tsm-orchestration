@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import atexit
 import warnings
-from typing import Any
+from typing import Any, TypedDict
 
 try:
     from typing import Self
@@ -35,6 +35,13 @@ complete[1]) drop-in replacement for classes in thing.py.
 """
 
 _cfgdb = "config_db"
+
+
+class QcStreamT(TypedDict):
+    arg_name: str
+    sta_thing_id: int | None
+    sta_stream_id: int | None
+    alias: str
 
 
 class ObjectNotFound(Exception):
@@ -89,9 +96,9 @@ def connect(dsn: str, **kwargs):
     """
     Globally connect feta with a DB.
 
-    The connection i valid for the whole python session,
-    to create a connection on creation of objects, use
-    the dsn argument with the classmethods.
+    The connection will be valid for the whole python session.
+    To create just a temporary connection, one can pass the dsn
+    argument to the different constructors.
     For example `Thing.from_id(1, dsn=...)`
 
     :param dsn: connection string
@@ -139,15 +146,18 @@ class Base:
     def __del__(self):
         if self._root:
             # The class connection is registered with atexit
-            # to be closed on program exit.
-            # see also Base._set_global_connection()
+            # and will be closed on program exit.
             if self._conn == self.__cls_connection:
                 return
-            logger.debug(f"Closing instance connection {self._conn}")
-            self._conn.close()
+            # On connection creation we set the owner attribute
+            # mark the connection as ours (see Base._get_connection).
+            if getattr(self._conn, "owner", None) == "feta":
+                logger.debug(f"Closing instance connection {self._conn}")
+                self._conn.close()
 
     @classmethod
     def _set_global_connection(cls, dsn, **kwargs):
+        """See also feta.connect"""
         cls.__cls_connection = conn = psycopg.connect(dsn, **kwargs)
         logger.debug(f"Opened global DB connection {conn}")
 
@@ -165,7 +175,12 @@ class Base:
         if dsn is not None:
             if isinstance(dsn, Connection):
                 return dsn
-            return psycopg.connect(dsn, **kwargs)
+            conn = psycopg.connect(dsn, **kwargs)
+            # We mark the connection as ours, to differentiate it
+            # from a user given connection. On __del__ we just want
+            # to close a connections if it is under our care.
+            conn.owner = "feta"
+            return conn
         # Check for an existing class connection
         if cls.__cls_connection is not None:
             return cls.__cls_connection
@@ -301,6 +316,7 @@ class FromUUIDMixin:
         :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
         :return: Returns an instance of a subclass of `feta.Base`
         """
+        uuid = str(uuid)  # prevent UUID object
         tab = sql.Identifier(_cfgdb, cls._table_name)
         query = sql.SQL("select * from {tab} where uuid::text = %s").format(tab=tab)
         conn = cls._get_connection(dsn, **kwargs)
@@ -362,7 +378,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "project"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
-    uuid: str = _prop(lambda self: self._attrs["uuid"])
+    uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
     database_id: int = _prop(lambda self: self._attrs["database_id"])
     database: Database = _fetch(
         f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database
@@ -400,7 +416,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
             params += [name]
         return [
             QAQC._from_parent(attr, self)
-            for attr in self._fetchall(self._conn, query, self.id)
+            for attr in self._fetchall(self._conn, query, *params)
         ]
 
 
@@ -503,7 +519,7 @@ class QAQCTest(Base):
     args: JsonT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    streams: JsonT | None = _prop(lambda self: self._attrs["streams"])
+    streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
     qaqc: QAQC = _fetch(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)
 
 
@@ -532,7 +548,7 @@ class S3Store(Base):
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _table_name = "thing"
     id: int = _prop(lambda self: self._attrs["id"])
-    uuid = _prop(lambda self: self._attrs["uuid"])
+    uuid = _prop(lambda self: str(self._attrs["uuid"]))
     name = _prop(lambda self: self._attrs["name"])
     project_id: int = _prop(lambda self: self._attrs["project_id"])
     ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
@@ -580,7 +596,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         """
         query = (
             f"select t.* from {_cfgdb}.thing t join s3_store s3 on "
-            "t.s3_store_id = s3.id where s3.bucket = %s",
+            "t.s3_store_id = s3.id where s3.bucket = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, bucket_name)):
@@ -616,7 +632,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         """
         query = (
             f"select t.* from {_cfgdb}.thing t join mqtt m on "
-            "t.mqtt_id = m.id where m.user = %s",
+            "t.mqtt_id = m.id where m.user = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, mqtt_user_name)):

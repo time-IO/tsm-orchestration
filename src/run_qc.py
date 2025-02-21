@@ -44,12 +44,13 @@ class QcHandler(AbstractHandler):
 
     def act(self, content: dict, message: MQTTMessage):
         thing_uuid = None
-        if (version := content.get("version", 1)) == 1:
-            _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message")
+        version = content.setdefault("version", 1)
+        if version == 1:
+            _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
             thing_uuid = content["thing_uuid"]
             logger.info(f"QC was triggered by data upload to thing. {content=}")
         elif version == 2:
-            _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message")
+            _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
             logger.info(f"QC was triggered by user (in frontend). {content=}")
         else:
             raise NotImplementedError(
@@ -94,11 +95,11 @@ class QcHandler(AbstractHandler):
 
         if thing_uuid is not None:
             if some:
-                journal.info(f"QC done. Config: {qc.conf['name']}", thing_uuid)
+                journal.info(f"QC done. Config: {qc.conf.name}", thing_uuid)
             else:
                 journal.warning(
                     f"QC done, but no quality labels were generated. "
-                    f"Config: {qc.conf['name']}",
+                    f"Config: {qc.conf.name}",
                     thing_uuid,
                 )
                 return
@@ -107,7 +108,7 @@ class QcHandler(AbstractHandler):
         payload = json.dumps(
             {
                 "version": 1,
-                "project_uuid": qc.proj["uuid"],
+                "project_uuid": qc.proj.uuid,
                 "thing_uuid": thing_uuid,  # None allowed
             }
         )
