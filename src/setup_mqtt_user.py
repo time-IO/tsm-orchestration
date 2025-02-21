@@ -39,7 +39,6 @@ class CreateMqttUserHandler(AbstractHandler):
         action = "Created" if created else "Updated"
         journal.info(f"{action} MQTT user {user}", thing.uuid)
 
-
     def create_user(self, thing, user, pw) -> bool:
         """Returns True for insert and False for update"""
         sql = (
