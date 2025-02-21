@@ -1,5 +1,8 @@
 ---
 
+# This triggers the CI in the deployment repo [1], 
+# which deploys the latest changes on the stage VM.  
+# [1] https://git.ufz.de/rdm-software/timeseries-management/tsm-deployment
 trigger_stage_deployment:
   stage: notify
   image: "docker:${DOCKER_IMAGE_TAG}"
