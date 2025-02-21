@@ -51,7 +51,9 @@ _no_ids = {
 }
 
 
-def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int] | None:
+def fetch_thing_related_ids(
+    conn: Connection, thing_uuid: str
+) -> dict[str, int] | dict[str, None]:
     with conn.cursor(row_factory=dict_row) as cur:
         return cur.execute(_IDS_BY_UUID_QUERY, [thing_uuid]).fetchone() or _no_ids
 
@@ -443,6 +445,26 @@ def upsert_table_thing(
     return id_
 
 
+def find_existing_project(
+    conn: Connection, pid: int | None
+) -> tuple[int, int] | tuple[None, None]:
+    # create a new project
+    if pid is None:
+        return None, None
+    query = (
+        "select min(p.id) "
+        "from config_db.project p "
+        "where p.uuid = ("
+        " select p2.uuid "
+        " from config_db.project p2 "
+        " where p2.id = %s)"
+    )
+    pid = conn.execute(cast(Literal, query), [pid]).fetchone()[0]
+    query = "select p.database_id from config_db.project p where p.id = %s"
+    did = conn.execute(cast(Literal, query), [pid]).fetchone()[0]
+    return pid, did
+
+
 def store_thing_config(conn: Connection, data: dict):
     # version: 4,
     # uuid: <str/uuid>
@@ -464,10 +486,13 @@ def store_thing_config(conn: Connection, data: dict):
     name = data["name"]
     schema = data["database"]["schema"]
     upsert_schema_thing_mapping(conn, uuid, schema)
-    ids = fetch_thing_related_ids(conn, uuid)
 
-    db_id = upsert_table_database(conn, data["database"], ids["database_id"])
-    proj_id = upsert_table_project(conn, data["project"], db_id, ids["project_id"])
+    ids = fetch_thing_related_ids(conn, uuid)
+    # duplicate projects FIX
+    proj_id, db_id = find_existing_project(conn, ids["project_id"])
+
+    db_id = upsert_table_database(conn, data["database"], db_id)
+    proj_id = upsert_table_project(conn, data["project"], db_id, proj_id)
 
     mqtt: dict = data["mqtt"]
     mqtt["mqtt_device_type"] = data["mqtt_device_type"]
