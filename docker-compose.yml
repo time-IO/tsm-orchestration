@@ -666,7 +666,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: thing_creation
+      TOPIC: configdb_update
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -680,6 +680,12 @@ services:
         ${CREATEDB_POSTGRES_DATABASE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
+      CONFIGDB_DSN: "postgresql://\
+                    ${CONFIGDB_USER}:\
+                    ${CONFIGDB_PASSWORD}@\
+                    ${CONFIGDB_HOST}:\
+                    ${CONFIGDB_PORT}/\
+                    ${CONFIGDB_DB}"
     entrypoint: ["python3", "setup_mqtt_user.py"]
 
 
