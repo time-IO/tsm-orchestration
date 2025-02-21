@@ -151,13 +151,13 @@ class Base:
                 return
             # On connection creation we set the owner attribute
             # mark the connection as ours (see Base._get_connection).
-            if getattr(self._conn, 'owner', None) == 'feta':
+            if getattr(self._conn, "owner", None) == "feta":
                 logger.debug(f"Closing instance connection {self._conn}")
                 self._conn.close()
 
     @classmethod
     def _set_global_connection(cls, dsn, **kwargs):
-        """ See also feta.connect"""
+        """See also feta.connect"""
         cls.__cls_connection = conn = psycopg.connect(dsn, **kwargs)
         logger.debug(f"Opened global DB connection {conn}")
 
@@ -179,7 +179,7 @@ class Base:
             # We mark the connection as ours, to differentiate it
             # from a user given connection. On __del__ we just want
             # to close a connections if it is under our care.
-            conn.owner = 'feta'
+            conn.owner = "feta"
             return conn
         # Check for an existing class connection
         if cls.__cls_connection is not None:
