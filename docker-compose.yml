@@ -772,6 +772,7 @@ services:
       MQTT_CLIENT_ID: mqtt-ingest
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
@@ -879,6 +880,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      JOURNALING: "${JOURNALING}"
     depends_on:
       init:
         condition: service_completed_successfully
