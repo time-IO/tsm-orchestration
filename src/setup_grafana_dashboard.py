@@ -5,9 +5,10 @@ from grafana_client import GrafanaApi
 from grafana_client.client import GrafanaException
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("grafana-dashboard-setup")
 
@@ -33,9 +34,10 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         )
         # needed when defining new datasource
         self.sslmode = get_envvar("GRAFANA_DEFAULT_DATASOURCE_SSLMODE")
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
-    def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.get_instance(content)
+    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         self.create_organization(thing)
 
         # create datasource, folder, dashboard in project org
