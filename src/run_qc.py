@@ -13,6 +13,7 @@ from timeio.common import get_envvar, setup_logging
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
 from timeio.journaling import Journal
 from timeio.databases import Database, DBapi
+from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
 journal = Journal("QualityControl")
@@ -34,43 +35,83 @@ class QcHandler(AbstractHandler):
         self.db = Database(get_envvar("DATABASE_DSN"))
         self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
 
+    def _check_data(self, content, keys: list[str]):
+        for key in keys:
+            if key not in content:
+                raise DataNotFoundError(
+                    "mandatory field '{key}' is not present in data"
+                )
+
     def act(self, content: dict, message: MQTTMessage):
-        if (thing_uuid := content.get("thing_uuid")) is None:
-            raise DataNotFoundError(
-                "mandatory field 'thing_uuid' is not present in data"
+        thing_uuid = None
+        version = content.setdefault("version", 1)
+        if version == 1:
+            _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
+            thing_uuid = content["thing_uuid"]
+            logger.info(f"QC was triggered by data upload to thing. {content=}")
+        elif version == 2:
+            _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
+            logger.info(f"QC was triggered by user (in frontend). {content=}")
+        else:
+            raise NotImplementedError(
+                f"data_parsed payload version {version} is not supported yet."
             )
-        logger.info(f"Thing {thing_uuid} triggered QAQC service")
 
         self.dbapi.ping_dbapi()
         with self.db.connection() as conn:
             logger.info("successfully connected to configdb")
+            if version == 1:
+                content: MqttPayload.DataParsedV1
+                qc = QualityControl.from_thing(
+                    conn,
+                    self.dbapi.base_url,
+                    uuid=thing_uuid,
+                )
+            else:
+                content: MqttPayload.DataParsedV2
+                qc = QualityControl.from_project(
+                    conn,
+                    self.dbapi.base_url,
+                    uuid=content["project_uuid"],
+                    config_name=content["qc_settings_name"],
+                )
             try:
-                qaqc = QualityControl(conn, self.dbapi.base_url, thing_uuid)
-            except NoDataWarning as w:
-                # TODO: uncomment if QC is production-ready
-                # journal.warning(str(w), thing_uuid)
-                raise w
-            try:
-                some = qaqc.qacq_for_thing()
+                if qc.legacy:
+                    # A legacy workflow should only be possible with v1
+                    # and must deliver a thing_uuid (because it works on
+                    # a single thing).
+                    assert version == 1 and thing_uuid is not None
+                    some = qc.run_legacy(thing_uuid)
+                else:
+                    some = qc.run(content.get("start_date"), content.get("end_date"))
             except UserInputError as e:
-                journal.error(str(e), thing_uuid)
+                if thing_uuid is not None:
+                    journal.error(str(e), thing_uuid)
                 raise e
             except NoDataWarning as w:
-                journal.warning(str(w), thing_uuid)
+                if thing_uuid is not None:
+                    journal.warning(str(w), thing_uuid)
                 raise w
 
-        if some:
-            journal.info(f"QC done. Config: {qaqc.conf['name']}", thing_uuid)
-        else:
-            journal.warning(
-                f"QC done, but no quality labels were generated. "
-                f"Config: {qaqc.conf['name']}",
-                thing_uuid,
-            )
-            return
+        if thing_uuid is not None:
+            if some:
+                journal.info(f"QC done. Config: {qc.conf.name}", thing_uuid)
+            else:
+                journal.warning(
+                    f"QC done, but no quality labels were generated. "
+                    f"Config: {qc.conf.name}",
+                    thing_uuid,
+                )
+                return
 
         logger.debug(f"inform downstream services about success of qc.")
-        payload = json.dumps({"thing": thing_uuid})
+        payload = json.dumps(
+            {
+                "version": 1,
+                "project_uuid": qc.proj.uuid,
+                "thing_uuid": thing_uuid,  # None allowed
+            }
+        )
         self.mqtt_client.publish(
             topic=self.publish_topic, payload=payload, qos=self.publish_qos
         )

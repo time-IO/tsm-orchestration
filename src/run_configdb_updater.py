@@ -8,7 +8,7 @@ from typing import Any, cast, Literal
 
 import paho.mqtt.client as mqtt
 from psycopg_pool import ConnectionPool
-from timeio.types import MqttPayload
+from timeio.typehints import MqttPayload
 from timeio.common import get_envvar
 from timeio.configdb import store_qaqc_config, store_thing_config
 from timeio.version import __version__ as timeio_version
@@ -39,28 +39,17 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
             d.setdefault("topic", d.get("description"))  # missing
         if d := data.get("database"):
             d.setdefault("schema", d.get("username"))  # missing
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
         if d := data.get("parsers", {}).get("parsers"):
             for parser in d:
                 parser.setdefault("name", "no-parser-name")  # missing
 
     elif data["version"] == 5:
-        # tsm-frontend/GL71
-        if d := data.get("external_sftp"):
-            d["private_key"] = "no-key-in-message-version-4"  # always None
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
-        if d := data.get("database"):
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
 
     elif data["version"] == 6:
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
-        if d := data.get("database"):
-            d.pop("url")  # unused
-            d.pop("ro_url")  # unused
     else:
         NotImplementedError(
             f"Content version {data['version']} is not implemented yet."
@@ -78,7 +67,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
     section = "decoding or parsing"
     data = None
     try:
-        data: MqttPayload.QaqcConfigV2_T = json.loads(msg.payload.decode())
+        data: MqttPayload.QaqcConfigV3_T = json.loads(msg.payload.decode())
         if (name := data.get("name")) is None:
             raise ValueError("mandatory field 'name' is not present in data")
         if (version := data.get("version")) is None:
@@ -94,7 +83,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         payload = json.dumps({"qaqc": data["name"]})
         client.publish(topic=pub_topic, payload=payload, qos=pub_qos)
     except Exception:
-        if data is None:
+        if data is not None:
             detail = f"Message content: {data}"
         else:
             detail = f"msg.payload: {msg.payload!r}"

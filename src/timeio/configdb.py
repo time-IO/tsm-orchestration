@@ -9,7 +9,7 @@ from psycopg import Connection, sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from timeio.common import get_envvar, get_envvar_as_bool
-from timeio.types import MqttPayload
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("configdb-updater")
 
@@ -218,13 +218,23 @@ def upsert_table_database(conn: Connection, values: dict, db_id: int | None) -> 
     id_ = _upsert(
         conn,
         table="database",
-        columns=["schema", "user", "password", "ro_user", "ro_password"],
+        columns=[
+            "schema",
+            "user",
+            "password",
+            "ro_user",
+            "ro_password",
+            "url",
+            "ro_url",
+        ],
         values=[
             v.pop("schema"),
             v.pop("username"),
             v.pop("password"),
             v.pop("ro_username"),
             v.pop("ro_password"),
+            v.pop("url"),
+            v.pop("ro_url"),
         ],
         id=db_id,
     )
@@ -336,7 +346,7 @@ def upsert_table_ext_sftp(conn: Connection, values: dict, extftp_id) -> int:
     #         "password": thing.ext_sftp_password or None
     #         "sync_interval": thing.ext_sftp_sync_interval,
     #         "public_key": thing.ext_sftp_public_key,
-    #         "private_key": None,
+    #         "private_key": encrypted private ssh key or "" (empty string),
     v = values.copy()
     id_ = _upsert(
         conn,
@@ -401,6 +411,7 @@ def upsert_table_thing(
     sftp_id: int,
     api_id: int,
     thing_id: int | None,
+    description: str,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -414,8 +425,19 @@ def upsert_table_thing(
             "mqtt_id",
             "ext_sftp_id",
             "ext_api_id",
+            "description",
         ),
-        values=(uuid, name, proj_id, ingest_type_id, s3_id, mqtt_id, sftp_id, api_id),
+        values=(
+            uuid,
+            name,
+            proj_id,
+            ingest_type_id,
+            s3_id,
+            mqtt_id,
+            sftp_id,
+            api_id,
+            description,
+        ),
         id=thing_id,
     )
     return id_
@@ -480,6 +502,7 @@ def store_thing_config(conn: Connection, data: dict):
         sftp_id,
         api_id,
         ids["thing_id"],
+        data["description"],
     )
 
 
@@ -502,15 +525,20 @@ def upsert_table_qaqc(
     #   type : "SaQC",
     #   name: "MyConfig",
     #   context_window: str or int,
+    #   default: bool
     #   tests: [...]  # we ignore those for now
     v = values.copy()
     v.pop("tests", None)  # v1
     v.pop("functions", None)  # v2
+    # in versions < 3 we don't have the default field,
+    # and each new QC Settings are considered to be
+    # the new default
+    v.setdefault("default", True)
     id_ = _upsert(
         conn,
         table="qaqc",
-        columns=("name", "project_id", "context_window"),
-        values=(v.pop("name"), proj_id, v.pop("context_window")),
+        columns=("name", "project_id", "context_window", "default"),
+        values=(v.pop("name"), proj_id, v.pop("context_window"), v.pop("default")),
         id=qaqc_id,
     )
     maybe_inform_unused_keys(v)
@@ -603,11 +631,16 @@ def store_qaqc_config(conn: Connection, data: dict):
         for i, test in enumerate(tests):
             check_keys(test, i + 1, ["name", "func_id", "kwargs", "datastreams"])
 
+    elif version == 3:
+        data: MqttPayload.QaqcConfigV3_T
+        tests = data["functions"]
+        for i, test in enumerate(tests):
+            check_keys(test, i + 1, ["name", "func_id", "kwargs", "datastreams"])
+
     else:
         raise NotImplementedError(
             f"Qaqc config protokoll version {version} is not yet implemented."
         )
-
     pid = fetch_project_id(conn, proj_uuid)
     qid = fetch_qaqc_id(conn, pid, qaqc_name)
     qid = upsert_table_qaqc(conn, data, pid, qid)

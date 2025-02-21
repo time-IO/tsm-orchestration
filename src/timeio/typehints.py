@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
+
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
 JsonObjectT = dict[str, "JsonT"]
@@ -30,6 +31,14 @@ class MqttPayload:
         context_window: str
         functions: list[MqttPayload.QaqcFunctionT]
 
+    class QaqcConfigV3_T(_t.TypedDict):
+        version: _t.Literal[3]
+        default: bool
+        name: str
+        project_uuid: str
+        context_window: str
+        functions: list[MqttPayload.QaqcFunctionT]
+
     class QaqcTestT(_t.TypedDict, total=True):
         function: str
         kwargs: dict[str, _t.Any]
@@ -46,6 +55,21 @@ class MqttPayload:
         thing_sta_id: int | None
         sta_stream_id: int | None
 
+    class ConfigDBUpdate(_t.TypedDict):
+        version: _t.Literal[1] | None
+        thing: str  # UUID of the thing
+
+    class DataParsedV1(_t.TypedDict):
+        version: _t.Literal[1] | None
+        thing_uuid: str
+
+    class DataParsedV2(_t.TypedDict):
+        version: _t.Literal[2]
+        project_uuid: str
+        qc_settings_name: str
+        start_date: str
+        end_date: str
+
 
 class ConfDB:
 
@@ -56,6 +80,8 @@ class ConfDB:
         password: str
         ro_user: str
         re_password: str
+        url: str
+        ro_url: str
 
     class ExtApiT(_t.TypedDict):
         id: int
@@ -130,6 +156,7 @@ class ConfDB:
         arg_name: str
         sta_thing_id: int | None
         sta_stream_id: int | None
+        alias: str
 
     class S3_StoreT(_t.TypedDict):
         id: int
@@ -149,3 +176,10 @@ class ConfDB:
         mqtt_id: int
         ext_sftp_id: int | None
         ext_api_id: int | None
+        description: str | None
+
+
+def check_dict_by_TypedDict(value: dict, expected: type[_t.TypedDict], name: str):
+    missing = expected.__required_keys__ - value.keys()
+    if missing:
+        raise KeyError(f"{', '.join(missing)} are a mandatory keys for {name!r}")

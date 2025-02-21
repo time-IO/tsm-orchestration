@@ -10,7 +10,7 @@ import subprocess
 import sys
 import typing
 import warnings
-from typing import Any, Hashable, Literal, TypedDict, cast
+from typing import Any, Hashable, Literal, cast
 
 import pandas as pd
 import requests
@@ -27,8 +27,9 @@ except ImportError:
 
 from timeio.common import ObservationResultType
 from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
-from timeio.types import ConfDB, DbRowT, JsonObjectT
+from timeio.typehints import DbRowT, JsonObjectT
 from timeio.journaling import Journal
+from timeio import feta
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -95,15 +96,15 @@ def dict_update_to_list(dict_: dict, key: Hashable, value: Any) -> None:
         dict_[key] = [dict_[key], value]
 
 
-def check_keys_by_TypedDict(value: dict, expected: type[typing.TypedDict], name: str):
-    missing = expected.__required_keys__ - value.keys()
-    if missing:
-        raise KeyError(f"{', '.join(missing)} are a mandatory keys for {name!r}")
-
-
 def ping_dbapi(base_url):
     r = requests.get(f"{base_url}/health")
     r.raise_for_status()
+
+
+def timestamp_from_string(ts: str) -> pd.Timestamp | None:
+    if ts is None:
+        return None
+    return pd.Timestamp(ts)
 
 
 class KwargsScheme(saqc.core.core.FloatScheme):
@@ -165,30 +166,66 @@ class KwargsScheme(saqc.core.core.FloatScheme):
 class QualityControl:
     conn: Connection
     api_url: str
-    thing: TypedDict("ThingT", {"id": int, "name": str, "uuid": str})
-    proj: ConfDB.ProjectT
+    proj: feta.Project
     schema: str
-    conf: ConfDB.QaqcT
-    tests: list[ConfDB.QaqcTestT]
+    conf: feta.QAQC
+    tests: list[feta.QAQCTest]
     window: pd.Timedelta | int
     legacy: bool
 
-    def __init__(self, conn: Connection, dbapi_url: str, thing_uuid: str):
+    def __init__(
+        self,
+        conn: Connection,
+        dbapi_url: str,
+        project_uuid: str,
+        qc_id: int,
+    ):
         self.conn: Connection = conn
         self.api_url = dbapi_url
-        self.schema = self.fetch_schema(thing_uuid)
-        self.proj = self.fetch_project(thing_uuid)
-        self.thing = self.fetch_thing(thing_uuid)
-        if not self.thing:
-            raise DataNotFoundError(f"A thing with UUID {thing_uuid} does not exist")
-        self.conf = self.fetch_qaqc_config(thing_uuid)
-        if not self.conf:
-            raise NoDataWarning(
-                f"No qaqc config present in project {self.proj['name']}"
-            )
-        self.tests = self.fetch_qaqc_tests(self.conf["id"])
-        self.window = self.parse_ctx_window(self.conf["context_window"])
-        self.legacy = any(map(lambda t: t.get("position") is not None, self.tests))
+
+        if isinstance(project_uuid, feta.Project):
+            self.proj = project_uuid
+        else:
+            self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
+
+        if not (confs := self.proj.get_qaqcs(id=qc_id)):
+            raise NoDataWarning(f"No qaqc config present in project {self.proj.name}")
+        self.conf = confs[0]
+        self.schema = self.proj.database.schema
+        self.tests = self.conf.get_tests()
+        self.window = self.parse_ctx_window(self.conf.context_window)
+        self.legacy = any((t.position is not None) for t in self.tests)
+
+    @classmethod
+    def from_project(
+        cls,
+        conn: Connection,
+        dbapi_url: str,
+        uuid: str,
+        config_name: str | None = None,
+    ):
+        proj = feta.Project.from_uuid(uuid, dsn=conn)
+        if config_name is None:
+            if (qc := proj.get_default_qaqc()) is None:
+                raise NoDataWarning(
+                    f"No default QC-Settings active in project {proj.name}"
+                )
+        else:
+            if not (qcs := proj.get_qaqcs(name=config_name)):
+                raise DataNotFoundError(
+                    f"No QC-Settings with name {config_name} "
+                    f"present in project {proj.name}"
+                )
+            qc = qcs[0]
+        return cls(conn, dbapi_url, proj, qc)  # noqa
+
+    @classmethod
+    def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
+        thing = feta.Thing.from_uuid(uuid, dsn=conn)
+        proj = thing.project
+        if (qc := proj.get_default_qaqc()) is None:
+            raise NoDataWarning(f"No default QC-Settings active in project {proj.name}")
+        return cls(conn, dbapi_url, proj, qc)  # noqa
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:
@@ -242,48 +279,10 @@ class QualityControl:
         t, *ds = name.split("S", maxsplit=1)
         return (int(t), int(ds[0])) if ds else (None, None)
 
-    def fetch_qaqc_config(self, thing_uuid) -> ConfDB.QaqcT | None:
-        q = (
-            "SELECT q.* FROM config_db.qaqc q "
-            "JOIN config_db.project p ON q.project_id = p.id "
-            "JOIN config_db.thing t ON p.id = t.project_id "
-            "WHERE t.uuid = %s ORDER BY q.id DESC "  # we want the last config
-        )
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [thing_uuid]).fetchone()
-
-    def fetch_qaqc_tests(self, qaqc_id: int) -> list[ConfDB.QaqcTestT]:
-        q = "SELECT * FROM config_db.qaqc_test qt WHERE qt.qaqc_id = %s"
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [qaqc_id]).fetchall()
-
-    def fetch_project(self, thing_uuid: str) -> ConfDB.ProjectT:
-        """Returns project UUID and project name for a given thing."""
-        q = (
-            "SELECT p.* FROM config_db.project p "
-            "JOIN config_db.thing t ON p.id = t.project_id "
-            "WHERE t.uuid = %s"
-        )
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(cast(Literal, q), [thing_uuid]).fetchone()
-
-    def fetch_schema(self, thing_uuid) -> str:
-        return self.conn.execute(
-            "SELECT schema FROM public.schema_thing_mapping WHERE thing_uuid = %s",
-            [thing_uuid],
-        ).fetchone()[0]
-
-    def fetch_thing(self, thing_uuid: str):
-        q = sql.SQL(
-            'select "id", "name", "uuid" from {schema}.thing where "uuid" = %s'
-        ).format(schema=sql.Identifier(self.schema))
-        with self.conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(q, [thing_uuid]).fetchone()
-
     def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
         q = (
-            "select thing_id as thing_uuid from public.datastream_link where "
-            "device_property_id = %s"
+            "select thing_id as thing_uuid from public.datastream_link "
+            "where device_property_id = %s"
         )
         row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
         return row and row[0]
@@ -474,7 +473,7 @@ class QualityControl:
             return None, None
         return r[0][0], r[1][0]
 
-    def qaqc_legacy(self) -> tuple[saqc.SaQC, dict[str, pd.DataFrame]]:
+    def qaqc_legacy(self, thing_uuid) -> tuple[saqc.SaQC, dict[str, pd.DataFrame]]:
         """
         Returns a tuple of data in saqc.SaQC and a metadata dict.
 
@@ -489,7 +488,7 @@ class QualityControl:
         """
 
         def fetch_data(pos) -> tuple[pd.Series, pd.DataFrame]:
-            ds = self.fetch_datastream_by_pos(self.thing["uuid"], pos)
+            ds = self.fetch_datastream_by_pos(thing_uuid, pos)
             earlier, later = self.fetch_unflagged_daterange_legacy(ds["id"])
             obs = None
             if earlier is not None:  # else no unflagged data
@@ -506,28 +505,26 @@ class QualityControl:
             else:
                 data_index = data.index[data.index.slice_indexer(earlier, later)]
             meta = pd.DataFrame(index=data_index)
-            meta.attrs = {
-                "repr_name": f"Datastream {ds['name']} of Thing {self.thing['name']}"
-            }
-            meta["thing_uuid"] = self.thing["uuid"]
+            meta.attrs = {"repr_name": f"Datastream {ds['name']} of Thing {thing_uuid}"}
+            meta["thing_uuid"] = thing_uuid
             meta["datastream_id"] = ds["id"]
             return data, meta
 
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
         for i, test in enumerate(self.tests):
-            test: ConfDB.QaqcTestT
-            origin = f"QA/QC Test #{i+1}: {self.conf['name']}/{test['name']}"
+            test: feta.QAQCTest
+            origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
 
             # Raise for bad function, before fetching all the data
-            attr = test["function"]
+            attr = test.function
             try:
                 func = getattr(qc, attr)
             except AttributeError:
                 raise UserInputError(f"{origin}: Unknown SaQC function {attr}")
 
-            kwargs: dict = test.get("args", {}).copy()
-            if (position := test.get("position", None)) is not None:
+            kwargs: dict = (test.args or {}).copy()
+            if (position := test.position) is not None:
                 if (name := str(position)) not in qc:
                     data, meta = fetch_data(position)
                     qc[name] = data
@@ -549,13 +546,21 @@ class QualityControl:
 
         return qc, md
 
-    def qaqc_sta(self) -> tuple[saqc.SaQC, dict[str, pd.DataFrame]]:
+    def qaqc_sta(
+        self,
+        start_date: pd.Timestamp | None,
+        end_date: pd.Timestamp | None,
+    ) -> tuple[saqc.SaQC, dict[str, pd.DataFrame]]:
 
         def fetch_sta_data(thing_id: int, stream_id):
+            if start_date is None:
+                earlier, later = self.fetch_unflagged_daterange_sta(stream_id)
+            else:
+                earlier, later = start_date, end_date
+
             thing_uuid = self.fetch_thing_uuid_for_sta_stream(stream_id)
-            earlier, later = self.fetch_unflagged_daterange_sta(stream_id)
             obs = None
-            if earlier is not None:  # else no unflagged data
+            if earlier is not None:  # else: we have no unflagged data
                 obs = self.fetch_datastream_data_sta(
                     stream_id, earlier, later, self.window
                 )
@@ -577,20 +582,20 @@ class QualityControl:
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
         for i, test in enumerate(self.tests):
-            test: ConfDB.QaqcTestT
-            origin = f"QA/QC Test #{i+1}: {self.conf['name']}/{test['name']}"
+            test: feta.QAQCTest
+            origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
 
             # Raise for bad function, before fetching all the data
-            attr = test["function"]
+            attr = test.function
             try:
                 func = getattr(qc, attr)
             except AttributeError:
                 raise UserInputError(f"{origin}: Unknown SaQC function {attr}")
 
             # fetch the relevant data
-            kwargs: dict = test.get("args", {}).copy()
-            for stream in test["streams"]:
-                stream: ConfDB.QaqcTestStreamT
+            kwargs: dict = (test.args or {}).copy()
+            for stream in test.streams or []:
+                stream: feta.QcStreamT
                 arg_name = stream["arg_name"]
                 tid, sid = stream["sta_thing_id"], stream["sta_stream_id"]
                 alias = stream["alias"]
@@ -613,32 +618,37 @@ class QualityControl:
 
         return qc, md
 
-    def qacq_for_thing(self):
+    def run(self, start_date: str | None = None, end_date: str | None = None):
         """
-        Run QA/QC on data in the Observation-DB.
+        Run QA/QC on data in the Observation-DB and returns
+        the number of observation that was updated.
+        """
+        if not self.tests:
+            raise NoDataWarning(
+                f"No quality functions present in config {self.conf.name!r}",
+            )
+        start_date = timestamp_from_string(start_date)
+        end_date = timestamp_from_string(end_date)
+        qc, meta = self.qaqc_sta(start_date, end_date)
+        m = self._upload(qc, meta)
+        return m
+
+    def run_legacy(self, thing_uuid):
+        """
+        Run QA/QC on data in the Observation-DB for a single Thing.
 
         Returns the number of observation that was updated and/or created.
         """
-        logger.info(f"Execute qaqc config {self.conf['name']!r}")
-        if not self.tests:
-            raise NoDataWarning(
-                f"No quality functions present in config {self.conf['name']!r}",
-            )
-
-        if self.legacy:
-            qc, meta = self.qaqc_legacy()
-        else:
-            qc, meta = self.qaqc_sta()
-
+        logger.info(f"Execute qaqc config {self.conf.name!r}")
+        qc, meta = self.qaqc_legacy(thing_uuid)
         # ============= legacy dataproducts =============
         # Data products must be created before quality labels are uploaded.
         # If we first do the upload and an error occur we will not be able to
-        # recreate the same data for the dataproducts, this is because a second
-        # run ignores already flagged data.
+        # recreate the same data for the dataproducts, this is because a
+        # legacy qc run always just sees unflagged data.
         n = 0
-        dp_columns = [c for c in qc.columns if c not in meta.keys()]
-        if self.legacy and dp_columns:
-            n += self._create_dataproducts_legacy(qc[dp_columns])
+        if dp_columns := [c for c in qc.columns if c not in meta.keys()]:
+            n += self._create_dataproducts_legacy(thing_uuid, qc[dp_columns])
 
         m = self._upload(qc, meta)
         return n + m
@@ -667,7 +677,7 @@ class QualityControl:
             flags_frame["datastream_id"] = meta[name]["datastream_id"]
 
             for uuid, group in flags_frame.groupby("thing_uuid", sort=False):
-                labels = self._create_quality_labels(group, self.conf["id"])
+                labels = self._create_quality_labels(group, self.conf.id)
 
                 try:
                     self._upload_quality_labels(uuid, labels)
@@ -779,7 +789,7 @@ class QualityControl:
         valid = df["data"].notna()
         return df[valid].apply(compose_json, axis=1).dropna().to_list()
 
-    def _create_dataproducts_legacy(self, qc):
+    def _create_dataproducts_legacy(self, thing_uuid, qc):
         total = 0
         flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
         for name in flags.columns:
@@ -788,8 +798,8 @@ class QualityControl:
             if df.empty:
                 logger.debug(f"no data for data product {name}")
                 continue
-            obs = self._create_dataproduct_legacy(df, name, self.conf["id"])
-            self._upload_dataproduct(self.thing["uuid"], obs)
+            obs = self._create_dataproduct_legacy(df, name, self.conf.id)
+            self._upload_dataproduct(thing_uuid, obs)
             logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
             total += len(obs)
             continue

@@ -69,14 +69,14 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.external_api is not None:
             interval = int(thing.external_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            script = f"/scripts/sync_{thing.external_api.api_type}_api.py"
+            script = f"/scripts/sync_{thing.external_api.api_type_name}_api.py"
             target_uri = thing.database.url
             command = f"""{script} {uuid} "{thing.external_api.settings}" {target_uri} > $STDOUT 2> $STDERR"""
             job.enable(enabled=thing.external_api.enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
             job.set_command(command)
-            info = f"{thing.external_api.api_type}-API @ {interval}s"
+            info = f"{thing.external_api.api_type_name}-API @ {interval}s"
         return info
 
     # alias
