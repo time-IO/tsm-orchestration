@@ -89,7 +89,6 @@ def main(
                 logger.warning(
                     f"Failed to deliver reprocessing message for file: {message['Key']}"
                 )
-                # import ipdb; ipdb.set_trace()
         if i == 0:
             break
 
