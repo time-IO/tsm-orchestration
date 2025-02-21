@@ -7,9 +7,10 @@ from random import randint
 from crontab import CronItem, CronTab
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.journaling import Journal
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("crontab-setup")
 journal = Journal("Cron")
@@ -27,9 +28,10 @@ class CreateThingInCrontabHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.tabfile = "/tmp/cron/crontab.txt"
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
-    def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.get_instance(content)
+    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         with CronTab(tabfile=self.tabfile) as crontab:
             for job in crontab:
                 if self.job_belongs_to_thing(job, thing):
