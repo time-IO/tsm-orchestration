@@ -461,9 +461,9 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID}:${GID}"
     ports:
-      - "${PROXY_HOST}:${PROXY_PLAIN_PORT}"
-      - "${PROXY_HOST}:${PROXY_TLS_PORT}"
-      - "${PROXY_HOST}:${PROXY_MINIO_PORT}"
+      - "${PROXY_PLAIN_URL}:80"
+      - "${PROXY_TLS_URL}:443"
+      - "${PROXY_MINIO_URL}:9000"
     volumes:
       - frontend-statics:/home/appuser/app/static
       - ./nginx/html:/usr/share/nginx/html
