@@ -26,14 +26,11 @@ class CreateFrostInstanceHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
-        self.setup_frost(thing)
-
-    def setup_frost(self, thing):
         frost.write_context_file(
             schema=thing.database.schema,
             user=f"sta_{thing.database.ro_username.lower()}",
             password=thing.database.ro_password,
-            db_url=thing.database.db_url,
+            db_url=thing.database.ro_url,
             tomcat_proxy_url=self.tomcat_proxy_url,
         )
 
