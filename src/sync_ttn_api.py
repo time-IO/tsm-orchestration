@@ -7,7 +7,7 @@ import logging
 import requests
 import click
 
-from timeio.crypto import decrypt
+from timeio.crypto import decrypt, get_crypt_key
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
@@ -34,7 +34,7 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
 
     logger.info(f"Start fetching TTN data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
-    api_key_dec = decrypt(params["api_key"])
+    api_key_dec = decrypt(params["api_key"], get_crypt_key())
 
     res = requests.get(
         params["endpoint_uri"],

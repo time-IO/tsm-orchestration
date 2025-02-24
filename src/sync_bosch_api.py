@@ -9,7 +9,7 @@ import requests
 
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
-from timeio.crypto import decrypt
+from timeio.crypto import decrypt, get_crypt_key
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
@@ -96,7 +96,7 @@ def main(thing_uuid, parameters, target_uri):
 
     logger.info(f"Start fetching Bosch data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
-    pw_dec = decrypt(params["password"])
+    pw_dec = decrypt(params["password"], get_crypt_key())
     timestamp_from, timestamp_to = get_utc_timestamps(params["period"])
     url = f"""{params["endpoint"]}/{params["sensor_id"]}/{timestamp_from}/{timestamp_to}"""
     response = make_request(url, params["username"], pw_dec)
