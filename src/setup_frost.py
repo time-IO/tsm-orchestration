@@ -33,7 +33,7 @@ class CreateFrostInstanceHandler(AbstractHandler):
             schema=thing.database.schema,
             user=f"sta_{thing.database.ro_username.lower()}",
             password=thing.database.ro_password,
-            db_url=thing.database.db_url,
+            db_url=thing.database.ro_url,
             tomcat_proxy_url=self.tomcat_proxy_url,
         )
 
