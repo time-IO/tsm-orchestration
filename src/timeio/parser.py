@@ -7,9 +7,11 @@ import logging
 import math
 import re
 import warnings
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 from io import StringIO
 from typing import Any, TypedDict, TypeVar, cast
 
@@ -129,22 +131,33 @@ class FileParser(Parser):
 
 
 class CsvParser(FileParser):
-    def _cast_index(self, index: pd.Series, fmt: str) -> pd.DatetimeIndex:
-        try:
-            index = index.str.strip()
-        except AttributeError:
-            pass
-        out = pd.to_datetime(index, format=fmt, errors="coerce")
-        if out.isna().any():
-            nat = out.isna()
+    def _set_index(self, df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
+
+        date_columns = [d["column"] for d in timestamp_columns]
+        date_format = " ".join([d["format"] for d in timestamp_columns])
+
+        for c in date_columns:
+            if c not in df.columns:
+                raise ParsingError(f"Timestamp column {c} does not exist. ")
+
+        index = reduce(
+            lambda x, y: x + " " + y,
+            [df[c].fillna("").astype(str).str.strip() for c in date_columns],
+        )
+        df = df.drop(columns=date_columns)
+
+        index = pd.to_datetime(index, format=date_format, errors="coerce")
+        if index.isna().any():
+            nat = index.isna()
             warnings.warn(
-                f"Could not parse {nat.sum()} of {out.count()} timestamps "
-                f"with provided timestamp format {fmt!r}. First failing "
+                f"Could not parse {nat.sum()} of {len(index)} timestamps "
+                f"with provided timestamp format {date_format!r}. First failing "
                 f"timestamp: '{index[nat].iloc[0]}'",
                 ParsingWarning,
             )
-        out.name = None
-        return pd.DatetimeIndex(out)
+        index.name = None
+        df.index = index
+        return df
 
     def do_parse(self, rawdata: str) -> pd.DataFrame:
         """
@@ -152,10 +165,11 @@ class CsvParser(FileParser):
         rawdata: the unparsed content
         NOTE:
             we need to preserve the original column numbering
-            and check for the date index column
         """
         settings = self.settings.copy()
-        index_col = settings.pop("index_col")
+        self.logger.info(settings)
+
+        timestamp_columns = settings.pop("timestamp_columns")
 
         if "comment" in settings:
             rawdata = filter_lines(rawdata, settings.pop("comment"))
@@ -173,13 +187,7 @@ class CsvParser(FileParser):
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
-        if index_col not in df.columns:
-            raise ParsingError(
-                f"Could not get Timestamp-Column {index_col}. "
-                f"Data has only {len(df.columns)} columns."
-            )
-
-        df.index = self._cast_index(df.pop(index_col), settings["date_format"])
+        df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
 
@@ -407,7 +415,5 @@ def get_parser(parser_type, settings) -> FileParser | MqttDataParser:
 
         kwargs = settings.pop("pandas_read_csv") or {}
         settings = {**default_settings, **kwargs, **settings}
-        settings["index_col"] = settings.pop("timestamp_column")
-        settings["date_format"] = settings.pop("timestamp_format")
         return klass(settings)
     return klass()
