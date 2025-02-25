@@ -8,7 +8,8 @@ SELECT
     dsl.device_property_id AS "ID",
     concat(c.label, ':',
         d.short_name, ':',
-        dp.property_name
+        dp.property_name, ':',
+        dp.label
     ) as "NAME",
     concat(d.short_name, ' ',
 		dp.property_name, ' ',
@@ -139,6 +140,6 @@ GROUP BY dsl.device_property_id, c.label, d.short_name, dp.property_name, dma.of
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
 	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,
 	dp.measuring_range_max, cv_l.term, cv_l.provenance_uri, cv_l.definition, c.id, dma.id, dma.label, dma.begin_description, dma.begin_date, dma.offset_x,
-	dma.offset_y, csl.x, csl.y, dp.property_uri, dma.end_date;
+	dma.offset_y, csl.x, csl.y, dp.property_uri, dma.end_date, dp.label;
 
 COMMIT;

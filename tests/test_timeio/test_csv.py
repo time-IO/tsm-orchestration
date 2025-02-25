@@ -17,6 +17,22 @@ RAWDATA = """
 1420, 2021/09/09 06:15:00,  987.1, 989.76, 991.12,   15.9, 128.9,  15.8,  14.6,  14.5, 76.1,119.0, 89.5, 11.855,      165,      103,     900,     900,  18.1, 63.2,  17.9, 63.8,        0
 """
 
+
+def test_parsing():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 3,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA)
+    assert (df[3] == [989.7, 989.74, 989.76]).all()
+    assert (df[15] == [122, 111, 103]).all()
+    assert (df.columns == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]).all()  # fmt: skip
+
+
 DIRTYDATA = """
 //Hydroinnova CRS-1000 Data
 //CellSig=12
@@ -29,30 +45,13 @@ DIRTYDATA = """
 """
 
 
-def test_parsing():
-    settings = {
-        "decimal": ".",
-        "delimiter": ",",
-        "skiprows": 3,
-        "skipfooter": 0,
-        "index_col": 1,
-        "date_format": "%Y/%m/%d %H:%M:%S",
-    }
-    parser = CsvParser(settings)
-    df = parser.do_parse(RAWDATA)
-    assert (df[3] == [989.7, 989.74, 989.76]).all()
-    assert (df[15] == [122, 111, 103]).all()
-    assert (df.columns == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]).all()  # fmt: skip
-
-
 def test_dirty_data_parsing():
     settings = {
         "decimal": ".",
         "delimiter": ",",
         "skiprows": 3,
         "skipfooter": 0,
-        "index_col": 1,
-        "date_format": "%Y/%m/%d %H:%M:%S",
+        "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
 
     parser = CsvParser(settings)
@@ -78,3 +77,44 @@ def test_dirty_data_parsing():
         "datastream_pos": "3",
         "parameters": '{"origin": "test", "column_header": "3"}',
     }
+
+
+MULTIDATECOLUMDATA = """
+============================================================================
+   Datum     Zeit  Temp spezLeitf   Tiefe   Chl   Chl    ODO ODOsat Batterie
+   t/m/j hh:mm:ss     C     uS/cm   Meter  ug/l   RFU   mg/l %Lokal     Volt
+----------------------------------------------------------------------------
+02/11/22 14:00:51 20.52         3   0.151   9.1   2.2   9.10  100.5     12.5
+02/11/22 15:00:51 20.38         3   0.158 -23.5  -5.6   9.11  100.3     12.5
+02/11/22 16:00:51 20.19         3   0.161  -0.5  -0.1   9.15  100.3     12.4
+02/11/22 17:00:51 20.02         3   0.164   0.0   0.0   9.18  100.3     12.5
+"""
+
+
+def test_multi_date_column_parsing():
+    settings = {
+        "decimal": ".",
+        "delimiter": "\\s+",
+        "skiprows": 4,
+        "skipfooter": 0,
+        "header": None,
+        "timestamp_columns": [
+            {"column": 0, "format": "%d/%m/%y"},
+            {"column": 1, "format": "%H:%M:%S"},
+        ],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(MULTIDATECOLUMDATA.strip())
+    assert df.index.equals(
+        pd.to_datetime(
+            [
+                "2022-11-02 14:00:51",
+                "2022-11-02 15:00:51",
+                "2022-11-02 16:00:51",
+                "2022-11-02 17:00:51",
+            ]
+        )
+    )
+    assert df.columns.equals(pd.RangeIndex(2, 10))
+    assert (df[2] == [20.52, 20.38, 20.19, 20.02]).all()
+    assert (df[9] == [12.5, 12.5, 12.4, 12.5]).all()
