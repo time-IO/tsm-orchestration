@@ -61,8 +61,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
             interval = int(thing.ext_sftp.sync_interval)
             schedule = cls.get_schedule(interval)
             script = "/scripts/sync_sftp.py"
-            keyfile = thing.ext_sftp.ssh_priv_key
-            command = f"{script} {uuid} {keyfile} > $STDOUT 2> $STDERR"
+            command = f"{script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_sftp.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
