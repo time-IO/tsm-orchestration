@@ -22,9 +22,16 @@
         "delimiter": ";",
         "exclude_headlines": 2,
         "exclude_footlines": 0,
-        "timestamp_column": 2,
-        "timestamp_format": "YYYY-mm-dd HH:MM:SS",
         "pandas_read_csv": null
+      }
+    },
+    {
+      "model": "tsm.timestampcolumn",
+      "pk": 1,
+      "fields": {
+        "csv_parser": 1,
+        "column": 2,
+        "format": "YYYY-mm-dd HH:MM:SS"
       }
     },
     {
