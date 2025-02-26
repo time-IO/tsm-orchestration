@@ -100,7 +100,9 @@ class CreateThingInCrontabHandler(AbstractHandler):
                 schedule = str(job.slices)
             job.setall(schedule)
             job.set_command(command)
-            info = f"sFTP {thing.ext_sftp.uri} @ {new_interval}m and schedule {schedule}"
+            info = (
+                f"sFTP {thing.ext_sftp.uri} @ {new_interval}m and schedule {schedule}"
+            )
         elif thing.ext_api is not None:
             new_interval = int(thing.ext_api.sync_interval)
             script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
@@ -172,8 +174,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         base_minute = cls.extract_base_minute(str(job.slices))
         if new_interval < 60:
             minutes = sorted(
-                (base_minute + i * new_interval) % 60
-                for i in range(60 // new_interval)
+                (base_minute + i * new_interval) % 60 for i in range(60 // new_interval)
             )
             return f"{','.join(map(str, minutes))} * * * *"
 
