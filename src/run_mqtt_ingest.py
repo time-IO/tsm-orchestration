@@ -14,7 +14,7 @@ from timeio.errors import UserInputError
 from timeio.journaling import Journal
 from timeio.databases import DBapi
 from timeio.feta import Thing
-from timeio.parser import get_parser
+from timeio.parser import get_parser, MqttDataParser
 
 logger = logging.getLogger("mqtt-ingest")
 journal = Journal("Parser")
@@ -41,12 +41,11 @@ class ParseMqttDataHandler(AbstractHandler):
 
         logger.info(f"get thing")
         mqtt_user = message.topic.split("/")[1]
-        thing = Thing.from_mqtt_user_name(mqtt_user)
+        thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
 
         logger.info(f"get parser")
-        p = thing.s3_store.file_parser
-        parser = get_parser(p.file_parser_type, p.params)
+        parser: MqttDataParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
 
         logger.info(f"parsing rawdata")
         try:
