@@ -235,10 +235,12 @@ class MqttDataParser(Parser):
             obpay: ObservationPayloadT = {
                 "result_time": str(ts),
                 "datastream_pos": str(ob.position),
-                "parameters": json.dumps({
-                    "origin": ob.origin,
-                    "column_header": ob.header,
-                }),
+                "parameters": json.dumps(
+                    {
+                        "origin": ob.origin,
+                        "column_header": ob.header,
+                    }
+                ),
             }
             if isinstance(ob.value, (float, int)):
                 obpay["result_number"] = ob.value
