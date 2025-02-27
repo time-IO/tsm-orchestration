@@ -10,11 +10,13 @@ import subprocess
 import sys
 import typing
 import warnings
+from collections.abc import Callable
 from typing import Any, Hashable, Literal, cast
 
 import pandas as pd
 import requests
 import saqc
+from joblib.externals.cloudpickle import loads
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
 from saqc import DictOfSeries, Flags
@@ -40,6 +42,11 @@ except ImportError:
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 TimestampT = typing.Union[datetime.datetime.timestamp, pd.Timestamp]
+
+
+class SaQCFuncT(typing.Protocol):
+    def __call__(self, qc: saqc.SaQC, *args: Any, **kwargs: Any) -> saqc.SaQC: ...
+
 
 journal = Journal("QualityControl")
 
@@ -546,74 +553,74 @@ class QualityControl:
 
         return qc, md
 
+    def _fetch_sta_data(self, thing_id: int, stream_id, start_date, end_date):
+        if start_date is None:
+            earlier, later = self.fetch_unflagged_daterange_sta(stream_id)
+        else:
+            earlier, later = start_date, end_date
+
+        thing_uuid = self.fetch_thing_uuid_for_sta_stream(stream_id)
+        obs = None
+        if earlier is not None:  # else: we have no unflagged data
+            obs = self.fetch_datastream_data_sta(stream_id, earlier, later, self.window)
+        df = pd.DataFrame(obs or [], columns=_OBS_COLUMNS + ["raw_datastream_id"])
+        df = df.set_index("result_time", drop=True)
+        df.index = pd.DatetimeIndex(df.index)
+        data = self.extract_data_by_result_type(df)
+        # we truncate the context window
+        if data.empty:
+            data_index = data.index
+        else:
+            data_index = data.index[data.index.slice_indexer(earlier, later)]
+        meta = pd.DataFrame(index=data_index)
+        meta.attrs = {"repr_name": f"Datastream {stream_id} of Thing {thing_id}"}
+        meta["thing_uuid"] = thing_uuid
+        meta["datastream_id"] = df["raw_datastream_id"]
+        return data, meta
+
     def qaqc_sta(
         self,
         start_date: pd.Timestamp | None,
         end_date: pd.Timestamp | None,
     ) -> tuple[saqc.SaQC, dict[str, pd.DataFrame]]:
 
-        def fetch_sta_data(thing_id: int, stream_id):
-            if start_date is None:
-                earlier, later = self.fetch_unflagged_daterange_sta(stream_id)
-            else:
-                earlier, later = start_date, end_date
-
-            thing_uuid = self.fetch_thing_uuid_for_sta_stream(stream_id)
-            obs = None
-            if earlier is not None:  # else: we have no unflagged data
-                obs = self.fetch_datastream_data_sta(
-                    stream_id, earlier, later, self.window
-                )
-            df = pd.DataFrame(obs or [], columns=_OBS_COLUMNS + ["raw_datastream_id"])
-            df = df.set_index("result_time", drop=True)
-            df.index = pd.DatetimeIndex(df.index)
-            data = self.extract_data_by_result_type(df)
-            # we truncate the context window
-            if data.empty:
-                data_index = data.index
-            else:
-                data_index = data.index[data.index.slice_indexer(earlier, later)]
-            meta = pd.DataFrame(index=data_index)
-            meta.attrs = {"repr_name": f"Datastream {stream_id} of Thing {thing_id}"}
-            meta["thing_uuid"] = thing_uuid
-            meta["datastream_id"] = df["raw_datastream_id"]
-            return data, meta
-
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
-        for i, test in enumerate(self.tests):
-            test: feta.QAQCTest
+
+        def load_stream_data(tid, sid, alias):
+
+            if tid is None or sid is None:
+                # Either we've got a references to a temporary
+                # alias (tid==None) OR the user wants to create
+                # a new datastream on an existing thing (sid==None).
+                return
+
+            if alias not in qc:
+                data, meta = self._fetch_sta_data(tid, sid, start_date, end_date)
+                qc[alias] = data
+                md[alias] = meta
+
+        for i, test in enumerate(self.tests):  # type: int, feta.QAQCTest
             origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
-
-            # Raise for bad function, before fetching all the data
-            attr = test.function
-            try:
-                func = getattr(qc, attr)
-            except AttributeError:
-                raise UserInputError(f"{origin}: Unknown SaQC function {attr}")
-
-            # fetch the relevant data
             kwargs: dict = (test.args or {}).copy()
-            for stream in test.streams or []:
-                stream: feta.QcStreamT
-                arg_name = stream["arg_name"]
-                tid, sid = stream["sta_thing_id"], stream["sta_stream_id"]
-                alias = stream["alias"]
-                if tid is None or sid is None:
-                    dict_update_to_list(kwargs, arg_name, alias)
-                    continue
-                if alias not in qc:
-                    data, meta = fetch_sta_data(tid, sid)
-                    qc[alias] = data
-                    md[alias] = meta
-                dict_update_to_list(kwargs, arg_name, alias)
 
-            # run QC
+            # Better raise for an unknown function, before we are fetching all the data
+            try:
+                func = getattr(qc, test.function)  # type: SaQCFuncT
+            except AttributeError:
+                raise UserInputError(f"{origin}: Unknown SaQC function {test.function}")
+
+            for stream in test.streams or []:  # type: feta.QcStreamT
+                # add alias to kwargs, e.g. {"field": "T55S3"}
+                dict_update_to_list(kwargs, stream["arg_name"], stream["alias"])
+                load_stream_data(
+                    stream["sta_thing_id"], stream["sta_stream_id"], stream["alias"]
+                )
             try:
                 qc = func(**kwargs)
             except Exception as e:
                 raise UserInputError(
-                    f"{origin}: Execution of test failed, because {e}"
+                    f"{origin}: Execution of test failed, " f"because {e}"
                 ) from e
 
         return qc, md
