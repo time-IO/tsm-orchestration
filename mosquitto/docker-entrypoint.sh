@@ -37,6 +37,7 @@ fi
   echo "topic readwrite frontend_thing_update/#"
   echo "topic readwrite user_login/#"
   echo "topic readwrite qaqc_settings_update/#"
+  echo "topic readwrite sync_tsystems/#"
 } >/mosquitto-auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
