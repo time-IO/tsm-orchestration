@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import requests
 import json
 import logging
@@ -34,7 +36,7 @@ class SyncTsystemsApi(AbstractHandler):
             "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
         )
 
-    def act(self, content: MqttPayload.SyncTsystems, message: MQTTMessage):
+    def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
