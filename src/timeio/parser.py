@@ -35,9 +35,9 @@ def filter_lines(rawdata: str, skip: tuple | str) -> str:
 
 
 class ObservationPayloadT(TypedDict, total=False):
-    phenomenon_time_start: datetime
-    phenomenon_time_end: datetime
-    result_time: Required[datetime]
+    phenomenon_time_start: str
+    phenomenon_time_end: str
+    result_time: Required[str]
     result_type: Required[int]
     result_number: float | int
     result_string: str
@@ -47,8 +47,8 @@ class ObservationPayloadT(TypedDict, total=False):
     result_longitude: float | int
     result_altitude: float | int
     result_quality: JsonT
-    valid_time_start: datetime
-    valid_time_end: datetime
+    valid_time_start: str
+    valid_time_end: str
     parameters: JsonT
     datastream_pos: Required[str]
 
@@ -204,7 +204,7 @@ class CsvParser(FileParser):
 class Observation:
     # This is a legacy class of the datastore_lib
     # see tsm_datastore_lib.Observation
-    timestamp: datetime
+    timestamp: datetime | str
     value: float | int | str | bool
     origin: str
     position: int
@@ -230,17 +230,17 @@ class MqttDataParser(Parser):
     ) -> list[ObservationPayloadT]:
         result = []
         for ob in data:
+            if isinstance(ts := ob.timestamp, datetime):
+                ts = ts.isoformat()
             obpay: ObservationPayloadT = {
-                "result_time": ob.timestamp,
+                "result_time": str(ts),
                 "datastream_pos": str(ob.position),
-                "parameters": {
-                    "origin": ob.origin,
-                    "column_header": ob.header,
-                },
-                "result_number": None,
-                "result_string": None,
-                "result_boolean": None,
-                "result_json": None,
+                "parameters": json.dumps(
+                    {
+                        "origin": ob.origin,
+                        "column_header": ob.header,
+                    }
+                ),
             }
             if isinstance(ob.value, (float, int)):
                 obpay["result_number"] = ob.value
@@ -344,7 +344,7 @@ class YdocMl417Parser(MqttDataParser):
         return ret
 
 
-class BrightskyDwdApiParser:
+class BrightskyDwdApiParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         weather = rawdata["weather"]
         timestamp = weather.pop("timestamp")
@@ -367,7 +367,7 @@ class BrightskyDwdApiParser:
         return out
 
 
-class SineDummyParser:
+class SineDummyParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()
         return [

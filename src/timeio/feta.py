@@ -566,12 +566,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
 
     # thing.Thing interface
     # uuid, name, project, description are already defined above
-    # Note that thing.properties is not supported, because
-    # we don't use/need it anymore
     database: Database = _prop(lambda self: self.project.database)
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
+    # Note that thing.properties is not supported anymore
+    properties = None
 
     @classmethod
     def from_s3_bucket_name(
