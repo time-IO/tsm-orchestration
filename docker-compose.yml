@@ -918,7 +918,7 @@ services:
   # Description
   # ===========
   # - fetches data from TSystems API and inserts it into TimeIO DB API
-  worker-sync_tsystems:
+  worker-sync-tsystems:
     image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
     build:
       context: .

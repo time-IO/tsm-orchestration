@@ -6,6 +6,7 @@ from timeio.common import get_envvar
 from timeio.journaling import Journal
 from timeio.mqtt import publish_single
 
+
 def write_observations(thing: Thing, parsed_observations: dict):
     journal = Journal(f"SYNC_{thing.ext_api.api_type_name}")
     resp = requests.post(
