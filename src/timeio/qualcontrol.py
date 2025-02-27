@@ -202,6 +202,7 @@ class QualityControl:
         self.tests = self.conf.get_tests()
         self.window = self.parse_ctx_window(self.conf.context_window)
         self.legacy = any((t.position is not None) for t in self.tests)
+        self.alias_map = {}
 
     @classmethod
     def from_project(
@@ -612,15 +613,17 @@ class QualityControl:
 
             for stream in test.streams or []:  # type: feta.QcStreamT
                 # add alias to kwargs, e.g. {"field": "T55S3"}
-                dict_update_to_list(kwargs, stream["arg_name"], stream["alias"])
-                load_stream_data(
-                    stream["sta_thing_id"], stream["sta_stream_id"], stream["alias"]
-                )
+                tid = stream["sta_thing_id"]
+                sid = stream["sta_stream_id"]
+                alias = stream["alias"]
+                self.alias_map[alias] = (tid, sid)
+                dict_update_to_list(kwargs, stream["arg_name"], alias)
+                load_stream_data(tid, sid, alias)
             try:
                 qc = func(**kwargs)
             except Exception as e:
                 raise UserInputError(
-                    f"{origin}: Execution of test failed, " f"because {e}"
+                    f"{origin}: Execution of test failed, because of {e}"
                 ) from e
 
         return qc, md
@@ -636,6 +639,7 @@ class QualityControl:
             )
         start_date = timestamp_from_string(start_date)
         end_date = timestamp_from_string(end_date)
+        self.alias_map = {}
         qc, meta = self.qaqc_sta(start_date, end_date)
         m = self._upload(qc, meta)
         return m
@@ -666,9 +670,16 @@ class QualityControl:
         for name in flags.columns:
 
             if name not in meta.keys():
-                # Either the variable is just a temporary variable
-                # or we have a legacy dataproduct, which are handled
-                # by another function.
+                tid, sid = self.alias_map.get(name, (None, None))
+                if tid is None and sid is None:
+                    continue  # temporary dataproduct (TEMP.SomeStreamName)
+                if sid is None:
+                    # we have a data product
+                    # we have a thing-id (sta) and a new stream name
+                    # get thing-uuid from sta-thing-id and use stream-name as position (varchar)
+                    # if not exist yet -> create with quality-labels
+                    # set values to meta and fall through this if.
+                    pass
                 continue
             repr_name = meta[name].attrs["repr_name"]
             flags_frame: pd.DataFrame = flags[name]
@@ -811,51 +822,3 @@ class QualityControl:
             total += len(obs)
             continue
         return total
-
-
-def qacq(
-    thing_uuid: str,
-    dbapi_url: str,
-    dsn_or_pool: str | ConnectionPool,
-    **kwargs,
-):
-    """
-    Run QA/QC on data in the Observation-DB.
-
-    First the QAQC configuration is fetched for a given Thing.
-        In the legacy workflow
-
-    Parameters
-    ----------
-    thing_uuid : str
-        The UUID of the thing that triggered the QA/QC.
-
-    dbapi_url : str
-        Base URL of the DB-API.
-
-    dsn_or_pool : str or psycopg_pool.ConnectionPool
-        If a pool is passed, a connection from the pool is used.
-        If a string is passed, a connection is created with the string as DSN.
-
-    kwargs :
-        If ``dsn_or_pool`` is a ``psycopg_pool.ConnectionPool`` all kwargs
-        are passed to its ``connect`` method.
-        Otherwise, all kwargs are passed to ``psycopg.Connection.connect()``.
-
-    Returns
-    -------
-    n: int
-        Number of observation updated and/or created.
-    """
-    ping_dbapi(dbapi_url)
-
-    if isinstance(dsn_or_pool, str):
-        conn_setup = Connection.connect
-        kwargs = {"conninfo": dsn_or_pool, **kwargs}
-    else:
-        conn_setup = dsn_or_pool.connection
-
-    with conn_setup(**kwargs) as conn:
-        logger.info("successfully connected to configdb")
-        qaqc = QualityControl(conn, dbapi_url, thing_uuid)
-        return qaqc.qacq_for_thing()
