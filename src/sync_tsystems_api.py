@@ -43,6 +43,8 @@ class SyncTsystemsApi(AbstractHandler):
             settings["station_id"],
             settings["user_name"],
             pw_dec,
+            content["datetime_from"],
+            content["datetime_to"],
         )
         parsed_observations = self.parse_api_response(response)
         write_observations(thing, parsed_observations)
@@ -78,10 +80,15 @@ class SyncTsystemsApi(AbstractHandler):
         return timestamp_from_str, now_str
 
     def request_tsystems_api(
-        self, group: str, station_id: str, username: str, password: str
+        self,
+        group: str,
+        station_id: str,
+        username: str,
+        password: str,
+        time_from: str,
+        time_to: str,
     ) -> list:
         bearer_token = self.get_bearer_token(username, password)
-        time_from, time_to = self.get_utc_timerange()
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
             "aggregationTime": "HOURLY",
