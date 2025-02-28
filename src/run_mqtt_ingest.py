@@ -12,7 +12,9 @@ from timeio.mqtt import AbstractHandler
 from timeio.common import get_envvar, setup_logging
 from timeio.errors import UserInputError
 from timeio.journaling import Journal
-from timeio.databases import ConfigDB, DBapi
+from timeio.databases import DBapi
+from timeio.feta import Thing
+from timeio.parser import get_parser, MqttDataParser
 
 logger = logging.getLogger("mqtt-ingest")
 journal = Journal("Parser")
@@ -30,7 +32,7 @@ class ParseMqttDataHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-        self.confdb = ConfigDB(get_envvar("CONFIGDB_DSN"))
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
 
@@ -39,10 +41,11 @@ class ParseMqttDataHandler(AbstractHandler):
 
         logger.info(f"get thing")
         mqtt_user = message.topic.split("/")[1]
-        thing_uuid = self.confdb.get_thing_uuid("mqtt_user", mqtt_user)
+        thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.configdb_dsn)
+        thing_uuid = thing.uuid
 
         logger.info(f"get parser")
-        parser = self.confdb.get_mqtt_parser(thing_uuid)
+        parser: MqttDataParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
 
         logger.info(f"parsing rawdata")
         try:

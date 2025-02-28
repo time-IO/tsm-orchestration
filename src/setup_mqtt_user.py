@@ -6,9 +6,10 @@ import logging
 import psycopg2
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.journaling import Journal
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("mqtt-user-setup")
 journal = Journal("System")
@@ -26,33 +27,30 @@ class CreateMqttUserHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = psycopg2.connect(get_envvar("DATABASE_URL"))
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
-    def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.get_instance(content)
-        if content["mqtt_authentication_credentials"]:
-            user = content["mqtt_authentication_credentials"]["username"]
-            pw = content["mqtt_authentication_credentials"]["password_hash"]
+    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        user = thing.mqtt.user
+        pw = thing.mqtt.password_hashed
 
-            logger.info(f"create user. {user=}")
-            created = self.create_user(thing, user, pw)
-            action = "Created" if created else "Updated"
-            journal.info(f"{action} MQTT user {user}", thing.uuid)
-        else:
-            logger.warning(f"no 'mqtt_authentication_credentials' present")
+        logger.info(f"create user. {user=}")
+        created = self.create_user(thing, user, pw)
+        action = "Created" if created else "Updated"
+        journal.info(f"{action} MQTT user {user}", thing.uuid)
 
     def create_user(self, thing, user, pw) -> bool:
         """Returns True for insert and False for update"""
         sql = (
             "INSERT INTO mqtt_auth.mqtt_user (project_uuid, thing_uuid, username, "
-            "password, description,properties, db_schema) "
-            "VALUES (%s, %s, %s, %s ,%s ,%s, %s) "
+            "password, description, db_schema) "
+            "VALUES (%s, %s, %s, %s ,%s ,%s) "
             "ON CONFLICT (thing_uuid) "
             "DO UPDATE SET"
             " project_uuid = EXCLUDED.project_uuid,"
             " username = EXCLUDED.username,"
             " password=EXCLUDED.password,"
             " description = EXCLUDED.description,"
-            " properties = EXCLUDED.properties,"
             " db_schema = EXCLUDED.db_schema "
             "RETURNING (xmax = 0)"
         )
@@ -66,7 +64,6 @@ class CreateMqttUserHandler(AbstractHandler):
                         user,
                         pw,
                         thing.description,
-                        json.dumps(thing.properties),
                         thing.database.username,
                     ),
                 )

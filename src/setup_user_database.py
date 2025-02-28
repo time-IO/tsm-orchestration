@@ -9,10 +9,11 @@ import psycopg
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.databases import ReentrantConnection
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.journaling import Journal
 from timeio.crypto import decrypt, get_crypt_key
+from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("db-setup")
 journal = Journal("System")
@@ -31,10 +32,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         self.db_conn = ReentrantConnection(get_envvar("DATABASE_URL"))
         self.db = self.db_conn.connect()
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
         self.db = self.db_conn.reconnect()
-        thing = Thing.get_instance(content)
+        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
         STA_PREFIX = "sta_"
         GRF_PREFIX = "grf_"

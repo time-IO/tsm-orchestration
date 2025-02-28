@@ -5,10 +5,9 @@ import click
 import logging
 import json
 import os
-import sys
 
 from datetime import datetime, timedelta, timezone
-from timeio.crypto import decrypt
+from timeio.crypto import decrypt, get_crypt_key
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
 
@@ -100,7 +99,7 @@ def main(thing_uuid, parameters, target_uri):
 
     logger.info(f"Start fetching TSystems data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
-    pw_dec = decrypt(params["password"])
+    pw_dec = decrypt(params["password"], get_crypt_key())
     response = request_tsystems_api(
         params["group"], params["station_id"], params["username"], pw_dec
     )
