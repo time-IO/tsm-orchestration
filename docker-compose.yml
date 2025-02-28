@@ -26,7 +26,7 @@ services:
       - ./cron:/tmp/cron
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -83,7 +83,7 @@ services:
       retries: 10
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
@@ -157,7 +157,7 @@ services:
       retries: 15
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -271,7 +271,7 @@ services:
       start_period: 10s
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -303,7 +303,7 @@ services:
         condition: service_completed_successfully
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
@@ -337,7 +337,7 @@ services:
       retries: 3
     logging:
       options:
-        max-size: "${DB_API_MAX_LOG_SIZE}"
+        max-size: "${DB_API_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
@@ -359,7 +359,7 @@ services:
       - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -409,7 +409,7 @@ services:
         condition: service_healthy
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -482,7 +482,7 @@ services:
         condition: service_started
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -533,7 +533,7 @@ services:
       start_period: 10s
     logging:
       options:
-        max-size: "${PROXY_MAX_LOG_SIZE}"
+        max-size: "${PROXY_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # =================================================================
@@ -571,7 +571,7 @@ services:
     entrypoint: ["python3", "run_configdb_updater.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # brief: create a new bucket for a Thing in S3 storage
@@ -613,7 +613,7 @@ services:
     entrypoint: ["python3", "setup_minio.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -667,7 +667,7 @@ services:
     entrypoint: ["python3", "setup_user_database.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -708,7 +708,7 @@ services:
     entrypoint: ["python3", "setup_frost.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -751,7 +751,7 @@ services:
     entrypoint: ["python3", "setup_mqtt_user.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -793,7 +793,7 @@ services:
     entrypoint: ["python3", "setup_grafana_dashboard.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -839,7 +839,7 @@ services:
     entrypoint: ["python3", "run_file_ingest.py"]
     logging:
       options:
-        max-size: "${WROKER_FILE_INGEST_MAX_LOG_SIZE}"
+        max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -877,7 +877,7 @@ services:
     entrypoint: ["python3", "run_qc.py"]
     logging:
       options:
-        max-size: "${WORKER_RUN_QAQC_MAX_LOG_SIZE}"
+        max-size: "${WORKER_RUN_QAQC_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -915,7 +915,7 @@ services:
     entrypoint: ["python3", "run_mqtt_ingest.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -954,7 +954,7 @@ services:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # =================================================================
@@ -992,7 +992,7 @@ services:
     entrypoint: ["python3", "setup_grafana_user.py"]
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -1054,7 +1054,7 @@ services:
       - sftp-private-keys:/sftp-private-keys:ro
     logging:
       options:
-        max-size: "${CRON_SCHEDULER_MAX_LOG_SIZE}"
+        max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   mqtt-cat:
@@ -1088,7 +1088,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     logging:
       options:
-        max-size: "${DEFAULT_MAX_LOG_SIZE}"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 volumes:
