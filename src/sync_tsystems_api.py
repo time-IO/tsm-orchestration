@@ -4,7 +4,7 @@ import requests
 import json
 import logging
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
