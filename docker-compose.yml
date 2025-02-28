@@ -512,7 +512,7 @@ services:
       MQTT_CLIENT_ID: configdb-updater
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
-      MQTT_PUBLISH_TOPIC: configdb_update
+      MQTT_PUBLISH_TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
       CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
@@ -534,7 +534,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -548,12 +548,7 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "postgresql://\
-              ${CONFIGDB_USER}:\
-              ${CONFIGDB_PASSWORD}@\
-              ${CONFIGDB_HOST}:\
-              ${CONFIGDB_PORT}/\
-              ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_minio.py"]
 
 
@@ -581,7 +576,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -594,12 +589,7 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "postgresql://\
-                    ${CONFIGDB_USER}:\
-                    ${CONFIGDB_PASSWORD}@\
-                    ${CONFIGDB_HOST}:\
-                    ${CONFIGDB_PORT}/\
-                    ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_user_database.py"]
 
 
@@ -620,7 +610,7 @@ services:
       - tomcat-context:/home/appuser/app/src/frost_context_files:rw
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -631,12 +621,7 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "postgresql://\
-              ${CONFIGDB_USER}:\
-              ${CONFIGDB_PASSWORD}@\
-              ${CONFIGDB_HOST}:\
-              ${CONFIGDB_PORT}/\
-              ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_frost.py"]
 
 
@@ -656,7 +641,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -666,12 +651,7 @@ services:
       DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-      CONFIGDB_DSN: "postgresql://\
-                    ${CONFIGDB_USER}:\
-                    ${CONFIGDB_PASSWORD}@\
-                    ${CONFIGDB_HOST}:\
-                    ${CONFIGDB_PORT}/\
-                    ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_mqtt_user.py"]
 
 
@@ -690,7 +670,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -704,12 +684,7 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "postgresql://\
-                    ${CONFIGDB_USER}:\
-                    ${CONFIGDB_PASSWORD}@\
-                    ${CONFIGDB_HOST}:\
-                    ${CONFIGDB_PORT}/\
-                    ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_grafana_dashboard.py"]
 
 
@@ -824,7 +799,7 @@ services:
           condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: configdb_update
+      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -833,12 +808,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-      CONFIGDB_DSN: "postgresql://\
-              ${CONFIGDB_USER}:\
-              ${CONFIGDB_PASSWORD}@\
-              ${CONFIGDB_HOST}:\
-              ${CONFIGDB_PORT}/\
-              ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_crontab.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
