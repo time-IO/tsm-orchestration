@@ -73,14 +73,6 @@ class SyncTsystemsApi(AbstractHandler):
         response.raise_for_status()
         return response.json()["access_token"]
 
-    @staticmethod
-    def get_utc_timerange():
-        now_utc = datetime.now(timezone.utc)
-        now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-        timestamp_from = now_utc - timedelta(minutes=60)
-        timestamp_from_str = timestamp_from.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return timestamp_from_str, now_str
-
     def request_tsystems_api(
         self,
         group: str,
