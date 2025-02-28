@@ -73,7 +73,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
             schedule = cls.get_schedule(interval)
             if thing.ext_api.api_type_name == "tsystems":
                 script = "/scripts/mqtt_sync_wrapper.py"
-                command =f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
+                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
             else:
                 script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
                 target_uri = thing.database.url

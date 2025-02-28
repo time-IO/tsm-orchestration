@@ -41,9 +41,7 @@ def main(thing_uuid: str):
         "datetime_from": datetime_from,
         "datetime_to": datetime_to,
     }
-    publish_single(
-        f"sync_ext_apis/{ext_api_name}", json.dumps(message)
-    )
+    publish_single(f"sync_ext_apis/{ext_api_name}", json.dumps(message))
 
 
 if __name__ == "__main__":

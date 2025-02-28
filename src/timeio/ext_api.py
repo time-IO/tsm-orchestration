@@ -8,6 +8,7 @@ from timeio.mqtt import publish_single
 
 api_base_url = get_envvar("DB_API_BASE_URL")
 
+
 def write_observations(thing: Thing, parsed_observations: dict):
     journal = Journal(f"SYNC_{thing.ext_api.api_type_name}")
     resp = requests.post(
