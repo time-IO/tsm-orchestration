@@ -287,6 +287,13 @@ class QualityControl:
         t, *ds = name.split("S", maxsplit=1)
         return (int(t), int(ds[0])) if ds else (None, None)
 
+    def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str | None:
+        # TODO @david.schaefer get our thing_uuid
+        raise NotImplementedError()
+        q = "select something as thing_uuid from somewhere where some_value = %s"
+        row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
+        return row and row[0]
+
     def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
         q = (
             "select thing_id as thing_uuid from public.datastream_link "
@@ -671,16 +678,31 @@ class QualityControl:
 
             if name not in meta.keys():
                 tid, sid = self.alias_map.get(name, (None, None))
-                if tid is None and sid is None:
-                    continue  # temporary dataproduct (TEMP.SomeStreamName)
+                if tid is None:
+                    # We've got a temporary dataproduct (TEMP.SomeStreamName),
+                    # which we don't upload.
+                    continue
+                tid: int
                 if sid is None:
                     # we have a data product
                     # we have a thing-id (sta) and a new stream name
                     # get thing-uuid from sta-thing-id and use stream-name as position (varchar)
                     # if not exist yet -> create with quality-labels
                     # set values to meta and fall through this if.
-                    pass
-                continue
+                    thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
+                    meta[name]["datastream_id"] = pos = name.split("T")[1]
+                    obs = self._create_dataproduct()
+                    self._upload_dataproduct(thing_uuid, obs)
+                    continue
+                else:
+                    # This case should never happen.
+                    # If a thing_id and a datastream_ID are present, the column also
+                    # should be present in the qc object, nevertheless if it is an
+                    # input stream (field) or output stream (target) it should be
+                    # at least be an empty column.
+                    raise AssertionError(
+                        "Something entirely went wrong. Please ask for Support."
+                    )
             repr_name = meta[name].attrs["repr_name"]
             flags_frame: pd.DataFrame = flags[name]
             flags_frame["flag"] = flags_frame["flag"].fillna(saqc.UNFLAGGED)
