@@ -6,11 +6,12 @@ from timeio.common import get_envvar
 from timeio.journaling import Journal
 from timeio.mqtt import publish_single
 
+api_base_url = get_envvar("DB_API_BASE_URL")
 
 def write_observations(thing: Thing, parsed_observations: dict):
     journal = Journal(f"SYNC_{thing.ext_api.api_type_name}")
     resp = requests.post(
-        get_envvar("DB_API_BASE_URL"),
+        f"{api_base_url}/observations/upsert/{thing.uuid}",
         json=parsed_observations,
         headers={"Content-Type": "application/json"},
     )

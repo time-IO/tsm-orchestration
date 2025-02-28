@@ -43,7 +43,7 @@ class SyncTsystemsApi(AbstractHandler):
         response = self.request_tsystems_api(
             settings["group"],
             settings["station_id"],
-            settings["user_name"],
+            settings["username"],
             pw_dec,
             content["datetime_from"],
             content["datetime_to"],
