@@ -21,7 +21,7 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
-      - "${MINIO_DIR}/certs/:/tmp/certs"
+      - "${OBJECT_STORAGE_DIR}/certs/:/tmp/certs"
       - ./nginx/html/:/home/tsm/html
       - ./cron:/tmp/cron
     logging:
@@ -56,7 +56,7 @@ services:
   # To see how and where the creation of each db is defined see in the volumes section
   # for the scripts, which gets mounted and executed on startup.
   database:
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     # image: timescale/timescaledb:${DATABASE_IMAGE_TAG-pg14}
     build:
       context: postgres
@@ -64,21 +64,21 @@ services:
         UID: "${UID}"
         DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${DATABASE_PORT}:5432"
     environment:
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: "${DATABASE_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
       - ./data/postgres/data:/var/lib/postgresql/data
-      - "${POSTGRES_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
-      - "${POSTGRES_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
+      - "${DATABASE_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
+      - "${DATABASE_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
     user: "${UID}:${GID}"
-    command: "${POSTGRES_EXTRA_PARAMS}"
+    command: "${DATABASE_POSTGRES_EXTRA_PARAMS}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      interval: "${POSTGRES_HEALTHCHECK_INTERVAL}"
+      test: ["CMD-SHELL", "pg_isready -U $DATABASE_USER"]
+      interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 10
     logging:
@@ -104,21 +104,21 @@ services:
   # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
   # sends mqtt messages to the broker on file upload (and other events).
   object-storage:
-    image: "minio/minio:${OBJECT_STORAGE_IMAGE_TAG}"
-    restart: "${RESTART}"
+    image: "minio/minio:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     ports:
-      - "${MINIO_SFTP_PORT}:22"
-      - "${MINIO_FTP_PORT}:21"
-      - "${MINIO_FTP_PASV_PORTS}"
+      - "${OBJECT_STORAGE_SFTP_PORT}:22"
+      - "${OBJECT_STORAGE_FTP_PORT}:21"
+      - "${OBJECT_STORAGE_FTP_PASV_PORTS_MAPPING}"
     depends_on:
       mqtt-broker:
         condition: service_started
       init:
         condition: service_completed_successfully
     environment:
-      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-      MINIO_BROWSER_REDIRECT_URL: "${MINIO_BROWSER_REDIRECT_URL}"
+      MINIO_ROOT_USER: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      MINIO_BROWSER_REDIRECT_URL: "${OBJECT_STORAGE_BROWSER_REDIRECT_URL}"
       MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: on
       MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: tcp://mqtt-broker:1883
       MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: object_storage_notification
@@ -130,14 +130,14 @@ services:
       #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
       #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
       #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
-      MINIO_SERVER_URL: "${MINIO_SERVER_URL}"
+      MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
     volumes:
-      - "${MINIO_DIR}/vol0:/vol0"
+      - "${OBJECT_STORAGE_DIR}/vol0:/vol0"
       # FTP server tls key and cert
-      - "${MINIO_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
-      - "${MINIO_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
       # SSH Server key to provide constant ssh host key
-      - "${MINIO_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
+      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
     user: "${UID}:${GID}"
     command: >
       server
@@ -152,7 +152,7 @@ services:
       /vol0
     healthcheck:
       test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
-      interval: "${MINIO_HEALTHCHECK_INTERVAL}"
+      interval: "${OBJECT_STORAGE_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 15
     logging:
@@ -172,8 +172,8 @@ services:
   # This is the main message bus, all mqtt messages are send here. Services can
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
-    restart: "${RESTART}"
-    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       database:
         condition: service_healthy
@@ -196,19 +196,19 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
-      FRONTEND_MQTT_USER: "${FRONTEND_MQTT_USER}"
-      FRONTEND_MQTT_PASS: "${FRONTEND_MQTT_PASS}"
+      FRONTEND_MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      FRONTEND_MQTT_PASS: "${THING_MANAGEMENT_MQTT_PASS}"
     ports:
-      - "${MOSQUITTO_PORT}:1883"
-      - "${MOSQUITTO_PORT_SECURE}:8883"
+      - "${MQTT_PORT}:1883"
+      - "${MQTT_PORT_SECURE}:8883"
     volumes:
-      - "${MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
-      - "${MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
+      - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
+      - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
       - ./data/mosquitto/auth:/mosquitto-auth/
       - ./data/mosquitto/data:/mosquitto-data/
-      - "${MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
-      - "${MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
-      - "${MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
+      - "${MQTT_MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
+      - "${MQTT_MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
+      - "${MQTT_MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
       - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh
     tmpfs:
       - /var/lib/mosquitto/:uid=${UID}
@@ -244,23 +244,23 @@ services:
   # ===========
   # This visualize observations of a group or project that are stored in the database.
   visualization:
-    restart: "${RESTART}"
-    image: "grafana/grafana:${GRAFANA_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "grafana/grafana:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
     user: "${UID}:${GID}"
     environment:
-      GF_SECURITY_ADMIN_USER: "${GRAFANA_USER}"
-      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD}"
-      GF_SERVER_ROOT_URL: "${GRAFANA_PROXY_URL}"
+      GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
+      GF_SECURITY_ADMIN_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      GF_SERVER_ROOT_URL: "${VISUALIZATION_PROXY_URL}"
       GF_SERVER_SERVE_FROM_SUB_PATH: true
       GF_AUTH_GENERIC_OAUTH_ENABLED: true
       GF_AUTH_GENERIC_OAUTH_NAME: "Helmholtz AAI"
       GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: true
-      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${DJANGO_HELMHOLTZ_CLIENT_ID}"
-      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
       GF_AUTH_GENERIC_OAUTH_SCOPES: "email profile eduperson_principal_name"
-      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "${GF_AUTH_GENERIC_OAUTH_AUTH_URL}"
-      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "${GF_AUTH_GENERIC_OAUTH_TOKEN_URL}"
-      GF_AUTH_GENERIC_OAUTH_API_URL: "${GF_AUTH_GENERIC_OAUTH_API_URL}"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "${VISUALIZATION_GENERIC_OAUTH_AUTH_URL}"
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL}"
+      GF_AUTH_GENERIC_OAUTH_API_URL: "${VISUALIZATION_GENERIC_OAUTH_API_URL}"
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
@@ -285,17 +285,13 @@ services:
   # ===========
   # TODO
   tsmdl:
-    image: "registry.hzdr.de/hub-terra/tsmdl-time-series-management-decoupling-layer/tsmdl-api:${TSM_DL_IMAGE_TAG}"
-    restart: "${RESTART}"
-    entrypoint: "/app/start.${TSM_DL_ENVIRONMENT}.sh"
+    image: "registry.hzdr.de/hub-terra/tsmdl-time-series-management-decoupling-layer/tsmdl-api:${TSMDL_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    entrypoint: "/app/start.${TSMDL_ENVIRONMENT}.sh"
     environment:
-      UFZ_DB_URL: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
-      STA_ENDPOINT_URL: "${TOMCAT_PROXY_URL}"
-      UVICORN_ARGS: "${UVICORN_ARGS}"
+      UFZ_DB_URL: "${DATABASE_ADMIN_DSN}"
+      STA_ENDPOINT_URL: "${STA_PROXY_URL}"
+      UVICORN_ARGS: "${TSMDL_UVICORN_ARGS}"
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
     depends_on:
@@ -317,15 +313,11 @@ services:
   # TODO
   timeio-db-api:
     image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     entrypoint: "sh /app/start.sh"
     environment:
-      DB_URL: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
-      UVICORN_ARGS: "${UVICORN_ARGS} --root-path /db_api"
+      DB_URL: "${DATABASE_ADMIN_DSN}"
+      UVICORN_ARGS: "${DB_API_UVICORN_ARGS} --root-path /db_api"
     depends_on:
       flyway:
         condition: service_completed_successfully
@@ -353,8 +345,8 @@ services:
     build:
       context: tomcat
       args:
-        TOMCAT_IMAGE_TAG: "${TOMCAT_IMAGE_TAG}"
-    restart: "${RESTART}"
+        TOMCAT_IMAGE_TAG: "${STA_TOMCAT_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
     logging:
@@ -380,18 +372,18 @@ services:
       - ./flyway/migrations:/flyway/sql
       - ./flyway/flyway.conf:/flyway/conf/flyway.conf
     environment:
-      FLYWAY_URL: "jdbc:postgresql://${CREATEDB_POSTGRES_HOST}/${CREATEDB_POSTGRES_DATABASE}"
-      FLYWAY_USER: "${CREATEDB_POSTGRES_USER}"
-      FLYWAY_PASSWORD: "${CREATEDB_POSTGRES_PASSWORD}"
+      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      FLYWAY_USER: "${DATABASE_ADMIN_USER}"
+      FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-      FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_USER}"
-      FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_PASSWORD}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_READONLY_USER}"
+      FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_READONLY_PASSWORD}"
       FLYWAY_PLACEHOLDERS_S3MAP_DB_USER: "${S3MAP_POSTGRES_USER}"
       FLYWAY_PLACEHOLDERS_S3MAP_DB_PASSWORD: "${S3MAP_POSTGRES_PASS}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
-      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${FRONTEND_POSTGRES_USER}"
-      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${FRONTEND_POSTGRES_PASS}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
       FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
@@ -423,8 +415,8 @@ services:
   # ===========
   # TODO
   frontend:
-    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${FRONTEND_IMAGE_TAG}"
-    restart: "${RESTART}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     command: >
       bash -c "python3 manage.py migrate
       && python3 manage.py loaddata admin_interface_theme_foundation.json
@@ -445,35 +437,35 @@ services:
     # ports:
     #   - "127.0.0.1:8000:8000"
     environment:
-      POSTGRES_HOST: "${FRONTEND_POSTGRES_HOST}"
-      POSTGRES_NAME: "${FRONTEND_POSTGRES_DB}"
-      POSTGRES_USER: "${FRONTEND_POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${FRONTEND_POSTGRES_PASS}"
+      POSTGRES_HOST: "${THING_MANAGEMENT_DATABASE_HOST}"
+      POSTGRES_NAME: "${THING_MANAGEMENT_DATABASE_DB_NAME}"
+      POSTGRES_USER: "${THING_MANAGEMENT_DATABASE_USER}"
+      POSTGRES_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
       PUBLISH_THING_TO_BROKER: True
-      CREATEDB_POSTGRES_HOST: "${CREATEDB_POSTGRES_HOST}"
-      CREATEDB_POSTGRES_DATABASE: "${CREATEDB_POSTGRES_DATABASE}"
-      MQTT_BROKER_HOST: "${FRONTEND_MQTT_HOST}"
-      MQTT_USER: "${FRONTEND_MQTT_USER}"
-      MQTT_PASSWORD: "${FRONTEND_MQTT_PASS}"
+      CREATEDB_POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
+      CREATEDB_POSTGRES_DATABASE: "${DATABASE_ADMIN_DB_NAME}"
+      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
+      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
       MQTT_CLIENT_ID: frontend
-      DJANGO_SUPERUSER_USERNAME: "${DJANGO_SUPERUSER_USERNAME}"
-      DJANGO_SUPERUSER_PASSWORD: "${DJANGO_SUPERUSER_PASSWORD}"
-      DJANGO_SUPERUSER_EMAIL: "${DJANGO_SUPERUSER_EMAIL}"
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
-      DJANGO_DEBUG: "${DJANGO_DEBUG}"
-      DJANGO_TRUSTED_ORIGINS: "${DJANGO_TRUSTED_ORIGINS}"
-      DJANGO_BASE_PATH: "${DJANGO_BASE_PATH}"
-      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS}"
-      POSTGRES_SSLMODE: "${DJANGO_POSTGRES_SSLMODE}"
-      DJANGO_HELMHOLTZ_CLIENT_ID: "${DJANGO_HELMHOLTZ_CLIENT_ID}"
-      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${DJANGO_HELMHOLTZ_CLIENT_SECRET}"
-      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${DJANGO_HELMHOLTZ_AAI_CONF_URL}"
-      MINIO_FTP_PORT: "${MINIO_FTP_PORT}"
-      MINIO_SFTP_PORT: "${MINIO_SFTP_PORT}"
+      DJANGO_SUPERUSER_USERNAME: "${THING_MANAGEMENT_DJANGO_SUPERUSER_USERNAME}"
+      DJANGO_SUPERUSER_PASSWORD: "${THING_MANAGEMENT_DJANGO_SUPERUSER_PASSWORD}"
+      DJANGO_SUPERUSER_EMAIL: "${THING_MANAGEMENT_DJANGO_SUPERUSER_EMAIL}"
+      DJANGO_SECRET_KEY: "${THING_MANAGEMENT_DJANGO_SECRET_KEY}"
+      DJANGO_DEBUG: "${THING_MANAGEMENT_DJANGO_DEBUG}"
+      DJANGO_TRUSTED_ORIGINS: "${THING_MANAGEMENT_DJANGO_TRUSTED_ORIGINS}"
+      DJANGO_BASE_PATH: "${THING_MANAGEMENT_DJANGO_BASE_PATH}"
+      DJANGO_ALLOWED_HOSTS: "${THING_MANAGEMENT_DJANGO_ALLOWED_HOSTS}"
+      POSTGRES_SSLMODE: "${THING_MANAGEMENT_DJANGO_POSTGRES_SSLMODE}"
+      DJANGO_HELMHOLTZ_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
+      MINIO_FTP_PORT: "${OBJECT_STORAGE_FTP_PORT}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
-      ALLOWED_VOS: "${ALLOWED_VOS}"
-      STA_ROOT_URL: "${STA_ROOT_URL}"
-      QAQC_SETTING_SAQC_VERSION: "${QAQC_SETTING_SAQC_VERSION}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
+      STA_ROOT_URL: "${THING_MANAGEMENT_STA_ROOT_URL}"
+      QAQC_SETTING_SAQC_VERSION: "${THING_MANAGEMENT_QAQC_SETTING_SAQC_VERSION}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
       mqtt-broker:
@@ -501,13 +493,13 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginxinc/nginx-unprivileged:${NGINX_IMAGE_TAG}"
-    restart: "${RESTART}"
+    image: "nginxinc/nginx-unprivileged:${PROXY_NGINX_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID}:${GID}"
     ports:
-      - "${PROXY_PLAIN_PORT}"
-      - "${PROXY_TLS_PORT}"
-      - "${PROXY_MINIO_PORT}"
+      - "${PROXY_PLAIN_PORT_MAPPING}"
+      - "${PROXY_TLS_PORT_MAPPING}"
+      - "${PROXY_MINIO_PORT_MAPPING}"
     volumes:
       - frontend-statics:/home/appuser/app/static
       - ./nginx/html:/usr/share/nginx/html
@@ -547,7 +539,7 @@ services:
     build:
       context: .
       dockerfile: configdb_updater/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -563,11 +555,7 @@ services:
       MQTT_PUBLISH_TOPIC: configdb_update
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
-      CONFIGDB_DSN: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
     entrypoint: ["python3", "run_configdb_updater.py"]
     logging:
       options:
@@ -580,7 +568,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -597,10 +585,10 @@ services:
       MQTT_CLIENT_ID: object-storage-setup
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      MINIO_SECURE: "${MINIO_SECURE}"
-      MINIO_URL: "${MINIO_HOST}"
-      MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
-      MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
@@ -631,7 +619,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -648,11 +636,7 @@ services:
       MQTT_CLIENT_ID: db-setup
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      DATABASE_URL: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
@@ -676,7 +660,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -695,7 +679,7 @@ services:
       MQTT_CLIENT_ID: frost-setup
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      TOMCAT_PROXY_URL: "${TOMCAT_PROXY_URL}"
+      TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
@@ -718,7 +702,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -735,11 +719,7 @@ services:
       MQTT_CLIENT_ID: mqtt-user-creation
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      DATABASE_URL: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       CONFIGDB_DSN: "postgresql://\
@@ -760,7 +740,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -777,10 +757,10 @@ services:
       MQTT_CLIENT_ID: grafana-dashboard
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      GRAFANA_URL: "${GRAFANA_URL}"
-      GRAFANA_USER: "${GRAFANA_USER}"
-      GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
-      GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${GRAFANA_DEFAULT_DATASOURCE_SSLMODE}"
+      GRAFANA_URL: "${VISUALIZATION_URL}"
+      GRAFANA_USER: "${VISUALIZATION_USER}"
+      GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${VISUALIZATION_DEFAULT_DATASOURCE_SSLMODE}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
@@ -806,7 +786,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -824,16 +804,11 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
-      MINIO_SECURE: "${MINIO_SECURE}"
-      MINIO_URL: "${MINIO_HOST}"
-      MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
-      MINIO_SECURE_KEY: "${MINIO_ROOT_PASSWORD}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
@@ -848,7 +823,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -867,11 +842,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_QC_DONE: qaqc_done
       TOPIC_QC_DONE_QOS: "${MQTT_QOS}"
-      DATABASE_DSN: "postgresql://\
-        ${CREATEDB_POSTGRES_USER}:\
-        ${CREATEDB_POSTGRES_PASSWORD}@\
-        ${CREATEDB_POSTGRES_HOST}/\
-        ${CREATEDB_POSTGRES_DATABASE}"
+      DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_qc.py"]
@@ -886,7 +857,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -904,12 +875,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_mqtt_ingest.py"]
@@ -924,7 +890,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
         mqtt-broker:
           condition: service_healthy
@@ -966,7 +932,7 @@ services:
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -983,10 +949,10 @@ services:
       MQTT_CLIENT_ID: grafana-user-orgs
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      GRAFANA_URL: "${GRAFANA_URL}"
-      GRAFANA_USER: "${GRAFANA_USER}"
-      GRAFANA_PASSWORD: "${GRAFANA_PASSWORD}"
-      ALLOWED_VOS: "${ALLOWED_VOS}"
+      GRAFANA_URL: "${VISUALIZATION_URL}"
+      GRAFANA_USER: "${VISUALIZATION_USER}"
+      GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "setup_grafana_user.py"]
@@ -1003,17 +969,17 @@ services:
       args:
         UID: "${UID}"
         DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
-    restart: "${RESTART}"
+    restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
     cpus: 0.5
     mem_limit: 4g
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
-      CREATEDB_POSTGRES_USER: "${CRON_CREATEDB_POSTGRES_USER}"
-      CREATEDB_POSTGRES_PASSWORD: "${CRON_CREATEDB_POSTGRES_PASSWORD}"
-      CREATEDB_POSTGRES_HOST: "${CRON_CREATEDB_POSTGRES_HOST}"
-      CREATEDB_POSTGRES_DATABASE: "${CRON_CREATEDB_POSTGRES_DATABASE}"
+      CREATEDB_POSTGRES_USER: "${CRON_DATABASE_ADMIN_USER}"
+      CREATEDB_POSTGRES_PASSWORD: "${CRON_DATABASE_ADMIN_PASSWORD}"
+      CREATEDB_POSTGRES_HOST: "${CRON_DATABASE_ADMIN_HOST}"
+      CREATEDB_POSTGRES_DATABASE: "${CRON_DATABASE_ADMIN_DB_NAME}"
       SMS_ACCESS_TYPE: "${CRON_SMS_ACCESS_TYPE}"
       SMS_API_URL: "${CRON_SMS_API_URL}"
       SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
@@ -1021,16 +987,11 @@ services:
       CV_API_URL: "${CRON_CV_API_URL}"
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
-      MINIO_URL: "${MINIO_HOST}"
-      MINIO_USER: "${MINIO_ROOT_USER}"
-      MINIO_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-      MINIO_SECURE: "${MINIO_SECURE}"
-      CONFIGDB_DSN: "postgresql://\
-        ${CONFIGDB_USER}:\
-        ${CONFIGDB_PASSWORD}@\
-        ${CONFIGDB_HOST}:\
-        ${CONFIGDB_PORT}/\
-        ${CONFIGDB_DB}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
@@ -1058,8 +1019,8 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   mqtt-cat:
-    restart: "${RESTART}"
-    image: "eclipse-mosquitto:${MQTT_CAT_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    image: "eclipse-mosquitto:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       mqtt-broker:
         condition: service_started
@@ -1076,11 +1037,11 @@ services:
       --id "mqtt-cat"
 
   monitoring:
-    image: "gcr.io/cadvisor/cadvisor:${MONITORING_IMAGE_TAG}"
-    restart: "${RESTART}"
+    image: "gcr.io/cadvisor/cadvisor:${MONITORING_CADVISOR_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     container_name: cadvisor
     ports:
-      - "${CADVISOR_PORT}:8080"
+      - "${MONITORING_PORT}:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
