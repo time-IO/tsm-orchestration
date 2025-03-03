@@ -77,7 +77,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
             else:
                 script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
                 target_uri = thing.database.url
-                command = f"""{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR"""
+                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
             job.enable(enabled=thing.ext_api.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
