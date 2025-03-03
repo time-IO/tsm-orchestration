@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
 from random import randint
 
 from crontab import CronItem, CronTab
@@ -70,9 +71,13 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_api is not None:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
-            target_uri = thing.database.url
-            command = f"""{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR"""
+            if thing.ext_api.api_type_name == "tsystems":
+                script = "/scripts/mqtt_sync_wrapper.py"
+                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
+            else:
+                script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
+                target_uri = thing.database.url
+                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
             job.enable(enabled=thing.ext_api.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)

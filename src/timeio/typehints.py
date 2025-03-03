@@ -59,6 +59,11 @@ class MqttPayload:
         version: _t.Literal[1] | None
         thing: str  # UUID of the thing
 
+    class SyncExtApi(_t.TypedDict):
+        thing: str  # UUID of the thing
+        datetime_from: str
+        datetime_to: str
+
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
