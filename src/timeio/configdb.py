@@ -135,7 +135,7 @@ def fetch_extapi_type_id(conn: Connection, name: str) -> int:
         [name],
     ).fetchone()
     if r is None:
-        raise ValueError(f"No entry for mqtt_device_type {name!r}")
+        raise ValueError(f"No entry for ext_api_type {name!r}")
     return r[0]
 
 
