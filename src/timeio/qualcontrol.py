@@ -568,10 +568,10 @@ class QualityControl:
             earlier, later = start_date, end_date
 
         thing_uuid = self.fetch_thing_uuid_for_sta_stream(stream_id)
-        obs = None
+        obs = []
         if earlier is not None:  # else: we have no unflagged data
             obs = self.fetch_datastream_data_sta(stream_id, earlier, later, self.window)
-        df = pd.DataFrame(obs or [], columns=_OBS_COLUMNS + ["raw_datastream_id"])
+        df = pd.DataFrame(obs, columns=_OBS_COLUMNS + ["raw_datastream_id"])
         df = df.set_index("result_time", drop=True)
         df.index = pd.DatetimeIndex(df.index)
         data = self.extract_data_by_result_type(df)
@@ -595,27 +595,12 @@ class QualityControl:
         qc = saqc.SaQC(scheme=KwargsScheme())
         md = dict()  # metadata
 
-        def load_stream_data(tid, sid, alias):
-
-            if tid is None or sid is None:
-                # Either we've got a references to a temporary
-                # alias (tid==None) OR the user wants to create
-                # a new datastream on an existing thing (sid==None).
-                return
-
-            if alias not in qc:
-                data, meta = self._fetch_sta_data(tid, sid, start_date, end_date)
-                qc[alias] = data
-                md[alias] = meta
-
         for i, test in enumerate(self.tests):  # type: int, feta.QAQCTest
             origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
             kwargs: dict = (test.args or {}).copy()
 
             # Better raise for an unknown function, before we are fetching all the data
-            try:
-                func = getattr(qc, test.function)  # type: SaQCFuncT
-            except AttributeError:
+            if (func := getattr(qc, test.function, None)) is None:
                 raise UserInputError(f"{origin}: Unknown SaQC function {test.function}")
 
             for stream in test.streams or []:  # type: feta.QcStreamT
@@ -625,7 +610,16 @@ class QualityControl:
                 alias = stream["alias"]
                 self.alias_map[alias] = (tid, sid)
                 dict_update_to_list(kwargs, stream["arg_name"], alias)
-                load_stream_data(tid, sid, alias)
+                if tid is None or sid is None:
+                    # Either we've got a references to a temporary
+                    # alias (tid==None) OR the user wants to create
+                    # a new datastream on an existing thing (sid==None).
+                    continue
+
+                if alias not in qc:
+                    data, meta = self._fetch_sta_data(tid, sid, start_date, end_date)
+                    qc[alias] = data
+                    md[alias] = meta
             try:
                 qc = func(**kwargs)
             except Exception as e:
@@ -648,6 +642,14 @@ class QualityControl:
         end_date = timestamp_from_string(end_date)
         self.alias_map = {}
         qc, meta = self.qaqc_sta(start_date, end_date)
+        # ============= legacy dataproducts =============
+        # Data products must be created before quality labels are uploaded.
+        # If we first do the upload and an error occur we will not be able to
+        # recreate the same data for the dataproducts, this is because a
+        # legacy qc run always just sees unflagged data.
+        n = 0
+        if dp_columns := [c for c in qc.columns if c not in meta.keys()]:
+            n += self._create_dataproducts(qc[dp_columns])
         m = self._upload(qc, meta)
         return m
 
@@ -690,19 +692,19 @@ class QualityControl:
                     # if not exist yet -> create with quality-labels
                     # set values to meta and fall through this if.
                     thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
-                    meta[name]["datastream_id"] = pos = name.split("T")[1]
+                    pos = name.split("T")[1]
+
                     obs = self._create_dataproduct()
                     self._upload_dataproduct(thing_uuid, obs)
                     continue
-                else:
-                    # This case should never happen.
-                    # If a thing_id and a datastream_ID are present, the column also
-                    # should be present in the qc object, nevertheless if it is an
-                    # input stream (field) or output stream (target) it should be
-                    # at least be an empty column.
-                    raise AssertionError(
-                        "Something entirely went wrong. Please ask for Support."
-                    )
+                # This case should never happen.
+                # If a thing_id and a datastream_ID are present, the column also
+                # should be present in the qc object, nevertheless if it is an
+                # input stream (field) or output stream (target) it should be
+                # at least be an empty column.
+                raise AssertionError(
+                    "Something entirely went wrong. Please ask for Support."
+                )
             repr_name = meta[name].attrs["repr_name"]
             flags_frame: pd.DataFrame = flags[name]
             flags_frame["flag"] = flags_frame["flag"].fillna(saqc.UNFLAGGED)
@@ -782,10 +784,7 @@ class QualityControl:
         return flags_df.apply(compose_json, axis=1).to_list()
 
     @staticmethod
-    def _create_dataproduct_legacy(
-        df: pd.DataFrame, name, config_id
-    ) -> list[JsonObjectT]:
-
+    def _create_dataproduct(df: pd.DataFrame, name, config_id) -> list[JsonObjectT]:
         assert pd.Index(["data", "flag", "func", "kwargs"]).difference(df.columns).empty
 
         if pd.api.types.is_numeric_dtype(df["data"]):
@@ -829,6 +828,32 @@ class QualityControl:
         valid = df["data"].notna()
         return df[valid].apply(compose_json, axis=1).dropna().to_list()
 
+    def _create_dataproducts(self, qc):
+        total = 0
+        flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
+        for name in flags.columns:
+            tid, sid = self.alias_map.get(name, (None, None))
+            if tid is None:
+                # We've got a temporary dataproduct (TEMP.SomeStreamName),
+                # which we don't upload.
+                continue
+            tid: int
+            if sid is not None:
+                raise AssertionError("This is wrong")
+
+            thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
+            stream_name = name.split("S")[1]  # T23SuserGivenName
+            df: pd.DataFrame = flags[name]
+            df["data"] = data[name]
+            if df.empty:
+                logger.debug(f"no data for data product {name}")
+                continue
+            obs = self._create_dataproduct(df, stream_name, self.conf.id)
+            self._upload_dataproduct(thing_uuid, obs)
+            logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
+            total += len(obs)
+        return total
+
     def _create_dataproducts_legacy(self, thing_uuid, qc):
         total = 0
         flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
@@ -838,9 +863,8 @@ class QualityControl:
             if df.empty:
                 logger.debug(f"no data for data product {name}")
                 continue
-            obs = self._create_dataproduct_legacy(df, name, self.conf.id)
+            obs = self._create_dataproduct(df, name, self.conf.id)
             self._upload_dataproduct(thing_uuid, obs)
             logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
             total += len(obs)
-            continue
         return total
