@@ -12,7 +12,7 @@ from timeio.feta import Thing
 from timeio.common import get_envvar
 
 
-def get_tsytsems_timerange():
+def get_tsystems_timerange():
     now_utc = datetime.now(timezone.utc)
     now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     timestamp_from = now_utc - timedelta(minutes=60)
@@ -27,7 +27,7 @@ def get_dwd_timerange():
     return yesterday_start, yesterday_end
 
 
-TIMERANGE_MAPPING = {"tsystems": get_tsytsems_timerange(), "dwd": get_dwd_timerange()}
+TIMERANGE_MAPPING = {"tsystems": get_tsystems_timerange, "dwd": get_dwd_timerange}
 
 
 @click.command()
@@ -35,7 +35,7 @@ TIMERANGE_MAPPING = {"tsystems": get_tsytsems_timerange(), "dwd": get_dwd_timera
 def main(thing_uuid: str):
     thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
     ext_api_name = thing.ext_api.api_type_name
-    datetime_from, datetime_to = TIMERANGE_MAPPING[ext_api_name]
+    datetime_from, datetime_to = TIMERANGE_MAPPING[ext_api_name]()
     message = {
         "thing": thing.uuid,
         "datetime_from": datetime_from,
