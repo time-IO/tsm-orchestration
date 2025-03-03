@@ -158,7 +158,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
 
     @staticmethod
     def extract_base_minute(schedule: str) -> int:
-        """Extract the minute value from the cron expression. In the case 
+        """Extract the minute value from the cron expression. In the case
         of multiple values, the first one is returned.
         """
         minute_part = schedule.split()[0]
