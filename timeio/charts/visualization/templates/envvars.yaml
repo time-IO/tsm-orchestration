@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  GF_SERVER_ROOT_URL: "{{  .Values.global.ingress.url}}/{{ .Values.name }}/"
+  GF_SERVER_ROOT_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/{{ .Values.name }}/"
   GF_SERVER_SERVE_FROM_SUB_PATH: "true"
   GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
   GF_AUTH_GENERIC_OAUTH_NAME: "OpenID Connect"

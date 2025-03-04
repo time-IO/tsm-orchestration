@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/timeio-images/tsmdl"
-  tag: "latest"
+  tag: latest
   pullPolicy: Always
 name: tsmdl
 
