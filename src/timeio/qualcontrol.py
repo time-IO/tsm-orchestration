@@ -272,27 +272,18 @@ class QualityControl:
 
         if is_negative:
             raise UserInputError(
-                "Parameter 'context_window' must have a non negative value"
+                "Parameter 'context_window' must not have a negative value"
             )
         return window
-
-    @staticmethod
-    def compose_saqc_name(sta_thing_id: int, sta_stream_id: int) -> str:
-        return f"T{sta_thing_id}S{sta_stream_id}"
-
-    @staticmethod
-    def parse_saqc_name(name: str) -> tuple[int, int] | tuple[None, None]:
-        # eg. T42S99
-        name = name[1:]  # rm 'T'
-        t, *ds = name.split("S", maxsplit=1)
-        return (int(t), int(ds[0])) if ds else (None, None)
 
     def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str | None:
         # TODO @david.schaefer get our thing_uuid
         raise NotImplementedError()
         q = "select something as thing_uuid from somewhere where some_value = %s"
         row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
-        return row and row[0]
+        if row is None:
+            raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
+        return row[0]
 
     def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
         q = (
@@ -300,7 +291,11 @@ class QualityControl:
             "where device_property_id = %s"
         )
         row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
-        return row and row[0]
+        if row is None:
+            raise DataNotFoundError(
+                f"No thing_uuid for STA.Datastream.Id {sta_stream_id}"
+            )
+        return row
 
     def fetch_datastream_by_pos(self, thing_uuid, position) -> dict[str, Any]:
         query = (
@@ -357,7 +352,7 @@ class QualityControl:
         params = [datastream_id, start_date, end_date, None]
         data = self.conn.execute(query, params).fetchall()
         if not data:  # If we have no data we also need no context data
-            return data
+            return None
 
         # Fetch data from context window, iff it was passed as a number,
         # which means number of observations before the actual data.
@@ -420,7 +415,7 @@ class QualityControl:
         params = [sta_stream_id, start_date, end_date, None]
         data = self.conn.execute(query, params).fetchall()
         if not data:  # If we have no data we also need no context data
-            return data
+            return None
 
         # Fetch data from context window, iff it was passed as a number,
         # which means number of observations before the actual data.
@@ -599,7 +594,7 @@ class QualityControl:
             origin = f"QA/QC Test #{i+1}: {self.conf.name}/{test.name}"
             kwargs: dict = (test.args or {}).copy()
 
-            # Better raise for an unknown function, before we are fetching all the data
+            # Better raise for an unknown function, before we are fetching data
             if (func := getattr(qc, test.function, None)) is None:
                 raise UserInputError(f"{origin}: Unknown SaQC function {test.function}")
 
@@ -610,16 +605,15 @@ class QualityControl:
                 alias = stream["alias"]
                 self.alias_map[alias] = (tid, sid)
                 dict_update_to_list(kwargs, stream["arg_name"], alias)
-                if tid is None or sid is None:
-                    # Either we've got a references to a temporary
-                    # alias (tid==None) OR the user wants to create
-                    # a new datastream on an existing thing (sid==None).
+                if tid is None or sid is None or alias in qc:
+                    # Either we've got a references to a temporary alias (tid is None)
+                    # OR the user wants to create a new datastream on an existing
+                    # thing (sid is None) OR we already fetched the data in a previous
+                    # test (alias in qc).
                     continue
-
-                if alias not in qc:
-                    data, meta = self._fetch_sta_data(tid, sid, start_date, end_date)
-                    qc[alias] = data
-                    md[alias] = meta
+                data, meta = self._fetch_sta_data(tid, sid, start_date, end_date)
+                qc[alias] = data
+                md[alias] = meta
             try:
                 qc = func(**kwargs)
             except Exception as e:
@@ -815,7 +809,7 @@ class QualityControl:
             tid: int
             assert sid is None
             thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
-            stream_name = name.split("S")[1]  # T23SuserGivenName
+            stream_name = name.split("S", maxsplit=1)[1]  # T23SuserGivenName
             df: pd.DataFrame = flags[name]
             df["data"] = data[name]
             if df.empty:
