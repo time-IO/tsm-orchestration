@@ -642,11 +642,11 @@ class QualityControl:
         end_date = timestamp_from_string(end_date)
         self.alias_map = {}
         qc, meta = self.qaqc_sta(start_date, end_date)
-        # ============= legacy dataproducts =============
+        # ============= dataproducts =============
         # Data products must be created before quality labels are uploaded.
         # If we first do the upload and an error occur we will not be able to
         # recreate the same data for the dataproducts, this is because a
-        # legacy qc run always just sees unflagged data.
+        # qc run always just sees unflagged data.
         n = 0
         if dp_columns := [c for c in qc.columns if c not in meta.keys()]:
             n += self._create_dataproducts(qc[dp_columns])
@@ -677,34 +677,9 @@ class QualityControl:
         total = 0
         flags = qc.flags  # implicit flags translation  -> KwargsScheme
         for name in flags.columns:
-
             if name not in meta.keys():
-                tid, sid = self.alias_map.get(name, (None, None))
-                if tid is None:
-                    # We've got a temporary dataproduct (TEMP.SomeStreamName),
-                    # which we don't upload.
-                    continue
-                tid: int
-                if sid is None:
-                    # we have a data product
-                    # we have a thing-id (sta) and a new stream name
-                    # get thing-uuid from sta-thing-id and use stream-name as position (varchar)
-                    # if not exist yet -> create with quality-labels
-                    # set values to meta and fall through this if.
-                    thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
-                    pos = name.split("T")[1]
-
-                    obs = self._create_dataproduct()
-                    self._upload_dataproduct(thing_uuid, obs)
-                    continue
-                # This case should never happen.
-                # If a thing_id and a datastream_ID are present, the column also
-                # should be present in the qc object, nevertheless if it is an
-                # input stream (field) or output stream (target) it should be
-                # at least be an empty column.
-                raise AssertionError(
-                    "Something entirely went wrong. Please ask for Support."
-                )
+                # Data products were already handled.
+                continue
             repr_name = meta[name].attrs["repr_name"]
             flags_frame: pd.DataFrame = flags[name]
             flags_frame["flag"] = flags_frame["flag"].fillna(saqc.UNFLAGGED)
@@ -838,9 +813,7 @@ class QualityControl:
                 # which we don't upload.
                 continue
             tid: int
-            if sid is not None:
-                raise AssertionError("This is wrong")
-
+            assert sid is None
             thing_uuid = self.fetch_thing_uuid_from_sta_id(tid)
             stream_name = name.split("S")[1]  # T23SuserGivenName
             df: pd.DataFrame = flags[name]
