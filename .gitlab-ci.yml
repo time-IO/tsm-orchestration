@@ -1,5 +1,5 @@
 stages:
-  - freeze
+  - test
   - build
   - push
 
@@ -8,6 +8,30 @@ variables:
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
   HELM_IMAGE_TAG: "latest"
+
+lint:
+  image:
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
+  stage: lint
+  script:
+    - helm lint timeio
+
+template:
+  image:
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
+  stage: test
+  script:
+    - helm template timeio
+
+dependency:
+  image:
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
+  stage: test
+  script:
+    - helm dependency build timeio
 
 build:
   image: 
