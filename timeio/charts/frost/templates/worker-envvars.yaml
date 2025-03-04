@@ -9,6 +9,6 @@ data:
   MQTT_CLIENT_ID: ""
   MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
-  TOMCAT_PROXY_URL: "{{  .Values.global.ingress.url }}/sta/"
+  TOMCAT_PROXY_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/sta/"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"

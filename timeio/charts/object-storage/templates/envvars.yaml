@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.name }}-envvars
 data:
   MINIO_SERVER_URL: "http://object-storage:9000/"
-  MINIO_BROWSER_REDIRECT_URL: "{{  .Values.global.ingress.url }}/object-storage/"
+  MINIO_BROWSER_REDIRECT_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/object-storage/"
   MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER }}"
   MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER }}"
   MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER }}"

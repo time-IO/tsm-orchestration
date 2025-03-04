@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  STA_ENDPOINT_URL: "{{ .Values.global.ingress.url }}/sta/"
+  STA_ENDPOINT_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/sta/"
   UVICORN_ARGS: ""
   ROOT_PATH: "/tsmdl"
   ORGANIZATION: "ufz"
