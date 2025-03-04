@@ -24,6 +24,10 @@ services:
       - "${OBJECT_STORAGE_DIR}/certs/:/tmp/certs"
       - ./nginx/html/:/home/tsm/html
       - ./cron:/tmp/cron
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -77,6 +81,10 @@ services:
       interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 10
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
   # =======
@@ -147,6 +155,10 @@ services:
       interval: "${OBJECT_STORAGE_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 15
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -257,6 +269,10 @@ services:
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -281,6 +297,10 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
   # =======
@@ -307,6 +327,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
+    logging:
+      options:
+        max-size: "${DB_API_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
   # =======
@@ -325,6 +349,10 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -371,6 +399,10 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -440,6 +472,10 @@ services:
         condition: service_healthy
       worker-configdb-updater:
         condition: service_started
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -487,6 +523,10 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
       start_period: 10s
+    logging:
+      options:
+        max-size: "${PROXY_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # =================================================================
   # SETUP worker (topic: configdb_update)
@@ -517,6 +557,10 @@ services:
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
       CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
     entrypoint: ["python3", "run_configdb_updater.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
@@ -550,6 +594,10 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_minio.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -591,6 +639,10 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_user_database.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   worker-frost-setup:
@@ -623,6 +675,10 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_frost.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
@@ -653,6 +709,10 @@ services:
       JOURNALING: "${JOURNALING}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_mqtt_user.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   worker-grafana-dashboard:
@@ -686,6 +746,10 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_grafana_dashboard.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # =================================================================
@@ -723,6 +787,10 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
+    logging:
+      options:
+        max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   worker-run-qaqc:
@@ -753,6 +821,10 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_qc.py"]
+    logging:
+      options:
+        max-size: "${WORKER_RUN_QAQC_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   worker-mqtt-ingest:
@@ -782,6 +854,10 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_mqtt_ingest.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   worker-crontab-setup:
@@ -812,6 +888,10 @@ services:
     entrypoint: ["python3", "setup_crontab.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # =================================================================
   # other worker
@@ -846,6 +926,10 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "setup_grafana_user.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
   # =======
@@ -934,6 +1018,10 @@ services:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt:ro
       - ./src:/scripts:ro
       - sftp-private-keys:/sftp-private-keys:ro
+    logging:
+      options:
+        max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   mqtt-cat:
     restart: "${SERVICE_RESTART_POLICY}"
@@ -964,6 +1052,10 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 volumes:
   frontend-statics:
