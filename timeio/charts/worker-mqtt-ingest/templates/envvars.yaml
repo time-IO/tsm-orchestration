@@ -11,3 +11,4 @@ data:
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
+  TOPIC_DATA_PARSED: "data_parsed"
