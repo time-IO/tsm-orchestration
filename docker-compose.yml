@@ -847,6 +847,46 @@ services:
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "setup_grafana_user.py"]
 
+  # Summary
+  # =======
+  # brief:  trigger sync of tsytems_api
+  #
+  # Description
+  # ===========
+  # Fetches data from the TSystems API and inserts it into TimeIO via the DB API.
+  worker-sync-tsystems:
+    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+    restart: "${RESTART}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: sync_ext_apis/tsystems
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: sync-tsystems
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      CONFIGDB_DSN: "postgresql://\
+                    ${CONFIGDB_USER}:\
+                    ${CONFIGDB_PASSWORD}@\
+                    ${CONFIGDB_HOST}:\
+                    ${CONFIGDB_PORT}/\
+                    ${CONFIGDB_DB}"
+    entrypoint: ["python3", "sync_tsystems_api.py"]
+
 
   cron-scheduler:
     build:
