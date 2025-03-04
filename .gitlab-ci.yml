@@ -13,7 +13,7 @@ lint:
   image:
     name: alpine/helm:${HELM_IMAGE_TAG}
     entrypoint: [""]
-  stage: lint
+  stage: test
   script:
     - helm lint timeio
 
