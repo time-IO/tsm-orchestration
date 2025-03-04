@@ -24,6 +24,7 @@ fi
   echo "topic readwrite logging/#"
   echo "topic readwrite object_storage_notification"
   echo "topic readwrite configdb_update/#"
+  echo "topic readwrite sync_ext_apis/#"
   echo ""
   echo "# Each user has its own topic and logging namespace"
   echo "pattern readwrite mqtt_ingest/%u/#"
@@ -37,6 +38,7 @@ fi
   echo "topic readwrite frontend_thing_update/#"
   echo "topic readwrite user_login/#"
   echo "topic readwrite qaqc_settings_update/#"
+  echo "topic readwrite sync_ext_apis/#"
 } >/mosquitto-auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
