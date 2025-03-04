@@ -879,12 +879,7 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "postgresql://\
-                    ${CONFIGDB_USER}:\
-                    ${CONFIGDB_PASSWORD}@\
-                    ${CONFIGDB_HOST}:\
-                    ${CONFIGDB_PORT}/\
-                    ${CONFIGDB_DB}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "sync_tsystems_api.py"]
 
 
