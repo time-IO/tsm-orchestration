@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
+  repository: "registry.hzdr.de/ufz-tsm/tsm-dispatcher/dispatcher"
   tag: 2025-01-28-160232
   pullPolicy: Always
 name: worker-mqtt-user-creation
