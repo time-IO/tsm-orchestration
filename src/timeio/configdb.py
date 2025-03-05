@@ -196,9 +196,9 @@ def _upsert(
         ),
     )
     if on_conflict_column:
-        q_on_conflict = sql.SQL(" ON CONFLICT ({col}) DO UPDATE SET {col} = EXCLUDED.{col} RETURNING id").format(
-            col=sql.Identifier(on_conflict_column)
-        )
+        q_on_conflict = sql.SQL(
+            " ON CONFLICT ({col}) DO UPDATE SET {col} = EXCLUDED.{col} RETURNING id"
+        ).format(col=sql.Identifier(on_conflict_column))
         q_insert = q_insert + q_on_conflict
     else:
         q_insert = q_insert + sql.SQL(" RETURNING id")
