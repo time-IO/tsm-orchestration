@@ -17,7 +17,7 @@ _TEMPLATE = """\
     <Parameter override="false" name="serviceRootUrl" value="{tomcat_proxy_url}{schema}" description="The base URL of the SensorThings Server without version."/>
     <Parameter override="false" name="defaultCount" value="false" description="The default value for the $count query option."/>
     <Parameter override="false" name="defaultTop" value="100" description="The default value for the $top query option."/>
-    <Parameter override="false" name="maxTop" value="1000" description="The maximum allowed value for the $top query option."/>
+    <Parameter override="false" name="maxTop" value="100000" description="The maximum allowed value for the $top query option."/>
     <Parameter override="false" name="maxDataSize" value="25000000" description="The maximum allowed estimated data size (in bytes) for responses."/>
     <Parameter override="false" name="bus.busImplementationClass" value="de.fraunhofer.iosb.ilt.frostserver.messagebus.InternalMessageBus" description="The java class used for connecting to the message bus."/>
     <Parameter override="false" name="persistence.persistenceManagerImplementationClass" value="de.fraunhofer.iosb.ilt.frostserver.persistence.pgjooq.imp.PostgresPersistenceManagerLong" description="The java class used for persistence (must implement PersistenceManaher interface)"/>
