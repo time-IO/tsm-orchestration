@@ -22,16 +22,16 @@ def setupMQTT(host, username, password):
     port = int(port)
 
     client = mqtt.Client(client_id="reparse-files", clean_session=False)
+    client.enable_logger(logger)
+
+    client.username_pw_set(username, password)
 
     if port == 8883:
         client.tls_set()
+        # client.tls_insecure_set(True)
 
     client.suppress_exceptions = False
-    client.username_pw_set(username, password)
-
     client.connect(host, port, keepalive=60)
-    if not client.is_connected():
-        raise RuntimeError(f"Couldn't etsablish a connection to {host}:{port}")
 
     return client
 
@@ -77,7 +77,7 @@ def main(
     mqtt.loop_start()
 
     message = {"EventName": "s3:ObjectCreated:Put"}
-    for i, obj in enumerate(minio.list_objects(bucket)):
+    for obj in minio.list_objects(bucket):
         fname = obj.object_name
         if fnmatch(fname, fnpattern):
             message["Key"] = f"{bucket}/{fname}"
