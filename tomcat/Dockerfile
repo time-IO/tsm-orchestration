@@ -6,7 +6,9 @@ EXPOSE 8080
 
 ARG UID=1000
 ARG GID=1000
-ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/2.4.2/FROST-Server.HTTP-2.4.2.war
+ARG STA_FROST_VERSION=1000
+ENV STA_FROST_VERSION $STA_FROST_VERSION
+ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/$STA_FROST_VERSION/FROST-Server.HTTP-$STA_FROST_VERSION.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2024.1.0/postgis-jdbc-2024.1.0.jar
 ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
 
