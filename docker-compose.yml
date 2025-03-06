@@ -346,7 +346,7 @@ services:
       context: tomcat
       args:
         TOMCAT_IMAGE_TAG: "${STA_TOMCAT_IMAGE_TAG}"
-        FROST_VERSION: "${STA_FROST_IMAGE_TAG}"
+        FROST_VERSION: "${STA_FROST_VERSION}"
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
