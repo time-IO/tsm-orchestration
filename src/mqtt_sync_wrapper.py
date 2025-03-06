@@ -53,7 +53,7 @@ def main(thing_uuid: str):
         "datetime_from": datetime_from,
         "datetime_to": datetime_to,
     }
-    publish_single(f"sync_ext_apis", json.dumps(message))
+    publish_single(get_envvar("API_SYNC_TOPIC"), json.dumps(message))
 
 
 if __name__ == "__main__":

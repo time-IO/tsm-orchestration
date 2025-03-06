@@ -1006,6 +1006,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
+      API_SYNC_TOPIC: sync_ext_apis
     depends_on:
       init:
         condition: service_completed_successfully
