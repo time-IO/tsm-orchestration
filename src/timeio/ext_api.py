@@ -23,7 +23,7 @@ def write_observations(thing: Thing, parsed_observations: dict):
 
     journal.info(
         f"Successfully inserted {len(parsed_observations['observations'])} "
-        f"observations for thing {thing.uuid} into timeIO DB",
+        f"observations for thing '{thing.name}' into timeIO DB",
         thing.uuid,
     )
     publish_single("data_parsed", json.dumps({"thing_uuid": thing.uuid}))

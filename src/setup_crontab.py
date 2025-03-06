@@ -71,7 +71,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_api is not None:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            if thing.ext_api.api_type_name == "tsystems":
+            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
                 script = "/scripts/mqtt_sync_wrapper.py"
                 command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
             else:
@@ -115,7 +115,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
                 schedule = cls.update_cron_expression(job, new_interval)
             else:
                 schedule = str(job.slices)
-            if thing.ext_api.api_type_name == "tsystems":
+            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
                 script = "/scripts/mqtt_sync_wrapper.py"
                 command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
             else:

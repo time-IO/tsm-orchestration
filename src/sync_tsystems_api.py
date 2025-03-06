@@ -6,8 +6,6 @@ import logging
 
 from datetime import datetime, timezone
 
-from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.common import get_envvar, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -16,19 +14,9 @@ from timeio.ext_api import write_observations
 logger = logging.getLogger("sync-tsystems")
 
 
-class SyncTsystemsApi(AbstractHandler):
+class SyncTsystemsApi:
 
     def __init__(self):
-        super().__init__(
-            topic=get_envvar("TOPIC"),
-            mqtt_broker=get_envvar("MQTT_BROKER"),
-            mqtt_user=get_envvar("MQTT_USER"),
-            mqtt_password=get_envvar("MQTT_PASSWORD"),
-            mqtt_client_id=get_envvar("MQTT_CLIENT_ID"),
-            mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
-            mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
-        )
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.tsystems_base_url = (
             "https://moc.caritc.de/sensorstation-management/api/measurements/average"
         )
@@ -36,8 +24,7 @@ class SyncTsystemsApi(AbstractHandler):
             "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
         )
 
-    def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def sync(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         response = self.request_tsystems_api(
@@ -116,8 +103,3 @@ class SyncTsystemsApi(AbstractHandler):
                     }
                     bodies.append(body)
         return {"observations": bodies}
-
-
-if __name__ == "__main__":
-    setup_logging(get_envvar("LOG_LEVEL", "INFO"))
-    SyncTsystemsApi().run_loop()
