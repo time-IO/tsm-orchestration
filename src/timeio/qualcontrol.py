@@ -279,7 +279,7 @@ class QualityControl:
     def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str | None:
         # TODO @david.schaefer get our thing_uuid
         raise NotImplementedError()
-        q = "select something as thing_uuid from somewhere where some_value = %s"
+        q = "SELECT thing_id, configuration_id FROM sms_datastream_link l JOIN sms_device_mount_action a ON l.device_mount_action_id = a.id JOIN sms_configuration c ON a.configuration_id = c.id where c.id = %s;"
         row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
         if row is None:
             raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
