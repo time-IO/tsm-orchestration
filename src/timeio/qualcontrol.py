@@ -277,9 +277,11 @@ class QualityControl:
         return window
 
     def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str | None:
-        # TODO @david.schaefer get our thing_uuid
-        raise NotImplementedError()
-        q = "SELECT thing_id, configuration_id FROM sms_datastream_link l JOIN sms_device_mount_action a ON l.device_mount_action_id = a.id JOIN sms_configuration c ON a.configuration_id = c.id where c.id = %s;"
+        q = (
+            "select thing_id as thing_uuid from public.sms_datastream_link l "
+            "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
+            "where a.configuration_id = %s"
+        )
         row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
         if row is None:
             raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
@@ -287,7 +289,7 @@ class QualityControl:
 
     def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
         q = (
-            "select thing_id as thing_uuid from public.datastream_link "
+            "select thing_id as thing_uuid from public.sms_datastream_link "
             "where device_property_id = %s"
         )
         row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
