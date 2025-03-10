@@ -231,8 +231,12 @@ class QualityControl:
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
         thing = feta.Thing.from_uuid(uuid, dsn=conn)
         proj = thing.project
-        if (qc := proj.get_default_qaqc()) is None:
-            raise NoDataWarning(f"No default QC-Settings active in project {proj.name}")
+        qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
+        if qc is None:
+            raise NoDataWarning(
+                f"Found no active QC-Settings in project {proj.name} "
+                f"and no legacy QC-Settings for thing {thing.name}"
+            )
         return cls(conn, dbapi_url, proj, qc)  # noqa
 
     @staticmethod
