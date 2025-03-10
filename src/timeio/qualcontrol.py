@@ -182,20 +182,13 @@ class QualityControl:
         self,
         conn: Connection,
         dbapi_url: str,
-        project_uuid: str,
-        qc_id: int,
+        project: feta.Project,
+        qc_config: feta.QAQC,
     ):
         self.conn: Connection = conn
         self.api_url = dbapi_url
-
-        if isinstance(project_uuid, feta.Project):
-            self.proj = project_uuid
-        else:
-            self.proj = feta.Project.from_uuid(project_uuid, dsn=conn)
-
-        if not (confs := self.proj.get_qaqcs(id=qc_id)):
-            raise NoDataWarning(f"No qaqc config present in project {self.proj.name}")
-        self.conf = confs[0]
+        self.proj = project
+        self.conf = qc_config
         self.schema = self.proj.database.schema
         self.tests = self.conf.get_tests()
         self.window = self.parse_ctx_window(self.conf.context_window)
@@ -214,16 +207,16 @@ class QualityControl:
         if config_name is None:
             if (qc := proj.get_default_qaqc()) is None:
                 raise NoDataWarning(
-                    f"No default QC-Settings active in project {proj.name}"
+                    f"No active QC-Settings found in project {proj.name}"
                 )
         else:
             if not (qcs := proj.get_qaqcs(name=config_name)):
                 raise DataNotFoundError(
                     f"No QC-Settings with name {config_name} "
-                    f"present in project {proj.name}"
+                    f"found in project {proj.name}"
                 )
             qc = qcs[0]
-        return cls(conn, dbapi_url, proj, qc)  # noqa
+        return cls(conn, dbapi_url, proj, qc)
 
     @classmethod
     def from_thing(cls, conn: Connection, dbapi_url: str, uuid: str):
@@ -232,10 +225,10 @@ class QualityControl:
         qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
         if qc is None:
             raise NoDataWarning(
-                f"Found no active QC-Settings in project {proj.name} "
-                f"and no legacy QC-Settings for thing {thing.name}"
+                f"Neither found active QC-Settings in the project {proj.name}, "
+                f"nor legacy QC-Settings are found with the thing {thing.name}."
             )
-        return cls(conn, dbapi_url, proj, qc)  # noqa
+        return cls(conn, dbapi_url, proj, qc)
 
     @staticmethod
     def extract_data_by_result_type(df: pd.DataFrame) -> pd.Series:

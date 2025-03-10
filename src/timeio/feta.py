@@ -176,6 +176,7 @@ class Base:
             if isinstance(dsn, Connection):
                 return dsn
             conn = psycopg.connect(dsn, **kwargs)
+            logger.debug(f"Opened instance connection {conn}")
             # We mark the connection as ours, to differentiate it
             # from a user given connection. On __del__ we just want
             # to close a connections if it is under our care.
