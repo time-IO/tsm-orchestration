@@ -10,13 +10,11 @@ import subprocess
 import sys
 import typing
 import warnings
-from collections.abc import Callable
 from typing import Any, Hashable, Literal, cast
 
 import pandas as pd
 import requests
 import saqc
-from joblib.externals.cloudpickle import loads
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
 from saqc import DictOfSeries, Flags
