@@ -114,14 +114,12 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         logger.debug(f"Message content version: {version}")
         data = prepare_data_by_version(data)
 
-        section = "storing thing"
         # We only commit changes if all inserts were successful,
         # and we also successfully informed downstream services
         # via mqtt, if anything goes wrong we roll back. This is
         # done automatically by the connection context manager.
         with db.connection() as conn:
 
-            section = "storing qaqc"
             # todo: Currently the qaqc config is passed with the thing,
             #   this is deprecated. Instead the qaqc config should become
             #   part of the 'project' and emit an own mqtt message on
@@ -138,14 +136,19 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
                 f"{cnf['name']!r} "
                 f"from project {proj_uuid}"
             )
-
             ids = fetch_thing_related_ids(conn, data["uuid"])
             db_id = upsert_table_database(conn, data["database"], ids["database_id"])
             proj_id = upsert_table_project(
                 conn, data["project"], db_id, ids["project_id"]
             )
+
+            section = "storing qaqc"
+            logger.info(
+                f"processing qaqc config {cnf['name']!r} from project {proj_uuid}"
+            )
             qid = store_qaqc_config(conn, cnf, legacy=True)
 
+            section = "storing thing"
             logger.info(f"processing data for thing {thing_uuid}")
             store_thing_config(conn, data, qid, proj_id)
 
