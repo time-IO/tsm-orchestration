@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import logging
 
-from sync_tsystems_api import SyncTsystemsApi
-from sync_bosch_api import SyncBoschApi
-
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
+from timeio.ext_api import SyncBoschApi, SyncTsystemsApi
 
 logger = logging.getLogger("sync-extapi-manager")
 
