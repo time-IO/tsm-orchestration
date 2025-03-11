@@ -21,9 +21,12 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
-      - "${OBJECT_STORAGE_DIR}/certs/:/tmp/certs"
-      - ./nginx/html/:/home/tsm/html
-      - ./cron:/tmp/cron
+      - "${MINIO_LOCAL_MOUNT_PATH:-minio}:/tmp/minio"
+      - "${CRONTAB_LOCAL_MOUNT_PATH:-crontab}:/tmp/crontab"
+      - "${GRAFANA_LOCAL_MOUNT_PATH:-grafana}:/tmp/grafana"
+      - "${MOSQUITTO_LOCAL_MOUNT_PATH:-mosquitto}:/tmp/mosquitto"
+      - "${DATABASE_LOCAL_MOUNT_PATH:-database}:/tmp/database"
+      - "${TOMCAT_LOCAL_MOUNT_PATH:-tomcat-context}:/tmp/tomcat"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -71,7 +74,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
-      - ./data/postgres/data:/var/lib/postgresql/data
+      - "${DATABASE_MOUNT_PATH:-database}:/var/lib/postgresql/data"
       - "${DATABASE_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
       - "${DATABASE_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
     user: "${UID}:${GID}"
@@ -127,15 +130,12 @@ services:
       MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: 60s
       MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "${MQTT_QOS}"
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: 60s
-      #      MINIO_NOTIFY_MQTT_QUEUE_DIR_LOCAL_BROKER: "<string>"
-      #      MINIO_NOTIFY_MQTT_QUEUE_LIMIT_LOCAL_BROKER: "<string>"
-      #      MINIO_NOTIFY_MQTT_COMMENT_LOCAL_BROKER: "<string>"
       MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
     volumes:
-      - "${OBJECT_STORAGE_DIR}/vol0:/vol0"
+      - "${MINIO_LOCAL_MOUNT_PATH:-minio}:/minio"
       # FTP server tls key and cert
-      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/certs/minio-ftp.crt:ro"
-      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/certs/minio-ftp.key:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/minio/certs/minio-ftp.crt:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/minio/certs/minio-ftp.key:ro"
       # SSH Server key to provide constant ssh host key
       - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/certs/id_ed25519:ro"
     user: "${UID}:${GID}"
@@ -145,11 +145,11 @@ services:
       --ftp address=:21
       --ftp passive-port-range=30000-30010
       --sftp address=:22
-      --sftp ssh-private-key=/certs/id_ed25519
-      --ftp tls-private-key=/certs/minio-ftp.key
-      --ftp tls-public-cert=/certs/minio-ftp.crt
+      --sftp ssh-private-key=/minio/certs/id_ed25519
+      --ftp tls-private-key=/minio/certs/minio-ftp.key
+      --ftp tls-public-cert=/minio/certs/minio-ftp.crt
       --json 
-      /vol0
+      /minio/vol0
     healthcheck:
       test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
       interval: "${OBJECT_STORAGE_HEALTHCHECK_INTERVAL}"
@@ -204,8 +204,7 @@ services:
     volumes:
       - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
       - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
-      - ./data/mosquitto/auth:/mosquitto-auth/
-      - ./data/mosquitto/data:/mosquitto-data/
+      - "${MOSQUITTO_LOCAL_MOUNT_PATH:-mqtt-broker}:/tmp/mosquitto/"
       - "${MQTT_MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
       - "${MQTT_MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
       - "${MQTT_MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
@@ -265,7 +264,7 @@ services:
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
     volumes:
-      - ./data/grafana/:/var/lib/grafana
+      - "${GRAFANA_LOCAL_MOUNT_PATH:-grafana}:/var/lib/grafana"
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
@@ -1062,3 +1061,7 @@ volumes:
   frontend-statics:
   sftp-private-keys:
   tomcat-context:
+  database:
+  grafana:
+  mosquitto:
+  minio:
