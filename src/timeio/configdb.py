@@ -178,9 +178,12 @@ def _upsert(
     Either execute insert [1] or update [2] on DB, depending on if the
     given id is None or an existing ID respectively.
 
-    [1] INSERT INTO table (column1, column2, ...) VALUES (%s, %s, ...) with possible
-    ON CONFLICT handling
+    [1] INSERT INTO table (column1, column2, ...) VALUES (%s, %s, ...) 
+        [ ON CONFLICT confl_col DO UPDATE SET confl_col = EXCLUDED.confl_col ]
+        The ON-CONFLICT part is optional.
     [2] UPDATE table t SET column1 = %s, column2 = %s, ... WHERE t.id = %s
+    
+    Note that `on_conflict_column` is ignored if `id` is an integer. 
     """
     q = "INSERT INTO {table} ({columns}) VALUES ({values})"
     q_insert = sql.SQL(q).format(
@@ -196,19 +199,17 @@ def _upsert(
         ),
     )
     if on_conflict_column:
-        q_on_conflict = sql.SQL(
-            " ON CONFLICT ({col}) DO UPDATE SET {col} = EXCLUDED.{col} RETURNING id"
+        q_insert += sql.SQL(
+            "ON CONFLICT ({col}) DO UPDATE SET {col} = EXCLUDED.{col}"
         ).format(col=sql.Identifier(on_conflict_column))
-        q_insert = q_insert + q_on_conflict
-    else:
-        q_insert = q_insert + sql.SQL(" RETURNING id")
+    
+    q_insert += sql.SQL("RETURNING id")
+    q_insert = q_insert.join(" ").as_string() 
     values = [Jsonb(v) if isinstance(v, dict) else v for v in values]
 
     if id is None:
         query = q_insert
-        logger.debug(
-            f"Try inserting new values to {schema}.{table} with possible conflict handling"
-        )
+        logger.debug(f"Try inserting new values to {schema}.{table}")
     else:
         values.append(id)
         query = q_update
@@ -659,7 +660,7 @@ def store_qaqc_config(conn: Connection, data: dict, legacy: bool):
     if legacy:
         pid = None
     qid = upsert_table_qaqc(conn, data, pid, qid)
-    logger.info(f"QAQC ID {qid}")
+    logger.debug(f"QAQC ID {qid}")
 
     n = delete_qaqc_tests(conn, qid)
     logger.debug(f"deleted {n} config tests")
