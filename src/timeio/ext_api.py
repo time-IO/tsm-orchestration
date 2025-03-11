@@ -13,10 +13,10 @@ from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
 api_base_url = get_envvar("DB_API_BASE_URL")
+journal = Journal("syn_ext_apis")
 
 
 def write_observations(thing: Thing, parsed_observations: dict):
-    journal = Journal(f"SYNC_{thing.ext_api.api_type_name}")
     resp = requests.post(
         f"{api_base_url}/observations/upsert/{thing.uuid}",
         json=parsed_observations,
