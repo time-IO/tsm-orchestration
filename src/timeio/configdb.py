@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Literal, Sequence, cast
+from typing import Any, Literal, Sequence, cast, Optional
 
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
@@ -172,15 +172,20 @@ def _upsert(
     values: Sequence[Any],
     id: int | None = None,
     schema: str = "config_db",
+    on_conflict_column: Optional[str] = None,
 ):
     """
     Either execute insert [1] or update [2] on DB, depending on if the
     given id is None or an existing ID respectively.
 
     [1] INSERT INTO table (column1, column2, ...) VALUES (%s, %s, ...)
+        [ ON CONFLICT confl_col DO UPDATE SET confl_col = EXCLUDED.confl_col ]
+        The ON-CONFLICT part is optional.
     [2] UPDATE table t SET column1 = %s, column2 = %s, ... WHERE t.id = %s
+
+    Note that `on_conflict_column` is ignored if `id` is an integer.
     """
-    q = "INSERT INTO {table} ({columns}) VALUES ({values}) RETURNING id"
+    q = "INSERT INTO {table} ({columns}) VALUES ({values})"
     q_insert = sql.SQL(q).format(
         table=sql.Identifier(schema, table),
         columns=sql.SQL(", ").join(map(sql.Identifier, columns)),
@@ -193,7 +198,15 @@ def _upsert(
             [sql.SQL("{col} = %s").format(col=sql.Identifier(col)) for col in columns]
         ),
     )
+    if on_conflict_column:
+        q_insert += sql.SQL(
+            "ON CONFLICT ({col}) DO UPDATE SET {col} = EXCLUDED.{col}"
+        ).format(col=sql.Identifier(on_conflict_column))
+
+    q_insert += sql.SQL("RETURNING id")
+    q_insert = q_insert.join(" ").as_string()
     values = [Jsonb(v) if isinstance(v, dict) else v for v in values]
+
     if id is None:
         query = q_insert
         logger.debug(f"Try inserting new values to {schema}.{table}")
@@ -201,7 +214,6 @@ def _upsert(
         values.append(id)
         query = q_update
         logger.debug(f"Try updating values of {schema}.{table} with id {id}")
-
     r = conn.execute(query, values).fetchone()
     return r[0]
 
@@ -279,6 +291,7 @@ def upsert_table_project(
         columns=["name", "uuid", "database_id"],
         values=[v.pop("name"), v.pop("uuid"), db_id],
         id=proj_id,
+        on_conflict_column="uuid",
     )
     maybe_inform_unused_keys(v)
     return id_
@@ -412,6 +425,7 @@ def upsert_table_thing(
     api_id: int,
     thing_id: int | None,
     description: str,
+    qid: int,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -426,6 +440,7 @@ def upsert_table_thing(
             "ext_sftp_id",
             "ext_api_id",
             "description",
+            "legacy_qaqc_id",
         ),
         values=(
             uuid,
@@ -437,13 +452,14 @@ def upsert_table_thing(
             sftp_id,
             api_id,
             description,
+            qid,
         ),
         id=thing_id,
     )
     return id_
 
 
-def store_thing_config(conn: Connection, data: dict):
+def store_thing_config(conn: Connection, data: dict, qid: int, proj_id: int):
     # version: 4,
     # uuid: <str/uuid>
     # name: <str>
@@ -465,9 +481,6 @@ def store_thing_config(conn: Connection, data: dict):
     schema = data["database"]["schema"]
     upsert_schema_thing_mapping(conn, uuid, schema)
     ids = fetch_thing_related_ids(conn, uuid)
-
-    db_id = upsert_table_database(conn, data["database"], ids["database_id"])
-    proj_id = upsert_table_project(conn, data["project"], db_id, ids["project_id"])
 
     mqtt: dict = data["mqtt"]
     mqtt["mqtt_device_type"] = data["mqtt_device_type"]
@@ -503,6 +516,7 @@ def store_thing_config(conn: Connection, data: dict):
         api_id,
         ids["thing_id"],
         data["description"],
+        qid,
     )
 
 
@@ -608,7 +622,7 @@ def insert_qaqc_tests(
     return n
 
 
-def store_qaqc_config(conn: Connection, data: dict):
+def store_qaqc_config(conn: Connection, data: dict, legacy: bool):
     version = data["version"]
     proj_uuid = data["project_uuid"]
     qaqc_name = data["name"]
@@ -643,10 +657,15 @@ def store_qaqc_config(conn: Connection, data: dict):
         )
     pid = fetch_project_id(conn, proj_uuid)
     qid = fetch_qaqc_id(conn, pid, qaqc_name)
+    if legacy:
+        pid = None
     qid = upsert_table_qaqc(conn, data, pid, qid)
+    logger.debug(f"QAQC ID {qid}")
 
     n = delete_qaqc_tests(conn, qid)
     logger.debug(f"deleted {n} config tests")
 
     n = insert_qaqc_tests(conn, qid, tests, version=version)
     logger.debug(f"inserted {n} config tests")
+
+    return qid
