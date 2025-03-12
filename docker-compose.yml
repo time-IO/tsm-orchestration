@@ -934,12 +934,12 @@ services:
 
   # Summary
   # =======
-  # brief:  trigger sync of tsytems_api
+  # brief:  trigger sync of several ext_apis
   #
   # Description
   # ===========
-  # Fetches data from the TSystems API and inserts it into TimeIO via the DB API.
-  worker-sync-tsystems:
+  # Fetches data from the respective extAPI and inserts it into TimeIO via the DB API.
+  worker-sync-extapis:
     image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
     build:
       context: .
@@ -954,18 +954,18 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: sync_ext_apis/tsystems
+      TOPIC: sync_ext_apis
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: sync-tsystems
+      MQTT_CLIENT_ID: sync-ext-apis
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "sync_tsystems_api.py"]
+    entrypoint: ["python3", "sync_extapi_manager.py"]
 
 
   cron-scheduler:
@@ -1007,6 +1007,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
+      API_SYNC_TOPIC: sync_ext_apis
     depends_on:
       init:
         condition: service_completed_successfully
