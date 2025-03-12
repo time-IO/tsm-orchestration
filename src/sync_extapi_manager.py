@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import logging
+import requests
+import json
+
+from requests.exceptions import HTTPError
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
+from timeio.journaling import Journal
 from timeio.ext_api import SyncBoschApi, SyncTsystemsApi
 
 logger = logging.getLogger("sync-extapi-manager")
+journal = Journal("sync_ext_apis")
 
 
 class SyncExtApiManager(AbstractHandler):
@@ -23,18 +29,45 @@ class SyncExtApiManager(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
+        self.api_base_url = get_envvar("DB_API_BASE_URL")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.sync_handlers = {"tsystems": SyncTsystemsApi(), "bosch": SyncBoschApi()}
 
     def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
+        try:
+            parsed_observations = self.sync_handlers[ext_api_name].parse(thing, content)
+            self.write_observations(thing, parsed_observations)
+        except HTTPError as e:
+            journal.error(
+                f"Insert/upsert into timeioDB for thing '{thing.name} failed",
+                thing.uuid,
+            )
+            raise e
+        except Exception as e:
+            journal.error(
+                f"Error in processing data for thing '{thing.name}", thing.uuid
+            )
+            raise e
 
-        if ext_api_name in self.sync_handlers:
-            logger.info(f"Start ext_api sync for API '{ext_api_name}'")
-            self.sync_handlers[ext_api_name].sync(thing, content)
-        else:
-            logger.warning(f"No handler found for ext_api_type '{ext_api_name}'")
+        self.mqtt_client.publish(
+            topic="data_parsed",
+            payload=json.dumps({"thing_uuid": thing.uuid}),
+        )
+        journal.info(
+            f"Successfully inserted {len(parsed_observations)} observations from API '{ext_api_name}' "
+            f"for thing '{thing.name}' into timeIO DB",
+            thing.uuid,
+        )
+
+    def write_observations(self, thing: Thing, parsed_observations: dict):
+        resp = requests.post(
+            f"{self.api_base_url}/observations/upsert/{thing.uuid}",
+            json=parsed_observations,
+            headers={"Content-Type": "application/json"},
+        )
+        resp.raise_for_status()
 
 
 if __name__ == "__main__":

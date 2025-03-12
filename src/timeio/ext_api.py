@@ -7,32 +7,11 @@ from datetime import datetime, timezone
 
 from timeio.feta import Thing
 from timeio.common import get_envvar
-from timeio.journaling import Journal
 from timeio.mqtt import publish_single
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
 api_base_url = get_envvar("DB_API_BASE_URL")
-journal = Journal("syn_ext_apis")
-
-
-def write_observations(thing: Thing, parsed_observations: dict):
-    resp = requests.post(
-        f"{api_base_url}/observations/upsert/{thing.uuid}",
-        json=parsed_observations,
-        headers={"Content-Type": "application/json"},
-    )
-    if resp.status_code != 200:
-        journal.error(f"Failed to insert data into timeIO DB: {resp.text}", thing.uuid)
-        resp.raise_for_status()
-        # exit
-
-    journal.info(
-        f"Successfully inserted {len(parsed_observations['observations'])} "
-        f"observations for thing '{thing.name}' into timeIO DB",
-        thing.uuid,
-    )
-    publish_single("data_parsed", json.dumps({"thing_uuid": thing.uuid}))
 
 
 class SyncBoschApi:
@@ -58,13 +37,13 @@ class SyncBoschApi:
             3: "result_boolean",
         }
 
-    def sync(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         url = f"""{settings["endpoint"]}/{settings["sensor_id"]}/{content["datetime_from"]}/{content["datetime_to"]}"""
         response = self.make_request(url, settings["username"], pw_dec)
         parsed_observations = self.parse_api_response(response, origin="bosch_data")
-        write_observations(thing, parsed_observations)
+        return parsed_observations
 
     @staticmethod
     def basic_auth(username, password):
@@ -121,7 +100,7 @@ class SyncTsystemsApi:
             "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
         )
 
-    def sync(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         response = self.request_tsystems_api(
@@ -133,7 +112,7 @@ class SyncTsystemsApi:
             content["datetime_to"],
         )
         parsed_observations = self.parse_api_response(response)
-        write_observations(thing, parsed_observations)
+        return parsed_observations
 
     @staticmethod
     def unix_ts_to_str(ts_unix: int) -> str:
