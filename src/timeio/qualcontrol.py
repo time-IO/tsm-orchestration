@@ -225,8 +225,8 @@ class QualityControl:
         qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
         if qc is None:
             raise NoDataWarning(
-                f"Neither found active QC-Settings in the project {proj.name}, "
-                f"nor legacy QC-Settings are found with the thing {thing.name}."
+                f"Neither found active QC-Settings for project {proj.name}, "
+                f"nor legacy QC-Settings for thing {thing.name}."
             )
         return cls(conn, dbapi_url, proj, qc)
 
@@ -290,7 +290,7 @@ class QualityControl:
         row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
         if row is None:
             raise DataNotFoundError(
-                f"No thing_uuid for STA.Datastream.Id {sta_stream_id}"
+                f"No thing_uuid for STA datastream with id {sta_stream_id}"
             )
         return row
 
