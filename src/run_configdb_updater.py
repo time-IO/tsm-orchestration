@@ -10,7 +10,13 @@ import paho.mqtt.client as mqtt
 from psycopg_pool import ConnectionPool
 from timeio.typehints import MqttPayload
 from timeio.common import get_envvar
-from timeio.configdb import store_qaqc_config, store_thing_config
+from timeio.configdb import (
+    store_qaqc_config,
+    store_thing_config,
+    upsert_table_project,
+    upsert_table_database,
+    fetch_thing_related_ids,
+)
 from timeio.version import __version__ as timeio_version
 
 logger = logging.getLogger("configdb-updater")
@@ -77,7 +83,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         logger.info(f"Processing qaqc config {name!r}. Project: {data['project_uuid']}")
         section = "storing qaqc settings"
         with db.connection() as conn:
-            store_qaqc_config(conn, data)
+            store_qaqc_config(conn, data, legacy=False)
         section = "sending mqtt message"
         logger.debug(f"inform downstream services about update of thing")
         payload = json.dumps({"qaqc": data["name"]})
@@ -108,17 +114,12 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         logger.debug(f"Message content version: {version}")
         data = prepare_data_by_version(data)
 
-        section = "storing thing"
         # We only commit changes if all inserts were successful,
         # and we also successfully informed downstream services
         # via mqtt, if anything goes wrong we roll back. This is
         # done automatically by the connection context manager.
         with db.connection() as conn:
 
-            logger.info(f"processing data for thing {thing_uuid}")
-            store_thing_config(conn, data)
-
-            section = "storing qaqc"
             # todo: Currently the qaqc config is passed with the thing,
             #   this is deprecated. Instead the qaqc config should become
             #   part of the 'project' and emit an own mqtt message on
@@ -135,7 +136,21 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
                 f"{cnf['name']!r} "
                 f"from project {proj_uuid}"
             )
-            store_qaqc_config(conn, cnf)
+            ids = fetch_thing_related_ids(conn, data["uuid"])
+            db_id = upsert_table_database(conn, data["database"], ids["database_id"])
+            proj_id = upsert_table_project(
+                conn, data["project"], db_id, ids["project_id"]
+            )
+
+            section = "storing qaqc"
+            logger.info(
+                f"processing qaqc config {cnf['name']!r} from project {proj_uuid}"
+            )
+            qid = store_qaqc_config(conn, cnf, legacy=True)
+
+            section = "storing thing"
+            logger.info(f"processing data for thing {thing_uuid}")
+            store_thing_config(conn, data, qid, proj_id)
 
             section = "sending mqtt message"
             logger.debug(f"inform downstream services about update of thing")
