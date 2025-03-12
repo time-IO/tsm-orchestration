@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/timeio-images/frost"
-  tag: 9.0.90
+  tag: latest
   pullPolicy: Always
 name: frost
 securityContext:
