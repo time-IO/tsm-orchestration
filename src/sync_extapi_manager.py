@@ -56,7 +56,7 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(parsed_observations)} observations from API '{ext_api_name}' "
+            f"Successfully inserted {len(parsed_observations['observations'])} observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,
         )
