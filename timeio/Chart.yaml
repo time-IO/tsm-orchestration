@@ -2,7 +2,7 @@ apiVersion: v2
 name: timeio
 description: "A Helm chart for time.IO"
 type: application
-version: 0.1.4
+version: 0.1.5
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
