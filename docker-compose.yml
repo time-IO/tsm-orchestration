@@ -48,8 +48,7 @@ services:
   # 1. a database for each group/project to store the things and the observations
   # 2. 'mqtt_auth' database for the service 'mqtt-broker'. It holds the mqtt-user,
   #   which are allowed to send data to the broker
-  # 3. 's3map_db' database, for some worker-services. It maps group specific
-  #   object-storage buckets to things and corresponding databases (see 1.)
+  # 3. (removed)
   # 4. the 'frontenddb' database for the service 'frontend', which use django
   # 5. SMS: TODO
   # 6. SMS_CV: TODO
@@ -379,8 +378,6 @@ services:
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_READONLY_USER}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_READONLY_PASSWORD}"
-      FLYWAY_PLACEHOLDERS_S3MAP_DB_USER: "${S3MAP_POSTGRES_USER}"
-      FLYWAY_PLACEHOLDERS_S3MAP_DB_PASSWORD: "${S3MAP_POSTGRES_PASS}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_DATABASE_USER}"
