@@ -734,16 +734,18 @@ class QualityControl:
                 "result_time": row.name.isoformat(),  # noqa, index label
                 "datastream_id": row["datastream_id"],
                 "result_quality": json.dumps(
-                    {
-                        "annotation": str(row["flag"]),
-                        "annotationType": "SaQC",
-                        "properties": {
-                            "version": saqc.__version__,
-                            "measure": row["func"],
-                            "configuration": config_id,
-                            "userLabel": row["kwargs"].get("label", None),
-                        },
-                    }
+                    [
+                        {
+                            "annotation": str(row["flag"]),
+                            "annotationType": "SaQC",
+                            "properties": {
+                                "version": saqc.__version__,
+                                "measure": row["func"],
+                                "configuration": config_id,
+                                "userLabel": row["kwargs"].get("label", None),
+                            },
+                        }
+                    ]
                 ),
             }
 
@@ -777,16 +779,18 @@ class QualityControl:
                 "result_type": result_type,
                 result_field: val,
                 "result_quality": json.dumps(
-                    {
-                        "annotation": str(row["flag"]),
-                        "annotationType": "SaQC",
-                        "properties": {
-                            "version": saqc.__version__,
-                            "measure": row["func"],
-                            "configuration": config_id,
-                            "userLabel": row["kwargs"].get("label", None),
-                        },
-                    }
+                    [
+                        {
+                            "annotation": str(row["flag"]),
+                            "annotationType": "SaQC",
+                            "properties": {
+                                "version": saqc.__version__,
+                                "measure": row["func"],
+                                "configuration": config_id,
+                                "userLabel": row["kwargs"].get("label", None),
+                            },
+                        }
+                    ]
                 ),
                 "datastream_pos": name,
             }
