@@ -111,6 +111,7 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
             raise ValueError("mandatory field 'version' is not present in data")
         logger.debug(f"Message content version: {version}")
         data = prepare_data_by_version(data)
+        logging.info(f"thing: {thing_uuid} ({data.get('name', 'UNNAMED')})")
 
         # We only commit changes if all inserts were successful,
         # and we also successfully informed downstream services
