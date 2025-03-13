@@ -14,15 +14,15 @@ build-images:
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
+    - export REGISTRY=$(grep -oP '^TIMEIO_IMAGE_REGISTRY=\K.*' .env)
   script:
     - docker compose build -q init cron-scheduler frost worker-configdb-updater worker-db-setup
     - docker images -a
-    - export REGISTRY=$(grep -oP '^TIMEIO_IMAGE_REGISTRY=\K.*' .env)
     - docker save -o images/init.tar ${REGISTRY}/init:$CI_COMMIT_REF_NAME
     - docker save -o images/cron-scheduler.tar ${REGISTRY}/cron-scheduler:$CI_COMMIT_REF_NAME
-    - docker save -o images/frost.tar ${REGISTRY}/frost:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-configdb-updater.tar ${REGISTRY}/worker-configdb-updater:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-db-setup.tar ${REGISTRY}/worker-db-setup:$CI_COMMIT_REF_NAME
+    #- docker save -o images/frost.tar ${REGISTRY}/frost:$CI_COMMIT_REF_NAME
+    #- docker save -o images/worker-configdb-updater.tar ${REGISTRY}/worker-configdb-updater:$CI_COMMIT_REF_NAME
+    #- docker save -o images/worker-db-setup.tar ${REGISTRY}/worker-db-setup:$CI_COMMIT_REF_NAME
     - ls images/*.tar
   artifacts:
     paths:
