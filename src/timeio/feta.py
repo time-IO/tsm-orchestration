@@ -576,10 +576,11 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     properties = None
 
     def get_legacy_qaqc(self) -> QAQC | None:
-        query = f"select * from {_cfgdb}.qaqc where legacy_qaqc_id = %s"
-        if res := self._fetchone(self._conn, query, self.id):
-            return QAQC._from_parent(res, self)
-        return None
+        if self.legacy_qaqc_id is None:
+            return None
+        query = f"select * from {_cfgdb}.qaqc where id = %s"
+        res = self._fetchone(self._conn, query, self.legacy_qaqc_id)
+        return QAQC._from_parent(res, self)
 
     @classmethod
     def from_s3_bucket_name(
