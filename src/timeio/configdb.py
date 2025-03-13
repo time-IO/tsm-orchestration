@@ -58,7 +58,7 @@ def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int]
 
 def fetch_project_related_ids(
     conn: Connection, project_uuid: str
-) -> dict[str, int] | None:
+) -> dict[str, int | None]:
     q = (
         "select p.id as project_id, p.database_id "
         "from config_db.project p where p.uuid = %s"
