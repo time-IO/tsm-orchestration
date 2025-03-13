@@ -473,8 +473,8 @@ def upsert_table_thing(
 
 def store_project_config(conn: Connection, data: dict):
     ids = fetch_project_related_ids(conn, data["project"]["uuid"])
-    db_id = upsert_table_database(conn, data["database"], ids['database_id'])
-    pid = upsert_table_project(conn, data["project"], db_id, ids['project_id'])
+    db_id = upsert_table_database(conn, data["database"], ids["database_id"])
+    pid = upsert_table_project(conn, data["project"], db_id, ids["project_id"])
     return pid
 
 
