@@ -38,6 +38,7 @@ fi
   echo "topic readwrite frontend_thing_update/#"
   echo "topic readwrite user_login/#"
   echo "topic readwrite qaqc_settings_update/#"
+  echo "topic readwrite data_parsed/#"
   echo "topic readwrite sync_ext_apis/#"
 } >/mosquitto-auth/mosquitto.acl
 
