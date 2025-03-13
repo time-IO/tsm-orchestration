@@ -17,9 +17,9 @@ build-and-push-to-registry:
   after_script:
     - docker logout
   script:
-    - docker compose build -q init database cron-scheduler frost worker-configdb-updater worker-db-setup
+    - docker compose build -q init cron-scheduler frost worker-configdb-updater worker-db-setup
     - docker images -a
-    - docker compose push init database cron-scheduler frost worker-configdb-updater worker-db-setup
+    - docker compose push init cron-scheduler frost worker-configdb-updater worker-db-setup
   artifacts:
     paths:
       - .build_date
