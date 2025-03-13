@@ -1,0 +1,22 @@
+---
+
+build-and-push-to-registry:
+  stage: build
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  before_script:
+    - cp .env.example .env
+    - echo $(date +%Y-%m-%d-%H%M%S) > .build_date
+    #- echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    #after_script:
+    #- docker logout
+  script:
+    - TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build init
+    - TIMEIO_DATABASE_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build database
+    - TIMEIO_FROST_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build frost
+    - TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build cron-scheduler
+    - TIMEIO_DISPATCHER_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build worker-mqtt-ingest
+    - TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG=$CI_COMMIT_REF_NAME docker compose build worker-configdb-updater
+    - docker images -a
+  artifacts:
+    paths:
+      - .build_date
