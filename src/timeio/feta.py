@@ -176,6 +176,7 @@ class Base:
             if isinstance(dsn, Connection):
                 return dsn
             conn = psycopg.connect(dsn, **kwargs)
+            logger.debug(f"Opened instance connection {conn}")
             # We mark the connection as ours, to differentiate it
             # from a user given connection. On __del__ we just want
             # to close a connections if it is under our care.
@@ -496,9 +497,9 @@ class QAQC(Base):
     _table_name = "qaqc"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
-    project_id: int = _prop(lambda self: self._attrs["project_id"])
+    project_id: int | None = _prop(lambda self: self._attrs["project_id"])
     context_window: str = _prop(lambda self: self._attrs["context_window"])
-    project: Project = _fetch(
+    project: Project | None = _fetch(
         f"select * from {_cfgdb}.project where id = %s", "project_id", Project
     )
 
@@ -563,6 +564,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     mqtt: MQTT = _fetch(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
     ext_sftp: ExtSFTP | None = _fetch(f"select * from {_cfgdb}.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
     ext_api: ExtAPI | None = _fetch(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
+    legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))
 
     # thing.Thing interface
     # uuid, name, project, description are already defined above
@@ -572,6 +574,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     external_api = ext_api
     # Note that thing.properties is not supported anymore
     properties = None
+
+    def get_legacy_qaqc(self) -> QAQC | None:
+        query = f"select * from {_cfgdb}.qaqc where legacy_qaqc_id = %s"
+        if res := self._fetchone(self._conn, query, self.id):
+            return QAQC._from_parent(res, self)
+        return None
 
     @classmethod
     def from_s3_bucket_name(
