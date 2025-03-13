@@ -1,19 +1,22 @@
 ---
-visualization-e2e:
+combined-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   needs:
     - "build-and-push-images"
   before_script:
-    - "apk add --no-cache curl jq python3"
+    - "apk add --no-cache postgresql-client jq"
     - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
-    - "sleep 2"
+    - "sleep 1"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
-    - "sleep 5"
+    - "sleep 1"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
+    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
+    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
+    - "echo 'teting visualization end-to-end...'"
     - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id)"
     - "echo $THING_UID"
     - "GROUP_ID=$(cat thing_dump.json | jq -r .[].fields.group)"
@@ -29,45 +32,7 @@ visualization-e2e:
     - "TEAMS_UID=$(python3 -c \"import uuid; print(uuid.UUID(int=${TEAMS_ID}))\")"
     - "echo $TEAMS_UID"
     - "[ \"$TEAMS_UID\" == \"$GROUP_UID\" ] || exit 1"
-  tags:
-    - "dind"
-
-# Disabled for now because thing_creation message is deprecated.
-#avro-thing-creation-e2e:
-#  image: "docker:${DOCKER_IMAGE_TAG}"
-#  stage: "end-to-end"
-#  before_script:
-#    - "apk add --no-cache python3"
-#    - "python3 -m venv venv"
-#    - "source venv/bin/activate"
-#    - "python3 -m ensurepip"
-#    - "python3 -m pip install --upgrade pip"
-#    - "python3 -m pip install fastavro paho-mqtt==1.6.1"
-#    - "cp .env.example .env"
-#    - "docker compose up -d frontend mqtt-broker --force-recreate -V --quiet-pull"
-#    - "sleep 20"
-#  script:
-#    - "echo \"Check if thing_creation message is valid\""
-#    - "chmod +x ./.gitlab/ci/py/avro-thing-creation.py"
-#    - "./.gitlab/ci/py/avro-thing-creation.py"
-#  tags:
-#    - "dind"
-    
-object-storage-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "end-to-end"
-  needs:
-    - "build-and-push-images"
-  before_script:
-    - "apk add --no-cache curl jq"
-    - "docker compose up -d --quiet-pull"
-    - "sleep 20"
-  script:
-    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
+    - "echo 'testing object storage end-to-end...'"
     - "export MINIO_USER=$(cat object-storage.json | jq -r '.[].fields.access_key')"
     - "export MINIO_PASSWORD=$(cat object-storage.json | jq -r '.[].fields.secret_key')"
     - "curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc"
@@ -76,51 +41,14 @@ object-storage-e2e:
     - "mc alias set minio http://docker:9000 minioadmin minioadmin"
     - "mc ls --summarize minio || exit 1"
     - "curl -u ${MINIO_USER}:${MINIO_PASSWORD} ftp://docker:40021 -I -s -o /dev/null || exit 1"
-  tags:
-    - "dind"
-
-database-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "end-to-end"
-  needs:
-    - "build-and-push-images"
-  before_script:
-    - "apk add --no-cache postgresql-client jq"
-    - "docker compose up -d --quiet-pull"
-    - "sleep 20"
-  script:
-    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
+    - "echo 'testing database end-to-end...'"
     - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "export DB_PASSWORD=$(cat database.json | jq -r '.[].fields.password')"
     - "export DB_RO_USER=$(cat database.json | jq -r '.[].fields.username')"
     - "export DB_RO_PASSWORD=$(cat database.json | jq -r '.[].fields.ro_password')"
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
     - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
-  tags:
-    - "dind"
-
-frost-e2e:
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "end-to-end"
-  needs:
-    - "build-and-push-images"
-  before_script:
-    - "apk add --no-cache curl jq"
-    - "docker compose up -d --quiet-pull"
-    - "sleep 20"
-  script:
-    - "docker compose exec -T frontend python3 manage.py loaddata user.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py loaddata thing.json"
-    - "sleep 2"
-    - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
-    - "sleep 10"
-    - "docker compose logs frost"
-    - "export DB_USER=$(cat database.json | jq -r '.[].fields.username')"
+    - "echo 'testing frost end-to-end...'"
     - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
   tags:
     - "dind"

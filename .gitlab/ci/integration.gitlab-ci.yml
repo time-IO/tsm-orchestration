@@ -45,7 +45,7 @@ combined-integration-test:
   needs:
     - "build-and-push-images"
   before_script:
-    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80 http://docker"
+    - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
     - "apk add --no-cache curl postgresql-client"
     - "docker compose up -d --quiet-pull"
     - "sleep 20"
