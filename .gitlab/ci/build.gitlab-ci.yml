@@ -30,6 +30,7 @@ build-images:
       - images
       - .build_date
       - .env
+    expire_in: 15 minutes
   tags:
     - "dind"
 
@@ -41,19 +42,7 @@ load-images:
   script:
     - for image in $(ls images/*.tar); do docker load < $image; done
     - docker images -a
-  tags:
-    - "dind"
-
-delete-artifacts:
-  dependencies:
-    - load-images
-  stage: delete
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  script:
-    - echo "Deleting image.tar artifact using GitLab API..."
-    - |
-      curl --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-           --request DELETE \
-           "https://codebase.helmholtz.cloud/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts"
+    - docker compose up -d --quiet-pull
+    - docker compose ps
   tags:
     - "dind"
