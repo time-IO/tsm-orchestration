@@ -1,6 +1,16 @@
-ARG TOMCAT_IMAGE_TAG=10
+ARG BASE_IMAGE_TAG=11
 
-FROM tomcat:${TOMCAT_IMAGE_TAG}
+FROM tomcat:${BASE_IMAGE_TAG}
+
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL maintainer="The ZID Team" \
+    org.opencontainers.image.title="time.IO FROST-Server Image" \
+    org.opencontainers.image.licenses="EUPL-1.2" \
+    org.opencontainers.image.version="0.1" \
+    org.opencontainers.image.revision=$VCS_REF \
+    org.opencontainers.image.created=$BUILD_DATE
 
 EXPOSE 8080
 
@@ -10,6 +20,16 @@ ARG GID=1000
 ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/$FROST_VERSION/FROST-Server.HTTP-$FROST_VERSION.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2024.1.0/postgis-jdbc-2024.1.0.jar
 ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
+
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL maintainer="The ZID Team" \
+    org.opencontainers.image.title="time.IO FROST-Server Image" \
+    org.opencontainers.image.licenses="EUPL-1.2" \
+    org.opencontainers.image.version="0.1" \
+    org.opencontainers.image.revision=$VCS_REF \
+    org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
 

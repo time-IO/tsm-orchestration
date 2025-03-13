@@ -13,11 +13,13 @@ services:
   # This service run init/init.sh, which create and install
   # ssl certificates for minio and sftp
   init:
+    image: "${TIMEIO_IMAGE_REGISTRY}/init:${TIMEIO_INIT_IMAGE_TAG}"
     build:
       context: init
       args:
         UID: "${UID}"
         GID: "${GID}"
+        BASE_IMAGE_TAG: "${INIT_ALPINE_BASE_IMAGE_TAG}"
     restart: no
     user: "${UID}:${GID}"
     volumes:
@@ -56,12 +58,12 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${SERVICE_RESTART_POLICY}"
-    # image: timescale/timescaledb:${DATABASE_IMAGE_TAG-pg14}
+    image: "${TIMEIO_IMAGE_REGISTRY}/database:${TIMEIO_DATABASE_IMAGE_TAG}"
     build:
       context: postgres
       args:
         UID: "${UID}"
-        DATABASE_IMAGE_TAG: "${DATABASE_IMAGE_TAG}"
+        BASE_IMAGE_TAG: "${DATABASE_TIMESCALE_BASE_IMAGE_TAG}"
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
@@ -341,10 +343,11 @@ services:
   # ===========
   # TODO
   frost:
+    image: "${TIMEIO_IMAGE_REGISTRY}/frost:${TIMEIO_FROST_IMAGE_TAG}"
     build:
       context: tomcat
       args:
-        TOMCAT_IMAGE_TAG: "${STA_TOMCAT_IMAGE_TAG}"
+        BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
@@ -533,10 +536,13 @@ services:
   # fills and updates the config-db from setup mqtt-messages
   # (e.g. topic: frontend-thing-update)
   worker-configdb-updater:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater:${CONFIGDB_UPDATER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/configdb-updater:${TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: configdb_updater/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -562,10 +568,13 @@ services:
 
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -608,10 +617,13 @@ services:
   # - create/update a thing in DB
   # - create/update frost view for the thing
   worker-db-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -644,10 +656,13 @@ services:
 
 
   worker-frost-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -681,10 +696,13 @@ services:
 
   # brief: Add user to mqtt_auth DB, so they are allowed to use mqtt
   worker-mqtt-user-creation:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -714,10 +732,13 @@ services:
 
 
   worker-grafana-dashboard:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -755,10 +776,13 @@ services:
   # =================================================================
 
   worker-file-ingest:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -792,10 +816,13 @@ services:
 
 
   worker-run-qaqc:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -826,10 +853,13 @@ services:
 
 
   worker-mqtt-ingest:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -859,10 +889,13 @@ services:
 
 
   worker-crontab-setup:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
         mqtt-broker:
@@ -896,10 +929,13 @@ services:
   # =================================================================
 
   worker-grafana-user-orgs:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -937,10 +973,13 @@ services:
   # ===========
   # Fetches data from the respective extAPI and inserts it into TimeIO via the DB API.
   worker-sync-extapis:
-    image: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher:${DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -966,12 +1005,13 @@ services:
 
 
   cron-scheduler:
+    image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
-        DEBIAN_IMAGE_TAG: "${CRON_DEBIAN_IMAGE_TAG}"
+        BASE_IMAGE_TAG: "${CRON_SCHEDULER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
