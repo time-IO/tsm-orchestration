@@ -37,8 +37,8 @@ class CreateThingInMinioHandler(AbstractHandler):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         if thing.raw_data_storage is None:
             logger.info(
-                f"Ignoring message, because no s3 storage "
-                f"is associated with thing {thing.name}"
+                f"Ignoring message, because no s3 storage is associated "
+                f"with the thing {thing.uuid} ({thing.name})"
             )
             return
         user = thing.raw_data_storage.username
