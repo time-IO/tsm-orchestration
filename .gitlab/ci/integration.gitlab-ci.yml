@@ -6,9 +6,7 @@ docker-service-test:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache bash"
-    - "mv .env.example .env"
-    - "cp .env .gitlab/ci/.env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "docker compose logs init"
     - "sleep 20"
   script:
@@ -32,8 +30,7 @@ mqtt-service-test:
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install paho-mqtt==1.6.1"
-    - "mv .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
@@ -48,10 +45,8 @@ proxy-test:
   needs:
     - "build-and-push-images"
   before_script:
-    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
-    - "apk add --no-cache curl"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80 http://docker"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "curl -Isf http://docker -o /dev/null || exit 1"
@@ -71,9 +66,8 @@ object-storage-test:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 30"
+    - "docker compose up -d --quiet-pull"
+    - "sleep 20"
   script:
     - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
   tags:
@@ -86,8 +80,7 @@ database-test:
     - "build-and-push-images"
   before_script:    
     - "apk add --no-cache postgresql-client"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"

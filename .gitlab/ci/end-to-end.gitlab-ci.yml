@@ -6,9 +6,7 @@ visualization-e2e:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq python3"
-    - "cp .env.example .env"
-    - "cp .env .gitlab/ci/.env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
@@ -33,7 +31,6 @@ visualization-e2e:
     - "[ \"$TEAMS_UID\" == \"$GROUP_UID\" ] || exit 1"
   tags:
     - "dind"
-    - "hifis"
 
 # Disabled for now because thing_creation message is deprecated.
 #avro-thing-creation-e2e:
@@ -63,8 +60,7 @@ object-storage-e2e:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
@@ -90,8 +86,7 @@ database-e2e:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache postgresql-client jq"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
@@ -115,8 +110,7 @@ frost-e2e:
     - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
