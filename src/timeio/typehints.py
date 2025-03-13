@@ -14,25 +14,31 @@ JsonT = _t.Union[JsonScalarT, JsonArrayT, JsonObjectT]
 DbScalarT = _t.Union[str, bool, int, float, JsonT, datetime.datetime.timestamp]
 DbRowT = tuple[DbScalarT, ...]
 
+v1 = _t.Literal[1]
+v2 = _t.Literal[2]
+v3 = _t.Literal[3]
+v4 = _t.Literal[4]
+v5 = _t.Literal[5]
+
 
 class MqttPayload:
 
     class QaqcConfigV1_T(_t.TypedDict):
-        version: _t.Literal[1]
+        version: v1
         name: str
         project_uuid: str
         context_window: str
         tests: list[MqttPayload.QaqcTestT]
 
     class QaqcConfigV2_T(_t.TypedDict):
-        version: _t.Literal[2]
+        version: v2
         name: str
         project_uuid: str
         context_window: str
         functions: list[MqttPayload.QaqcFunctionT]
 
     class QaqcConfigV3_T(_t.TypedDict):
-        version: _t.Literal[3]
+        version: v3
         default: bool
         name: str
         project_uuid: str
@@ -56,7 +62,7 @@ class MqttPayload:
         sta_stream_id: int | None
 
     class ConfigDBUpdate(_t.TypedDict):
-        version: _t.Literal[1] | None
+        version: v1 | None
         thing: str  # UUID of the thing
 
     class SyncExtApi(_t.TypedDict):
@@ -65,11 +71,11 @@ class MqttPayload:
         datetime_to: str
 
     class DataParsedV1(_t.TypedDict):
-        version: _t.Literal[1] | None
+        version: v1 | None
         thing_uuid: str
 
     class DataParsedV2(_t.TypedDict):
-        version: _t.Literal[2]
+        version: v2
         project_uuid: str
         qc_settings_name: str
         start_date: str
