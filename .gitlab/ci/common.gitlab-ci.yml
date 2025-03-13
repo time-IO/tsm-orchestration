@@ -1,6 +1,8 @@
 ---
 stages:
   - "build"
+  - "load"
+  - "delete"
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"

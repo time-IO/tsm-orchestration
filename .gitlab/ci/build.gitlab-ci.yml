@@ -1,12 +1,12 @@
 ---
 
-build-and-push-to-registry:
+build-images:
   stage: build
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
+    - mkdir images -p
     - cp .env.example .env
     - echo $(date +%Y-%m-%d-%H%M%S) > .build_date
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_DATABASE_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
@@ -14,14 +14,61 @@ build-and-push-to-registry:
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
-  after_script:
-    - docker logout
   script:
-    - docker compose build -q --push init cron-scheduler frost worker-configdb-updater worker-db-setup
+    - docker compose build -q init cron-scheduler frost worker-configdb-updater worker-db-setup
     - docker images -a
-    #- docker compose push init cron-scheduler frost worker-configdb-updater worker-db-setup
+    - docker save -o images/init.tar timeio/init:$CI_COMMIT_REF_NAME
+    - docker save -o images/cron-scheduler.tar timeio/cron-scheduler:$CI_COMMIT_REF_NAME
+    - docker save -o images/frost.tar timeio/frost:$CI_COMMIT_REF_NAME
+    - docker save -o images/worker-configdb-updater.tar timeio/worker-configdb-updater:$CI_COMMIT_REF_NAME
+    - docker save -o images/worker-db-setup.tar timeio/worker-db-setup:$CI_COMMIT_REF_NAME
+    - ls images/*.tar
   artifacts:
     paths:
+      - images
+      - .build_date
+      - .env
+  tags:
+    - "dind"
+
+build-and-push-to-registry:
+  stage: load
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  script:
+    - for image in $(ls images/*.tar); do docker load < $image; done
+    - docker images -a
+  artifacts:
+    paths:
+      - images
+      - .build_date
+      - .env
+  tags:
+    - "dind"
+
+load-images:
+  stage: load
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  script:
+    - for image in $(ls images/*.tar); do docker load < $image; done
+    - docker images -a
+  artifacts:
+    paths:
+      - images
+      - .build_date
+      - .env
+  tags:
+    - "dind"
+
+delete-images:
+  stage: delete
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  script:
+    - ls images/*.tar
+    - rm images/*.tar
+    - ls images/*.tar
+  artifacts:
+    paths:
+      - images
       - .build_date
       - .env
   tags:
