@@ -51,9 +51,21 @@ _no_ids = {
 }
 
 
-def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int] | None:
+def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int | None]:
     with conn.cursor(row_factory=dict_row) as cur:
         return cur.execute(_IDS_BY_UUID_QUERY, [thing_uuid]).fetchone() or _no_ids
+
+
+def fetch_project_related_ids(
+    conn: Connection, project_uuid: str
+) -> dict[str, int | None]:
+    q = (
+        "select p.id as project_id, p.database_id "
+        "from config_db.project p where p.uuid = %s"
+    )
+    no_ids = {"project_id": None, "database_id": None}
+    with conn.cursor(row_factory=dict_row) as cur:
+        return cur.execute(q, [project_uuid]).fetchone() or no_ids
 
 
 def upsert_schema_thing_mapping(conn: Connection, uuid: str, schema: str):
@@ -457,6 +469,13 @@ def upsert_table_thing(
         id=thing_id,
     )
     return id_
+
+
+def store_project_config(conn: Connection, data: dict):
+    ids = fetch_project_related_ids(conn, data["project"]["uuid"])
+    db_id = upsert_table_database(conn, data["database"], ids["database_id"])
+    pid = upsert_table_project(conn, data["project"], db_id, ids["project_id"])
+    return pid
 
 
 def store_thing_config(conn: Connection, data: dict, qid: int, proj_id: int):

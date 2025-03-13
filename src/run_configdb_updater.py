@@ -13,9 +13,7 @@ from timeio.common import get_envvar
 from timeio.configdb import (
     store_qaqc_config,
     store_thing_config,
-    upsert_table_project,
-    upsert_table_database,
-    fetch_thing_related_ids,
+    store_project_config,
 )
 from timeio.version import __version__ as timeio_version
 
@@ -113,6 +111,7 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
             raise ValueError("mandatory field 'version' is not present in data")
         logger.debug(f"Message content version: {version}")
         data = prepare_data_by_version(data)
+        logging.info(f"thing: {thing_uuid} ({data.get('name', 'UNNAMED')})")
 
         # We only commit changes if all inserts were successful,
         # and we also successfully informed downstream services
@@ -120,11 +119,7 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         # done automatically by the connection context manager.
         with db.connection() as conn:
 
-            ids = fetch_thing_related_ids(conn, data["uuid"])
-            db_id = upsert_table_database(conn, data["database"], ids["database_id"])
-            proj_id = upsert_table_project(
-                conn, data["project"], db_id, ids["project_id"]
-            )
+            proj_id = store_project_config(conn, data)
 
             # Currently we have two different qc workflows.
             # The legacy workflow, by which the QC Settings are stored with the
