@@ -17,6 +17,7 @@ build-and-push-images:
     - echo $CI_REGISTRY_PASSWORD | docker login $REGISTRY -u $CI_REGISTRY_USER --password-stdin
   after_script:
     - docker logout
+  needs: []
   script:
     - docker compose build -q --push init cron-scheduler frost worker-configdb-updater worker-db-setup
   tags:
@@ -24,17 +25,3 @@ build-and-push-images:
   artifacts:
     paths:
       - .env
-
-load-images-from-registry:
-  dependencies:
-    - build-and-push-images
-  stage: load
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  before_script:
-  script:
-    - docker compose pull -q
-    - docker images -a
-    - docker compose up -d
-    - docker compose ps
-  tags:
-    - "dind"

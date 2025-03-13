@@ -2,6 +2,8 @@
 visualization-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq python3"
     - "cp .env.example .env"
@@ -57,6 +59,8 @@ visualization-e2e:
 object-storage-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq"
     - "cp .env.example .env"
@@ -82,6 +86,8 @@ object-storage-e2e:
 database-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache postgresql-client jq"
     - "cp .env.example .env"
@@ -105,6 +111,8 @@ database-e2e:
 frost-e2e:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache curl jq"
     - "cp .env.example .env"
