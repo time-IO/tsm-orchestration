@@ -17,11 +17,12 @@ build-images:
   script:
     - docker compose build -q init cron-scheduler frost worker-configdb-updater worker-db-setup
     - docker images -a
-    - docker save -o images/init.tar timeio/init:$CI_COMMIT_REF_NAME
-    - docker save -o images/cron-scheduler.tar timeio/cron-scheduler:$CI_COMMIT_REF_NAME
-    - docker save -o images/frost.tar timeio/frost:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-configdb-updater.tar timeio/worker-configdb-updater:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-db-setup.tar timeio/worker-db-setup:$CI_COMMIT_REF_NAME
+    - export REGISTRY=$(grep -oP '^TIMEIO_IMAGE_REGISTRY=\K.*' .env)
+    - docker save -o images/init.tar ${REGISTRY}/init:$CI_COMMIT_REF_NAME
+    - docker save -o images/cron-scheduler.tar ${REGISTRY}/cron-scheduler:$CI_COMMIT_REF_NAME
+    - docker save -o images/frost.tar ${REGISTRY}/frost:$CI_COMMIT_REF_NAME
+    - docker save -o images/worker-configdb-updater.tar ${REGISTRY}/worker-configdb-updater:$CI_COMMIT_REF_NAME
+    - docker save -o images/worker-db-setup.tar ${REGISTRY}/worker-db-setup:$CI_COMMIT_REF_NAME
     - ls images/*.tar
   artifacts:
     paths:
