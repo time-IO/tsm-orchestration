@@ -44,14 +44,16 @@ load-images:
   tags:
     - "dind"
 
-delete-images:
+delete-artifacts:
   dependencies:
     - load-images
   stage: delete
   image: "docker:${DOCKER_IMAGE_TAG}"
   script:
-    - rm images/*.tar
-    - rm .build_date
-    - rm .env
+    - echo "Deleting image.tar artifact using GitLab API..."
+    - |
+      curl --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+           --request DELETE \
+           "https://gitlab.example.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts"
   tags:
     - "dind"
