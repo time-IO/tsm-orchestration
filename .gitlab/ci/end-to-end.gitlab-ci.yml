@@ -5,7 +5,7 @@ combined-e2e:
   needs:
     - "build-and-push-images"
   before_script:
-    - "apk add --no-cache postgresql-client jq"
+    - "apk add --no-cache curl python3 postgresql-client jq"
     - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
