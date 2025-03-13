@@ -51,7 +51,7 @@ _no_ids = {
 }
 
 
-def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int] | None:
+def fetch_thing_related_ids(conn: Connection, thing_uuid: str) -> dict[str, int | None]:
     with conn.cursor(row_factory=dict_row) as cur:
         return cur.execute(_IDS_BY_UUID_QUERY, [thing_uuid]).fetchone() or _no_ids
 
