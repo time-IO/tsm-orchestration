@@ -54,8 +54,8 @@ build-images:
     - docker save -o images/init.tar ${REGISTRY}/init:$CI_COMMIT_REF_NAME
     - docker save -o images/cron-scheduler.tar ${REGISTRY}/cron-scheduler:$CI_COMMIT_REF_NAME
     - docker save -o images/frost.tar ${REGISTRY}/frost:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-configdb-updater.tar ${REGISTRY}/worker-configdb-updater:$CI_COMMIT_REF_NAME
-    - docker save -o images/worker-db-setup.tar ${REGISTRY}/worker-db-setup:$CI_COMMIT_REF_NAME
+    - docker save -o images/configdb-updater.tar ${REGISTRY}/configdb-updater:$CI_COMMIT_REF_NAME
+    - docker save -o images/dispatcher.tar ${REGISTRY}/dispatcher:$CI_COMMIT_REF_NAME
     - ls images/*.tar
   artifacts:
     paths:
