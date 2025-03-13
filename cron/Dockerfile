@@ -1,4 +1,4 @@
-ARG BASE_IMAGE_TAG
+ARG BASE_IMAGE_TAG=bullseye-slim
 
 FROM debian:${BASE_IMAGE_TAG}
 

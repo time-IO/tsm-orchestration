@@ -2,8 +2,8 @@ ARG BASE_IMAGE_TAG=11
 
 FROM tomcat:${BASE_IMAGE_TAG}
 
-ARG BUILD_DATE
-ARG VCS_REF
+ARG BUILD_DATE=""
+ARG VCS_REF=""
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO FROST-Server Image" \
@@ -21,9 +21,6 @@ ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2024.1.0/postgis-jdbc-2024.1.0.jar
 ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar
 
-ARG BUILD_DATE
-ARG VCS_REF
-
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO FROST-Server Image" \
     org.opencontainers.image.licenses="EUPL-1.2" \
@@ -40,7 +37,7 @@ RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
     && apt-get clean \
     && addgroup --system --gid ${GID} tomcat \
     && adduser --system --uid ${UID} --gid ${GID} --home /home/tomcat tomcat \
-    || echo "The UID '${UID}' is already in use."\
+    || echo "The UID '${UID}' is already in use."
 
 # Download the FROST-Server.war, postgis-jdbc.jar, and postgresql.jar files
 # Create the /share directory and set the owner to the UID user

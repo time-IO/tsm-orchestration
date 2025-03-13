@@ -340,6 +340,8 @@ services:
       args:
         BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
