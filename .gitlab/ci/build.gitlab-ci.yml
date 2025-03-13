@@ -14,7 +14,7 @@ build-and-push-to-registry:
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
-    after_script:
+  after_script:
     - docker logout
   script:
     - docker compose build -q init database cron-scheduler frost worker-configdb-updater worker-db-setup
