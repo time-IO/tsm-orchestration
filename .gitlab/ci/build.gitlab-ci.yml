@@ -24,3 +24,5 @@ build-and-push-to-registry:
     paths:
       - .build_date
       - .env
+  tags:
+    - "dind"
