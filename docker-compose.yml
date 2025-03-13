@@ -58,12 +58,7 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "${TIMEIO_IMAGE_REGISTRY}/database:${TIMEIO_DATABASE_IMAGE_TAG}"
-    build:
-      context: postgres
-      args:
-        UID: "${UID}"
-        BASE_IMAGE_TAG: "${DATABASE_TIMESCALE_BASE_IMAGE_TAG}"
+    image: "bitnami/postgresql:${DATABASE_POSTGRES_IMAGE_TAG}"
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
@@ -71,12 +66,8 @@ services:
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./postgres/postgres-force-ssl.sh:/docker-entrypoint-initdb.d/postgres-force-ssl.sh
       - ./data/postgres/data:/var/lib/postgresql/data
-      - "${DATABASE_TLS_CERT_PATH}:/var/lib/postgresql/server.crt"
-      - "${DATABASE_TLS_KEY_PATH}:/var/lib/postgresql/server.key"
-    user: "${UID}:${GID}"
-    command: "${DATABASE_POSTGRES_EXTRA_PARAMS}"
+    user: "$UID"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $DATABASE_USER"]
       interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
