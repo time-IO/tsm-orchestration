@@ -1,5 +1,5 @@
 ---
-combined-e2e:
+combined-e2e-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
   needs:

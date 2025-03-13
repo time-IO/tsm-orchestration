@@ -5,6 +5,8 @@
 # [1] https://git.ufz.de/rdm-software/timeseries-management/tsm-deployment
 trigger_stage_deployment:
   stage: notify
+  needs:
+    - "deploy-images-to-registry"
   image: "docker:${DOCKER_IMAGE_TAG}"
   script:
     - apk add --no-cache curl

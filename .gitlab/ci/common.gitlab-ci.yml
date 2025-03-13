@@ -4,6 +4,9 @@ stages:
   - "build"
   - "integration"
   - "end-to-end"
+  - "scan"
+  - "release"
+  - "notify"
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
