@@ -25,12 +25,10 @@ services:
     volumes:
       - "${MINIO_LOCAL_MOUNT_PATH:-minio}:/tmp/minio"
       - "${CRONTAB_LOCAL_MOUNT_PATH:-crontab}:/tmp/crontab"
-      - "${GRAFANA_LOCAL_MOUNT_PATH:-grafana}:/tmp/grafana"
       - "${MOSQUITTO_LOCAL_MOUNT_PATH:-mosquitto}:/tmp/mosquitto"
-      - "${DATABASE_LOCAL_MOUNT_PATH:-database}:/tmp/database"
       - "${TOMCAT_LOCAL_MOUNT_PATH:-tomcat-context}:/tmp/tomcat"
+      # is there a better way to do this?
       - ./nginx/html/:/home/tsm/html
-      - ./cron:/tmp/cron
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1098,3 +1096,4 @@ volumes:
   grafana:
   mosquitto:
   minio:
+  crontab:

@@ -22,4 +22,7 @@ COPY init.sh /init.sh
 RUN chown tsm /init.sh
 USER tsm
 RUN mkdir /home/tsm/html
+RUN mkdir -p /tmp/minio \
+    && mkdir -p /tmp/crontab \
+    && mkdir -p /tmp
 CMD ["/init.sh"]
