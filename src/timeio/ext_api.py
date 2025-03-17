@@ -3,6 +3,7 @@ import json
 import base64
 
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 
 from timeio.feta import Thing
@@ -12,6 +13,11 @@ from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
 api_base_url = get_envvar("DB_API_BASE_URL")
+
+
+class NoHttpsError(Exception):
+    def __init_(self, msg):
+        super().__init__(msg)
 
 
 class SyncBoschApi:
@@ -41,6 +47,8 @@ class SyncBoschApi:
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         url = f"""{settings["endpoint"]}/{settings["sensor_id"]}/{content["datetime_from"]}/{content["datetime_to"]}"""
+        if urlparse(url).scheme != "https":
+            raise NoHttpsError(f"{url} is not https")
         response = self.make_request(url, settings["username"], pw_dec)
         parsed_observations = self.parse_api_response(response, origin="bosch_data")
         return parsed_observations
