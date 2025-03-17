@@ -405,6 +405,55 @@ services:
 
   # Summary
   # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  thing-management-frontend:
+    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:test-for-orchestration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  thing-management-api:
+    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:test-for-orchestration
+    environment:
+      ENVIRONMENT: "development"
+      DB_URL: "${DATABASE_ADMIN_DSN}"
+      POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
+      PROXY_URL: "${PROXY_URL}"
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_started
+    #  keycloak:
+    #    condition: service_started
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+
+  # Summary
+  # =======
   # brief: A user frontend to add things groups parser etc.
   # dir:
   # see also:
@@ -515,6 +564,8 @@ services:
       tsmdl:
         condition: service_started
       frost:
+        condition: service_started
+      thing-management-frontend:
         condition: service_started
       init:
         condition: service_completed_successfully
