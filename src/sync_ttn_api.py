@@ -7,9 +7,12 @@ import logging
 import requests
 import click
 
+from urllib.parse import urlparse
+
 from timeio.crypto import decrypt, get_crypt_key
 import timeio.mqtt as mqtt
 from timeio.journaling import Journal
+from timeio.ext_api import NoHttpsError
 
 journal = Journal("CronJob")
 api_base_url = os.environ.get("DB_API_BASE_URL")
@@ -35,9 +38,11 @@ def main(thing_uuid: str, parameters: str, target_uri: str):
     logger.info(f"Start fetching TTN data for thing {thing_uuid}")
     params = json.loads(parameters.replace("'", '"'))
     api_key_dec = decrypt(params["api_key"], get_crypt_key())
-
+    url = params["endpoint_uri"]
+    if urlparse(url).scheme != "https":
+        raise NoHttpsError(f"{url} is not https")
     res = requests.get(
-        params["endpoint_uri"],
+        url,
         headers={
             "Authorization": f"Bearer {api_key_dec}",
             "Accept": "text/event-stream",
