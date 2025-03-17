@@ -59,8 +59,6 @@ combined-integration-test:
     - "curl -Isf http://docker/object-storage/ -o /dev/null || exit 1"
     - "curl -Isf http://docker/visualization/ -o /dev/null || exit 1"
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
-    - "curl -Isf http://docker/frontend || echo 'fail'"
-    # so for now we curl it from inside the proxy container
-    #- "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
+    - "curl -Isf http://docker/frontend/ -o /dev/null || exit 1"
   tags:
     - "dind"
