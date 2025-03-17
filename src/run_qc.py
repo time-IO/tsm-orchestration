@@ -45,11 +45,11 @@ class QcHandler(AbstractHandler):
     def act(self, content: dict, message: MQTTMessage):
         thing_uuid = None
         version = content.setdefault("version", 1)
-        if version == 1:
+        if version == 1:  # data was parsed
             _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
             thing_uuid = content["thing_uuid"]
             logger.info(f"QC was triggered by data upload to thing. {content=}")
-        elif version == 2:
+        elif version == 2:  # triggered by frontend
             _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
             logger.info(f"QC was triggered by user (in frontend). {content=}")
         else:

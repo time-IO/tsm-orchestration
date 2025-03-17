@@ -4,13 +4,17 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from typing import Any, cast, Literal
+from typing import Any
 
 import paho.mqtt.client as mqtt
 from psycopg_pool import ConnectionPool
-from timeio.typehints import MqttPayload
+from timeio.typehints import MqttPayload, v1
 from timeio.common import get_envvar
-from timeio.configdb import store_qaqc_config, store_thing_config
+from timeio.configdb import (
+    store_qaqc_config,
+    store_thing_config,
+    store_project_config,
+)
 from timeio.version import __version__ as timeio_version
 
 logger = logging.getLogger("configdb-updater")
@@ -64,7 +68,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
     pub_topic: str = userdata["publish_topic"]
     pub_qos: int = userdata["publish_qos"]
 
-    section = "decoding or parsing"
+    section = "Parsing message content"
     data = None
     try:
         data: MqttPayload.QaqcConfigV3_T = json.loads(msg.payload.decode())
@@ -74,12 +78,12 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
             raise ValueError("mandatory field 'version' is not present in data")
         logger.debug(f"Message content version: {version}")
 
-        logger.info(f"Processing qaqc config {name!r}. Project: {data['project_uuid']}")
-        section = "storing qaqc settings"
+        logger.info(f"Processing QC config {name!r}. Project: {data['project_uuid']}")
+        section = "Processing QC settings"
         with db.connection() as conn:
-            store_qaqc_config(conn, data)
+            store_qaqc_config(conn, data, legacy=False)
         section = "sending mqtt message"
-        logger.debug(f"inform downstream services about update of thing")
+        logger.debug(f"Inform downstream services about update of QC.")
         payload = json.dumps({"qaqc": data["name"]})
         client.publish(topic=pub_topic, payload=payload, qos=pub_qos)
     except Exception:
@@ -89,7 +93,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
             detail = f"msg.payload: {msg.payload!r}"
         logger.exception(f"{section} failed. {detail}\n")
     else:
-        logger.info(f"Successfully updated settings for project {data['project_uuid']}")
+        logger.info(f"Successfully updated QC settings")
 
 
 def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
@@ -98,7 +102,7 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
     pub_topic: str = userdata["publish_topic"]
     pub_qos: int = userdata["publish_qos"]
 
-    section = "decoding or parsing"
+    section = "Parsing message content"
     try:
         data: dict = json.loads(msg.payload.decode())
         if (thing_uuid := data.get("uuid")) is None:
@@ -107,44 +111,46 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
             raise ValueError("mandatory field 'version' is not present in data")
         logger.debug(f"Message content version: {version}")
         data = prepare_data_by_version(data)
+        logging.info(f"thing: {thing_uuid} ({data.get('name', 'UNNAMED')})")
 
-        section = "storing thing"
         # We only commit changes if all inserts were successful,
         # and we also successfully informed downstream services
         # via mqtt, if anything goes wrong we roll back. This is
         # done automatically by the connection context manager.
         with db.connection() as conn:
 
-            logger.info(f"processing data for thing {thing_uuid}")
-            store_thing_config(conn, data)
+            proj_id = store_project_config(conn, data)
 
-            section = "storing qaqc"
-            # todo: Currently the qaqc config is passed with the thing,
-            #   this is deprecated. Instead the qaqc config should become
-            #   part of the 'project' and emit an own mqtt message on
-            #   modification or creation.
-            #   Until then we call store_qaqc_config() from here.
+            # Currently we have two different qc workflows.
+            # The legacy workflow, by which the QC Settings are stored with the
+            # thing itself and the new qc workflow which has its own input mask
+            # in the frontend and is bound to a project.
+            # The former is handled here by extracting the relevant keys from the
+            # mqtt message and with them calling `store_qaqc_config`.
+            # The latter is triggererd by another mqtt message and processed in its
+            # own mqtt handler `qaqc_update` above.
+            section = "Processing legacy QC"
             proj_uuid = data["project"]["uuid"]
             idx = data["qaqc"]["default"]
             cnf = data["qaqc"]["configs"][idx]
-            cnf["version"] = cast(Literal[1], 1)
+            cnf["version"] = v1
             cnf["project_uuid"] = proj_uuid
             cnf: MqttPayload.QaqcConfigV1_T
-            logger.info(
-                f"processing qaqc config "
-                f"{cnf['name']!r} "
-                f"from project {proj_uuid}"
-            )
-            store_qaqc_config(conn, cnf)
+            logger.info(f"Processing legacy QC settings from thing {thing_uuid}")
+            qid = store_qaqc_config(conn, cnf, legacy=True)
 
-            section = "sending mqtt message"
+            section = "Processing thing"
+            logger.info(f"processing data for thing {thing_uuid}")
+            store_thing_config(conn, data, qid, proj_id)
+
+            section = "Sending mqtt message"
             logger.debug(f"inform downstream services about update of thing")
             payload = json.dumps({"thing": thing_uuid})
             client.publish(topic=pub_topic, payload=payload, qos=pub_qos)
     except Exception:
         logger.exception(f"{section} failed.\n")
     else:
-        logger.info(f"successfully updated thing {thing_uuid}")
+        logger.info(f"Successfully updated thing {thing_uuid}")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,11 @@
 
 deploy-images-to-registry:
   stage: release
+  needs:
+    - "docker-service-test"
+    - "mqtt-service-test"
+    - "combined-integration-test"
+    - "combined-e2e-test"
   rules:
     # Rules are evaluated in order until the first match.
     # We only want to push new images if source files changes
@@ -12,21 +17,29 @@ deploy-images-to-registry:
         - src/**/*
         - dispatcher/**/*
         - configdb_updater/**/*
+        - init/**/*
+        - tomcat/**/*
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
-    - cp .env.example .env
-    - export BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)
+    - export BUILD_DATE=$(cat .build_date)
     - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - export REGISTRY=$(grep TIMEIO_IMAGE_REGISTRY .env | cut -d'=' -f2)
+    - export BUILD_DATE=$(cat .build_date)
   after_script:
     - docker logout
   script:
-    # build and push dispatcher
-    - DISPATCHER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
-    - DISPATCHER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-mqtt-ingest
-    # build and push configdb-updater
-    - CONFIGDB_UPDATER_IMAGE_TAG=$BUILD_DATE docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
-    - CONFIGDB_UPDATER_IMAGE_TAG=latest docker compose build --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" --push -q worker-configdb-updater
+    - docker compose pull init frost cron-scheduler worker-configdb-updater worker-db-setup
+    - |
+      for image in $(docker images --format '{{ .Repository }}; do 
+        docker tag $image $image:latest;
+        docker tag $image $image:${BUILD_DATE};
+        docker push $image:latest;
+        docker push $image:{BUILD_DATE};
+      done
   tags:
     - "dind"
+  artifacts:
+    paths:
+      - .build_date
