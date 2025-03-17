@@ -29,10 +29,10 @@ services:
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mqtt"
       - ./nginx/html/:/home/tsm/html
       # MinIO FTP TLS certificate
-      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/minio/hostcerts/minio-ftp.crt:ro"
-      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/minio/hostcerts/minio-ftp.key:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/hostcerts/minio-ftp.crt:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/hostcerts/minio-ftp.key:ro"
       # SSH Server key to provide constant ssh host key
-      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/tmp/minio/hostcerts/id_ed25519:ro"
+      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/tmp/hostcerts/id_ed25519:ro"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
