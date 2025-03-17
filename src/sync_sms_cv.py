@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import os
-import psycopg2
-from psycopg2 import sql as psysql
+import psycopg
+from psycopg import sql as psysql
+from psycopg import connection, cursor
 from typing import Union, Dict, Optional, Any
-from psycopg2.extensions import cursor, connection
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
 import json
@@ -27,8 +27,8 @@ def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
     err = None
     for _ in range(retries):
         try:
-            return psycopg2.connect(
-                database=db, user=user, password=password, host=host
+            return psycopg.connect(
+                dbname=db, user=user, password=password, host=host
             )
         except Exception as e:
             err = e
