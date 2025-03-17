@@ -30,7 +30,7 @@ def generate_random_topic(username):
 
 def set_mosquitto_password(user, passwd):
     os.system(
-        f"docker compose exec -T mqtt-broker bash -c 'echo {user}:$(/mosquitto/pw -p {passwd}) >> /mosquitto-auth/mosquitto.passwd'"
+        f"docker compose exec -T mqtt-broker bash -c 'echo {user}:$(/mosquitto/pw -p {passwd}) >> /tmp/mosquitto/auth/mosquitto.passwd'"
     )
     os.system(
         "echo Restarting mqtt-broker; docker compose restart mqtt-broker > /dev/null 2>&1; sleep 2"

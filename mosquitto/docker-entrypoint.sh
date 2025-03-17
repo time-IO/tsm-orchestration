@@ -9,10 +9,10 @@ if [ "$user" = '0' ]; then
 fi
 
 # create password db when not present
-if [ ! -f "/mosquitto-auth/mosquitto.passwd" ]; then
-  echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd &&
-  echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd
-  echo `echo -n "$FRONTEND_MQTT_USER:" && /mosquitto/pw -p "$FRONTEND_MQTT_PASS"` >> /mosquitto-auth/mosquitto.passwd
+if [ ! -f "/tmp/mosquitto/auth/mosquitto.passwd" ]; then
+  echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd &&
+  echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd
+  echo `echo -n "$FRONTEND_MQTT_USER:" && /mosquitto/pw -p "$FRONTEND_MQTT_PASS"` >> /tmp/mosquitto/auth/mosquitto.passwd
 fi
 
 # always update acl file
@@ -40,7 +40,7 @@ fi
   echo "topic readwrite qaqc_settings_update/#"
   echo "topic readwrite data_parsed/#"
   echo "topic readwrite sync_ext_apis/#"
-} >/mosquitto-auth/mosquitto.acl
+} >/tmp/mosquitto/auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
 then

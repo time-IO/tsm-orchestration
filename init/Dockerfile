@@ -23,5 +23,8 @@ RUN chown tsm /init.sh
 USER tsm
 RUN mkdir /home/tsm/html
 RUN mkdir -p /tmp/minio \
-    && mkdir -p /tmp/cron
+    && mkdir -p /tmp/cron \
+    && mkdir -p /tmp/database \
+    && mkdir -p /tmp/mqtt
+
 CMD ["/init.sh"]

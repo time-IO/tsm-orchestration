@@ -141,20 +141,20 @@ break the health check of the service. To change passwords or add users use the
 `mosquitto_passwd` command from inside the container:
 
 ```bash
-docker-compose run --rm mqtt-broker mosquitto_passwd -b /mosquitto-auth/mosquitto.passwd "user" "password"
+docker-compose run --rm mqtt-broker mosquitto_passwd -b /tmp/mosquitto/auth/mosquitto.passwd "user" "password"
 ```
 
 With interactive password input:
 
 ```bash
-docker-compose run --rm mqtt-broker mosquitto_passwd /mosquitto-auth/mosquitto.passwd "user"
+docker-compose run --rm mqtt-broker mosquitto_passwd /tmp/mosquitto/auth/mosquitto.passwd "user"
 ```
 
 ### Example for adding a new user and an acl to publish data
 
 1. Start the mqtt-broker service with `docker-compose up mqtt-broker` at least once the create 
    the initial `mosquitto.passwd` and `mosquitto.acl` files.
-2. Call ``docker-compose exec mqtt-broker bash -c $'echo `echo -n "MY_NEW_MQTT_USER:" && /mosquitto/pw -p "MY_NEW_MQTT_PASSWORD"` >> /mosquitto-auth/mosquitto.passwd'``
+2. Call ``docker-compose exec mqtt-broker bash -c $'echo `echo -n "MY_NEW_MQTT_USER:" && /mosquitto/pw -p "MY_NEW_MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd'``
    to add the new user with its password 
 3. Restart the mqtt-broker service `docker-compose restart mqtt-broker`
 4. From now on you should be able to publish to the new users topic namespace:

@@ -25,7 +25,14 @@ services:
     volumes:
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/minio"
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
+      - "${DATABASE_PERSTENCE_VOLUME:-database}:/tmp/database"
+      - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mqtt"
       - ./nginx/html/:/home/tsm/html
+      # MinIO FTP TLS certificate
+      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/minio/hostcerts/minio-ftp.crt:ro"
+      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/minio/hostcerts/minio-ftp.key:ro"
+      # SSH Server key to provide constant ssh host key
+      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/tmp/minio/hostcerts/id_ed25519:ro"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -59,14 +66,16 @@ services:
   database:
     restart: "${SERVICE_RESTART_POLICY}"
     image: "bitnami/postgresql:${DATABASE_POSTGRES_IMAGE_TAG}"
+    depends_on:
+      init:
+        condition: service_completed_successfully
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
       POSTGRES_USER: "${DATABASE_USER}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
-      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - "${DATABASE_MOUNT_PATH:-database}:/var/lib/postgresql/data"
+      - "${DATABASE_PERSISTENCE_VOLUME:-database}:/bitnami/postgresql/data"
     user: "$UID"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $DATABASE_USER"]
@@ -122,11 +131,6 @@ services:
       MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
     volumes:
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/minio"
-      # FTP server tls key and cert
-      - "${OBJECT_STORAGE_FTP_TLS_CRT}:/minio/certs/minio-ftp.crt:ro"
-      - "${OBJECT_STORAGE_FTP_TLS_KEY}:/minio/certs/minio-ftp.key:ro"
-      # SSH Server key to provide constant ssh host key
-      - "${OBJECT_STORAGE_SFTP_HOSTKEY}:/minio/certs/id_ed25519:ro"
     user: "${UID}:${GID}"
     command: >
       server
