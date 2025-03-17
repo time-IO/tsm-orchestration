@@ -34,8 +34,8 @@ deploy-images-to-registry:
     - |
       for image in $(docker images --format '{{ .Repository }}; do 
         docker tag $image $image:latest;
-        docker push $image:latest;
         docker tag $image $image:${BUILD_DATE};
+        docker push $image:latest;
         docker push $image:{BUILD_DATE};
       done
   tags:
