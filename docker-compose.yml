@@ -23,11 +23,8 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
-      - "${MINIO_LOCAL_MOUNT_PATH:-minio}:/tmp/minio"
-      - "${CRONTAB_LOCAL_MOUNT_PATH:-crontab}:/tmp/crontab"
-      - "${MOSQUITTO_LOCAL_MOUNT_PATH:-mosquitto}:/tmp/mosquitto"
-      - "${TOMCAT_LOCAL_MOUNT_PATH:-tomcat-context}:/tmp/tomcat"
-      # is there a better way to do this?
+      - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/minio"
+      - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
       - ./nginx/html/:/home/tsm/html
     logging:
       options:
@@ -124,7 +121,7 @@ services:
       MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: 60s
       MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
     volumes:
-      - "${MINIO_LOCAL_MOUNT_PATH:-minio}:/minio"
+      - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/minio"
       # FTP server tls key and cert
       - "${OBJECT_STORAGE_FTP_TLS_CRT}:/minio/certs/minio-ftp.crt:ro"
       - "${OBJECT_STORAGE_FTP_TLS_KEY}:/minio/certs/minio-ftp.key:ro"
@@ -196,7 +193,7 @@ services:
     volumes:
       - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
       - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
-      - "${MOSQUITTO_LOCAL_MOUNT_PATH:-mosquitto}:/tmp/mosquitto/"
+      - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mosquitto/"
       - "${MQTT_MOSQUITTO_TLS_CERT_PATH}:/mosquitto/config/certs/server.crt:ro"
       - "${MQTT_MOSQUITTO_TLS_KEY_PATH}:/mosquitto/config/certs/server.key:ro"
       - "${MQTT_MOSQUITTO_TLS_CA_PATH}:/mosquitto/config/certs/ca.crt:ro"
@@ -256,7 +253,7 @@ services:
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
     volumes:
-      - "${GRAFANA_LOCAL_MOUNT_PATH:-grafana}:/var/lib/grafana"
+      - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/var/lib/grafana"
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
@@ -343,7 +340,7 @@ services:
         GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
-      - tomcat-context:/usr/local/tomcat/conf/Catalina/localhost:ro
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost:ro"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -664,7 +661,7 @@ services:
       timeio-db-api:
         condition: service_healthy
     volumes:
-      - tomcat-context:/home/appuser/app/src/frost_context_files:rw
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
@@ -910,7 +907,7 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
     entrypoint: ["python3", "setup_crontab.py"]
     volumes:
-      - ./cron/crontab.txt:/tmp/cron/crontab.txt
+      - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1046,7 +1043,7 @@ services:
       timeout: 3s
       retries: 5
     volumes:
-      - ./cron/crontab.txt:/tmp/cron/crontab.txt:ro
+      - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
       - ./src:/scripts:ro
       - sftp-private-keys:/sftp-private-keys:ro
     logging:
@@ -1093,7 +1090,7 @@ volumes:
   sftp-private-keys:
   tomcat-context:
   database:
-  grafana:
-  mosquitto:
-  minio:
+  visualization:
+  mqtt-broker:
+  object-storage:
   crontab:
