@@ -124,7 +124,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
                     ro_user=ro_user, schema=schema
                 )
-                )
+            )
 
     def password_has_changed(self, url, user, password):
         # NOTE: currently unused function
@@ -177,9 +177,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
             )
             # Set default schema when connecting as user
             c.execute(
-                sql.SQL(
-                    "ALTER ROLE {user} SET search_path to {user}, public"
-                ).format(user=user)
+                sql.SQL("ALTER ROLE {user} SET search_path to {user}, public").format(
+                    user=user
+                )
             )
             # Grant schema to new user
             c.execute(
@@ -188,9 +188,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
             )
             # Equip new user with all grants
-            c.execute(
-                sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
-            )
+            c.execute(sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user))
             # deploy the tables and indices and so on
             c.execute(query)
 
@@ -296,7 +294,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     user_prefix.lower() + thing.database.ro_username.lower()
                 )
                 sms_url, cv_url = os.environ.get("SMS_URL"), os.environ.get("CV_URL")
-                view = view.replace("%(tsm_schema)s", f"'{thing.database.username.lower()}'")
+                view = view.replace(
+                    "%(tsm_schema)s", f"'{thing.database.username.lower()}'"
+                )
                 view = view.replace("%(sms_url)s", f"'{sms_url}'")
                 view = view.replace("%(cv_url)s", f"'{cv_url}'")
                 c.execute(sql.SQL("SET search_path TO {user}").format(user=user))

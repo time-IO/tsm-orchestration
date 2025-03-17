@@ -85,7 +85,6 @@ class ReentrantConnection:
         def _connect(_self) -> None:
             _self._conn = psycopg.connect(dsn)
 
-
         self._conn: psycopg.Connection | None = None
         self._connect = _connect
         self._lock = threading.RLock()
@@ -110,7 +109,9 @@ class ReentrantConnection:
                 # unfortunately there is no client side timeout
                 # option, and we encountered spurious very long
                 # Connection timeouts (>15 min)
-                c.execute(f"SET statement_timeout TO {int(self.TIMEOUT * 1000)}")  # Timeout in ms
+                c.execute(
+                    f"SET statement_timeout TO {int(self.TIMEOUT * 1000)}"
+                )  # Timeout in ms
                 c.execute("SELECT 1")
                 c.fetchone()
                 return
@@ -136,7 +137,7 @@ class ReentrantConnection:
         self.connect()
         return self._conn.cursor()
 
-    def transaction(self, query, params= None, fetchone=True):
+    def transaction(self, query, params=None, fetchone=True):
         if self._conn is None:
             raise ValueError("must call connect first")
         with self._conn.transaction():
