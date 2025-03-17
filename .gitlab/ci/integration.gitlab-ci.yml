@@ -2,10 +2,11 @@
 docker-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
-  needs: []
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache bash"
-    - "docker compose up -d --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "docker compose logs init"
     - "sleep 20"
   script:
@@ -20,7 +21,8 @@ docker-service-test:
 mqtt-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
-  needs: []
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache python3"
     - "python3 -m venv venv"
@@ -28,7 +30,7 @@ mqtt-service-test:
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install paho-mqtt==1.6.1"
-    - "docker compose up -d --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
@@ -40,11 +42,12 @@ mqtt-service-test:
 combined-integration-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
-  needs: []
+  needs:
+    - "build-and-push-images"
   before_script:
     - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
     - "apk add --no-cache curl postgresql-client"
-    - "docker compose up -d --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "echo 'testing object storage integration...'"
