@@ -27,3 +27,4 @@ build-and-push-images:
   artifacts:
     paths:
       - .env
+      - .build_date

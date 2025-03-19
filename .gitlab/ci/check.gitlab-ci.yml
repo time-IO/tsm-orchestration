@@ -17,7 +17,7 @@ check-protected-files:
 
 black:
   stage: check
-  image: python:3.11
+  image: python:3.11-slim
   before_script:
     - pip install black
   script:
@@ -25,7 +25,7 @@ black:
 
 pytest:
   stage: check
-  image: python:3.11
+  image: python:3.11-slim
   before_script:
     - pip install -r src/requirements.txt  pytest
   script:
