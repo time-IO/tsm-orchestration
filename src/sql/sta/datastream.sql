@@ -34,14 +34,7 @@ SELECT
 		'symbol', dp.unit_name,
 		'definition', dp.unit_uri
 	) as "UNIT_OF_MEASUREMENT",
-    public.st_asgeojson(
-        public.st_convexhull(
-            public.ST_SetSRID(
-                    public.ST_MakePoint(csl.x, csl.y),
-                    4326
-            )
-        )
-    ) as "OBSERVED_AREA",
+    public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
 	null as "RESULT_TIME",
 	null as "PHENOMENON_TIME",
 	dma.begin_date AS "PHENOMENON_TIME_START",
