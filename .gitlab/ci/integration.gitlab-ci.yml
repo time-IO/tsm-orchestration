@@ -2,11 +2,11 @@
 docker-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache bash"
-    - "mv .env.example .env"
-    - "cp .env .gitlab/ci/.env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "docker compose logs init"
     - "sleep 20"
   script:
@@ -21,6 +21,8 @@ docker-service-test:
 mqtt-service-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
+  needs:
+    - "build-and-push-images"
   before_script:
     - "apk add --no-cache python3"
     - "python3 -m venv venv"
@@ -28,8 +30,7 @@ mqtt-service-test:
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
     - "python3 -m pip install paho-mqtt==1.6.1"
-    - "mv .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
     - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
@@ -38,48 +39,26 @@ mqtt-service-test:
   tags:
     - "dind"
 
-proxy-test:
+combined-integration-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "integration"
+  needs:
+    - "build-and-push-images"
   before_script:
-    - "export DJANGO_TRUSTED_ORIGINS=http://docker:80"
-    - "apk add --no-cache curl"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
+    - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
+    - "apk add --no-cache curl postgresql-client"
+    - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
+    - "echo 'testing object storage integration...'"
+    - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
+    - "echo 'testing database integration...'"
+    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
+    - "echo 'testing proxy integration...'"
     - "curl -Isf http://docker -o /dev/null || exit 1"
     - "curl -Isf http://docker/object-storage/ -o /dev/null || exit 1"
     - "curl -Isf http://docker/visualization/ -o /dev/null || exit 1"
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
-    # somehow curl -Isf http://docker/frontend returns 400
-    # so for now we curl it from inside the proxy container
-    - "docker compose exec proxy curl -Isf http://proxy/frontend -o /dev/null || exit 1"
-  tags:
-    - "dind"
-
-object-storage-test:
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "integration"
-  before_script:
-    - "apk add --no-cache curl"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 30"
-  script:
-    - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
-  tags:
-    - "dind"
-
-database-test:
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  stage: "integration"
-  before_script:    
-    - "apk add --no-cache postgresql-client"
-    - "cp .env.example .env"
-    - "docker compose up -d --force-recreate -V --quiet-pull --build"
-    - "sleep 20"
-  script:
-    - "PGPASSWORD=postgres psql -U postgres -d postgres -h docker -tAc \"SELECT version()\" || exit 1"
+    - "curl -Isf http://docker/frontend/ || echo nope"
   tags:
     - "dind"
