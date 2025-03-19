@@ -2,6 +2,20 @@
 
 deploy-images-to-registry:
   stage: release
+  rules:
+    # Rules are evaluated in order until the first match.
+    # We only want to push new images if source files changes
+    # or if we manually decide to do so.
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - .env.example
+        - src/**/*
+        - dispatcher/**/*
+        - configdb_updater/**/*
+        - init/**/*
+        - tomcat/**/*
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
   dependencies:
     - build-and-push-images
   image: "docker:${DOCKER_IMAGE_TAG}"
