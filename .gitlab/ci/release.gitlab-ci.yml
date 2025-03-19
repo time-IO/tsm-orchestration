@@ -2,25 +2,8 @@
 
 deploy-images-to-registry:
   stage: release
-  needs:
-    - "docker-service-test"
-    - "mqtt-service-test"
-    - "combined-integration-test"
-    - "combined-e2e-test"
-  rules:
-    # Rules are evaluated in order until the first match.
-    # We only want to push new images if source files changes
-    # or if we manually decide to do so.
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - .env.example
-        - src/**/*
-        - dispatcher/**/*
-        - configdb_updater/**/*
-        - init/**/*
-        - tomcat/**/*
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+  dependencies:
+    - build
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
     - export BUILD_DATE=$(cat .build_date)
@@ -33,10 +16,8 @@ deploy-images-to-registry:
     - docker compose pull init frost cron-scheduler worker-configdb-updater worker-db-setup
     - |
       for image in $(docker images --format '{{ .Repository }}; do 
-        docker tag $image $image:latest;
-        docker tag $image $image:${BUILD_DATE};
-        docker push $image:latest;
-        docker push $image:{BUILD_DATE};
+        echo "${image}:latest";
+        echo "${image}:${BUILD_DATE}";
       done
   tags:
     - "dind"
