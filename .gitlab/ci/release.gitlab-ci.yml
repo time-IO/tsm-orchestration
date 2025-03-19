@@ -16,7 +16,7 @@ deploy-images-to-registry:
   script:
     - docker compose pull init frost cron-scheduler worker-configdb-updater worker-db-setup
     - |
-      for image in $(docker images --format '{{ .Repository }}; do 
+      for image in $(docker images --format '{{ .Repository }}'; do 
         echo "${image}:latest";
         echo "${image}:${BUILD_DATE}";
       done
