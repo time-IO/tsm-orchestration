@@ -6,6 +6,7 @@ build-and-push-images:
   before_script:
     - mkdir images -p
     - cp .env.example .env
+    - cp .env .env.release
     - echo -n $(date +%Y-%m-%d-%H%M%S) > .build_date
     - export BUILD_DATE=$(echo .build_date)
     - |
@@ -26,3 +27,4 @@ build-and-push-images:
   artifacts:
     paths:
       - .env
+      - .build_date
