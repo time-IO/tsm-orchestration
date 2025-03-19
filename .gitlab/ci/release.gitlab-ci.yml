@@ -3,7 +3,7 @@
 deploy-images-to-registry:
   stage: release
   dependencies:
-    - build
+    - build-and-push-images
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
     - cp .env.release .env
