@@ -31,10 +31,10 @@ deploy-images-to-registry:
     - docker compose pull -q init frost cron-scheduler worker-configdb-updater worker-db-setup
     - |
       for image in $(docker images --format '{{ .Repository }}'); do 
-        docker tag $image $image:latest;
-        docker tag $image $image:${BUILD_DATE};
+        docker tag $image:$CI_COMMIT_REF_NAME $image:latest;
+        docker tag $image:$CI_COMMIT_REF_NAME $image:$BUILD_DATE;
         docker push $image:latest;
-        docker push $image:{BUILD_DATE};
+        docker push $image:$BUILD_DATE;
       done
   tags:
     - "dind"
