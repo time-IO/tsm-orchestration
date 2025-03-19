@@ -2,20 +2,20 @@
 
 deploy-images-to-registry:
   stage: release
-  #rules:
-    # Rules are evaluated in order until the first match.
-    # We only want to push new images if source files changes
-    # or if we manually decide to do so.
-    #- if: $CI_COMMIT_BRANCH == "main"
-    #  changes:
-    #    - .env.example
-    #    - src/**/*
-    #    - dispatcher/**/*
-    #    - configdb_updater/**/*
-    #    - init/**/*
-    #    - tomcat/**/*
-    #- if: $CI_COMMIT_BRANCH == "main"
-    #  when: manual
+  rules:
+     Rules are evaluated in order until the first match.
+     We only want to push new images if source files changes
+     or if we manually decide to do so.
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - .env.example
+        - src/**/*
+        - dispatcher/**/*
+        - configdb_updater/**/*
+        - init/**/*
+        - tomcat/**/*
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
   dependencies:
     - build-and-push-images
   image: "docker:${DOCKER_IMAGE_TAG}"
@@ -28,11 +28,13 @@ deploy-images-to-registry:
   after_script:
     - docker logout
   script:
-    - docker compose pull init frost cron-scheduler worker-configdb-updater worker-db-setup
+    - docker compose pull -q init frost cron-scheduler worker-configdb-updater worker-db-setup
     - |
       for image in $(docker images --format '{{ .Repository }}'); do 
-        echo "${image}:latest";
-        echo "${image}:${BUILD_DATE}";
+        docker tag $image $image:latest;
+        docker tag $image $image:${BUILD_DATE};
+        docker push $image:latest;
+        docker push $image:{BUILD_DATE};
       done
   tags:
     - "dind"
