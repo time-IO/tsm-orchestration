@@ -23,7 +23,7 @@ build-and-push-images:
   script:
     - docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" init cron-scheduler frost worker-configdb-updater worker-db-setup
   rules:
-    - if: $CI_COMMIT_BRANCH != "main"
+    - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
   tags:
     - "dind"
   artifacts:

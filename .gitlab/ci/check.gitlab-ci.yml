@@ -5,7 +5,7 @@ check-protected-files:
     - echo "Files in flyway/migrations MUST NOT be altered! Undo your changes and commit again."
     - exit 1
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
       changes:
         - flyway/migrations/V1_1__create_schema_thing_mapping.sql
         - flyway/migrations/V2_1__configdb_add_schema_and_role.sql
@@ -23,7 +23,7 @@ black:
   script:
     - black --check src/ tests/
   rules:
-    - if: "$CI_COMMIT_BRANCH != 'main'"
+    - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
 
 pytest:
   stage: check
@@ -33,4 +33,4 @@ pytest:
   script:
     - python3 -m pytest tests
   rules:
-    - if: "$CI_COMMIT_BRANCH != 'main'"
+    - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
