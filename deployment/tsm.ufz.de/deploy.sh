@@ -15,6 +15,8 @@ if [ $? -ne 0 ]; then
 fi
 rm $TEMP_ENV_FILE
 
+git checkout ${SSH_ORIGINAL_COMMAND}
+
 # check whether the tag and the release environment file exist
 # fail if it does not exist ...
 RELEASE_ENV_FILE="releases/${SSH_ORIGINAL_COMMAND}.env"
