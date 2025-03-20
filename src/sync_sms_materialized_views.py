@@ -1,63 +1,60 @@
 import psycopg
-from os import environ
-from psycopg import connection
-from datetime import datetime
-import time
+from psycopg import sql
 
-def get_utc_str() -> str:
-    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
+from timeio.databases import Database
+from timeio.common import get_envvar
 
-def get_connection_from_env(retries: int = 4, sleep: int = 3) -> connection:
-    user = environ.get("CREATEDB_POSTGRES_USER")
-    password = environ.get("CREATEDB_POSTGRES_PASSWORD")
-    host = environ.get("CREATEDB_POSTGRES_HOST")
-    db = environ.get("CREATEDB_POSTGRES_DATABASE")
-    err = None
-    for _ in range(retries):
-        try:
-            return psycopg.connect(
-                database=db, user=user, password=password, host=host
-            )
-        except Exception as e:
-            err = e
-            print(f"{get_utc_str()}: Retrying...")
-            time.sleep(sleep)
-    raise RuntimeError(f"Could not connect to database") from err
 
-def update_materialized_views() -> None:
-  conn: connection = get_connection_from_env()
-  try:
-      # Create a cursor object to execute SQL queries
-      with conn.cursor() as cur:
-          # Query to get the list of materialized views starting with the prefix "sms_"
-          cur.execute("""
-              SELECT matviewname
-              FROM pg_matviews
-              WHERE schemaname = 'public'
-              AND matviewname LIKE 'sms_%'
-          """)
+class SyncSmsMaterializedViews:
+    def __init__(self):
+        self.db = Database(get_envvar("DATABASE_DSN"))
+        self.materialized_views = []
 
-          # Fetch the list of materialized views
-          matviews = cur.fetchall()
+    def collect_materialized_views(self):
+        with self.db.connection() as conn:
+            try:
+                with conn.cursor() as cur:
+                    # Query to get the list of materialized views starting with the prefix "sms_"
+                    cur.execute("""
+                                     SELECT matviewname
+                                     FROM pg_matviews
+                                     WHERE schemaname = 'public'
+                                     AND matviewname LIKE 'sms_%'
+                                 """)
 
-          # Iterate over the materialized views and refresh them
-          for matview in matviews:
-              view_name = matview[0]
-              cur.execute(f"REFRESH MATERIALIZED VIEW {view_name};")
-              print(f"Refreshed materialized view: {view_name}")
+                    self.materialized_views = cur.fetchall()
 
-      # Commit the changes
-      conn.commit()
+                    return self
+            except psycopg.Error as e:
+                print(f"Error occurred: {e}")
+                if conn:
+                    conn.rollback()
 
-  except psycopg.Error as e:
-      print(f"Error occurred: {e}")
-      if conn:
-          conn.rollback()
+    def update_materialized_views(self) -> None:
+        with self.db.connection() as conn:
+            try:
+                # Create a cursor object to execute SQL queries
+                with conn.cursor() as cur:
 
-  finally:
-      # Close the connection
-      if conn:
-          conn.close()
+                    # Iterate over the materialized views and refresh them
+                    for matview in self.materialized_views:
+                        view_name = matview[0]
+                        cur.execute(sql.SQL("REFRESH MATERIALIZED VIEW {}").format(sql.Identifier(view_name)))
+                        print(f"Refreshed materialized view: {view_name}")
+
+                # Commit the changes
+                conn.commit()
+
+            except psycopg.Error as e:
+                print(f"Error occurred: {e}")
+                if conn:
+                    conn.rollback()
+
+            finally:
+                # Close the connection
+                if conn:
+                    conn.close()
+
 
 if __name__ == "__main__":
-    update_materialized_views()
+    SyncSmsMaterializedViews().collect_materialized_views().update_materialized_views()
