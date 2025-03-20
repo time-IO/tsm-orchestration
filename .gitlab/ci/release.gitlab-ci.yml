@@ -6,7 +6,7 @@ deploy-images-to-registry:
     # Rules are evaluated in order until the first match.
     # We only want to push new images if source files changes
     # or if we manually decide to do so.
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: "$CI_COMMIT_BRANCH == 'main'"
       changes:
         - .env.example
         - src/**/*
@@ -14,7 +14,7 @@ deploy-images-to-registry:
         - configdb_updater/**/*
         - init/**/*
         - tomcat/**/*
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: "$CI_COMMIT_BRANCH == 'main'"
       when: manual
   dependencies:
     - build-and-push-images

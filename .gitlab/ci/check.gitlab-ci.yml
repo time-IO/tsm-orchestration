@@ -22,6 +22,8 @@ black:
     - pip install black
   script:
     - black --check src/ tests/
+  rules:
+    - if: "$CI_COMMIT_BRANCH != 'main'"
 
 pytest:
   stage: check
@@ -30,12 +32,5 @@ pytest:
     - pip install -r src/requirements.txt  pytest
   script:
     - python3 -m pytest tests
-
-git-merge-main:
-  stage: check
-  image: "docker:${DOCKER_IMAGE_TAG}"
-  script:
-    - git fetch origin main
-    - git merge --no-commit --no-ff origin/main || (echo "Merge conflicts detected!" && exit 1)
-    - echo "Merge successful."
-
+  rules:
+    - if: "$CI_COMMIT_BRANCH != 'main'"

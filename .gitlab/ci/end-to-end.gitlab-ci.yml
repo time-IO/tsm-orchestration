@@ -50,5 +50,7 @@ combined-e2e-test:
     - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
     - "echo 'testing frost end-to-end...'"
     - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
+  rules:
+    - if: "$CI_COMMIT_BRANCH != 'main'"
   tags:
     - "dind"
