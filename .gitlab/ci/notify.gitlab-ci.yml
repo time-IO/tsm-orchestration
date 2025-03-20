@@ -13,5 +13,5 @@ trigger_stage_deployment:
     - curl -X POST "https://git.ufz.de/api/v4/projects/3977/trigger/pipeline" -F "token=$PIPELINE_TOKEN_STAGE" -F "ref=main"
     - echo "triggering deployment on stage"
   rules:
-    - if: "$CI_COMMIT_BRANCH == 'main'"
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
   when: on_success
