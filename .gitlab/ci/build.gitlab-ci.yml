@@ -6,6 +6,7 @@ build-and-push-images:
   needs: []
   before_script:
     - cp .env.example .env
+    - echo "dummy"
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
