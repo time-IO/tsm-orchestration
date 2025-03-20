@@ -31,3 +31,11 @@ pytest:
   script:
     - python3 -m pytest tests
 
+git-merge-main:
+  stage: check
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  script:
+    - git fetch origin main
+    - git merge --no-commit --no-ff origin/main || (echo "Merge conflicts detected!" && exit 1)
+    - echo "Merge successful."
+
