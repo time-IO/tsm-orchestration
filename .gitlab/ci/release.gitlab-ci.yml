@@ -20,7 +20,7 @@ deploy-images-to-registry:
   needs: []
   before_script:
     - cp .env.example .env
-    - export BRANCH_NAME=$(git log --merges -1 --pretty=format:'%s' | sed "s/Merge branch '\(.*\)' into 'main'/\1/"
+    - export BRANCH_NAME=$(git log --merges -1 --pretty=format:'%s' | sed "s/Merge branch '\(.*\)' into 'main'/\1/")
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
