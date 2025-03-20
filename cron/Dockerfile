@@ -1,6 +1,6 @@
-ARG BASE_IMAGE_TAG=bullseye-slim
+ARG BASE_IMAGE_TAG=bullseye
 
-FROM debian:${BASE_IMAGE_TAG}
+FROM bitnami/minideb:${BASE_IMAGE_TAG}
 
 ARG BUILD_DATE
 ARG VCS_REF
