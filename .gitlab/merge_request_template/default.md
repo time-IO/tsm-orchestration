@@ -8,4 +8,5 @@
 
 
 > :warning:
+>
 > Do not change the auto-generated merge commit message, otherwise the release pipeline fails!
