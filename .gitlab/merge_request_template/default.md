@@ -9,4 +9,4 @@
 
 > :warning:
 >
-> Do not change the auto-generated merge commit message, otherwise the release pipeline fails!
+> Do not change the auto-generated `Merge commit message` or `Squash commit message`, otherwise the release pipeline fails!
