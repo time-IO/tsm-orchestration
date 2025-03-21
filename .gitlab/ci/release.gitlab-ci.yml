@@ -20,7 +20,22 @@ deploy-images-to-registry:
   needs: []
   before_script:
     - cp .env.example .env
-    - export BRANCH_NAME=$(git log --merges -1 --pretty=format:'%s' | sed "s/Merge branch '\(.*\)' into 'main'/\1/")
+    # return both parent commits
+    - export PARENT_SHA_1=$(git log --pretty=%P -n 1 $CI_COMMIT_SHA | awk '{print $1}')
+    - export PARENT_SHA_2=$(git log --pretty=%P -n 1 $CI_COMMIT_SHA | awk '{print $2}')
+    # return parent commit branch names
+    - export PARENT_BRANCH_1=$(git branch --contains $PARENT_SHA_1 --format="%(refname:short)" | head -n 1)
+    - export PARENT_BRANCH_2=$(git branch --contains $PARENT_SHA_2 --format="%(refname:short)" | head -n 1)
+    # set BRANCH_NAME to PARENT_BRANCH that is not "main"
+    - |
+      if [[ "$PARENT_BRANCH_1" != "main" ]]; then
+        export BRANCH_NAME=$PARENT_BRANCH_1
+      elif [[ "$PARENT_BRANCH_2" != "main" ]]; then
+        export BRANCH_NAME=$PARENT_BRANCH_2
+      else
+        echo "Both parent branches are 'main', can not determine non-main parent branch"
+        exit 1
+      fi
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
