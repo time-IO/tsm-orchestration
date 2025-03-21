@@ -1038,6 +1038,8 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
       API_SYNC_TOPIC: sync_ext_apis
+      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
+      DB_HOST: "${DATABASE_ADMIN_HOST}"
     depends_on:
       init:
         condition: service_completed_successfully

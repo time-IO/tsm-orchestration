@@ -71,13 +71,8 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_api is not None:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
-                script = "/scripts/mqtt_sync_wrapper.py"
-                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
-            else:
-                script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
-                target_uri = thing.database.url
-                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
+            script = "/scripts/mqtt_sync_wrapper.py"
+            command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_api.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
@@ -114,13 +109,8 @@ class CreateThingInCrontabHandler(AbstractHandler):
                 schedule = cls.update_cron_expression(job, new_interval)
             else:
                 schedule = str(job.slices)
-            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
-                script = "/scripts/mqtt_sync_wrapper.py"
-                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
-            else:
-                script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
-                target_uri = thing.database.url
-                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
+            script = "/scripts/mqtt_sync_wrapper.py"
+            command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_api.enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)

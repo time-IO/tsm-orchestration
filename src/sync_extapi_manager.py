@@ -11,7 +11,7 @@ from timeio.common import get_envvar, setup_logging
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
-from timeio.ext_api import SyncBoschApi, SyncTsystemsApi
+from timeio.ext_api import SyncBoschApi, SyncTsystemsApi, SyncUbaApi, SyncDwdApi, SyncTtnApi, SyncNmApi
 
 logger = logging.getLogger("sync-extapi-manager")
 journal = Journal("sync_ext_apis")
@@ -31,7 +31,14 @@ class SyncExtApiManager(AbstractHandler):
         )
         self.api_base_url = get_envvar("DB_API_BASE_URL")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
-        self.sync_handlers = {"tsystems": SyncTsystemsApi(), "bosch": SyncBoschApi()}
+        self.sync_handlers = {
+            "tsystems": SyncTsystemsApi(),
+            "bosch": SyncBoschApi(),
+            "uba": SyncUbaApi(),
+            "dwd": SyncDwdApi(),
+            "ttn": SyncTtnApi(),
+            "nm": SyncNmApi(),
+        }
 
     def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
@@ -56,7 +63,8 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(parsed_observations['observations'])} observations from API '{ext_api_name}' "
+            f"Successfully inserted {len(parsed_observations['observations'])}"
+            f" observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,
         )
