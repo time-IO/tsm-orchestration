@@ -7,13 +7,25 @@ check-protected-files:
   rules:
     - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event' && $CI_COMMIT_BEFORE_SHA !~ /^0000/"
       changes:
-        - flyway/migrations/V1_1__create_schema_thing_mapping.sql
-        - flyway/migrations/V2_1__configdb_add_schema_and_role.sql
-        - flyway/migrations/V2_2__configdb_initial_schema.sql
-        - flyway/migrations/V2_3__configdb_initial_data.sql
-        - flyway/migrations/V2_4__configdb_add_bosch.sql
-        - flyway/migrations/V2_5__configdb_drop_S3_not_null.sql
-        - flyway/migrations/V2_6__configdb_modify_qaqc_test.sql
+        - flyway/migrations/V0_1__*
+        - flyway/migrations/V0_2__*
+        - flyway/migrations/V0_3__*
+        - flyway/migrations/V0_4_0__*
+        - flyway/migrations/V0_4_1__*
+        - flyway/migrations/V1_1__*
+        - flyway/migrations/V2_1__*
+        - flyway/migrations/V2_2__*
+        - flyway/migrations/V2_3__*
+        - flyway/migrations/V2_4__*
+        - flyway/migrations/V2_5__*
+        - flyway/migrations/V2_6__*
+        - flyway/migrations/V2_7__*
+        - flyway/migrations/V2_8__*
+        - flyway/migrations/V2_9__*
+        - flyway/migrations/V2_10__*
+        - flyway/migrations/V2_11__*
+        - flyway/migrations/V2_12__*
+        - flyway/migrations/V2_13__*
 
 black:
   stage: check
