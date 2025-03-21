@@ -8,8 +8,6 @@ from functools import partial
 from typing import Any, Callable, Literal
 
 import psycopg
-import psycopg2
-import psycopg2.extensions
 import requests
 from psycopg import Connection, conninfo
 from psycopg.rows import dict_row
@@ -82,27 +80,22 @@ class ReentrantConnection:
     TIMEOUT = 2.0
     logger = logging.getLogger("ReentrantConnection")
 
-    def __init__(
-        self, dsn=None, connection_factory=None, cursor_factory=None, **kwargs
-    ):
-
+    def __init__(self, dsn=None):
         # we use a nested function to hide credentials
         def _connect(_self) -> None:
-            _self._conn = psycopg2.connect(
-                dsn, connection_factory, cursor_factory, **kwargs
-            )
+            _self._conn = psycopg.connect(dsn)
 
-        self._conn: psycopg2.extensions.connection | None = None
+        self._conn: psycopg.Connection | None = None
         self._connect = _connect
         self._lock = threading.RLock()
 
     def _is_alive(self) -> bool:
         try:
             self._ping()
-        except TimeoutError:
+        except psycopg.errors.QueryCanceled:
             self.logger.debug("Connection timed out")
             return False
-        except (psycopg2.InterfaceError, psycopg2.OperationalError):
+        except (psycopg.InterfaceError, psycopg.OperationalError):
             self.logger.debug("Connection seems stale")
             return False
         else:
@@ -111,29 +104,21 @@ class ReentrantConnection:
     def _ping(self):
         if self._conn is None:
             raise ValueError("must call connect first")
-        with self._conn as conn:
-            # unfortunately there is no client side timeout
-            # option, and we encountered spurious very long
-            # Connection timeouts (>15 min)
-            timer = threading.Timer(self.TIMEOUT, conn.cancel)
-            timer.start()
-            try:
-                # also unfortunately there is no other way to check
-                # if the db connection is still alive, other than to
-                # send a (simple) query.
-                with conn.cursor() as c:
-                    c.execute("select 1")
-                    c.fetchone()
-                if timer.is_alive():
-                    return
-            finally:
-                try:
-                    timer.cancel()
-                except Exception:
-                    pass
-            raise TimeoutError("Connection timed out")
+        try:
+            with self._conn.cursor() as c:
+                # unfortunately there is no client side timeout
+                # option, and we encountered spurious very long
+                # Connection timeouts (>15 min)
+                c.execute(
+                    f"SET statement_timeout TO {int(self.TIMEOUT * 1000)}"
+                )  # Timeout in ms
+                c.execute("SELECT 1")
+                c.fetchone()
+                return
+        finally:
+            pass
 
-    def reconnect(self) -> psycopg2.extensions.connection:
+    def reconnect(self) -> psycopg.connection:
         with self._lock:
             if self._conn is None or not self._is_alive():
                 try:
@@ -146,6 +131,31 @@ class ReentrantConnection:
         return self._conn
 
     connect = reconnect
+
+    def get_cursor(self):
+        """Ensures connection is alive and returns a cursor"""
+        self.connect()
+        return self._conn.cursor()
+
+    def transaction(self, query, params=None, fetchone=True):
+        if self._conn is None:
+            raise ValueError("must call connect first")
+        with self._conn.transaction():
+            with self._conn.cursor() as c:
+                c.execute(query, params)
+                if fetchone:
+                    result = c.fetchone()  # Fetch all rows
+                else:
+                    result = c.fetchall()  # Fetch only the first row
+                return result
+
+    def commit(self):
+        if self._conn is None:
+            raise ValueError("must call connect first")
+        try:
+            self._conn.commit()
+        except Exception as e:
+            raise
 
     def close(self) -> None:
         self._conn.close()

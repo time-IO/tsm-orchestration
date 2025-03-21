@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from psycopg2 import sql
 import psycopg
+from psycopg import sql
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.databases import ReentrantConnection
@@ -80,53 +80,51 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
     def create_user(self, thing):
 
-        with self.db:
-            with self.db.cursor() as c:
-                user = sql.Identifier(thing.database.username.lower())
-                passw = decrypt(thing.database.password, get_crypt_key())
-                c.execute(
-                    sql.SQL("CREATE ROLE {user} WITH LOGIN PASSWORD {password}").format(
-                        user=user, password=sql.Literal(passw)
-                    )
+        with self.db_conn.get_cursor() as c:
+            user = sql.Identifier(thing.database.username.lower())
+            passw = decrypt(thing.database.password, get_crypt_key())
+            c.execute(
+                sql.SQL("CREATE ROLE {user} WITH LOGIN PASSWORD {password}").format(
+                    user=user, password=sql.Literal(passw)
                 )
-                c.execute(
-                    sql.SQL("GRANT {user} TO {creator}").format(
-                        user=user, creator=sql.Identifier(self.db.info.user)
-                    )
+            )
+            c.execute(
+                sql.SQL("GRANT {user} TO {creator}").format(
+                    user=user, creator=sql.Identifier(self.db.info.user)
                 )
+            )
 
     def create_ro_user(self, thing, user_prefix: str = ""):
-        with self.db:
-            with self.db.cursor() as c:
-                ro_username = user_prefix.lower() + thing.database.ro_username.lower()
-                ro_user = sql.Identifier(ro_username)
-                schema = sql.Identifier(thing.database.username.lower())
-                ro_passw = decrypt(thing.database.ro_password, get_crypt_key())
+        with self.db_conn.get_cursor() as c:
+            ro_username = user_prefix.lower() + thing.database.ro_username.lower()
+            ro_user = sql.Identifier(ro_username)
+            schema = sql.Identifier(thing.database.username.lower())
+            ro_passw = decrypt(thing.database.ro_password, get_crypt_key())
 
-                c.execute(
-                    sql.SQL(
-                        "CREATE ROLE {ro_user} WITH LOGIN PASSWORD {ro_password}"
-                    ).format(ro_user=ro_user, ro_password=sql.Literal(ro_passw))
-                )
+            c.execute(
+                sql.SQL(
+                    "CREATE ROLE {ro_user} WITH LOGIN PASSWORD {ro_password}"
+                ).format(ro_user=ro_user, ro_password=sql.Literal(ro_passw))
+            )
 
-                c.execute(
-                    sql.SQL("GRANT {ro_user} TO {creator}").format(
-                        ro_user=ro_user, creator=sql.Identifier(self.db.info.user)
-                    )
+            c.execute(
+                sql.SQL("GRANT {ro_user} TO {creator}").format(
+                    ro_user=ro_user, creator=sql.Identifier(self.db.info.user)
                 )
+            )
 
-                # Allow tcp connections to database with new user
-                c.execute(
-                    sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {ro_user}").format(
-                        ro_user=ro_user, db_name=sql.Identifier(self.db.info.dbname)
-                    )
+            # Allow tcp connections to database with new user
+            c.execute(
+                sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {ro_user}").format(
+                    ro_user=ro_user, db_name=sql.Identifier(self.db.info.dbname)
                 )
+            )
 
-                c.execute(
-                    sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
-                        ro_user=ro_user, schema=schema
-                    )
+            c.execute(
+                sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
+                    ro_user=ro_user, schema=schema
                 )
+            )
 
     def password_has_changed(self, url, user, password):
         # NOTE: currently unused function
@@ -147,140 +145,132 @@ class CreateThingInPostgresHandler(AbstractHandler):
             return
 
         logger.debug(f"update password for user {user}")
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute(
-                    sql.SQL("ALTER USER {user} WITH PASSWORD {password}").format(
-                        user=sql.Identifier(user), password=sql.Identifier(password)
-                    )
+        with self.db_conn.get_cursor() as c:
+            c.execute(
+                sql.SQL("ALTER USER {user} WITH PASSWORD {password}").format(
+                    user=sql.Identifier(user), password=sql.Identifier(password)
                 )
+            )
 
     def create_schema(self, thing):
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute(
-                    sql.SQL(
-                        "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
-                    ).format(user=sql.Identifier(thing.database.username.lower()))
-                )
+        with self.db_conn.get_cursor() as c:
+            c.execute(
+                sql.SQL(
+                    "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
+                ).format(user=sql.Identifier(thing.database.username.lower()))
+            )
 
     def deploy_ddl(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
         with open(file) as fh:
             query = fh.read()
 
-        with self.db:
-            with self.db.cursor() as c:
-                user = sql.Identifier(thing.database.username.lower())
-                # Set search path for current session
-                c.execute(sql.SQL("SET search_path TO {0}").format(user))
-                # Allow tcp connections to database with new user
-                c.execute(
-                    sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {user}").format(
-                        user=user, db_name=sql.Identifier(self.db.info.dbname)
-                    )
+        with self.db_conn.get_cursor() as c:
+            user = sql.Identifier(thing.database.username.lower())
+            # Set search path for current session
+            c.execute(sql.SQL("SET search_path TO {0}").format(user))
+            # Allow tcp connections to database with new user
+            c.execute(
+                sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {user}").format(
+                    user=user, db_name=sql.Identifier(self.db.info.dbname)
                 )
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL(
-                        "ALTER ROLE {user} SET search_path to {user}, public"
-                    ).format(user=user)
+            )
+            # Set default schema when connecting as user
+            c.execute(
+                sql.SQL("ALTER ROLE {user} SET search_path to {user}, public").format(
+                    user=user
                 )
-                # Grant schema to new user
-                c.execute(
-                    sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
-                        user=user
-                    )
+            )
+            # Grant schema to new user
+            c.execute(
+                sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
+                    user=user
                 )
-                # Equip new user with all grants
-                c.execute(
-                    sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
-                )
-                # deploy the tables and indices and so on
-                c.execute(query)
+            )
+            # Equip new user with all grants
+            c.execute(sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user))
+            # deploy the tables and indices and so on
+            c.execute(query)
 
-                c.execute(
-                    sql.SQL(
-                        "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"
-                    ).format(user=user)
-                )
+            c.execute(
+                sql.SQL(
+                    "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"
+                ).format(user=user)
+            )
 
-                c.execute(
-                    sql.SQL(
-                        "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {user} TO {user}"
-                    ).format(user=user)
-                )
+            c.execute(
+                sql.SQL(
+                    "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {user} TO {user}"
+                ).format(user=user)
+            )
 
     def deploy_dml(self):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute(query)
+        with self.db_conn.get_cursor() as c:
+            c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):
         schema = sql.Identifier(thing.database.username.lower())
         sta_user = sql.Identifier(
             user_prefix.lower() + thing.database.ro_username.lower()
         )
-        with self.db:
-            with self.db.cursor() as c:
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL(
-                        "ALTER ROLE {sta_user} SET search_path to {schema}, public"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
+        with self.db_conn.get_cursor() as c:
+            # Set default schema when connecting as user
+            c.execute(
+                sql.SQL(
+                    "ALTER ROLE {sta_user} SET search_path to {schema}, public"
+                ).format(sta_user=sta_user, schema=schema)
+            )
 
-                # grant read rights to newly created views in schema to user
-                c.execute(
-                    sql.SQL(
-                        "GRANT SELECT ON ALL TABLES in SCHEMA {schema} TO {sta_user}"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
+            # grant read rights to newly created views in schema to user
+            c.execute(
+                sql.SQL(
+                    "GRANT SELECT ON ALL TABLES in SCHEMA {schema} TO {sta_user}"
+                ).format(sta_user=sta_user, schema=schema)
+            )
 
-                c.execute(
-                    sql.SQL(
-                        "GRANT SELECT ON ALL SEQUENCES in SCHEMA {schema} TO {sta_user}"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
+            c.execute(
+                sql.SQL(
+                    "GRANT SELECT ON ALL SEQUENCES in SCHEMA {schema} TO {sta_user}"
+                ).format(sta_user=sta_user, schema=schema)
+            )
 
-                c.execute(
-                    sql.SQL(
-                        "GRANT EXECUTE ON ALL FUNCTIONS in SCHEMA {schema} TO {sta_user}"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
+            c.execute(
+                sql.SQL(
+                    "GRANT EXECUTE ON ALL FUNCTIONS in SCHEMA {schema} TO {sta_user}"
+                ).format(sta_user=sta_user, schema=schema)
+            )
 
     def grant_grafana_select(self, thing, user_prefix: str):
-        with self.db:
-            with self.db.cursor() as c:
-                schema = sql.Identifier(thing.database.username.lower())
-                grf_user = sql.Identifier(
-                    user_prefix.lower() + thing.database.ro_username.lower()
-                )
+        with self.db_conn.get_cursor() as c:
+            schema = sql.Identifier(thing.database.username.lower())
+            grf_user = sql.Identifier(
+                user_prefix.lower() + thing.database.ro_username.lower()
+            )
 
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL("ALTER ROLE {grf_user} SET search_path to {schema}").format(
-                        grf_user=grf_user, schema=schema
-                    )
+            # Set default schema when connecting as user
+            c.execute(
+                sql.SQL("ALTER ROLE {grf_user} SET search_path to {schema}").format(
+                    grf_user=grf_user, schema=schema
                 )
+            )
 
-                c.execute(sql.SQL("SET search_path TO {schema}").format(schema=schema))
+            c.execute(sql.SQL("SET search_path TO {schema}").format(schema=schema))
 
-                c.execute(
-                    sql.SQL(
-                        "REVOKE ALL ON ALL TABLES IN SCHEMA {schema}, public FROM {grf_user}"
-                    ).format(grf_user=grf_user, schema=schema)
-                )
+            c.execute(
+                sql.SQL(
+                    "REVOKE ALL ON ALL TABLES IN SCHEMA {schema}, public FROM {grf_user}"
+                ).format(grf_user=grf_user, schema=schema)
+            )
 
-                c.execute(
-                    sql.SQL(
-                        "GRANT SELECT ON TABLE thing, datastream, observation, "
-                        "journal, datastream_properties TO {grf_user}"
-                    ).format(grf_user=grf_user, schema=schema)
-                )
+            c.execute(
+                sql.SQL(
+                    "GRANT SELECT ON TABLE thing, datastream, observation, "
+                    "journal, datastream_properties TO {grf_user}"
+                ).format(grf_user=grf_user, schema=schema)
+            )
 
     def create_frost_views(self, thing, user_prefix: str = "sta_"):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta")
@@ -294,97 +284,84 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "observation.sql"),
             os.path.join(base_path, "feature.sql"),
         ]
-        with self.db:
-            with self.db.cursor() as c:
-                for file in files:
-                    logger.debug(f"deploy file: {file}")
-                    with open(file) as fh:
-                        view = fh.read()
-                    user = sql.Identifier(thing.database.username.lower())
-                    sta_user = sql.Identifier(
-                        user_prefix.lower() + thing.database.ro_username.lower()
-                    )
-                    c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
-                    c.execute(
-                        view,
-                        {
-                            "cv_url": os.environ.get("CV_URL"),
-                            "sms_url": os.environ.get("SMS_URL"),
-                            "tsm_schema": thing.database.username.lower(),
-                        },
-                    )
+        with self.db_conn.get_cursor() as c:
+            for file in files:
+                logger.debug(f"deploy file: {file}")
+                with open(file) as fh:
+                    view = fh.read()
+                user = sql.Identifier(thing.database.username.lower())
+                sta_user = sql.Identifier(
+                    user_prefix.lower() + thing.database.ro_username.lower()
+                )
+                sms_url, cv_url = os.environ.get("SMS_URL"), os.environ.get("CV_URL")
+                view = view.replace(
+                    "%(tsm_schema)s", f"'{thing.database.username.lower()}'"
+                )
+                view = view.replace("%(sms_url)s", f"'{sms_url}'")
+                view = view.replace("%(cv_url)s", f"'{cv_url}'")
+                c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
+                c.execute(view)
 
     def create_grafana_helper_view(self, thing):
-        with self.db:
-            with self.db.cursor() as c:
-                username_identifier = sql.Identifier(thing.database.username.lower())
-                # Set search path for current session
-                c.execute(sql.SQL("SET search_path TO {0}").format(username_identifier))
-                c.execute(
-                    sql.SQL("""DROP VIEW IF EXISTS "datastream_properties" CASCADE""")
-                )
-                c.execute(
-                    sql.SQL(
-                        """
-                        CREATE OR REPLACE VIEW "datastream_properties" AS
-                        SELECT DISTINCT case
-                            when dp.property_name is null or dp.unit_name is null then tsm_ds.position
-                            else concat(dp.property_name,
-                                ' (', dp.unit_name, ') - ',
-                                dma.label,
-                                ' - ', tsm_ds."position"::text)
-                        end as "property",
-                        tsm_ds."position",
-                        tsm_ds.id as "ds_id",
-                        tsm_t.uuid as "t_uuid"
-                        FROM datastream tsm_ds
-                        JOIN thing tsm_t ON tsm_ds.thing_id = tsm_t.id
-                        LEFT JOIN public.sms_datastream_link sdl ON tsm_t.uuid = sdl.thing_id AND tsm_ds.id = sdl.datastream_id
-                        LEFT JOIN public.sms_device_property dp ON sdl.device_property_id = dp.id
-                        LEFT JOIN public.sms_device_mount_action dma on dma.id = sdl.device_mount_action_id
+        with self.db_conn.get_cursor() as c:
+            username_identifier = sql.Identifier(thing.database.username.lower())
+            # Set search path for current session
+            c.execute(sql.SQL("SET search_path TO {0}").format(username_identifier))
+            c.execute(
+                sql.SQL("""DROP VIEW IF EXISTS "datastream_properties" CASCADE""")
+            )
+            c.execute(
+                sql.SQL(
                     """
-                    )
+                    CREATE OR REPLACE VIEW "datastream_properties" AS
+                    SELECT DISTINCT case
+                        when dp.property_name is null or dp.unit_name is null then tsm_ds.position
+                        else concat(dp.property_name,
+                            ' (', dp.unit_name, ') - ',
+                            dma.label,
+                            ' - ', tsm_ds."position"::text)
+                    end as "property",
+                    tsm_ds."position",
+                    tsm_ds.id as "ds_id",
+                    tsm_t.uuid as "t_uuid"
+                    FROM datastream tsm_ds
+                    JOIN thing tsm_t ON tsm_ds.thing_id = tsm_t.id
+                    LEFT JOIN public.sms_datastream_link sdl ON tsm_t.uuid = sdl.thing_id AND tsm_ds.id = sdl.datastream_id
+                    LEFT JOIN public.sms_device_property dp ON sdl.device_property_id = dp.id
+                    LEFT JOIN public.sms_device_mount_action dma on dma.id = sdl.device_mount_action_id
+                """
                 )
+            )
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
+        schema_name = thing.database.username.lower()
         query = (
-            "INSERT INTO thing (name, uuid, description, properties) "
+            f"INSERT INTO {schema_name}.thing (name, uuid, description, properties) "
             "VALUES (%s, %s, %s, %s) ON CONFLICT (uuid) DO UPDATE SET "
             "name = EXCLUDED.name, "
             "description = EXCLUDED.description, "
             "properties = EXCLUDED.properties "
             "RETURNING (xmax = 0)"
         )
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute(
-                    sql.SQL("SET search_path TO {user}").format(
-                        user=sql.Identifier(thing.database.username.lower())
-                    )
-                )
-                c.execute(
-                    query,
-                    (
-                        thing.name,
-                        thing.uuid,
-                        thing.description,
-                        json.dumps(thing.properties),
-                    ),
-                )
-                return c.fetchone()[0]
+        params = (
+            thing.name,
+            thing.uuid,
+            thing.description,
+            json.dumps(thing.properties),
+        )
+        result = self.db_conn.transaction(query, params)
+        return result
 
     def thing_exists(self, username: str):
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
-                return len(c.fetchall()) > 0
+        with self.db_conn.get_cursor() as c:
+            c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
+            return len(c.fetchall()) > 0
 
     def user_exists(self, username: str):
-        with self.db:
-            with self.db.cursor() as c:
-                c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
-                return len(c.fetchall()) > 0
+        with self.db_conn.get_cursor() as c:
+            c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
+            return len(c.fetchall()) > 0
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 
-import psycopg2
+import psycopg
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -26,7 +26,7 @@ class CreateMqttUserHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.db = psycopg2.connect(get_envvar("DATABASE_URL"))
+        self.db = psycopg.connect(get_envvar("DATABASE_URL"))
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
