@@ -15,12 +15,14 @@ class SyncSmsMaterializedViews:
             try:
                 with conn.cursor() as cur:
                     # Query to get the list of materialized views starting with the prefix "sms_"
-                    cur.execute("""
+                    cur.execute(
+                        """
                                      SELECT matviewname
                                      FROM pg_matviews
                                      WHERE schemaname = 'public'
                                      AND matviewname LIKE 'sms_%'
-                                 """)
+                                 """
+                    )
 
                     self.materialized_views = cur.fetchall()
 
@@ -39,7 +41,11 @@ class SyncSmsMaterializedViews:
                     # Iterate over the materialized views and refresh them
                     for matview in self.materialized_views:
                         view_name = matview[0]
-                        cur.execute(sql.SQL("REFRESH MATERIALIZED VIEW {}").format(sql.Identifier(view_name)))
+                        cur.execute(
+                            sql.SQL("REFRESH MATERIALIZED VIEW {}").format(
+                                sql.Identifier(view_name)
+                            )
+                        )
                         print(f"Refreshed materialized view: {view_name}")
 
                 # Commit the changes
