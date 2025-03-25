@@ -271,6 +271,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     "journal, datastream_properties TO {grf_user}"
                 ).format(grf_user=grf_user, schema=schema)
             )
+        # explicit commit to avoid idle in transaction on previous grant see: https://ufz-rdm.atlassian.net/browse/TSM-562
+        self.db_conn.commit()
 
     def create_frost_views(self, thing, user_prefix: str = "sta_"):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta")
