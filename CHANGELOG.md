@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+## 2025-03-26
+
 ### Changed
 - Switching to materialized views for SMS data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/326))
 
