@@ -1,0 +1,13 @@
+# Changelog
+- Use `Added`, `Changed`, `Fixed`, `Removed`
+
+## [Unreleased]
+
+### Changed
+- Switching to materialized views for SMS data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/326))
+
+### Fixed
+- Idle State when creating views for frost ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/336))
+- Bug, when Saving a QaQc Test ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/337))
+
+## 2025-03-19
