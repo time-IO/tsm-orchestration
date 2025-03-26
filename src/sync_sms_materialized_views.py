@@ -34,7 +34,7 @@ class SyncSmsMaterializedViews:
 
                     return self
             except psycopg.Error as e:
-                logger.error(f"Error occurred during fetching materialized : {e}")
+                logger.error(f"Error occurred during fetching materialized view: {e}")
                 if conn:
                     conn.rollback()
 
