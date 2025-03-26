@@ -83,7 +83,7 @@ def qaqc_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         with db.connection() as conn:
             store_qaqc_config(conn, data, legacy=False)
         # this publish caused an error: https://ufz-rdm.atlassian.net/jira/software/c/projects/TSM/boards/105?selectedIssue=TSM-563
-        # no service currently needs this message so we commented out the publish
+        # no service currently needs this message so we comment out the publish
         # section = "sending mqtt message"
         # logger.debug(f"Inform downstream services about update of QC.")
         # payload = json.dumps({"qaqc": data["name"]})
