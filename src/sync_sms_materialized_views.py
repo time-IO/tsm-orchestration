@@ -58,7 +58,7 @@ class SyncSmsMaterializedViews:
                 conn.commit()
 
             except psycopg.Error as e:
-                logger.error(f"Error occurred during refreshing materialized : {e}")
+                logger.error(f"Error occurred during refreshing materialized view: {e}")
                 if conn:
                     conn.rollback()
 
