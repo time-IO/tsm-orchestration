@@ -6,6 +6,10 @@ from psycopg import sql
 from timeio.databases import Database
 from timeio.common import get_envvar
 
+import logging
+
+logger = logging.getLogger("sync_sms_materialized_views")
+
 
 class SyncSmsMaterializedViews:
     def __init__(self):
@@ -30,7 +34,7 @@ class SyncSmsMaterializedViews:
 
                     return self
             except psycopg.Error as e:
-                print(f"Error occurred: {e}")
+                logger.error(f"Error occurred during fetching materialized view: {e}")
                 if conn:
                     conn.rollback()
 
@@ -48,13 +52,13 @@ class SyncSmsMaterializedViews:
                                 sql.Identifier(view_name)
                             )
                         )
-                        print(f"Refreshed materialized view: {view_name}")
+                        logger.info(f"Refreshed materialized sms view: {view_name}")
 
                 # Commit the changes
                 conn.commit()
 
             except psycopg.Error as e:
-                print(f"Error occurred: {e}")
+                logger.error(f"Error occurred during refreshing materialized view: {e}")
                 if conn:
                     conn.rollback()
 
