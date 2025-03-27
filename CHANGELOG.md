@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Bug when saving the QC-Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/341))
+
 ## 2025-03-26
 
 ### Changed
