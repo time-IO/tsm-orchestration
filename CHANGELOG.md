@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Bug when running the QC-Settings ([Merge Request]())
+
 ## 2025-03-27
 
 ### Fixed
