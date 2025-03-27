@@ -4,7 +4,7 @@
 ## [Unreleased]
 
 ### Fixed
-- Bug when running the QC-Settings ([Merge Request]())
+- Bug when running the QC-Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/343))
 
 ## 2025-03-27
 
