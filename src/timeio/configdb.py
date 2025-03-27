@@ -618,7 +618,7 @@ def insert_qaqc_tests(
                             test["position"],
                         ]
                     )
-                if version == 2:
+                elif version in (2, 3):
                     test: MqttPayload.QaqcFunctionT
 
                     # workaround for missing parsing in frontend
@@ -638,6 +638,8 @@ def insert_qaqc_tests(
                             None,
                         ]
                     )
+                else:
+                    raise ValueError(f"Unknown QC-Test version: {version}")
     return n
 
 
