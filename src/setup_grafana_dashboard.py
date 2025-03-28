@@ -329,13 +329,16 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             WHERE NOT EXISTS (SELECT 1 FROM date_filtered)
             ORDER BY "time" ASC
         """
+
         qaqc_sql = f"""
+            -- Using "result_quality -> -1 ->>" because result_quality is an array of quality objects 
+            -- we use "-1" to always select the last one              
             SELECT o.result_time AS "time",
             1 AS "quality_flag",
             jsonb_build_object(
-                'annotation', CAST (jsonb_extract_path_text(result_quality, 'annotation') AS DECIMAL),
-                'measure', jsonb_extract_path_text(result_quality, 'properties', 'measure'),
-                'user_label', jsonb_extract_path_text(result_quality, 'properties', 'userLabel')
+                'annotation', CAST ((result_quality -> -1 ->> 'annotation') AS DECIMAL),
+                'measure', result_quality -> -1 ->> 'properties', 'measure',
+                'user_label', result_quality -> -1 ->> 'properties', 'userLabel'
             ) AS "qaqc_result"
             FROM observation o
             WHERE o.datastream_id = (
@@ -346,8 +349,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             ) AND ${{show_qaqc_flags}} = 'True'
             AND result_quality IS NOT NULL
             AND result_quality <> 'null'
-            AND jsonb_extract_path_text(result_quality, 'annotation') <> '0.0'
-            AND jsonb_extract_path_text(result_quality, 'annotation') <> '-inf'
+            AND (result_quality -> -1 ->> 'annotation') IS NOT NULL
+            AND (result_quality -> -1 ->> 'annotation') <> '0.0'
+            AND (result_quality -> -1 ->> 'annotation') <> '-inf'
             ORDER BY o.result_time ASC
         """
         show_qaqc_overrides = {
