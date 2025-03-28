@@ -412,14 +412,28 @@ services:
   # Description
   # ===========
   # TODO
-  thing-management-frontend:
-    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:test-for-orchestration
+  # thing-management-frontend:
+  #   image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:test-for-orchestration
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "200k"
+  #       max-file: "10"
+  thing_management:
+    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_V2_IMAGE_TAG}
+    environment:
+      - API_URL=${THING_MANAGEMENT_V2_API_URL}
+      - APP_PATH=${THING_MANAGEMENT_V2_APP_PATH}
+      - VERSION=${THING_MANAGEMENT_V2_VERSION}
+      - APP_URL=${THING_MANAGEMENT_V2_APP_URL}
+    depends_on:
+      thing-management-api:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
         max-size: "200k"
         max-file: "10"
-
 
   # Summary
   # =======
@@ -431,11 +445,22 @@ services:
   # ===========
   # TODO
   thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:test-for-orchestration
+    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_V2_IMAGE_TAG}
+    container_name: thing-management-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     environment:
       ENVIRONMENT: "development"
       DB_URL: "${DATABASE_ADMIN_DSN}"
       POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
+      POSTGRES_PORT: "${DATABASE_ADMIN_PORT}"
+      POSTGRES_USER: "${DATABASE_ADMIN_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      POSTGRES_DB: "${DATABASE_ADMIN_DB_NAME}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
     depends_on:
