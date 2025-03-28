@@ -1,6 +1,16 @@
-ARG DEBIAN_IMAGE_TAG
+ARG BASE_IMAGE_TAG=bullseye-slim
 
-FROM debian:${DEBIAN_IMAGE_TAG}
+FROM debian:${BASE_IMAGE_TAG}
+
+ARG BUILD_DATE
+ARG VCS_REF
+
+LABEL maintainer="The ZID Team" \
+    org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
+    org.opencontainers.image.licenses="EUPL-1.2" \
+    org.opencontainers.image.version="0.1" \
+    org.opencontainers.image.revision=$VCS_REF \
+    org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl tini python3 python3-pip inotify-tools \
@@ -28,6 +38,7 @@ RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER}
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 ENV STDOUT=/proc/1/fd/1
 ENV STDERR=/proc/1/fd/2
+ENV PYTHONPATH=/scripts/timeio
 
 USER ${UID}
 

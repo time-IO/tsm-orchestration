@@ -1,11 +1,13 @@
 ---
 stages:
   - "check"
+  - "build"
   - "integration"
   - "end-to-end"
-  - "scan"
   - "release"
+  - "scan"
   - "notify"
+
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
@@ -21,8 +23,8 @@ variables:
   OBJECT_STORAGE_FTP_PORT: 40021
   OBJECT_STORAGE_FTP_PASV_PORTS_MAPPING: 30000-30010:30000-30010
   MONITORING_PORT: 8080
-  DOCKER_IMAGE_TAG: 27-cli
-  DOCKER_SERVICE_IMAGE_TAG: 27-dind
+  DOCKER_IMAGE_TAG: 28-cli
+  DOCKER_SERVICE_IMAGE_TAG: 28-dind
   TRIVY_VERSION: 0.58.2
 
 services:

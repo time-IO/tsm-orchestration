@@ -69,10 +69,11 @@ if __name__ == "__main__":
     )
 
     priv_key = decrypt(thing.ext_sftp.ssh_priv_key, get_crypt_key())
+    password = decrypt(thing.ext_sftp.password, get_crypt_key())
     source = FtpFS.from_credentials(
         uri=thing.ext_sftp.uri,
         username=thing.ext_sftp.user,
-        password=thing.ext_sftp.password,
+        password=password,
         path=thing.ext_sftp.path,
         keyfile_path=io.StringIO(priv_key),
         missing_host_key_policy=WarningPolicy(),

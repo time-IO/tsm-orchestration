@@ -16,8 +16,9 @@ if [ $? -ne 0 ]; then
 fi
 rm $TEMP_ENV_FILE
 
-git checkout origin/main
+git checkout main
+git pull origin main
 rm remove-all-data.sh
-sudo docker compose create --build --pull always
+sudo docker compose pull -q
 sudo docker compose up -d
 sudo docker compose ps

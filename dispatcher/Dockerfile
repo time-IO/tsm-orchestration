@@ -1,4 +1,6 @@
-FROM debian:bullseye-slim AS base
+ARG BASE_IMAGE_TAG=bullseye-slim
+
+FROM debian:${BASE_IMAGE_TAG} AS base
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -45,8 +47,10 @@ RUN pip install --upgrade pip \
 
 FROM base AS dist
 
+ARG UID=1000
+
 # Create a group and user
-RUN useradd --uid 1000 -m appuser
+RUN useradd --uid $UID -m appuser
 
 COPY --chown=appuser --from=build /root/.local /home/appuser/.local
 COPY --from=build /usr/local/bin/mc /usr/local/bin/mc
