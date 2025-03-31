@@ -18,5 +18,3 @@ services:
       MQTT_PUBLISH_TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
       MQTT_QOS: "${MQTT_QOS}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
-    volumes:
-      - ./src:/usr/src/app
