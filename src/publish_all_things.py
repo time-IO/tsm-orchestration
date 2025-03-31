@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import psycopg
 from timeio.databases import Database
 from timeio.common import get_envvar
@@ -18,16 +16,16 @@ class PublishAllThings:
         self.publish_topic = get_envvar("MQTT_PUBLISH_TOPIC")
 
     def fetch_things(self):
-        with self.db.connection as conn:
+        with self.db.connection() as conn:
             try:
                 with conn.cursor() as cursor:
                     cursor.execute(
                         """
-                        Select uuid from config_db.thing;
+                        Select uuid::TEXT from config_db.thing;
                         """
                     )
                     logger.info(f"Fetching uuids of all stored things")
-                    self.things_uuids = cursor.fetchall()
+                    self.things_uuids = [row[0] for row in cursor.fetchall()]
 
                     return self
             except psycopg.Error as e:
@@ -37,6 +35,7 @@ class PublishAllThings:
 
     def publish_all_things(self):
         for thing_uuid in self.things_uuids:
+            print(f"Publishing thing: {thing_uuid}")
             logger.info(f"Publishing thing uuid: {thing_uuid} to topic: {self.publish_topic}")
             mqtt.publish_single(self.publish_topic, json.dumps({"thing_uuid": thing_uuid}))
 
