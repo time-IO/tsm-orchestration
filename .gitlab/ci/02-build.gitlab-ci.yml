@@ -22,7 +22,7 @@ build-and-push-images:
     - echo 'docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES'
   rules:
     # Always run if pipeline is triggered by a tag
-    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
       when: always
     # Never run if pipeline is triggered by a merge_request_event or a push on main
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
