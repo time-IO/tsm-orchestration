@@ -58,7 +58,7 @@ combined-e2e-test:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
       when: never
     # Always run if pipeline is triggered by a push on a branch
-    - if: "$CI_COMMIT_SOURCE == 'push'"
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
   tags:
     - "dind"
