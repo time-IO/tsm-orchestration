@@ -415,13 +415,13 @@ services:
   #     options:
   #       max-size: "200k"
   #       max-file: "10"
-  thing_management:
-    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_V2_IMAGE_TAG}
+  thing-management-frontend:
+    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
     environment:
-      - API_URL=${THING_MANAGEMENT_V2_API_URL}
-      - APP_PATH=${THING_MANAGEMENT_V2_APP_PATH}
-      - VERSION=${THING_MANAGEMENT_V2_VERSION}
-      - APP_URL=${THING_MANAGEMENT_V2_APP_URL}
+      API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
+      APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
+      VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
+      APP_URL: "${THING_MANAGEMENT_FRONTEND_HOST}"
     depends_on:
       thing-management-api:
         condition: service_healthy
@@ -441,7 +441,7 @@ services:
   # ===========
   # TODO
   thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_V2_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
     container_name: thing-management-api
     restart: unless-stopped
     healthcheck:
@@ -450,8 +450,9 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      ENVIRONMENT: "development"
+      VERSION: "${THING_MANAGEMENT_API_ENVIRONMENT}"
       DB_URL: "${DATABASE_ADMIN_DSN}"
+      DB_SCHEMA: "thing-management"
       POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
       POSTGRES_PORT: "${DATABASE_ADMIN_PORT}"
       POSTGRES_USER: "${DATABASE_ADMIN_USER}"
