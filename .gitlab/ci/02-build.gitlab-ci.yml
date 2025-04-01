@@ -5,6 +5,8 @@ build-and-push-images:
   image: "docker:${DOCKER_IMAGE_TAG}"
   needs: []
   before_script:
+    # Prepare .env file to use the branch name as image tag
+    # This .env file is used in subequent jobs that have a line of dependency back to this job.
     - cp .env.example .env
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
@@ -17,9 +19,8 @@ build-and-push-images:
   after_script:
     - docker logout
   script:
-    # needs to be activated once everything else works
-    - export BUILD_SERVICES="init cron-scheduler frost worker-configdb-updater worker-db-setup"
-    - echo 'docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES'
+    - export BUILD_SERVICES='init cron-scheduler frost worker-configdb-updater worker-db-setup'
+    - docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES
   rules:
     # Always run if pipeline is triggered by a tag
     - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"

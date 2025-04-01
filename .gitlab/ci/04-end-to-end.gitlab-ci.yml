@@ -5,6 +5,7 @@ combined-e2e-test:
   needs:
     - "build-and-push-images"
   before_script:
+    # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache curl python3 postgresql-client jq"
     - "docker compose up -d --quiet-pull"
     - "sleep 20"
@@ -16,7 +17,7 @@ combined-e2e-test:
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.thing > thing_dump.json"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.database > database.json"
     - "docker compose exec -T frontend python3 manage.py dumpdata tsm.rawdatastorage > object-storage.json"
-    - "echo 'teting visualization end-to-end...'"
+    - "echo 'testing visualization end-to-end...'"
     - "THING_UID=$(cat thing_dump.json | jq -r .[].fields.thing_id)"
     - "echo $THING_UID"
     - "GROUP_ID=$(cat thing_dump.json | jq -r .[].fields.group)"
@@ -48,6 +49,7 @@ combined-e2e-test:
     - "export DB_RO_PASSWORD=$(cat database.json | jq -r '.[].fields.ro_password')"
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
     - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" &>/dev/null || exit 1"
+    - "sleep 5"
     - "echo 'testing frost end-to-end...'"
     - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
   rules:
