@@ -189,15 +189,12 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
 
             if i == header_line:
-                settings["header"] = "infer" # len(rows)
+                settings["header"] = "infer"  # len(rows)
                 # we might have comments at the header line as well
                 rows.append(re.sub(comment_regex, "", row))
                 continue
-            try:
-                if not re.match(comment_regex, row):
+            if not re.match(comment_regex, row):
                     rows.append(row)
-            except:
-                import ipdb; ipdb.set_trace()
 
         rawdata = "\n".join(rows)
 
