@@ -51,13 +51,13 @@ combined-e2e-test:
     - "echo 'testing frost end-to-end...'"
     - "curl -Isf http://docker/sta/${DB_USER} -o /dev/null || exit 1"
   rules:
-    # Always run if pipeline is triggered by a tag
-    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
+    # Run if pipeline is triggered by a tag and build job was successful
+    - if: "$CI_COMMIT_TAG"
       when: on_success
     # Never run if pipeline is triggered by a merge_request_event or a push on main
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
       when: never
-    # Always run if pipeline is triggered by a push on a branch
+    # Run if pipeline is triggered by a push on a branch and build job was successful
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
   tags:

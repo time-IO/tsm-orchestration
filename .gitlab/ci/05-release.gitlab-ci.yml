@@ -1,12 +1,15 @@
 ---
 
-deploy-images-to-registry:
+stage-tag-images-in-registry:
   stage: release
   rules:
     # Rules are evaluated in order until the first match.
     # We only want to push new images if source files changes
     # or if we manually decide to do so.
-    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE != 'push'"
+
+    # Run if pipeline is triggered by a commit on main that was not a push (e.g. merge_requet_event) and
+    # changes to source files or Dockerfiles were made. 
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       changes:
         - .env.example
         - src/**/*
@@ -15,12 +18,16 @@ deploy-images-to-registry:
         - init/**/*
         - tomcat/**/*
       when: always
+    # Run manually if pipeline is triggered by a push on main  
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       when: manual
   image: "docker:${DOCKER_IMAGE_TAG}"
+  # Job has no dependencies. It is the first job to run in the post-merge pipeline
   needs: []
   before_script:
     - cp .env.example .env
+    # Retrieve name of branch that was merged into main.
+    # Could be changed to something more robust than retrieving it from the `Merge commit message`
     - export BRANCH_NAME=$(git log --merges -1 --pretty=format:'%s' | sed "s/Merge branch '\(.*\)' into 'main'/\1/")
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
@@ -47,13 +54,13 @@ deploy-images-to-registry:
     - "dind"
 
 
-deploy-prod-images-to-registry:
+prod-tag-images-in-registry:
   stage: release
   rules:
     # Rules are evaluated in order until the first match.
     # We only want to push new images if source files changes
     # or if we manually decide to do so.
-    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
+    - if: "$CI_COMMIT_TAG"
       when: on_success
   needs:
     - "docker-service-test"
@@ -74,8 +81,7 @@ deploy-prod-images-to-registry:
     - |
       for image in $(docker images --format '{{ .Repository }}'); do
         docker tag $image:main $image:$PROD_TAG;
-        echo "pushing $image:$PROD_TAG";
-        #docker push $image:PROD_TAG;
+        docker push $image:PROD_TAG;
       done
     - docker images
   tags:

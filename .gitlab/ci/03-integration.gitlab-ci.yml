@@ -16,13 +16,13 @@ docker-service-test:
     - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
   rules:
-    # Always run pipeline if triggered by a tag
-    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
+    # Run if pipeline is triggered by a tag and build job was successful
+    - if: "$CI_COMMIT_TAG"
       when: on_success
     # Never run if pipeline is triggered by a merge_request_event or a push on main
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
       when: never
-    # Always run if pipeline is triggered by a push on a branch
+    # Run if pipeline is triggered by a push on a branch and build job was successful
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
   tags:
@@ -47,13 +47,13 @@ mqtt-service-test:
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
     - "docker compose logs mqtt-cat"
   rules:
-    # Always run pipeline if triggered by a tag
-    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
+    # Run if pipeline is triggered by a tag and build job was successful
+    - if: "$CI_COMMIT_TAG"
       when: on_success
     # Never run if pipeline is triggered by a merge_request_event or a push on main
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
       when: never
-    # Always run if pipeline is triggered by a push on a branch
+    # Run if pipeline is triggered by a push on a branch and build job was successful
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
   tags:
@@ -81,13 +81,13 @@ combined-integration-test:
     - "curl -Isf http://docker/sta/ -o /dev/null || exit 1"
     - "curl -Isf http://docker/frontend/ || echo nope"
   rules:
-    # Always run pipeline if triggered by a tag
-    - if: "$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == 'push'"
+    # Run if pipeline is triggered by a tag and build job was successful
+    - if: "$CI_COMMIT_TAG"
       when: on_success
     # Never run if pipeline is triggered by a merge_request_event or a push on main
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
       when: never
-    # Always run if pipeline is triggered by a push on a branch
+    # Run if pipeline is triggered by a push on a branch and build job was successful
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
   tags:
