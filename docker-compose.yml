@@ -408,13 +408,6 @@ services:
   # Description
   # ===========
   # TODO
-  # thing-management-frontend:
-  #   image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:test-for-orchestration
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "200k"
-  #       max-file: "10"
   thing-management-frontend:
     image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
     environment:
@@ -426,10 +419,9 @@ services:
       thing-management-api:
         condition: service_healthy
     logging:
-      driver: "json-file"
       options:
-        max-size: "200k"
-        max-file: "10"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # Summary
   # =======
@@ -453,11 +445,11 @@ services:
       VERSION: "${THING_MANAGEMENT_API_ENVIRONMENT}"
       DB_URL: "${DATABASE_ADMIN_DSN}"
       DB_SCHEMA: "thing-management"
-      POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
-      POSTGRES_PORT: "${DATABASE_ADMIN_PORT}"
-      POSTGRES_USER: "${DATABASE_ADMIN_USER}"
-      POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
-      POSTGRES_DB: "${DATABASE_ADMIN_DB_NAME}"
+      # POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
+      # POSTGRES_PORT: "${DATABASE_ADMIN_PORT}"
+      # POSTGRES_USER: "${DATABASE_ADMIN_USER}"
+      # POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      # POSTGRES_DB: "${DATABASE_ADMIN_DB_NAME}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
     depends_on:
@@ -468,10 +460,9 @@ services:
     #  keycloak:
     #    condition: service_started
     logging:
-      driver: "json-file"
       options:
-        max-size: "200k"
-        max-file: "10"
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
