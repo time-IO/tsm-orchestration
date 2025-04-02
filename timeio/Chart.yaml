@@ -64,3 +64,6 @@ dependencies:
   - name: worker-run-qaqc
     version: 0.0.1
     repository: "file://charts/worker-run-qaqc"
+  - name: worker-sync-extapis
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extapis"
