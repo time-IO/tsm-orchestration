@@ -1,8 +1,8 @@
 global:
 
   pvc:
-    #storageClassName: "microk8s-hostpath"
-    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: "microk8s-hostpath"
+    #storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:
@@ -22,17 +22,17 @@ global:
         add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
         add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "timeio.web-intern-stage.app.ufz.de"
+    - host: "local.host"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 80
-    url: "https://timeio.web-intern-stage.app.ufz.de"
+    url: "https://local.host"
     tls:
     - secretName: "timeio-ingress-tls"
       hosts:
-        - "timeio.web-intern-stage.app.ufz.de"
+        - "local.host"
 
   s3ingress:
     enabled: true
@@ -51,17 +51,17 @@ global:
         add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
         add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "s3.timeio.web-intern-stage.app.ufz.de"
+    - host: "s3.local.host"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 9000
-    url: "https://s3.timeio.web-intern-stage.app.ufz.de"
+    url: "https://s3.local.host"
     tls:
     - secretName: "timeio-s3-ingress-tls"
       hosts:
-        - "s3.timeio.web-intern-stage.app.ufz.de"
+        - "s3.local.host"
 
   createSecrets: true
   secrets:
@@ -104,7 +104,7 @@ global:
     UID: "1000"
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
-    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
+    PROXY_HOST: "local.host"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
