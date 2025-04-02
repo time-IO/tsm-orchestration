@@ -183,3 +183,4 @@ global:
     DB_API_BASE_URL: "http://timeio-db-api:8001"
     JOURNALING: "true"
     TSM_DL_ENVIRONMENT: "staging"
+    SAQC_VERSION: "v2.6.0"
