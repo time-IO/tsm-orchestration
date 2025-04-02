@@ -4,11 +4,11 @@ metadata:
   name: {{ .Values.name }}-envvars
 data:
   LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
-  TOPIC: "thing_creation"
+  TOPIC: "mqtt_ingest/#"
   MQTT_BROKER: "mqtt-broker:1883"
   MQTT_CLIENT_ID: ""
   MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  TOPIC_DATA_PARSED: "data_parsed"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
-  TOPIC_DATA_PARSED: "data_parsed"

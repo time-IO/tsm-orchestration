@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
+  tag: 2025-03-05-100929
+  pullPolicy: Always
+name: worker-sync-extapis
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+existingSecret: ""
