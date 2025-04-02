@@ -86,7 +86,8 @@ spec:
             - -c
             - |
               if [ ! -f /tmp/cron/crontab.txt ]; then
-                echo "*/2 * * * * /scripts/sync_sms_materialized_views.py > $STDOUT 2>$STDERR" /tmp/cron/crontab.txt
+                touch /tmp/cron/crontab.txt
+                echo "* * * * * /scripts/sync_sms_materialized_views.py > $STDOUT 2>$STDERR" > /tmp/cron/crontab.txt
               fi
           volumeMounts:
             - mountPath: /tmp/cron

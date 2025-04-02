@@ -31,7 +31,7 @@ frontend:
   name: frontend
   image:
     repository: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend"
-    tag: 2025-03-04-104702
+    tag: 2025-03-17-115500
     pullPolicy: Always
 
 existingSecret: ""
