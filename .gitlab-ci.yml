@@ -23,15 +23,9 @@ template:
     entrypoint: [""]
   stage: test
   script:
-    - helm template timeio
+    - helm dependency build timeio || exit 1
+    - helm template timeio > /dev/null || exit 1
 
-dependency:
-  image:
-    name: alpine/helm:${HELM_IMAGE_TAG}
-    entrypoint: [""]
-  stage: test
-  script:
-    - helm dependency build timeio
 
 build:
   image: 
