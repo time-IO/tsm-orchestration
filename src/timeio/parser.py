@@ -194,7 +194,7 @@ class CsvParser(FileParser):
                 rows.append(re.sub(comment_regex, "", row))
                 continue
             if not re.match(comment_regex, row):
-                    rows.append(row)
+                rows.append(row)
 
         rawdata = "\n".join(rows)
 
