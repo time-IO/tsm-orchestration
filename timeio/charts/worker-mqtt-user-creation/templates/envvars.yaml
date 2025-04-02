@@ -5,7 +5,7 @@ metadata:
 data:
   LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
   TOPIC: "thing_creation"
-  MQTT_BROKER: "mqtt-broker:1883"
+  MQTT_BROKER: "mosquitto:1883"
   MQTT_CLIENT_ID: ""
   MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"

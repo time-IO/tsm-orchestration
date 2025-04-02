@@ -1,20 +1,17 @@
 replicaCount: 1
 
 image:
-  #repository: "registry.hzdr.de/ufz-tsm/timeio-images/database"
-  repository: "timescale/timescaledb-ha"
-  tag: pg16
+  repository: "iegomez/mosquitto-go-auth"
+  tag: latest
   pullPolicy: Always
-name: database
-port: 5432
+name: mosquitto
+port: 1883
 
 securityContext:
   allowPrivilegeEscalation: False
   capabilities:
     drop: ["ALL"]
   runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault

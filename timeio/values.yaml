@@ -1,8 +1,25 @@
+# database specific settings
+# bitnami postgresql helm chart is used,
+# ENVVARs and SECRETS defined further below can not be used here
+database:
+  enabled: true
+  fullnameOverride: "database"
+  global:
+    postgresql:
+      auth:
+        username: "postgres"
+        password: "postgres"
+        database: "postgres"
+        postgresPassword: "postgres"
+  primary:
+    persistence:
+      enabled: false
+
 global:
 
   pvc:
-    #storageClassName: "microk8s-hostpath"
-    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: "microk8s-hostpath"
+    #storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:
@@ -19,20 +36,20 @@ global:
       cert-manager.io/private-key-rotation-policy: "Always"
       nginx.ingress.kubernetes.io/configuration-snippet: |
         add_header 'X-Content-Type-Options' 'nosniff' always;
-        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
+        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.local.host ; child-src 'self' *.host ; object-src 'none' ; frame-ancestors 'self' http://*.host https://*.host ;" always;
         add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "timeio.web-intern-stage.app.ufz.de"
+    - host: "local.host"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 80
-    url: "https://timeio.web-intern-stage.app.ufz.de"
+    url: "https://local.host"
     tls:
     - secretName: "timeio-ingress-tls"
       hosts:
-        - "timeio.web-intern-stage.app.ufz.de"
+        - "local.host"
 
   s3ingress:
     enabled: true
@@ -48,20 +65,20 @@ global:
       cert-manager.io/private-key-rotation-policy: "Always"
       nginx.ingress.kubernetes.io/configuration-snippet: |
         add_header 'X-Content-Type-Options' 'nosniff' always;
-        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
+        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.host ; child-src 'self' *.host ; object-src 'none' ; frame-ancestors 'self' http://*.host https://*.host ;" always;
         add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "s3.timeio.web-intern-stage.app.ufz.de"
+    - host: "s3.local.host"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 9000
-    url: "https://s3.timeio.web-intern-stage.app.ufz.de"
+    url: "https://s3.local.host"
     tls:
     - secretName: "timeio-s3-ingress-tls"
       hosts:
-        - "s3.timeio.web-intern-stage.app.ufz.de"
+        - "s3.local.host"
 
   createSecrets: true
   secrets:
@@ -104,7 +121,7 @@ global:
     UID: "1000"
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
-    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
+    PROXY_HOST: "local.host"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
@@ -143,17 +160,17 @@ global:
     FRONTEND_POSTGRES_HOST: "database"
     FRONTEND_POSTGRES_PORT: "5432"
     FRONTEND_POSTGRES_DB: "postgres"
-    FRONTEND_MQTT_HOST: "mqtt-broker"
+    FRONTEND_MQTT_HOST: "mosquitto"
     FRONTEND_MQTT_PORT: "1883"
     SMS_DB_PORT: "5432"
     SMS_DB_DB: "postgres"
     SMS_DB_HOST: "database"
-    SMS_URL: "https://web-intern-stage.app.ufz.de/sms/"
+    SMS_URL: "https://local.host/sms/"
     SMS_ACCESS_TYPE: "db"
     CV_DB_PORT: "5432"
     CV_DB_DB: "postgres"
     CV_DB_HOST: "database"
-    CV_URL: "https://sms-cv.helmholtz.cloud/sms/cv/"
+    CV_URL: "https://local.host/sms/cv/"
     CV_ACCESS_TYPE: "db"
     GRAFANA_URL: "http://visualization:3000"
     GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "disable"
@@ -166,7 +183,7 @@ global:
     MINIO_HOST: "object-storage:9000"
     MINIO_SECURE: "false"
     MINIO_NOTIFY_MQTT_ENABLE_LOCAL_BROKER: "on"
-    MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mqtt-broker:1883"
+    MINIO_NOTIFY_MQTT_BROKER_LOCAL_BROKER: "tcp://mosquitto:1883"
     MINIO_NOTIFY_MQTT_TOPIC_LOCAL_BROKER: "object_storage_notification"
     MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "1"
     MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "60s"
@@ -183,3 +200,4 @@ global:
     DB_API_BASE_URL: "http://timeio-db-api:8001"
     JOURNALING: "true"
     TSM_DL_ENVIRONMENT: "staging"
+    SAQC_VERSION: "v2.6.0"

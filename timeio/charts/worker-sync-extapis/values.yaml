@@ -1,11 +1,10 @@
 replicaCount: 1
 
 image:
-  repository: "iegomez/mosquitto-go-auth"
-  tag: latest
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
+  tag: 2025-03-27-115859
   pullPolicy: Always
-name: mqtt-broker
-port: 1883
+name: worker-sync-extapis
 
 securityContext:
   allowPrivilegeEscalation: False
