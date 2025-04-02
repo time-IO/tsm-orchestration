@@ -10,6 +10,7 @@ data:
   CREATEDB_POSTGRES_HOST: "{{  .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
   CREATEDB_POSTGRES_DATABASE: "{{  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
   MQTT_BROKER_HOST: "{{  .Values.global.envvars.FRONTEND_MQTT_HOST }}"
+  MQTT_BROKER_PORT: "1883"
   MQTT_CLIENT_ID: ""
   DJANGO_SUPERUSER_EMAIL: "{{  .Values.global.envvars.FRONTEND_DJANGO_SUPERUSER_EMAIL }}"
   DJANGO_DEBUG: "{{  .Values.global.envvars.DJANGO_DEBUG }}"

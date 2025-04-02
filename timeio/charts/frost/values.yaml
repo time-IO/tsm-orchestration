@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/frost"
-  tag: latest
+  tag: 2025-03-27-115859
   pullPolicy: Always
 name: frost
 securityContext:
