@@ -43,7 +43,7 @@ stage-tag-images-in-registry:
   after_script:
     - docker logout
   script:
-    - docker compose pull -q init frost cron-scheduler worker-configdb-updater worker-db-setup
+    - docker compose pull -q $BUILD_SERVICES
     - |
       for image in $(docker images --format '{{ .Repository }}'); do 
         docker tag $image:$BRANCH_NAME $image:latest;
@@ -74,7 +74,6 @@ prod-tag-images-in-registry:
     - export REGISTRY=$(grep TIMEIO_IMAGE_REGISTRY .env | cut -d'=' -f2)
     - export PROD_TAG="prod-${CI_COMMIT_TAG}"
     - echo "PROD_TAG is $PROD_TAG"
-    - export BUILD_SERVICES="init frost cron-scheduler worker-configdb-updater worker-db-setup"
   after_script:
     - docker logout
   script:

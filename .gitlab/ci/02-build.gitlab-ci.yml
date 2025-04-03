@@ -19,7 +19,6 @@ build-and-push-images:
   after_script:
     - docker logout
   script:
-    - export BUILD_SERVICES='init cron-scheduler frost worker-configdb-updater worker-db-setup'
     - docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES
   rules:
     # Always run if pipeline is triggered by a tag

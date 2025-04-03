@@ -37,7 +37,7 @@ prod-trigger-deployment:
       curl -X POST "https://git.ufz.de/api/v4/projects/4741/trigger/pipeline" \
         -F "token=$PIPELINE_TOKEN_PROD" \
         -F "ref=main" \
-        -F "variables[REF]=$CI_COMMIT_REF_NAME"
+        -F "variables[TAG]=$CI_COMMIT_TAG"
     - echo "Check deployment pipeline on https://git.ufz.de/rdm-software/timeseries-management/tsm-prod-deployment"
   rules:
     # Always run if pipeline is triggered by a tag and prod images tagging was successful
