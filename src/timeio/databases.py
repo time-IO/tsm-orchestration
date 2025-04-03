@@ -5,14 +5,12 @@ import logging
 import threading
 import urllib.request
 from functools import partial
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 import psycopg
 import requests
 from psycopg import Connection, conninfo
-from psycopg.rows import dict_row
 
-import timeio.parser as parser
 from timeio.errors import DataNotFoundError
 
 
