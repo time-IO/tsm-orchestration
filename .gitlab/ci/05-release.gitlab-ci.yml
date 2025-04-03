@@ -60,7 +60,7 @@ prod-tag-images-in-registry:
   stage: release
   rules:
     # Run if pipeline is triggered by a tag and if integration and end-to-end tests were successful
-    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED"
       when: on_success
   needs:
     - "docker-service-test"
