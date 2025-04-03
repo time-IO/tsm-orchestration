@@ -36,8 +36,13 @@ class PublishAllThings:
     def publish_all_things(self):
         for thing_uuid in self.things_uuids:
             print(f"Publishing thing: {thing_uuid}")
-            logger.info(f"Publishing thing uuid: {thing_uuid} to topic: {self.publish_topic}")
-            mqtt.publish_single(self.publish_topic, json.dumps({"thing_uuid": thing_uuid}))
+            logger.info(
+                f"Publishing thing uuid: {thing_uuid} to topic: {self.publish_topic}"
+            )
+            mqtt.publish_single(
+                self.publish_topic, json.dumps({"thing_uuid": thing_uuid})
+            )
+
 
 if __name__ == "__main__":
     PublishAllThings().fetch_things().publish_all_things()
