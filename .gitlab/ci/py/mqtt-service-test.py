@@ -71,10 +71,10 @@ def on_message(client, userdata, msg):
 def connect_and_listen():
     global username
     global password
-    client = mqtt.Client()
+    client = mqtt.Client(client_id=None, clean_session=True, userdata=None, protocol=mqtt.MQTTv5)
     client.on_connect = on_connect
     client.on_message = on_message
-    client.username_pw_set(username, password)
+    client.username_pw_set(username=username, password=password)
     client.connect(host, port)
     client.loop_forever()
 
