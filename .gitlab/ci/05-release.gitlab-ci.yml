@@ -7,8 +7,8 @@ stage-tag-images-in-registry:
     # We only want to push new images if source files changes
     # or if we manually decide to do so.
 
-    # Run if pipeline is triggered by a commit on main that was not a push (e.g. merge_requet_event) and
-    # changes to source files or Dockerfiles were made. 
+    # Run if pipeline is triggered by a push on main
+    # and changes to source files or Dockerfiles were made. 
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       changes:
         - .env.example
