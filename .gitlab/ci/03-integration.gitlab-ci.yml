@@ -14,7 +14,6 @@ docker-service-test:
     - "docker ps"
     - "docker compose logs flyway"
     - "cd .gitlab/ci"
-    - "chmod +x ./dockertest.sh"
     - "./dockertest.sh"
   rules:
     # Run if pipeline is triggered by a tag and build job was successful
@@ -46,7 +45,6 @@ mqtt-service-test:
     - "docker compose up -d --quiet-pull"
     - "sleep 20"
   script:
-    - "chmod +x .gitlab/ci/py/mqtt-service-test.py"
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
     - "docker compose logs mqtt-cat"
   rules:
