@@ -25,7 +25,7 @@ services:
     volumes:
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/volume/minio"
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/volume/cron"
-      - "${DATABASE_PERSTENCE_VOLUME:-database}:/tmp/volume/database"
+      - "${DATABASE_PERSISTENCE_VOLUME:-database}:/tmp/volume/database"
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/volume/mqtt"
       - ./nginx/html/:/home/tsm/html
       # Pass local MinIO FTP TLS certificate and SSH host key
@@ -77,6 +77,7 @@ services:
     environment:
       POSTGRES_USER: "${DATABASE_USER}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+      PGDATA: "/bitnami/postgresql/data/pgdata"
     volumes:
       - "${DATABASE_PERSISTENCE_VOLUME:-database}:/bitnami/postgresql/data"
     user: "$UID"

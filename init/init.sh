@@ -20,6 +20,7 @@ mkdir -p $MQTT_CERT_TARGET
 mkdir -p /tmp/volume/mqtt/auth
 mkdir -p /tmp/volume/mqtt/data
 mkdir -p /tmp/volume/cron
+mkdir -p /tmp/volume/database/pgdata
 
 ####################
 #  object-storage  #
