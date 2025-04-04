@@ -15,7 +15,7 @@ SELECT
     o.valid_time_end AS "VALID_TIME_END",
     o.result_time AS "PHENOMENON_TIME_END",
     null AS "FEATURE_ID",
-    row_number() OVER () AS "ID",
+    o.id AS "ID",
     o.result_json AS "RESULT_JSON",
     o.result_time AS "RESULT_TIME",
     o.result_number AS "RESULT_NUMBER",
