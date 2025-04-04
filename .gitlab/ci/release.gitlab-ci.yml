@@ -44,6 +44,3 @@ deploy-images-to-registry:
       done
   tags:
     - "dind"
-  artifacts:
-    paths:
-      - .build_date
