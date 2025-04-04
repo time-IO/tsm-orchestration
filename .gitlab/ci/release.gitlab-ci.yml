@@ -2,11 +2,6 @@
 
 deploy-images-to-registry:
   stage: release
-  needs:
-    - "docker-service-test"
-    - "mqtt-service-test"
-    - "combined-integration-test"
-    - "combined-e2e-test"
   rules:
     # Rules are evaluated in order until the first match.
     # We only want to push new images if source files changes
