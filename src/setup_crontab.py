@@ -94,8 +94,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_sftp is not None:
             new_interval = int(thing.ext_sftp.sync_interval)
             script = "/scripts/sync_sftp.py"
-            keyfile = thing.ext_sftp.ssh_priv_key
-            command = f"{script} {uuid} {keyfile} > $STDOUT 2> $STDERR"
+            command = f"{script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_sftp.enabled)
             job.set_comment(comment, pre_comment=True)
             # if the interval has changed we want to ensure consistent starting times with the previous one

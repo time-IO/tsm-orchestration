@@ -271,7 +271,7 @@ class QualityControl:
             )
         return window
 
-    def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str | None:
+    def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str:
         q = (
             "select thing_id as thing_uuid from public.sms_datastream_link l "
             "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
@@ -282,7 +282,7 @@ class QualityControl:
             raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
         return row[0]
 
-    def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int):
+    def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int) -> str:
         q = (
             "select thing_id as thing_uuid from public.sms_datastream_link "
             "where device_property_id = %s"
@@ -292,7 +292,7 @@ class QualityControl:
             raise DataNotFoundError(
                 f"No thing_uuid for STA datastream with id {sta_stream_id}"
             )
-        return row
+        return row[0]
 
     def fetch_datastream_by_pos(self, thing_uuid, position) -> dict[str, Any]:
         query = (
@@ -623,7 +623,7 @@ class QualityControl:
     def run(self, start_date: str | None = None, end_date: str | None = None):
         """
         Run QA/QC on data in the Observation-DB and returns
-        the number of observation that was updated.
+        the number of observation that were updated.
         """
         if not self.tests:
             raise NoDataWarning(

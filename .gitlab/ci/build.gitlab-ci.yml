@@ -3,11 +3,9 @@
 build-and-push-images:
   stage: build
   image: "docker:${DOCKER_IMAGE_TAG}"
+  needs: []
   before_script:
-    - mkdir images -p
     - cp .env.example .env
-    - echo -n $(date +%Y-%m-%d-%H%M%S) > .build_date
-    - export BUILD_DATE=$(echo .build_date)
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
@@ -18,9 +16,10 @@ build-and-push-images:
     - echo $CI_REGISTRY_PASSWORD | docker login $REGISTRY -u $CI_REGISTRY_USER --password-stdin
   after_script:
     - docker logout
-  needs: []
   script:
     - docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" init cron-scheduler frost worker-configdb-updater worker-db-setup
+  rules:
+    - if: "$CI_COMMIT_BRANCH != 'main' && $CI_PIPELINE_SOURCE != 'merge_request_event'"
   tags:
     - "dind"
   artifacts:

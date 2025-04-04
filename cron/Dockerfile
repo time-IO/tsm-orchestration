@@ -38,6 +38,7 @@ RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER}
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 ENV STDOUT=/proc/1/fd/1
 ENV STDERR=/proc/1/fd/2
+ENV PYTHONPATH=/scripts/timeio
 
 USER ${UID}
 
