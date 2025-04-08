@@ -112,9 +112,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             if org.get("name") == name:
                 logger.debug(f"Organization {name} already exists")
                 return org
-        res = self.api.organization.create_organization({"name": name})
+        self.api.organization.create_organization({"name": name})
         logger.debug(f"Created organization {name}")
-        return self.api.organization.find_organization(res["orgID"])
+        return self.api.organization.find_organization(name)
 
     def get_or_create_team(self, thing, org_id) -> TeamT:
         """Return team and maybe create it."""
@@ -124,7 +124,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             return teams[0]
         res = self.api.teams.add_team({"name": name, "orgId": org_id})
         logger.debug(f"Created team {name}")
-        return self.api.teams.get_team(res["teamID"])
+        return self.api.teams.get_team(res["teamId"])
 
     def get_or_create_folder(self, thing) -> FolderT:
         uid = thing.project.uuid
