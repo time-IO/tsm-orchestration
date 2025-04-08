@@ -360,13 +360,43 @@ services:
   # Description
   # ===========
   # TODO
+  flyway-thing-management:
+    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    volumes:
+      - ./flyway/migrations/thing-management:/flyway/sql
+      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
+    environment:
+      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      FLYWAY_USER: "${DATABASE_ADMIN_USER}"
+      FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+    depends_on:
+      database:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
   flyway:
     image: flyway/flyway:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
-      - ./flyway/migrations:/flyway/sql
-      - ./flyway/flyway.conf:/flyway/conf/flyway.conf
+      - ./flyway/migrations/public:/flyway/sql
+      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
     environment:
       FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
       FLYWAY_USER: "${DATABASE_ADMIN_USER}"
