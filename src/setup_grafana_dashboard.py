@@ -85,7 +85,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
-        org = self.get_or_create_organization(thing.project.name)
+        org = self.get_organization(thing.project.name)
+        if org is None:
+            org = self.create_organization(thing.project.name)
 
         # create datasource, folder, dashboard in project org
         # Give Grafana and Org Admins admin access to folder
@@ -98,42 +100,61 @@ class CreateThingInGrafanaHandler(AbstractHandler):
 
     def create_all_in_org(self, thing, org_id, role):
         self.api.organizations.switch_organization(org_id)
-        ds = self.get_or_create_datasource(thing, user_prefix="grf_")
-        team_name = None
-        if org_id == 1:  # only create team in Main org
-            team_name = self.get_or_create_team(thing, org_id)
-        folder = self.get_or_create_folder(thing)
-        self.set_folder_permissions(folder, team_name, role)
-        self.create_dashboard(thing, folder, ds)
+        if (ds := self.get_datasource(thing)) is None:
+            ds = self.create_datasource(thing, user_prefix="grf_")
 
-    def get_or_create_organization(self, name) -> OrgT:
+        if (team_name := self.get_team(thing)) is None and org_id == 1:
+            # only create team in Main org
+            team_name = self.create_team(thing, org_id)
+
+        if (folder := self.get_folder(thing)) is None:
+            folder = self.create_folder(thing)
+
+        self.set_folder_permissions(folder, team_name, role)
+
+        action = "Updated" if self.dashboard_exists(thing.uuid) else "Created new"
+        dashboard = self.build_dashboard(thing, folder, ds)
+        self.api.dashboard.update_dashboard(dashboard)
+        logger.debug(f"{action} dashboard {thing.name}")
+
+    def get_organization(self, name) -> OrgT | None:
         organizations = self.api.organizations.list_organization()
         for org in organizations:
             if org.get("name") == name:
-                logger.debug(f"Organization {name} already exists")
                 return org
+        return None
+
+    def create_organization(self, name) -> OrgT:
         self.api.organization.create_organization({"name": name})
-        logger.debug(f"Created organization {name}")
+        logger.debug(f"Created new organization {name}")
         return self.api.organization.find_organization(name)
 
-    def get_or_create_team(self, thing, org_id) -> TeamT:
+    def get_team(self, thing) -> TeamT | None:
         """Return team and maybe create it."""
         name = thing.project.name
         if teams := self.api.teams.search_teams(query=name):
             logger.debug(f"Team {name} already exists")
             return teams[0]
+        return None
+
+    def create_team(self, thing, org_id) -> TeamT:
+        """Return team and maybe create it."""
+        name = thing.project.name
         res = self.api.teams.add_team({"name": name, "orgId": org_id})
-        logger.debug(f"Created team {name}")
+        logger.debug(f"Created new team {name}")
         return self.api.teams.get_team(res["teamId"])
 
-    def get_or_create_folder(self, thing) -> FolderT:
+    def get_folder(self, thing) -> FolderT | None:
+        uid = thing.project.uuid
+        if self.folder_exists(uid):
+            return self.api.folder.get_folder(uid)
+        return None
+
+    def create_folder(self, thing) -> FolderT:
         uid = thing.project.uuid
         name = thing.project.name
-        if self.folder_exists(uid):
-            logger.debug(f"Folder {name} already exists")
-        else:
-            self.api.folder.create_folder(name, uid)
-            logger.debug(f"Created folder {name}")
+        self.api.folder.create_folder(name, uid)
+        logger.debug(f"Created new folder {name}")
         return self.api.folder.get_folder(uid)
 
     def set_folder_permissions(self, folder, team, role):
@@ -157,29 +178,27 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             }
         self.api.folder.update_folder_permissions(folder["uid"], permissions)
 
-    def get_or_create_datasource(self, thing, user_prefix: str) -> DatasourceT:
-        uid, name = thing.project.uuid, thing.project.name
+    def get_datasource(self, thing) -> DatasourceT | None:
+        uid = thing.project.uuid
         if self.datasource_exists(uid):
-            logger.debug(f"Datasource {name} already exists")
-        else:
-            self.create_datasource(thing, user_prefix)
-            logger.debug(f"Created datasource {name}")
-        return self.api.datasource.get_datasource_by_uid(uid)
+            return self.api.datasource.get_datasource_by_uid(uid)
+        return None
 
     def create_datasource(self, thing, user_prefix: str):
+        name = thing.project.name
+        uid = thing.project.uuid
         db_user = user_prefix.lower() + thing.database.ro_username.lower()
         db_password = decrypt(thing.database.ro_password, get_crypt_key())
 
         db_url_parsed = urlparse(thing.database.url)
         db_path = db_url_parsed.path.lstrip("/")
         db_url = db_url_parsed.hostname
-        if db_url_parsed.port is not None:
-            # only add port, if it is defined
+        if db_url_parsed.port is not None:  # only add port, if it is defined
             db_url += f":{db_url_parsed.port}"
         self.api.datasource.create_datasource(
             {
-                "name": thing.project.name,
-                "uid": thing.project.uuid,
+                "name": name,
+                "uid": uid,
                 "type": "postgres",
                 "url": db_url,
                 "user": db_user,
@@ -193,21 +212,8 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                 "secureJsonData": {"password": db_password},
             }
         )
-
-    def create_dashboard(
-        self,
-        thing: Thing,
-        folder: FolderT,
-        datasource: DatasourceT,
-        overwrite: bool = True,
-    ):
-        if overwrite or not self.dashboard_exists(thing.uuid):
-            dashboard = self.build_dashboard_dict(thing, folder, datasource)
-            self.api.dashboard.update_dashboard(dashboard)
-            action = "Updated" if overwrite else "Created"
-            logger.debug(f"{action} dashboard {thing.name}")
-        else:
-            logger.debug(f"Dashboard {thing.name} already exists")
+        logger.debug(f"Created new datasource {name}")
+        return self.api.datasource.get_datasource_by_uid(uid)
 
     def _exists(self, func: callable, *args) -> bool:
         try:
@@ -226,7 +232,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
     def folder_exists(self, uuid) -> bool:
         return self._exists(self.api.folder.get_folder, uuid)
 
-    def build_dashboard_dict(self, thing, folder: FolderT, datasource: DatasourceT):
+    def build_dashboard(self, thing, folder: FolderT, datasource: DatasourceT):
         dashboard_uid = thing.uuid
         dashboard_title = thing.name
         # datasource = {"type": datasource["type"], "uid": datasource["uid"]}
