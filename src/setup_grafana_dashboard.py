@@ -213,20 +213,6 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "type": "query",
         }
 
-        # template variable for log levels
-        log_level_templating = {
-            "datasource": datasource_dict,
-            "hide": 0,
-            "includeAll": True,
-            "label": "Log Level",
-            "multi": True,
-            "name": "log_level",
-            "query": "INFO,WARNING,ERROR",
-            "refresh": 1,
-            "sort": 7,
-            "type": "custom",
-        }
-
         show_qaqc_templating = {
             "datasource": datasource_dict,
             "hide": 0,
@@ -240,49 +226,6 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                 {"text": "False", "value": "False", "selected": True},
                 {"text": "True", "value": "True", "selected": False},
             ],
-        }
-
-        # value mapping and overrides for log levels in journal panel
-        log_level_mapping = {
-            "options": {
-                "ERROR": {"color": "#9d545d", "index": 2},
-                "INFO": {"color": "#6d9967", "index": 0},
-                "WARNING": {"color": "#b48250", "index": 1},
-            },
-            "type": "value",
-        }
-
-        log_level_overrides = {
-            "matcher": {"id": "byName", "options": "level"},
-            "properties": [
-                {
-                    "id": "custom.cellOptions",
-                    "value": {
-                        "applyToRow": True,
-                        "mode": "gradient",
-                        "type": "color-background",
-                    },
-                }
-            ],
-        }
-
-        # template variable for log origins
-        log_origin_sql = f"""
-            SELECT DISTINCT origin FROM journal j
-            JOIN thing t on j.thing_id = t.id
-            WHERE t.uuid::text = '{thing.uuid}'
-        """
-        log_origin_templating = {
-            "datasource": datasource_dict,
-            "hide": 0,
-            "includeAll": True,
-            "label": "Log Origin",
-            "multi": True,
-            "name": "log_origin",
-            "query": log_origin_sql,
-            "refresh": 1,
-            "sort": 7,
-            "type": "query",
         }
 
         # query to get observations, used in timeseries panel
@@ -413,43 +356,12 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "type": "row",
         }
 
-        # query to get journal messages
-        journal_sql = f"""
-            SELECT timestamp, level, message, origin FROM journal
-            JOIN thing t on journal.thing_id = t.id
-            WHERE t.uuid::text = '{thing.uuid}'
-            AND level in ($log_level)
-            AND origin in ($log_origin)
-            ORDER BY timestamp DESC
-        """
-
-        # build journal panel dict
-        journal_panel = {
-            "datasource": datasource_dict,
-            "fieldConfig": {
-                "defaults": {"mappings": [log_level_mapping]},
-                "overrides": [log_level_overrides],
-            },
-            "gridPos": {"h": 8, "w": 12},
-            "targets": [
-                {
-                    "datasource": datasource_dict,
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": True,
-                    "rawSql": journal_sql,
-                    "refId": "A",
-                }
-            ],
-            "title": "Status Journal",
-            "type": "table",
-        }
         journal_row = {
             "collapsed": True,
             "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
-            "panels": [journal_panel],
             "title": "Status Journal",
             "type": "row",
+            "panels": [self._journal_table(thing, datasource_dict)],
         }
 
         # build dashboard dictionary
@@ -466,8 +378,6 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "templating": {
                 "list": [
                     datastream_templating,
-                    log_level_templating,
-                    log_origin_templating,
                     show_qaqc_templating,
                 ]
             },
@@ -476,11 +386,64 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "uid": dashboard_uid,
         }
 
+        # query to get journal messages
         return {
             "dashboard": dashboard,
             "folderUid": folder_uid,
             "message": "created by TSM dashboard automation",
             "overwrite": True,
+        }
+
+    def _journal_table(self, thing: Thing, datasource: dict[str, str]):
+
+        return {
+            "datasource": datasource,
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [
+                        {
+                            "options": {
+                                "ERROR": {"color": "#9d545d", "index": 2},
+                                "INFO": {"color": "#6d9967", "index": 0},
+                                "WARNING": {"color": "#b48250", "index": 1},
+                            },
+                            "type": "value",
+                        }
+                    ]
+                },
+                "overrides": [
+                    {
+                        "matcher": {"id": "byName", "options": "level"},
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "applyToRow": True,
+                                    "mode": "gradient",
+                                    "type": "color-background",
+                                },
+                            }
+                        ],
+                    }
+                ],
+            },
+            "gridPos": {"h": 8, "w": 12},
+            "title": "Status Journal",
+            "type": "table",
+            "targets": [
+                {
+                    "datasource": datasource,
+                    "refId": "A",
+                    "editorMode": "code",
+                    "format": "table",
+                    "rawQuery": True,
+                    "rawSql": f"SELECT timestamp, level, message, origin "
+                    f"FROM journal "
+                    f"JOIN thing t on journal.thing_id = t.id "
+                    f"WHERE t.uuid::text = '{thing.uuid}' "
+                    f"ORDER BY timestamp DESC ",
+                }
+            ],
         }
 
 
