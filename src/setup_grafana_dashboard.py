@@ -348,29 +348,26 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "title": "$datastream_pos",
             "type": "timeseries",
         }
-        observation_row = {
-            "collapsed": False,
-            "gridPos": {"h": 1, "w": 24},
-            "panels": [],
-            "title": "Observations",
-            "type": "row",
-        }
-
-        journal_row = {
-            "collapsed": True,
-            "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
-            "title": "Status Journal",
-            "type": "row",
-            "panels": [self._journal_table(thing, datasource_dict)],
-        }
 
         # build dashboard dictionary
         dashboard = {
             "editable": True,
             "liveNow": True,
             "panels": [
-                journal_row,
-                observation_row,
+                {
+                    "collapsed": True,
+                    "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+                    "panels": [self._journal_table(thing, datasource_dict)],
+                    "title": "Status Journal New 0",
+                    "type": "row",
+                },
+                {
+                    "collapsed": False,
+                    "gridPos": {"h": 1, "w": 24},
+                    "panels": [],
+                    "title": "Observations",
+                    "type": "row",
+                },
                 observation_panel,
             ],
             "refresh": False,
@@ -427,7 +424,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                     }
                 ],
             },
-            "gridPos": {"h": 8, "w": 12},
+            "gridPos": {"h": 12, "w": 24},
             "title": "Status Journal",
             "type": "table",
             "targets": [
