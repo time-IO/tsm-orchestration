@@ -7,6 +7,7 @@ build-and-push-images:
   before_script:
     # Prepare .env file to use the branch name as image tag
     # This .env file is used in subequent jobs that have a line of dependency back to this job.
+    # if a tag is set $CI_COMMIT_REF_NAME equals $CI_COMMIT_TAG
     - cp .env.example .env
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
