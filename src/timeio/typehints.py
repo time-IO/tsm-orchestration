@@ -70,6 +70,9 @@ class MqttPayload:
         datetime_from: str
         datetime_to: str
 
+    class SyncExtSftp(_t.TypedDict):
+        thing: str  # UUID of the thing
+
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
