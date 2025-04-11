@@ -6,12 +6,11 @@ TAG=${SSH_ORIGINAL_COMMAND}
 git fetch origin
 git show ${TAG}:.env.example > $TEMP_ENV_FILE
 
-# activate virtual environment
-source venv/bin/activate
 # compare the .env file with the .env.example file from the tag
 # if it fails, rm TEMP_ENV_FILE and exit
 # if it passes, rm TEMP_ENV_FILE and continue
-./compare_dotenv_files.py .env $TEMP_ENV_FILE
+# use venv with dotenv and click pre-installed
+venv/bin/python3 compare_dotenv_files.py .env $TEMP_ENV_FILE
 if [ $? -ne 0 ]; then
   rm $TEMP_ENV_FILE
   exit 1
