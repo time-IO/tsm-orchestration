@@ -19,6 +19,6 @@ rm $TEMP_ENV_FILE
 git checkout main
 git pull origin main
 rm remove-all-data.sh
-sudo docker compose pull -q
-sudo docker compose up -d
-sudo docker compose ps
+docker compose create --build
+docker compose up -d
+docker compose ps

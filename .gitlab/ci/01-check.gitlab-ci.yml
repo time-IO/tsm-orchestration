@@ -62,3 +62,18 @@ pytest:
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: always
+
+check-release-env-file:
+  stage: check
+  image: python:3.11-slim
+  before_script:
+    - pip install dotenv click
+  script:
+    - python3 ./compare_dotenv_files.py .env.example ./releases/release.env
+  rules:
+    # Never run if pipeline is triggered by a merge_request_event or a push on main
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    # Always run if pipeline is triggered by a push on a branch
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: always
