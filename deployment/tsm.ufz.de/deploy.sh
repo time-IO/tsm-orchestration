@@ -20,7 +20,7 @@ rm $TEMP_ENV_FILE
 git checkout ${TAG}
 rm remove-all-data.sh
 # ... otherwise deploy time.IO with the tag env file
-DC="docker compose --env-file .env --env-file releases/release.env"
+DC="sudo docker compose --env-file .env --env-file releases/release.env"
 $DC create --build
 $DC up -d
 sleep 10
