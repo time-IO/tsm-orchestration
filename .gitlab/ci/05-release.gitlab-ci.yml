@@ -62,11 +62,6 @@ prod-tag-images-in-registry:
     # Run if pipeline is triggered by a tag and if integration and end-to-end tests were successful
     - if: "$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED"
       when: on_success
-  needs:
-    - "docker-service-test"
-    - "mqtt-service-test"
-    - "combined-integration-test"
-    - "combined-e2e-test"
   image: "docker:${DOCKER_IMAGE_TAG}"
   before_script:
     # As job has `needs` dependency tracing back to the build job, we can use the .env defined there
@@ -81,7 +76,7 @@ prod-tag-images-in-registry:
     # Images built in a commit tag pipeline on main are tagged "main" by build job.
     - |
       for image in $(docker images --format '{{ .Repository }}'); do
-        docker tag $image:main $image:$PROD_TAG;
+        docker tag $image:${CI_COMMIT_TAG} $image:$PROD_TAG;
         docker push $image:PROD_TAG;
       done
     - docker images
