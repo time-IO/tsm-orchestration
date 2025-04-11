@@ -76,7 +76,7 @@ prod-tag-images-in-registry:
     # Images built in a commit tag pipeline on main are tagged "main" by build job.
     - |
       for image in $(docker images --format '{{ .Repository }}'); do
-        docker tag $image:main $image:$PROD_TAG;
+        docker tag $image:${CI_COMMIT_TAG} $image:$PROD_TAG;
         docker push $image:PROD_TAG;
       done
     - docker images
