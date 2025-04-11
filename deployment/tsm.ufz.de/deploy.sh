@@ -2,10 +2,11 @@
 cd "$(dirname "$0")/../.."
 
 TEMP_ENV_FILE=$(mktemp)
+TAG=${SSH_ORIGINAL_COMMAND}
 git fetch origin
-git show origin/main:.env.example > $TEMP_ENV_FILE
+git show ${TAG}:.env.example > $TEMP_ENV_FILE
 
-# compare the .env file with the .env.example file from the main branch
+# compare the .env file with the .env.example file from the tag
 # if it fails, rm TEMP_ENV_FILE and exit
 # if it passes, rm TEMP_ENV_FILE and continue
 ./compare_dotenv_files.py .env $TEMP_ENV_FILE
@@ -15,13 +16,10 @@ if [ $? -ne 0 ]; then
 fi
 rm $TEMP_ENV_FILE
 
-# check whether the tag and the release environment file exist
-# fail if it does not exist ...
-RELEASE_ENV_FILE="releases/${SSH_ORIGINAL_COMMAND}.env"
-git show ${SSH_ORIGINAL_COMMAND}:${RELEASE_ENV_FILE} || exit 1
-
+git checkout ${TAG}
+rm remove-all-data.sh
 # ... otherwise deploy time.IO with the tag env file
-DC="sudo docker compose --env-file .env --env-file ${RELEASE_ENV_FILE}"
+DC="docker compose --env-file .env --env-file releases/release.env"
 $DC create --build
 $DC up -d
 sleep 10
