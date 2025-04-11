@@ -65,7 +65,7 @@ check-release-env-file:
   stage: check
   image: python:3.11-slim
   before_script:
-    - pip install dotenv
+    - pip install dotenv click
   script:
     - python3 ./compare_dotenv_files.py .env.example ./releases/release.env
   rules:
