@@ -4,6 +4,7 @@
 import click
 import json
 import psycopg
+import logging
 
 from datetime import datetime, timedelta, timezone
 
@@ -93,10 +94,13 @@ TIMERANGE_MAPPING = {
     "nm": get_nm_timerange,
 }
 
+@click.group()
+def cli():
+    pass
 
-@click.command()
+@cli.command()
 @click.argument("thing_uuid")
-def main(thing_uuid: str):
+def sync_thing(thing_uuid: str):
     thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
     if thing.ext_api is not None:
         ext_api_name = thing.ext_api.api_type_name
@@ -111,6 +115,11 @@ def main(thing_uuid: str):
         message = {"thing": thing.uuid}
         publish_single(get_envvar("SFTP_SYNC_TOPIC"), json.dumps(message))
 
+@cli.command()
+@click.argument("origin")
+def sync_sms(origin: str):
+    message = {"origin": origin}
+    publish_single(get_envvar("SMS_SYNC_TOPIC"), json.dumps(message))
 
 if __name__ == "__main__":
-    main()
+    cli()

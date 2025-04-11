@@ -73,6 +73,9 @@ class MqttPayload:
     class SyncExtSftp(_t.TypedDict):
         thing: str  # UUID of the thing
 
+    class SyncSms(_t.TypedDict):
+        origin: str # sms backend data or sms cv data
+
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
