@@ -369,12 +369,17 @@ services:
       - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
     environment:
       FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-      FLYWAY_USER: "${DATABASE_ADMIN_USER}"
-      FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
+      FLYWAY_USER: "${THING_MANAGEMENT_V2_DATABASE_USER}"
+      FLYWAY_PASSWORD: "${THING_MANAGEMENT_V2_DATABASE_PASS}"
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_V2_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_V2_DATABASE_PASS}"
+      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_V2_DATABASE_SCHEMA:-thing_management_db}"
     depends_on:
       database:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -408,6 +413,8 @@ services:
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_DATABASE_USER}"
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_V2_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_V2_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
       FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
@@ -444,7 +451,7 @@ services:
       API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
       APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
       VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-      APP_URL: "${THING_MANAGEMENT_FRONTEND_HOST}"
+      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
     depends_on:
       thing-management-api:
         condition: service_healthy
@@ -473,20 +480,23 @@ services:
       retries: 3
     environment:
       VERSION: "${THING_MANAGEMENT_API_ENVIRONMENT}"
-      DB_URL: "${DATABASE_ADMIN_DSN}"
-      DB_SCHEMA: "thing-management"
-      # POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
-      # POSTGRES_PORT: "${DATABASE_ADMIN_PORT}"
-      # POSTGRES_USER: "${DATABASE_ADMIN_USER}"
-      # POSTGRES_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
-      # POSTGRES_DB: "${DATABASE_ADMIN_DB_NAME}"
+      DB_URL: "postgresql://${THING_MANAGEMENT_V2_DATABASE_USER}:${THING_MANAGEMENT_V2_DATABASE_PASS}@${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      DB_SCHEMA: "${THING_MANAGEMENT_V2_DATABASE_SCHEMA:-thing_management_db}"
+      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASSWORD}"
+      MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
+      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST:-mqtt-broker}"
+      MQTT_CLIENT_ID: "${MQTT_CLIENT_ID:-thing_management}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
     depends_on:
+      mqtt-broker:
+        condition: service_healthy
       database:
         condition: service_healthy
-      flyway:
-        condition: service_started
+      flyway-thing-management:
+        condition: service_completed_successfully
     #  keycloak:
     #    condition: service_started
     logging:
