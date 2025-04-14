@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+### Added
+- Option to disable the database service ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/358))
+
 ## 2025-03-28
 
 ### Fixed
