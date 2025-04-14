@@ -74,7 +74,7 @@ def connect_and_listen():
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
-    client.username_pw_set(username, password)
+    client.username_pw_set(username=username, password=password)
     client.connect(host, port)
     client.loop_forever()
 
