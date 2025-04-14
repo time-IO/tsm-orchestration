@@ -40,6 +40,7 @@ DSN format:
   postgresql://[user[:password]@][netloc][:port][/dbname]
 """
 
+
 class SyncExtSftpManager(AbstractHandler):
 
     def __init__(self):
@@ -53,7 +54,6 @@ class SyncExtSftpManager(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
-
 
     def act(self, content: MqttPayload.SyncExtSftp, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)

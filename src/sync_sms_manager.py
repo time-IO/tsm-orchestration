@@ -31,6 +31,7 @@ class SyncSmsManager(AbstractHandler):
         elif origin == "sms_cv":
             SyncSmsCv().sync()
 
+
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     SyncSmsManager().run_loop()

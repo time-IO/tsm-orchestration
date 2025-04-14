@@ -94,9 +94,11 @@ TIMERANGE_MAPPING = {
     "nm": get_nm_timerange,
 }
 
+
 @click.group()
 def cli():
     pass
+
 
 @cli.command()
 @click.argument("thing_uuid")
@@ -115,11 +117,13 @@ def sync_thing(thing_uuid: str):
         message = {"thing": thing.uuid}
         publish_single(get_envvar("SFTP_SYNC_TOPIC"), json.dumps(message))
 
+
 @cli.command()
 @click.argument("origin")
 def sync_sms(origin: str):
     message = {"origin": origin}
     publish_single(get_envvar("SMS_SYNC_TOPIC"), json.dumps(message))
+
 
 if __name__ == "__main__":
     cli()

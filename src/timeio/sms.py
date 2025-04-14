@@ -31,7 +31,8 @@ class SyncSmsCv:
 
     def sync(self):
         file_path_list = [
-            os.path.join(self.script_dir, "cv_tables", file_name) for file_name in self.file_names
+            os.path.join(self.script_dir, "cv_tables", file_name)
+            for file_name in self.file_names
         ]
         os.chdir(self.home)
         for file_path in file_path_list:
@@ -42,7 +43,9 @@ class SyncSmsCv:
                         with open(file_path, "r") as f:
                             table_dict = json.load(f)
                         self.create_table(c=c, table_dict=table_dict)
-                        self.upsert_table(c=db.cursor(), url=self.cv_api_url, table_dict=table_dict)
+                        self.upsert_table(
+                            c=db.cursor(), url=self.cv_api_url, table_dict=table_dict
+                        )
             finally:
                 db.close()
 
@@ -58,14 +61,18 @@ class SyncSmsCv:
         err = None
         for _ in range(retries):
             try:
-                return psycopg.connect(dbname=db, user=user, password=password, host=host)
+                return psycopg.connect(
+                    dbname=db, user=user, password=password, host=host
+                )
             except Exception as e:
                 err = e
                 print(f"{self.get_utc_str()}: Retrying...")
                 time.sleep(sleep)
         raise RuntimeError(f"Could not connect to database") from err
 
-    def get_data_from_url(self, url: str, endpoint: str, token: Optional[str] = None) -> Dict:
+    def get_data_from_url(
+        self, url: str, endpoint: str, token: Optional[str] = None
+    ) -> Dict:
         target = urljoin(url, endpoint)
         print(f"{self.get_utc_str()}: Getting data from {target}")
         all_data = []
@@ -200,7 +207,7 @@ class SyncSmsCv:
         return query
 
     def upsert_table(
-            self, c: cursor, url: str, table_dict: dict, token: Optional[str] = None
+        self, c: cursor, url: str, table_dict: dict, token: Optional[str] = None
     ) -> None:
         """
         updates table based on table_dict (loaded from foo-table.json in ./tables)
@@ -221,7 +228,9 @@ class SyncSmsCv:
             ...
         """
         if token:
-            r = self.get_data_from_url(url=url, endpoint=table_dict["endpoint"], token=token)
+            r = self.get_data_from_url(
+                url=url, endpoint=table_dict["endpoint"], token=token
+            )
         else:
             r = self.get_data_from_url(url=url, endpoint=table_dict["endpoint"])
         data = self._remove_id_duplicates(r["data"])
@@ -232,9 +241,6 @@ class SyncSmsCv:
         except Exception as e:
             print(f"Could not sync data to table {table_dict['name']}:\n{e}")
             raise e
-
-
-
 
 
 class SyncSmsMaterializedViews:
@@ -261,7 +267,9 @@ class SyncSmsMaterializedViews:
 
                     return self
             except psycopg.Error as e:
-                self.logger.error(f"Error occurred during fetching materialized view: {e}")
+                self.logger.error(
+                    f"Error occurred during fetching materialized view: {e}"
+                )
                 if conn:
                     conn.rollback()
 
@@ -279,13 +287,17 @@ class SyncSmsMaterializedViews:
                                 psysql.Identifier(view_name)
                             )
                         )
-                        self.logger.info(f"Refreshed materialized sms view: {view_name}")
+                        self.logger.info(
+                            f"Refreshed materialized sms view: {view_name}"
+                        )
 
                 # Commit the changes
                 conn.commit()
 
             except psycopg.Error as e:
-                self.logger.error(f"Error occurred during refreshing materialized view: {e}")
+                self.logger.error(
+                    f"Error occurred during refreshing materialized view: {e}"
+                )
                 if conn:
                     conn.rollback()
 
