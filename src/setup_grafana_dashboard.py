@@ -142,7 +142,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         name = thing.project.name
         res = self.api.teams.add_team({"name": name, "orgId": org_id})
         logger.debug(f"Created new team {name}")
-        return self.get_team(res["teamId"])
+        return self.get_team(thing)
 
     def get_folder(self, thing) -> FolderT | None:
         uid = thing.project.uuid
