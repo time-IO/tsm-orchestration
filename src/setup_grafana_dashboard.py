@@ -127,7 +127,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
     def create_organization(self, name) -> OrgT:
         self.api.organization.create_organization({"name": name})
         logger.debug(f"Created new organization {name}")
-        return self.api.organization.find_organization(name)
+        return self.get_organization(name)
 
     def get_team(self, thing) -> TeamT | None:
         """Return team and maybe create it."""
