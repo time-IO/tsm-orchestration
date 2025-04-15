@@ -127,7 +127,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
     def create_organization(self, name) -> OrgT:
         self.api.organization.create_organization({"name": name})
         logger.debug(f"Created new organization {name}")
-        return self.api.organization.find_organization(name)
+        return self.get_organization(name)
 
     def get_team(self, thing) -> TeamT | None:
         """Return team and maybe create it."""
@@ -142,7 +142,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         name = thing.project.name
         res = self.api.teams.add_team({"name": name, "orgId": org_id})
         logger.debug(f"Created new team {name}")
-        return self.api.teams.get_team(res["teamId"])
+        return self.get_team(res["teamId"])
 
     def get_folder(self, thing) -> FolderT | None:
         uid = thing.project.uuid
