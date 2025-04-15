@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from urllib.parse import urlparse
 
@@ -9,8 +11,53 @@ from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
 from timeio.typehints import MqttPayload
+from typing import TypedDict, Any
 
 logger = logging.getLogger("grafana-dashboard-setup")
+
+TeamT = TypedDict("TeamT", {"id": int, "uid": str, "title": str})
+OrgT = TypedDict("OrgT", {"id": int, "name": str, "address": dict[str, str]})
+FolderT = TypedDict(
+    "FolderT",
+    {
+        "id": int,
+        "uid": str,
+        "orgId": int,
+        "title": str,
+        "url": str,
+        "hasAcl": bool,
+        "canSave": bool,
+        "canEdit": bool,
+        "canAdmin": bool,
+        "canDelete": bool,
+        "createdBy": str,
+        "created": str,
+        "updatedBy": str,
+        "updated": str,
+        "version": int,
+    },
+)
+
+DatasourceT = TypedDict(
+    "DatasourceT",
+    {
+        "id": int,
+        "uid": str,
+        "orgId": int,
+        "name": str,
+        "type": str,
+        "typeName": str,
+        "typeLogoUrl": str,
+        "access": str,
+        "url": str,
+        "user": str,
+        "database": str,
+        "basicAuth": bool,
+        "isDefault": bool,
+        "jsonData": dict[str, Any],
+        "readOnly": bool,
+    },
+)
 
 
 class CreateThingInGrafanaHandler(AbstractHandler):
@@ -38,13 +85,14 @@ class CreateThingInGrafanaHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
-        self.create_organization(thing)
+        org = self.get_organization(thing.project.name)
+        if org is None:
+            org = self.create_organization(thing.project.name)
 
         # create datasource, folder, dashboard in project org
         # Give Grafana and Org Admins admin access to folder
         # Give Role Editor edit access to folder
-        org_id = self.organization_from_list(thing.project.name).get("id")
-        self.create_all_in_org(thing, org_id=org_id, role=2)
+        self.create_all_in_org(thing, org_id=org["id"], role=2)
 
         # create team, datasource, folder, dashboard in Main org
         # Give Team viewer access to folder
@@ -52,128 +100,70 @@ class CreateThingInGrafanaHandler(AbstractHandler):
 
     def create_all_in_org(self, thing, org_id, role):
         self.api.organizations.switch_organization(org_id)
-        self.create_datasource(thing, user_prefix="grf_")
-        self.create_folder(thing)
-        # only create team in Main org
-        if org_id == 1:
-            self.create_team(thing, org_id)
-        self.set_folder_permissions(thing, role)
-        self.create_dashboard(thing)
+        if (ds := self.get_datasource(thing)) is None:
+            ds = self.create_datasource(thing, user_prefix="grf_")
 
-    def create_organization(self, thing):
-        name = thing.project.name
-        if not self.organization_exists(name):
-            self.api.organization.create_organization({"name": name})
-            logger.debug(f"Created organization {name}")
-        else:
-            logger.debug(f"Organization {name} already exists")
+        if (team_name := self.get_team(thing)) is None and org_id == 1:
+            # only create team in Main org
+            team_name = self.create_team(thing, org_id)
 
-    def create_team(self, thing, org_id):
-        name = thing.project.name
-        if not self.team_exists(name):
-            self.api.teams.add_team({"name": name, "orgId": org_id})
-            logger.debug(f"Created team {name}")
-        else:
-            logger.debug(f"Team {name} already exists")
+        if (folder := self.get_folder(thing)) is None:
+            folder = self.create_folder(thing)
 
-    def create_folder(self, thing):
-        uid = thing.project.uuid
-        name = thing.project.name
-        if not self.folder_exists(uid):
-            self.api.folder.create_folder(name, uid)
-            logger.debug(f"Created folder {name}")
-        else:
-            logger.debug(f"Folder {name} already exists")
+        self.set_folder_permissions(folder, team_name, role)
 
-    def create_datasource(self, thing, user_prefix: str):
-        uuid, name = thing.project.uuid, thing.project.name
-        if not self.datasource_exists(uuid):
-            datasource = self.new_datasource(thing, user_prefix)
-            self.api.datasource.create_datasource(datasource)
-            logger.debug(f"Created datasource {name}")
-        else:
-            logger.debug(f"Datasource {name} already exists")
+        action = "Updated" if self.dashboard_exists(thing.uuid) else "Created new"
+        dashboard = self.build_dashboard(thing, folder, ds)
+        self.api.dashboard.update_dashboard(dashboard)
+        logger.debug(f"{action} dashboard {thing.name}")
 
-    def create_dashboard(self, thing, overwrite=True):
-        # create/update dashboard if it doesn't exist or overwrite is True
-        if overwrite or not self.dashboard_exists(thing.uuid):
-            dashboard = self.build_dashboard_dict(thing)
-            self.api.dashboard.update_dashboard(dashboard)
-            action = "Updated" if overwrite else "Created"
-            logger.debug(f"{action} dashboard {thing.name}")
-        else:
-            logger.debug(f"Dashboard {thing.name} already exists")
-
-    def new_datasource(self, thing, user_prefix: str):
-        ds_uid = thing.project.uuid
-        ds_name = thing.project.name
-        db_user = user_prefix.lower() + thing.database.ro_username.lower()
-        db_password = decrypt(thing.database.ro_password, get_crypt_key())
-
-        # parse thing.database.url to get hostname, port, database name
-        db_url_parsed = urlparse(thing.database.url)
-        db_path = db_url_parsed.path.lstrip("/")
-        # only add port, if it is defined
-        db_url = db_url_parsed.hostname
-        if db_url_parsed.port is not None:
-            db_url += f":{db_url_parsed.port}"
-
-        return {
-            "name": ds_name,
-            "uid": ds_uid,
-            "type": "postgres",
-            "url": db_url,
-            "user": db_user,
-            "access": "proxy",
-            "basicAuth": False,
-            "jsonData": {
-                "database": db_path,
-                "sslmode": self.sslmode,
-                "timescaledb": True,
-            },
-            "secureJsonData": {"password": db_password},
-        }
-
-    def organization_from_list(self, name):
+    def get_organization(self, name) -> OrgT | None:
         organizations = self.api.organizations.list_organization()
         for org in organizations:
             if org.get("name") == name:
                 return org
         return None
 
-    def _exists(self, func: callable, *args) -> bool:
-        try:
-            func(*args)
-        except GrafanaException:
-            return False
-        else:
-            return True
+    def create_organization(self, name) -> OrgT:
+        self.api.organization.create_organization({"name": name})
+        logger.debug(f"Created new organization {name}")
+        return self.api.organization.find_organization(name)
 
-    def organization_exists(self, name) -> bool:
-        return self.organization_from_list(name) is not None
+    def get_team(self, thing) -> TeamT | None:
+        """Return team and maybe create it."""
+        name = thing.project.name
+        if teams := self.api.teams.search_teams(query=name):
+            logger.debug(f"Team {name} already exists")
+            return teams[0]
+        return None
 
-    def datasource_exists(self, uuid) -> bool:
-        return self._exists(self.api.datasource.get_datasource_by_uid, uuid)
+    def create_team(self, thing, org_id) -> TeamT:
+        """Return team and maybe create it."""
+        name = thing.project.name
+        res = self.api.teams.add_team({"name": name, "orgId": org_id})
+        logger.debug(f"Created new team {name}")
+        return self.api.teams.get_team(res["teamId"])
 
-    def dashboard_exists(self, uuid) -> bool:
-        return self._exists(self.api.dashboard.get_dashboard, uuid)
+    def get_folder(self, thing) -> FolderT | None:
+        uid = thing.project.uuid
+        if self.folder_exists(uid):
+            return self.api.folder.get_folder(uid)
+        return None
 
-    def folder_exists(self, uuid) -> bool:
-        return self._exists(self.api.folder.get_folder, uuid)
+    def create_folder(self, thing) -> FolderT:
+        uid = thing.project.uuid
+        name = thing.project.name
+        self.api.folder.create_folder(name, uid)
+        logger.debug(f"Created new folder {name}")
+        return self.api.folder.get_folder(uid)
 
-    def team_exists(self, name) -> bool:
-        return bool(self.api.teams.search_teams(query=name))
-
-    def set_folder_permissions(self, thing, role):
-        name, uuid = thing.project.name, thing.project.uuid
-        current_org = self.api.organization.get_current_organization()
+    def set_folder_permissions(self, folder, team, role):
         if role == 1:
-            team_id = self.api.teams.search_teams(query=name)[0].get("id")
             # set GRAFANA_USER as folder admin and team as Viewer
             permissions = {
                 "items": [
                     {"userId": 1, "permission": 4},
-                    {"teamId": team_id, "permission": role},
+                    {"teamId": team["id"], "permission": role},
                 ]
             }
         else:
@@ -186,14 +176,66 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                     {"role": "Editor", "permission": role},
                 ]
             }
-        self.api.folder.update_folder_permissions(uuid, permissions)
+        self.api.folder.update_folder_permissions(folder["uid"], permissions)
 
-    def build_dashboard_dict(self, thing):
+    def get_datasource(self, thing) -> DatasourceT | None:
+        uid = thing.project.uuid
+        if self.datasource_exists(uid):
+            return self.api.datasource.get_datasource_by_uid(uid)
+        return None
+
+    def create_datasource(self, thing, user_prefix: str):
+        name = thing.project.name
+        uid = thing.project.uuid
+        db_user = user_prefix.lower() + thing.database.ro_username.lower()
+        db_password = decrypt(thing.database.ro_password, get_crypt_key())
+
+        db_url_parsed = urlparse(thing.database.url)
+        db_path = db_url_parsed.path.lstrip("/")
+        db_url = db_url_parsed.hostname
+        if db_url_parsed.port is not None:  # only add port, if it is defined
+            db_url += f":{db_url_parsed.port}"
+        self.api.datasource.create_datasource(
+            {
+                "name": name,
+                "uid": uid,
+                "type": "postgres",
+                "url": db_url,
+                "user": db_user,
+                "access": "proxy",
+                "basicAuth": False,
+                "jsonData": {
+                    "database": db_path,
+                    "sslmode": self.sslmode,
+                    "timescaledb": True,
+                },
+                "secureJsonData": {"password": db_password},
+            }
+        )
+        logger.debug(f"Created new datasource {name}")
+        return self.api.datasource.get_datasource_by_uid(uid)
+
+    def _exists(self, func: callable, *args) -> bool:
+        try:
+            func(*args)
+        except GrafanaException:
+            return False
+        else:
+            return True
+
+    def datasource_exists(self, uuid) -> bool:
+        return self._exists(self.api.datasource.get_datasource_by_uid, uuid)
+
+    def dashboard_exists(self, uuid) -> bool:
+        return self._exists(self.api.dashboard.get_dashboard, uuid)
+
+    def folder_exists(self, uuid) -> bool:
+        return self._exists(self.api.folder.get_folder, uuid)
+
+    def build_dashboard(self, thing, folder: FolderT, datasource: DatasourceT):
         dashboard_uid = thing.uuid
         dashboard_title = thing.name
-        folder_uid = thing.project.uuid
-        folder_title = thing.project.name
-        datasource_dict = {"type": "postgres", "uid": folder_uid}
+        # datasource = {"type": datasource["type"], "uid": datasource["uid"]}
 
         # template variable for datastream positions/properties
         datastream_sql = f"""
@@ -201,7 +243,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             WHERE t_uuid::text = '{thing.uuid}'
         """
         datastream_templating = {
-            "datasource": datasource_dict,
+            "datasource": datasource,
             "hide": 0,
             "includeAll": True,
             "label": "Datastream",
@@ -213,22 +255,8 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "type": "query",
         }
 
-        # template variable for log levels
-        log_level_templating = {
-            "datasource": datasource_dict,
-            "hide": 0,
-            "includeAll": True,
-            "label": "Log Level",
-            "multi": True,
-            "name": "log_level",
-            "query": "INFO,WARNING,ERROR",
-            "refresh": 1,
-            "sort": 7,
-            "type": "custom",
-        }
-
         show_qaqc_templating = {
-            "datasource": datasource_dict,
+            "datasource": datasource,
             "hide": 0,
             "type": "custom",
             "name": "show_qaqc_flags",
@@ -240,49 +268,6 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                 {"text": "False", "value": "False", "selected": True},
                 {"text": "True", "value": "True", "selected": False},
             ],
-        }
-
-        # value mapping and overrides for log levels in journal panel
-        log_level_mapping = {
-            "options": {
-                "ERROR": {"color": "#9d545d", "index": 2},
-                "INFO": {"color": "#6d9967", "index": 0},
-                "WARNING": {"color": "#b48250", "index": 1},
-            },
-            "type": "value",
-        }
-
-        log_level_overrides = {
-            "matcher": {"id": "byName", "options": "level"},
-            "properties": [
-                {
-                    "id": "custom.cellOptions",
-                    "value": {
-                        "applyToRow": True,
-                        "mode": "gradient",
-                        "type": "color-background",
-                    },
-                }
-            ],
-        }
-
-        # template variable for log origins
-        log_origin_sql = f"""
-            SELECT DISTINCT origin FROM journal j
-            JOIN thing t on j.thing_id = t.id
-            WHERE t.uuid::text = '{thing.uuid}'
-        """
-        log_origin_templating = {
-            "datasource": datasource_dict,
-            "hide": 0,
-            "includeAll": True,
-            "label": "Log Origin",
-            "multi": True,
-            "name": "log_origin",
-            "query": log_origin_sql,
-            "refresh": 1,
-            "sort": 7,
-            "type": "query",
         }
 
         # query to get observations, used in timeseries panel
@@ -368,7 +353,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         }
         # build observations panel dict
         observation_panel = {
-            "datasource": datasource_dict,
+            "datasource": datasource,
             "gridPos": {"h": 8},
             "options": {
                 "legend": {
@@ -386,7 +371,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             },
             "targets": [
                 {
-                    "datasource": datasource_dict,
+                    "datasource": datasource,
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": True,
@@ -394,7 +379,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
                     "refId": "A",
                 },
                 {
-                    "datasource": datasource_dict,
+                    "datasource": datasource,
                     "editorMode": "code",
                     "format": "time_series",
                     "rawQuery": True,
@@ -405,69 +390,33 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "title": "$datastream_pos",
             "type": "timeseries",
         }
-        observation_row = {
-            "collapsed": False,
-            "gridPos": {"h": 1, "w": 24},
-            "panels": [],
-            "title": "Observations",
-            "type": "row",
-        }
-
-        # query to get journal messages
-        journal_sql = f"""
-            SELECT timestamp, level, message, origin FROM journal
-            JOIN thing t on journal.thing_id = t.id
-            WHERE t.uuid::text = '{thing.uuid}'
-            AND level in ($log_level)
-            AND origin in ($log_origin)
-            ORDER BY timestamp DESC
-        """
-
-        # build journal panel dict
-        journal_panel = {
-            "datasource": datasource_dict,
-            "fieldConfig": {
-                "defaults": {"mappings": [log_level_mapping]},
-                "overrides": [log_level_overrides],
-            },
-            "gridPos": {"h": 8, "w": 12},
-            "targets": [
-                {
-                    "datasource": datasource_dict,
-                    "editorMode": "code",
-                    "format": "table",
-                    "rawQuery": True,
-                    "rawSql": journal_sql,
-                    "refId": "A",
-                }
-            ],
-            "title": "Status Journal",
-            "type": "table",
-        }
-        journal_row = {
-            "collapsed": True,
-            "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
-            "panels": [journal_panel],
-            "title": "Status Journal",
-            "type": "row",
-        }
 
         # build dashboard dictionary
         dashboard = {
             "editable": True,
             "liveNow": True,
             "panels": [
-                journal_row,
-                observation_row,
+                {
+                    "collapsed": True,
+                    "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+                    "panels": [self._journal_table(thing, datasource)],
+                    "title": "Status Journal",
+                    "type": "row",
+                },
+                {
+                    "collapsed": False,
+                    "gridPos": {"h": 1, "w": 24},
+                    "panels": [],
+                    "title": "Observations",
+                    "type": "row",
+                },
                 observation_panel,
             ],
             "refresh": False,
-            "tags": [folder_title, dashboard_title, "TSM_automation"],
+            "tags": [folder["title"], dashboard_title, "TSM_automation"],
             "templating": {
                 "list": [
                     datastream_templating,
-                    log_level_templating,
-                    log_origin_templating,
                     show_qaqc_templating,
                 ]
             },
@@ -476,11 +425,71 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             "uid": dashboard_uid,
         }
 
+        # query to get journal messages
         return {
             "dashboard": dashboard,
-            "folderUid": folder_uid,
+            "folderUid": folder["uid"],
             "message": "created by TSM dashboard automation",
             "overwrite": True,
+        }
+
+    def _journal_table(self, thing: Thing, datasource: dict[str, str]):
+        """Create the journal table"""
+
+        return {
+            "type": "table",
+            "title": "Status Journal",
+            "gridPos": {"h": 12, "w": 24},
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "filterable": True,
+                    },
+                    "mappings": [
+                        {
+                            "options": {
+                                "ERROR": {"color": "#9d545d", "index": 2},
+                                "INFO": {"color": "#6d9967", "index": 0},
+                                "WARNING": {"color": "#b48250", "index": 1},
+                            },
+                            "type": "value",
+                        }
+                    ],
+                },
+                "overrides": [
+                    {
+                        "matcher": {"id": "byName", "options": "level"},
+                        "properties": [
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "applyToRow": True,
+                                    "mode": "gradient",
+                                    "type": "color-background",
+                                },
+                            }
+                        ],
+                    }
+                ],
+            },
+            "transparent": True,
+            "targets": [
+                {
+                    "datasource": datasource,
+                    "editorMode": "code",
+                    "format": "table",
+                    "rawQuery": True,
+                    "rawSql": (
+                        f"SELECT timestamp, level, message, origin "
+                        f"FROM journal "
+                        f"JOIN thing t on journal.thing_id = t.id "
+                        f"WHERE t.uuid::text = '{thing.uuid}' "
+                        f"ORDER BY timestamp DESC "
+                    ),
+                    "refId": "A",
+                }
+            ],
+            "datasource": datasource,
         }
 
 
