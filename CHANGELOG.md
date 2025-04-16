@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Added
+- Option to disable the database service ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/358))
+- Option to sort and filter columns in Grafana dashoard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/349))
+
 ## 2025-03-28
 
 ### Fixed
