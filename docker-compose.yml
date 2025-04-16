@@ -167,8 +167,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
-      database:
-        condition: service_healthy
       flyway:
         condition: service_completed_successfully
     command: >
@@ -372,6 +370,8 @@ services:
       FLYWAY_USER: "${DATABASE_ADMIN_USER}"
       FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_CONNECT_RETRIES: 10
+      FLYWAY_CONNECT_RETRIES_INTERVAL: 3
       FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_READONLY_USER}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_READONLY_PASSWORD}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
@@ -621,8 +621,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
       timeio-db-api:
         condition: service_healthy
     environment:
@@ -659,8 +657,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -699,8 +695,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -820,8 +814,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
       timeio-db-api:
         condition: service_healthy
     environment:
@@ -856,8 +848,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
