@@ -22,7 +22,7 @@ ENV_KEYS = [
 
 
 def get_env_endpoints():
-    env_endpoints = [os.getenv(env_var) for env_var in ENV_KEYS]
+    env_endpoints = [os.environ.get(env_var) for env_var in ENV_KEYS]
     return env_endpoints
 
 
