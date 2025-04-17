@@ -448,6 +448,7 @@ services:
   # TODO
   thing-management-frontend:
     image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
+    restart: "${SERVICE_RESTART_POLICY}"
     environment:
       API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
       APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
@@ -472,7 +473,7 @@ services:
   # TODO
   thing-management-api:
     image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
-    restart: unless-stopped
+    restart: "${SERVICE_RESTART_POLICY}"
     healthcheck:
       test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
       interval: 30s
