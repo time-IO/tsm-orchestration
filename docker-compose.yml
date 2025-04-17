@@ -479,7 +479,7 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      VERSION: "${THING_MANAGEMENT_API_ENVIRONMENT}"
+      VERSION: "${THING_MANAGEMENT_API_VERSION}"
       DB_URL: "${THING_MANAGEMENT_API_DSN}"
       DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
       MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
@@ -515,7 +515,7 @@ services:
   # ===========
   # TODO
   frontend:
-    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_IMAGE_TAG}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_LEGACY_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     command: >
       bash -c "python3 manage.py migrate
