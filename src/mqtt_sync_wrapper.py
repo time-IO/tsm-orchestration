@@ -34,8 +34,8 @@ def get_bosch_timerange(thing):
 
 def get_dwd_timerange(thing):
     yesterday = datetime.now() - timedelta(days=1)
-    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%d:00:00:00")
-    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%d:23:55:00")
+    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
+    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
     return yesterday_start, yesterday_end
 
 
