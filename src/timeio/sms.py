@@ -14,11 +14,10 @@ from functools import reduce
 from operator import getitem
 
 from timeio.databases import Database
-from timeio.common import get_envvar
 
 
 class SmsCVSyncer:
-    def __init__(self, cv_api_url):
+    def __init__(self, cv_api_url, db_conn_str):
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.file_names = [
             "sms_cv_measured_quantity.json",
@@ -27,7 +26,8 @@ class SmsCVSyncer:
             "sms_cv_unit.json",
         ]
         self.cv_api_url = cv_api_url
-
+        self.db_conn_str = db_conn_str
+        self.db = self.get_connection_from_env()
 
     def sync(self):
         file_path_list = [
@@ -35,35 +35,28 @@ class SmsCVSyncer:
             for file_name in self.file_names
         ]
 
-        for file_path in file_path_list:
-            db = self.get_connection_from_env()
-            try:
-                with db:
-                    with db.cursor() as c:
+        try:
+            with self.db:
+                for file_path in file_path_list:
+                    with self.db.cursor() as c:
                         with open(file_path, "r") as f:
                             table_dict = json.load(f)
                         self.create_table(c=c, table_dict=table_dict)
                         self.upsert_table(
-                            c=db.cursor(), url=self.cv_api_url, table_dict=table_dict
+                            c=c, url=self.cv_api_url, table_dict=table_dict
                         )
-            finally:
-                db.close()
+        finally:
+            self.db.close()
 
     @staticmethod
     def get_utc_str() -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
     def get_connection_from_env(self, retries: int = 4, sleep: int = 3) -> connection:
-        user = get_envvar("CREATEDB_POSTGRES_USER")
-        password = get_envvar("CREATEDB_POSTGRES_PASSWORD")
-        host = get_envvar("CREATEDB_POSTGRES_HOST")
-        db = get_envvar("CREATEDB_POSTGRES_DATABASE")
         err = None
         for _ in range(retries):
             try:
-                return psycopg.connect(
-                    dbname=db, user=user, password=password, host=host
-                )
+                return psycopg.connect(self.db_conn_str)
             except Exception as e:
                 err = e
                 print(f"{self.get_utc_str()}: Retrying...")
@@ -244,8 +237,8 @@ class SmsCVSyncer:
 
 
 class SmsMaterializedViewsSyncer:
-    def __init__(self):
-        self.db = Database(get_envvar("DATABASE_DSN"))
+    def __init__(self, db_conn_str):
+        self.db = Database(db_conn_str)
         self.materialized_views = []
         self.logger = logging.getLogger("sync_sms_materialized_views")
 
@@ -256,11 +249,11 @@ class SmsMaterializedViewsSyncer:
                     # Query to get the list of materialized views starting with the prefix "sms_"
                     cur.execute(
                         """
-                                     SELECT matviewname
-                                     FROM pg_matviews
-                                     WHERE schemaname = 'public'
-                                     AND matviewname LIKE 'sms_%'
-                                 """
+                        SELECT matviewname
+                        FROM pg_matviews
+                        WHERE schemaname = 'public'
+                        AND matviewname LIKE 'sms_%'
+                        """
                     )
 
                     self.materialized_views = cur.fetchall()

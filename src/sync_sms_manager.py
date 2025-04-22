@@ -24,13 +24,16 @@ class SyncSmsManager(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.cv_api_url = get_envvar("CV_API_URL")
+        self.db_conn_str = get_envvar("DATABASE_DSN")
 
     def act(self, content: MqttPayload.SyncSmsT, message: MQTTMessage):
         origin = content["origin"]
         if origin == "sms_backend":
-            SmsMaterializedViewsSyncer().collect_materialized_views().update_materialized_views()
+            SmsMaterializedViewsSyncer(
+                self.db_conn_str
+            ).collect_materialized_views().update_materialized_views()
         elif origin == "sms_cv":
-            SmsCVSyncer(self.cv_api_url).sync()
+            SmsCVSyncer(self.cv_api_url, self.db_conn_str).sync()
 
 
 if __name__ == "__main__":
