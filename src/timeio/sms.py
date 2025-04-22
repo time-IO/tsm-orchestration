@@ -18,7 +18,7 @@ from timeio.common import get_envvar
 
 
 class SmsCVSyncer:
-    def __init__(self):
+    def __init__(self, cv_api_url):
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.file_names = [
             "sms_cv_measured_quantity.json",
@@ -26,7 +26,7 @@ class SmsCVSyncer:
             "sms_cv_aggregation_type.json",
             "sms_cv_unit.json",
         ]
-        self.cv_api_url = get_envvar("CV_API_URL")
+        self.cv_api_url = cv_api_url
 
 
     def sync(self):
