@@ -27,14 +27,14 @@ class SmsCVSyncer:
             "sms_cv_unit.json",
         ]
         self.cv_api_url = get_envvar("CV_API_URL")
-        self.home = get_envvar("HOME")
+
 
     def sync(self):
         file_path_list = [
             os.path.join(self.script_dir, "cv_tables", file_name)
             for file_name in self.file_names
         ]
-        os.chdir(self.home)
+
         for file_path in file_path_list:
             db = self.get_connection_from_env()
             try:
