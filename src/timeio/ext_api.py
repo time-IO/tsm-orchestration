@@ -31,20 +31,18 @@ RESULT_TYPE_MAPPING = {
 
 
 class SyncBoschApi:
-
-    def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "CO_3_CORR": 0,
-            "ESP_0_RH_AVG": 0,
-            "ESP_0_TEMP_AVG": 0,
-            "ES_0_PRESS": 0,
-            "NO2_1_CORR": 0,
-            "O3_0_CORR": 0,
-            "PS_0_PM10_CORR": 0,
-            "PS_0_PM2P5_CORR": 0,
-            "SO2_2_CORR": 0,
-            "SO2_2_CORR_1hr": 0,
-        }
+    PARAMETER_MAPPING = {
+        "CO_3_CORR": 0,
+        "ESP_0_RH_AVG": 0,
+        "ESP_0_TEMP_AVG": 0,
+        "ES_0_PRESS": 0,
+        "NO2_1_CORR": 0,
+        "O3_0_CORR": 0,
+        "PS_0_PM10_CORR": 0,
+        "PS_0_PM2P5_CORR": 0,
+        "SO2_2_CORR": 0,
+        "SO2_2_CORR_1hr": 0,
+    }
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
@@ -439,26 +437,27 @@ class SyncUbaApi:
 
 
 class SyncDwdApi:
+    PARAMETER_MAPPING = {
+        "cloud_cover": 0,
+        "condition": 1,
+        "dew_point": 0,
+        "icon": 1,
+        "precipitation": 0,
+        "precipitation_probability": 0,
+        "precipitation_probability_6h": 0,
+        "pressure_msl": 0,
+        "relative_humidity": 0,
+        "solar": 0,
+        "sunshine": 0,
+        "temperature": 0,
+        "visibility": 0,
+        "wind_direction": 0,
+        "wind_speed": 0,
+        "wind_gust_direction": 0,
+        "wind_gust_speed": 0,
+    }
+
     def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "cloud_cover": 0,
-            "condition": 1,
-            "dew_point": 0,
-            "icon": 1,
-            "precipitation": 0,
-            "precipitation_probability": 0,
-            "precipitation_probability_6h": 0,
-            "pressure_msl": 0,
-            "relative_humidity": 0,
-            "solar": 0,
-            "sunshine": 0,
-            "temperature": 0,
-            "visibility": 0,
-            "wind_direction": 0,
-            "wind_speed": 0,
-            "wind_gust_direction": 0,
-            "wind_gust_speed": 0,
-        }
         self.brightsky_base_url = "https://api.brightsky.dev/weather"
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
@@ -506,15 +505,14 @@ class SyncDwdApi:
 
 
 class SyncTtnApi:
-    def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "BAT": 0,
-            "H1": 0,
-            "H2": 0,
-            "InputStatus": 1,
-            "T1": 0,
-            "Work_mode": 1,
-        }
+    PARAMETER_MAPPING = {
+        "BAT": 0,
+        "H1": 0,
+        "H2": 0,
+        "InputStatus": 1,
+        "T1": 0,
+        "Work_mode": 1,
+    }
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
