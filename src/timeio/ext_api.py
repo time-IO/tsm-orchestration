@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
 
 from timeio.feta import Thing
-from timeio.common import get_envvar
 from timeio.mqtt import publish_single
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key

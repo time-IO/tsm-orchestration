@@ -9,7 +9,7 @@ from psycopg import connection, cursor
 from typing import Union, Dict, Optional, Any
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import reduce
 from operator import getitem
 
@@ -51,7 +51,7 @@ class SmsCVSyncer:
 
     @staticmethod
     def get_utc_str() -> str:
-        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
     def get_connection_from_env(self, retries: int = 4, sleep: int = 3) -> connection:
         user = get_envvar("CREATEDB_POSTGRES_USER")
