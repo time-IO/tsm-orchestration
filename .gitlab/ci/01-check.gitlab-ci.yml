@@ -11,25 +11,27 @@ check-protected-files:
     # Run only if files in flyway/migrations are altered and the commit is not a new branch
     - if: "$CI_COMMIT_BEFORE_SHA !~ /^0000/"
       changes:
-        - flyway/migrations/V0_1__*
-        - flyway/migrations/V0_2__*
-        - flyway/migrations/V0_3__*
-        - flyway/migrations/V0_4_0__*
-        - flyway/migrations/V0_4_1__*
-        - flyway/migrations/V1_1__*
-        - flyway/migrations/V2_1__*
-        - flyway/migrations/V2_2__*
-        - flyway/migrations/V2_3__*
-        - flyway/migrations/V2_4__*
-        - flyway/migrations/V2_5__*
-        - flyway/migrations/V2_6__*
-        - flyway/migrations/V2_7__*
-        - flyway/migrations/V2_8__*
-        - flyway/migrations/V2_9__*
-        - flyway/migrations/V2_10__*
-        - flyway/migrations/V2_11__*
-        - flyway/migrations/V2_12__*
-        - flyway/migrations/V2_13__*
+        - flyway/migrations/public/V0_1__*
+        - flyway/migrations/public/V0_2__*
+        - flyway/migrations/public/V0_3__*
+        - flyway/migrations/public/V0_4_0__*
+        - flyway/migrations/public/V0_4_1__*
+        - flyway/migrations/public/V1_1__*
+        - flyway/migrations/public/V2_1__*
+        - flyway/migrations/public/V2_2__*
+        - flyway/migrations/public/V2_3__*
+        - flyway/migrations/public/V2_4__*
+        - flyway/migrations/public/V2_5__*
+        - flyway/migrations/public/V2_6__*
+        - flyway/migrations/public/V2_7__*
+        - flyway/migrations/public/V2_8__*
+        - flyway/migrations/public/V2_9__*
+        - flyway/migrations/public/V2_10__*
+        - flyway/migrations/public/V2_11__*
+        - flyway/migrations/public/V2_12__*
+        - flyway/migrations/public/V2_13__*
+        - flyway/migrations/public/V2_14__*
+        - flyway/migrations/public/V2_15__*
 
 black:
   stage: check

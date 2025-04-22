@@ -219,3 +219,47 @@ a {
         display: none;
     }
 }
+
+/* Remove all the following when frontend switch is complete */
+
+.hidden {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.draggable {
+    cursor: grab;
+    transition: transform 0.3s ease-out;
+}
+
+.draggable:active {
+    cursor: grabbing;
+}
+
+.dragging {
+    opacity: 0.5;
+    transform: translateX(150px);
+}
+
+.sparkle-border {
+    position: relative;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    animation: sparkle 3s infinite;
+}
+
+@keyframes sparkle {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        border-color: rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 1);
+        border-color: rgba(255, 215, 0, 1);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        border-color: rgba(255, 215, 0, 0.5);
+    }
+}
