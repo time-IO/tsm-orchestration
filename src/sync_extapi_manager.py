@@ -47,7 +47,7 @@ class SyncExtApiManager(AbstractHandler):
             "nm": SyncNmApi(),
         }
 
-    def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
+    def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
         try:

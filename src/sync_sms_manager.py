@@ -24,7 +24,7 @@ class SyncSmsManager(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-    def act(self, content: MqttPayload.SyncSms, message: MQTTMessage):
+    def act(self, content: MqttPayload.SyncSmsT, message: MQTTMessage):
         origin = content["origin"]
         if origin == "sms_backend":
             SyncSmsMaterializedViews().collect_materialized_views().update_materialized_views()

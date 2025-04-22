@@ -55,7 +55,7 @@ class SyncExtSftpManager(AbstractHandler):
         )
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
-    def act(self, content: MqttPayload.SyncExtSftp, message: MQTTMessage):
+    def act(self, content: MqttPayload.SyncExtSftpT, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         minio_secure = get_envvar("MINIO_SECURE").lower() not in ["false", "0"]
         target = MinioFS.from_credentials(
