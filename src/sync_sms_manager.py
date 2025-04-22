@@ -6,7 +6,7 @@ import logging
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.typehints import MqttPayload
-from timeio.sms import SyncSmsMaterializedViews, SyncSmsCv
+from timeio.sms import SmsMaterializedViewsSyncer, SmsCVSyncer
 
 logger = logging.getLogger("sync-sms-manager")
 
@@ -27,9 +27,9 @@ class SyncSmsManager(AbstractHandler):
     def act(self, content: MqttPayload.SyncSmsT, message: MQTTMessage):
         origin = content["origin"]
         if origin == "sms_backend":
-            SyncSmsMaterializedViews().collect_materialized_views().update_materialized_views()
+            SmsMaterializedViewsSyncer().collect_materialized_views().update_materialized_views()
         elif origin == "sms_cv":
-            SyncSmsCv().sync()
+            SmsCVSyncer().sync()
 
 
 if __name__ == "__main__":

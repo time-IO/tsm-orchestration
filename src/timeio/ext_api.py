@@ -14,8 +14,6 @@ from timeio.mqtt import publish_single
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
-api_base_url = get_envvar("DB_API_BASE_URL")
-
 
 class NoHttpsError(Exception):
     def __init_(self, msg):

@@ -17,7 +17,7 @@ from timeio.databases import Database
 from timeio.common import get_envvar
 
 
-class SyncSmsCv:
+class SmsCVSyncer:
     def __init__(self):
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.file_names = [
@@ -243,7 +243,7 @@ class SyncSmsCv:
             raise e
 
 
-class SyncSmsMaterializedViews:
+class SmsMaterializedViewsSyncer:
     def __init__(self):
         self.db = Database(get_envvar("DATABASE_DSN"))
         self.materialized_views = []
