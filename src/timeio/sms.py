@@ -128,8 +128,7 @@ class SmsCVSyncer:
     @staticmethod
     def _table_is_foreign(c: cursor, table_name: str) -> bool:
         query = psysql.SQL(
-            "SELECT table_type FROM information_schema.tables" 
-            " WHERE table_name=%s"
+            "SELECT table_type FROM information_schema.tables WHERE table_name=%s"
         )
         c.execute(query, (table_name,))
         r = c.fetchone()
