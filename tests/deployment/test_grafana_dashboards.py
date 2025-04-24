@@ -77,23 +77,22 @@ def test_main_org_dashboards(api, thing_uuids):
     assert missing == set()
 
 
-def get_things(db: psycopg.Connection, project_name):
-    res = db.execute(
-        "select distinct t.uuid::varchar from thing t \
-        join project p on p.id = t.project_id \
-        where p.name = %s",
-        [project_name],
+def _get_things(db: psycopg.Connection, project_name):
+    q = (
+        "select distinct t.uuid::varchar from thing t "
+        "join project p on p.id = t.project_id where p.name = %s"
     )
-    return unpack(res.fetchall())
+    return unpack(db.execute(q, [project_name]).fetchall())
 
 
 def test_dashboards(
     subtests, db, api: GrafanaApi, project_names, organisations, thing_uuids
 ):
+    """Test if each organisation (project)  has a dashboard for each thing."""
     for org in organisations:
         if (name := org["name"]) not in project_names:
             continue
-        uuids = get_things(db, name)
+        uuids = _get_things(db, name)
         api.organizations.switch_organization(org["id"])
         dashboards = api.search.search_dashboards(type_="dash-db")
         with subtests.test(msg="test if each thing has a dashboard", org=name):
