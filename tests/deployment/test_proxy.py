@@ -21,6 +21,7 @@ def get_env_endpoints():
     env_endpoints = [os.environ.get(env_var) for env_var in ENV_KEYS]
     return env_endpoints
 
+
 @pytest.mark.parametrize("endpoint", get_env_endpoints())
 def test_proxy_endpoints(endpoint):
     response = requests.get(endpoint, timeout=5)
