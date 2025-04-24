@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import os
+import socket
 from typing import Any
 
 import pytest
@@ -13,9 +14,8 @@ from typing import Generator
 load_dotenv()
 
 CONFIGDB_DSN = os.environ.get("CONFIGDB_READONLY_DSN")
-
-# TODO: should be removed after testing locally
-CONFIGDB_DSN = CONFIGDB_DSN.replace("database", "localhost")
+# On a local setup uncomment this line
+# CONFIGDB_DSN = CONFIGDB_DSN.replace("database", "localhost")
 
 
 def unpack(collection: list[tuple[Any]]) -> list[Any]:
