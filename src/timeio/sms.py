@@ -27,7 +27,7 @@ class SmsCVSyncer:
         ]
         self.cv_api_url = cv_api_url
         self.db_conn_str = db_conn_str
-        self.db = self.get_connection_from_env()
+        self.db = self.connect()
 
     def sync(self):
         file_path_list = [
@@ -52,7 +52,7 @@ class SmsCVSyncer:
     def get_utc_str() -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
-    def get_connection_from_env(self, retries: int = 4, sleep: int = 3) -> connection:
+    def connect(self, retries: int = 4, sleep: int = 3) -> connection:
         err = None
         for _ in range(retries):
             try:

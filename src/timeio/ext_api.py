@@ -1,7 +1,6 @@
 import requests
 import json
 import base64
-import psycopg
 import re
 
 from urllib.request import Request, urlopen
@@ -27,7 +26,7 @@ RESULT_TYPE_MAPPING = {
 }
 
 
-class SyncBoschApi:
+class BoschApiSyncer:
     PARAMETER_MAPPING = {
         "CO_3_CORR": 0,
         "ESP_0_RH_AVG": 0,
@@ -96,15 +95,13 @@ class SyncBoschApi:
         return {"observations": bodies}
 
 
-class SyncTsystemsApi:
-
-    def __init__(self):
-        self.tsystems_base_url = (
-            "https://moc.caritc.de/sensorstation-management/api/measurements/average"
-        )
-        self.tsytems_auth_url = (
-            "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
-        )
+class TsystemsApiSyncer:
+    tsystems_base_url = (
+        "https://moc.caritc.de/sensorstation-management/api/measurements/average"
+    )
+    tsytems_auth_url = (
+        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+    )
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
@@ -187,23 +184,16 @@ class SyncTsystemsApi:
         return {"observations": bodies}
 
 
-class SyncUbaApi:
-    def __init__(self):
-        self.uba_componsents_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
-        )
-        self.uba_scopes_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/scopes/json"
-        )
-        self.uba_limits_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
-        )
-        self.uba_measures_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/measures/json"
-        )
-        self.uba_airquality_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json"
-        )
+class UbaApiSyncer:
+    uba_componsents_url = (
+        "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
+    )
+    uba_scopes_url = "https://www.umweltbundesamt.de/api/air_data/v3/scopes/json"
+    uba_limits_url = "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
+    uba_measures_url = "https://www.umweltbundesamt.de/api/air_data/v3/measures/json"
+    uba_airquality_url = (
+        "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json"
+    )
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
@@ -433,7 +423,7 @@ class SyncUbaApi:
         return bodies
 
 
-class SyncDwdApi:
+class DwdApiSyncer:
     PARAMETER_MAPPING = {
         "cloud_cover": 0,
         "condition": 1,
@@ -453,9 +443,7 @@ class SyncDwdApi:
         "wind_gust_direction": 0,
         "wind_gust_speed": 0,
     }
-
-    def __init__(self):
-        self.brightsky_base_url = "https://api.brightsky.dev/weather"
+    brightsky_base_url = "https://api.brightsky.dev/weather"
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings
@@ -501,7 +489,7 @@ class SyncDwdApi:
         return {"observations": bodies}
 
 
-class SyncTtnApi:
+class TtnApiSyncer:
     PARAMETER_MAPPING = {
         "BAT": 0,
         "H1": 0,
@@ -560,9 +548,8 @@ class SyncTtnApi:
         return f"[{rep}]".strip()
 
 
-class SyncNmApi:
-    def __init__(self):
-        self.nm_base_url = "http://www.nmdb.eu/nest/draw_graph.php"
+class NmApiSyncer:
+    nm_base_url = "http://www.nmdb.eu/nest/draw_graph.php"
 
     def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
         settings = thing.ext_api.settings

@@ -4,7 +4,6 @@
 import click
 import json
 import psycopg
-import logging
 
 from datetime import datetime, timedelta, timezone
 
