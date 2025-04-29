@@ -494,8 +494,6 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
-      database:
-        condition: service_healthy
       flyway-thing-management:
         condition: service_completed_successfully
     #  keycloak:

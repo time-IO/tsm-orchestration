@@ -6,3 +6,6 @@ services:
 
   flyway:
     depends_on: !override []
+
+  flyway-thing-management:
+    depends_on: !override []
