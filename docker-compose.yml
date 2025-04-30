@@ -966,7 +966,7 @@ services:
   # ===========
   # Fetches data from the respective extAPI and inserts it into TimeIO via the DB API.
   worker-sync-extapis:
-    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:500-cron-scheduler-only-sends-mqtt"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
@@ -1045,7 +1045,7 @@ services:
   # ===========
   # Syncs data from SMS DB and SMS CV DB
   worker-sync-sms:
-    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:500-cron-scheduler-only-sends-mqtt"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
@@ -1069,6 +1069,7 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       JOURNALING: "${JOURNALING}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
+      CV_API_URL: "${CRON_CV_API_URL}"
     entrypoint: [ "python3", "sync_sms_manager.py" ]
 
 
