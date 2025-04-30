@@ -31,7 +31,7 @@ class SmsCVSyncer:
 
     def sync(self):
         file_path_list = [
-            os.path.join(self.script_dir, "cv_tables", file_name)
+            os.path.join(self.script_dir, "..", "cv_tables", file_name)
             for file_name in self.file_names
         ]
 
