@@ -1045,7 +1045,7 @@ services:
   # ===========
   # Syncs data from SMS DB and SMS CV DB
   worker-sync-sms:
-    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:500-cron-scheduler-only-sends-mqtt"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
