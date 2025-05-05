@@ -48,8 +48,8 @@ def fetch_brightsky_data(
 ) -> dict:
     """Returns DWD data with hourly resolution of yesterday"""
     yesterday = datetime.now() - timedelta(days=1)
-    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%d:00:00:00")
-    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%d:23:55:00")
+    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
+    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
     params = {
         "dwd_station_id": station_id,
         "date": yesterday_start,
