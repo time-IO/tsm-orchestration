@@ -59,7 +59,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
-        command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
+        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         if thing.ext_sftp is not None:
             interval = int(thing.ext_sftp.sync_interval)
             schedule = cls.get_schedule(interval)
@@ -84,7 +84,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
-        command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
+        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         current_interval = cls.get_current_interval(job)
         if thing.ext_sftp is not None:
             new_interval = int(thing.ext_sftp.sync_interval)

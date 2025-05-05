@@ -12,12 +12,12 @@ from timeio.feta import Thing
 from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
 from timeio.ext_api import (
-    SyncBoschApi,
-    SyncTsystemsApi,
-    SyncUbaApi,
-    SyncDwdApi,
-    SyncTtnApi,
-    SyncNmApi,
+    BoschApiSyncer,
+    TsystemsApiSyncer,
+    UbaApiSyncer,
+    DwdApiSyncer,
+    TtnApiSyncer,
+    NmApiSyncer,
 )
 
 logger = logging.getLogger("sync-extapi-manager")
@@ -39,15 +39,15 @@ class SyncExtApiManager(AbstractHandler):
         self.api_base_url = get_envvar("DB_API_BASE_URL")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.sync_handlers = {
-            "tsystems": SyncTsystemsApi(),
-            "bosch": SyncBoschApi(),
-            "uba": SyncUbaApi(),
-            "dwd": SyncDwdApi(),
-            "ttn": SyncTtnApi(),
-            "nm": SyncNmApi(),
+            "tsystems": TsystemsApiSyncer(),
+            "bosch": BoschApiSyncer(),
+            "uba": UbaApiSyncer(),
+            "dwd": DwdApiSyncer(),
+            "ttn": TtnApiSyncer(),
+            "nm": NmApiSyncer(),
         }
 
-    def act(self, content: MqttPayload.SyncExtApi, message: MQTTMessage):
+    def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
         try:

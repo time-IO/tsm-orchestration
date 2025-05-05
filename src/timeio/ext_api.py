@@ -1,7 +1,6 @@
 import requests
 import json
 import base64
-import psycopg
 import re
 
 from urllib.request import Request, urlopen
@@ -13,8 +12,6 @@ from timeio.common import get_envvar
 from timeio.mqtt import publish_single
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
-
-api_base_url = get_envvar("DB_API_BASE_URL")
 
 
 class NoHttpsError(Exception):
@@ -30,23 +27,21 @@ RESULT_TYPE_MAPPING = {
 }
 
 
-class SyncBoschApi:
+class BoschApiSyncer:
+    PARAMETER_MAPPING = {
+        "CO_3_CORR": 0,
+        "ESP_0_RH_AVG": 0,
+        "ESP_0_TEMP_AVG": 0,
+        "ES_0_PRESS": 0,
+        "NO2_1_CORR": 0,
+        "O3_0_CORR": 0,
+        "PS_0_PM10_CORR": 0,
+        "PS_0_PM2P5_CORR": 0,
+        "SO2_2_CORR": 0,
+        "SO2_2_CORR_1hr": 0,
+    }
 
-    def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "CO_3_CORR": 0,
-            "ESP_0_RH_AVG": 0,
-            "ESP_0_TEMP_AVG": 0,
-            "ES_0_PRESS": 0,
-            "NO2_1_CORR": 0,
-            "O3_0_CORR": 0,
-            "PS_0_PM10_CORR": 0,
-            "PS_0_PM2P5_CORR": 0,
-            "SO2_2_CORR": 0,
-            "SO2_2_CORR_1hr": 0,
-        }
-
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         url = f"""{settings["endpoint"]}/{settings["sensor_id"]}/{content["datetime_from"]}/{content["datetime_to"]}"""
@@ -101,17 +96,15 @@ class SyncBoschApi:
         return {"observations": bodies}
 
 
-class SyncTsystemsApi:
+class TsystemsApiSyncer:
+    tsystems_base_url = (
+        "https://moc.caritc.de/sensorstation-management/api/measurements/average"
+    )
+    tsytems_auth_url = (
+        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+    )
 
-    def __init__(self):
-        self.tsystems_base_url = (
-            "https://moc.caritc.de/sensorstation-management/api/measurements/average"
-        )
-        self.tsytems_auth_url = (
-            "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
-        )
-
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
         response = self.request_tsystems_api(
@@ -192,25 +185,18 @@ class SyncTsystemsApi:
         return {"observations": bodies}
 
 
-class SyncUbaApi:
-    def __init__(self):
-        self.uba_componsents_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
-        )
-        self.uba_scopes_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/scopes/json"
-        )
-        self.uba_limits_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
-        )
-        self.uba_measures_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/measures/json"
-        )
-        self.uba_airquality_url = (
-            "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json"
-        )
+class UbaApiSyncer:
+    uba_componsents_url = (
+        "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
+    )
+    uba_scopes_url = "https://www.umweltbundesamt.de/api/air_data/v3/scopes/json"
+    uba_limits_url = "https://www.umweltbundesamt.de/api/air_data/v3/measures/limits"
+    uba_measures_url = "https://www.umweltbundesamt.de/api/air_data/v3/measures/json"
+    uba_airquality_url = (
+        "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json"
+    )
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         station_id = settings["station_id"]
         date_from, time_from, date_to, time_to = self.parse_timeranges(
@@ -438,30 +424,29 @@ class SyncUbaApi:
         return bodies
 
 
-class SyncDwdApi:
-    def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "cloud_cover": 0,
-            "condition": 1,
-            "dew_point": 0,
-            "icon": 1,
-            "precipitation": 0,
-            "precipitation_probability": 0,
-            "precipitation_probability_6h": 0,
-            "pressure_msl": 0,
-            "relative_humidity": 0,
-            "solar": 0,
-            "sunshine": 0,
-            "temperature": 0,
-            "visibility": 0,
-            "wind_direction": 0,
-            "wind_speed": 0,
-            "wind_gust_direction": 0,
-            "wind_gust_speed": 0,
-        }
-        self.brightsky_base_url = "https://api.brightsky.dev/weather"
+class DwdApiSyncer:
+    PARAMETER_MAPPING = {
+        "cloud_cover": 0,
+        "condition": 1,
+        "dew_point": 0,
+        "icon": 1,
+        "precipitation": 0,
+        "precipitation_probability": 0,
+        "precipitation_probability_6h": 0,
+        "pressure_msl": 0,
+        "relative_humidity": 0,
+        "solar": 0,
+        "sunshine": 0,
+        "temperature": 0,
+        "visibility": 0,
+        "wind_direction": 0,
+        "wind_speed": 0,
+        "wind_gust_direction": 0,
+        "wind_gust_speed": 0,
+    }
+    brightsky_base_url = "https://api.brightsky.dev/weather"
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         response = self.fetch_brightsky_data(
             settings["station_id"], content["datetime_from"], content["datetime_to"]
@@ -505,18 +490,17 @@ class SyncDwdApi:
         return {"observations": bodies}
 
 
-class SyncTtnApi:
-    def __init__(self):
-        self.PARAMETER_MAPPING = {
-            "BAT": 0,
-            "H1": 0,
-            "H2": 0,
-            "InputStatus": 1,
-            "T1": 0,
-            "Work_mode": 1,
-        }
+class TtnApiSyncer:
+    PARAMETER_MAPPING = {
+        "BAT": 0,
+        "H1": 0,
+        "H2": 0,
+        "InputStatus": 1,
+        "T1": 0,
+        "Work_mode": 1,
+    }
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         url = settings["endpoint_uri"]
@@ -565,11 +549,10 @@ class SyncTtnApi:
         return f"[{rep}]".strip()
 
 
-class SyncNmApi:
-    def __init__(self):
-        self.nm_base_url = "http://www.nmdb.eu/nest/draw_graph.php"
+class NmApiSyncer:
+    nm_base_url = "http://www.nmdb.eu/nest/draw_graph.php"
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApi):
+    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         station_id = settings["station_id"]
         resolution = settings["time_resolution"]

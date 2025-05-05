@@ -33,8 +33,8 @@ def get_bosch_timerange(thing):
 
 def get_dwd_timerange(thing):
     yesterday = datetime.now() - timedelta(days=1)
-    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%d:00:00:00")
-    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%d:23:55:00")
+    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
+    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
     return yesterday_start, yesterday_end
 
 
@@ -94,9 +94,14 @@ TIMERANGE_MAPPING = {
 }
 
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
 @click.argument("thing_uuid")
-def main(thing_uuid: str):
+def sync_thing(thing_uuid: str):
     thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
     if thing.ext_api is not None:
         ext_api_name = thing.ext_api.api_type_name
@@ -112,5 +117,12 @@ def main(thing_uuid: str):
         publish_single(get_envvar("SFTP_SYNC_TOPIC"), json.dumps(message))
 
 
+@cli.command()
+@click.argument("origin")
+def sync_sms(origin: str):
+    message = {"origin": origin}
+    publish_single(get_envvar("SMS_SYNC_TOPIC"), json.dumps(message))
+
+
 if __name__ == "__main__":
-    main()
+    cli()
