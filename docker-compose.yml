@@ -167,8 +167,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
-      database:
-        condition: service_healthy
       flyway:
         condition: service_completed_successfully
     command: >
