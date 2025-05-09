@@ -20,7 +20,7 @@ from paramiko import (
     MissingHostKeyPolicy,
 )
 from paramiko.config import SSH_PORT
-from journaling import Journal
+from timeio.journaling import Journal
 
 journal = Journal("CronJob")
 logger = logging.getLogger("sftp_sync")

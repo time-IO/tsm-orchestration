@@ -58,11 +58,11 @@ class CreateThingInCrontabHandler(AbstractHandler):
         info = ""
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
+        script = "/scripts/mqtt_sync_wrapper.py"
+        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         if thing.ext_sftp is not None:
             interval = int(thing.ext_sftp.sync_interval)
             schedule = cls.get_schedule(interval)
-            script = "/scripts/sync_sftp.py"
-            command = f"{script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_sftp.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
@@ -71,13 +71,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_api is not None:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
-                script = "/scripts/mqtt_sync_wrapper.py"
-                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
-            else:
-                script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
-                target_uri = thing.database.url
-                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
             job.enable(enabled=thing.ext_api.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
@@ -90,11 +83,11 @@ class CreateThingInCrontabHandler(AbstractHandler):
         info = ""
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
+        script = "/scripts/mqtt_sync_wrapper.py"
+        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         current_interval = cls.get_current_interval(job)
         if thing.ext_sftp is not None:
             new_interval = int(thing.ext_sftp.sync_interval)
-            script = "/scripts/sync_sftp.py"
-            command = f"{script} {uuid} > $STDOUT 2> $STDERR"
             job.enable(enabled=thing.ext_sftp.enabled)
             job.set_comment(comment, pre_comment=True)
             # if the interval has changed we want to ensure consistent starting times with the previous one
@@ -114,13 +107,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
                 schedule = cls.update_cron_expression(job, new_interval)
             else:
                 schedule = str(job.slices)
-            if thing.ext_api.api_type_name in ["tsystems", "bosch"]:
-                script = "/scripts/mqtt_sync_wrapper.py"
-                command = f"python3 {script} {uuid} > $STDOUT 2> $STDERR"
-            else:
-                script = f"/scripts/sync_{thing.ext_api.api_type_name}_api.py"
-                target_uri = thing.database.url
-                command = f'{script} {uuid} "{thing.ext_api.settings}" {target_uri} > $STDOUT 2> $STDERR'
             job.enable(enabled=thing.ext_api.enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
