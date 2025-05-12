@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import socket
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import TypedDict, Generator
 
 import pytest
@@ -20,14 +20,20 @@ if not dotenv.load_dotenv():
 
 LOCAL_DEV = socket.gethostname() != "tsm"
 DECRYPT_KEY = timeio.crypto.get_crypt_key()
+DATA_QUERY = (
+    'select t.uuid, it.name as "ingest_type", s3."user", s3.password, s3.bucket '
+    "from config_db.thing t "
+    "left outer join config_db.ingest_type it on t.ingest_type_id = it.id "
+    "left outer join config_db.s3_store s3 on t.s3_store_id = s3.id"
+)
 
 
 class ThingDataT(TypedDict):
-    uuid: str
-    ingest_type: str
-    user: None | str
-    password: None | str
-    bucket: None | str
+    uuid: str  # thing uuid
+    ingest_type: str  # ingest type of the thing
+    user: None | str  # S3 user
+    password: None | str  # S3 password
+    bucket: None | str  # S3 bucket name
 
 
 @pytest.fixture(scope="module")
@@ -35,7 +41,6 @@ def minio_cl():
     host = get_envvar("OBJECT_STORAGE_HOST")
     if LOCAL_DEV:
         host = host.replace("object-storage", "localhost")
-
     yield Minio(
         endpoint=host,
         access_key=get_envvar("OBJECT_STORAGE_ROOT_USER"),
@@ -75,20 +80,13 @@ def sftp_transport() -> Generator[paramiko.Transport]:
 # Attention: This already runs at test collection/parameterization stage
 @lru_cache()
 def get_things() -> ThingDataT:
-    query = (
-        'select t.uuid, it.name as "ingest_type", s3."user", s3.password, s3.bucket '
-        "from config_db.thing t "
-        "left outer join config_db.ingest_type it on t.ingest_type_id = it.id "
-        "left outer join config_db.s3_store s3 on t.s3_store_id = s3.id"
-    )
-
     dsn = get_envvar("CONFIGDB_READONLY_DSN")
     if LOCAL_DEV:
         dsn = dsn.replace("database", "localhost")
 
     with psycopg.connect(dsn) as conn:  # type: psycopg.Connection
         with conn.cursor(row_factory=dict_row) as cur:
-            return cur.execute(query).fetchall()
+            return cur.execute(DATA_QUERY).fetchall()
 
 
 def decrypt(pw: str) -> str:
@@ -116,7 +114,24 @@ def test_minio_connection(minio_cl):
 
 
 @pytest.mark.parametrize("thing", get_things())
-def test_things_with_buckets(minio_cl, thing):
+def test_user_login(thing):
+    skip_optional_s3(thing)
+    host = get_envvar("OBJECT_STORAGE_HOST")
+    if LOCAL_DEV:
+        host = host.replace("object-storage", "localhost")
+    cl = Minio(
+        endpoint=host,
+        access_key=thing["user"],
+        secret_key=decrypt(thing["password"]),
+        secure=get_envvar("OBJECT_STORAGE_SECURE", cast_to=bool),
+    )
+    # We cannot use `Minio.bucket_exists`, because we don't
+    # have the rights to ask for outside our scope.
+    assert cl.list_buckets()
+
+
+@pytest.mark.parametrize("thing", get_things())
+def test_bucket_exists(minio_cl, thing):
     skip_optional_s3(thing)
     bucket_name = thing.get("bucket")
     uuid = str(thing.get("uuid"))
