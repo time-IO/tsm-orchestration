@@ -1,4 +1,4 @@
-ARG BASE_IMAGE_TAG=3.11-slim
+ARG BASE_IMAGE_TAG=3.13-slim
 
 FROM python:${BASE_IMAGE_TAG}
 
@@ -31,6 +31,7 @@ USER appuser
 
 # enable sslmode verify-full
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
+ENV PATH="/venv/bin:$PATH"
 
 ENTRYPOINT ["python3"]
 

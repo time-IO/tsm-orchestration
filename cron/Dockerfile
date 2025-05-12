@@ -1,4 +1,4 @@
-ARG BASE_IMAGE_TAG=bullseye-slim
+ARG BASE_IMAGE_TAG=bookworm-slim
 
 FROM debian:${BASE_IMAGE_TAG}
 
@@ -29,7 +29,9 @@ RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPE
     && chmod 755 /supercronic-entrypoint.sh \
     && chmod 755 /supercronic-health.sh
 
-RUN pip install --upgrade pip \
+RUN python3 -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 ARG UID=1000
