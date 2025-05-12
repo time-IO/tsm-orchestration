@@ -1,9 +1,10 @@
-ARG BASE_IMAGE_TAG=bullseye
+ARG BASE_IMAGE_TAG=bullseye-slim
 
-FROM bitnami/minideb:${BASE_IMAGE_TAG}
+FROM debian:${BASE_IMAGE_TAG}
 
 ARG BUILD_DATE
 ARG VCS_REF
+ARG SUPERCRONIC_VERSION=0.2.33
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
@@ -17,18 +18,19 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY src/requirements.txt .
+COPY src/constraints.txt .
+COPY src/requirements.cron-scheduler.txt ./requirements.txt
 COPY cron/supercronic-entrypoint.sh .
 COPY cron/supercronic-health.sh .
 
-RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
+RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-amd64 \
     && chmod 755 supercronic-linux-amd64 \
     && mv supercronic-linux-amd64 /usr/local/bin/supercronic \
     && chmod 755 /supercronic-entrypoint.sh \
     && chmod 755 /supercronic-health.sh
 
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 ARG UID=1000
 ARG USER=tsm

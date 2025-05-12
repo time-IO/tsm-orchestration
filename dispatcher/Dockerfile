@@ -1,6 +1,6 @@
-ARG BASE_IMAGE_TAG=bullseye
+ARG BASE_IMAGE_TAG=bullseye-slim
 
-FROM bitnami/minideb:${BASE_IMAGE_TAG} AS base
+FROM debian:${BASE_IMAGE_TAG} AS base
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -37,13 +37,14 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc 
     && chmod a+x /usr/local/bin/mc
 
 # add requirements
-COPY src/requirements.txt /tmp/requirements.txt
+COPY src/constraints.txt /tmp/constraints.txt
+COPY src/requirements.dispatcher.txt /tmp/requirements.txt
 RUN pip install --upgrade pip \
     && pip install \
         --user \
         --no-cache-dir \
-        --no-warn-script-location -r \
-        /tmp/requirements.txt
+        --no-warn-script-location \
+        -r /tmp/requirements.txt -c /tmp/constraints.txt
 
 FROM base AS dist
 

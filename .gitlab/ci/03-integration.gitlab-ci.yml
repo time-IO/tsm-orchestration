@@ -40,7 +40,7 @@ mqtt-service-test:
     - "source venv/bin/activate"
     - "python3 -m ensurepip"
     - "python3 -m pip install --upgrade pip"
-    - "export PAHO_MQTT=$(grep 'paho-mqtt' src/requirements.txt)"
+    - "export PAHO_MQTT=$(grep 'paho-mqtt' src/constraints.txt)"
     - "python3 -m pip install $PAHO_MQTT"
     - "docker compose up -d --quiet-pull"
     - "sleep 20"

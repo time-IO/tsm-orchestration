@@ -17,8 +17,9 @@ LABEL maintainer="The ZID Team" \
 
 WORKDIR /usr/src/app
 
-COPY src/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src/constraints.txt ./
+COPY src/requirements.configdb-updater.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 COPY src .
 
