@@ -1,5 +1,5 @@
-psycopg==3.2.1
-psycopg-pool==3.2.2
+psycopg==3.2.8
+psycopg-pool==3.2.6
 click>=8.0.3
 paho-mqtt==2.1.0
 --index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple

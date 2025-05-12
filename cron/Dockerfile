@@ -14,7 +14,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl tini python3 python3-pip inotify-tools \
+    && apt-get install -y --no-install-recommends curl tini python3 python3-pip python3-venv inotify-tools \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
