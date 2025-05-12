@@ -1,9 +1,10 @@
-ARG BASE_IMAGE_TAG=bullseye-slim
+ARG BASE_IMAGE_TAG=bookworm-slim
 
 FROM debian:${BASE_IMAGE_TAG}
 
 ARG BUILD_DATE
 ARG VCS_REF
+ARG SUPERCRONIC_VERSION=0.2.33
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
@@ -13,22 +14,25 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl tini python3 python3-pip inotify-tools \
+    && apt-get install -y --no-install-recommends curl tini python3 python3-pip python3-venv inotify-tools \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY src/requirements.txt .
+COPY src/constraints.txt .
+COPY src/requirements.cron-scheduler.txt ./requirements.txt
 COPY cron/supercronic-entrypoint.sh .
 COPY cron/supercronic-health.sh .
 
-RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
+RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-amd64 \
     && chmod 755 supercronic-linux-amd64 \
     && mv supercronic-linux-amd64 /usr/local/bin/supercronic \
     && chmod 755 /supercronic-entrypoint.sh \
     && chmod 755 /supercronic-health.sh
 
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN python3 -m venv /venv \
+    && . /venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 ARG UID=1000
 ARG USER=tsm

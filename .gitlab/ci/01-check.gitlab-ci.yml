@@ -32,6 +32,7 @@ check-protected-files:
         - flyway/migrations/public/V2_13__*
         - flyway/migrations/public/V2_14__*
         - flyway/migrations/public/V2_15__*
+        - flyway/migrations/public/V2_16__*
 
 black:
   stage: check
@@ -52,7 +53,7 @@ pytest:
   stage: check
   image: python:3.11-slim
   before_script:
-    - pip install -r src/requirements.txt  pytest
+    - pip install -r src/constraints.txt  pytest
   script:
     - python3 -m pytest tests/test_timeio
   rules:

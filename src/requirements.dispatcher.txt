@@ -1,0 +1,15 @@
+psycopg[binary]
+psycopg-pool
+click
+paho-mqtt
+minio-cli-wrapper
+grafana-client
+requests
+python-crontab
+croniter
+pandas
+saqc
+cryptography
+typing-extensions
+paramiko
+pytest-subtests

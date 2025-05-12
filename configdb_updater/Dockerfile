@@ -1,4 +1,4 @@
-ARG BASE_IMAGE_TAG=3.11-slim
+ARG BASE_IMAGE_TAG=3.13-slim
 
 FROM python:${BASE_IMAGE_TAG}
 
@@ -17,8 +17,9 @@ LABEL maintainer="The ZID Team" \
 
 WORKDIR /usr/src/app
 
-COPY src/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src/constraints.txt ./
+COPY src/requirements.configdb-updater.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 COPY src .
 
@@ -30,6 +31,7 @@ USER appuser
 
 # enable sslmode verify-full
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
+ENV PATH="/venv/bin:$PATH"
 
 ENTRYPOINT ["python3"]
 
