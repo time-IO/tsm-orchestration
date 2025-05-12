@@ -83,7 +83,7 @@ $$;
 --
 CREATE TABLE IF NOT EXISTS "observation"
 (
---     "id"                    bigserial                NOT NULL PRIMARY KEY,
+    "id"                    bigserial                NOT NULL PRIMARY KEY,
     "phenomenon_time_start" timestamp with time zone NULL,
     "phenomenon_time_end"   timestamp with time zone NULL,
     "result_time"           timestamp with time zone NOT NULL,
@@ -104,19 +104,6 @@ CREATE TABLE IF NOT EXISTS "observation"
     CONSTRAINT "observation_datastream_id_result_time_1d043396_uniq" UNIQUE ("datastream_id", "result_time"),
     CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
 );
--- -- Conditionally make a TimescaleDB hypertable if not already done
--- DO
--- $$
---     BEGIN
---         IF NOT EXISTS (SELECT 1
---                        FROM timescaledb_information.hypertables
---                        WHERE hypertable_name = 'observation'
---                          AND hypertable_schema = current_schema()) THEN
---             -- The table is not a hypertable, so create it
---             PERFORM public.create_hypertable('observation', 'result_time');
---         END IF;
---     END
--- $$;
 -- Conditionally create the index if it does not exist
 DO
 $$

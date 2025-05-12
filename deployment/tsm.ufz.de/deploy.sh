@@ -19,9 +19,10 @@ rm $TEMP_ENV_FILE
 
 git checkout ${TAG}
 rm remove-all-data.sh
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.prod.yml"
+ENV_FILES="--env-file .env --env-file releases/release.env"
 # ... otherwise deploy time.IO with the tag env file
-DC="sudo docker compose --env-file .env --env-file releases/release.env"
-$DC create --build
-$DC up -d
+sudo docker compose $COMPOSE_FILES $ENV_FILES create --build
+sudo docker compose $COMPOSE_FILES $ENV_FILES up -d
 sleep 10
-$DC ps
+sudo docker compose $COMPOSE_FILES $ENV_FILES ps

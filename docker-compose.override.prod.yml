@@ -1,0 +1,11 @@
+services:
+  database:
+     entrypoint: ["/bin/bash", "-c", "echo 'Database disabled'; exit 0"]
+     restart: "no"
+     ports: !override []
+
+  flyway:
+    depends_on: !override []
+
+  flyway-thing-management:
+    depends_on: !override []
