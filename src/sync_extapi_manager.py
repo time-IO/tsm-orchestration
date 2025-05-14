@@ -51,7 +51,8 @@ class SyncExtApiManager(AbstractHandler):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
         try:
-            parsed_observations = self.sync_handlers[ext_api_name].parse(thing, content)
+            api_response = self.sync_handlers[ext_api_name].fetch_api_data(thing, content)
+            parsed_observations = self.sync_handlers[ext_api_name].do_parse(api_response)
             self.write_observations(thing, parsed_observations)
         except HTTPError as e:
             journal.error(
