@@ -291,17 +291,21 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 logger.debug(f"deploy file: {file}")
                 with open(file) as fh:
                     view = fh.read()
-                user = sql.Identifier(thing.database.username.lower())
-                sta_user = sql.Identifier(
-                    user_prefix.lower() + thing.database.ro_username.lower()
+
+                # Fill the placeholder.
+                view = view.replace("{tsm_schema}", f"{user}")
+                view = view.replace("{sms_url}", f"{sms_url}")
+                view = view.replace("{cv_url}", f"{cv_url}")
+
+                user = thing.database.username.lower()
+                sms_url = os.environ.get("SMS_URL")
+                cv_url = os.environ.get("CV_URL")
+
+                c.execute(
+                    sql.SQL("SET search_path TO {user}").format(
+                        user=sql.Identifier(user)
+                    )
                 )
-                sms_url, cv_url = os.environ.get("SMS_URL"), os.environ.get("CV_URL")
-                view = view.replace(
-                    "%(tsm_schema)s", f"'{thing.database.username.lower()}'"
-                )
-                view = view.replace("%(sms_url)s", f"'{sms_url}'")
-                view = view.replace("%(cv_url)s", f"'{cv_url}'")
-                c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
                 c.execute(view)
 
     def create_grafana_helper_view(self, thing):
