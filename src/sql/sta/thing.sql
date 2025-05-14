@@ -1,6 +1,6 @@
 BEGIN;
 
-SET search_path TO %(tsm_schema)s;
+SET search_path TO '{tsm_schema}';
 
 DROP VIEW IF EXISTS "THINGS" CASCADE;
 CREATE OR REPLACE VIEW "THINGS" AS
@@ -11,7 +11,7 @@ WITH
         ccr.role_name AS "role_name",
         ccr.role_uri AS "role_uri",
         array_agg(DISTINCT jsonb_build_object(
-                'jsonld.id', %(sms_url)s || 'contacts/' || co.id,
+                'jsonld.id', '{sms_url}' || 'contacts/' || co.id,
                 'jsonld.type', 'Person',
                 'givenName', co.given_name,
                 'familyName', co.family_name,
@@ -34,7 +34,7 @@ WITH
     c.id AS "configuration_id",
     jsonb_build_object(
         '@context', public.get_schema_org_context(),
-        'jsonld.id', %(sms_url)s || 'configurations/' || c.id,
+        'jsonld.id', '{sms_url}' || 'configurations/' || c.id,
         'jsonld.type', 'ThingProperties',
         'identifier', c.persistent_identifier,
         'responsiblePersons', array_agg(DISTINCT jsonb_build_object(
@@ -51,7 +51,7 @@ WITH
             'encodingType', 'http://www.opengis.net/doc/IS/SensorML/2.0',
             'distribution', jsonb_build_object(
                 'jsonld.type', 'DataDistributionService',
-                'url', %(sms_url)s || 'cbackend/api/v1/configurations/' || c.id || '/sensorml'
+                'url', '{sms_url}' || 'cbackend/api/v1/configurations/' || c.id || '/sensorml'
             )
         ),
     'isVirtual', false
@@ -70,7 +70,7 @@ WITH
     c.is_public, d.is_public, dsl.datasource_id
     HAVING
     ((cdl.configuration_id IS NOT NULL) OR (csl.configuration_id IS NOT NULL))
-    AND c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
+    AND c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
     )
 SELECT DISTINCT
     c.id AS "ID",

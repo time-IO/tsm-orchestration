@@ -1,6 +1,6 @@
 BEGIN;
 
-SET search_path TO %(tsm_schema)s;
+SET search_path TO '{tsm_schema}';
 
 DROP VIEW IF EXISTS "DATASTREAMS" CASCADE;
 CREATE OR REPLACE VIEW "DATASTREAMS" AS
@@ -43,7 +43,7 @@ SELECT
     dma.end_date AS "RESULT_TIME_END",
 	jsonb_build_object(
         '@context', public.get_schema_org_context(),
-		'jsonld.id',  %(sms_url)s || 'datastream-links/' || MAX(dsl.id),
+		'jsonld.id',  '{sms_url}' || 'datastream-links/' || MAX(dsl.id),
 		'jsonld.type', 'DatastreamProperties',
 		'observingProcedure', jsonb_build_object(
 			'jsonld.type', 'ObservingProcedure',
@@ -92,7 +92,7 @@ SELECT
 		),
 		'providerMobility', CASE WHEN MAX(cdl.begin_date) IS NULL THEN 'static' ELSE 'dynamic' end,
 		'deployment', jsonb_build_object(
-			'jsonld.id', %(sms_url)s || 'configurations/' || c.id || '/platforms-and-devices?deviceMountAction=' || dma.id,
+			'jsonld.id', '{sms_url}' || 'configurations/' || c.id || '/platforms-and-devices?deviceMountAction=' || dma.id,
 			'jsonld.type', 'Deployment',
 			'name', dma."label",
 			'description', dma.begin_description,
@@ -128,7 +128,7 @@ LEFT JOIN public.sms_cv_unit cv_ua ON coalesce(nullif(split_part(dp.accuracy_uni
 LEFT JOIN public.sms_cv_license cv_l ON coalesce(nullif(split_part(dsl.license_uri,'/',9),'')::integer) =cv_l.id
 LEFT JOIN public.sms_configuration_dynamic_location_begin_action cdl ON c.id = cdl.configuration_id
 LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = csl.configuration_id
-WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
+WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
 GROUP BY dsl.device_property_id, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
 	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,

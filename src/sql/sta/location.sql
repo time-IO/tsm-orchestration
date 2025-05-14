@@ -1,6 +1,6 @@
 BEGIN;
 
-SET search_path TO %(tsm_schema)s;
+SET search_path TO '{tsm_schema}';
 
 DROP VIEW IF EXISTS "LOCATIONS" CASCADE;
 CREATE OR REPLACE VIEW "LOCATIONS" AS
@@ -17,7 +17,7 @@ SELECT DISTINCT
     ) AS "LOCATION",
     jsonb_build_object(
         '@context', public.get_schema_org_context(),
-        'jsonld.id', %(sms_url)s || 'configurations/' || c.id || 'locations/static-location-actions/' || csl.id,
+        'jsonld.id', '{sms_url}' || 'configurations/' || c.id || 'locations/static-location-actions/' || csl.id,
         'jsonld.type', 'LocationProperties'
     ) AS "PROPERTIES"
 FROM public.sms_configuration_static_location_begin_action csl
@@ -25,7 +25,7 @@ JOIN public.sms_configuration c ON csl.configuration_id = c.id
 JOIN public.sms_device_mount_action dma ON c.id = dma.configuration_id
 JOIN public.sms_device d ON dma.device_id = d.id
 JOIN public.sms_datastream_link dsl ON dma.id = dsl.device_mount_action_id
-WHERE dsl.datasource_id = %(tsm_schema)s
+WHERE dsl.datasource_id = '{tsm_schema}'
 AND c.is_public AND d.is_public
 ORDER BY csl.id;
 
@@ -42,7 +42,7 @@ ON c.id = csl.configuration_id
 JOIN public.sms_device_mount_action dma ON c.id = dma.configuration_id
 JOIN public.sms_datastream_link dsl ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_device d ON dma.device_id = d.id
-WHERE dsl.datasource_id = %(tsm_schema)s
+WHERE dsl.datasource_id = '{tsm_schema}'
 AND c.is_public AND d.is_public
 ORDER BY c.id, csl.begin_date DESC;
 
@@ -59,7 +59,7 @@ JOIN public.sms_configuration_static_location_begin_action csl ON c.id = csl.con
 JOIN public.sms_device_mount_action dma on c.id = dma.configuration_id
 JOIN public.sms_device d ON dma.device_id = d.id
 JOIN public.sms_datastream_link dsl ON dma.id = dsl.device_mount_action_id
-WHERE dsl.datasource_id = %(tsm_schema)s
+WHERE dsl.datasource_id = '{tsm_schema}'
 AND c.is_public AND d.is_public
 ),
 current_locations AS (
@@ -95,7 +95,7 @@ JOIN public.sms_device_mount_action dma ON c.id = dma.configuration_id
 JOIN public.sms_device d ON dma.device_id = d.id
 JOIN public.sms_datastream_link dsl ON dma.id = dsl.device_mount_action_id
 WHERE c.is_public AND d.is_public
-AND dsl.datasource_id = %(tsm_schema)s
+AND dsl.datasource_id = '{tsm_schema}'
 )
 
 SELECT DISTINCT "THING_ID",
