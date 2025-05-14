@@ -1,6 +1,6 @@
 BEGIN;
 
-SET search_path TO %(tsm_schema)s;
+SET search_path TO '{tsm_schema}';
 
 CREATE OR REPLACE function public.get_schema_org_context() RETURNS jsonb AS
 $$
