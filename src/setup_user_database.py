@@ -286,26 +286,28 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "observation.sql"),
             os.path.join(base_path, "feature.sql"),
         ]
+
+        schema = thing.database.schema.lower()
+        user = sql.Identifier(thing.database.username.lower())
+        SMS_URL = os.environ.get("SMS_URL")
+        CV_URL = os.environ.get("CV_URL")
+
+        def escape_quote(s: str) -> str:
+            return s.replace("'", "''")
+
         with self.db_conn.get_cursor() as c:
+            c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
             for file in files:
                 logger.debug(f"deploy file: {file}")
                 with open(file) as fh:
                     view = fh.read()
-
-                # Fill the placeholder.
-                view = view.replace("{tsm_schema}", f"{user}")
-                view = view.replace("{sms_url}", f"{sms_url}")
-                view = view.replace("{cv_url}", f"{cv_url}")
-
-                user = thing.database.username.lower()
-                sms_url = os.environ.get("SMS_URL")
-                cv_url = os.environ.get("CV_URL")
-
-                c.execute(
-                    sql.SQL("SET search_path TO {user}").format(
-                        user=sql.Identifier(user)
-                    )
-                )
+                # This is a possible entry point for SQL injections. Ensure that we have
+                # full control over the values, especially that the value does not come
+                # from userinput. Additionally, we escape single quotes, prevent closing
+                # the outer quotes in the file.
+                view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
+                view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
+                view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                 c.execute(view)
 
     def create_grafana_helper_view(self, thing):

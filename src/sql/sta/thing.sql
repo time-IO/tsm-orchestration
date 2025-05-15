@@ -1,9 +1,5 @@
-BEGIN;
-
-SET search_path TO '{tsm_schema}';
-
 DROP VIEW IF EXISTS "THINGS" CASCADE;
-CREATE OR REPLACE VIEW "THINGS" AS
+CREATE VIEW "THINGS" AS
 WITH
     configuration_role_responsible_persons AS (
     SELECT
@@ -80,5 +76,3 @@ SELECT DISTINCT
 FROM public.sms_configuration c
 JOIN configuration_properties cp ON c.id = cp.configuration_id
 ORDER BY c.id ASC;
-
-COMMIT;

@@ -1,7 +1,3 @@
-BEGIN;
-
-SET search_path TO '{tsm_schema}';
-
 DO $$
 BEGIN
     IF EXISTS (
@@ -28,6 +24,4 @@ CREATE TABLE "FEATURES" (
   "ENCODING_TYPE" text,
   "FEATURE" jsonb,
   "PROPERTIES" jsonb
-);
-
-COMMIT;
+)
