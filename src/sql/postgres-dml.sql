@@ -1,5 +1,3 @@
-BEGIN;
-
 INSERT INTO relation_role
     (id, name, definition, inverse_name, inverse_definition, description, properties)
 VALUES
@@ -11,4 +9,3 @@ ON CONFLICT (id) DO UPDATE SET
     inverse_definition = excluded.inverse_definition,
     description = excluded.description,
     properties = excluded.properties;
-COMMIT;
