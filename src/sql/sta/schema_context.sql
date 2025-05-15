@@ -9,4 +9,3 @@ BEGIN
         }'::jsonb;
 END;
 $$ language plpgsql;
-
