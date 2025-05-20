@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-from timeio.grafana.typing import DatasourceT
+from timeio.grafana.typehints import DatasourceT, FolderT
 from typing import TYPE_CHECKING
-from logging import Logger
 
 from timeio.grafana.utils import _exists
 from timeio.thing import Thing
+from timeio.grafana.utils import logger
 
 if TYPE_CHECKING:
     from timeio.grafana.api import TimeioGrafanaApi
 
 
 class GrafanaDashboard:
-    def __init__(self, api: TimeioGrafanaApi, logger: Logger) -> None:
+    def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
-        self.logger = logger
 
     def exists(self, uid: str) -> bool:
         return _exists(self.api.dashboard.get_dashboard, uid)
@@ -37,7 +36,7 @@ class GrafanaDashboard:
             "templating": {
                 "list": [
                     self._datastream_templating(thing, datasource),
-                    self._show_qaqc_templating(daatsource),
+                    self._show_qaqc_templating(datasource),
                 ]
             },
             "time": {"from": "now-7d", "to": "now"},
@@ -51,7 +50,7 @@ class GrafanaDashboard:
             "overwrite": True,
         }
 
-    def _datastream_templating(self, thing, datasource) -> Dict:
+    def _datastream_templating(self, thing, datasource) -> dict:
         return {
             "datasource": datasource,
             "hide": 0,
@@ -66,7 +65,7 @@ class GrafanaDashboard:
         }
 
     @staticmethod
-    def _show_qaqc_templating(datasource: DatasourceT) -> Dict:
+    def _show_qaqc_templating(datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
             "hide": 0,
