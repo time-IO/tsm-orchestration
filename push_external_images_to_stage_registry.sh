@@ -58,4 +58,4 @@ echo !! ON THE STAGE SYSTEM !!
 echo Put the environment variables above in an extra dotenv FILE and
 echo pass it to docker compose commands with the --env-file FILE flag. Bear
 echo in min you can NOT use other tags for the images than the one provided
-echo below, because they most probably does not exist !
+echo below, because they most probably do not exist !
