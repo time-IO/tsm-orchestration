@@ -30,7 +30,6 @@ fi
   echo ""
   echo "user $FRONTEND_MQTT_USER"
   echo "topic readwrite #"
-  echo "topic read \$SYS/#"
 } >/mosquitto-auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
