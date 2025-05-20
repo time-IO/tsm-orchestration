@@ -35,9 +35,7 @@ docker image push $VISUALIZATION_GRAFANA_IMAGE_REGISTRY:$VISUALIZATION_GRAFANA_I
 docker image push $MONITORING_CADVISOR_IMAGE_REGISTRY:$MONITORING_CADVISOR_IMAGE_TAG
 
 echo
-echo Set these environment variables in an dotenv file and pass it to docker compose
-echo with the --env-file flag.
-echo
+echo "==============================================================="
 echo FLYWAY_IMAGE_REGISTRY=$PREFIX/flyway
 echo PROXY_NGINX_IMAGE_REGISTRY=$PREFIX/nginx
 echo DATABASE_POSTGRES_IMAGE_REGISTRY=$PREFIX/postgres
@@ -54,5 +52,10 @@ echo MQTT_CAT_MOSQUITTO_IMAGE_TAG=$MQTT_CAT_MOSQUITTO_IMAGE_TAG
 echo OBJECT_STORAGE_MINIO_IMAGE_TAG=$OBJECT_STORAGE_MINIO_IMAGE_TAG
 echo VISUALIZATION_GRAFANA_IMAGE_TAG=$MONITORING_CADVISOR_IMAGE_TAG
 echo MONITORING_CADVISOR_IMAGE_TAG=$MONITORING_CADVISOR_IMAGE_TAG
+echo "==============================================================="
 echo
-echo Do NOT use other tags they might not exist !
+echo !! ON THE STAGE SYSTEM !!
+echo Put the environment variables above in an extra dotenv FILE and
+echo pass it to docker compose commands with the --env-file FILE flag. Bear
+echo in min you can NOT use other tags for the images than the one provided
+echo below, because they most probably does not exist !
