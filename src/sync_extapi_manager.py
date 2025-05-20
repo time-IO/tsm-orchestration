@@ -50,9 +50,12 @@ class SyncExtApiManager(AbstractHandler):
     def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
+        syncer = self.sync_handlers[ext_api_name]
         try:
-            parsed_observations = self.sync_handlers[ext_api_name].parse(thing, content)
-            self.write_observations(thing, parsed_observations)
+            data = syncer.fetch_api_data(thing, content)
+            obs = syncer.do_parse(data)
+            self.write_observations(thing, obs)
+
         except HTTPError as e:
             journal.error(
                 f"Insert/upsert into timeioDB for thing '{thing.name} failed",
