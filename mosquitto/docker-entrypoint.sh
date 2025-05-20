@@ -20,11 +20,6 @@ fi
   echo "user $MQTT_USER"
   echo "topic readwrite #"
   echo "topic read \$SYS/#"
-  echo "topic readwrite thing_creation"
-  echo "topic readwrite logging/#"
-  echo "topic readwrite object_storage_notification"
-  echo "topic readwrite configdb_update/#"
-  echo "topic readwrite sync_ext_apis/#"
   echo ""
   echo "# Each user has its own topic and logging namespace"
   echo "pattern readwrite mqtt_ingest/%u/#"
@@ -34,12 +29,7 @@ fi
   echo "topic read mqtt_ingest/#"
   echo ""
   echo "user $FRONTEND_MQTT_USER"
-  echo "topic readwrite thing_creation/#"
-  echo "topic readwrite frontend_thing_update/#"
-  echo "topic readwrite user_login/#"
-  echo "topic readwrite qaqc_settings_update/#"
-  echo "topic readwrite data_parsed/#"
-  echo "topic readwrite sync_ext_apis/#"
+  echo "topic readwrite #"
 } >/mosquitto-auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]
