@@ -47,6 +47,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             self.create_user(thing)
             logger.debug("create schema")
             self.create_schema(thing)
+            logger.debug("deploy dll")
+            self.deploy_ddl(thing)
+            logger.debug("deploy dml")
+            self.deploy_dml()
 
         if not self.user_exists(
             sta_user := STA_PREFIX + thing.database.ro_username.lower()
@@ -60,21 +64,16 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug(f"create grafana read-only user {grf_user}")
             self.create_ro_user(thing, user_prefix=GRF_PREFIX)
 
-        logger.debug("deploy dll")
-        self.deploy_ddl(thing)
-        logger.debug("deploy dml")
-        self.deploy_dml()
-
         logger.info("update/create thing in db")
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        logger.debug("create frost views")
+        logger.debug("create/refresh frost views")
         self.create_frost_views(thing, user_prefix=STA_PREFIX)
         logger.debug(f"grand frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
-        logger.debug("create grafana helper views")
-        self.create_grafana_helper_view(thing)
+        logger.debug("create/refresh grafana views")
+        self.create_grafana_views(thing)
         logger.debug(f"grand grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
@@ -127,7 +126,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
             )
 
     def password_has_changed(self, url, user, password):
-        # NOTE: currently unused function
         try:
             with psycopg.connect(url, user=user, password=password):
                 pass
@@ -275,7 +273,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.db_conn.commit()
 
     def create_frost_views(self, thing, user_prefix: str = "sta_"):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta")
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
             os.path.join(base_path, "schema_context.sql"),
             os.path.join(base_path, "thing.sql"),
@@ -310,36 +308,19 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                 c.execute(view)
 
-    def create_grafana_helper_view(self, thing):
+    def create_grafana_views(self, thing):
+        file = os.path.join(
+            os.path.dirname(__file__),
+            "sql",
+            "grafana_views",
+            "datastream_properties.sql",
+        )
+        with open(file) as fh:
+            view = fh.read()
         with self.db_conn.get_cursor() as c:
-            username_identifier = sql.Identifier(thing.database.username.lower())
-            # Set search path for current session
-            c.execute(sql.SQL("SET search_path TO {0}").format(username_identifier))
-            c.execute(
-                sql.SQL("""DROP VIEW IF EXISTS "datastream_properties" CASCADE""")
-            )
-            c.execute(
-                sql.SQL(
-                    """
-                    CREATE OR REPLACE VIEW "datastream_properties" AS
-                    SELECT DISTINCT case
-                        when dp.property_name is null or dp.unit_name is null then tsm_ds.position
-                        else concat(dp.property_name,
-                            ' (', dp.unit_name, ') - ',
-                            dma.label,
-                            ' - ', tsm_ds."position"::text)
-                    end as "property",
-                    tsm_ds."position",
-                    tsm_ds.id as "ds_id",
-                    tsm_t.uuid as "t_uuid"
-                    FROM datastream tsm_ds
-                    JOIN thing tsm_t ON tsm_ds.thing_id = tsm_t.id
-                    LEFT JOIN public.sms_datastream_link sdl ON tsm_t.uuid = sdl.thing_id AND tsm_ds.id = sdl.datastream_id
-                    LEFT JOIN public.sms_device_property dp ON sdl.device_property_id = dp.id
-                    LEFT JOIN public.sms_device_mount_action dma on dma.id = sdl.device_mount_action_id
-                """
-                )
-            )
+            user = sql.Identifier(thing.database.username.lower())
+            c.execute(sql.SQL("SET search_path TO {0}").format(user))
+            c.execute(view)
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
