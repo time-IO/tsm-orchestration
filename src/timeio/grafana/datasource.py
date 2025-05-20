@@ -3,14 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from logging import Logger
 
-from timeio.grafana.typed_dicts import DatasourceT
-from timeio.grafana.utils import value_from_dict_list, _exists
+from timeio.grafana.typing import DatasourceT
+from timeio.grafana.utils import get_dict_by_key_value, _exists
 from timeio.thing import Thing
 from timeio.crypto import decrypt, get_crypt_key
 from urllib.parse import urlparse
 
 if TYPE_CHECKING:
     from timeio.grafana.api import TimeioGrafanaApi
+
 
 class GrafanaDatasource:
     def __init__(self, api: TimeioGrafanaApi, logger: Logger) -> None:
@@ -22,11 +23,11 @@ class GrafanaDatasource:
 
     def get_by_name(self, name: str) -> DatasourceT | None:
         datasources = self.api.datasource.list_datasources()
-        return value_from_dict_list(datasources, "name", name)
+        return get_dict_by_key_value(datasources, "name", name)
 
     def get_by_uid(self, uid: str) -> DatasourceT | None:
         datasources = self.api.datasource.list_datasources()
-        return value_from_dict_list(datasources, "uid", uid)
+        return get_dict_by_key_value(datasources, "uid", uid)
 
     def create(self, thing: Thing, user_prefix: str, sslmode: str) -> DatasourceT:
         db_user = user_prefix + thing.database.ro_username

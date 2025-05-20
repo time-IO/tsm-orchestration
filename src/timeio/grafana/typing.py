@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TypedDict, Any
 
+
 class TeamT(TypedDict):
     id: int
     uid: str
@@ -13,10 +14,12 @@ class TeamT(TypedDict):
     permission: int
     accessControl: Any
 
+
 class OrgT(TypedDict):
     id: int
     name: str
     address: dict[str, str]
+
 
 class FolderT(TypedDict):
     id: int
@@ -35,6 +38,7 @@ class FolderT(TypedDict):
     updated: str
     version: int
 
+
 class DatasourceT(TypedDict):
     id: int
     uid: str
@@ -51,3 +55,22 @@ class DatasourceT(TypedDict):
     isDefault: bool
     jsonData: dict[str, Any]
     readOnly: bool
+
+
+class UserT(TypedDict):
+    id: int
+    uid: str
+    email: str
+    name: str
+    login: str
+    theme: str
+    orgId: int
+    isGrafanaAdmin: bool
+    isDisabled: bool
+    isExternal: bool
+    isExternallySynced: bool
+    isGrafanaAdminExternallySynced: bool
+    authLabels: Any
+    updatedAt: str
+    createdAt: str
+    avatarUrl: str

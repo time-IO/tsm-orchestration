@@ -15,3 +15,4 @@ data/
 /Pipfile
 docker-compose-dev.yml
 cron/crontab.txt
+**/__pycache__
