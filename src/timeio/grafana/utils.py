@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from typing import List, Dict, Any
+import logging
+from typing import Any
 from grafana_client.client import GrafanaException
 
 
-def get_dict_by_key_value(dict_list: List[Dict], key: str, value: Any):
+logger = logging.getLogger("timeio-grafana-api")
+
+
+def get_dict_by_key_value(dict_list: list[dict], key: str, value: Any):
     for d in dict_list:
         if d.get(key) == value:
             return d

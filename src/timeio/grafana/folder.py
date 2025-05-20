@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from logging import Logger
-
-from timeio.grafana.typing import FolderT
+from timeio.grafana.typehints import FolderT
 from timeio.grafana.utils import get_dict_by_key_value, _exists
 
 if TYPE_CHECKING:
     from timeio.grafana.api import TimeioGrafanaApi
 
+from timeio.grafana.utils import logger
+
 
 class GrafanaFolder:
-    def __init__(self, api: TimeioGrafanaApi, logger: Logger) -> None:
+    def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
-        self.logger = logger
 
     def exists(self, uid: str) -> bool:
         return _exists(self.api.folder.get_folder, uid)
@@ -28,7 +27,7 @@ class GrafanaFolder:
 
     def create(self, name: str, uid: str) -> FolderT:
         folder = self.api.folder.create(title=name, uid=uid)
-        self.logger.debug(f"Created new folder '{name}'")
+        logger.debug(f"Created new folder '{name}'")
         return self.api.folder.get_folder(uid)
 
     def set_permissions(self, folder, team, role):
@@ -50,6 +49,4 @@ class GrafanaFolder:
                 ]
             }
         self.api.folder.update_folder_permissions(folder["uid"], permissions)
-        self.logger.debug(
-            f"Set permissions on folder '{folder['name']}' for role '{role}'"
-        )
+        logger.debug(f"Set permissions on folder '{folder['name']}' for role '{role}'")
