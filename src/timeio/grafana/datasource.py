@@ -1,22 +1,21 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from logging import Logger
 
-from timeio.grafana.typing import DatasourceT
+from timeio.grafana.typehints import DatasourceT
 from timeio.grafana.utils import get_dict_by_key_value, _exists
 from timeio.thing import Thing
 from timeio.crypto import decrypt, get_crypt_key
 from urllib.parse import urlparse
+from timeio.grafana.utils import logger
 
 if TYPE_CHECKING:
     from timeio.grafana.api import TimeioGrafanaApi
 
 
 class GrafanaDatasource:
-    def __init__(self, api: TimeioGrafanaApi, logger: Logger) -> None:
+    def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
-        self.logger = logger
 
     def exists(self, uuid) -> bool:
         return _exists(self.api.datasource.get_datasource_by_uid, uuid)
@@ -53,5 +52,5 @@ class GrafanaDatasource:
             "secureJsonData": {"password": db_pass},
         }
         self.api.datasource.create_datasource(datasource)
-        self.logger.debug(f"Created new datasource '{datasource['name']}'")
+        logger.debug(f"Created new datasource '{datasource['name']}'")
         return self.get_by_name(thing.project.name)
