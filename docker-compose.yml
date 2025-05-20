@@ -58,7 +58,7 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "bitnami/postgresql:${DATABASE_POSTGRES_IMAGE_TAG}"
+    image: "${DATABASE_POSTGRES_IMAGE_REGISTRY}:${DATABASE_POSTGRES_IMAGE_TAG}"
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
@@ -96,7 +96,7 @@ services:
   # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
   # sends mqtt messages to the broker on file upload (and other events).
   object-storage:
-    image: "minio/minio:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
+    image: "${OBJECT_STORAGE_MINIO_IMAGE_REGISTRY}:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     ports:
       - "${OBJECT_STORAGE_SFTP_PORT}:22"
@@ -165,7 +165,7 @@ services:
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_BROKER_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       flyway:
         condition: service_completed_successfully
@@ -236,7 +236,7 @@ services:
   # This visualize observations of a group or project that are stored in the database.
   visualization:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "grafana/grafana:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    image: "${VISUALIZATION_GRAFANA_IMAGE_REGISTRY}:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
     user: "${UID}:${GID}"
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
@@ -395,7 +395,7 @@ services:
   # ===========
   # TODO
   flyway:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
@@ -592,7 +592,7 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginxinc/nginx-unprivileged:${PROXY_NGINX_IMAGE_TAG}"
+    image: "${PROXY_NGINX_IMAGE_REGISTRY}:${PROXY_NGINX_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID}:${GID}"
     ports:
@@ -1235,7 +1235,7 @@ services:
 
   mqtt-cat:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "eclipse-mosquitto:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_CAT_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       mqtt-broker:
         condition: service_started
@@ -1252,7 +1252,7 @@ services:
       --id "mqtt-cat"
 
   monitoring:
-    image: "gcr.io/cadvisor/cadvisor:${MONITORING_CADVISOR_IMAGE_TAG}"
+    image: "${MONITORING_CADVISOR_IMAGE_REGISTRY}:${MONITORING_CADVISOR_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     container_name: cadvisor
     ports:
