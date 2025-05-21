@@ -6,6 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from urllib.request import Request, urlopen
 from urllib.parse import urlparse
+from urllib.error import HTTPError, URLError
 from datetime import datetime, timezone, timedelta
 
 from timeio.feta import Thing
@@ -17,7 +18,14 @@ from timeio.crypto import decrypt, get_crypt_key
 
 class NoHttpsError(Exception):
     def __init_(self, msg):
-        super().__init__(msg)
+        self.msg = msg
+        super().__init__(self.msg)
+
+
+class ExtApiRequestError(Exception):
+    def __init__(self, msg, status_code=None):
+        self.msg = f"{msg}. Status code: {status_code}" if status_code else msg
+        super().__init__(self.msg)
 
 
 class ExtApiSyncer(ABC):
@@ -28,6 +36,18 @@ class ExtApiSyncer(ABC):
     @abstractmethod
     def do_parse(self, api_response) -> dict:
         raise NotImplementedError
+
+
+def request_with_handling(method, url, **kwargs):
+    try:
+        response = requests.request(method, url, **kwargs)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response else None
+        raise ExtApiRequestError("HTTP request failed", status_code)
+    except requests.exceptions.RequestException as e:
+        raise ExtApiRequestError(f"Network error: {e}")
 
 
 RESULT_TYPE_MAPPING = {
@@ -66,7 +86,12 @@ class BoschApiSyncer(ExtApiSyncer):
         r.add_header("Content-Type", "application/json")
         r.add_header("Accept", "application/json")
         r.data = None
-        handle = urlopen(r)
+        try:
+            handle = urlopen(r)
+        except HTTPError as e:
+            raise ExtApiRequestError("HTTP request failed", e.code)
+        except URLError as e:
+            raise ExtApiRequestError(f"URL error: {e.reason}")
         content = handle.read().decode("utf8")
         response = json.loads(content)
         return response
@@ -123,12 +148,12 @@ class TsystemsApiSyncer(ExtApiSyncer):
             "from": content["datetime_from"],
             "to": content["datetime_to"],
         }
-        response = requests.get(
+        response = request_with_handling(
+            "GET",
             f'{self.tsystems_base_url}/{settings["group"]}/{settings["station_id"]}',
             headers=headers,
             params=params,
         )
-        response.raise_for_status()
         return response.json()
 
     def do_parse(self, api_response):
@@ -236,10 +261,8 @@ class UbaApiSyncer(ExtApiSyncer):
         """Get components (i.e measured quantites) and scopes
         (aggregation infos) for later mapping
         """
-        response_components = requests.get(self.uba_componsents_url)
-        response_components.raise_for_status()
-        response_scopes = requests.get(self.uba_scopes_url)
-        response_scopes.raise_for_status()
+        response_components = request_with_handling("GET", self.uba_componsents_url)
+        response_scopes = request_with_handling("GET", self.uba_scopes_url)
         components = {
             int(v[0]): v[1]
             for k, v in response_components.json().items()
@@ -257,8 +280,7 @@ class UbaApiSyncer(ExtApiSyncer):
         station
         """
         station_info = list()
-        response = requests.get(self.uba_limits_url)
-        response.raise_for_status()
+        response = request_with_handling("GET", self.uba_limits_url)
         response_json = response.json()["data"]
         for k, v in response_json.items():
             if v[2] == station_id:
@@ -287,11 +309,11 @@ class UbaApiSyncer(ExtApiSyncer):
             "component": component_id,
             "scope": scope_id,
         }
-        response = requests.get(
-            url=self.uba_measures_url,
+        response = request_with_handling(
+            "GET",
+            self.uba_measures_url,
             params=params,
         )
-        response.raise_for_status()
         response_json = response.json()
         if response_json["data"]:
             return response_json["data"][station_id]
@@ -375,8 +397,7 @@ class UbaApiSyncer(ExtApiSyncer):
             "time_to": time_to,
             "station": station_id,
         }
-        response = requests.get(self.uba_airquality_url, params=params)
-        response.raise_for_status()
+        response = request_with_handling("GET", self.uba_airquality_url, params=params)
         response_json = response.json()
         if not response_json["data"]:
             return []
@@ -453,8 +474,8 @@ class DwdApiSyncer(ExtApiSyncer):
             "last_date": content["datetime_to"],
             "units": "dwd",
         }
-        brightsky_response = requests.get(url=self.brightsky_base_url, params=params)
-        return brightsky_response.json()
+        response = request_with_handling("GET", self.brightsky_base_url, params=params)
+        return response.json()
 
     def do_parse(self, api_response):
         observation_data = api_response["weather"]
@@ -462,8 +483,8 @@ class DwdApiSyncer(ExtApiSyncer):
         bodies = []
         for obs in observation_data:
             timestamp = obs.pop("timestamp")
-            del obs["source_id"]
-            del obs["fallback_source_ids"]
+            obs.pop("fallback_source_ids", None)
+            obs.pop("source_id", None)
             for parameter, value in obs.items():
                 if value:
                     result_type = self.PARAMETER_MAPPING[parameter]
@@ -494,14 +515,14 @@ class TtnApiSyncer(ExtApiSyncer):
         settings = thing.ext_api.settings
         api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         url = settings["endpoint_uri"]
-        res = requests.get(
+        res = request_with_handling(
+            "GET",
             url,
             headers={
                 "Authorization": f"Bearer {api_key_dec}",
                 "Accept": "text/event-stream",
             },
         )
-
         rep = self.cleanup_json(res.text)
         return {"response": json.loads(rep), "url": url}
 
@@ -563,7 +584,7 @@ class NmApiSyncer(ExtApiSyncer):
             "end_min": {end_date.min},
             "yunits": 0,
         }
-        res = requests.get(self.nm_base_url, params=params)
+        res = request_with_handling("GET", self.nm_base_url, params=params)
         rows = [
             r.split(";") for r in re.findall(r"^\d.*", res.text, flags=re.MULTILINE)
         ]
