@@ -2,7 +2,6 @@ import requests
 import json
 import base64
 import re
-import logging
 
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
