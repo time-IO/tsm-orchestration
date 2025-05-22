@@ -2,11 +2,10 @@ import requests
 import json
 import base64
 import re
+import logging
 
 from abc import ABC, abstractmethod
-from urllib.request import Request, urlopen
 from urllib.parse import urlparse
-from urllib.error import HTTPError, URLError
 from datetime import datetime, timezone, timedelta
 
 from timeio.feta import Thing
@@ -44,8 +43,15 @@ def request_with_handling(method, url, **kwargs):
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError as e:
-        status_code = e.response.status_code if e.response else None
-        raise ExtApiRequestError("HTTP request failed", status_code)
+        status_code = e.response.status_code
+        if status_code == 401:
+            raise ExtApiRequestError(
+                f"Unauthorized for url {url}", status_code=status_code
+            )
+        elif status_code == 403:
+            raise ExtApiRequestError("Forbidden", status_code=status_code)
+        else:
+            raise ExtApiRequestError("HTTP request failed", status_code)
     except requests.exceptions.RequestException as e:
         raise ExtApiRequestError(f"Network error: {e}")
 
@@ -81,20 +87,13 @@ class BoschApiSyncer(ExtApiSyncer):
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
-        r = Request(server_url)
-        r.add_header("Authorization", self.basic_auth(settings["username"], password))
-        r.add_header("Content-Type", "application/json")
-        r.add_header("Accept", "application/json")
-        r.data = None
-        try:
-            handle = urlopen(r)
-        except HTTPError as e:
-            raise ExtApiRequestError("HTTP request failed", e.code)
-        except URLError as e:
-            raise ExtApiRequestError(f"URL error: {e.reason}")
-        content = handle.read().decode("utf8")
-        response = json.loads(content)
-        return response
+        headers = {
+            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        response = request_with_handling("GET", server_url, headers=headers)
+        return response.json()
 
     def do_parse(self, api_response):
         bodies = []
@@ -193,8 +192,9 @@ class TsystemsApiSyncer(ExtApiSyncer):
             "username": username,
             "password": password,
         }
-        response = requests.post(self.tsytems_auth_url, headers=headers, data=payload)
-        response.raise_for_status()
+        response = request_with_handling(
+            "POST", self.tsytems_auth_url, headers=headers, data=payload
+        )
         return response.json()["access_token"]
 
 
