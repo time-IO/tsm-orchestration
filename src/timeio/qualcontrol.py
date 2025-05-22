@@ -168,7 +168,7 @@ class KwargsScheme(saqc.core.core.FloatScheme):
         return out
 
 
-class QualityControl:
+class QcBase:
     conn: Connection
     api_url: str
     proj: feta.Project
@@ -271,29 +271,71 @@ class QualityControl:
             )
         return window
 
-    def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str:
-        q = (
-            "select thing_id as thing_uuid from public.sms_datastream_link l "
-            "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
-            "where a.configuration_id = %s"
-        )
-        row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
-        if row is None:
-            raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
-        return row[0]
+    @staticmethod
+    def _create_dataproduct(df: pd.DataFrame, name, config_id) -> list[JsonObjectT]:
+        assert pd.Index(["data", "flag", "func", "kwargs"]).difference(df.columns).empty
 
-    def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int) -> str:
-        q = (
-            "select thing_id as thing_uuid from public.sms_datastream_link "
-            "where device_property_id = %s"
-        )
-        row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
-        if row is None:
-            raise DataNotFoundError(
-                f"No thing_uuid for STA datastream with id {sta_stream_id}"
-            )
-        return row[0]
+        if pd.api.types.is_numeric_dtype(df["data"]):
+            result_type = ObservationResultType.Number
+            result_field = "result_number"
+        elif pd.api.types.is_string_dtype(df["data"]):
+            result_type = ObservationResultType.String
+            result_field = "result_string"
+        elif pd.api.types.is_bool_dtype(df["data"]):
+            result_type = ObservationResultType.Bool
+            result_field = "result_bool"
+        elif pd.api.types.is_object_dtype(df["data"]):
+            result_type = ObservationResultType.Json
+            result_field = "result_json"
+        else:
+            raise UserInputError(f"data of type {df['data'].dtype} is not supported")
 
+        def compose_json(row: pd.Series) -> JsonObjectT:
+            val = row["data"]
+            if result_type == ObservationResultType.Json:
+                val = json.dumps(val)
+            return {
+                "result_time": row.name.isoformat(),  # noqa, index label
+                "result_type": result_type,
+                result_field: val,
+                "result_quality": json.dumps(
+                    [
+                        {
+                            "annotation": str(row["flag"]),
+                            "annotationType": "SaQC",
+                            "properties": {
+                                "version": saqc.__version__,
+                                "measure": row["func"],
+                                "configuration": config_id,
+                                "userLabel": row["kwargs"].get("label", None),
+                            },
+                        }
+                    ]
+                ),
+                "datastream_pos": name,
+            }
+
+        valid = df["data"].notna()
+        return df[valid].apply(compose_json, axis=1).dropna().to_list()
+
+    def _upload_quality_labels(self, thing_uuid, qlabels: list[JsonObjectT]):
+        r = requests.post(
+            f"{self.api_url}/observations/qaqc/{thing_uuid}",
+            json={"qaqc_labels": qlabels},
+            headers={"Content-type": "application/json"},
+        )
+        r.raise_for_status()
+
+    def _upload_dataproduct(self, thing_uuid, obs: list[JsonObjectT]):
+        r = requests.post(
+            f"{self.api_url}/observations/upsert/{thing_uuid}",
+            json={"observations": obs},
+            headers={"Content-type": "application/json"},
+        )
+        r.raise_for_status()
+
+
+class QualityControlLegacy(QcBase):
     def fetch_datastream_by_pos(self, thing_uuid, position) -> dict[str, Any]:
         query = (
             "SELECT ds.id, ds.name, ds.position, ds.thing_id "
@@ -367,69 +409,6 @@ class QualityControl:
         # return an ascending (oldest first) data set.
         return context[::-1] + data[::-1]
 
-    def fetch_datastream_data_sta(
-        self,
-        sta_stream_id: int,
-        start_date: TimestampT | None,
-        end_date: TimestampT | None,
-        window: pd.Timedelta | int | None,
-    ) -> list[DbRowT] | None:
-
-        # (start_date - window) <= start_date <= data <= end_date
-        # [===context window===]+[===============data============]
-        if isinstance(window, pd.Timedelta) and start_date is not None:
-            start_date = start_date - window
-        if start_date is None:
-            start_date = "-Infinity"
-        if end_date is None:
-            end_date = "Infinity"
-
-        # Mind that o."DATASTREAM_ID" is the STA datastream id
-        query = sql.SQL(
-            cast(
-                Literal,
-                "select {fields},  "
-                "l.datastream_id as raw_datastream_id "
-                'from {schema}."OBSERVATIONS" o '
-                "join public.sms_datastream_link l "
-                'on o."DATASTREAM_ID" = l.device_property_id '
-                'where o."DATASTREAM_ID" = %s '
-                'and o."RESULT_TIME" >= %s '
-                'and o."RESULT_TIME" <= %s '
-                'order by o."RESULT_TIME" desc '
-                "limit %s",
-            )
-        ).format(
-            fields=sql.SQL(", ").join(
-                map(sql.Identifier, map(str.upper, _OBS_COLUMNS))
-            ),
-            schema=sql.Identifier(self.schema),
-        )
-
-        # Fetch data by dates including context window, iff it was defined
-        # as a timedelta. None as limit, becomes SQL:'LIMIT NULL' which is
-        # equivalent to 'LIMIT ALL'.
-        params = [sta_stream_id, start_date, end_date, None]
-        data = self.conn.execute(query, params).fetchall()
-        if not data:  # If we have no data we also need no context data
-            return None
-
-        # Fetch data from context window, iff it was passed as a number,
-        # which means number of observations before the actual data.
-        context = []
-        if isinstance(window, int) and window > 0:
-            params = [sta_stream_id, "-Infinity", start_date, window]
-            context = self.conn.execute(query, params).fetchall()
-            # If the exact start_date is present in the data, the usage
-            # of `>=` and `<=` will result in a duplicate row.
-            if len(context) > 0 and context[0][0] == data[-1][0]:
-                context = context[1:]
-
-        # In the query we ordered descending (newest first) to correctly
-        # use the limit keyword, but for python/pandas etc. we want to
-        # return an ascending (oldest first) data set.
-        return context[::-1] + data[::-1]
-
     def fetch_unflagged_daterange_legacy(
         self, datastream_id
     ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
@@ -450,32 +429,6 @@ class QualityControl:
             oldest, newest
         )
         r = self.conn.execute(query, [datastream_id, datastream_id]).fetchall()
-        if not r:
-            return None, None
-        return r[0][0], r[1][0]
-
-    def fetch_unflagged_daterange_sta(
-        self, sta_stream_id
-    ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
-        """Returns (first aka. earliest, last) timestamp of unflagged data."""
-
-        # Mind that o."DATASTREAM_ID" is the STA datastream id
-        part = """\
-            select o."RESULT_TIME" from {schema}."OBSERVATIONS" o 
-            where o."DATASTREAM_ID" = %s and 
-            (o."RESULT_QUALITY" is null or o."RESULT_QUALITY" = 'null'::jsonb)
-            order by "RESULT_TIME" {order} limit 1
-        """
-        newest = sql.SQL(part).format(
-            schema=sql.Identifier(self.schema), order=sql.SQL("desc")
-        )
-        oldest = sql.SQL(part).format(
-            schema=sql.Identifier(self.schema), order=sql.SQL("asc")
-        )
-        query = sql.SQL('({}) UNION ALL ({}) ORDER BY "RESULT_TIME"').format(
-            oldest, newest
-        )
-        r = self.conn.execute(query, [sta_stream_id, sta_stream_id]).fetchall()
         if not r:
             return None, None
         return r[0][0], r[1][0]
@@ -552,6 +505,156 @@ class QualityControl:
                 ) from e
 
         return qc, md
+
+    def run_legacy(self, thing_uuid):
+        """
+        Run QA/QC on data in the Observation-DB for a single Thing.
+
+        Returns the number of observation that was updated and/or created.
+        """
+        logger.info(f"Execute qaqc config {self.conf.name!r}")
+        qc, meta = self.qaqc_legacy(thing_uuid)
+        # ============= legacy dataproducts =============
+        # Data products must be created before quality labels are uploaded.
+        # If we first do the upload and an error occur we will not be able to
+        # recreate the same data for the dataproducts, this is because a
+        # legacy qc run always just sees unflagged data.
+        n = 0
+        if dp_columns := [c for c in qc.columns if c not in meta.keys()]:
+            n += self._create_dataproducts_legacy(thing_uuid, qc[dp_columns])
+
+        m = self._upload(qc, meta)
+        return n + m
+
+    def _create_dataproducts_legacy(self, thing_uuid, qc):
+        total = 0
+        flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
+        for name in flags.columns:
+            df: pd.DataFrame = flags[name]
+            df["data"] = data[name]
+            if df.empty:
+                logger.debug(f"no data for data product {name}")
+                continue
+            obs = self._create_dataproduct(df, name, self.conf.id)
+            self._upload_dataproduct(thing_uuid, obs)
+            logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
+            total += len(obs)
+        return total
+
+
+class QualityControl(QcBase):
+
+    def fetch_thing_uuid_from_sta_id(self, thing_id: int) -> str:
+        q = (
+            "select thing_id as thing_uuid from public.sms_datastream_link l "
+            "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
+            "where a.configuration_id = %s"
+        )
+        row = self.conn.execute(cast(Literal, q), [thing_id]).fetchone()
+        if row is None:
+            raise DataNotFoundError(f"No thing_uuid for STA.Thing.Id {thing_id}")
+        return row[0]
+
+    def fetch_thing_uuid_for_sta_stream(self, sta_stream_id: int) -> str:
+        q = (
+            "select thing_id as thing_uuid from public.sms_datastream_link "
+            "where device_property_id = %s"
+        )
+        row = self.conn.execute(cast(Literal, q), [sta_stream_id]).fetchone()
+        if row is None:
+            raise DataNotFoundError(
+                f"No thing_uuid for STA datastream with id {sta_stream_id}"
+            )
+        return row[0]
+
+    def fetch_datastream_data_sta(
+        self,
+        sta_stream_id: int,
+        start_date: TimestampT | None,
+        end_date: TimestampT | None,
+        window: pd.Timedelta | int | None,
+    ) -> list[DbRowT] | None:
+
+        # (start_date - window) <= start_date <= data <= end_date
+        # [===context window===]+[===============data============]
+        if isinstance(window, pd.Timedelta) and start_date is not None:
+            start_date = start_date - window
+        if start_date is None:
+            start_date = "-Infinity"
+        if end_date is None:
+            end_date = "Infinity"
+
+        # Mind that o."DATASTREAM_ID" is the STA datastream id
+        query = sql.SQL(
+            cast(
+                Literal,
+                "select {fields},  "
+                "l.datastream_id as raw_datastream_id "
+                'from {schema}."OBSERVATIONS" o '
+                "join public.sms_datastream_link l "
+                'on o."DATASTREAM_ID" = l.device_property_id '
+                'where o."DATASTREAM_ID" = %s '
+                'and o."RESULT_TIME" >= %s '
+                'and o."RESULT_TIME" <= %s '
+                'order by o."RESULT_TIME" desc '
+                "limit %s",
+            )
+        ).format(
+            fields=sql.SQL(", ").join(
+                map(sql.Identifier, map(str.upper, _OBS_COLUMNS))
+            ),
+            schema=sql.Identifier(self.schema),
+        )
+
+        # Fetch data by dates including context window, iff it was defined
+        # as a timedelta. None as limit, becomes SQL:'LIMIT NULL' which is
+        # equivalent to 'LIMIT ALL'.
+        params = [sta_stream_id, start_date, end_date, None]
+        data = self.conn.execute(query, params).fetchall()
+        if not data:  # If we have no data we also need no context data
+            return None
+
+        # Fetch data from context window, iff it was passed as a number,
+        # which means number of observations before the actual data.
+        context = []
+        if isinstance(window, int) and window > 0:
+            params = [sta_stream_id, "-Infinity", start_date, window]
+            context = self.conn.execute(query, params).fetchall()
+            # If the exact start_date is present in the data, the usage
+            # of `>=` and `<=` will result in a duplicate row.
+            if len(context) > 0 and context[0][0] == data[-1][0]:
+                context = context[1:]
+
+        # In the query we ordered descending (newest first) to correctly
+        # use the limit keyword, but for python/pandas etc. we want to
+        # return an ascending (oldest first) data set.
+        return context[::-1] + data[::-1]
+
+    def fetch_unflagged_daterange_sta(
+        self, sta_stream_id
+    ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
+        """Returns (first aka. earliest, last) timestamp of unflagged data."""
+
+        # Mind that o."DATASTREAM_ID" is the STA datastream id
+        part = """\
+            select o."RESULT_TIME" from {schema}."OBSERVATIONS" o 
+            where o."DATASTREAM_ID" = %s and 
+            (o."RESULT_QUALITY" is null or o."RESULT_QUALITY" = 'null'::jsonb)
+            order by "RESULT_TIME" {order} limit 1
+        """
+        newest = sql.SQL(part).format(
+            schema=sql.Identifier(self.schema), order=sql.SQL("desc")
+        )
+        oldest = sql.SQL(part).format(
+            schema=sql.Identifier(self.schema), order=sql.SQL("asc")
+        )
+        query = sql.SQL('({}) UNION ALL ({}) ORDER BY "RESULT_TIME"').format(
+            oldest, newest
+        )
+        r = self.conn.execute(query, [sta_stream_id, sta_stream_id]).fetchall()
+        if not r:
+            return None, None
+        return r[0][0], r[1][0]
 
     def _fetch_sta_data(self, thing_id: int, stream_id, start_date, end_date):
         if start_date is None:
@@ -644,26 +747,6 @@ class QualityControl:
         m = self._upload(qc, meta)
         return m
 
-    def run_legacy(self, thing_uuid):
-        """
-        Run QA/QC on data in the Observation-DB for a single Thing.
-
-        Returns the number of observation that was updated and/or created.
-        """
-        logger.info(f"Execute qaqc config {self.conf.name!r}")
-        qc, meta = self.qaqc_legacy(thing_uuid)
-        # ============= legacy dataproducts =============
-        # Data products must be created before quality labels are uploaded.
-        # If we first do the upload and an error occur we will not be able to
-        # recreate the same data for the dataproducts, this is because a
-        # legacy qc run always just sees unflagged data.
-        n = 0
-        if dp_columns := [c for c in qc.columns if c not in meta.keys()]:
-            n += self._create_dataproducts_legacy(thing_uuid, qc[dp_columns])
-
-        m = self._upload(qc, meta)
-        return n + m
-
     def _upload(self, qc: saqc.SaQC, meta: dict[str, pd.DataFrame]):
         total = 0
         flags = qc.flags  # implicit flags translation  -> KwargsScheme
@@ -704,22 +787,6 @@ class QualityControl:
 
         return total
 
-    def _upload_quality_labels(self, thing_uuid, qlabels: list[JsonObjectT]):
-        r = requests.post(
-            f"{self.api_url}/observations/qaqc/{thing_uuid}",
-            json={"qaqc_labels": qlabels},
-            headers={"Content-type": "application/json"},
-        )
-        r.raise_for_status()
-
-    def _upload_dataproduct(self, thing_uuid, obs: list[JsonObjectT]):
-        r = requests.post(
-            f"{self.api_url}/observations/upsert/{thing_uuid}",
-            json={"observations": obs},
-            headers={"Content-type": "application/json"},
-        )
-        r.raise_for_status()
-
     @staticmethod
     def _create_quality_labels(flags_df: pd.DataFrame, config_id) -> list[JsonObjectT]:
 
@@ -751,53 +818,6 @@ class QualityControl:
 
         return flags_df.apply(compose_json, axis=1).to_list()
 
-    @staticmethod
-    def _create_dataproduct(df: pd.DataFrame, name, config_id) -> list[JsonObjectT]:
-        assert pd.Index(["data", "flag", "func", "kwargs"]).difference(df.columns).empty
-
-        if pd.api.types.is_numeric_dtype(df["data"]):
-            result_type = ObservationResultType.Number
-            result_field = "result_number"
-        elif pd.api.types.is_string_dtype(df["data"]):
-            result_type = ObservationResultType.String
-            result_field = "result_string"
-        elif pd.api.types.is_bool_dtype(df["data"]):
-            result_type = ObservationResultType.Bool
-            result_field = "result_bool"
-        elif pd.api.types.is_object_dtype(df["data"]):
-            result_type = ObservationResultType.Json
-            result_field = "result_json"
-        else:
-            raise UserInputError(f"data of type {df['data'].dtype} is not supported")
-
-        def compose_json(row: pd.Series) -> JsonObjectT:
-            val = row["data"]
-            if result_type == ObservationResultType.Json:
-                val = json.dumps(val)
-            return {
-                "result_time": row.name.isoformat(),  # noqa, index label
-                "result_type": result_type,
-                result_field: val,
-                "result_quality": json.dumps(
-                    [
-                        {
-                            "annotation": str(row["flag"]),
-                            "annotationType": "SaQC",
-                            "properties": {
-                                "version": saqc.__version__,
-                                "measure": row["func"],
-                                "configuration": config_id,
-                                "userLabel": row["kwargs"].get("label", None),
-                            },
-                        }
-                    ]
-                ),
-                "datastream_pos": name,
-            }
-
-        valid = df["data"].notna()
-        return df[valid].apply(compose_json, axis=1).dropna().to_list()
-
     def _create_dataproducts(self, qc):
         total = 0
         flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
@@ -817,21 +837,6 @@ class QualityControl:
                 logger.debug(f"no data for data product {name}")
                 continue
             obs = self._create_dataproduct(df, stream_name, self.conf.id)
-            self._upload_dataproduct(thing_uuid, obs)
-            logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
-            total += len(obs)
-        return total
-
-    def _create_dataproducts_legacy(self, thing_uuid, qc):
-        total = 0
-        flags, data = qc.flags, qc.data  # implicit flags translation ->KwargsScheme
-        for name in flags.columns:
-            df: pd.DataFrame = flags[name]
-            df["data"] = data[name]
-            if df.empty:
-                logger.debug(f"no data for data product {name}")
-                continue
-            obs = self._create_dataproduct(df, name, self.conf.id)
             self._upload_dataproduct(thing_uuid, obs)
             logger.info(f"uploaded {len(obs)} data points for dataproduct {name!r}")
             total += len(obs)
