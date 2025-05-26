@@ -10,6 +10,7 @@ import subprocess
 import sys
 import typing
 import warnings
+from functools import partial
 from typing import Any, Hashable, Literal, cast
 
 import pandas as pd
