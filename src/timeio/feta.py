@@ -13,7 +13,7 @@ import psycopg
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
 import logging
-from timeio.typehints import JsonT
+from timeio.typehints import JsonObjectT
 
 logger = logging.getLogger("feta")
 
@@ -427,7 +427,7 @@ class ExtAPI(Base):
     api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
     sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
-    settings: JsonT | None = _prop(lambda self: self._attrs["settings"])
+    settings: JsonObjectT | None = _prop(lambda self: self._attrs["settings"])
     api_type: ExtAPIType = _fetch(
         f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType
     )
@@ -467,7 +467,7 @@ class FileParser(Base):
     id: int = _prop(lambda self: self._attrs["id"])
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
     name: str = _prop(lambda self: self._attrs["name"])
-    params: JsonT | None = _prop(lambda self: self._attrs["params"])
+    params: JsonObjectT | None = _prop(lambda self: self._attrs["params"])
     file_parser_type: FileParserType = _fetch(
         f"SELECT * FROM {_cfgdb}.file_parser_type WHERE id = %s",
         "file_parser_type_id",
@@ -517,7 +517,7 @@ class QAQCTest(Base):
     id: int = _prop(lambda self: self._attrs["id"])
     qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
     function: str = _prop(lambda self: self._attrs["function"])
-    args: JsonT | None = _prop(lambda self: self._attrs["args"])
+    args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
     streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
