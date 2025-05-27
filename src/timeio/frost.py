@@ -25,6 +25,7 @@ _TEMPLATE = """\
     <Parameter override="false" name="persistence.autoUpdateDatabase" value="false" description="Automatically apply database updates."/>
     <Parameter override="false" name="persistence.alwaysOrderbyId" value="false" description="Always add an 'orderby=id asc' to queries to ensure consistent paging."/>
     <Parameter override="false" name="persistence.db_jndi_datasource" value="jdbc/sensorThings" description="JNDI data source name"/>
+    <Parameter override="false" name="persistence.queryTimeout" value="120" description="The maximum duration, in seconds, that a query is allowed to take."/>
     <Parameter override="false" name="plugins.openApi.enable" value="true" description="Toggle indicating whether the OpenAPI plugin should be enabled." />
     <Resource
         name="jdbc/sensorThings" auth="Container"
