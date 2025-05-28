@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 import typing
-from types import SimpleNamespace
 
 import pandas as pd
 from typing import Any
 
-from django.db.models.expressions import result
-
-from timeio import feta
 from timeio.errors import UserInputError
 from timeio.qc.qctools import QcTool, get_qctool
 
-__all__ = ["Param", "StreamParam", "QcTest"]
+__all__ = ["Param", "StreamInfo", "QcTest"]
 
 if typing.TYPE_CHECKING:
     from timeio.qc.stream_manager import StreamManager
@@ -28,9 +24,9 @@ class Param:
         return self.value
 
 
-class StreamParam(Param):
+class StreamInfo(Param):
     def __init__(self, key, value: Any, thing_id, stream_id):
-        super().__init__(key, value, StreamParam)
+        super().__init__(key, value, StreamInfo)
         self.thing_id = thing_id
         self.stream_id = stream_id
 
@@ -43,6 +39,11 @@ class StreamParam(Param):
     def parse(self):
         # cast according to Datatype
         return self.value
+
+class QcResult:
+    columns: list[str] | pd.Index
+    data: dict[str, pd.Series]
+    quality: dict[str, pd.DataFrame]
 
 
 class QcTest:
@@ -57,9 +58,9 @@ class QcTest:
         self.name = name or "Unnamed QcTest"
         self.func_name = func_name
         self.params = params
-        self.streams = [p for p in self.params if isinstance(p, StreamParam)]
+        self.streams = [p for p in self.params if isinstance(p, StreamInfo)]
         self.context_window = context_window
-        self.result = None
+        self.result: QcResult | None = None
 
         if isinstance(qctool, str):
             qctool = get_qctool(qctool)
@@ -96,8 +97,11 @@ class QcTest:
     def run(self) -> None:
         func = self.func_name
         kws = self._parsed_args
-        self.result = self._qctool.execute(func, **kws)
-        self._qctool = self.result
+        self._qctool.execute(func, **kws)
+        result = QcResult()
+        result.data = self._qctool.get_data()
+        result.quality = self._qctool.get_quality()
+        self.result = result
 
     def load_data(
         self,
@@ -127,6 +131,3 @@ class QcTest:
             data[name] = stream.get_data(start_date, end_date, self._parsed_window)
 
         self._qctool.add_data(data)
-
-    def result_from_other(self, last_result: QcTool):
-        self._qctool = last_result
