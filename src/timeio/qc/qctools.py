@@ -20,7 +20,21 @@ def get_qctool(name) -> type[QcTool]:
     return tool
 
 
+
+
 class QcTool(abc.ABC):
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """Returns the name of the QcTool"""
+        ...
+
+    @property
+    @abc.abstractmethod
+    def version(self) -> str:
+        """Returns the version of the QcTool"""
+        ...
 
     @property
     @abc.abstractmethod
@@ -54,24 +68,30 @@ class QcTool(abc.ABC):
     @abc.abstractmethod
     def get_quality(self) -> dict[str, pd.DataFrame]:
         """
-        Returns a dict of pandas Dataframes. Each dataframe has
-         - a datetime index
-         - a column called "quality" holding the QC information
-         - optional other columns
+        Returns a dict of datetime index pandas Dataframes.
+        Each with at least one column called "quality", which
+        holds the QC information. Other columns that are
+        evaluated are:
+            * 'measure' (str) - name of the function that created the quality label
+            * 'userLabel' (str) - user given information string
+
+        See also -> qc.datastream.QUALITY_COLUMNS
         """
         ...
 
     @abc.abstractmethod
-    def get_data(self):
+    def get_data(self) -> dict[str, pd.Series]:
         """
-        Returns a dict of pandas Dataframes. Each dataframe has
-         - a datetime index
-         - a column called "data" holding the QC information
-         - optional other columns
+        Returns a dict of datetime indexed pandas Series
+        containing the data.
         """
+        ...
 
 
 class Saqc(QcTool):
+
+    name = "saqc"
+    version = saqc.__version__
 
     @property
     def columns(self) -> pd.Index:
