@@ -6,13 +6,17 @@ import json
 import logging
 
 from paho.mqtt.client import MQTTMessage
+from psycopg import Connection
 
-from timeio.mqtt import AbstractHandler
-from timeio.qualcontrol import QualityControl
+from timeio import feta
 from timeio.common import get_envvar, setup_logging
-from timeio.errors import DataNotFoundError, UserInputError, NoDataWarning
-from timeio.journaling import Journal
 from timeio.databases import Database, DBapi
+from timeio.errors import DataNotFoundError, NoDataWarning
+from timeio.journaling import Journal
+from timeio.mqtt import AbstractHandler
+from timeio.qc.qctest import QcTest
+from timeio.qc.stream_manager import StreamManager
+from timeio.qc.utils import collect_tests
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -42,12 +46,39 @@ class QcHandler(AbstractHandler):
                     "mandatory field '{key}' is not present in data"
                 )
 
+    def get_config_from_thing(cls, conn: Connection, thing_uuid: str):
+        thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
+        proj = thing.project
+        qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
+        if qc is None:
+            raise NoDataWarning(
+                f"Neither found active QC-Settings for project {proj.name}, "
+                f"nor legacy QC-Settings for thing {thing.name}."
+            )
+        return qc
+
+    def get_config_from_project(
+        self, conn: Connection, proj_uuid: str, config_name: str | None = None
+    ):
+        proj = feta.Project.from_uuid(proj_uuid, dsn=conn)
+        if config_name is None:
+            if (qc := proj.get_default_qaqc()) is None:
+                raise NoDataWarning(
+                    f"No active QC-Settings found in project {proj.name}"
+                )
+        else:
+            if not (qcs := proj.get_qaqcs(name=config_name)):
+                raise DataNotFoundError(
+                    f"No QC-Settings with name {config_name} "
+                    f"found in project {proj.name}"
+                )
+            qc = qcs[0]
+        return qc
+
     def act(self, content: dict, message: MQTTMessage):
-        thing_uuid = None
         version = content.setdefault("version", 1)
         if version == 1:  # data was parsed
             _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
-            thing_uuid = content["thing_uuid"]
             logger.info(f"QC was triggered by data upload to thing. {content=}")
         elif version == 2:  # triggered by frontend
             _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
@@ -60,55 +91,65 @@ class QcHandler(AbstractHandler):
         self.dbapi.ping_dbapi()
         with self.db.connection() as conn:
             logger.info("successfully connected to configdb")
+
             if version == 1:
                 content: MqttPayload.DataParsedV1
-                qc = QualityControl.from_thing(
-                    conn,
-                    self.dbapi.base_url,
-                    uuid=thing_uuid,
-                )
+                thing_uuid = content["thing_uuid"]
+                config = self.get_config_from_thing(conn, thing_uuid)
+                proj_uuid = config.project.uuid
             else:
                 content: MqttPayload.DataParsedV2
-                qc = QualityControl.from_project(
-                    conn,
-                    self.dbapi.base_url,
-                    uuid=content["project_uuid"],
-                    config_name=content["qc_settings_name"],
-                )
-            try:
-                if qc.legacy:
-                    # A legacy workflow should only be possible with v1
-                    # and must deliver a thing_uuid (because it works on
-                    # a single thing).
-                    assert version == 1 and thing_uuid is not None
-                    some = qc.run_legacy(thing_uuid)
-                else:
-                    some = qc.run(content.get("start_date"), content.get("end_date"))
-            except UserInputError as e:
-                if thing_uuid is not None:
-                    journal.error(str(e), thing_uuid)
-                raise e
-            except NoDataWarning as w:
-                if thing_uuid is not None:
-                    journal.warning(str(w), thing_uuid)
-                raise w
+                proj_uuid = content["project_uuid"]
+                config_name = content["qc_settings_name"]
+                config = self.get_config_from_project(conn, proj_uuid, config_name)
 
-        if thing_uuid is not None:
-            if some:
-                journal.info(f"QC done. Config: {qc.conf.name}", thing_uuid)
-            else:
-                journal.warning(
-                    f"QC done, but no quality labels were generated. "
-                    f"Config: {qc.conf.name}",
-                    thing_uuid,
-                )
-                return
+            sm = StreamManager(conn)
+            tests = collect_tests(config)
+            start_date = content.get("start_date")
+            end_date = content.get("end_date")
+            for test in tests:  # type: QcTest
+                test.parse()
+                test.load_data(sm, start_date, end_date)
+                test.run()
+                sm.update(test.result)
 
+            # upload(sm)
+
+        #     qc = None
+        #     try:
+        #         if qc.legacy:
+        #             # A legacy workflow should only be possible with v1
+        #             # and must deliver a thing_uuid (because it works on
+        #             # a single thing).
+        #             assert version == 1 and thing_uuid is not None
+        #             some = qc.run_legacy(thing_uuid)
+        #         else:
+        #             some = qc.run(content.get("start_date"), content.get("end_date"))
+        #     except UserInputError as e:
+        #         if thing_uuid is not None:
+        #             journal.error(str(e), thing_uuid)
+        #         raise e
+        #     except NoDataWarning as w:
+        #         if thing_uuid is not None:
+        #             journal.warning(str(w), thing_uuid)
+        #         raise w
+        #
+        # if thing_uuid is not None:
+        #     if some:
+        #         journal.info(f"QC done. Config: {qc.conf.name}", thing_uuid)
+        #     else:
+        #         journal.warning(
+        #             f"QC done, but no quality labels were generated. "
+        #             f"Config: {qc.conf.name}",
+        #             thing_uuid,
+        #         )
+        #         return
+        #
         logger.debug(f"inform downstream services about success of qc.")
         payload = json.dumps(
             {
                 "version": 1,
-                "project_uuid": qc.proj.uuid,
+                "project_uuid": proj_uuid,
                 "thing_uuid": thing_uuid,  # None allowed
             }
         )

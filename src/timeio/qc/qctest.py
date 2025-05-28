@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
+import typing
+from types import SimpleNamespace
+
 import pandas as pd
 from typing import Any
+
+from django.db.models.expressions import result
+
 from timeio import feta
 from timeio.errors import UserInputError
-from .qctools import QcTool
+from timeio.qc.qctools import QcTool, get_qctool
+
+__all__ = ["Param", "StreamParam", "QcTest"]
+
+if typing.TYPE_CHECKING:
+    from timeio.qc.stream_manager import StreamManager
+    from timeio.qc.typeshints import WindowT, TimestampT
 
 
 class Param:
-    def __init__(self, name, value: Any, *args):
-        self.name = name
+    def __init__(self, key, value: Any, *args):
+        self.key = key
         self.value = value
 
     def parse(self):
@@ -17,11 +29,16 @@ class Param:
 
 
 class StreamParam(Param):
-    def __init__(self, name, value: Any, thing_id, stream_id, *args):
-        super().__init__(name, value, StreamParam)
-        self.stream_id = stream_id
+    def __init__(self, key, value: Any, thing_id, stream_id):
+        super().__init__(key, value, StreamParam)
         self.thing_id = thing_id
-        # todo: add alias parsing
+        self.stream_id = stream_id
+
+        # Frozen data is not allowed to change. In particular
+        # this means data points must not be overwritten in the DB.
+        self.is_immutable = thing_id is not None and stream_id is not None
+        self.is_temporary = thing_id is None
+        self.is_dataproduct = thing_id is not None and stream_id is None
 
     def parse(self):
         # cast according to Datatype
@@ -29,43 +46,38 @@ class StreamParam(Param):
 
 
 class QcTest:
-    def __init__(self, name, func_name, params: list[Param], context_window=None):
+    def __init__(
+        self,
+        name,
+        func_name,
+        params: list[Param],
+        context_window: WindowT,
+        qctool: str | QcTool,
+    ):
+        self.name = name or "Unnamed QcTest"
         self.func_name = func_name
-        self._params = params
-        self._window = context_window
+        self.params = params
+        self.streams = [p for p in self.params if isinstance(p, StreamParam)]
+        self.context_window = context_window
+        self.result = None
+
+        if isinstance(qctool, str):
+            qctool = get_qctool(qctool)
+        self._qctool = qctool()
 
         # filled by QcTest.parse()
-        self.name = name or "Unnamed QcTest"
-        self.context_window = None
-        self.args = {}
-        self.streams: list[StreamParam] = []
+        self._parsed_window = None
+        self._parsed_args = {}
+        self._data = None
 
-    @classmethod
-    def from_feta(cls, test: feta.QAQCTest):
-        params = []
-        for stream in test.streams or []:  # type: feta.QcStreamT
-            params.append(
-                StreamParam(
-                    stream["arg_name"],
-                    stream["sta_thing_id"],
-                    stream["sta_stream_id"],
-                    stream["alias"],
-                )
-            )
-        for key, value in test.args.items():
-            params.append(Param(key, value))
-        return cls(test.name, test.function, params)
-
-    def parse(self, qctool: QcTool):
+    def parse(self):
+        self._qctool.check_func_name(self.func_name)
         self._parse_window()
-        qctool.check_func_name(self.func_name)
-        for p in self._params:
-            self.args[p.name] = p.parse()
-            if isinstance(p, StreamParam):
-                self.streams.append(p)
+        for p in self.params:
+            self._parsed_args[p.key] = p.parse()
 
     def _parse_window(self):
-        window = self._window
+        window = self.context_window
         if window is None:
             window = 0
         if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
@@ -79,4 +91,42 @@ class QcTest:
             raise UserInputError(
                 "Parameter 'context_window' must not have a negative value"
             )
-        self.context_window = window
+        self._parsed_window = window
+
+    def run(self) -> None:
+        func = self.func_name
+        kws = self._parsed_args
+        self.result = self._qctool.execute(func, **kws)
+        self._qctool = self.result
+
+    def load_data(
+        self,
+        sm: StreamManager,
+        start_date: TimestampT | None = None,
+        end_date: TimestampT | None = None,
+    ):
+        data = {}
+        for stream_info in self.streams:
+            name = stream_info.value
+
+            # If data is already present, we don't load it.
+            # This might become problematic, if a second test
+            # requests another chunk of data of the same stream,
+            # than another test before.
+            # Currently, all test request the same chunk of data,
+            # because the start and end date are set in the QC-
+            # config for all tests.
+            if name in data or name in self._qctool.columns:
+                continue
+
+            stream = sm.get_stream(stream_info)
+
+            if start_date is None:
+                start_date, end_date = stream.get_unprocessed_range()
+            # todo: what if no new data present (None, None) ?
+            data[name] = stream.get_data(start_date, end_date, self._parsed_window)
+
+        self._qctool.add_data(data)
+
+    def result_from_other(self, last_result: QcTool):
+        self._qctool = last_result
