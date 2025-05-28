@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 
 from timeio import feta
-from timeio.qc.qctest import QcTest, StreamParam, Param
+from timeio.qc.qctest import QcTest, StreamInfo, Param
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def collect_params(test: feta.QAQCTest):
     params = []
     for stream in test.streams or []:
         params.append(
-            StreamParam(
+            StreamInfo(
                 stream["arg_name"],
                 stream["alias"],
                 stream["sta_thing_id"],

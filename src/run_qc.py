@@ -107,11 +107,23 @@ class QcHandler(AbstractHandler):
             tests = collect_tests(config)
             start_date = content.get("start_date")
             end_date = content.get("end_date")
+            last_test: QcTest | None = None
             for test in tests:  # type: QcTest
+
+                # This is a hack / optimisation which simplify things
+                # as long as all test use the same start and end date
+                if last_test is not None:
+                    test._qctool = last_test._qctool
+
                 test.parse()
                 test.load_data(sm, start_date, end_date)
                 test.run()
-                sm.update(test.result)
+                if True:
+                    sm.update(test.result)
+                last_test = test
+
+            sm.update(last_test.result)
+            sm.upload()
 
             # upload(sm)
 
