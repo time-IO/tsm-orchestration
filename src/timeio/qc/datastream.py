@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import abc
-import warnings
+
 from datetime import datetime
+from typing import Any
 
 import pandas as pd
 import psycopg
 from psycopg import sql
-from typing import Any, Sequence, Literal
-from psycopg import Cursor
+
 from timeio.qc.typeshints import TimestampT, WindowT
 
 __all__ = ["Datastream"]
@@ -18,6 +17,7 @@ This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.
 """
 
+QUALITY_COLUMNS = ["quality", "measure", "userLabel"]
 
 def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
     """
@@ -131,7 +131,7 @@ class DatastreamSTA:
         date_end: TimestampT,
         context_window: WindowT,
     ):
-        # maybe update self._data
+        # We might need to fetch the data first ...
         self.get_data(date_start, date_end, context_window)
         return self._data.loc[date_start:date_end, "quality"]
 
@@ -197,16 +197,17 @@ class DatastreamSTA:
             f"cached={len(self._data.index)} rows)"
         )
 
-    def update_quality_labels(self, labels: pd.Series) -> None:
+    def update_quality_labels(self, labels: pd.DataFrame) -> None:
         unknown = labels.index.difference(self._data.index)
         if not unknown.empty:
             pass  # todo warn about unknown labels
         index = labels.index.intersection(self._data.index)
-        self._data.loc[index, "quality"] = labels
+        columns = labels.columns.intersection(QUALITY_COLUMNS)
+        self._data.loc[index, columns] = labels[columns]
 
     def upload(self, overwrite=True):
         """Update locally stored quality labels to the DB"""
-        pass  # todo: upload data and/or Qlabels
+        pass  # todo: Upload quality labels
 
 
 Datastream = DatastreamSTA
@@ -297,7 +298,7 @@ class ProductStream(Datastream):
             self._fetch_thing_uuid()
         return super().get_data(date_start, date_end, context_window)
 
-    def set_data(self, data: pd.Series, qlabels: pd.Series | None = None) -> None:
+    def set_data(self, data: pd.Series, qlabels: pd.DataFrame | None = None) -> None:
         """Sets new data uncondidionally."""
         index = data.index
         if data.empty:
@@ -310,6 +311,9 @@ class ProductStream(Datastream):
         if qlabels is not None:
             self.update_quality_labels(qlabels)
 
+    def upload(self, overwrite=True):
+        """Update locally stored data and quality labels to the DB"""
+        pass  # todo: Upload data and quality labels
 
 class LocalStream(Datastream):
 
@@ -324,8 +328,6 @@ class LocalStream(Datastream):
         super().__init__(thing_id, stream_id, name, db_conn, schema)
 
     def _append(self, *args, **kwargs):
-        if self.foo == 99:
-            self.foo = 0
         raise NotImplementedError
 
     def _fetch(self, *args, **kwargs):
@@ -366,7 +368,7 @@ class LocalStream(Datastream):
         return pd.concat([context, chunk])
 
     def set_data(self, data: pd.Series, qlabels: pd.Series | None = None) -> None:
-        return ProductStream.set_data(self, data, qlabels)
+        return ProductStream.set_data(self, data, qlabels)  # noqa
 
     def get_unprocessed_range(
         self,
@@ -374,5 +376,4 @@ class LocalStream(Datastream):
         return None, None
 
     def upload(self, overwrite=True):
-        # todo: warn for mocked upload
-        pass  # we never upload a mocked stream
+        raise RuntimeError("Temporary variables must not be uploaded to the DB.")
