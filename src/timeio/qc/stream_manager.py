@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
-import numpy as np
+import typing
+
 import psycopg
-import saqc
 
 from timeio import feta
 from timeio.qc.datastream import Datastream, ProductStream, LocalStream
 
-import typing
-
-from timeio.qc.qctools import QcTool
-
 if typing.TYPE_CHECKING:
-    from timeio.qc.qctest import QcTest, StreamInfo, QcResult
+    from timeio.qc.qctest import StreamInfo, QcResult
 
 
 class StreamManager:

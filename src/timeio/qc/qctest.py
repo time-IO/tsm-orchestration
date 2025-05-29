@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import typing
+from typing import Any
 
 import pandas as pd
-from typing import Any
 
 from timeio.errors import UserInputError
 from timeio.qc.qctools import QcTool, get_qctool
 
-__all__ = ["Param", "StreamInfo", "QcTest"]
+__all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
 
 if typing.TYPE_CHECKING:
     from timeio.qc.stream_manager import StreamManager
