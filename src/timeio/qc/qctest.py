@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import typing
 
 import pandas as pd
@@ -15,6 +16,7 @@ if typing.TYPE_CHECKING:
 
 
 class Param:
+    """ Dataclass that stores a parameter for a quality test function"""
     def __init__(self, key, value: Any, *args):
         self.key = key
         self.value = value
@@ -25,6 +27,7 @@ class Param:
 
 
 class StreamInfo(Param):
+    """ Dataclass that stores a stream parameter for a quality test function"""
     def __init__(self, key, value: Any, thing_id, stream_id):
         super().__init__(key, value, StreamInfo)
         self.thing_id = thing_id
@@ -41,6 +44,8 @@ class StreamInfo(Param):
         return self.value
 
 class QcResult:
+    """ Simple dataclass to store the result of QcTest.run()"""
+    qctool: QcTool
     columns: list[str] | pd.Index
     data: dict[str, pd.Series]
     quality: dict[str, pd.DataFrame]
@@ -101,6 +106,7 @@ class QcTest:
         result = QcResult()
         result.data = self._qctool.get_data()
         result.quality = self._qctool.get_quality()
+        result.qctool = self._qctool
         self.result = result
 
     def load_data(
@@ -109,25 +115,20 @@ class QcTest:
         start_date: TimestampT | None = None,
         end_date: TimestampT | None = None,
     ):
+        window = self._parsed_window
         data = {}
+        qual = {}
         for stream_info in self.streams:
             name = stream_info.value
-
-            # If data is already present, we don't load it.
-            # This might become problematic, if a second test
-            # requests another chunk of data of the same stream,
-            # than another test before.
-            # Currently, all test request the same chunk of data,
-            # because the start and end date are set in the QC-
-            # config for all tests.
-            if name in data or name in self._qctool.columns:
+            if name in data:
                 continue
 
             stream = sm.get_stream(stream_info)
 
             if start_date is None:
                 start_date, end_date = stream.get_unprocessed_range()
-            # todo: what if no new data present (None, None) ?
-            data[name] = stream.get_data(start_date, end_date, self._parsed_window)
+
+            data[name] = stream.get_data(start_date, end_date, window)
+            qual[name] = stream.get_quality_labels(start_date, end_date, window)
 
         self._qctool.add_data(data)

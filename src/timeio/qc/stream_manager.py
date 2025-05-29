@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import numpy as np
 import psycopg
 import saqc
 
@@ -27,7 +28,7 @@ class StreamManager:
         self._streams: dict[str, Datastream] = {}
         self._conn = db_conn
 
-    def get_stream_schema(self, sta_thing_id):
+    def get_schema(self, sta_thing_id):
         if sta_thing_id is None:
             return None
 
@@ -45,7 +46,7 @@ class StreamManager:
         tid = stream_info.thing_id
         sid = stream_info.stream_id
         name = stream_info.value
-        schema = self.get_stream_schema(tid, sid)
+        schema = self.get_schema(tid, sid)
 
         if stream_info.is_dataproduct:
             new = ProductStream(tid, sid, name, self._conn, schema)
@@ -64,6 +65,7 @@ class StreamManager:
 
     def update(self, result: QcResult):
         """ Update streams with new data and/or quality labels. """
+
         for name in result.columns:
             if name not in self._streams:
                 self._streams[name] = LocalStream(None, None, name, None, None)

@@ -4,6 +4,7 @@ import abc
 import warnings
 from typing import Any, Self
 
+import numpy as np
 import pandas as pd
 import saqc
 
@@ -105,13 +106,13 @@ class Saqc(QcTool):
         self._qc = saqc.SaQC()
 
     def add_data(
-        self, data: dict[str, pd.Series], quality: dict[str, pd.Series] | None = None
+        self, data: dict[str, pd.Series], quality: dict[str, pd.DataFrame] | None = None
     ):
         if quality is not None:
-            raise NotImplementedError("Not supported yet")
+            quality = saqc.Flags({k:df['quality'] for k,df in quality.items()})
 
-        for key, val in data.items():
-            self._qc[key] = val
+        new = saqc.SaQC(data, quality)
+        self._qc[new.columns] = new
 
     def execute(self, func_name: str, *args, **kwargs) -> Self:
         qc = self._qc
@@ -120,7 +121,25 @@ class Saqc(QcTool):
         return self
 
     def get_quality(self):
-        return dict(self._qc.flags)
+        # Hack for lack import options with saqc.SaQC.
+        # SaQC cannot import additional quality info like
+        # the function name. As a workaround we just import
+        # the labels and remove them now again, then we
+        # just update instead over overwrite the quality
+        # labels in the stream.
+        flags = self._qc.flags
+        for df in flags.values():
+            mask = df['measure'] == 'importedFlags'
+            df.loc[mask, 'quality'] = -np.inf
+            df.loc[mask, 'measure'] = ""
+        return flags
 
     def get_data(self):
-        return dict(self._qc.data)
+        return self._qc.data
+
+    # def get_date_range(self, name: str):
+    #     series : pd.Series | None = self._qc._data.get(name)
+    #     if series is None or series.empty():
+    #         return None, None
+    #     idx = series.index
+    #     return idx.min(), idx.mnax()

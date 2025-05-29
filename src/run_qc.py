@@ -99,6 +99,7 @@ class QcHandler(AbstractHandler):
                 proj_uuid = config.project.uuid
             else:
                 content: MqttPayload.DataParsedV2
+                thing_uuid = None
                 proj_uuid = content["project_uuid"]
                 config_name = content["qc_settings_name"]
                 config = self.get_config_from_project(conn, proj_uuid, config_name)
@@ -107,56 +108,15 @@ class QcHandler(AbstractHandler):
             tests = collect_tests(config)
             start_date = content.get("start_date")
             end_date = content.get("end_date")
-            last_test: QcTest | None = None
+
             for test in tests:  # type: QcTest
-
-                # This is a hack / optimisation which simplify things
-                # as long as all test use the same start and end date
-                if last_test is not None:
-                    test._qctool = last_test._qctool
-
                 test.parse()
                 test.load_data(sm, start_date, end_date)
                 test.run()
-                if True:
-                    sm.update(test.result)
-                last_test = test
+                sm.update(test.result)
 
-            sm.update(last_test.result)
             sm.upload()
 
-            # upload(sm)
-
-        #     qc = None
-        #     try:
-        #         if qc.legacy:
-        #             # A legacy workflow should only be possible with v1
-        #             # and must deliver a thing_uuid (because it works on
-        #             # a single thing).
-        #             assert version == 1 and thing_uuid is not None
-        #             some = qc.run_legacy(thing_uuid)
-        #         else:
-        #             some = qc.run(content.get("start_date"), content.get("end_date"))
-        #     except UserInputError as e:
-        #         if thing_uuid is not None:
-        #             journal.error(str(e), thing_uuid)
-        #         raise e
-        #     except NoDataWarning as w:
-        #         if thing_uuid is not None:
-        #             journal.warning(str(w), thing_uuid)
-        #         raise w
-        #
-        # if thing_uuid is not None:
-        #     if some:
-        #         journal.info(f"QC done. Config: {qc.conf.name}", thing_uuid)
-        #     else:
-        #         journal.warning(
-        #             f"QC done, but no quality labels were generated. "
-        #             f"Config: {qc.conf.name}",
-        #             thing_uuid,
-        #         )
-        #         return
-        #
         logger.debug(f"inform downstream services about success of qc.")
         payload = json.dumps(
             {
