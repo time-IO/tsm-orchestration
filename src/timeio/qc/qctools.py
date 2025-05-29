@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import abc
 import warnings
-from typing import Any, Self
+from typing import Self
 
 import numpy as np
 import pandas as pd

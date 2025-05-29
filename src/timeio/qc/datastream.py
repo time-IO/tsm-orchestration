@@ -10,7 +10,12 @@ from psycopg import sql
 
 from timeio.qc.typeshints import TimestampT, WindowT
 
-__all__ = ["Datastream"]
+__all__ = [
+    "QUALITY_COLUMNS",
+    "Datastream",
+    "ProductStream",
+    "LocalStream",
+]
 
 """ 
 This module provides a convenient abstraction for retrieving and 

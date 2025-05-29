@@ -14,9 +14,7 @@ from timeio.databases import Database, DBapi
 from timeio.errors import DataNotFoundError, NoDataWarning
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
-from timeio.qc.qctest import QcTest
-from timeio.qc.stream_manager import StreamManager
-from timeio.qc.utils import collect_tests
+from timeio.qc import QcTest, StreamManager, collect_tests
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
