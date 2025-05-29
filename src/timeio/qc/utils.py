@@ -4,12 +4,16 @@
 
 from __future__ import annotations
 
-import logging
-
-from timeio import feta
+import typing
 from timeio.qc.qctest import QcTest, StreamInfo, Param
 
-logger = logging.getLogger(__name__)
+if typing.TYPE_CHECKING:
+    from timeio import feta
+
+__all__ = [
+    "collect_params",
+    "collect_tests",
+]
 
 
 def collect_params(test: feta.QAQCTest):
