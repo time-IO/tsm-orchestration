@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 
 from timeio.errors import UserInputError
-from timeio.qc.qctools import QcTool, get_qctool
+from timeio.qc.qctool import QcTool, get_qctool
 
 __all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
 
@@ -46,7 +46,6 @@ class StreamInfo(Param):
 
 class QcResult:
     """ Simple dataclass to store the result of QcTest.run()"""
-    qctool: QcTool
     columns: list[str] | pd.Index
     data: dict[str, pd.Series]
     quality: dict[str, pd.DataFrame]
@@ -107,7 +106,6 @@ class QcTest:
         result = QcResult()
         result.data = self._qctool.get_data()
         result.quality = self._qctool.get_quality()
-        result.qctool = self._qctool
         self.result = result
 
     def load_data(
