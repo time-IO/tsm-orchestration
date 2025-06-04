@@ -38,6 +38,13 @@ def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
 
 class DatastreamSTA:
 
+    """
+    A Datastream for immutable existing data.
+
+    The data can be retrieved from the DB. Quality annotations can be added
+    and uploaded to the DB, but the data itself is readonly.
+    """
+
     _columns = ["data", "quality", "raw_stream_id"]
 
     def __init__(
@@ -233,6 +240,13 @@ Datastream = DatastreamSTA
 
 
 class ProductStream(Datastream):
+    """
+    A Datastream for mutable data a.k.a. Dataproducts.
+
+    It never has  _unprocessed_ data, because the data is always generated
+    by user defined algorithms. In contrast to a default datastream.Datastream,
+    new data can be added and uploaded to the DB.
+    """
 
     def __init__(
         self,
@@ -336,6 +350,11 @@ class ProductStream(Datastream):
 
 
 class LocalStream(Datastream):
+    """
+    A Datastream for temporary local data.
+
+    Its data is never uploaded to the DB.
+    """
 
     def __init__(
         self,
