@@ -132,13 +132,13 @@ class DatastreamSTA:
         # context-window is the number of data points BEFORE
         # the first data to process. The query to fetch the
         # data also includes the start and end dates. With
-        # this we always have an overlap of exactly one
-        # observation.
+        # (windows+1) we always have an overlap of exactly one
+        # observation between the data and the context data,
+        # but this is acceptable.
         window += 1
-        pre_chunk = self._data.loc[:date_start]
-        missing = window - len(pre_chunk)
-        if missing > 1:
-            fetched = self._fetch("-Infinity", data_start, limit=missing)
+        nr_obs = window - len(self._data.loc[:date_start])
+        if nr_obs > 1:
+            fetched = self._fetch("-Infinity", data_start, limit=nr_obs)
             self._append(fetched)
         return self._data.loc[:date_start].index[-window]
 
