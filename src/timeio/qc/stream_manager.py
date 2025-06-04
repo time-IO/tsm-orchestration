@@ -20,7 +20,7 @@ class StreamManager:
     A stream can also store data and/or quality labels which can be
     later synced back to the database (output/upload).
     """
-    def __init__(self, db_conn: psycopg.Connection) -> str:
+    def __init__(self, db_conn: psycopg.Connection):
         self._streams: dict[str, Datastream] = {}
         self._conn = db_conn
 
@@ -42,7 +42,7 @@ class StreamManager:
         tid = stream_info.thing_id
         sid = stream_info.stream_id
         name = stream_info.value
-        schema = self.get_schema(tid, sid)
+        schema = self.get_schema(tid)
 
         if stream_info.is_dataproduct:
             new = ProductStream(tid, sid, name, self._conn, schema)
@@ -68,15 +68,14 @@ class StreamManager:
 
             stream = self._streams[name]
 
-            # Dataproducts and temporary variables.
-            qlabels = result.quality[name]
+            # Add new or modified data (e.g. for Dataproducts).
             if isinstance(stream, (ProductStream, LocalStream)):
                 data = result.data[name]
-                stream.set_data(data, qlabels)
+                stream.set_data(data)
 
-            # Regular quality labels for existing data.
-            else:
-                stream.update_quality_labels(qlabels)
+            # Set quality labels.
+            qlabels = result.quality[name]
+            stream.update_quality_labels(qlabels)
 
     def upload(self):
         for stream in self._streams.values():
