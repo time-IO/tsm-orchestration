@@ -17,7 +17,8 @@ if typing.TYPE_CHECKING:
 
 
 class Param:
-    """ Dataclass that stores a parameter for a quality test function"""
+    """Dataclass that stores a parameter for a quality test function"""
+
     def __init__(self, key, value: Any, *args):
         self.key = key
         self.value = value
@@ -28,7 +29,8 @@ class Param:
 
 
 class StreamInfo(Param):
-    """ Dataclass that stores a stream parameter for a quality test function"""
+    """Dataclass that stores a stream parameter for a quality test function"""
+
     def __init__(self, key, value: Any, thing_id, stream_id):
         super().__init__(key, value, StreamInfo)
         self.thing_id = thing_id
@@ -44,8 +46,10 @@ class StreamInfo(Param):
         # cast according to Datatype
         return self.value
 
+
 class QcResult:
-    """ Simple dataclass to store the result of QcTest.run()"""
+    """Simple dataclass to store the result of QcTest.run()"""
+
     columns: list[str] | pd.Index
     data: dict[str, pd.Series]
     quality: dict[str, pd.DataFrame]
