@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 import saqc
 
+from timeio.qc.datastream import QUALITY_COLUMNS
+
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
 except ImportError:
@@ -22,6 +24,53 @@ def get_qctool(name) -> type[QcTool]:
     return tool
 
 
+class TimeIO_Scheme(saqc.FloatScheme):
+    def toExternal(
+        self, flags: saqc.Flags, attrs: dict | None = None
+    ) -> saqc.DictOfSeries:
+
+        out = saqc.DictOfSeries()
+
+        tflags = super().toExternal(flags, attrs=attrs)
+        for field in tflags.columns:
+            df = pd.DataFrame(
+                {
+                    "annotation": tflags[field],
+                    "measure": "",
+                    "userLabel": "",
+                    "version": Saqc.version,
+                    "annotationType": Saqc.name,
+                }
+            )
+
+            assert (df.columns == pd.Index(QUALITY_COLUMNS)).all()
+
+            history = flags.history[field]
+            for col in history.columns:
+                valid = (history.hist[col] != saqc.UNFLAGGED) & history.hist[
+                    col
+                ].notna()
+                meta = history.meta[col]
+                df.loc[valid, "measure"] = meta["func"]
+                df.loc[valid, "userLabel"] = meta["kwargs"].get("label", "")
+                out[field] = df
+
+        return out
+
+    def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
+        data = {}
+        for key, frame in flags.items():
+            history = saqc.core.History(index=frame.index)
+            for (flag, func, label), values in frame.groupby(
+                # see also datastreams.QUALITY_COLUMNS
+                ["annotation", "measure", "userLabel"]
+            ):
+                kwargs = {"label": label}
+                column = pd.Series(np.nan, index=frame.index)
+                column.loc[values.index] = self(flag)
+                history.append(column, meta={"func": func, "kwargs": kwargs})
+            data[key] = history
+        return saqc.Flags(data)
 
 
 class QcTool(abc.ABC):
@@ -104,13 +153,14 @@ class Saqc(QcTool):
             raise ValueError(f"Unknown qc routine {func_name} for SaQC")
 
     def __init__(self):
-        self._qc = saqc.SaQC()
+        scheme = TimeIO_Scheme()
+        self._qc = saqc.SaQC(scheme=scheme)
 
     def add_data(
         self, data: dict[str, pd.Series], quality: dict[str, pd.DataFrame] | None = None
     ):
         if quality is not None:
-            quality = saqc.Flags({k:df['quality'] for k,df in quality.items()})
+            quality = saqc.Flags({k: df["quality"] for k, df in quality.items()})
 
         new = saqc.SaQC(data, quality)
         self._qc[new.columns] = new
@@ -122,25 +172,9 @@ class Saqc(QcTool):
         return self
 
     def get_quality(self):
-        # Hack for lack import options with saqc.SaQC.
-        # SaQC cannot import additional quality info like
-        # the function name. As a workaround we just import
-        # the labels and remove them now again, then we
-        # just update instead over overwrite the quality
-        # labels in the stream.
-        flags = self._qc.flags
-        for df in flags.values():
-            mask = df['measure'] == 'importedFlags'
-            df.loc[mask, 'quality'] = -np.inf
-            df.loc[mask, 'measure'] = ""
-        return flags
+        # The translation is done by scheme
+        # we passed during initialisation.
+        return self._qc.flags
 
     def get_data(self):
         return self._qc.data
-
-    # def get_date_range(self, name: str):
-    #     series : pd.Series | None = self._qc._data.get(name)
-    #     if series is None or series.empty():
-    #         return None, None
-    #     idx = series.index
-    #     return idx.min(), idx.mnax()

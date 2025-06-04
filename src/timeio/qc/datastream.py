@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from datetime import datetime
+import typing
 from typing import Any
+from datetime import datetime
 
 import pandas as pd
 import psycopg
 from psycopg import sql
 
-from timeio.qc.typeshints import TimestampT, WindowT
+if typing.TYPE_CHECKING:
+    from timeio.qc.qctool import QcTool
+    from timeio.qc.typeshints import TimestampT, WindowT
 
 __all__ = [
     "QUALITY_COLUMNS",
@@ -22,7 +25,7 @@ This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.
 """
 
-QUALITY_COLUMNS = ["quality", "measure", "userLabel"]
+QUALITY_COLUMNS = ["annotation", "measure", "userLabel", "version", "annotationType"]
 
 
 def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
@@ -37,7 +40,6 @@ def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
 
 
 class DatastreamSTA:
-
     """
     A Datastream for immutable existing data.
 
@@ -223,13 +225,17 @@ class DatastreamSTA:
         This acts like uploading data to the DB, but instead of
         really uploading the data, the data is stored within the
         stream abstraction (this class).
+
+        The passed dataframe must have all of datastream.QUALITY_COLUMNS
         """
         unknown = labels.index.difference(self._data.index)
         if not unknown.empty:
             pass  # todo warn about unknown labels
+        missing = labels.columns.difference(QUALITY_COLUMNS)
+        if not missing.empty:
+            raise ValueError(f"missing columns {missing}")
         index = labels.index.intersection(self._data.index)
-        columns = labels.columns.intersection(QUALITY_COLUMNS)
-        self._data.loc[index, columns] = labels[columns]
+        self._data.loc[index, QUALITY_COLUMNS] = labels.loc[index, QUALITY_COLUMNS]
 
     def upload(self, overwrite=True):
         """Update locally stored quality labels to the DB"""
@@ -331,8 +337,8 @@ class ProductStream(Datastream):
             self._fetch_thing_uuid()
         return super().get_data(date_start, date_end, context_window)
 
-    def set_data(self, data: pd.Series, qlabels: pd.DataFrame | None = None) -> None:
-        """Sets new data uncondidionally."""
+    def set_data(self, data: pd.Series) -> None:
+        """Sets new data unconditionally."""
         index = data.index
         if data.empty:
             index = pd.DatetimeIndex([])
@@ -340,9 +346,6 @@ class ProductStream(Datastream):
 
         self._data = pd.DataFrame(columns=self._columns, index=index)
         self._data["data"] = data
-
-        if qlabels is not None:
-            self.update_quality_labels(qlabels)
 
     def upload(self, overwrite=True):
         """Update locally stored data and quality labels to the DB"""
@@ -406,8 +409,8 @@ class LocalStream(Datastream):
         context: pd.Series = pre_chunk.iloc[-(context_window + 1) : -1]
         return pd.concat([context, chunk])
 
-    def set_data(self, data: pd.Series, qlabels: pd.Series | None = None) -> None:
-        return ProductStream.set_data(self, data, qlabels)  # noqa
+    def set_data(self, data: pd.Series) -> None:
+        return ProductStream.set_data(self, data)
 
     def get_unprocessed_range(
         self,
