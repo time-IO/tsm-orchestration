@@ -73,7 +73,7 @@ CREATE TABLE "observation"
     CONSTRAINT "observation_datastream_id_result_time_1d043396_uniq" UNIQUE ("datastream_id", "result_time"),
     CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
 );
-CREATE INDEX "observation_datastream_id_77f5c4fb" ON "observation" ("datastream_id")
+CREATE INDEX "observation_datastream_id_77f5c4fb" ON "observation" ("datastream_id");
 
 
 --
