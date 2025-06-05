@@ -16,7 +16,7 @@ from timeio.crypto import decrypt, get_crypt_key
 from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("db-setup")
-journal = Journal("System", errors='ignore')
+journal = Journal("System", errors="ignore")
 
 STA_PREFIX = "sta_"
 GRF_PREFIX = "grf_"
