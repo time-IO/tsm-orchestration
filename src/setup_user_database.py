@@ -16,7 +16,10 @@ from timeio.crypto import decrypt, get_crypt_key
 from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("db-setup")
-journal = Journal("System")
+journal = Journal("System", errors='ignore')
+
+STA_PREFIX = "sta_"
+GRF_PREFIX = "grf_"
 
 
 class CreateThingInPostgresHandler(AbstractHandler):
@@ -38,11 +41,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.db = self.db_conn.reconnect()
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
-        STA_PREFIX = "sta_"
-        GRF_PREFIX = "grf_"
+        ro_user = thing.database.ro_username.lower()
+        user = thing.database.username.lower()
 
         # 1. Check, if there is already a database user for this project
-        if not self.user_exists(user := thing.database.username.lower()):
+        if not self.user_exists(user):
             logger.debug(f"create user {user}")
             self.create_user(thing)
             logger.debug("create schema")
@@ -52,15 +55,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dml")
             self.deploy_dml()
 
-        if not self.user_exists(
-            sta_user := STA_PREFIX + thing.database.ro_username.lower()
-        ):
+        if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
             self.create_ro_user(thing, user_prefix=STA_PREFIX)
 
-        if not self.user_exists(
-            grf_user := GRF_PREFIX + thing.database.ro_username.lower()
-        ):
+        if not self.user_exists(grf_user := GRF_PREFIX + ro_user):
             logger.debug(f"create grafana read-only user {grf_user}")
             self.create_ro_user(thing, user_prefix=GRF_PREFIX)
 
