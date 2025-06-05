@@ -1,3 +1,5 @@
+-- This program adds a primary key column called `id` to the `observation` tables in all schemas.
+-- NOTE: For large tables this might take up to a few hours.
 DO $$
 DECLARE
     r RECORD;

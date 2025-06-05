@@ -1,3 +1,8 @@
+-- This program checks all schemas for timescaledb hypertables called
+-- `observation`, renames these tables to `observation_old` and copies
+-- all data to a structurally identical postgres table.
+-- NOTE: To finisch the migration the hypertables called `observation_old`
+--       need to be removed manually.
 DO $$
 DECLARE
     schema_name text;
