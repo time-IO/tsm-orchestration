@@ -14,8 +14,10 @@ BEGIN
           AND table_type = 'BASE TABLE'
     LOOP
         full_table := quote_ident(r.table_schema) || '.' || quote_ident(r.table_name);
-        seq_name := quote_ident(r.table_schema || '_observation_id_seq');
-        constraint_name := quote_ident('pk_' || r.table_schema || '_observation');
+        seq_name := quote_ident(r.table_schema) || '.' || quote_ident('observation_id_seq');
+        constraint_name := quote_ident('pk_observation');
+
+        RAISE NOTICE 'Migrating schema: %', r.table_schema;
 
         -- 1. Add column if it doesn't exist
         IF NOT EXISTS (
@@ -25,18 +27,31 @@ BEGIN
               AND table_name = r.table_name
               AND column_name = 'id'
         ) THEN
+            RAISE NOTICE 'Adding id column to table: %', full_table;
             EXECUTE format('ALTER TABLE %s ADD COLUMN id BIGINT;', full_table);
 
-            -- 2. Create the sequence if it doesn't exist
+            RAISE NOTICE 'Creating sequence: %', seq_name;
             EXECUTE format('CREATE SEQUENCE IF NOT EXISTS %s;', seq_name);
 
-            -- 3. Populate the 'id' column
+            RAISE NOTICE 'Populating the id column: %', seq_name;
             EXECUTE format(
                 'UPDATE %s SET id = nextval(''%s'') WHERE id IS NULL;',
-                full_table, seq_name
+                full_table, r.table_schema || '_observation_id_seq'
             );
 
-            -- 4. Add primary key constraint
+            RAISE NOTICE 'Setting default on id column to use sequence';
+            EXECUTE format(
+                'ALTER TABLE %s ALTER COLUMN id SET DEFAULT nextval(''%s'');',
+                full_table, r.table_schema || '_observation_id_seq'
+            );
+
+            RAISE NOTICE 'Setting ownership of sequence to id column';
+            EXECUTE format(
+                'ALTER SEQUENCE %s OWNED BY %s.id;',
+                seq_name, full_table
+            );
+
+            RAISE NOTICE 'Adding constraint % to table %', constraint_name, full_table;
             EXECUTE format(
                 'ALTER TABLE %s ADD CONSTRAINT %s PRIMARY KEY (id);',
                 full_table, constraint_name
