@@ -107,6 +107,11 @@ services:
       timeout: 5s
       retries: 5
 
+  thing-management-api:
+    depends_on:
+      keycloak:
+        condition: service_started
+
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
