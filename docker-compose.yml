@@ -475,11 +475,11 @@ services:
     # image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
     image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:dev
     restart: "${SERVICE_RESTART_POLICY}"
-    # healthcheck:
-    #   test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     environment:
       VERSION: "${THING_MANAGEMENT_API_VERSION}"
       DB_URL: "${THING_MANAGEMENT_API_DSN}"
