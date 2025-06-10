@@ -454,9 +454,9 @@ services:
       APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
       VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
       APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-    depends_on:
-      thing-management-api:
-        condition: service_healthy
+    # depends_on:
+    #   thing-management-api:
+    #     condition: service_healthy
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -472,13 +472,14 @@ services:
   # ===========
   # TODO
   thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
+    # image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:dev
     restart: "${SERVICE_RESTART_POLICY}"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
     environment:
       VERSION: "${THING_MANAGEMENT_API_VERSION}"
       DB_URL: "${THING_MANAGEMENT_API_DSN}"
@@ -491,7 +492,7 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
-      OICD_CONF_URL: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
+      OIDC_CONF_URL: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
       OIDC_CLIENT_ID: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID}"
       OIDC_CLIENT_SECRET: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
       OIDC_ADMIN_USERNAME: "${THING_MANAGEMENT_API_DATABASE_USER}"
