@@ -55,10 +55,7 @@ class SyncExtApiManager(AbstractHandler):
         syncer = self.sync_handlers[ext_api_name]
         try:
             data = syncer.fetch_api_data(thing, content)
-        except ExtApiRequestError as e:
-            journal.error(e.msg, thing.uuid)
-            return
-        except NoHttpsError as e:
+        except (ExtApiRequestError, NoHttpsError) as e:
             journal.error(e.msg, thing.uuid)
             return
         try:
@@ -82,8 +79,8 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(obs['observations'])}"
-            f" observations from API '{ext_api_name}' "
+            f"Successfully inserted {len(obs['observations'])} "
+            f"observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,
         )

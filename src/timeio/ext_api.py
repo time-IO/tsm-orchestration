@@ -15,9 +15,7 @@ from timeio.crypto import decrypt, get_crypt_key
 
 
 class NoHttpsError(Exception):
-    def __init_(self, msg):
-        self.msg = msg
-        super().__init__(self.msg)
+    pass
 
 
 class ExtApiRequestError(Exception):
