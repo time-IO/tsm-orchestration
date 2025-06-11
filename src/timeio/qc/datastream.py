@@ -118,12 +118,12 @@ class DatastreamSTA:
 
     def _fetch_context(self, date_start: TimestampT, window: WindowT) -> pd.Timestamp:
         """Fetches the context window and returns its first timestamp."""
-        data_start = self._data.index.min()
+        present_data_start = self._data.index.min()
 
         if isinstance(window, pd.Timedelta):
             new_start = date_start - window
-            if new_start < data_start:
-                fetched = self._fetch(new_start, data_start)
+            if new_start < present_data_start:
+                fetched = self._fetch(new_start, present_data_start)
                 self._append(fetched)
             return new_start
 
@@ -138,7 +138,7 @@ class DatastreamSTA:
         window += 1
         nr_obs = window - len(self._data.loc[:date_start])
         if nr_obs > 1:
-            fetched = self._fetch("-Infinity", data_start, limit=nr_obs)
+            fetched = self._fetch("-Infinity", present_data_start, limit=nr_obs)
             self._append(fetched)
         return self._data.loc[:date_start].index[-window]
 
