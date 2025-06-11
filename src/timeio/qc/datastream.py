@@ -10,7 +10,6 @@ import psycopg
 from psycopg import sql
 
 if typing.TYPE_CHECKING:
-    from timeio.qc.qctool import QcTool
     from timeio.qc.typeshints import TimestampT, WindowT
 
 __all__ = [
