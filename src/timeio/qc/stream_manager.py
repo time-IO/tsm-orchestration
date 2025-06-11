@@ -36,6 +36,8 @@ class StreamManager:
         )
         with self._conn.cursor() as cur:
             row = cur.execute(query, [sta_thing_id]).fetchone()
+        if not row:
+            raise RuntimeError(f"Thing with STA ID {sta_thing_id} has no SMS linking")
         thing_uuid = row[0]
         return feta.Thing.from_uuid(thing_uuid, self._conn).database.schema
 
