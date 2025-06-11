@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 
 from timeio.errors import UserInputError
-from timeio.qc.qctool import QcTool, get_qctool
+from timeio.qc.qctools import QcTool, get_qctool
 
 __all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
 
