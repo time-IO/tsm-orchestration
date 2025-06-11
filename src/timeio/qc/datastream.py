@@ -104,7 +104,7 @@ class DatastreamSTA:
             date_end = "Infinity"
 
         with self._conn.cursor() as cur:
-            cur.execute("set searchpath to %s", [self.schema])
+            cur.execute("set search_path to %s", [self.schema])
             cur.execute(query, (self.stream_id, date_start, date_end, limit))
 
             data = None
