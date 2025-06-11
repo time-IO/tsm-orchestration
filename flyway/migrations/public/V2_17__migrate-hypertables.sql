@@ -36,7 +36,7 @@ BEGIN
                     SELECT 1 FROM pg_tables
                     WHERE schemaname = schema_name AND tablename = 'observation_old'
                 ) THEN
-                    RAISE NOTICE 'Schema % already migrated. Skipping.', schema_name;
+                    RAISE NOTICE 'Schema % seems to be partially migrated, as there are two hypertables called observation and observation_old. Skipping, but please check!', schema_name;
                     CONTINUE;
                 END IF;
 
