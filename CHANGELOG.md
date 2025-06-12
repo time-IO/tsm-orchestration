@@ -6,6 +6,7 @@
 ### Added
 - Option to disable the database service ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/358))
 - Option to sort and filter columns in Grafana dashoard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/349))
+- Migrated `observation` tables from timescaleDB Hypertables to 'normal' Postgres Tablesj
 
 ## 2025-03-28
 
