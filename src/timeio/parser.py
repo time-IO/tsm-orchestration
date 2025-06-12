@@ -415,6 +415,7 @@ def get_parser(parser_type, settings) -> FileParser | MqttDataParser:
         "campbell_cr6": CampbellCr6Parser,
         "brightsky_dwd_api": BrightskyDwdApiParser,
         "ydoc_ml417": YdocMl417Parser,
+        "chirpstack_generic": ChirpStackGenericParser,
         "sine_dummy": SineDummyParser,
     }
     klass = types.get(parser_type)
