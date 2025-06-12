@@ -367,6 +367,27 @@ class BrightskyDwdApiParser(MqttDataParser):
         return out
 
 
+class ChirpStackGenericParser(MqttDataParser):
+    def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        timestamp = rawdata["time"]
+        out = []
+        for key, value in rawdata["object"]:
+            try:
+                out.append(
+                    Observation(
+                        timestamp=timestamp,
+                        value=value,
+                        position=key,
+                        origin=origin,
+                        header=key,
+                    )
+                )
+            except ValueError:
+                # value is NaN or None
+                continue
+        return out
+
+
 class SineDummyParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()
