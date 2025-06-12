@@ -359,41 +359,6 @@ services:
   # Description
   # ===========
   # TODO
-  flyway-thing-management:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-    user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-    volumes:
-      - ./flyway/migrations/thing-management:/flyway/sql
-      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-    environment:
-      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-    depends_on:
-      database:
-        condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
   flyway:
     image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
@@ -436,72 +401,6 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  thing-management-frontend:
-    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
-    restart: "${SERVICE_RESTART_POLICY}"
-    environment:
-      API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
-      APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
-      VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-    depends_on:
-      thing-management-api:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
-    restart: "${SERVICE_RESTART_POLICY}"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      VERSION: "${THING_MANAGEMENT_API_VERSION}"
-      DB_URL: "${THING_MANAGEMENT_API_DSN}"
-      DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
-      MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
-      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
-      MQTT_CLIENT_ID: thing_management
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
-      PROXY_URL: "${PROXY_URL}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-      flyway-thing-management:
-        condition: service_completed_successfully
-    #  keycloak:
-    #    condition: service_started
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -616,8 +515,6 @@ services:
       tsmdl:
         condition: service_started
       frost:
-        condition: service_started
-      thing-management-frontend:
         condition: service_started
       init:
         condition: service_completed_successfully
