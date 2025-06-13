@@ -2,7 +2,7 @@ apiVersion: v2
 name: timeio
 description: "A Helm chart for time.IO"
 type: application
-version: 0.1.7
+version: 0.1.8
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
@@ -83,6 +83,14 @@ dependencies:
   - name: worker-sync-extapis
     version: 0.0.1
     repository: "file://charts/worker-sync-extapis"
+
+  - name: worker-sync-extsftp
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extsftp"
+
+  - name: worker-sync-sms
+    version: 0.0.1
+    repository: "file://charts/worker-sync-sms"
 
   - name: postgresql
     version: "16.6.*"
