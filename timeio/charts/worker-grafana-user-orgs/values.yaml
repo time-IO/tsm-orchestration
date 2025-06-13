@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: 2025-03-27-115859
+  tag: "prod-2025-06-12"
   pullPolicy: Always
 name: worker-grafana-user-orgs
 

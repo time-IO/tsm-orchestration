@@ -4,7 +4,7 @@ image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
   tag: "prod-2025-06-12"
   pullPolicy: Always
-name: worker-mqtt-user-creation
+name: worker-sync-sms
 
 securityContext:
   allowPrivilegeEscalation: False
