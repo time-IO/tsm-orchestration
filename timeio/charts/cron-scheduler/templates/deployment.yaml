@@ -50,6 +50,10 @@ spec:
           name: crontab-pv
           subPath: crontab.txt
           readOnly: true
+        - mountPath: /scripts/mqtt_sync_wrapper.py
+          name: {{ .Values.name }}-mqtt-sync-wrapper
+          subPath: mqtt_sync_wrapper.py
+          readOnly: true
       - name: {{ .Values.worker.name }}
         image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
         imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
@@ -100,3 +104,6 @@ spec:
       - name: crontab-pv
         persistentVolumeClaim:
           claimName: crontab-pvc
+      - name: {{ .Values.name }}-mqtt-sync-wrapper
+        configMap:
+            name: mqtt-sync-wrapper
