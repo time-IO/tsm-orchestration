@@ -206,8 +206,6 @@ class CsvParser(FileParser):
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
 
-
-
         # remove all-nan columns as artifacts
         df = df.dropna(axis=1, how="all")
         if df.empty:
