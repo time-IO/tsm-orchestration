@@ -130,7 +130,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
         "https://moc.caritc.de/sensorstation-management/api/measurements/average"
     )
     tsytems_auth_url = (
-        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+        "https://moc.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
     )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
@@ -506,6 +506,11 @@ class TtnApiSyncer(ExtApiSyncer):
         "InputStatus": 1,
         "T1": 0,
         "Work_mode": 1,
+        "Bat": 0,
+        "Distance": 0,
+        "Interrupt_flag": 0,
+        "Sensor_flag": 0,
+        "TempC_DS18B20": 0,
     }
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
