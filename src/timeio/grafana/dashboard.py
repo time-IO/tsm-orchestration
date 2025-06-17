@@ -15,10 +15,19 @@ class GrafanaDashboard:
     def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
 
-    def exists(self, uid: str) -> bool:
+    def _exists(self, uid: str) -> bool:
         return _exists(self.api.dashboard.get_dashboard, uid)
 
-    def build_dashboard(
+    def upsert(self, dashboard: dict) -> dict:
+        """Create or update the dashboard"""
+        dashboard_uid = dashboard["dashboard"]["uid"]
+        dashboard_title = dashboard["dashboard"]["title"]
+        action = "Updated" if self._exists(dashboard_uid) else "Created new"
+        self.api.dashboard.update_dashboard(dashboard)
+        logger.debug(f"{action} dashboard '{dashboard_title}'")
+        return self.api.dashboard.get_dashboard(dashboard_uid)
+
+    def build(
         self, thing: Thing, folder: FolderT, datasource: DatasourceT
     ) -> dict:
         dashboard_uid = thing.uuid
@@ -28,7 +37,7 @@ class GrafanaDashboard:
             "liveNow": True,
             "panels": [
                 self._journal_panel(thing, datasource),
-                self._observations_row(),
+                self._observations_row_panel(),
                 self._observation_panel(thing, datasource),
             ],
             "refresh": False,
@@ -107,25 +116,25 @@ class GrafanaDashboard:
             "type": "timeseries",
         }
 
-    @staticmethod
-    def _observation_query_target(thing: ThingT, datasource: DatasourceT) -> dict:
+    @classmethod
+    def _observation_query_target(cls, thing: ThingT, datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": True,
-            "rawSql": observation_sql(thing.uuid),
+            "rawSql": cls._observation_sql(thing.uuid),
             "refId": "A",
         }
 
-    @staticmethod
-    def _qaqc_query_target(thing: ThingT, datasource: DatasourceT) -> dict:
+    @classmethod
+    def _qaqc_query_target(cls, thing: ThingT, datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": True,
-            "rawSql": qaqc_sql(thing.uuid),
+            "rawSql": cls._qaqc_sql(thing.uuid),
             "refId": "B",
         }
 

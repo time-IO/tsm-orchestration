@@ -14,7 +14,7 @@ class GrafanaFolder:
     def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
 
-    def exists(self, uid: str) -> bool:
+    def _exists(self, uid: str) -> bool:
         return _exists(self.api.folder.get_folder, uid)
 
     def get_by_uid(self, uid: str) -> FolderT | None:
@@ -26,9 +26,9 @@ class GrafanaFolder:
         return get_dict_by_key_value(folders, "name", name)
 
     def create(self, name: str, uid: str) -> FolderT:
-        folder = self.api.folder.create(title=name, uid=uid)
+        folder = self.api.folder.create_folder(title=name, uid=uid)
         logger.debug(f"Created new folder '{name}'")
-        return self.api.folder.get_folder(uid)
+        return self.get_by_uid(uid)
 
     def set_permissions(self, folder, team, role):
         if role == 1:
@@ -49,4 +49,4 @@ class GrafanaFolder:
                 ]
             }
         self.api.folder.update_folder_permissions(folder["uid"], permissions)
-        logger.debug(f"Set permissions on folder '{folder['name']}' for role '{role}'")
+        logger.debug(f"Set permissions on folder '{folder['title']}' for role '{role}'")

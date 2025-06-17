@@ -12,15 +12,21 @@ class GrafanaOrganization:
     def __init__(self, api: TimeioGrafanaApi) -> None:
         self.api = api
 
-    def get_organization_by_id(self, org_id: int) -> OrgT | None:
-        organizations = self.api.organizations.list_organization()
-        return get_dict_by_key_value(organizations, "id", org_id)
+    def _get_org(self, key: str, value: str | int):
+        orgs = self.api.organizations.list_organization()
+        org = get_dict_by_key_value(orgs, key, value)
+        return org
 
-    def get_organization_by_name(self, name: str) -> OrgT | None:
-        organizations = self.api.organizations.list_organization()
-        return get_dict_by_key_value(organizations, "name", name)
+    def get_by_id(self, id: int) -> OrgT | None:
+        return self._get_org("id", id)
 
-    def create_organization(self, name: str) -> OrgT:
-        org = self.api.organization.create_organization({"name": name})
-        logger.debug(f"Created new organization '{name}'")
-        return self.get_organization_by_name(name)
+    def get_by_name(self, name: str) -> OrgT | None:
+        return self._get_org("name", name)
+
+    def create(self, name: str) -> OrgT:
+        if not self.get_by_name(name):
+            self.api.organization.create_organization({"name": name})
+            logger.debug(f"Created new organization '{name}'")
+        else:
+            logger.debug(f"Organization '{name}' already exists")
+        return self.get_by_name(name)

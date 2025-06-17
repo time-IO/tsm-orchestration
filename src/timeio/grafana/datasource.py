@@ -20,15 +20,18 @@ class GrafanaDatasource:
     def exists(self, uuid) -> bool:
         return _exists(self.api.datasource.get_datasource_by_uid, uuid)
 
-    def get_by_name(self, name: str) -> DatasourceT | None:
+    def _get_datasource(self, key: str, value: str | int):
         datasources = self.api.datasource.list_datasources()
-        return get_dict_by_key_value(datasources, "name", name)
+        ds = get_dict_by_key_value(datasources, key, value)
+        return ds
 
     def get_by_uid(self, uid: str) -> DatasourceT | None:
-        datasources = self.api.datasource.list_datasources()
-        return get_dict_by_key_value(datasources, "uid", uid)
+        return self._get_datasource("uid", uid)
 
-    def create(self, thing: Thing, user_prefix: str, sslmode: str) -> DatasourceT:
+    def get_by_name(self, name: str) -> DatasourceT | None:
+        return self._get_datasource("name", name)
+
+    def create(self, thing: Thing, user_prefix: str, sslmode: str = "disable") -> DatasourceT:
         db_user = user_prefix + thing.database.ro_username
         db_pass = decrypt(thing.database.ro_password, get_crypt_key())
         db_url_parsed = urlparse(thing.database.url)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from grafana_client import GrafanaApi
 from types import SimpleNamespace
+
 from timeio.grafana.organization import GrafanaOrganization
 from timeio.grafana.team import GrafanaTeam
 from timeio.grafana.folder import GrafanaFolder
