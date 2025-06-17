@@ -26,10 +26,12 @@ class CreateGrafanaUserHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.api = TimeioGrafanaApi(
+        self.api = TimeioGrafanaApi.from_url(
             url=get_envvar("GRAFANA_URL"),
-            user=get_envvar("GRAFANA_USER"),
-            password=get_envvar("GRAFANA_PASSWORD"),
+            credential=(
+                get_envvar("GRAFANA_USER"),
+                get_envvar("GRAFANA_PASSWORD"),
+            ),
         )
         self.vo_group_key = get_envvar("VO_GROUP_KEY", "eduperson_entitlement")
         self.vo_login_key = get_envvar("VO_LOGIN_KEY", "eduperson_principal_name")
