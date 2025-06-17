@@ -134,7 +134,6 @@ class FileParser(Parser):
             chunk["parameters"] = json.dumps({"origin": origin, "column_header": col})
 
             observations.extend(chunk.to_dict(orient="records"))
-
         return observations
 
 
@@ -179,6 +178,8 @@ class CsvParser(FileParser):
 
         timestamp_columns = settings.pop("timestamp_columns")
         header_line = settings.get("header", None)
+        if header_line is not None:
+            line = get_header(rawdata, header_line)
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
@@ -189,7 +190,7 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
 
             if i == header_line:
-                settings["header"] = "infer"  # len(rows)
+                settings["header"] = header_line  # len(rows)
                 # we might have comments at the header line as well
                 rows.append(re.sub(comment_regex, "", row))
                 continue
@@ -199,18 +200,24 @@ class CsvParser(FileParser):
         rawdata = "\n".join(rows)
 
         try:
+            if header_line is not None:
+                settings["header"] = header_line - settings["skiprows"] - 1
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
 
-        # If no header is given, we always use column positions
-        if header_line is None:
-            df.columns = range(len(df.columns))
+
 
         # remove all-nan columns as artifacts
         df = df.dropna(axis=1, how="all")
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
+
+        if header_line is not None:
+            df.columns = line.split(",")
+        # If no header is given, we always use column positions
+        else:
+            df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
