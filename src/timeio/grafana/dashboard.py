@@ -27,9 +27,7 @@ class GrafanaDashboard:
         logger.debug(f"{action} dashboard '{dashboard_title}'")
         return self.api.dashboard.get_dashboard(dashboard_uid)
 
-    def build(
-        self, thing: Thing, folder: FolderT, datasource: DatasourceT
-    ) -> dict:
+    def build(self, thing: Thing, folder: FolderT, datasource: DatasourceT) -> dict:
         dashboard_uid = thing.uuid
         dashboard_title = thing.name
         dashboard = {

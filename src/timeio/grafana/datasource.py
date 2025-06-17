@@ -31,7 +31,9 @@ class GrafanaDatasource:
     def get_by_name(self, name: str) -> DatasourceT | None:
         return self._get_datasource("name", name)
 
-    def create(self, thing: Thing, user_prefix: str, sslmode: str = "disable") -> DatasourceT:
+    def create(
+        self, thing: Thing, user_prefix: str, sslmode: str = "disable"
+    ) -> DatasourceT:
         db_user = user_prefix + thing.database.ro_username
         db_pass = decrypt(thing.database.ro_password, get_crypt_key())
         db_url_parsed = urlparse(thing.database.url)
