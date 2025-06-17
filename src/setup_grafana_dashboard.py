@@ -39,9 +39,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
-        org = self.api.timeio.organization.get_by_name(thing.project.name)
+        org = self.api.t.org.get_by_name(thing.project.name)
         if org is None:
-            org = self.api.timeio.organization.create(thing.project.name)
+            org = self.api.t.org.create(thing.project.name)
 
         # create datasource, folder, dashboard in project org
         # Give Grafana and Org Admins admin access to folder
@@ -56,22 +56,22 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         p_name = thing.project.name
         p_uuid = thing.project.uuid
         self.api.organizations.switch_organization(org_id)
-        if (ds := self.api.timeio.datasource.get_by_uid(p_uuid)) is None:
-            ds = self.api.timeio.datasource.create(thing, user_prefix="grf_")
+        if (ds := self.api.t.dsrc.get_by_uid(p_uuid)) is None:
+            ds = self.api.t.dsrc.create(thing, user_prefix="grf_")
 
         if (
-            team_name := self.api.timeio.team.get_by_name(p_name)
+            team_name := self.api.t.team.get_by_name(p_name)
         ) is None and org_id == 1:
             # only create team in Main org
-            team_name = self.api.timeio.team.create(p_name, org_id)
+            team_name = self.api.t.team.create(p_name, org_id)
 
-        if (folder := self.api.timeio.folder.get_by_uid(p_uuid)) is None:
-            folder = self.api.timeio.folder.create(p_name, p_uuid)
+        if (folder := self.api.t.fldr.get_by_uid(p_uuid)) is None:
+            folder = self.api.t.fldr.create(p_name, p_uuid)
 
-        self.api.timeio.folder.set_permissions(folder, team_name, role)
+        self.api.t.fldr.set_permissions(folder, team_name, role)
 
-        dashboard = self.api.timeio.dashboard.build(thing, folder, ds)
-        self.api.timeio.dashboard.upsert(dashboard)
+        dashboard = self.api.t.dash.build(thing, folder, ds)
+        self.api.t.dash.upsert(dashboard)
 
 
 if __name__ == "__main__":

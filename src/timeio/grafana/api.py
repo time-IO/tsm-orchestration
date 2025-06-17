@@ -8,18 +8,21 @@ from timeio.grafana.team import GrafanaTeam
 from timeio.grafana.folder import GrafanaFolder
 from timeio.grafana.datasource import GrafanaDatasource
 from timeio.grafana.dashboard import GrafanaDashboard
+from timeio.grafana.user import GrafanaUser
 from timeio.grafana.utils import logger
+
 
 
 class TimeioGrafanaApi(GrafanaApi):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.timeio = SimpleNamespace()
-        self.timeio.organization = GrafanaOrganization(self)
-        self.timeio.team = GrafanaTeam(self)
-        self.timeio.folder = GrafanaFolder(self)
-        self.timeio.datasource = GrafanaDatasource(self)
-        self.timeio.dashboard = GrafanaDashboard(self)
+        self.t = SimpleNamespace()
+        self.t.org = GrafanaOrganization(self)
+        self.t.team = GrafanaTeam(self)
+        self.t.fldr = GrafanaFolder(self)
+        self.t.dsrc = GrafanaDatasource(self)
+        self.t.dash = GrafanaDashboard(self)
+        self.t.user = GrafanaUser(self)
 
     @classmethod
     def connect_from_url(
