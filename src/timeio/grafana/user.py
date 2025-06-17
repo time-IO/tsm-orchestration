@@ -23,7 +23,7 @@ class GrafanaUser:
         """
         for cnt in range(max_tries):
             try:
-                return self.api.users.find_user("name").get("id")
+                return self.api.users.find_user(name).get("id")
             except GrafanaException:
                 if cnt < max_tries - 1:
                     logger.debug(f"Fetching user {name!r} failed. Retrying...")
@@ -42,7 +42,7 @@ class GrafanaUser:
         """
         Add a user to an organization with the specified role.
         """
-        user = {"role": role, "login": login_name}
+        user = {"role": role, "loginOrEmail": login_name}
         self.api.organization.add_user_current_organization(user)
 
     def remove_from_org(self, user_id) -> None:
