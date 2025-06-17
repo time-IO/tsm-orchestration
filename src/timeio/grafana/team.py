@@ -17,7 +17,7 @@ class GrafanaTeam:
         teams = self.api.teams.search_teams()
         return get_dict_by_key_value(teams, "name", name)
 
-    def create_team(self, name, org_id) -> TeamT:
+    def create(self, name, org_id) -> TeamT:
         res = self.api.teams.add_team({"name": name, "orgId": org_id})
         logger.debug(f"Created new team '{name}'")
         return self.get_by_name(name)
