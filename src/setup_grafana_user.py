@@ -13,6 +13,7 @@ from timeio.common import get_envvar, setup_logging
 
 logger = logging.getLogger("grafana-user-setup")
 
+
 class CreateGrafanaUserHandler(AbstractHandler):
 
     def __init__(self):

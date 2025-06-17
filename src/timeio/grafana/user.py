@@ -30,7 +30,7 @@ class GrafanaUser:
                 time.sleep(sleep)
         return None
 
-    def get_orgs(self, user_id: int) -> dict[str,str]:
+    def get_orgs(self, user_id: int) -> dict[str, str]:
         """
         Get the organizations the user is part of.
         Returns a dictionary with organization names as keys and roles as values.
@@ -65,10 +65,12 @@ class GrafanaUser:
 
     def remove_from_team(self, org_name: str, user_id: int) -> None:
         team_id = self.api.t.team.get_id_by_name(org_name)
-        if team_id and self.is_in_team(team_id. user_id):
+        if team_id and self.is_in_team(team_id.user_id):
             self.api.teams.remove_team_member(team_id, user_id)
 
-    def update_orgs(self, user_id: int, user_name: str, new_orgs: dict[str, str]) -> None:
+    def update_orgs(
+        self, user_id: int, user_name: str, new_orgs: dict[str, str]
+    ) -> None:
         """
         Update the user's organizations based on the provided dictionary.
         Adds, updates, or removes the user from organizations as necessary.
