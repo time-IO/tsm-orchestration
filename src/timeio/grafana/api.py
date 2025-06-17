@@ -12,7 +12,6 @@ from timeio.grafana.user import GrafanaUser
 from timeio.grafana.utils import logger
 
 
-
 class TimeioGrafanaApi(GrafanaApi):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
