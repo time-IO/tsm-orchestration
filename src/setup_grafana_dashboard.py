@@ -59,7 +59,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         if (ds := self.api.timeio.datasource.get_by_uid(p_uuid)) is None:
             ds = self.api.timeio.datasource.create(thing, user_prefix="grf_")
 
-        if (team_name := self.api.timeio.team.get_by_name(p_name)) is None and org_id == 1:
+        if (
+            team_name := self.api.timeio.team.get_by_name(p_name)
+        ) is None and org_id == 1:
             # only create team in Main org
             team_name = self.api.timeio.team.create(p_name, org_id)
 

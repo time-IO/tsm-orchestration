@@ -22,5 +22,7 @@ class TimeioGrafanaApi(GrafanaApi):
         self.timeio.dashboard = GrafanaDashboard(self)
 
     @classmethod
-    def connect_from_url(cls, url: str, credential: tuple[str, str]) -> TimeioGrafanaApi:
+    def connect_from_url(
+        cls, url: str, credential: tuple[str, str]
+    ) -> TimeioGrafanaApi:
         return super().from_url(url=url, credential=credential)
