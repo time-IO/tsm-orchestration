@@ -23,6 +23,13 @@ class GrafanaOrganization:
     def get_by_name(self, name: str) -> OrgT | None:
         return self._get_org("name", name)
 
+    def get_names_and_ids(self) -> list[dict[str, int]]:
+        """
+        Get all organization names and their IDs in Grafana.
+        """
+        orgs = self.api.organizations.list_organization()
+        return {org.get("name"): org.get("id") for org in orgs}
+
     def create(self, name: str) -> OrgT:
         if not self.get_by_name(name):
             self.api.organization.create_organization({"name": name})
