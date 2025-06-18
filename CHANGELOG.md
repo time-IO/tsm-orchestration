@@ -6,11 +6,11 @@
 ## 2025-06-18
 
 ### Added
-- Option to use self-hosted docker images
-- Additional parameters for TTN API
+- Option to use self-hosted docker images ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/386))
+- Additional parameters for TTN API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/387))
 
 ### Fixed
-- Authentication in TSystems API
+- Authentication in TSystems API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/387))
 
 ## 2025-06-12
 
