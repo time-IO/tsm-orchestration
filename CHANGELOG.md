@@ -3,6 +3,15 @@
 
 ## [Unreleased]
 
+## 2025-06-18
+
+### Added
+- Option to use self-hosted docker images
+- Additional parameters for TTN API
+
+### Fixed
+- Authentication in TSystems API
+
 ## 2025-06-12
 
 ### Added
