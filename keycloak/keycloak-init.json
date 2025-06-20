@@ -722,7 +722,7 @@
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
     "secret" : "pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ",
-    "redirectUris" : [ "http://localhost/frontend/oidc/auth/", "http://localhost/visualization/login/generic_oauth", "http://localhost/thing-management/things" ],
+    "redirectUris" : [ "http://localhost/frontend/oidc/auth/", "http://localhost/visualization/login/generic_oauth", "http://localhost/thing-management/login/callback" ],
     "webOrigins" : [ "http://localhost" ],
     "notBefore" : 0,
     "bearerOnly" : false,
