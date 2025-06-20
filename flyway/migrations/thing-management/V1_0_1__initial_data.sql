@@ -13,7 +13,7 @@ VALUES ('campbell_cr6'::varchar(200)),
        ('ydoc_ml417'::varchar(200)),
        ('sine_dummy'::varchar(200));
 
-INSERT INTO ext_api_type (name)
+INSERT INTO external_api_type (name)
 VALUES ('ttn'::varchar(200)),
        ('dwd'::varchar(200)),
        ('nm'::varchar(200)),

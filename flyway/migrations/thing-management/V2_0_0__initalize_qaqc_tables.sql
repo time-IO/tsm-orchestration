@@ -14,13 +14,17 @@ CREATE TABLE "qaqc_setting"
     "context_window" VARCHAR(255)             NULL,
     "project_id"     BIGINT                   NOT NULL,
     "created_by"     BIGINT                   NOT NULL,
-    "created_at"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    "created_at"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "thing_id"       BIGINT
 );
 
 ALTER TABLE "qaqc_setting"
     ADD CONSTRAINT "fk_qaqc_setting_project" FOREIGN KEY ("project_id") REFERENCES "project" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE "qaqc_setting"
     ADD CONSTRAINT "fk_qaqc_setting_user" FOREIGN KEY ("created_by") REFERENCES "user" ("id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "qaqc_setting"
+    ADD CONSTRAINT "fk_qaqc_setting_thing"
+        FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED;
 
 -- ===========================================
 -- Create Table: function
@@ -65,8 +69,7 @@ CREATE TABLE "qaqc_setting_function"
     "qaqc_setting_id" BIGINT       NOT NULL,
     "function_id"     BIGINT       NOT NULL,
     "name"            VARCHAR(255) NOT NULL,
-    "position"        INT          NOT NULL,
-    UNIQUE ("qaqc_setting_id", "function_id")
+    "position"        INT          NOT NULL
 );
 
 ALTER TABLE "qaqc_setting_function"
