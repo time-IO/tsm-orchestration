@@ -450,11 +450,6 @@ services:
     image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     environment:
-      # NOTE:
-      # All of this are build time variables and need to be adjusted in
-      # thing_management/frontend/.env
-      # TODO:
-      # Build frontend images based on the configuration here
       APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
       APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
