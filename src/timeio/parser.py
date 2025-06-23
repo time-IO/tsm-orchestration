@@ -178,8 +178,10 @@ class CsvParser(FileParser):
 
         timestamp_columns = settings.pop("timestamp_columns")
         header_line = settings.get("header", None)
+        delimiter = settings.get("delimiter", ",")
         if header_line is not None:
-            line = get_header(rawdata, header_line)
+            header_raw = get_header(rawdata, header_line)
+            self.logger.debug(f"HEADER: {header_raw}")
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
@@ -190,7 +192,6 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
 
             if i == header_line:
-                settings["header"] = header_line  # len(rows)
                 # we might have comments at the header line as well
                 rows.append(re.sub(comment_regex, "", row))
                 continue
@@ -201,7 +202,8 @@ class CsvParser(FileParser):
 
         try:
             if header_line is not None:
-                settings["header"] = header_line - settings["skiprows"] - 1
+                skiprows = settings.get("skiprows", 0)
+                settings["header"] = header_line - skiprows
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
@@ -212,7 +214,7 @@ class CsvParser(FileParser):
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
         if header_line is not None:
-            df.columns = line.split(",")
+            df.columns = header_raw.split(delimiter)
         # If no header is given, we always use column positions
         else:
             df.columns = range(len(df.columns))
