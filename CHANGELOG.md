@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+### Added
+- MQTTDeviceType `chirpstack-generic` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/383))
+
 ## 2025-06-18
 
 ### Added
