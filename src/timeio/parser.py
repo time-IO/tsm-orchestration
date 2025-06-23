@@ -213,7 +213,7 @@ class Observation:
     def __post_init__(self):
         if self.value is None:
             raise ValueError("None is not allowed as observation value.")
-        if math.isnan(self.value):
+        if isinstance(self.value, float) and math.isnan(self.value):
             raise ValueError("NaN is not allowed as observation value.")
 
 
@@ -371,7 +371,10 @@ class ChirpStackGenericParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = rawdata["time"]
         out = []
-        for key, value in rawdata["object"]:
+        for key, value in rawdata["object"].items():
+            if key == "Data_time":
+                # this is a timestamp, we ignore it
+                continue
             try:
                 out.append(
                     Observation(
