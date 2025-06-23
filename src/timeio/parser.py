@@ -145,10 +145,9 @@ class CsvParser(FileParser):
             [df[c].fillna("").astype(str).str.strip() for c in date_columns],
         )
         df = df.drop(columns=date_columns)
-
-        index = pd.to_datetime(index, format=date_format, errors="coerce")
-        if index.isna().any():
-            nat = index.isna()
+        dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
+        if dt_index.isna().any():
+            nat = dt_index.isna()
             warnings.warn(
                 f"Could not parse {nat.sum()} of {len(index)} timestamps "
                 f"with provided timestamp format {date_format!r}. First failing "
@@ -156,7 +155,7 @@ class CsvParser(FileParser):
                 ParsingWarning,
             )
         index.name = None
-        df.index = index
+        df.index = dt_index
         return df
 
     def do_parse(self, rawdata: str) -> pd.DataFrame:
@@ -190,6 +189,12 @@ class CsvParser(FileParser):
         df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
+
+        if df.shape[0] == 0:
+            warnings.warn(
+                f"No valid timestamps found in data.",
+                ParsingWarning,
+            )
 
         self.logger.debug(f"data.shape={df.shape}")
         return df
