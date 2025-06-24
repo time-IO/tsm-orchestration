@@ -11,7 +11,7 @@ RAWDATA = """
 //Hydroinnova CRS-1000 Data
 //CellSig=12
 
-//RecordNum,Date Time(UTC),P1_mb,P3_mb,P4_mb,T1_C,T2_C,T3_C,T4_C,T_CS215,RH1,RH2,RH_CS215,Vbat,N1Cts,N2Cts,N1ET_sec,N2ET_sec,N1T_C,N1RH,N2T_C,N2RH,D1,
+//RecordNum,Date Time(UTC),P1_mb,P3_mb,P4_mb,T1_C,T2_C,T3_C,T4_C,T_CS215,RH1,RH2,RH_CS215,Vbat,N1Cts,N2Cts,N1ET_sec,N2ET_sec,N1T_C,N1RH,N2T_C,N2RH,D1
 
 1418, 2021/09/09 05:45:00,  987.0, 989.70, 991.05,   15.9, 128.9,  15.8,  14.6,  13.8, 75.2,119.0, 89.2, 11.853,      160,      122,     900,     900,  17.9, 62.7,  17.7, 63.5,        0
 1419, 2021/09/09 06:00:00,  987.0, 989.74, 991.05,   15.9, 128.9,  15.7,  14.5,  14.2, 75.6,119.0, 88.8, 11.856,      171,      111,     900,     900,  18.0, 62.9,  17.8, 63.6,        0
@@ -23,7 +23,7 @@ RAWDATA = """
     "settings, columns",
     [
         [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 2, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
         [{"comment": "//", "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
