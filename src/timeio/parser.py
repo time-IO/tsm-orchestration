@@ -179,6 +179,7 @@ class CsvParser(FileParser):
         timestamp_columns = settings.pop("timestamp_columns")
         header_line = settings.get("header", None)
         delimiter = settings.get("delimiter", ",")
+        duplicate = settings.pop("duplicate", False)
         if header_line is not None:
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
@@ -202,8 +203,7 @@ class CsvParser(FileParser):
 
         try:
             if header_line is not None:
-                skiprows = settings.get("skiprows", 0)
-                settings["header"] = header_line - skiprows
+                settings["header"] = 0
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
@@ -214,7 +214,8 @@ class CsvParser(FileParser):
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
         if header_line is not None:
-            df.columns = header_raw.split(delimiter)
+            header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
+            df.columns = header_raw_clean.split(delimiter)
         # If no header is given, we always use column positions
         else:
             df.columns = range(len(df.columns))
