@@ -192,7 +192,7 @@ class CsvParser(FileParser):
 
         if df.shape[0] == 0:
             warnings.warn(
-                f"No valid timestamps found in data.",
+                f"Parsing resulted in empty dataset.",
                 ParsingWarning,
             )
 
