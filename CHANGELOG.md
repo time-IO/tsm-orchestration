@@ -6,6 +6,9 @@
 ### Added
 - MQTTDeviceType `chirpstack-generic` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/383))
 
+### Fixed
+- Pass CSV parser warnings to dashboard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/388))
+
 ## 2025-06-18
 
 ### Added
