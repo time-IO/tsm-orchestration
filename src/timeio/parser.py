@@ -218,7 +218,7 @@ class Observation:
     def __post_init__(self):
         if self.value is None:
             raise ValueError("None is not allowed as observation value.")
-        if math.isnan(self.value):
+        if isinstance(self.value, float) and math.isnan(self.value):
             raise ValueError("NaN is not allowed as observation value.")
 
 
@@ -372,6 +372,30 @@ class BrightskyDwdApiParser(MqttDataParser):
         return out
 
 
+class ChirpStackGenericParser(MqttDataParser):
+    def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        timestamp = rawdata["time"]
+        out = []
+        for key, value in rawdata["object"].items():
+            if key == "Data_time":
+                # this is a timestamp, we ignore it
+                continue
+            try:
+                out.append(
+                    Observation(
+                        timestamp=timestamp,
+                        value=value,
+                        position=key,
+                        origin=origin,
+                        header=key,
+                    )
+                )
+            except ValueError:
+                # value is NaN or None
+                continue
+        return out
+
+
 class SineDummyParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()
@@ -399,6 +423,7 @@ def get_parser(parser_type, settings) -> FileParser | MqttDataParser:
         "campbell_cr6": CampbellCr6Parser,
         "brightsky_dwd_api": BrightskyDwdApiParser,
         "ydoc_ml417": YdocMl417Parser,
+        "chirpstack_generic": ChirpStackGenericParser,
         "sine_dummy": SineDummyParser,
     }
     klass = types.get(parser_type)
