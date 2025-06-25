@@ -6,6 +6,9 @@
 ### Added
 - MQTTDeviceType `chirpstack-generic` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/383))
 
+### Changed
+- Refactoring python code for Grafana workers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/375))
+
 ### Fixed
 - Pass CSV parser warnings to dashboard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/388))
 
