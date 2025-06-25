@@ -19,6 +19,7 @@ services:
       args:
         UID: "${UID}"
         GID: "${GID}"
+        BASE_IMAGE_REGISTRY: "${INIT_ALPINE_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${INIT_ALPINE_BASE_IMAGE_TAG}"
     restart: no
     user: "${UID}:${GID}"
@@ -58,7 +59,7 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "bitnami/postgresql:${DATABASE_POSTGRES_IMAGE_TAG}"
+    image: "${DATABASE_POSTGRES_IMAGE_REGISTRY}:${DATABASE_POSTGRES_IMAGE_TAG}"
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
@@ -96,7 +97,7 @@ services:
   # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
   # sends mqtt messages to the broker on file upload (and other events).
   object-storage:
-    image: "minio/minio:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
+    image: "${OBJECT_STORAGE_MINIO_IMAGE_REGISTRY}:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     ports:
       - "${OBJECT_STORAGE_SFTP_PORT}:22"
@@ -165,10 +166,8 @@ services:
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_BROKER_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
-      database:
-        condition: service_healthy
       flyway:
         condition: service_completed_successfully
     command: >
@@ -188,6 +187,7 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
+      # same MQTT auth used by legacy (django) frontend and new frontend
       FRONTEND_MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
       FRONTEND_MQTT_PASS: "${THING_MANAGEMENT_MQTT_PASS}"
     ports:
@@ -237,7 +237,7 @@ services:
   # This visualize observations of a group or project that are stored in the database.
   visualization:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "grafana/grafana:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    image: "${VISUALIZATION_GRAFANA_IMAGE_REGISTRY}:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
     user: "${UID}:${GID}"
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
@@ -247,8 +247,8 @@ services:
       GF_AUTH_GENERIC_OAUTH_ENABLED: true
       GF_AUTH_GENERIC_OAUTH_NAME: "Helmholtz AAI"
       GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: true
-      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
-      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
       GF_AUTH_GENERIC_OAUTH_SCOPES: "email profile eduperson_principal_name"
       GF_AUTH_GENERIC_OAUTH_AUTH_URL: "${VISUALIZATION_GENERIC_OAUTH_AUTH_URL}"
       GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL}"
@@ -338,6 +338,7 @@ services:
     build:
       context: tomcat
       args:
+        BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
         UID: "${UID}"
@@ -351,6 +352,41 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
+  # # Summary
+  # # =======
+  # # brief:
+  # # dir:
+  # # see also:
+  # #
+  # # Description
+  # # ===========
+  # # TODO
+  # flyway-thing-management:
+  #   image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+  #   user: "${UID}:${UID}"
+  #   command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+  #   volumes:
+  #     - ./flyway/migrations/thing-management:/flyway/sql
+  #     - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
+  #   environment:
+  #     FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+  #     FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+  #     FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+  #     FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+  #     THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #     flyway:
+  #       condition: service_completed_successfully
+  #   logging:
+  #     options:
+  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+
   # Summary
   # =======
   # brief:
@@ -361,23 +397,27 @@ services:
   # ===========
   # TODO
   flyway:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
-      - ./flyway/migrations:/flyway/sql
-      - ./flyway/flyway.conf:/flyway/conf/flyway.conf
+      - ./flyway/migrations/public:/flyway/sql
+      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
     environment:
       FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
       FLYWAY_USER: "${DATABASE_ADMIN_USER}"
       FLYWAY_PASSWORD: "${DATABASE_ADMIN_PASSWORD}"
       FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_CONNECT_RETRIES: 10
+      FLYWAY_CONNECT_RETRIES_INTERVAL: 3
       FLYWAY_PLACEHOLDERS_CONFIGDB_USER: "${CONFIGDB_READONLY_USER}"
       FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD: "${CONFIGDB_READONLY_PASSWORD}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER: "${MQTT_AUTH_POSTGRES_USER}"
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
-      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_LEGACY_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_LEGACY_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
       FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
@@ -399,6 +439,73 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
+  # # Summary
+  # # =======
+  # # brief:
+  # # dir:
+  # # see also:
+  # #
+  # # Description
+  # # ===========
+  # # TODO
+  # thing-management-frontend:
+  #   image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
+  #   restart: "${SERVICE_RESTART_POLICY}"
+  #   environment:
+  #     API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
+  #     APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
+  #     VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
+  #     APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+  #   depends_on:
+  #     thing-management-api:
+  #       condition: service_healthy
+  #   logging:
+  #     options:
+  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+  # # Summary
+  # # =======
+  # # brief:
+  # # dir:
+  # # see also:
+  # #
+  # # Description
+  # # ===========
+  # # TODO
+  # thing-management-api:
+  #   image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
+  #   restart: "${SERVICE_RESTART_POLICY}"
+  #   healthcheck:
+  #     test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   environment:
+  #     VERSION: "${THING_MANAGEMENT_API_VERSION}"
+  #     DB_URL: "${THING_MANAGEMENT_API_DSN}"
+  #     DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+  #     MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+  #     MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
+  #     MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
+  #     MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
+  #     MQTT_CLIENT_ID: thing_management
+  #     FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+  #     MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
+  #     PROXY_URL: "${PROXY_URL}"
+  #   depends_on:
+  #     mqtt-broker:
+  #       condition: service_healthy
+  #     flyway-thing-management:
+  #       condition: service_completed_successfully
+  #   #  keycloak:
+  #   #    condition: service_started
+  #   logging:
+  #     options:
+  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+
   # Summary
   # =======
   # brief: A user frontend to add things groups parser etc.
@@ -409,7 +516,7 @@ services:
   # ===========
   # TODO
   frontend:
-    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_IMAGE_TAG}"
+    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_LEGACY_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     command: >
       bash -c "python3 manage.py migrate
@@ -431,10 +538,10 @@ services:
     # ports:
     #   - "127.0.0.1:8000:8000"
     environment:
-      POSTGRES_HOST: "${THING_MANAGEMENT_DATABASE_HOST}"
-      POSTGRES_NAME: "${THING_MANAGEMENT_DATABASE_DB_NAME}"
-      POSTGRES_USER: "${THING_MANAGEMENT_DATABASE_USER}"
-      POSTGRES_PASSWORD: "${THING_MANAGEMENT_DATABASE_PASS}"
+      POSTGRES_HOST: "${THING_MANAGEMENT_LEGACY_DATABASE_HOST}"
+      POSTGRES_NAME: "${THING_MANAGEMENT_LEGACY_DATABASE_DB_NAME}"
+      POSTGRES_USER: "${THING_MANAGEMENT_LEGACY_DATABASE_USER}"
+      POSTGRES_PASSWORD: "${THING_MANAGEMENT_LEGACY_DATABASE_PASS}"
       PUBLISH_THING_TO_BROKER: True
       CREATEDB_POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
       CREATEDB_POSTGRES_DATABASE: "${DATABASE_ADMIN_DB_NAME}"
@@ -442,24 +549,24 @@ services:
       MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
       MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
       MQTT_CLIENT_ID: frontend
-      DJANGO_SUPERUSER_USERNAME: "${THING_MANAGEMENT_DJANGO_SUPERUSER_USERNAME}"
-      DJANGO_SUPERUSER_PASSWORD: "${THING_MANAGEMENT_DJANGO_SUPERUSER_PASSWORD}"
-      DJANGO_SUPERUSER_EMAIL: "${THING_MANAGEMENT_DJANGO_SUPERUSER_EMAIL}"
-      DJANGO_SECRET_KEY: "${THING_MANAGEMENT_DJANGO_SECRET_KEY}"
-      DJANGO_DEBUG: "${THING_MANAGEMENT_DJANGO_DEBUG}"
-      DJANGO_TRUSTED_ORIGINS: "${THING_MANAGEMENT_DJANGO_TRUSTED_ORIGINS}"
-      DJANGO_BASE_PATH: "${THING_MANAGEMENT_DJANGO_BASE_PATH}"
-      DJANGO_ALLOWED_HOSTS: "${THING_MANAGEMENT_DJANGO_ALLOWED_HOSTS}"
-      POSTGRES_SSLMODE: "${THING_MANAGEMENT_DJANGO_POSTGRES_SSLMODE}"
-      DJANGO_HELMHOLTZ_CLIENT_ID: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID}"
-      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
-      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${THING_MANAGEMENT_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
+      DJANGO_SUPERUSER_USERNAME: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_USERNAME}"
+      DJANGO_SUPERUSER_PASSWORD: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_PASSWORD}"
+      DJANGO_SUPERUSER_EMAIL: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_EMAIL}"
+      DJANGO_SECRET_KEY: "${THING_MANAGEMENT_LEGACY_DJANGO_SECRET_KEY}"
+      DJANGO_DEBUG: "${THING_MANAGEMENT_LEGACY_DJANGO_DEBUG}"
+      DJANGO_TRUSTED_ORIGINS: "${THING_MANAGEMENT_LEGACY_DJANGO_TRUSTED_ORIGINS}"
+      DJANGO_BASE_PATH: "${THING_MANAGEMENT_LEGACY_DJANGO_BASE_PATH}"
+      DJANGO_ALLOWED_HOSTS: "${THING_MANAGEMENT_LEGACY_DJANGO_ALLOWED_HOSTS}"
+      POSTGRES_SSLMODE: "${THING_MANAGEMENT_LEGACY_DJANGO_POSTGRES_SSLMODE}"
+      DJANGO_HELMHOLTZ_CLIENT_ID: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID}"
+      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
+      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
       MINIO_FTP_PORT: "${OBJECT_STORAGE_FTP_PORT}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
-      STA_ROOT_URL: "${THING_MANAGEMENT_STA_ROOT_URL}"
-      QAQC_SETTING_SAQC_VERSION: "${THING_MANAGEMENT_QAQC_SETTING_SAQC_VERSION}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
+      STA_ROOT_URL: "${THING_MANAGEMENT_LEGACY_STA_ROOT_URL}"
+      QAQC_SETTING_SAQC_VERSION: "${THING_MANAGEMENT_LEGACY_QAQC_SETTING_SAQC_VERSION}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
     depends_on:
       mqtt-broker:
@@ -487,7 +594,7 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginxinc/nginx-unprivileged:${PROXY_NGINX_IMAGE_TAG}"
+    image: "${PROXY_NGINX_IMAGE_REGISTRY}:${PROXY_NGINX_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID}:${GID}"
     ports:
@@ -512,6 +619,8 @@ services:
         condition: service_started
       frost:
         condition: service_started
+      # thing-management-frontend:
+      #   condition: service_started
       init:
         condition: service_completed_successfully
     healthcheck:
@@ -535,6 +644,7 @@ services:
       dockerfile: configdb_updater/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -567,6 +677,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -616,12 +727,11 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -655,12 +765,11 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -695,12 +804,11 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -731,6 +839,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -775,6 +884,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -815,12 +925,11 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -852,12 +961,11 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
-        condition: service_healthy
-      database:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
@@ -888,6 +996,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -928,6 +1037,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -949,7 +1059,7 @@ services:
       GRAFANA_URL: "${VISUALIZATION_URL}"
       GRAFANA_USER: "${VISUALIZATION_USER}"
       GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_ALLOWED_VOS}"
+      ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "setup_grafana_user.py"]
@@ -972,6 +1082,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -997,6 +1108,84 @@ services:
     entrypoint: ["python3", "sync_extapi_manager.py"]
 
 
+  # Summary
+  # =======
+  # brief:  trigger sync of sftp fileserver for given thing
+  #
+  # Description
+  # ===========
+  # Syncs files from external SFTP server with MinIO
+  worker-sync-extsftp:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: sync_ext_sftp
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: sync-ext-sftp
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+    entrypoint: [ "python3", "sync_extsftp_manager.py" ]
+
+  # Summary
+  # =======
+  # brief:  trigger sync of SMS bacckend (MV) and SMS CV data
+  #
+  # Description
+  # ===========
+  # Syncs data from SMS DB and SMS CV DB
+  worker-sync-sms:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: sync_sms
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: sync-sms
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      JOURNALING: "${JOURNALING}"
+      DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
+      CV_API_URL: "${CRON_CV_API_URL}"
+    entrypoint: [ "python3", "sync_sms_manager.py" ]
+
+
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
     build:
@@ -1004,6 +1193,7 @@ services:
       dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CRON_SCHEDULER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
@@ -1038,6 +1228,10 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
       API_SYNC_TOPIC: sync_ext_apis
+      SFTP_SYNC_TOPIC: sync_ext_sftp
+      SMS_SYNC_TOPIC: sync_sms
+      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
+      DB_HOST: "${DATABASE_ADMIN_HOST}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
     depends_on:
       init:
@@ -1058,7 +1252,7 @@ services:
 
   mqtt-cat:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "eclipse-mosquitto:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_CAT_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       mqtt-broker:
         condition: service_started
@@ -1075,7 +1269,7 @@ services:
       --id "mqtt-cat"
 
   monitoring:
-    image: "gcr.io/cadvisor/cadvisor:${MONITORING_CADVISOR_IMAGE_TAG}"
+    image: "${MONITORING_CADVISOR_IMAGE_REGISTRY}:${MONITORING_CADVISOR_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     container_name: cadvisor
     ports:

@@ -152,10 +152,9 @@ class CsvParser(FileParser):
             [df[c].fillna("").astype(str).str.strip() for c in date_columns],
         )
         df = df.drop(columns=date_columns)
-
-        index = pd.to_datetime(index, format=date_format, errors="coerce")
-        if index.isna().any():
-            nat = index.isna()
+        dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
+        if dt_index.isna().any():
+            nat = dt_index.isna()
             warnings.warn(
                 f"Could not parse {nat.sum()} of {len(df)} timestamps "
                 f"with provided timestamp format {date_format!r}. First failing "
@@ -163,7 +162,7 @@ class CsvParser(FileParser):
                 ParsingWarning,
             )
         index.name = None
-        df.index = index
+        df.index = dt_index
         return df
 
     def do_parse(self, rawdata: str):
@@ -224,6 +223,12 @@ class CsvParser(FileParser):
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
 
+        if df.shape[0] == 0:
+            warnings.warn(
+                f"Parsing resulted in empty dataset.",
+                ParsingWarning,
+            )
+
         self.logger.debug(f"data.shape={df.shape}")
         return df
 
@@ -246,7 +251,7 @@ class Observation:
     def __post_init__(self):
         if self.value is None:
             raise ValueError("None is not allowed as observation value.")
-        if math.isnan(self.value):
+        if isinstance(self.value, float) and math.isnan(self.value):
             raise ValueError("NaN is not allowed as observation value.")
 
 
@@ -400,6 +405,30 @@ class BrightskyDwdApiParser(MqttDataParser):
         return out
 
 
+class ChirpStackGenericParser(MqttDataParser):
+    def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        timestamp = rawdata["time"]
+        out = []
+        for key, value in rawdata["object"].items():
+            if key == "Data_time":
+                # this is a timestamp, we ignore it
+                continue
+            try:
+                out.append(
+                    Observation(
+                        timestamp=timestamp,
+                        value=value,
+                        position=key,
+                        origin=origin,
+                        header=key,
+                    )
+                )
+            except ValueError:
+                # value is NaN or None
+                continue
+        return out
+
+
 class SineDummyParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()
@@ -427,6 +456,7 @@ def get_parser(parser_type, settings) -> FileParser | MqttDataParser:
         "campbell_cr6": CampbellCr6Parser,
         "brightsky_dwd_api": BrightskyDwdApiParser,
         "ydoc_ml417": YdocMl417Parser,
+        "chirpstack_generic": ChirpStackGenericParser,
         "sine_dummy": SineDummyParser,
     }
     klass = types.get(parser_type)

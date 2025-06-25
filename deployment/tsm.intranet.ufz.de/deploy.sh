@@ -19,6 +19,8 @@ rm $TEMP_ENV_FILE
 git checkout main
 git pull origin main
 rm remove-all-data.sh
-sudo docker compose pull -q
-sudo docker compose up -d
-sudo docker compose ps
+COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.prod.yml"
+ENV_FILES="--env-file .env"
+sudo docker compose $COMPOSE_FILES $ENV_FILES create --build
+sudo docker compose $COMPOSE_FILES $ENV_FILES up -d
+sudo docker compose $COMPOSE_FILES $ENV_FILES ps
