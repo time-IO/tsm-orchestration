@@ -26,7 +26,7 @@ combined-e2e-test:
     - "echo $GROUP_UID"
     - "GF_API=http://docker/visualization/api"
     - "curl -Isf -u grafana:grafana ${GF_API}/dashboards/uid/${THING_UID} || exit 1"
-    - "curl -Isf -u grafana:grafana ${GF_API}/dashboards/uid/${GROUP_UID} || exit 1"
+    - "curl -Isf -u grafana:grafana ${GF_API}/folders/${GROUP_UID} || exit 1"
     - "curl -Isf -u grafana:grafana ${GF_API}/datasources/uid/${GROUP_UID} || exit 1"
     - "curl -sf -u grafana:grafana ${GF_API}/teams/search?uid=${GROUP_UID} > teams.json || exit 1"
     - "TEAMS_ID=$(cat teams.json | jq -r .teams[0].orgId)"
