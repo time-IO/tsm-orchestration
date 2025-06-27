@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import datetime
 import warnings
+import requests
 
 from minio import Minio
 from minio.commonconfig import Tags
@@ -42,7 +43,7 @@ class ParserJobHandler(AbstractHandler):
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.api_base_url = get_envvar("DB_API_BASE_URL")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
@@ -94,7 +95,12 @@ class ParserJobHandler(AbstractHandler):
 
         logger.debug("storing observations to database ...")
         try:
-            self.dbapi.upsert_observations(thing_uuid, obs)
+            resp = requests.post(
+                f"{self.api_base_url}/observations/upsert/{thing_uuid}",
+                json={"observations": obs},
+                headers={"Content-Type": "application/json"},
+            )
+            resp.raise_for_status()
         except Exception as e:
             # Tell the user that his parsing was successful
             journal.error(
