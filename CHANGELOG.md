@@ -5,6 +5,7 @@
 
 ### Added
 - MQTTDeviceType `chirpstack-generic` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/383))
+- option to use header names as datastream names in CsvParser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/347))
 
 ### Changed
 - Refactoring python code for Grafana workers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/375))

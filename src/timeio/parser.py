@@ -27,11 +27,19 @@ parsedT = TypeVar("parsedT")
 journal = Journal("Parser")
 
 
-def filter_lines(rawdata: str, skip: tuple | str) -> str:
-    if isinstance(skip, str):
-        skip = (skip,)
-    pattern = "|".join(skip)
-    return "\n".join(ln for ln in rawdata.splitlines() if not re.match(pattern, ln))
+def filter_lines(rawdata: str, comment_regex: str) -> str:
+    lines = []
+    for line in rawdata.splitlines():
+        if not re.match(comment_regex, line):
+            lines.append(line)
+    return "\n".join(lines)
+
+
+def get_header(rawdata: str, header_line: int) -> str:
+    for i, line in enumerate(rawdata.splitlines()):
+        if i == header_line:
+            return line
+    raise ValueError(f"header line {header_line} not found")
 
 
 class ObservationPayloadT(TypedDict, total=False):
@@ -126,19 +134,18 @@ class FileParser(Parser):
             chunk["parameters"] = json.dumps({"origin": origin, "column_header": col})
 
             observations.extend(chunk.to_dict(orient="records"))
-
         return observations
 
 
 class CsvParser(FileParser):
     def _set_index(self, df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
 
-        date_columns = [d["column"] for d in timestamp_columns]
+        date_columns = [df.columns[d["column"]] for d in timestamp_columns]
         date_format = " ".join([d["format"] for d in timestamp_columns])
 
-        for c in date_columns:
-            if c not in df.columns:
-                raise ParsingError(f"Timestamp column {c} does not exist. ")
+        # for c in date_columns:
+        #     if c not in df.columns:
+        #         raise ParsingError(f"Timestamp column {c} does not exist. ")
 
         index = reduce(
             lambda x, y: x + " " + y,
@@ -149,7 +156,7 @@ class CsvParser(FileParser):
         if dt_index.isna().any():
             nat = dt_index.isna()
             warnings.warn(
-                f"Could not parse {nat.sum()} of {len(index)} timestamps "
+                f"Could not parse {nat.sum()} of {len(df)} timestamps "
                 f"with provided timestamp format {date_format!r}. First failing "
                 f"timestamp: '{index[nat].iloc[0]}'",
                 ParsingWarning,
@@ -158,7 +165,7 @@ class CsvParser(FileParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str) -> pd.DataFrame:
+    def do_parse(self, rawdata: str):
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -169,22 +176,48 @@ class CsvParser(FileParser):
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
+        header_line = settings.get("header", None)
+        delimiter = settings.get("delimiter", ",")
+        duplicate = settings.pop("duplicate", False)
+        if header_line is not None:
+            header_raw = get_header(rawdata, header_line)
+            self.logger.debug(f"HEADER: {header_raw}")
 
-        if "comment" in settings:
-            rawdata = filter_lines(rawdata, settings.pop("comment"))
+        if comment_regex := settings.pop("comment", r"(?!.*)"):
+            if isinstance(comment_regex, str):
+                comment_regex = (comment_regex,)
+            comment_regex = "|".join(comment_regex)
+
+        rows = []
+        for i, row in enumerate(rawdata.splitlines()):
+
+            if i == header_line:
+                # we might have comments at the header line as well
+                rows.append(re.sub(comment_regex, "", row))
+                continue
+            if not re.match(comment_regex, row):
+                rows.append(row)
+
+        rawdata = "\n".join(rows)
 
         try:
+            if header_line is not None:
+                settings["header"] = 0
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
-
-        # We always use positions as header
-        df.columns = range(len(df.columns))
 
         # remove all-nan columns as artifacts
         df = df.dropna(axis=1, how="all")
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
+
+        if header_line is not None:
+            header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
+            df.columns = header_raw_clean.split(delimiter)
+        # If no header is given, we always use column positions
+        else:
+            df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
