@@ -62,18 +62,6 @@ RESULT_TYPE_MAPPING = {
 
 
 class BoschApiSyncer(ExtApiSyncer):
-    PARAMETER_MAPPING = {
-        "CO_3_CORR": 0,
-        "ESP_0_RH_AVG": 0,
-        "ESP_0_TEMP_AVG": 0,
-        "ES_0_PRESS": 0,
-        "NO2_1_CORR": 0,
-        "O3_0_CORR": 0,
-        "PS_0_PM10_CORR": 0,
-        "PS_0_PM2P5_CORR": 0,
-        "SO2_2_CORR": 0,
-        "SO2_2_CORR_1hr": 0,
-    }
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -103,12 +91,11 @@ class BoschApiSyncer(ExtApiSyncer):
             timestamp = obs.pop("UTC")
             for parameter, value in obs.items():
                 if value:
-                    result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
                         "result_time": timestamp,
-                        "result_type": result_type,
+                        "result_type": 0,
                         "datastream_pos": parameter,
-                        RESULT_TYPE_MAPPING[result_type]: value,
+                        "result_number": value,
                         "parameters": json.dumps(
                             {"origin": "bosch_data", "column_header": source}
                         ),
