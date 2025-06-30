@@ -78,6 +78,7 @@ class BoschApiSyncer(ExtApiSyncer):
             "Accept": "application/json",
         }
         response = request_with_handling("GET", server_url, headers=headers)
+
         return response.json()
 
     def do_parse(self, api_response):
@@ -85,9 +86,13 @@ class BoschApiSyncer(ExtApiSyncer):
         for entry in api_response:
             obs = entry["payload"]
             source = {
-                "sensor_id": obs.pop("deviceID"),
+                "sensor_id": obs.pop("deviceID") if "deviceId" in obs else "not found",
                 "observation_type": obs.pop("Type"),
             }
+            if "LocalTime" in obs:
+                obs.pop("LocalTime", None)  # Remove LocalTime if present
+            if "IMEI" in obs:
+                obs["IMEI"] = int(obs["IMEI"])  # Convert IMEI to int if present
             timestamp = obs.pop("UTC")
             for parameter, value in obs.items():
                 if value:
