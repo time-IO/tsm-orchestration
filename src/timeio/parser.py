@@ -214,7 +214,16 @@ class CsvParser(FileParser):
 
         if header_line is not None:
             header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
-            df.columns = header_raw_clean.split(delimiter)
+            header_names = header_raw_clean.split(delimiter)
+
+            if duplicate:
+                df_default_names = df.copy()
+                df_default_names.columns = range(len(df.columns))
+                df.columns = header_names
+                df = pd.conncat([df, df_default_names], axis=1)
+            else:
+                df.columns = header_names
+
         # If no header is given, we always use column positions
         else:
             df.columns = range(len(df.columns))
