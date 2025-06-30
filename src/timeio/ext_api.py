@@ -86,7 +86,7 @@ class BoschApiSyncer(ExtApiSyncer):
         for entry in api_response:
             obs = entry["payload"]
             source = {
-                "sensor_id": obs.pop("deviceID") if "deviceId" in obs else "not found",
+                "sensor_id": obs.pop("deviceID") if "deviceID" in obs else "not found",
                 "observation_type": obs.pop("Type"),
             }
             if "LocalTime" in obs:
