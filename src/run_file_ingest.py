@@ -79,7 +79,7 @@ class ParserJobHandler(AbstractHandler):
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
-                df = parser.do_parse(rawdata)
+                df = parser.do_parse(rawdata, thing_uuid)
                 obs = parser.to_observations(df, source_uri)
             except ParsingError as e:
                 journal.error(

@@ -80,7 +80,7 @@ class FileParser(Parser):
         self.logger.debug(f"parser settings in use with {name}: {self.settings}")
 
     @abstractmethod
-    def do_parse(self, rawdata: Any) -> pd.DataFrame:
+    def do_parse(self, rawdata: Any, thing_uuid: str) -> pd.DataFrame:
         raise NotImplementedError
 
     def to_observations(
@@ -166,7 +166,7 @@ class CsvParser(FileParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str):
+    def do_parse(self, rawdata: str, thing_uuid: str):
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -177,6 +177,7 @@ class CsvParser(FileParser):
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
+        ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
@@ -222,6 +223,14 @@ class CsvParser(FileParser):
                 df_default_names.columns = range(len(df.columns))
                 df.columns = header_names
                 if np.array_equal(df.to_numpy(), df_default_names.to_numpy()):
+                    column_mapping = dict(zip(df_default_names.columns, header_names))
+                    column_mapping = {
+                        thing_uuid: {
+                            k: v
+                            for k, v in column_mapping.items()
+                            if k not in ts_indices
+                        }
+                    }
                     df = pd.concat([df, df_default_names], axis=1)
                 else:
                     df = df_default_names
