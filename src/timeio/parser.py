@@ -16,6 +16,7 @@ from io import StringIO
 from typing import Any, TypedDict, TypeVar, cast
 
 import pandas as pd
+import numpy as np
 from typing_extensions import Required
 
 from timeio.common import ObservationResultType
@@ -214,7 +215,24 @@ class CsvParser(FileParser):
 
         if header_line is not None:
             header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
-            df.columns = header_raw_clean.split(delimiter)
+            header_names = header_raw_clean.split(delimiter)
+
+            if duplicate:
+                df_default_names = df.copy()
+                df_default_names.columns = range(len(df.columns))
+                df.columns = header_names
+                if np.array_equal(df.to_numpy(), df_default_names.to_numpy()):
+                    df = pd.concat([df, df_default_names], axis=1)
+                else:
+                    df = df_default_names
+                    warnings.warn(
+                        "Comparison of header based data and position based"
+                        "data failed. Positions will be used instead.",
+                        ParsingWarning,
+                    )
+            else:
+                df.columns = header_names
+
         # If no header is given, we always use column positions
         else:
             df.columns = range(len(df.columns))
