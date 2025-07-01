@@ -15,6 +15,9 @@
 ### Fixed
 - Pass CSV parser warnings to dashboard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/388))
 
+### Removed
+- explicit mapping of parameter to result_type in Bosch API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/396))
+
 ## 2025-06-18
 
 ### Added
