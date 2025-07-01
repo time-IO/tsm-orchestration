@@ -16,6 +16,7 @@ from io import StringIO
 from typing import Any, TypedDict, TypeVar, cast
 
 import pandas as pd
+import numpy as np
 from typing_extensions import Required
 
 from timeio.common import ObservationResultType
@@ -220,7 +221,7 @@ class CsvParser(FileParser):
                 df_default_names = df.copy()
                 df_default_names.columns = range(len(df.columns))
                 df.columns = header_names
-                if df.values.tolist() == df_default_names.values.tolist():
+                if np.array_equal(df.to_numpy(), df_default_names.to_numpy()):
                     df = pd.concat([df, df_default_names], axis=1)
                 else:
                     df = df_default_names
