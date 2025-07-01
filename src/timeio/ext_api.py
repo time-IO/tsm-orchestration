@@ -155,7 +155,11 @@ class TsystemsApiSyncer(ExtApiSyncer):
     def do_parse(self, api_response):
         bodies = []
         for entry in api_response:
-            source = {"sensor_id": entry.pop("deviceId"), "aggregation_time": "hourly"}
+            source = {
+                "sensor_id": entry.pop("deviceId"),
+                "location_id": entry.pop("locationId"),
+                "aggregation_time": "hourly",
+            }
             timestamp = entry.pop("timestamp")
             for parameter, value in entry.items():
                 if value:

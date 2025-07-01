@@ -9,6 +9,7 @@
 
 ### Changed
 - Refactoring python code for Grafana workers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/375))
+- Tsystems API due to changed response ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/398))
 
 ### Fixed
 - Pass CSV parser warnings to dashboard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/388))
