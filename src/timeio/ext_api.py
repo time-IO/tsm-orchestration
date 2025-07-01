@@ -62,18 +62,6 @@ RESULT_TYPE_MAPPING = {
 
 
 class BoschApiSyncer(ExtApiSyncer):
-    PARAMETER_MAPPING = {
-        "CO_3_CORR": 0,
-        "ESP_0_RH_AVG": 0,
-        "ESP_0_TEMP_AVG": 0,
-        "ES_0_PRESS": 0,
-        "NO2_1_CORR": 0,
-        "O3_0_CORR": 0,
-        "PS_0_PM10_CORR": 0,
-        "PS_0_PM2P5_CORR": 0,
-        "SO2_2_CORR": 0,
-        "SO2_2_CORR_1hr": 0,
-    }
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -90,6 +78,7 @@ class BoschApiSyncer(ExtApiSyncer):
             "Accept": "application/json",
         }
         response = request_with_handling("GET", server_url, headers=headers)
+
         return response.json()
 
     def do_parse(self, api_response):
@@ -97,18 +86,21 @@ class BoschApiSyncer(ExtApiSyncer):
         for entry in api_response:
             obs = entry["payload"]
             source = {
-                "sensor_id": obs.pop("deviceID"),
+                "sensor_id": obs.pop("deviceID") if "deviceID" in obs else "not found",
                 "observation_type": obs.pop("Type"),
             }
+            if "LocalTime" in obs:
+                obs.pop("LocalTime", None)  # Remove LocalTime if present
+            if "IMEI" in obs:
+                obs["IMEI"] = int(obs["IMEI"])  # Convert IMEI to int if present
             timestamp = obs.pop("UTC")
             for parameter, value in obs.items():
                 if value:
-                    result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
                         "result_time": timestamp,
-                        "result_type": result_type,
+                        "result_type": 0,
                         "datastream_pos": parameter,
-                        RESULT_TYPE_MAPPING[result_type]: value,
+                        "result_number": value,
                         "parameters": json.dumps(
                             {"origin": "bosch_data", "column_header": source}
                         ),
