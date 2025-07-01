@@ -220,7 +220,15 @@ class CsvParser(FileParser):
                 df_default_names = df.copy()
                 df_default_names.columns = range(len(df.columns))
                 df.columns = header_names
-                df = pd.conncat([df, df_default_names], axis=1)
+                if df.values.tolist() == df_default_names.values.tolist():
+                    df = pd.concat([df, df_default_names], axis=1)
+                else:
+                    df = df_default_names
+                    warnings.warn(
+                        "Comparison of header based data and position based"
+                        "data failed. Positions will be used instead.",
+                        ParsingWarning,
+                    )
             else:
                 df.columns = header_names
 
