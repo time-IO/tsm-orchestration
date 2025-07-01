@@ -34,9 +34,9 @@ class ExtApiSyncer(ABC):
         raise NotImplementedError
 
 
-def request_with_handling(method, url, **kwargs):
+def request_with_handling(method, url, timeout=(10, 60), **kwargs):
     try:
-        response = requests.request(method, url, **kwargs)
+        response = requests.request(method, url, timeout, **kwargs)
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError as e:
