@@ -260,7 +260,9 @@ class CsvParser(FileParser):
                         project_name,
                         thing_uuid,
                     )
-                    df_default_names = df_default_names.drop(columns=ts_indices, errors="ignore")
+                    df_default_names = df_default_names.drop(
+                        columns=ts_indices, errors="ignore"
+                    )
                     df = pd.concat([df, df_default_names], axis=1)
                 else:
                     df = df_default_names
