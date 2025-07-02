@@ -45,8 +45,8 @@ def get_header(rawdata: str, header_line: int) -> str:
     raise ValueError(f"header line {header_line} not found")
 
 
-def pandafy_headerline(raw_header: str, delimiter: str) -> list[str]:
-    mock_cvs = StringIO(raw_header + "\n\n")
+def pandafy_headerline(header_raw: str, delimiter: str) -> list[str]:
+    mock_cvs = StringIO(header_raw + "\n\n")
     df = pd.read_csv(mock_cvs, delimiter=delimiter)
     return df.columns.to_list()
 
