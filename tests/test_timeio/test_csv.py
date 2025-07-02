@@ -36,7 +36,7 @@ def test_parsing(settings, columns):
     }
 
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(RAWDATA.strip())
+    df = parser.do_parse(RAWDATA.strip(), "thing_uuid")
 
     assert df.columns[[1, 3, 7]].equals(pd.Index(columns))
     assert (df.iloc[:, 2] == [989.7, 989.74, 989.76]).all()
@@ -71,7 +71,7 @@ def test_dirty_data_parsing():
     }
 
     parser = CsvParser(settings)
-    df = parser.do_parse(DIRTYDATA)
+    df = parser.do_parse(DIRTYDATA, "thing")
 
     assert pd.api.types.is_numeric_dtype(df[2])
     assert pd.api.types.is_string_dtype(df[3])
@@ -120,7 +120,7 @@ def test_multi_date_column_parsing():
         ],
     }
     parser = CsvParser(settings)
-    df = parser.do_parse(MULTIDATECOLUMDATA.strip())
+    df = parser.do_parse(MULTIDATECOLUMDATA.strip(), "thing")
 
     assert df.index.equals(
         pd.to_datetime(
