@@ -174,11 +174,10 @@ class CsvParser(FileParser):
         self,
         df_default: pd.DataFrame,
         header_names: list,
-        timestamp_columns: dict,
+        ts_indices: list,
         project_name: str,
         thing_uuid: str,
     ):
-        ts_indices = [i["column"] for i in timestamp_columns]
         column_mapping = dict(zip(df_default.columns, header_names))
         column_mapping = {
             thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
@@ -208,6 +207,7 @@ class CsvParser(FileParser):
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
+        ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
@@ -256,10 +256,11 @@ class CsvParser(FileParser):
                     self._write_mapping_yaml(
                         df_default_names,
                         header_names,
-                        timestamp_columns,
+                        ts_indices,
                         project_name,
                         thing_uuid,
                     )
+                    df_default_names = df_default_names.drop(columns=ts_indices, errors="ignore")
                     df = pd.concat([df, df_default_names], axis=1)
                 else:
                     df = df_default_names
