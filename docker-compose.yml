@@ -912,6 +912,8 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
+    volumes:
+      - ./data/worker_file_ingest/datastream_mapping/:/tmp/data/worker_file_ingest/datastream_mapping/
     logging:
       options:
         max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
