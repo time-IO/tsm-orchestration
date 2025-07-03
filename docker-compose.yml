@@ -913,7 +913,7 @@ services:
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
     volumes:
-      - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/migrations/worker_file_ingest/datastream_mapping/
+      - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
     logging:
       options:
         max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"

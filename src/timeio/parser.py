@@ -183,7 +183,7 @@ class CsvParser(FileParser):
             thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
         }
         output_dir = (
-            f"/tmp/migrations/worker_file_ingest/datastream_mapping/{project_name}"
+            f"/tmp/datastream_mapping/{project_name}"
         )
         try:
             os.makedirs(output_dir, exist_ok=True)
