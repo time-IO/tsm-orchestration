@@ -9,7 +9,9 @@ import json
 
 @click.command()
 @click.argument("thing_uuid", type=str)
-@click.argument("dsn", type=str, default="postgresql://postgres:postgres@localhost:5432/postgres")
+@click.argument(
+    "dsn", type=str, default="postgresql://postgres:postgres@localhost:5432/postgres"
+)
 @click.argument("frnt_schema", type=str, default="frontenddb")
 @click.argument("cfg_schema", type=str, default="config_db")
 def cleanup(thing_uuid, dsn, cfg_schema, frnt_schema) -> None:
@@ -18,10 +20,12 @@ def cleanup(thing_uuid, dsn, cfg_schema, frnt_schema) -> None:
             update_parser_front(cur, thing_uuid, frnt_schema)
             update_parser_cfg(cur, thing_uuid, cfg_schema)
 
+
 def set_search_path(cur, schema: str) -> None:
     identifier = sql.Identifier(schema)
-    query= sql.SQL("SET SEARCH_PATH TO {}").format(identifier)
+    query = sql.SQL("SET SEARCH_PATH TO {}").format(identifier)
     cur.execute(query)
+
 
 def update_parser_front(cur, thing_uuid: str, front_schema: str) -> None:
     set_search_path(cur, front_schema)
@@ -29,11 +33,13 @@ def update_parser_front(cur, thing_uuid: str, front_schema: str) -> None:
     params = get_parser_params_front(cur, p_id)
     set_duplicate_false_front(cur, p_id, params)
 
+
 def update_parser_cfg(cur, thing_uuid: str, cfg_schema: str) -> None:
     set_search_path(cur, cfg_schema)
     p_id = get_parser_id_cfg(cur, thing_uuid)
     params = get_parser_params_cfg(cur, p_id)
     set_duplicate_false_cfg(cur, p_id, params)
+
 
 def get_parser_id_front(cur, thing_uuid: str) -> int:
     cur.execute(
@@ -54,6 +60,7 @@ def get_parser_id_cfg(cur, thing_uuid: str) -> int:
     )
     return cur.fetchone()[0]  # Assuming file_parser_id is the first column
 
+
 def get_parser_params_front(cur, parser_id: int) -> dict:
     cur.execute(
         "SELECT pandas_read_csv FROM tsm_csvparser WHERE parser_ptr_id = %s",
@@ -61,12 +68,14 @@ def get_parser_params_front(cur, parser_id: int) -> dict:
     )
     return cur.fetchone()[0]  # Assuming pandas_read_csv is a JSON field
 
+
 def get_parser_params_cfg(cur, parser_id: int) -> dict:
     cur.execute(
         "SELECT params FROM file_parser where id = %s",
         (parser_id,),
     )
     return cur.fetchone()[0]  # Assuming params is a JSON field
+
 
 def set_duplicate_false_front(cur, parser_id: int, params: dict) -> None:
     duplicate = params.get("duplicate", None)
@@ -82,8 +91,9 @@ def set_duplicate_false_front(cur, parser_id: int, params: dict) -> None:
     else:
         print("FrontendDB: No `duplicate` settings found, nothing to update...")
 
+
 def set_duplicate_false_cfg(cur, parser_id: int, params: dict) -> None:
-    duplicate = params.get("pandas_read_csv",{}).get("duplicate", None)
+    duplicate = params.get("pandas_read_csv", {}).get("duplicate", None)
     if duplicate == "true":
         params["pandas_read_csv"]["duplicate"] = "false"
         cur.execute(
@@ -95,7 +105,6 @@ def set_duplicate_false_cfg(cur, parser_id: int, params: dict) -> None:
         print("ConfígDB: `duplicate` already set to false, nothing to update...")
     else:
         print("ConfigDB: No `duplicate` settings found, nothing to update...")
-
 
 
 if __name__ == "__main__":
