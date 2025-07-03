@@ -61,7 +61,7 @@ class DatastreamComparer:
         mapping = self.mapping.get(self.thing_uuid)
         if not mapping:
             raise ValueError(f"No mapping found for thing: {self.thing_uuid}")
-        results = {}
+        results = list()
         for k,v in mapping.items():
             ds_pos_id = self.get_datastream_id(str(k))
             ds_header_id = self.get_datastream_id(v)
@@ -69,5 +69,5 @@ class DatastreamComparer:
             obs_pos = self.get_timerange_obs(ds_pos_id, ts_from, ts_to)
             obs_header = self.get_timerange_obs(ds_header_id, ts_from, ts_to)
             equal = sorted(obs_pos) == sorted(obs_header)
-            results[(k, v)] = equal
+            results.append({"position_datatsream_id":ds_pos_id, "header_datatsream_id": ds_header_id, "equal":equal})
         return results
