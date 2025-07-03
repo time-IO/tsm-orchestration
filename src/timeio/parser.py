@@ -7,6 +7,8 @@ import logging
 import math
 import re
 import warnings
+import yaml
+import os
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -80,7 +82,9 @@ class FileParser(Parser):
         self.logger.debug(f"parser settings in use with {name}: {self.settings}")
 
     @abstractmethod
-    def do_parse(self, rawdata: Any) -> pd.DataFrame:
+    def do_parse(
+        self, rawdata: Any, project_name: str, thing_uuid: str
+    ) -> pd.DataFrame:
         raise NotImplementedError
 
     def to_observations(
@@ -166,7 +170,33 @@ class CsvParser(FileParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str):
+    def _write_mapping_yaml(
+        self,
+        df_default: pd.DataFrame,
+        header_names: list,
+        ts_indices: list,
+        project_name: str,
+        thing_uuid: str,
+    ):
+        column_mapping = dict(zip(df_default.columns, header_names))
+        column_mapping = {
+            thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
+        }
+        output_dir = f"/tmp/datastream_mapping/{project_name}"
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
+                yaml.dump(column_mapping, f, sort_keys=False)
+            self.logger.info(
+                f"Successfully created mapping yaml for thing {thing_uuid}"
+            )
+        except Exception as e:
+            warnings.warn(
+                f"Failed to create mapping yaml for thing {thing_uuid}: {e}",
+                ParsingWarning,
+            )
+
+    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -177,6 +207,7 @@ class CsvParser(FileParser):
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
+        ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
@@ -222,6 +253,16 @@ class CsvParser(FileParser):
                 df_default_names.columns = range(len(df.columns))
                 df.columns = header_names
                 if np.array_equal(df.to_numpy(), df_default_names.to_numpy()):
+                    self._write_mapping_yaml(
+                        df_default_names,
+                        header_names,
+                        ts_indices,
+                        project_name,
+                        thing_uuid,
+                    )
+                    df_default_names = df_default_names.drop(
+                        columns=ts_indices, errors="ignore"
+                    )
                     df = pd.concat([df, df_default_names], axis=1)
                 else:
                     df = df_default_names
