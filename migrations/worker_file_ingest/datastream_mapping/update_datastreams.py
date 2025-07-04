@@ -22,8 +22,12 @@ def update_datastreams(thing_uuid, dsn) -> None:
             print(datastreams)
             ds_name_ids = []
             for ds_pos, ds_name in datastreams.items():
-                ds_name_ids.append = get_datastream_id(cur, thing_uuid, ds_name)
+                print(f"Renaming datastream at position {ds_pos}")
+                ds_name_ids.append(get_datastream_id(cur, thing_uuid, ds_pos))
                 rename_datastream(cur, thing_uuid, ds_pos, ds_name)
+            for ds_id in ds_name_ids:
+                delete_datastream_observations(cur, thing_uuid, ds_id)
+                delete_datastream(cur, thing_uuid, ds_id)
 
 
 def get_thing_schema(cur, thing_uuid: str) -> str:
@@ -78,10 +82,11 @@ def get_datastream_id(cur, thing_uuid: str, ds_pos: int) -> int:
         )
 
 
-def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str):
+def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str) -> None:
     thing_name = get_thing_name(cur, thing_uuid)
     ds_name_new = f"{thing_name}/{ds_name}"
     ds_pos_new = ds_name
+
     query = sql.SQL(
         "UPDATE datastream d "
         "SET name = {name_new}, position = {pos_new} "
@@ -98,6 +103,34 @@ def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str):
     print(query.as_string())
     cur.execute(query)
 
+def delete_datastream_observations(cur, thing_uuid: str, ds_id: int) -> None:
+    query = sql.SQL(
+        "DELETE FROM observation o "
+        "USING datastream d "
+        "JOIN thing t ON d.thing_id = t.id "
+        "WHERE o.datastream_id = d.id "
+        "AND t.uuid = {thing_uuid} "
+        "AND d.id = {ds_id}"
+    ).format(
+        thing_uuid=sql.Literal(thing_uuid),
+        ds_id=sql.Literal(ds_id),
+    )
+    print(query.as_string())
+    cur.execute(query)
+
+def delete_datastream(cur, thing_uuid: str, ds_id: int) -> None:
+    query = sql.SQL(
+        "DELETE FROM datastream d "
+        "USING thing t "
+        "WHERE d.thing_id = t.id "
+        "AND t.uuid = {thing_uuid} "
+        "AND d.id = {ds_id}"
+    ).format(
+        thing_uuid=sql.Literal(thing_uuid),
+        ds_id=sql.Literal(ds_id),
+    )
+    print(query.as_string())
+    cur.execute(query)
 
 # need to either rename new datastream or drop constraint on id, position before renaming
 # need to get datastream_ids that should be deleted before renaming
