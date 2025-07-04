@@ -54,7 +54,7 @@ def set_search_path(cur, schema: str) -> None:
 
 
 def get_datastreams_from_yaml(thing_uuid: str) -> dict:
-    match = glob.glob(f"*/{thing_uuid}.yaml")
+    match = glob.glob(f"datastream_mapping/{thing_uuid}.yaml")
     if not match:
         raise FileNotFoundError(f"No YAML file found for thing UUID: {thing_uuid}")
     with open(match[0], "r") as file:
