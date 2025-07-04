@@ -18,16 +18,25 @@ def update_datastreams(thing_uuid, dsn) -> None:
         with conn.cursor() as cur:
             schema = get_thing_schema(cur, thing_uuid)
             set_search_path(cur, schema)
+            drop_datastream_pos_constaint(cur)
             datastreams = get_datastreams_from_yaml(thing_uuid)
             print(datastreams)
             ds_name_ids = []
             for ds_pos, ds_name in datastreams.items():
-                print(f"Renaming datastream at position {ds_pos}")
-                ds_name_ids.append(get_datastream_id(cur, thing_uuid, ds_pos))
-                rename_datastream(cur, thing_uuid, ds_pos, ds_name)
+                try:
+                    ds_name_ids.append(get_datastream_id(cur, thing_uuid, ds_pos))
+                    print(f"Renaming datastream at position {ds_pos} to {ds_name}")
+                    rename_datastream(cur, thing_uuid, ds_pos, ds_name)
+                except ValueError:
+                    print(f"Datastream at position {ds_pos} not found, skipping.")
             for ds_id in ds_name_ids:
                 delete_datastream_observations(cur, thing_uuid, ds_id)
                 delete_datastream(cur, thing_uuid, ds_id)
+    # Open new connection to commit previous changes
+    with psycopg.connect(dsn) as conn:
+        with conn.cursor() as cur:
+            set_search_path(cur, schema)
+            add_datastream_pos_constraint(cur)
 
 
 def get_thing_schema(cur, thing_uuid: str) -> str:
@@ -83,6 +92,11 @@ def get_datastream_id(cur, thing_uuid: str, ds_pos: int) -> int:
 
 
 def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str) -> None:
+    ## Drop the unique constraint temporarily
+    cur.execute(
+        "ALTER TABLE datastream "
+        "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
+    )
     thing_name = get_thing_name(cur, thing_uuid)
     ds_name_new = f"{thing_name}/{ds_name}"
     ds_pos_new = ds_name
@@ -103,6 +117,7 @@ def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str) -> None:
     print(query.as_string())
     cur.execute(query)
 
+
 def delete_datastream_observations(cur, thing_uuid: str, ds_id: int) -> None:
     query = sql.SQL(
         "DELETE FROM observation o "
@@ -118,6 +133,7 @@ def delete_datastream_observations(cur, thing_uuid: str, ds_id: int) -> None:
     print(query.as_string())
     cur.execute(query)
 
+
 def delete_datastream(cur, thing_uuid: str, ds_id: int) -> None:
     query = sql.SQL(
         "DELETE FROM datastream d "
@@ -131,6 +147,24 @@ def delete_datastream(cur, thing_uuid: str, ds_id: int) -> None:
     )
     print(query.as_string())
     cur.execute(query)
+
+
+def drop_datastream_pos_constaint(cur) -> None:
+    cur.execute(
+        "ALTER TABLE datastream "
+        "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
+    )
+    print("Dropped unique constraint on thing_id and position in datastream table.")
+
+
+def add_datastream_pos_constraint(cur) -> None:
+    cur.execute(
+        "ALTER TABLE datastream "
+        "ADD CONSTRAINT datastream_thing_id_position_9f2cfe68_uniq "
+        "UNIQUE (thing_id, position)"
+    )
+    print("Added unique constraint on thing_id and position in datastream table.")
+
 
 # need to either rename new datastream or drop constraint on id, position before renaming
 # need to get datastream_ids that should be deleted before renaming
