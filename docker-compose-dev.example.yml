@@ -69,25 +69,26 @@ services:
   keycloak:
     image: "quay.io/keycloak/keycloak:24.0.3"
     ports:
-      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
-    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+      - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
+    user: ${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}
     environment:
-      KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "admin"
+      KEYCLOAK_ADMIN: $KEYCLOAK_ADMIN
+      KEYCLOAK_ADMIN_PASSWORD: $KEYCLOAK_ADMIN_PASSWORD
       KC_DB: postgres
       KC_DB_URL_DATABASE: keycloak
       KC_DB_SCHEMA: public
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-      KC_PROXY: edge
-      KC_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
-      KC_HTTP_RELATIVE_PATH: keycloak  # shoulnd't be necessary but currently is
+      KC_DB_URL: jdbc:${KC_DB_DSN}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HTTP_RELATIVE_PATH: ${KC_HTTP_RELATIVE_PATH:-/keycloak}
+      KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
+      KC_HOSTNAME_URL: ${KC_HOSTNAME_URL}
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
     command:
-      - start-dev
+      - $KEYCLOAK_START_CMD
       - --import-realm
+      - --http-enabled true
       - --http-port=${KEYCLOAK_PORT}
     depends_on:
       keycloak-postgres:
@@ -106,11 +107,11 @@ services:
       interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
       timeout: 5s
       retries: 5
-
-  thing-management-api:
-    depends_on:
-      keycloak:
-        condition: service_started
+#
+#  thing-management-api:
+#    depends_on:
+#      keycloak:
+#        condition: service_started
 
   timeio-db-api:
     ports:
