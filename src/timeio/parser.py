@@ -45,6 +45,12 @@ def get_header(rawdata: str, header_line: int) -> str:
     raise ValueError(f"header line {header_line} not found")
 
 
+def pandafy_headerline(header_raw: str, delimiter: str) -> list[str]:
+    mock_cvs = StringIO(header_raw + "\n\n")
+    df = pd.read_csv(mock_cvs, delimiter=delimiter)
+    return df.columns.to_list()
+
+
 class ObservationPayloadT(TypedDict, total=False):
     phenomenon_time_start: str
     phenomenon_time_end: str
@@ -246,7 +252,7 @@ class CsvParser(FileParser):
 
         if header_line is not None:
             header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
-            header_names = header_raw_clean.split(delimiter)
+            header_names = pandafy_headerline(header_raw_clean, delimiter)
 
             if duplicate:
                 df_default_names = df.copy()
