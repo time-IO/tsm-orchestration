@@ -88,13 +88,12 @@ class DatastreamComparer:
             equal = sorted(obs_pos) == sorted(obs_header)
             results.append(
                 {
-                    "position_datastream_id": ds_pos_id,
-                    "header_datastream_id": ds_header_id,
+                    "ds_pos": ds_pos_id,
+                    "ds_name": ds_header_id,
                     "equal": equal,
                 }
             )
         return {
-            "schema": self.schema,
             "thing_uuid": self.thing_uuid,
             "compare": results,
         }
