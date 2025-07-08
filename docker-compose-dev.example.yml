@@ -80,8 +80,10 @@ services:
       KC_DB_URL: jdbc:${KC_DB_DSN}
       KC_DB_USERNAME: ${KC_DB_USERNAME}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
-      KC_HOSTNAME: ${KC_FULL_URL}
       KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
+      KC_HOSTNAME: ${KC_FULL_URL}
+      KC_HOSTNAME_URL: ${KC_FULL_URL}
+      KC_HTTP_RELATIVE_PATH: keycloak  # shouldn't be necessary but currently is
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
     command:
