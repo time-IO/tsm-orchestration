@@ -19,6 +19,7 @@ services:
       args:
         UID: "${UID}"
         GID: "${GID}"
+        BASE_IMAGE_REGISTRY: "${INIT_ALPINE_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${INIT_ALPINE_BASE_IMAGE_TAG}"
     restart: no
     user: "${UID}:${GID}"
@@ -337,6 +338,7 @@ services:
     build:
       context: tomcat
       args:
+        BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
         UID: "${UID}"
@@ -350,39 +352,39 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  flyway-thing-management:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-    user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-    volumes:
-      - ./flyway/migrations/thing-management:/flyway/sql
-      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-    environment:
-      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-    depends_on:
-      database:
-        condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  # # Summary
+  # # =======
+  # # brief:
+  # # dir:
+  # # see also:
+  # #
+  # # Description
+  # # ===========
+  # # TODO
+  # flyway-thing-management:
+  #   image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+  #   user: "${UID}:${UID}"
+  #   command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+  #   volumes:
+  #     - ./flyway/migrations/thing-management:/flyway/sql
+  #     - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
+  #   environment:
+  #     FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+  #     FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+  #     FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+  #     FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+  #     THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #     flyway:
+  #       condition: service_completed_successfully
+  #   logging:
+  #     options:
+  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -631,8 +633,8 @@ services:
         condition: service_started
       frost:
         condition: service_started
-      thing-management-frontend:
-        condition: service_started
+      # thing-management-frontend:
+      #   condition: service_started
       init:
         condition: service_completed_successfully
     healthcheck:
@@ -656,6 +658,7 @@ services:
       dockerfile: configdb_updater/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -688,6 +691,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -737,6 +741,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -774,6 +779,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -812,6 +818,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -846,6 +853,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -890,6 +898,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -917,6 +926,8 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
+    volumes:
+      - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
     logging:
       options:
         max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
@@ -930,6 +941,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -965,6 +977,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -999,6 +1012,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1039,6 +1053,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1083,6 +1098,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1122,6 +1138,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1162,6 +1179,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1191,6 +1209,7 @@ services:
       dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CRON_SCHEDULER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at

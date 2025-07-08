@@ -7,6 +7,8 @@ import logging
 import math
 import re
 import warnings
+import yaml
+import os
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -16,6 +18,7 @@ from io import StringIO
 from typing import Any, TypedDict, TypeVar, cast
 
 import pandas as pd
+import numpy as np
 from typing_extensions import Required
 
 from timeio.common import ObservationResultType
@@ -27,11 +30,25 @@ parsedT = TypeVar("parsedT")
 journal = Journal("Parser")
 
 
-def filter_lines(rawdata: str, skip: tuple | str) -> str:
-    if isinstance(skip, str):
-        skip = (skip,)
-    pattern = "|".join(skip)
-    return "\n".join(ln for ln in rawdata.splitlines() if not re.match(pattern, ln))
+def filter_lines(rawdata: str, comment_regex: str) -> str:
+    lines = []
+    for line in rawdata.splitlines():
+        if not re.match(comment_regex, line):
+            lines.append(line)
+    return "\n".join(lines)
+
+
+def get_header(rawdata: str, header_line: int) -> str:
+    for i, line in enumerate(rawdata.splitlines()):
+        if i == header_line:
+            return line
+    raise ValueError(f"header line {header_line} not found")
+
+
+def pandafy_headerline(header_raw: str, delimiter: str) -> list[str]:
+    mock_cvs = StringIO(header_raw + "\n\n")
+    df = pd.read_csv(mock_cvs, delimiter=delimiter)
+    return df.columns.to_list()
 
 
 class ObservationPayloadT(TypedDict, total=False):
@@ -71,7 +88,9 @@ class FileParser(Parser):
         self.logger.debug(f"parser settings in use with {name}: {self.settings}")
 
     @abstractmethod
-    def do_parse(self, rawdata: Any) -> pd.DataFrame:
+    def do_parse(
+        self, rawdata: Any, project_name: str, thing_uuid: str
+    ) -> pd.DataFrame:
         raise NotImplementedError
 
     def to_observations(
@@ -80,7 +99,7 @@ class FileParser(Parser):
         observations = []
 
         data.index.name = "result_time"
-        data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S%Z")
+        data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         to_process = [val for _, val in data.items()]
 
@@ -126,40 +145,64 @@ class FileParser(Parser):
             chunk["parameters"] = json.dumps({"origin": origin, "column_header": col})
 
             observations.extend(chunk.to_dict(orient="records"))
-
         return observations
 
 
 class CsvParser(FileParser):
     def _set_index(self, df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
 
-        date_columns = [d["column"] for d in timestamp_columns]
+        date_columns = [df.columns[d["column"]] for d in timestamp_columns]
         date_format = " ".join([d["format"] for d in timestamp_columns])
 
-        for c in date_columns:
-            if c not in df.columns:
-                raise ParsingError(f"Timestamp column {c} does not exist. ")
+        # for c in date_columns:
+        #     if c not in df.columns:
+        #         raise ParsingError(f"Timestamp column {c} does not exist. ")
 
         index = reduce(
             lambda x, y: x + " " + y,
             [df[c].fillna("").astype(str).str.strip() for c in date_columns],
         )
         df = df.drop(columns=date_columns)
-
-        index = pd.to_datetime(index, format=date_format, errors="coerce")
-        if index.isna().any():
-            nat = index.isna()
+        dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
+        if dt_index.isna().any():
+            nat = dt_index.isna()
             warnings.warn(
-                f"Could not parse {nat.sum()} of {len(index)} timestamps "
+                f"Could not parse {nat.sum()} of {len(df)} timestamps "
                 f"with provided timestamp format {date_format!r}. First failing "
                 f"timestamp: '{index[nat].iloc[0]}'",
                 ParsingWarning,
             )
         index.name = None
-        df.index = index
+        df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str) -> pd.DataFrame:
+    def _write_mapping_yaml(
+        self,
+        df_default: pd.DataFrame,
+        header_names: list,
+        ts_indices: list,
+        project_name: str,
+        thing_uuid: str,
+    ):
+        column_mapping = dict(zip(df_default.columns, header_names))
+        column_mapping = {
+            thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
+        }
+        output_dir = f"/tmp/datastream_mapping/{project_name}"
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
+                yaml.dump(column_mapping, f, sort_keys=False)
+            self.logger.info(
+                f"Successfully created mapping yaml for thing {thing_uuid}"
+            )
+        except Exception as e:
+            warnings.warn(
+                f"Failed to create mapping yaml for thing {thing_uuid}: {e}",
+                ParsingWarning,
+            )
+
+    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -170,26 +213,86 @@ class CsvParser(FileParser):
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
+        ts_indices = [i["column"] for i in timestamp_columns]
+        header_line = settings.get("header", None)
+        delimiter = settings.get("delimiter", ",")
+        duplicate = settings.pop("duplicate", False)
+        if header_line is not None:
+            header_raw = get_header(rawdata, header_line)
+            self.logger.debug(f"HEADER: {header_raw}")
 
-        if "comment" in settings:
-            rawdata = filter_lines(rawdata, settings.pop("comment"))
+        if comment_regex := settings.pop("comment", r"(?!.*)"):
+            if isinstance(comment_regex, str):
+                comment_regex = (comment_regex,)
+            comment_regex = "|".join(comment_regex)
+
+        rows = []
+        for i, row in enumerate(rawdata.splitlines()):
+
+            if i == header_line:
+                # we might have comments at the header line as well
+                rows.append(re.sub(comment_regex, "", row))
+                continue
+            if not re.match(comment_regex, row):
+                rows.append(row)
+
+        rawdata = "\n".join(rows)
 
         try:
+            if header_line is not None:
+                settings["header"] = 0
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
-
-        # We always use positions as header
-        df.columns = range(len(df.columns))
 
         # remove all-nan columns as artifacts
         df = df.dropna(axis=1, how="all")
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
+        if header_line is not None:
+            header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
+            header_names = pandafy_headerline(header_raw_clean, delimiter)
+
+            if duplicate:
+                df_default_names = df.copy()
+                df_default_names.columns = range(len(df.columns))
+                df.columns = header_names
+                if np.array_equal(df.to_numpy(), df_default_names.to_numpy()):
+                    self._write_mapping_yaml(
+                        df_default_names,
+                        header_names,
+                        ts_indices,
+                        project_name,
+                        thing_uuid,
+                    )
+                    df_default_names = df_default_names.drop(
+                        columns=ts_indices, errors="ignore"
+                    )
+                    df = pd.concat([df, df_default_names], axis=1)
+                else:
+                    df = df_default_names
+                    warnings.warn(
+                        "Comparison of header based data and position based"
+                        "data failed. Positions will be used instead.",
+                        ParsingWarning,
+                    )
+            else:
+                df.columns = header_names
+
+        # If no header is given, we always use column positions
+        else:
+            df.columns = range(len(df.columns))
+
         df = self._set_index(df, timestamp_columns)
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
+
+        if df.shape[0] == 0:
+            warnings.warn(
+                f"Parsing resulted in empty dataset.",
+                ParsingWarning,
+            )
 
         self.logger.debug(f"data.shape={df.shape}")
         return df
@@ -213,7 +316,7 @@ class Observation:
     def __post_init__(self):
         if self.value is None:
             raise ValueError("None is not allowed as observation value.")
-        if math.isnan(self.value):
+        if isinstance(self.value, float) and math.isnan(self.value):
             raise ValueError("NaN is not allowed as observation value.")
 
 
@@ -367,6 +470,30 @@ class BrightskyDwdApiParser(MqttDataParser):
         return out
 
 
+class ChirpStackGenericParser(MqttDataParser):
+    def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        timestamp = rawdata["time"]
+        out = []
+        for key, value in rawdata["object"].items():
+            if key == "Data_time":
+                # this is a timestamp, we ignore it
+                continue
+            try:
+                out.append(
+                    Observation(
+                        timestamp=timestamp,
+                        value=value,
+                        position=key,
+                        origin=origin,
+                        header=key,
+                    )
+                )
+            except ValueError:
+                # value is NaN or None
+                continue
+        return out
+
+
 class SineDummyParser(MqttDataParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()
@@ -394,6 +521,7 @@ def get_parser(parser_type, settings) -> FileParser | MqttDataParser:
         "campbell_cr6": CampbellCr6Parser,
         "brightsky_dwd_api": BrightskyDwdApiParser,
         "ydoc_ml417": YdocMl417Parser,
+        "chirpstack_generic": ChirpStackGenericParser,
         "sine_dummy": SineDummyParser,
     }
     klass = types.get(parser_type)

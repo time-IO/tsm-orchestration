@@ -5,13 +5,14 @@ import json
 import logging
 from datetime import datetime
 import warnings
+import requests
 
 from minio import Minio
 from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
 from timeio.databases import DBapi
-from timeio.errors import UserInputError, ParsingError
+from timeio.errors import UserInputError, ParsingError, ParsingWarning
 from timeio.feta import Thing
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
@@ -42,7 +43,7 @@ class ParserJobHandler(AbstractHandler):
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.api_base_url = get_envvar("DB_API_BASE_URL")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
@@ -57,6 +58,7 @@ class ParserJobHandler(AbstractHandler):
 
         thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
+        project_name = thing.project.name
         pattern = thing.s3_store.filename_pattern
 
         if not fnmatch.fnmatch(filename, pattern):
@@ -74,25 +76,32 @@ class ParserJobHandler(AbstractHandler):
         rawdata = self.read_file(bucket_name, filename)
 
         logger.info("parsing rawdata ... ")
-        file = source_uri
-        with warnings.catch_warnings() as w:
+        file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
+        with warnings.catch_warnings(record=True) as recorded_warnings:
+            warnings.simplefilter("always", ParsingWarning)
             try:
-                df = parser.do_parse(rawdata)
+                df = parser.do_parse(rawdata, project_name, thing_uuid)
                 obs = parser.to_observations(df, source_uri)
             except ParsingError as e:
                 journal.error(
-                    f"Parsing failed. Detail: {e}. File: {file!r}", thing_uuid
+                    f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
                 raise e
             except Exception as e:
-                journal.error(f"Parsing failed for file {file!r}", thing_uuid)
+                journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
                 raise UserInputError("Parsing failed") from e
-            if w:
-                journal.warning(w[0].message, thing_uuid)
+            for w in recorded_warnings:
+                logger.info(f"{w.message!r}")
+                journal.warning(f"{w.message}", thing_uuid)
 
         logger.debug("storing observations to database ...")
         try:
-            self.dbapi.upsert_observations(thing_uuid, obs)
+            resp = requests.post(
+                f"{self.api_base_url}/observations/upsert/{thing_uuid}",
+                json={"observations": obs},
+                headers={"Content-Type": "application/json"},
+            )
+            resp.raise_for_status()
         except Exception as e:
             # Tell the user that his parsing was successful
             journal.error(
@@ -102,8 +111,14 @@ class ParserJobHandler(AbstractHandler):
             )
             raise e
 
-        # Now everything is fine and we tell the user
-        journal.info(f"Parsed file {file}", thing_uuid)
+        if len(obs) > 0:
+            # Now everything is fine and we tell the user
+            journal.info(
+                f"Parsed file: {file!r} | "
+                f"Data rows: {df.shape[0]} | "
+                f"Stored observations: {len(obs)}",
+                thing_uuid,
+            )
 
         object_tags = Tags.new_object_tags()
         object_tags["parsed_at"] = datetime.now().isoformat()
