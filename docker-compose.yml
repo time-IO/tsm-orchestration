@@ -352,39 +352,39 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # # Summary
-  # # =======
-  # # brief:
-  # # dir:
-  # # see also:
-  # #
-  # # Description
-  # # ===========
-  # # TODO
-  # flyway-thing-management:
-  #   image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-  #   user: "${UID}:${UID}"
-  #   command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-  #   volumes:
-  #     - ./flyway/migrations/thing-management:/flyway/sql
-  #     - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-  #   environment:
-  #     FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-  #     FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-  #     FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-  #     FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-  #     THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     flyway:
-  #       condition: service_completed_successfully
-  #   logging:
-  #     options:
-  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  flyway-thing-management:
+    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    volumes:
+      - ./flyway/migrations/thing-management:/flyway/sql
+      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
+    environment:
+      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -633,8 +633,8 @@ services:
         condition: service_started
       frost:
         condition: service_started
-      # thing-management-frontend:
-      #   condition: service_started
+      thing-management-frontend:
+        condition: service_started
       init:
         condition: service_completed_successfully
     healthcheck:
