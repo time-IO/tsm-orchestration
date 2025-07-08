@@ -80,15 +80,13 @@ services:
       KC_DB_URL: jdbc:${KC_DB_DSN}
       KC_DB_USERNAME: ${KC_DB_USERNAME}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
-      KC_HTTP_RELATIVE_PATH: ${KC_HTTP_RELATIVE_PATH:-/keycloak}
+      KC_HOSTNAME: ${KC_FULL_URL}
       KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
-      KC_HOSTNAME_URL: ${KC_HOSTNAME_URL}
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
     command:
       - $KEYCLOAK_START_CMD
       - --import-realm
-      - --http-enabled true
       - --http-port=${KEYCLOAK_PORT}
     depends_on:
       keycloak-postgres:
