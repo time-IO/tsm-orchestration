@@ -58,7 +58,7 @@ class ParserJobHandler(AbstractHandler):
 
         thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
-        project_name = thing.project.name
+        project_name = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
 
         if not fnmatch.fnmatch(filename, pattern):

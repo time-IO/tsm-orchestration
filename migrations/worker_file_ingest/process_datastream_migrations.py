@@ -2,64 +2,72 @@
 
 from __future__ import annotations
 import click
-import glob
-import yaml
+import os
 import psycopg
 from psycopg import sql
+from compare_datastreams import DatastreamComparer
+from set_parser_duplicate_false import cleanup
 
 
 @click.command()
-@click.argument("thing_uuid", type=str)
+@click.argument("schema", type=str)
 @click.argument(
     "dsn", type=str, default="postgresql://postgres:postgres@localhost:5432/postgres"
 )
-def update_datastreams(thing_uuid, dsn) -> None:
+@click.argument("frnt_schema", type=str, default="frontenddb")
+@click.argument("cfg_schema", type=str, default="config_db")
+def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str):
+    mapping_dirs = os.listdir("datastream_mapping")
+    schema_folder = (
+        os.path.join("datastream_mapping", schema) if schema in mapping_dirs else None
+    )
+    if not schema_folder:
+        print(f"No matching folder found for {schema}")
+        return False
+
     with psycopg.connect(dsn) as conn:
         with conn.cursor() as cur:
-            schema = get_thing_schema(cur, thing_uuid)
             set_search_path(cur, schema)
             drop_datastream_pos_constaint(cur)
-            datastreams = get_datastreams_from_yaml(thing_uuid)
-            print(datastreams)
-            ds_name_ids = []
-            for ds_pos, ds_name in datastreams.items():
-                try:
-                    ds_name_ids.append(get_datastream_id(cur, thing_uuid, ds_pos))
-                    print(f"Renaming datastream at position {ds_pos} to {ds_name}")
-                    rename_datastream(cur, thing_uuid, ds_pos, ds_name)
-                except ValueError:
-                    print(f"Datastream at position {ds_pos} not found, skipping.")
-            for ds_id in ds_name_ids:
-                delete_datastream_observations(cur, thing_uuid, ds_id)
-                delete_datastream(cur, thing_uuid, ds_id)
-    # Open new connection to commit previous changes
-    with psycopg.connect(dsn) as conn:
-        with conn.cursor() as cur:
+            conn.commit()
+
+            for mapping_file in os.listdir(schema_folder):
+                mapping_path = os.path.join(schema_folder, mapping_file)
+                comparer = DatastreamComparer(dsn, schema, mapping_path)
+                compare_result = comparer.compare_datastreams()
+                thing_uuid = compare_result["thing_uuid"]
+                ds_pos_ids = []
+                print(f"Start processing datastreams for thing {thing_uuid}...")
+                for ds in compare_result["compare"]:
+                    if ds["equal"]:
+                        try:
+                            print(
+                                f"Renaming datastream at position {ds['ds_pos']} to {ds['ds_name']}"
+                            )
+                            rename_datastream(
+                                cur, thing_uuid, ds["ds_pos"], ds["ds_name"]
+                            )
+                            ds_pos_ids.append(ds["ds_pos"])
+                        except ValueError:
+                            print(
+                                f"Datastream at position {ds['ds_pos']} not found, skipping."
+                            )
+                conn.commit()
+                for ds_id in ds_pos_ids:
+                    delete_datastream_observations(cur, thing_uuid, ds_id)
+                    delete_datastream(cur, thing_uuid, ds_id)
+                conn.commit()
+                cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
             set_search_path(cur, schema)
             add_datastream_pos_constraint(cur)
 
-
-def get_thing_schema(cur, thing_uuid: str) -> str:
-    query = sql.SQL(
-        "SELECT schema FROM schema_thing_mapping WHERE thing_uuid = {thing_uuid}"
-    ).format(thing_uuid=sql.Literal(thing_uuid))
-    cur.execute(query)
-    return cur.fetchone()[0]
+    return True
 
 
 def set_search_path(cur, schema: str) -> None:
     identifier = sql.Identifier(schema)
     query = sql.SQL("SET search_path TO {}").format(identifier)
     cur.execute(query)
-
-
-def get_datastreams_from_yaml(thing_uuid: str) -> dict:
-    match = glob.glob(f"datastream_mapping/{thing_uuid}.yaml")
-    if not match:
-        raise FileNotFoundError(f"No YAML file found for thing UUID: {thing_uuid}")
-    with open(match[0], "r") as file:
-        ds_mapping = yaml.safe_load(file)
-    return ds_mapping.get(thing_uuid)
 
 
 def get_thing_name(cur, thing_uuid: str) -> str:
@@ -72,23 +80,6 @@ def get_thing_name(cur, thing_uuid: str) -> str:
         return result[0]
     else:
         raise ValueError(f"No thing found with UUID: {thing_uuid}")
-
-
-def get_datastream_id(cur, thing_uuid: str, ds_pos: int) -> int:
-    query = sql.SQL(
-        "SELECT d.id FROM datastream d "
-        "JOIN thing t ON d.thing_id = t.id "
-        "WHERE t.uuid = {thing_uuid} "
-        "AND d.position = {ds_pos}::text"
-    ).format(thing_uuid=sql.Literal(thing_uuid), ds_pos=sql.Literal(ds_pos))
-    cur.execute(query)
-    result = cur.fetchone()
-    if result:
-        return result[0]
-    else:
-        raise ValueError(
-            f"No datastream found for UUID: {thing_uuid} at position: {ds_pos}"
-        )
 
 
 def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str) -> None:
