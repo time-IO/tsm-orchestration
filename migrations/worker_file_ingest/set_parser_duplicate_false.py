@@ -1,19 +1,8 @@
-#!/usr/bin/env python3
-
-from __future__ import annotations
-import click
 import psycopg
 from psycopg import sql
 import json
 
 
-@click.command()
-@click.argument("thing_uuid", type=str)
-@click.argument(
-    "dsn", type=str, default="postgresql://postgres:postgres@localhost:5432/postgres"
-)
-@click.argument("frnt_schema", type=str, default="frontenddb")
-@click.argument("cfg_schema", type=str, default="config_db")
 def cleanup(thing_uuid, dsn, cfg_schema, frnt_schema) -> None:
     with psycopg.connect(dsn) as conn:
         with conn.cursor() as cur:
@@ -79,14 +68,14 @@ def get_parser_params_cfg(cur, parser_id: int) -> dict:
 
 def set_duplicate_false_front(cur, parser_id: int, params: dict) -> None:
     duplicate = params.get("duplicate", None)
-    if duplicate == "true":
-        params["duplicate"] = "false"
+    if duplicate:
+        params["duplicate"] = False
         cur.execute(
             "UPDATE tsm_csvparser SET pandas_read_csv = %s WHERE parser_ptr_id = %s",
             (json.dumps(params), parser_id),
         )
         print("FrontendDB: `duplicate` set to false in tsm_csvparser.pandas_read_csv")
-    elif duplicate == "false":
+    elif not duplicate:
         print("FrontendDB: `duplicate` already set to false, nothing to update...")
     else:
         print("FrontendDB: No `duplicate` settings found, nothing to update...")
@@ -94,18 +83,14 @@ def set_duplicate_false_front(cur, parser_id: int, params: dict) -> None:
 
 def set_duplicate_false_cfg(cur, parser_id: int, params: dict) -> None:
     duplicate = params.get("pandas_read_csv", {}).get("duplicate", None)
-    if duplicate == "true":
-        params["pandas_read_csv"]["duplicate"] = "false"
+    if duplicate:
+        params["pandas_read_csv"]["duplicate"] = False
         cur.execute(
             "UPDATE file_parser SET params = %s WHERE id = %s",
             (json.dumps(params), parser_id),
         )
         print("ConfigDB: `duplicate` set to false in file_parser.params")
-    elif duplicate == "false":
+    elif not duplicate:
         print("ConfígDB: `duplicate` already set to false, nothing to update...")
     else:
         print("ConfigDB: No `duplicate` settings found, nothing to update...")
-
-
-if __name__ == "__main__":
-    cleanup()
