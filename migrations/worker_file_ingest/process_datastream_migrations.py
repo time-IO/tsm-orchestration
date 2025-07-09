@@ -28,7 +28,7 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
     with psycopg.connect(dsn) as conn:
         with conn.cursor() as cur:
             set_search_path(cur, schema)
-            drop_datastream_pos_constaint(cur)
+            drop_datastream_pos_constraint(cur)
             conn.commit()
 
             for mapping_file in os.listdir(schema_folder):
@@ -140,7 +140,7 @@ def delete_datastream(cur, thing_uuid: str, ds_id: int) -> None:
     cur.execute(query)
 
 
-def drop_datastream_pos_constaint(cur) -> None:
+def drop_datastream_pos_constraint(cur) -> None:
     cur.execute(
         "ALTER TABLE datastream "
         "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
