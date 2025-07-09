@@ -67,30 +67,29 @@ def get_parser_params_cfg(cur, parser_id: int) -> dict:
 
 
 def set_duplicate_false_front(cur, parser_id: int, params: dict) -> None:
-    duplicate = params.get("duplicate", None)
-    if duplicate:
+    if "duplicate" not in params:
+        print("FrontendDB: No `duplicate` settings found, nothing to update...")
+    elif params["duplicate"]:
         params["duplicate"] = False
         cur.execute(
             "UPDATE tsm_csvparser SET pandas_read_csv = %s WHERE parser_ptr_id = %s",
             (json.dumps(params), parser_id),
         )
         print("FrontendDB: `duplicate` set to false in tsm_csvparser.pandas_read_csv")
-    elif not duplicate:
-        print("FrontendDB: `duplicate` already set to false, nothing to update...")
     else:
-        print("FrontendDB: No `duplicate` settings found, nothing to update...")
+        print("FrontendDB: `duplicate` already set to false, nothing to update...")
 
 
 def set_duplicate_false_cfg(cur, parser_id: int, params: dict) -> None:
-    duplicate = params.get("pandas_read_csv", {}).get("duplicate", None)
-    if duplicate:
+    duplicate_setting = params.get("pandas_read_csv", {})
+    if "duplicate" not in duplicate_setting:
+        print("ConfigDB: No `duplicate` settings found, nothing to update...")
+    elif duplicate_setting["duplicate"]:
         params["pandas_read_csv"]["duplicate"] = False
         cur.execute(
             "UPDATE file_parser SET params = %s WHERE id = %s",
             (json.dumps(params), parser_id),
         )
         print("ConfigDB: `duplicate` set to false in file_parser.params")
-    elif not duplicate:
-        print("ConfígDB: `duplicate` already set to false, nothing to update...")
     else:
-        print("ConfigDB: No `duplicate` settings found, nothing to update...")
+        print("ConfígDB: `duplicate` already set to false, nothing to update...")

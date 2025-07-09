@@ -4,7 +4,9 @@ from __future__ import annotations
 import click
 import os
 import psycopg
+
 from psycopg import sql
+
 from compare_datastreams import DatastreamComparer
 from set_parser_duplicate_false import cleanup
 
