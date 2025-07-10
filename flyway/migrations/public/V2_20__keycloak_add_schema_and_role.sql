@@ -1,4 +1,4 @@
-CREATE ROLE ${keycloak_db_user} WITH PASSWORD '${keycloak_db_password}';
+CREATE ROLE ${keycloak_db_user} WITH LOGIN PASSWORD '${keycloak_db_password}';
 GRANT ${keycloak_db_user} TO ${flyway:user};
 CREATE SCHEMA IF NOT EXISTS ${keycloak_db_user} AUTHORIZATION ${keycloak_db_user};
 SET search_path TO ${keycloak_db_user};
