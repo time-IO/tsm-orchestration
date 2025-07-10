@@ -1,6 +1,6 @@
 CREATE ROLE ${keycloak_db_user} WITH PASSWORD '${keycloak_db_password}';
 GRANT ${keycloak_db_user} TO ${flyway:user};
-CREATE SCHEMA IF NOT EXISTS keycloak AUTHORIZATION ${keycloak_db_user};
+CREATE SCHEMA IF NOT EXISTS ${keycloak_db_user} AUTHORIZATION ${keycloak_db_user};
 SET search_path TO ${keycloak_db_user};
 GRANT CONNECT ON DATABASE ${flyway:database} TO ${keycloak_db_user};
 ALTER ROLE ${keycloak_db_user} SET search_path to keycloak;
