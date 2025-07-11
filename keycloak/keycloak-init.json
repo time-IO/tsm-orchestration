@@ -1,6 +1,8 @@
 {
   "id" : "c529064c-d09a-4648-951e-8cfc282cd3e6",
   "realm" : "demo",
+  "displayName" : "",
+  "displayNameHtml" : "",
   "notBefore" : 0,
   "defaultSignatureAlgorithm" : "RS256",
   "revokeRefreshToken" : false,
@@ -424,8 +426,8 @@
     "clientConsents" : [ {
       "clientId" : "timeIO-client",
       "grantedClientScopes" : [ "eduperson_unique_id", "eduperson_entitlement", "roles", "eduperson_principal_name", "profile", "email", "timeIO-client", "openid" ],
-      "createdDate" : 1717749619787,
-      "lastUpdatedDate" : 1717749619834
+      "createdDate" : 1752237662085,
+      "lastUpdatedDate" : 1752237662096
     } ],
     "notBefore" : 0,
     "groups" : [ "/a:a:a:group:VO:Group1#", "/a:a:a:group:VO:Group2#" ]
@@ -715,38 +717,44 @@
     "name" : "timeIO Client",
     "description" : "A demo client",
     "rootUrl" : "http://localhost/thing-management",
-    "adminUrl" : "http://localhost/thing-management",
+    "adminUrl" : "http://localhost/frontend",
     "baseUrl" : "http://localhost/thing-management",
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ",
-    "redirectUris" : [ "http://localhost/frontend/oidc/auth/", "http://localhost/visualization/login/generic_oauth", "http://localhost/thing-management/login/callback" ],
+    "redirectUris" : [ "http://localhost/frontend/oidc/auth/", "http://localhost/thing-management/login/callback" ],
     "webOrigins" : [ "http://localhost" ],
     "notBefore" : 0,
     "bearerOnly" : false,
     "consentRequired" : false,
     "standardFlowEnabled" : true,
     "implicitFlowEnabled" : false,
-    "directAccessGrantsEnabled" : true,
+    "directAccessGrantsEnabled" : false,
     "serviceAccountsEnabled" : false,
     "publicClient" : true,
     "frontchannelLogout" : true,
     "protocol" : "openid-connect",
     "attributes" : {
-      "oidc.ciba.grant.enabled" : "false",
       "client.secret.creation.time" : "1714992844",
-      "backchannel.logout.session.required" : "true",
-      "post.logout.redirect.uris" : "http://localhost/thing-management/login",
-      "display.on.consent.screen" : "true",
+      "post.logout.redirect.uris" : "http://localhost/frontend##http://localhost/thing-management/login",
       "oauth2.device.authorization.grant.enabled" : "false",
-      "backchannel.logout.revoke.offline.tokens" : "false"
+      "backchannel.logout.revoke.offline.tokens" : "false",
+      "use.refresh.tokens" : "true",
+      "oidc.ciba.grant.enabled" : "false",
+      "client.use.lightweight.access.token.enabled" : "false",
+      "backchannel.logout.session.required" : "true",
+      "client_credentials.use_refresh_token" : "false",
+      "acr.loa.map" : "{}",
+      "require.pushed.authorization.requests" : "false",
+      "tls.client.certificate.bound.access.tokens" : "false",
+      "display.on.consent.screen" : "true",
+      "token.response.type.bearer.lower-case" : "false"
     },
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "email", "eduperson_*", "openid", "basic" ],
+    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   } ],
   "clientScopes" : [ {
@@ -1144,12 +1152,30 @@
     "description" : "",
     "protocol" : "openid-connect",
     "attributes" : {
-      "include.in.token.scope" : "false",
+      "include.in.token.scope" : "true",
       "display.on.consent.screen" : "true",
       "gui.order" : "",
       "consent.screen.text" : ""
     },
     "protocolMappers" : [ {
+      "id" : "6d17e229-49ca-4db9-9f18-0dcdd13db03d",
+      "name" : "eduperson_entitlement_attribute",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "aggregate.attrs" : "false",
+        "introspection.token.claim" : "true",
+        "multivalued" : "true",
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "eduperson_entitlement",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "claim.name" : "eduperson_entitlement",
+        "jsonType.label" : "String"
+      }
+    }, {
       "id" : "351934a7-54eb-4aab-98bd-a9249b740708",
       "name" : "Mapper eduperson_entitlement",
       "protocol" : "openid-connect",
@@ -1159,6 +1185,7 @@
         "full.path" : "false",
         "introspection.token.claim" : "true",
         "userinfo.token.claim" : "true",
+        "multivalued" : "true",
         "id.token.claim" : "true",
         "lightweight.claim" : "false",
         "access.token.claim" : "true",
@@ -1336,7 +1363,7 @@
       }
     } ]
   } ],
-  "defaultDefaultClientScopes" : [ "role_list", "profile", "email", "roles", "web-origins", "acr", "openid", "eduperson_principal_name", "eduperson_entitlement", "eduperson_unique_id" ],
+  "defaultDefaultClientScopes" : [ "role_list", "profile", "email", "roles", "web-origins", "acr", "openid", "eduperson_principal_name", "eduperson_unique_id", "eduperson_entitlement" ],
   "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt" ],
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
@@ -1349,13 +1376,69 @@
     "strictTransportSecurity" : "max-age=31536000; includeSubDomains"
   },
   "smtpServer" : { },
+  "loginTheme" : "timeio-login",
+  "accountTheme" : "",
+  "adminTheme" : "",
+  "emailTheme" : "",
   "eventsEnabled" : false,
   "eventsListeners" : [ "jboss-logging" ],
   "enabledEventTypes" : [ ],
   "adminEventsEnabled" : false,
   "adminEventsDetailsEnabled" : false,
-  "identityProviders" : [ ],
-  "identityProviderMappers" : [ ],
+  "identityProviders" : [ {
+    "alias" : "helmholtz-aai",
+    "displayName" : "Helmholtz AAI",
+    "internalId" : "baa2a11c-b507-4540-92c9-6d99afd45f97",
+    "providerId" : "oidc",
+    "enabled" : true,
+    "updateProfileFirstLoginMode" : "on",
+    "trustEmail" : true,
+    "storeToken" : true,
+    "addReadTokenRoleOnCreate" : false,
+    "authenticateByDefault" : false,
+    "linkOnly" : false,
+    "config" : {
+      "acceptsPromptNoneForwardFromClient" : "false",
+      "tokenUrl" : "https://login-dev.helmholtz.de/oauth2/token",
+      "isAccessTokenJWT" : "false",
+      "jwksUrl" : "https://login-dev.helmholtz.de/oauth2/jwk",
+      "filteredByClaim" : "false",
+      "backchannelSupported" : "false",
+      "issuer" : "https://login-dev.helmholtz.de/oauth2",
+      "pkceMethod" : "plain",
+      "loginHint" : "false",
+      "clientAuthMethod" : "client_secret_post",
+      "syncMode" : "IMPORT",
+      "clientSecret" : "pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ",
+      "allowedClockSkew" : "0",
+      "defaultScope" : "email profile eduperson_principal_name eduperson_entitlement",
+      "hideOnLoginPage" : "false",
+      "userInfoUrl" : "https://login-dev.helmholtz.de/oauth2/userinfo",
+      "validateSignature" : "true",
+      "clientId" : "timeio-thing-management",
+      "uiLocales" : "false",
+      "disableNonce" : "false",
+      "useJwksUrl" : "true",
+      "sendClientIdOnLogout" : "false",
+      "metadataDescriptorUrl" : "https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration",
+      "pkceEnabled" : "true",
+      "authorizationUrl" : "https://login-dev.helmholtz.de/oauth2-as/oauth2-authz",
+      "disableUserInfo" : "false",
+      "sendIdTokenOnLogout" : "true",
+      "passMaxAge" : "false"
+    }
+  } ],
+  "identityProviderMappers" : [ {
+    "id" : "0cf7480e-645c-4ae6-8075-95f1b5fd288d",
+    "name" : "username importer",
+    "identityProviderAlias" : "helmholtz-aai",
+    "identityProviderMapper" : "oidc-username-idp-mapper",
+    "config" : {
+      "syncMode" : "INHERIT",
+      "template" : "${CLAIM.eduperson_principal_name}",
+      "target" : "LOCAL"
+    }
+  } ],
   "components" : {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy" : [ {
       "id" : "fd109b4b-8c63-4352-9a7e-a2b5d91447f9",
@@ -1406,7 +1489,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-role-list-mapper" ]
       }
     }, {
       "id" : "5bd353c4-737b-4b31-aa05-4b1d2ddbef2b",
@@ -1424,7 +1507,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "saml-role-list-mapper", "oidc-full-name-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-address-mapper", "saml-user-property-mapper" ]
       }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
@@ -2028,17 +2111,19 @@
   "firstBrokerLoginFlow" : "first broker login",
   "attributes" : {
     "cibaBackchannelTokenDeliveryMode" : "poll",
-    "cibaExpiresIn" : "120",
     "cibaAuthRequestedUserHint" : "login_hint",
-    "oauth2DeviceCodeLifespan" : "600",
     "clientOfflineSessionMaxLifespan" : "0",
     "oauth2DevicePollingInterval" : "5",
     "clientSessionIdleTimeout" : "0",
-    "parRequestUriLifespan" : "60",
-    "clientSessionMaxLifespan" : "0",
     "clientOfflineSessionIdleTimeout" : "0",
     "cibaInterval" : "5",
-    "realmReusableOtpCode" : "false"
+    "realmReusableOtpCode" : "false",
+    "cibaExpiresIn" : "120",
+    "oauth2DeviceCodeLifespan" : "600",
+    "parRequestUriLifespan" : "60",
+    "clientSessionMaxLifespan" : "0",
+    "frontendUrl" : "",
+    "acr.loa.map" : "{}"
   },
   "keycloakVersion" : "24.0.3",
   "userManagedAccessAllowed" : false,
