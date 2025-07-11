@@ -426,8 +426,8 @@
     "clientConsents" : [ {
       "clientId" : "timeIO-client",
       "grantedClientScopes" : [ "eduperson_unique_id", "eduperson_entitlement", "roles", "eduperson_principal_name", "profile", "email", "timeIO-client", "openid" ],
-      "createdDate" : 1752237662085,
-      "lastUpdatedDate" : 1752237662096
+      "createdDate" : 1752247080786,
+      "lastUpdatedDate" : 1752247080806
     } ],
     "notBefore" : 0,
     "groups" : [ "/a:a:a:group:VO:Group1#", "/a:a:a:group:VO:Group2#" ]
@@ -1429,7 +1429,7 @@
     }
   } ],
   "identityProviderMappers" : [ {
-    "id" : "0cf7480e-645c-4ae6-8075-95f1b5fd288d",
+    "id" : "31645b0e-cbbc-452d-b743-5a777181b58d",
     "name" : "username importer",
     "identityProviderAlias" : "helmholtz-aai",
     "identityProviderMapper" : "oidc-username-idp-mapper",
@@ -1437,6 +1437,16 @@
       "syncMode" : "INHERIT",
       "template" : "${CLAIM.eduperson_principal_name}",
       "target" : "LOCAL"
+    }
+  }, {
+    "id" : "c25a4b25-1488-495a-ad64-dca6e7294a5a",
+    "name" : "eduperson_entitlement",
+    "identityProviderAlias" : "helmholtz-aai",
+    "identityProviderMapper" : "oidc-user-attribute-idp-mapper",
+    "config" : {
+      "syncMode" : "INHERIT",
+      "claim" : "eduperson_entitlement",
+      "user.attribute" : "eduperson_entitlement"
     }
   } ],
   "components" : {
@@ -1489,7 +1499,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "saml-role-list-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-usermodel-property-mapper" ]
       }
     }, {
       "id" : "5bd353c4-737b-4b31-aa05-4b1d2ddbef2b",
@@ -1507,7 +1517,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-address-mapper", "saml-user-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper" ]
       }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
