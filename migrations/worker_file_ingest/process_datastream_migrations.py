@@ -26,42 +26,46 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
     if not schema_folder:
         print(f"No matching folder found for {schema}")
         return False
+    try:
+        with psycopg.connect(dsn) as conn:
+            with conn.cursor() as cur:
+                set_search_path(cur, schema)
+                drop_datastream_pos_constraint(cur)
 
-    with psycopg.connect(dsn) as conn:
-        with conn.cursor() as cur:
-            set_search_path(cur, schema)
-            drop_datastream_pos_constraint(cur)
+                for mapping_file in os.listdir(schema_folder):
+                    mapping_path = os.path.join(schema_folder, mapping_file)
+                    comparer = DatastreamComparer(dsn, schema, mapping_path)
+                    compare_result = comparer.compare_datastreams()
+                    thing_uuid = compare_result["thing_uuid"]
+                    ds_pos_ids = []
+                    print(f"Start processing datastreams for thing {thing_uuid}...")
+                    for ds in compare_result["compare"]:
+                        if ds["equal"]:
+                            try:
+                                print(
+                                    f"Renaming datastream at position {ds['ds_pos']} to {ds['ds_name']}"
+                                )
+                                rename_datastream(
+                                    cur, thing_uuid, ds["ds_pos"], ds["ds_name"]
+                                )
+                                ds_pos_ids.append(ds["ds_pos"])
+                            except ValueError:
+                                print(
+                                    f"Datastream at position {ds['ds_pos']} not found, skipping."
+                                )
+                    for ds_id in ds_pos_ids:
+                        delete_datastream_observations(cur, thing_uuid, ds_id)
+                        delete_datastream(cur, thing_uuid, ds_id)
+                    cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
+                set_search_path(cur, schema)
+                add_datastream_pos_constraint(cur)
+
             conn.commit()
 
-            for mapping_file in os.listdir(schema_folder):
-                mapping_path = os.path.join(schema_folder, mapping_file)
-                comparer = DatastreamComparer(dsn, schema, mapping_path)
-                compare_result = comparer.compare_datastreams()
-                thing_uuid = compare_result["thing_uuid"]
-                ds_pos_ids = []
-                print(f"Start processing datastreams for thing {thing_uuid}...")
-                for ds in compare_result["compare"]:
-                    if ds["equal"]:
-                        try:
-                            print(
-                                f"Renaming datastream at position {ds['ds_pos']} to {ds['ds_name']}"
-                            )
-                            rename_datastream(
-                                cur, thing_uuid, ds["ds_pos"], ds["ds_name"]
-                            )
-                            ds_pos_ids.append(ds["ds_pos"])
-                        except ValueError:
-                            print(
-                                f"Datastream at position {ds['ds_pos']} not found, skipping."
-                            )
-                conn.commit()
-                for ds_id in ds_pos_ids:
-                    delete_datastream_observations(cur, thing_uuid, ds_id)
-                    delete_datastream(cur, thing_uuid, ds_id)
-                conn.commit()
-                cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
-            set_search_path(cur, schema)
-            add_datastream_pos_constraint(cur)
+    except Exception as e:
+        print(f"Error during processing. No changes were applied: {e}")
+        conn.rollback()
+        return False
 
     return True
 
