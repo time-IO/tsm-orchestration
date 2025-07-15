@@ -622,7 +622,7 @@ services:
       frost:
         condition: service_started
       keycloak:
-        condition: service_started
+        condition: service_healthy
       # thing-management-frontend:
       #   condition: service_started
       init:
