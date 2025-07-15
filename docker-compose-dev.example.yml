@@ -62,50 +62,11 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/token}"
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${VISUALIZATION_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
 
-  proxy:
-    volumes:
-      - "./nginx/tsm.dev.keycloak.conf:/etc/nginx/conf.d/default.conf:ro"
-
   keycloak:
-    image: "quay.io/keycloak/keycloak:24.0.3"
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
-    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
-    environment:
-      KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "admin"
-      KC_DB: postgres
-      KC_DB_URL_DATABASE: keycloak
-      KC_DB_SCHEMA: public
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-      KC_HTTP_RELATIVE_PATH: ${KC_HTTP_RELATIVE_PATH:-/keycloak}
-      KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
-      KC_HOSTNAME_URL: ${KC_HOSTNAME_URL:-http://localhost/keycloak}
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
-    command:
-      - start-dev
-      - --import-realm
-      - --http-port=${KEYCLOAK_PORT}
-    depends_on:
-      keycloak-postgres:
-        condition: service_healthy
-
-  keycloak-postgres:
-    image: "postgres:14-alpine"
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
-    volumes:
-      - "keycloak-data:/var/lib/postgresql/data/"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U keycloak" ]
-      interval: "${DATABASE_HEALTHCHECK_INTERVAL}"
-      timeout: 5s
-      retries: 5
 
   timeio-db-api:
     ports:
