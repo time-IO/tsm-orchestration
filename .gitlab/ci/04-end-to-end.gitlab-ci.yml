@@ -11,7 +11,7 @@ combined-e2e-test:
     - "sleep 20"
   script:
     - "docker compose logs keycloak"
-    - "docker compose logs nginx"
+    - "docker compose logs proxy"
     - "docker compose exec -T frontend python3 manage.py loaddata user.json"
     - "sleep 1"
     - "docker compose exec -T frontend python3 manage.py loaddata thing.json"

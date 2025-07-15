@@ -12,7 +12,7 @@ docker-service-test:
     - "sleep 20"
   script:
     - "docker compose logs keycloak"
-    - "docker compose logs nginx"
+    - "docker compose logs proxy"
     - "docker ps"
     - "docker compose logs flyway"
     - "cd .gitlab/ci"
@@ -75,7 +75,7 @@ combined-integration-test:
     - "sleep 20"
   script:
     - "docker compose logs keycloak"
-    - "docker compose logs nginx"
+    - "docker compose logs proxy"
     - "echo 'testing object storage integration...'"
     - "curl -u minioadmin:minioadmin ftp://docker:40021 -I -s -o /dev/null || exit 1"
     - "echo 'testing database integration...'"
