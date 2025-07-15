@@ -240,7 +240,7 @@ class CsvParser(FileParser):
 
         try:
             if header_line is not None:
-                settings["header"] = None
+                settings["header"] = 0
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
@@ -273,7 +273,7 @@ class CsvParser(FileParser):
                 else:
                     df = df_default_names
                     warnings.warn(
-                        "Comparison of header based data and position based "
+                        "Comparison of header based data and position based"
                         "data failed. Positions will be used instead.",
                         ParsingWarning,
                     )
