@@ -621,6 +621,8 @@ services:
         condition: service_started
       frost:
         condition: service_started
+      keycloak:
+        condition: service_started
       # thing-management-frontend:
       #   condition: service_started
       init:
@@ -1257,6 +1259,9 @@ services:
   keycloak:
     image: "quay.io/keycloak/keycloak:24.0.3"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
     environment:
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN_USER}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASS}"
