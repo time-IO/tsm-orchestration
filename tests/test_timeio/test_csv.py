@@ -23,7 +23,7 @@ RAWDATA = """
     "settings, columns",
     [
         [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 2, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
         [{"comment": "//", "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
@@ -34,7 +34,6 @@ def test_parsing(settings, columns):
         "skipfooter": 0,
         "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
-
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA.strip(), "project", "thing")
 
