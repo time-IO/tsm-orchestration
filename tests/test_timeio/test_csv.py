@@ -23,7 +23,7 @@ RAWDATA = """
     "settings, columns",
     [
         [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 2, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
         [{"comment": "//", "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
