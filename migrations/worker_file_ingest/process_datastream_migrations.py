@@ -40,7 +40,7 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                     compare_result = comparer.compare_datastreams()
                     print(compare_result)
                     thing_uuid = compare_result["thing_uuid"]
-                    ds_pos_ids = []
+                    ds_header_ids = []
                     print(f"Start processing datastreams for thing {thing_uuid}...")
                     for ds in compare_result["compare"]:
                         if ds["equal"]:
@@ -54,12 +54,12 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                                     ds["ds_position_pos"],
                                     ds["ds_header_pos"],
                                 )
-                                ds_pos_ids.append(ds["ds_header_id"])
+                                ds_header_ids.append(ds["ds_header_id"])
                             except ValueError:
                                 print(
                                     f"Datastream at position {ds['ds_position_id']} not found, skipping."
                                 )
-                    for ds_id in ds_pos_ids:
+                    for ds_id in ds_header_ids:
                         delete_datastream_observations(cur, thing_uuid, ds_id)
                         delete_datastream(cur, thing_uuid, ds_id)
                     cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
