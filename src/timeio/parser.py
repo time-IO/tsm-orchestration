@@ -228,14 +228,11 @@ class CsvParser(FileParser):
 
         rows = []
         for i, row in enumerate(rawdata.splitlines()):
-
             if i == header_line:
                 # we might have comments at the header line as well
                 rows.append(re.sub(comment_regex, "", row))
                 continue
-            if not re.match(comment_regex, row):
-                rows.append(row)
-
+            rows.append(row)
         rawdata = "\n".join(rows)
 
         try:

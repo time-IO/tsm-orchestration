@@ -23,8 +23,8 @@ RAWDATA = """
     "settings, columns",
     [
         [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
-        [{"comment": "//", "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 4, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 4, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
 def test_parsing(settings, columns):
@@ -39,8 +39,8 @@ def test_parsing(settings, columns):
     df = parser.do_parse(RAWDATA.strip(), "project", "thing")
 
     assert df.columns[[1, 3, 7]].equals(pd.Index(columns))
-    assert (df.iloc[:, 2] == [989.7, 989.74, 989.76]).all()
-    assert (df.iloc[:, 14] == [122, 111, 103]).all()
+    assert (df.iloc[:, 2].tolist() == [989.7, 989.74, 989.76])
+    assert (df.iloc[:, 14].tolist() == [122, 111, 103])
 
     tframe = df.iloc[:, 3].to_frame()
     obs = parser.to_observations(tframe, origin="test")
