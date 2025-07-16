@@ -3,14 +3,19 @@
 
 ## [Unreleased]
 
+## 2025-07-09
+
 ### Added
 - MQTTDeviceType `chirpstack-generic` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/383))
 - option to use header names as datastream names in CsvParser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/347))
 - option to write duplicated data for CsvParser. With headers and positions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/397))
+- timeout for ExtAPI HTTPs Requests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/399))
+- migration scripts for changing position based datastream names to header based datastream names ([Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/400), [Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/402), [Merge Request 3](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/403))
 
 ### Changed
 - Refactoring python code for Grafana workers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/375))
 - Tsystems API due to changed response ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/398))
+- Increase mosquitto message limitations ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/391))
 
 ### Fixed
 - Pass CSV parser warnings to dashboard journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/388))
