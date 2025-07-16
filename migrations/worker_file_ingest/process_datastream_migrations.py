@@ -63,7 +63,7 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
             conn.commit()
         with psycopg.connect(dsn, autocommit=True) as conn:
             with conn.cursor() as cur:
-                add_datastream_pos_constraint(cur)
+                add_datastream_pos_constraint(cur, schema)
 
     except Exception as e:
         print(f"Error during processing. No changes were applied: {e}")
