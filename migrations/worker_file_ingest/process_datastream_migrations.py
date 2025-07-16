@@ -18,7 +18,7 @@ from set_parser_duplicate_false import cleanup
 )
 @click.argument("frnt_schema", type=str, default="frontenddb")
 @click.argument("cfg_schema", type=str, default="config_db")
-def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str):
+def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str):
     mapping_dirs = os.listdir("datastream_mapping")
     schema_folder = (
         os.path.join("datastream_mapping", schema) if schema in mapping_dirs else None
@@ -45,15 +45,18 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
                         if ds["equal"]:
                             try:
                                 print(
-                                    f"Renaming datastream at position {ds['ds_pos']} to {ds['ds_name']}"
+                                    f"Renaming datastream at position {ds['ds_position_id']} to {ds['ds_header_name']}"
                                 )
                                 rename_datastream(
-                                    cur, thing_uuid, ds["ds_pos"], ds["ds_name"]
+                                    cur,
+                                    thing_uuid,
+                                    ds["ds_position_id"],
+                                    ds["ds_header_pos"],
                                 )
-                                ds_pos_ids.append(ds["ds_pos"])
+                                ds_pos_ids.append(ds["ds_header_id"])
                             except ValueError:
                                 print(
-                                    f"Datastream at position {ds['ds_pos']} not found, skipping."
+                                    f"Datastream at position {ds['ds_position_id']} not found, skipping."
                                 )
                     for ds_id in ds_pos_ids:
                         delete_datastream_observations(cur, thing_uuid, ds_id)
