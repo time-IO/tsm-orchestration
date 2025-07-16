@@ -26,11 +26,13 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
     if not schema_folder:
         print(f"No matching folder found for {schema}")
         return False
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        with conn.cursor() as cur:
+            drop_datastream_pos_constraint(cur, schema)
     try:
         with psycopg.connect(dsn) as conn:
             with conn.cursor() as cur:
                 set_search_path(cur, schema)
-                drop_datastream_pos_constraint(cur)
 
                 for mapping_file in os.listdir(schema_folder):
                     mapping_path = os.path.join(schema_folder, mapping_file)
@@ -58,9 +60,10 @@ def update_datastreams(schema: str, dsn: str, cfg_schema: str, frnt_schema: str)
                         delete_datastream(cur, thing_uuid, ds_id)
                     cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
                 set_search_path(cur, schema)
-                add_datastream_pos_constraint(cur)
-
             conn.commit()
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                add_datastream_pos_constraint(cur)
 
     except Exception as e:
         print(f"Error during processing. No changes were applied: {e}")
@@ -90,10 +93,10 @@ def get_thing_name(cur, thing_uuid: str) -> str:
 
 def rename_datastream(cur, thing_uuid: str, ds_pos: int, ds_name: str) -> None:
     ## Drop the unique constraint temporarily
-    cur.execute(
-        "ALTER TABLE datastream "
-        "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
-    )
+    # cur.execute(
+    #    "ALTER TABLE datastream "
+    #    "DROP CONSTRAINT IF EXISTS 'datastream_thing_id_position_9f2cfe68_uniq'"
+    # )
     thing_name = get_thing_name(cur, thing_uuid)
     ds_name_new = f"{thing_name}/{ds_name}"
     ds_pos_new = ds_name
@@ -146,19 +149,23 @@ def delete_datastream(cur, thing_uuid: str, ds_id: int) -> None:
     cur.execute(query)
 
 
-def drop_datastream_pos_constraint(cur) -> None:
+def drop_datastream_pos_constraint(cur, schema) -> None:
     cur.execute(
-        "ALTER TABLE datastream "
-        "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
+        sql.SQL(
+            "ALTER TABLE {schema}.datastream "
+            "DROP CONSTRAINT IF EXISTS datastream_thing_id_position_9f2cfe68_uniq"
+        ).format(schema=sql.Identifier(schema))
     )
     print("Dropped unique constraint on thing_id and position in datastream table.")
 
 
-def add_datastream_pos_constraint(cur) -> None:
+def add_datastream_pos_constraint(cur, schema) -> None:
     cur.execute(
-        "ALTER TABLE datastream "
-        "ADD CONSTRAINT datastream_thing_id_position_9f2cfe68_uniq "
-        "UNIQUE (thing_id, position)"
+        sql.SQL(
+            "ALTER TABLE {schema}.datastream "
+            "ADD CONSTRAINT datastream_thing_id_position_9f2cfe68_uniq "
+            "UNIQUE (thing_id, position)"
+        ).format(schema=sql.Identifier(schema))
     )
     print("Added unique constraint on thing_id and position in datastream table.")
 
