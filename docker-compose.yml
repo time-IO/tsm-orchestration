@@ -621,6 +621,8 @@ services:
         condition: service_started
       frost:
         condition: service_started
+      keycloak:
+        condition: service_healthy
       # thing-management-frontend:
       #   condition: service_started
       init:
@@ -1253,6 +1255,40 @@ services:
       options:
         max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+  keycloak:
+    image: "quay.io/keycloak/keycloak:24.0.3"
+    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN_USER}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASS}"
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://${KEYCLOAK_DATABASE_HOST}/${KEYCLOAK_DATABASE_NAME}"
+      KC_DB_SCHEMA: "${KEYCLOAK_DATABASE_USER}"
+      KC_DB_USERNAME: "${KEYCLOAK_DATABASE_USER}"
+      KC_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
+      KC_PROXY_HEADERS: "${KC_PROXY_HEADERS}"
+      KC_HTTP_ENABLED: "${KC_HTTP_ENABLED}"
+      KC_HOSTNAME_URL: "${KC_HOSTNAME_URL}"
+      KC_HTTP_RELATIVE_PATH: "${KC_HTTP_RELATIVE_PATH}"
+      KC_HEALTH_ENABLED: "true"
+    healthcheck:
+      test: >
+        bash -c "
+          exec 3<>/dev/tcp/localhost/${KEYCLOAK_PORT} &&
+          echo -e "GET /keycloak/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3
+        "
+      interval: 3s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+    command:
+      - ${KEYCLOAK_START_COMMAND}
+      - --import-realm
+      - --http-port=${KEYCLOAK_PORT}
 
   mqtt-cat:
     restart: "${SERVICE_RESTART_POLICY}"
