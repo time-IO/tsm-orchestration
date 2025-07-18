@@ -45,6 +45,14 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                     mapping_path = os.path.join(mapping_folder, mapping_file)
                     comparer = DatastreamComparer(dsn, schema, mapping_path)
                     compare_result = comparer.compare_datastreams()
+                    if any(not ds["equal"] for ds in compare_result["compare"]):
+                        print(
+                            "At least one datastream is unequal — continue processing."
+                        )
+                        with psycopg.connect(dsn, autocommit=True) as conn2:
+                            with conn2.cursor() as cur2:
+                                add_datastream_pos_constraint(cur2, schema)
+                        return False
                     thing_uuid = compare_result["thing_uuid"]
                     ds_header_ids = []
                     print(f"Start processing datastreams for thing {thing_uuid}...")
