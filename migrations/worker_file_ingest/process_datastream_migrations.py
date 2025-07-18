@@ -38,7 +38,6 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                     mapping_path = os.path.join(schema_folder, mapping_file)
                     comparer = DatastreamComparer(dsn, schema, mapping_path)
                     compare_result = comparer.compare_datastreams()
-                    print(compare_result)
                     thing_uuid = compare_result["thing_uuid"]
                     ds_header_ids = []
                     print(f"Start processing datastreams for thing {thing_uuid}...")
