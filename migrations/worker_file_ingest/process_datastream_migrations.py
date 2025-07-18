@@ -184,6 +184,10 @@ def move_yaml_to_done(mapping_path, schema_folder):
     done_directory = os.path.join(schema_folder, "processed_mappings")
     try:
         os.makedirs(done_directory, exist_ok=True)
+        filename = os.path.basename(mapping_path)
+        destination_path = os.path.join(done_directory, filename)
+        if os.path.exists(destination_path):
+            os.remove(destination_path)
         shutil.move(mapping_path, done_directory)
         print(f"Moved '{mapping_path}' to '{done_directory}'")
     except Exception as e:
