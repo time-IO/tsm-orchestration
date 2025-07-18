@@ -3,6 +3,7 @@
 from __future__ import annotations
 import click
 import os
+import shutil
 import psycopg
 
 from psycopg import sql
@@ -21,10 +22,16 @@ from set_parser_duplicate_false import cleanup
 def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str):
     mapping_dirs = os.listdir("datastream_mapping")
     schema_folder = (
-        os.path.join("datastream_mapping", schema) if schema in mapping_dirs else None
+        os.path.join("datastream_mapping", f"{schema}")
+        if schema in mapping_dirs
+        else None
     )
     if not schema_folder:
         print(f"No matching folder found for {schema}")
+        return False
+    mapping_folder = os.path.join(schema_folder, "mappings")
+    if not os.path.isdir(mapping_folder) or not os.listdir(mapping_folder):
+        print(f"No mapping yamls found in '{mapping_folder}'")
         return False
     with psycopg.connect(dsn, autocommit=True) as conn:
         with conn.cursor() as cur:
@@ -34,8 +41,8 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
             with conn.cursor() as cur:
                 set_search_path(cur, schema)
 
-                for mapping_file in os.listdir(schema_folder):
-                    mapping_path = os.path.join(schema_folder, mapping_file)
+                for mapping_file in os.listdir(mapping_folder):
+                    mapping_path = os.path.join(mapping_folder, mapping_file)
                     comparer = DatastreamComparer(dsn, schema, mapping_path)
                     compare_result = comparer.compare_datastreams()
                     thing_uuid = compare_result["thing_uuid"]
@@ -62,6 +69,7 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                         delete_datastream_observations(cur, thing_uuid, ds_id)
                         delete_datastream(cur, thing_uuid, ds_id)
                     cleanup(thing_uuid, dsn, cfg_schema, frnt_schema)
+                    move_yaml_to_done(mapping_path, schema_folder)
                 set_search_path(cur, schema)
             conn.commit()
         with psycopg.connect(dsn, autocommit=True) as conn:
@@ -72,7 +80,6 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
         print(f"Error during processing. No changes were applied: {e}")
         conn.rollback()
         return False
-
     return True
 
 
@@ -171,6 +178,16 @@ def add_datastream_pos_constraint(cur, schema) -> None:
         ).format(schema=sql.Identifier(schema))
     )
     print("Added unique constraint on thing_id and position in datastream table.")
+
+
+def move_yaml_to_done(mapping_path, schema_folder):
+    done_directory = os.path.join(schema_folder, "processed_mappings")
+    try:
+        os.makedirs(done_directory, exist_ok=True)
+        shutil.move(mapping_path, done_directory)
+        print(f"Moved '{mapping_path}' to '{done_directory}'")
+    except Exception as e:
+        print(f"Failed to move file: {e}")
 
 
 # need to either rename new datastream or drop constraint on id, position before renaming
