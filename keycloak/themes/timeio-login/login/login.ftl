@@ -10,7 +10,7 @@
       overflow: hidden;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       background-color: #5FB4C0;
-      animation: bgCycle 10s ease-in-out infinite;
+      animation: bgCycle 20s ease-in-out infinite;
     }
 
     @keyframes bgCycle {
@@ -121,11 +121,37 @@
       height: auto;
     }
 
-    .login-text {
+    .welcome-text {
       font-size: 1.4rem;
       font-weight: 500;
       margin-bottom: 2rem;
       color: #004F9F;
+    }
+
+    .kc-message {
+      padding: 0.75rem;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .kc-message.error {
+      background-color: #ffd6d6;
+      color: #990000;
+      border: 1px solid #cc0000;
+    }
+
+    .kc-message.warning {
+      background-color: #fff4d6;
+      color: #996600;
+      border: 1px solid #cc9900;
+    }
+
+    .kc-message.success {
+      background-color: #d6ffd6;
+      color: #006600;
+      border: 1px solid #00cc00;
     }
 
     .social-providers {
@@ -212,7 +238,7 @@
         width: 130px;
       }
 
-      .login-text {
+      .welcome-text {
         font-size: 1.1rem;
       }
     }
@@ -223,7 +249,7 @@
 
   <section class="fullscreen">
 
-    <!-- Background Decorations -->
+    <!-- Background decorations -->
     <div class="orbital-waves">
       <span></span>
       <span></span>
@@ -234,13 +260,19 @@
     <div class="wave-layer"></div>
     <div class="wave-layer"></div>
 
-    <!-- Login Box -->
+    <!-- Login box -->
     <div class="login-container">
       <div class="logo-container">
         <img src="${url.resourcesPath}/logo.svg" alt="Logo" />
       </div>
 
-      <div class="login-text">Login to time.IO</div>
+      <div class="welcome-text">Welcome to time.IO!</div>
+
+      <#if message?has_content>
+        <div class="kc-message ${message.type}">
+          ${message.summary}
+        </div>
+      </#if>
 
       <#if social?? && social.providers?has_content>
         <div class="social-providers">

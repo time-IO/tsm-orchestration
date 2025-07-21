@@ -86,6 +86,7 @@ services:
       KC_HTTP_RELATIVE_PATH: keycloak
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
     command:
       - ${KEYCLOAK_START_CMD}
       - --import-realm
