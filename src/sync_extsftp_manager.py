@@ -14,7 +14,7 @@ from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
 
 logger = logging.getLogger("sync-ext-sftp")
-journal = Journal("sync_ext_apis")
+journal = Journal("sync_ext_sftp")
 
 USAGE = """
 Usage: sftp_sync.py THING_UUID 
