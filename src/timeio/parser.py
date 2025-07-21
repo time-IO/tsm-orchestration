@@ -188,7 +188,7 @@ class CsvParser(FileParser):
         column_mapping = {
             thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
         }
-        output_dir = f"/tmp/datastream_mapping/{project_name}"
+        output_dir = f"/tmp/datastream_mapping/{project_name}/mappings"
         try:
             os.makedirs(output_dir, exist_ok=True)
             with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
@@ -228,19 +228,16 @@ class CsvParser(FileParser):
 
         rows = []
         for i, row in enumerate(rawdata.splitlines()):
-
             if i == header_line:
                 # we might have comments at the header line as well
                 rows.append(re.sub(comment_regex, "", row))
                 continue
-            if not re.match(comment_regex, row):
-                rows.append(row)
-
+            rows.append(row)
         rawdata = "\n".join(rows)
 
         try:
             if header_line is not None:
-                settings["header"] = 0
+                settings["header"] = None
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
@@ -273,7 +270,7 @@ class CsvParser(FileParser):
                 else:
                     df = df_default_names
                     warnings.warn(
-                        "Comparison of header based data and position based"
+                        "Comparison of header based data and position based "
                         "data failed. Positions will be used instead.",
                         ParsingWarning,
                     )
