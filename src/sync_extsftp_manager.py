@@ -11,8 +11,10 @@ from timeio.crypto import decrypt, get_crypt_key
 from timeio.remote_fs import MinioFS, FtpFS, sync
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
+from timeio.journaling import Journal
 
 logger = logging.getLogger("sync-ext-sftp")
+journal = Journal("sync_ext_apis")
 
 USAGE = """
 Usage: sftp_sync.py THING_UUID 
@@ -67,14 +69,20 @@ class SyncExtSftpManager(AbstractHandler):
         )
         priv_key = decrypt(thing.ext_sftp.ssh_priv_key, get_crypt_key())
         password = decrypt(thing.ext_sftp.password, get_crypt_key())
-        source = FtpFS.from_credentials(
-            uri=thing.ext_sftp.uri,
-            username=thing.ext_sftp.user,
-            password=password,
-            path=thing.ext_sftp.path,
-            keyfile_path=io.StringIO(priv_key),
-            missing_host_key_policy=WarningPolicy(),
-        )
+        try:
+            source = FtpFS.from_credentials(
+                uri=thing.ext_sftp.uri,
+                username=thing.ext_sftp.user,
+                password=password,
+                path=thing.ext_sftp.path,
+                keyfile_path=io.StringIO(priv_key),
+                missing_host_key_policy=WarningPolicy(),
+            )
+        except Exception as e:
+            msg = f"Failed to create SFTP client"
+            journal.error(msg, thing.uuid)
+            logger.error(f"{msg}:\n{e}")
+            return
         sync(source, target, thing.uuid)
 
 
