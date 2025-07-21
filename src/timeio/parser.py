@@ -188,7 +188,7 @@ class CsvParser(FileParser):
         column_mapping = {
             thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
         }
-        output_dir = f"/tmp/datastream_mapping/{project_name}"
+        output_dir = f"/tmp/datastream_mapping/{project_name}/mappings"
         try:
             os.makedirs(output_dir, exist_ok=True)
             with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
