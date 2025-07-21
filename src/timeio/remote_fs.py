@@ -177,6 +177,7 @@ class FtpFS(RemoteFS):
             look_for_keys=False,  # todo maybe ?
             allow_agent=False,
             compress=True,
+            timeout=10,
         )
         cl = ssh.open_sftp()
         return cls(cl, path)

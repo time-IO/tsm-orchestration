@@ -79,9 +79,9 @@ class SyncExtSftpManager(AbstractHandler):
                 missing_host_key_policy=WarningPolicy(),
             )
         except Exception as e:
-            msg = f"Failed to create SFTP client"
+            msg = f"Failed to create SFTP client. Reason: {e}"
             journal.error(msg, thing.uuid)
-            logger.error(f"{msg}:\n{e}")
+            logger.error(msg)
             return
         sync(source, target, thing.uuid)
 
