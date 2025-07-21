@@ -66,7 +66,7 @@ services:
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
-      - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/keycloak-init-dev.json:/opt/keycloak/data/import/keycloak-init.json"
 
   timeio-db-api:
     ports:
