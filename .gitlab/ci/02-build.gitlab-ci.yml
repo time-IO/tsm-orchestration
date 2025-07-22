@@ -21,7 +21,7 @@ build-and-push-images:
     - docker logout
   script:
     - echo $BUILD_SERVICES
-    - docker compose build -q --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES
+    - docker compose build --push --build-arg "BUILD_DATE=${BUILD_DATE} VCF_REF=${CI_COMMIT_SHA}" $BUILD_SERVICES
   rules:
     # Always run if pipeline is triggered by a tag
     - if: "$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED"
