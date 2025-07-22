@@ -1291,6 +1291,21 @@ services:
       KC_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
       KC_HTTP_RELATIVE_PATH: "${KEYCLOAK_HTTP_RELATIVE_PATH}"
       KC_HEALTH_ENABLED: "true"
+      # Helmholtz AAI config (used in configuration template)
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_AUTH_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2-as/oauth2-authz"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_TOKEN_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/token"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_USER_INFO_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/userinfo"
+      KEYCLOAK_HELMHOLTZ_AAI_ISSUER: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2"
+      KEYCLOAK_HELMHOLTZ_AAI_JWKS_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/jwk"
+      KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
+      KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
+      # Keycloak client config (used in configuration template)
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: "[\"${THING_MANAGEMENT_FRONTEND_APP_URL}/login/callback\"]"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "${THING_MANAGEMENT_FRONTEND_APP_URL}/login"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
     healthcheck:
       test: >
         bash -c "
@@ -1302,7 +1317,7 @@ services:
       retries: 30
       start_period: 5s
     volumes:
-      - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
     command:
       - ${KEYCLOAK_START_COMMAND}
