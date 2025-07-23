@@ -34,7 +34,6 @@ def test_parsing(settings, columns):
         "skipfooter": 0,
         "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
-
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA.strip(), "project", "thing")
 

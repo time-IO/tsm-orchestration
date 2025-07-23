@@ -12,7 +12,7 @@ class DatastreamComparer:
 
         self.query_ds_id = sql.SQL(
             """
-            SELECT d.id FROM {schema}.datastream d
+            SELECT d.id, d.name, d.position FROM {schema}.datastream d
             JOIN {schema}.thing t ON t.id = d.thing_id
             WHERE t.uuid = %s AND d.position = %s
         """
@@ -40,7 +40,7 @@ class DatastreamComparer:
         with open(self.mapping_file, "r") as f:
             return yaml.safe_load(f)
 
-    def get_datastream_id(self, pos: str):
+    def get_datastream_info(self, pos: str):
         with connect(self.dsn) as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -51,7 +51,7 @@ class DatastreamComparer:
                     ),
                 )
                 row = cur.fetchone()
-        return row[0]
+        return row
 
     def get_header_timerange(self, ds_id):
         with connect(self.dsn) as conn:
@@ -80,21 +80,24 @@ class DatastreamComparer:
             raise ValueError(f"No mapping found for thing: {self.thing_uuid}")
         results = list()
         for k, v in mapping.items():
-            ds_pos_id = self.get_datastream_id(str(k))
-            ds_header_id = self.get_datastream_id(v)
-            ts_from, ts_to = self.get_header_timerange(ds_header_id)
-            obs_pos = self.get_timerange_obs(ds_pos_id, ts_from, ts_to)
-            obs_header = self.get_timerange_obs(ds_header_id, ts_from, ts_to)
+            ds_position = self.get_datastream_info(str(k))
+            ds_header = self.get_datastream_info(v)
+            ts_from, ts_to = self.get_header_timerange(ds_header[0])
+            obs_pos = self.get_timerange_obs(ds_position[0], ts_from, ts_to)
+            obs_header = self.get_timerange_obs(ds_header[0], ts_from, ts_to)
             equal = sorted(obs_pos) == sorted(obs_header)
             results.append(
                 {
-                    "position_datastream_id": ds_pos_id,
-                    "header_datastream_id": ds_header_id,
+                    "ds_position_id": ds_position[0],
+                    "ds_position_name": ds_position[1],
+                    "ds_position_pos": ds_position[2],
+                    "ds_header_id": ds_header[0],
+                    "ds_header_name": ds_header[1],
+                    "ds_header_pos": ds_header[2],
                     "equal": equal,
                 }
             )
         return {
-            "schema": self.schema,
             "thing_uuid": self.thing_uuid,
             "compare": results,
         }
