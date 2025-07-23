@@ -11,7 +11,8 @@ SET SEARCH_PATH TO ${mqtt_monitoring_db_user};
 CREATE TABLE broker (
     id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ NOT NULL,
-    uptime BIGINT,
+    uptime INTERVAL,
+    clients_total INTEGER,
     clients_inactive INTEGER,
     clients_disconnected INTEGER,
     clients_active INTEGER,

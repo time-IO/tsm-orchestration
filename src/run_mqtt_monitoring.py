@@ -77,7 +77,7 @@ class MqttMonitoringHandler(AbstractHandler):
             clean_key = clean_key.replace("/", "_")
             clean_key = clean_key.replace(" ", "_")
             if clean_key == "uptime":
-                parsed_message[clean_key] = int(v.split()[0])
+                parsed_message[clean_key] = v
             else:
                 try:
                     parsed_message[clean_key] = float(v)
