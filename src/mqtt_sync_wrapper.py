@@ -123,6 +123,7 @@ def sync_sms(origin: str):
     message = {"origin": origin}
     publish_single(get_envvar("SMS_SYNC_TOPIC"), json.dumps(message))
 
+
 @cli.command()
 def mqtt_monitoring():
     publish_single(get_envvar("MQTT_MONITORING_TOPIC"), json.dumps({}))

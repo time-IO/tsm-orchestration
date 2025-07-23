@@ -17,6 +17,7 @@ from timeio.sms import SmsMaterializedViewsSyncer, SmsCVSyncer
 
 logger = logging.getLogger("run-mqtt-monitoring")
 
+
 class MqttMonitoringHandler(AbstractHandler):
 
     def __init__(self):
@@ -47,11 +48,10 @@ class MqttMonitoringHandler(AbstractHandler):
             message[msg.topic] = msg.payload.decode()
 
         mqtt_client = mqtt.Client(
-            client_id=f"{self.mqtt_client_id}_fetcher",
-            clean_session=True
+            client_id=f"{self.mqtt_client_id}_fetcher", clean_session=True
         )
         mqtt_client.username_pw_set(self.mqtt_user, self.mqtt_password)
-        #self.mqtt_client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
+        # mqtt_client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
         mqtt_client.on_message = on_message
         mqtt_client.connect(self.mqtt_host, self.mqtt_port)
         mqtt_client.subscribe(f"{self.sub_topic}#")
@@ -62,16 +62,15 @@ class MqttMonitoringHandler(AbstractHandler):
 
         return message
 
-
     def parse_message(self, raw_message):
         parsed_message = {}
         for k, v in raw_message.items():
             if k == "timestamp":
                 parsed_message["timestamp"] = v
                 continue
-            clean_key = k[len(self.sub_topic):] if k.startswith(self.sub_topic) else k
-            clean_key = clean_key.replace('/', '_')
-            clean_key = clean_key.replace(' ', '_')
+            clean_key = k[len(self.sub_topic) :] if k.startswith(self.sub_topic) else k
+            clean_key = clean_key.replace("/", "_")
+            clean_key = clean_key.replace(" ", "_")
             if clean_key == "uptime":
                 parsed_message[clean_key] = int(v.split()[0])
             else:
@@ -82,7 +81,7 @@ class MqttMonitoringHandler(AbstractHandler):
 
         return parsed_message
 
+
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     MqttMonitoringHandler().run_loop()
-
