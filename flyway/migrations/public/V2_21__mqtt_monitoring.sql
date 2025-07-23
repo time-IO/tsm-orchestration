@@ -1,14 +1,14 @@
-CREATE ROLE ${mqtt_monitoring_db_user} WITH LOGIN PASSWORD '${mqtt_monitoring_db_password}';
-GRANT ${mqtt_monitoring_db_user} TO ${flyway:user};
-CREATE SCHEMA IF NOT EXISTS ${mqtt_monitoring_db_user} AUTHORIZATION ${mqtt_monitoring_db_user};
-SET search_path TO ${mqtt_monitoring_db_user};
-GRANT CONNECT ON DATABASE ${flyway:database} TO ${mqtt_monitoring_db_user};
-ALTER ROLE ${mqtt_monitoring_db_user} SET search_path to ${mqtt_monitoring_db_user};
-GRANT USAGE ON SCHEMA ${mqtt_monitoring_db_user} TO ${mqtt_monitoring_db_user};
+CREATE ROLE ${monitoring_db_user} WITH LOGIN PASSWORD '${monitoring_db_password}';
+GRANT ${monitoring_db_user} TO ${flyway:user};
+CREATE SCHEMA IF NOT EXISTS ${monitoring_db_user} AUTHORIZATION ${monitoring_db_user};
+SET search_path TO ${monitoring_db_user};
+GRANT CONNECT ON DATABASE ${flyway:database} TO ${monitoring_db_user};
+ALTER ROLE ${monitoring_db_user} SET search_path to ${monitoring_db_user};
+GRANT USAGE ON SCHEMA ${monitoring_db_user} TO ${monitoring_db_user};
 
-SET SEARCH_PATH TO ${mqtt_monitoring_db_user};
+SET SEARCH_PATH TO ${monitoring_db_user};
 
-CREATE TABLE broker (
+CREATE TABLE mqtt_broker (
     id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ NOT NULL,
     uptime INTERVAL,
@@ -65,4 +65,4 @@ CREATE TABLE broker (
     bytes_sent BIGINT
 );
 
-GRANT SELECT ON ALL TABLES IN SCHEMA ${mqtt_monitoring_db_user} TO ${mqtt_monitoring_db_user};
+GRANT SELECT ON ALL TABLES IN SCHEMA ${monitoring_db_user} TO ${monitoring_db_user};

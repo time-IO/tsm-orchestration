@@ -89,7 +89,7 @@ class MqttMonitoringHandler(AbstractHandler):
     def write_into_db(self, parsed_message):
         columns = list(parsed_message.keys())
 
-        query = sql.SQL("INSERT INTO mqtt_monitoring.broker ({}) VALUES ({})").format(
+        query = sql.SQL("INSERT INTO monitoring.mqtt_broker ({}) VALUES ({})").format(
             sql.SQL(", ").join(map(sql.Identifier, columns)),
             sql.SQL(", ").join(sql.Placeholder(k) for k in columns),
         )
