@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import typing
-import ssl
 import time
 
 from datetime import datetime
@@ -12,8 +11,6 @@ import paho.mqtt.client as mqtt
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
-from timeio.typehints import MqttPayload
-from timeio.sms import SmsMaterializedViewsSyncer, SmsCVSyncer
 
 logger = logging.getLogger("run-mqtt-monitoring")
 
@@ -51,7 +48,6 @@ class MqttMonitoringHandler(AbstractHandler):
             client_id=f"{self.mqtt_client_id}_fetcher", clean_session=True
         )
         mqtt_client.username_pw_set(self.mqtt_user, self.mqtt_password)
-        # mqtt_client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
         mqtt_client.on_message = on_message
         mqtt_client.connect(self.mqtt_host, self.mqtt_port)
         mqtt_client.subscribe(f"{self.sub_topic}#")
