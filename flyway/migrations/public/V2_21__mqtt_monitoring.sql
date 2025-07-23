@@ -16,6 +16,7 @@ CREATE TABLE broker (
     clients_disconnected INTEGER,
     clients_active INTEGER,
     clients_connected INTEGER,
+    clients_total INTEGER,
     load_messages_received_1min FLOAT,
     load_messages_received_5min FLOAT,
     load_messages_received_15min FLOAT,
