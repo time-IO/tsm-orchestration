@@ -12,7 +12,6 @@ CREATE TABLE broker (
     id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ NOT NULL,
     uptime INTERVAL,
-    clients_total INTEGER,
     clients_inactive INTEGER,
     clients_disconnected INTEGER,
     clients_active INTEGER,
