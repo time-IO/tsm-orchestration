@@ -61,7 +61,7 @@ class MqttMonitoringHandler(AbstractHandler):
         mqtt_client.connect(self.mqtt_host, self.mqtt_port)
         mqtt_client.subscribe(f"{self.sub_topic}#")
         mqtt_client.loop_start()
-        time.sleep(1)
+        time.sleep(2)
         mqtt_client.loop_stop()
         mqtt_client.disconnect()
 
