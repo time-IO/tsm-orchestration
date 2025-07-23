@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging
 import typing
 import time
+import psycopg
 
 from datetime import datetime
+from psycopg import sql
 
 import paho.mqtt.client as mqtt
 
@@ -29,11 +31,18 @@ class MqttMonitoringHandler(AbstractHandler):
         )
 
         self.sub_topic = "$SYS/broker/"
+        self.dsn = get_envvar("DSN")
 
     def act(self, content: typing.Any, message: MQTTMessage):
-        logger.info(f"[ACT TRIGGERED] Received on topic: {message.topic}")
-        raw_message = self.fetch_data()
-        parsed_message = self.parse_message(raw_message)
+        try:
+            raw_message = self.fetch_data()
+            parsed_message = self.parse_message(raw_message)
+            self.write_into_db(parsed_message)
+            logger.info("Successfully wrote mqtt broker metrics into TimeIO DB")
+        except Exception as e:
+            logger.error(
+                f"Failed to receive and/or write mqtt broker metrics into TimeIO DB: {e}"
+            )
 
     def fetch_data(self):
         message = {}
@@ -41,7 +50,7 @@ class MqttMonitoringHandler(AbstractHandler):
         def on_message(client, userdata, msg):
             if msg.topic == f"{self.sub_topic}version":
                 return
-            message["timestamp"] = datetime.now()
+            message["time"] = datetime.now()
             message[msg.topic] = msg.payload.decode()
 
         mqtt_client = mqtt.Client(
@@ -61,8 +70,8 @@ class MqttMonitoringHandler(AbstractHandler):
     def parse_message(self, raw_message):
         parsed_message = {}
         for k, v in raw_message.items():
-            if k == "timestamp":
-                parsed_message["timestamp"] = v
+            if k == "time":
+                parsed_message["time"] = v
                 continue
             clean_key = k[len(self.sub_topic) :] if k.startswith(self.sub_topic) else k
             clean_key = clean_key.replace("/", "_")
@@ -76,6 +85,18 @@ class MqttMonitoringHandler(AbstractHandler):
                     parsed_message[clean_key] = v
 
         return parsed_message
+
+    def write_into_db(self, parsed_message):
+        columns = list(parsed_message.keys())
+
+        query = sql.SQL("INSERT INTO mqtt_monitoring.broker ({}) VALUES ({})").format(
+            sql.SQL(", ").join(map(sql.Identifier, columns)),
+            sql.SQL(", ").join(sql.Placeholder(k) for k in columns),
+        )
+
+        with psycopg.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, parsed_message)
 
 
 if __name__ == "__main__":

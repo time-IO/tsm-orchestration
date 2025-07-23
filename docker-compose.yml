@@ -1224,7 +1224,7 @@ services:
       MQTT_CLIENT_ID: monitor_mqtt
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSN: "${DATABASE_ADMIN_DSN}"
     entrypoint: [ "python3", "run_mqtt_monitoring.py" ]
 
 
