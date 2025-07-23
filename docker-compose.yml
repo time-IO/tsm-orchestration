@@ -1193,6 +1193,40 @@ services:
       CV_API_URL: "${CRON_CV_API_URL}"
     entrypoint: [ "python3", "sync_sms_manager.py" ]
 
+  # Summary
+  # =======
+  # brief:  trigger sync of mqtt monitoring metrics
+  #
+  # Description
+  # ===========
+  # Fetches monitoring metrics from the mqtt broker and inserts it into TimeIO.
+  worker-monitor-mqtt:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: monitor_mqtt
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: monitor_mqtt
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+    entrypoint: [ "python3", "run_mqtt_monitoring.py" ]
+
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
@@ -1238,6 +1272,7 @@ services:
       API_SYNC_TOPIC: sync_ext_apis
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
+      MQTT_MONITORING_TOPIC: monitor_mqtt
       DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
       DB_HOST: "${DATABASE_ADMIN_HOST}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
