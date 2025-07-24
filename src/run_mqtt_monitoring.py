@@ -31,6 +31,7 @@ class MqttMonitoringHandler(AbstractHandler):
         )
 
         self.sub_topic = "$SYS/broker/"
+        self.monitoring_schema = get_envvar("MONITORING_SCHEMA")
         self.dsn = get_envvar("DSN")
 
     def act(self, content: typing.Any, message: MQTTMessage):
@@ -88,8 +89,11 @@ class MqttMonitoringHandler(AbstractHandler):
 
     def write_into_db(self, parsed_message):
         columns = list(parsed_message.keys())
+        table_name = "mqtt_broker"
 
-        query = sql.SQL("INSERT INTO monitoring.mqtt_broker ({}) VALUES ({})").format(
+        query = sql.SQL("INSERT INTO {}.{} ({}) VALUES ({})").format(
+            sql.Identifier(self.monitoring_schema),
+            sql.Identifier(table_name),
             sql.SQL(", ").join(map(sql.Identifier, columns)),
             sql.SQL(", ").join(sql.Placeholder(k) for k in columns),
         )
