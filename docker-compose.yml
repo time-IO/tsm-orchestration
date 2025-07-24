@@ -1225,7 +1225,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       DSN: "${DATABASE_ADMIN_DSN}"
-      MONITORING_SCHEMA: "{MONITORING_DATABASE_USER}"
+      MONITORING_SCHEMA: "${MONITORING_DATABASE_USER}"
     entrypoint: [ "python3", "run_mqtt_monitoring.py" ]
 
 
