@@ -1,7 +1,4 @@
 DROP VIEW IF EXISTS "LOCATIONS" CASCADE;
-DROP VIEW IF EXISTS "THINGS_LOCATIONS" CASCADE;
-DROP VIEW IF EXISTS "LOCATIONS_HIST_LOCATIONS" CASCADE;
-DROP VIEW IF EXISTS "HIST_LOCATIONS" CASCADE;
 
 CREATE VIEW "LOCATIONS" AS
 SELECT DISTINCT
@@ -29,6 +26,7 @@ ORDER BY csl.id;
 
 
 --- CREATE VIEW THINGS_LOCATIONS ---
+DROP VIEW IF EXISTS "THINGS_LOCATIONS" CASCADE;
 CREATE VIEW "THINGS_LOCATIONS" AS
 SELECT DISTINCT ON (c.id)
     c.id   AS "THING_ID",
@@ -44,6 +42,7 @@ WHERE dsl.datasource_id = '{tsm_schema}'
 ORDER BY c.id, csl.begin_date DESC;
 
 
+DROP VIEW IF EXISTS "LOCATIONS_HIST_LOCATIONS" CASCADE;
 CREATE VIEW "LOCATIONS_HIST_LOCATIONS" AS
 --build cte that returns configuration_ids and location_ids (configuration_static_location_begin_action.id)
 WITH locations AS (
@@ -69,6 +68,7 @@ ORDER BY cl.max_csl_id ASC, loc.csl_id ASC
 --returns hist_location_id mapped to current location_id for each configuration_id
 ;
 
+DROP VIEW IF EXISTS "HIST_LOCATIONS" CASCADE;
 CREATE VIEW "HIST_LOCATIONS" AS
 WITH cte AS (
     SELECT c.id AS "THING_ID", csl.id "ID", csl.begin_date AS "TIME",
