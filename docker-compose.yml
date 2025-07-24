@@ -256,8 +256,14 @@ services:
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
+      MONITORING_DATABASE_HOST: "${MONITORING_DATABASE_HOST}"
+      MONITORING_DATABASE_USER: "${MONITORING_DATABASE_USER}"
+      MONITORING_DATABASE_PASS: "${MONITORING_DATABASE_PASS}"
+      MONITORING_DATABASE_DB: "${MONITORING_DATABASE_DB}"
+      MONITORING_DATABASE_SSLMODE: "${MONITORING_DATABASE_SSLMODE}"
     volumes:
       - ./data/grafana/:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
