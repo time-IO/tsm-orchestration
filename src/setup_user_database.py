@@ -267,7 +267,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
             c.execute(
                 sql.SQL(
-                    'GRANT SELECT ON TABLE thing, datastream, observation, '
+                    "GRANT SELECT ON TABLE thing, datastream, observation, "
                     'journal, datastream_properties, "LOCATIONS", "THINGS", '
                     '"THINGS_LOCATIONS", "SENSORS", "OBS_PROPERTIES", "DATASTREAMS", '
                     '"OBSERVATIONS" TO {grf_user}'

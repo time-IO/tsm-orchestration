@@ -46,8 +46,6 @@ class GrafanaMapDashboard:
             "overwrite": True,
         }
 
-
-
     def _locations_panel(self, datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
@@ -63,8 +61,8 @@ class GrafanaMapDashboard:
                 },
                 "basemap": {
                     "type": "xyz",
-                }
-            }
+                },
+            },
         }
 
     @classmethod
@@ -83,4 +81,3 @@ class GrafanaMapDashboard:
         with open("timeio/grafana/sql/locations.sql", "r") as f:
             sql = f.read()
         return sql
-
