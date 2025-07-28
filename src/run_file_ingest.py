@@ -123,7 +123,7 @@ class ParserJobHandler(AbstractHandler):
         object_tags = Tags.new_object_tags()
         object_tags["parsed_at"] = datetime.now().isoformat()
         self.minio.set_object_tags(bucket_name, filename, object_tags)
-        payload = json.dumps({"thing_uuid": str(thing_uuid)})
+        payload = json.dumps({"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"})
         self.mqtt_client.publish(
             topic=self.pub_topic, payload=payload, qos=self.mqtt_qos
         )
