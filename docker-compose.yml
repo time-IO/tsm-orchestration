@@ -358,39 +358,39 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # # Summary
-  # # =======
-  # # brief:
-  # # dir:
-  # # see also:
-  # #
-  # # Description
-  # # ===========
-  # # TODO
-  # flyway-thing-management:
-  #   image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-  #   user: "${UID}:${UID}"
-  #   command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-  #   volumes:
-  #     - ./flyway/migrations/thing-management:/flyway/sql
-  #     - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-  #   environment:
-  #     FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-  #     FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-  #     FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-  #     FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-  #     FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-  #     THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     flyway:
-  #       condition: service_completed_successfully
-  #   logging:
-  #     options:
-  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  flyway-thing-management:
+    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    user: "${UID}:${UID}"
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    volumes:
+      - ./flyway/migrations/thing-management:/flyway/sql
+      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
+    environment:
+      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
+      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -449,71 +449,83 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # # Summary
-  # # =======
-  # # brief:
-  # # dir:
-  # # see also:
-  # #
-  # # Description
-  # # ===========
-  # # TODO
-  # thing-management-frontend:
-  #   image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
-  #   restart: "${SERVICE_RESTART_POLICY}"
-  #   environment:
-  #     API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
-  #     APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
-  #     VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-  #     APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-  #   depends_on:
-  #     thing-management-api:
-  #       condition: service_healthy
-  #   logging:
-  #     options:
-  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  thing-management-frontend:
+    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
+    restart: "${SERVICE_RESTART_POLICY}"
+    environment:
+      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
+      APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
+      VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
+      OIDC_URL: "${THING_MANAGEMENT_FRONTEND_OIDC_URL}"
+      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
+      OIDC_REDIRECT_URL: "${THING_MANAGEMENT_FRONTEND_REDIRECT_URL}"
+      OIDC_POST_LOGOUT_URL: "${THING_MANAGEMENT_FRONTEND_POST_LOGOUT_URL}"
+      OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
+    depends_on:
+      thing-management-api:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-  # # Summary
-  # # =======
-  # # brief:
-  # # dir:
-  # # see also:
-  # #
-  # # Description
-  # # ===========
-  # # TODO
-  # thing-management-api:
-  #   image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
-  #   restart: "${SERVICE_RESTART_POLICY}"
-  #   healthcheck:
-  #     test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   environment:
-  #     VERSION: "${THING_MANAGEMENT_API_VERSION}"
-  #     DB_URL: "${THING_MANAGEMENT_API_DSN}"
-  #     DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-  #     MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-  #     MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
-  #     MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
-  #     MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
-  #     MQTT_CLIENT_ID: thing_management
-  #     FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-  #     MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
-  #     PROXY_URL: "${PROXY_URL}"
-  #   depends_on:
-  #     mqtt-broker:
-  #       condition: service_healthy
-  #     flyway-thing-management:
-  #       condition: service_completed_successfully
-  #   #  keycloak:
-  #   #    condition: service_started
-  #   logging:
-  #     options:
-  #       max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-  #       max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  # Summary
+  # =======
+  # brief:
+  # dir:
+  # see also:
+  #
+  # Description
+  # ===========
+  # TODO
+  thing-management-api:
+    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
+    restart: "${SERVICE_RESTART_POLICY}"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      ENVIRONMENT: "${THING_MANAGEMENT_API_ENVIRONMENT}"
+      DB_URL: "${THING_MANAGEMENT_API_DSN}"
+      DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
+      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
+      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
+      MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
+      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
+      MQTT_CLIENT_ID: thing_management
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
+      PROXY_URL: "${PROXY_URL}"
+      OIDC_CONF_URL: "${THING_MANAGEMENT_API_OIDC_URL}/.well-known/openid-configuration"
+      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
+      OIDC_CLIENT_SECRET: ""
+      OIDC_ADMIN_USERNAME: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      OIDC_ADMIN_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      OIDC_ALLOWED_ISSUERS: "${THING_MANAGEMENT_API_ALLOWED_ISSUERS}"
+      OIDC_ALLOWED_AUDIENCES: "${THING_MANAGEMENT_API_ALLOWED_AUDIENCES}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      flyway-thing-management:
+        condition: service_completed_successfully
+      keycloak:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
   # Summary
@@ -629,10 +641,10 @@ services:
         condition: service_started
       frost:
         condition: service_started
+      thing-management-frontend:
+        condition: service_started
       keycloak:
         condition: service_healthy
-      # thing-management-frontend:
-      #   condition: service_started
       init:
         condition: service_completed_successfully
     healthcheck:
@@ -1301,7 +1313,7 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   keycloak:
-    image: "quay.io/keycloak/keycloak:24.0.3"
+    image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
       flyway:
@@ -1314,11 +1326,26 @@ services:
       KC_DB_SCHEMA: "${KEYCLOAK_DATABASE_USER}"
       KC_DB_USERNAME: "${KEYCLOAK_DATABASE_USER}"
       KC_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
-      KC_PROXY_HEADERS: "${KC_PROXY_HEADERS}"
-      KC_HTTP_ENABLED: "${KC_HTTP_ENABLED}"
-      KC_HOSTNAME_URL: "${KC_HOSTNAME_URL}"
-      KC_HTTP_RELATIVE_PATH: "${KC_HTTP_RELATIVE_PATH}"
+      KC_PROXY_HEADERS: "${KEYCLOAK_PROXY_HEADERS}"
+      KC_HTTP_ENABLED: "${KEYCLOAK_HTTP_ENABLED}"
+      KC_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
+      KC_HTTP_RELATIVE_PATH: "${KEYCLOAK_HTTP_RELATIVE_PATH}"
       KC_HEALTH_ENABLED: "true"
+      # Helmholtz AAI config (used in configuration template)
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_AUTH_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2-as/oauth2-authz"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_TOKEN_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/token"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_USER_INFO_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/userinfo"
+      KEYCLOAK_HELMHOLTZ_AAI_ISSUER: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2"
+      KEYCLOAK_HELMHOLTZ_AAI_JWKS_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/jwk"
+      KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
+      KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
+      # Keycloak client config (used in configuration template)
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: "[\"${THING_MANAGEMENT_FRONTEND_APP_URL}/login/callback\"]"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "${THING_MANAGEMENT_FRONTEND_APP_URL}/login"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
     healthcheck:
       test: >
         bash -c "
@@ -1329,6 +1356,9 @@ services:
       timeout: 2s
       retries: 30
       start_period: 5s
+    volumes:
+      - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
     command:
       - ${KEYCLOAK_START_COMMAND}
       - --import-realm
