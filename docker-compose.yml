@@ -471,6 +471,9 @@ services:
       OIDC_REDIRECT_URL: "${THING_MANAGEMENT_FRONTEND_REDIRECT_URL}"
       OIDC_POST_LOGOUT_URL: "${THING_MANAGEMENT_FRONTEND_POST_LOGOUT_URL}"
       OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
+    depends_on:
+      thing-management-api:
+        condition: service_started
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
