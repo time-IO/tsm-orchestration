@@ -16,7 +16,10 @@ from timeio.crypto import decrypt, get_crypt_key
 from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("db-setup")
-journal = Journal("System")
+journal = Journal("System", errors="ignore")
+
+STA_PREFIX = "sta_"
+GRF_PREFIX = "grf_"
 
 
 class CreateThingInPostgresHandler(AbstractHandler):
@@ -38,43 +41,38 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.db = self.db_conn.reconnect()
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
-        STA_PREFIX = "sta_"
-        GRF_PREFIX = "grf_"
+        ro_user = thing.database.ro_username.lower()
+        user = thing.database.username.lower()
 
         # 1. Check, if there is already a database user for this project
-        if not self.user_exists(user := thing.database.username.lower()):
+        if not self.user_exists(user):
             logger.debug(f"create user {user}")
             self.create_user(thing)
             logger.debug("create schema")
             self.create_schema(thing)
+            logger.debug("deploy dll")
+            self.deploy_ddl(thing)
+            logger.debug("deploy dml")
+            self.deploy_dml()
 
-        if not self.user_exists(
-            sta_user := STA_PREFIX + thing.database.ro_username.lower()
-        ):
+        if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
             self.create_ro_user(thing, user_prefix=STA_PREFIX)
 
-        if not self.user_exists(
-            grf_user := GRF_PREFIX + thing.database.ro_username.lower()
-        ):
+        if not self.user_exists(grf_user := GRF_PREFIX + ro_user):
             logger.debug(f"create grafana read-only user {grf_user}")
             self.create_ro_user(thing, user_prefix=GRF_PREFIX)
-
-        logger.debug("deploy dll")
-        self.deploy_ddl(thing)
-        logger.debug("deploy dml")
-        self.deploy_dml()
 
         logger.info("update/create thing in db")
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        logger.debug("create frost views")
+        logger.debug("create/refresh frost views")
         self.create_frost_views(thing, user_prefix=STA_PREFIX)
         logger.debug(f"grand frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
-        logger.debug("create grafana helper views")
-        self.create_grafana_helper_view(thing)
+        logger.debug("create/refresh grafana views")
+        self.create_grafana_views(thing)
         logger.debug(f"grand grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
@@ -127,7 +125,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
             )
 
     def password_has_changed(self, url, user, password):
-        # NOTE: currently unused function
         try:
             with psycopg.connect(url, user=user, password=password):
                 pass
@@ -275,7 +272,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.db_conn.commit()
 
     def create_frost_views(self, thing, user_prefix: str = "sta_"):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta")
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
             os.path.join(base_path, "schema_context.sql"),
             os.path.join(base_path, "thing.sql"),
@@ -286,54 +283,43 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "observation.sql"),
             os.path.join(base_path, "feature.sql"),
         ]
+
+        schema = thing.database.schema.lower()
+        user = sql.Identifier(thing.database.username.lower())
+        SMS_URL = os.environ.get("SMS_URL")
+        CV_URL = os.environ.get("CV_URL")
+
+        def escape_quote(s: str) -> str:
+            return s.replace("'", "''")
+
         with self.db_conn.get_cursor() as c:
+            c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
             for file in files:
                 logger.debug(f"deploy file: {file}")
                 with open(file) as fh:
                     view = fh.read()
-                user = sql.Identifier(thing.database.username.lower())
-                sta_user = sql.Identifier(
-                    user_prefix.lower() + thing.database.ro_username.lower()
-                )
-                sms_url, cv_url = os.environ.get("SMS_URL"), os.environ.get("CV_URL")
-                view = view.replace(
-                    "%(tsm_schema)s", f"'{thing.database.username.lower()}'"
-                )
-                view = view.replace("%(sms_url)s", f"'{sms_url}'")
-                view = view.replace("%(cv_url)s", f"'{cv_url}'")
-                c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
+                # This is a possible entry point for SQL injections. Ensure that we have
+                # full control over the values, especially that the value does not come
+                # from userinput. Additionally, we escape single quotes, prevent closing
+                # the outer quotes in the file.
+                view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
+                view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
+                view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                 c.execute(view)
 
-    def create_grafana_helper_view(self, thing):
+    def create_grafana_views(self, thing):
+        file = os.path.join(
+            os.path.dirname(__file__),
+            "sql",
+            "grafana_views",
+            "datastream_properties.sql",
+        )
+        with open(file) as fh:
+            view = fh.read()
         with self.db_conn.get_cursor() as c:
-            username_identifier = sql.Identifier(thing.database.username.lower())
-            # Set search path for current session
-            c.execute(sql.SQL("SET search_path TO {0}").format(username_identifier))
-            c.execute(
-                sql.SQL("""DROP VIEW IF EXISTS "datastream_properties" CASCADE""")
-            )
-            c.execute(
-                sql.SQL(
-                    """
-                    CREATE OR REPLACE VIEW "datastream_properties" AS
-                    SELECT DISTINCT case
-                        when dp.property_name is null or dp.unit_name is null then tsm_ds.position
-                        else concat(dp.property_name,
-                            ' (', dp.unit_name, ') - ',
-                            dma.label,
-                            ' - ', tsm_ds."position"::text)
-                    end as "property",
-                    tsm_ds."position",
-                    tsm_ds.id as "ds_id",
-                    tsm_t.uuid as "t_uuid"
-                    FROM datastream tsm_ds
-                    JOIN thing tsm_t ON tsm_ds.thing_id = tsm_t.id
-                    LEFT JOIN public.sms_datastream_link sdl ON tsm_t.uuid = sdl.thing_id AND tsm_ds.id = sdl.datastream_id
-                    LEFT JOIN public.sms_device_property dp ON sdl.device_property_id = dp.id
-                    LEFT JOIN public.sms_device_mount_action dma on dma.id = sdl.device_mount_action_id
-                """
-                )
-            )
+            user = sql.Identifier(thing.database.username.lower())
+            c.execute(sql.SQL("SET search_path TO {0}").format(user))
+            c.execute(view)
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
