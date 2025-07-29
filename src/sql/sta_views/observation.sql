@@ -1,9 +1,5 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS "OBSERVATIONS" CASCADE;
-CREATE OR REPLACE VIEW "OBSERVATIONS" AS
+CREATE VIEW "OBSERVATIONS" AS
 SELECT
     o.result_boolean AS "RESULT_BOOLEAN",
     o.result_quality AS "RESULT_QUALITY",
@@ -30,7 +26,5 @@ JOIN observation o ON o.datastream_id = dsl.datastream_id
 JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_device d ON d.id = dma.device_id
 JOIN public.sms_configuration c ON c.id = dma.configuration_id
-WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
+WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
 AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp);
-
-COMMIT;
