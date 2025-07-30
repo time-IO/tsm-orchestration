@@ -1,3 +1,10 @@
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,6 +20,13 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      annotations:
+        checksum/css-cm: {{ include (print $.Template.BasePath "/css-CM.yaml") . | sha256sum }}
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/html-cm: {{ include (print $.Template.BasePath "/html-CM.yaml") . | sha256sum }}
+        checksum/locations-cm: {{ include (print $.Template.BasePath "/locations-CM.yaml") . | sha256sum }}
+        checksum/nginx-conf-cm: {{ include (print $.Template.BasePath "/nginx-conf-CM.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
@@ -60,7 +74,7 @@ spec:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
+            name: {{ $secretName }}
         command:
           - /bin/sh
           - -c
@@ -76,6 +90,18 @@ spec:
           - name: {{ .Values.name }}-static
             mountPath: "/home/appuser/app/static"
             readOnly: false
+      initContainers:
+      - name: "mqtt-connection-check"
+        image: "eclipse-mosquitto:2.0"
+        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+        volumeMounts:
+          - name: init-mqtt-worker
+            mountPath: /tmp/init-mqtt-worker
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.name }}-envvars
+          - secretRef:
+              name: {{ $secretName }}
       volumes:
       - name: {{ .Values.name }}-html
         configMap:
@@ -89,6 +115,9 @@ spec:
       - name: {{ .Values.name }}-locs
         configMap:
           name: {{ .Values.name }}-locs
+      - name: init-mqtt-worker
+        configMap:
+          name: init-mqtt-worker
       - name: {{ .Values.name }}-static
         persistentVolumeClaim:
           claimName: {{ .Values.name }}-static-pvc

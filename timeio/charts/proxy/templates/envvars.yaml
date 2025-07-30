@@ -9,6 +9,7 @@ data:
   PUBLISH_THING_TO_BROKER: "True"
   CREATEDB_POSTGRES_HOST: "{{  .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
   CREATEDB_POSTGRES_DATABASE: "{{  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
+  MQTT_BROKER: "mosquitto:1883"
   MQTT_BROKER_HOST: "{{  .Values.global.envvars.FRONTEND_MQTT_HOST }}"
   MQTT_BROKER_PORT: "1883"
   MQTT_CLIENT_ID: ""

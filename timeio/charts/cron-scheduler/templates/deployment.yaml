@@ -1,3 +1,17 @@
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+{{- end }}
+
+{{- $workerSecretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $workerSecretName = printf "%s-secret" .Values.worker.name  }}
+{{- else }}
+  {{- $workerSecretName = index .Values.global .Values.name "worker" "existingSecret" }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -14,6 +28,14 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      annotations:
+        checksum/cron-entrypoint-cm: {{ include (print $.Template.BasePath "/cron-entrypoint-CM.yaml") . | sha256sum }}
+        checksum/crond-pid-cm: {{ include (print $.Template.BasePath "/crond-pid-CM.yaml") . | sha256sum }}
+        checksum/crontab-cm: {{ include (print $.Template.BasePath "/crontab-CM.yaml") . | sha256sum }}
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/worker-envvars: {{ include (print $.Template.BasePath "/worker-envvars.yaml") . | sha256sum }}
+        checksum/worker-secret: {{ include (print $.Template.BasePath "/worker-secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
@@ -40,7 +62,7 @@ spec:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
+            name: {{ $secretName }}
         volumeMounts:
         - mountPath: /tmp/entrypoint/cron-entrypoint.sh
           name: {{ .Values.name }}-entrypoint
@@ -49,10 +71,6 @@ spec:
         - mountPath: /tmp/cron/crontab.txt
           name: crontab-pv
           subPath: crontab.txt
-          readOnly: true
-        - mountPath: /scripts/mqtt_sync_wrapper.py
-          name: {{ .Values.name }}-mqtt-sync-wrapper
-          subPath: mqtt_sync_wrapper.py
           readOnly: true
       - name: {{ .Values.worker.name }}
         image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
@@ -70,7 +88,7 @@ spec:
           - configMapRef:
               name: {{ .Values.worker.name }}-envvars
           - secretRef:
-              name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.worker.name }}{{ else }}{{ index .Values.global .Values.name "worker" "existingSecret" }}{{ end }}
+              name: {{ $workerSecretName }}
         volumeMounts:
           - mountPath: /tmp/cron
             name: crontab-pv
@@ -96,6 +114,17 @@ spec:
           volumeMounts:
             - mountPath: /tmp/cron
               name: crontab-pv
+        - name: "mqtt-connection-check"
+          image: "eclipse-mosquitto:2.0"
+          command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+          volumeMounts:
+            - name: init-mqtt-worker
+              mountPath: /tmp/init-mqtt-worker
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.name }}-envvars
+            - secretRef:
+                name: {{ $secretName }}
       volumes:
       - name: {{ .Values.name }}-entrypoint
         configMap:
@@ -104,6 +133,6 @@ spec:
       - name: crontab-pv
         persistentVolumeClaim:
           claimName: crontab-pvc
-      - name: {{ .Values.name }}-mqtt-sync-wrapper
+      - name: init-mqtt-worker
         configMap:
-            name: mqtt-sync-wrapper
+          name: init-mqtt-worker

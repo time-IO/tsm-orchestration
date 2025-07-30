@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/cron-scheduler"
-  tag: "prod-2025-06-12"
+  tag: "2025-07-29-064436"
   pullPolicy: Always
 name: cron-scheduler
 securityContext:
@@ -19,7 +19,7 @@ securityContext:
 worker:
   image:
     repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-    tag: "prod-2025-06-12"
+    tag: "2025-07-29-064436"
     pullPolicy: Always
   name: worker-crontab-setup
   securityContext:

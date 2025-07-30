@@ -1,3 +1,17 @@
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+{{- end }}
+
+{{- $workerSecretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $workerSecretName = printf "%s-secret" .Values.worker.name }}
+{{- else }}
+  {{- $workerSecretName = index .Values.global .Values.name "worker" "existingSecret" }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,9 +27,25 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      annotations:
+        checksum/index-jsp-cm: {{ include (print $.Template.BasePath "/index-jsp-CM.yaml") . | sha256sum }}
+        checksum/worker-envvars: {{ include (print $.Template.BasePath "/worker-envvars.yaml") . | sha256sum }}
+        checksum/worker-secret: {{ include (print $.Template.BasePath "/worker-secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
+      initContainers:
+      - name: "mqtt-connection-check"
+        image: "eclipse-mosquitto:2.0"
+        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+        volumeMounts:
+          - name: init-mqtt-worker
+            mountPath: /tmp/init-mqtt-worker
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.worker.name }}-envvars
+          - secretRef:
+              name: {{ $workerSecretName }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -52,7 +82,7 @@ spec:
         - configMapRef:
             name: {{ .Values.worker.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.worker.name }}{{ else }}{{ index .Values.global .Values.name "worker" "existingSecret" }}{{ end }}
+            name: {{ $workerSecretName }}
         volumeMounts:
         - mountPath: /home/appuser/app/src/frost_context_files
           name: {{ .Values.name }}-context
@@ -63,3 +93,6 @@ spec:
       - name: {{ .Values.name }}-index
         configMap:
           name: {{ .Values.name }}-index
+      - name: init-mqtt-worker
+        configMap:
+          name: init-mqtt-worker

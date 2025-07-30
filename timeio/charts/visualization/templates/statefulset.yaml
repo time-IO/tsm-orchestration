@@ -1,3 +1,10 @@
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -14,6 +21,9 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      annotations:
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
@@ -34,7 +44,7 @@ spec:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
+            name: {{ $secretName }}
         volumeMounts:
         - name: {{ .Values.name }}-pv
           mountPath: /var/lib/grafana

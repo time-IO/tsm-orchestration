@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/configdb-updater"
-  tag: "prod-2025-06-12"
+  tag: "2025-07-29-064436"
   pullPolicy: Always
 name: worker-configdb-updater
 

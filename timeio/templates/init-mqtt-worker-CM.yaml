@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "init-mqtt-worker"
+data:
+  init-mqtt-worker.sh: |
+{{ .Files.Get "shared/init-mqtt-worker.sh" | indent 4 }}
