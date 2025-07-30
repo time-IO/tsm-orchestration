@@ -473,7 +473,7 @@ services:
       OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
     depends_on:
       thing-management-api:
-        condition: service_healthy
+        condition: service_started
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
