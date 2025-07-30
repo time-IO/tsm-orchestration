@@ -1,3 +1,10 @@
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -14,7 +21,26 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      annotations:
+        checksum/entrypoint-cm: {{ include (print $.Template.BasePath "/entrypoint-CM.yaml") . | sha256sum }}
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/mosquitto-cm: {{ include (print $.Template.BasePath "/mosquitto-CM.yaml") . | sha256sum }}
+        checksum/mosquitto-tls-cm: {{ include (print $.Template.BasePath "/mosquitto-tls-CM.yaml") . | sha256sum }}
+        checksum/mosquitto-db-probe-cm: {{ include (print $.Template.BasePath "/mosquitto-db-probe-CM.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
+      initContainers:
+      - name: {{ .Values.name}}-init
+        image: alpine/psql:17.5
+        command: ["/bin/sh", "-c", "/tmp/mosquitto-db-probe/mosquitto-db-probe.sh"]
+        volumeMounts:
+          - name: mosquitto-db-probe
+            mountPath: /tmp/mosquitto-db-probe
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.name }}-envvars
+          - secretRef:
+              name: {{ $secretName }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -32,7 +58,7 @@ spec:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
-            name: {{ if .Values.global.createSecrets }}{{ printf "%s-secret" .Values.name }}{{ else }}{{ index .Values.global .Values.name "existingSecret" }}{{ end }}
+            name: {{ $secretName }}
         volumeMounts:
         - mountPath: /mosquitto-data
           name: {{ .Values.name }}-pv
@@ -55,3 +81,7 @@ spec:
       - name: {{ .Values.name }}-tls-config
         configMap:
           name: {{ .Values.name }}-tls-config
+      - name: {{ .Values.name }}-db-probe
+        configMap:
+          name: {{ .Values.name }}-db-probe-cm
+          defaultMode: 0755

@@ -4,6 +4,7 @@ metadata:
   name: {{ .Values.name }}-envvars
 data:
   LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
+  MQTT_BROKER: "mosquitto:1883"
   MQTT_BROKER_HOST: "mosquitto"
   MQTT_BROKER_PORT: "1883"
   MQTT_CLIENT_ID: ""

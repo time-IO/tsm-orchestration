@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
+  FLYWAY_CONNECT_RETRIES: "10"
+  FLYWAY_CONNECT_RETRIES_INTERVAL: "5"
   FLYWAY_URL: "jdbc:postgresql://{{-  .Values.global.envvars.CREATEDB_POSTGRES_HOST -}}/{{-  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE -}}"
   FLYWAY_BASELINE_VERSION: {{ .Values.global.envvars.FLYWAY_BASELINE_VERSION | quote }}
   FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: {{ .Values.global.envvars.SMS_ACCESS_TYPE | quote }}
