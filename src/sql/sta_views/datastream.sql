@@ -18,8 +18,7 @@ SELECT
     d.id as "SENSOR_ID",
     CASE
                     WHEN dp.property_uri = '' THEN NULL
-                    ELSE reverse(split_part(reverse(dp.property_uri::text), '/'::text,
-                                            2))::integer
+                    ELSE reverse(split_part(reverse(dp.property_uri::text), '/'::text, 2))::integer
     END as "OBS_PROPERTY_ID",
     dp.unit_uri AS "UNIT_DEFINITION",
     dp.property_name AS "UNIT_NAME",
