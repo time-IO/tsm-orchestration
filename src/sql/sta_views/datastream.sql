@@ -30,13 +30,13 @@ SELECT
 		'symbol', dp.unit_name,
 		'definition', dp.unit_uri
 	) as "UNIT_OF_MEASUREMENT",
-    public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
+  public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
 	null as "RESULT_TIME",
 	null as "PHENOMENON_TIME",
 	dma.begin_date AS "PHENOMENON_TIME_START",
-    dma.begin_date AS "RESULT_TIME_START",
-    dma.end_date AS "PHENOMENON_TIME_END",
-    dma.end_date AS "RESULT_TIME_END",
+  dma.begin_date AS "RESULT_TIME_START",
+  dma.end_date AS "PHENOMENON_TIME_END",
+  dma.end_date AS "RESULT_TIME_END",
 	jsonb_build_object(
         '@context', public.get_schema_org_context(),
 		'jsonld.id',  '{sms_url}' || 'datastream-links/' || MAX(dsl.id),
@@ -125,8 +125,13 @@ LEFT JOIN public.sms_cv_license cv_l ON coalesce(nullif(split_part(dsl.license_u
 LEFT JOIN public.sms_configuration_dynamic_location_begin_action cdl ON c.id = cdl.configuration_id
 LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = csl.configuration_id
 WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
-GROUP BY dsl.device_property_id, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
-	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
-	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,
-	dp.measuring_range_max, cv_l.term, cv_l.provenance_uri, cv_l.definition, c.id, dma.id, dma.label, dma.begin_description, dma.begin_date, dma.offset_x,
-	dma.offset_y, csl.x, csl.y, dp.property_uri, dma.end_date, dp.label;
+GROUP BY c.id, c.label,
+         cv_agg.definition,
+         cv_l.definition, cv_l.provenance_uri, cv_l.term,
+         cv_u.provenance, cv_u.term, cv_ua.provenance, cv_ur.provenance,
+         d.id, d.short_name,
+         dma.begin_date, dma.begin_description, dma.end_date, dma.id, dma.label, dma.offset_x, dma.offset_y, dma.offset_z,
+         dp.accuracy, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.aggregation_type_name, dp.aggregation_type_uri, dp.label,
+         dp.measuring_range_max, dp.measuring_range_min, dp.property_name, dp.property_uri, dp.resolution, dp.resolution_unit_name,
+         dp.resolution_unit_uri, dp.unit_name, dp.unit_uri,
+         dsl.aggregation_period, dsl.device_property_id, dsl.id;
