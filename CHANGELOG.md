@@ -3,6 +3,20 @@
 
 ## [Unreleased]
 
+## 2025-08-12
+
+### Added
+- Keycloak as an AAI proxy
+- Hidden Alpha version of the new Thing-Management
+- Option to use csv-file headers as datastream names
+- Mosquitto Monitoring
+
+### Changed
+- Mosquitto resource settings
+
+### Fixed
+- extSFTP service failures
+
 ## 2025-07-09
 
 ### Added
