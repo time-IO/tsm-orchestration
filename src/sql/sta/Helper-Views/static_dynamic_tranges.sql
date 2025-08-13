@@ -1,5 +1,8 @@
 BEGIN;
 
+SET search_path TO %(tsm_schema)s;
+
+--- Helper View to get dateranges for different static and dynamic location actions ---
 DROP VIEW IF EXISTS "static_dynamic_tsranges" CASCADE;
 CREATE OR REPLACE VIEW "static_dynamic_tsranges" AS
 SELECT dma.configuration_id as "configuration_id",

@@ -283,6 +283,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "sensor.sql"),
             os.path.join(base_path, "observed_property.sql"),
             os.path.join(base_path, "datastream.sql"),
+            os.path.join(base_path, "Helper-Views", "location_property_order.sql"),
+            os.path.join(base_path, "Helper-Views", "static_dynamic_tranges.sql"),
+            os.path.join(base_path, "Helper-Views", "ts_action_type.sql"),
+            os.path.join(base_path, "Helper-Views", "ts_coordinates.sql"),
             os.path.join(base_path, "observation.sql"),
             os.path.join(base_path, "feature.sql"),
         ]

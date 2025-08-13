@@ -1,4 +1,4 @@
-BEGIN
+BEGIN;
 
 SET search_path TO %(tsm_schema)s;
 
@@ -18,7 +18,7 @@ WITH ts_action_type_unfiltered AS (
     JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
     JOIN static_dynamic_tsranges ranges ON ranges.configuration_id = dma.configuration_id
     JOIN observation obs ON obs.datastream_id = dsl.datastream_id
-)SET search_path TO %(tsm_schema)s;
+)
 SELECT result_time, action_type, action_id FROM ts_action_type_unfiltered
 WHERE action_type IS NOT NULL AND action_id IS NOT NULL;
 

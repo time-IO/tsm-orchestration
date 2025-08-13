@@ -2,6 +2,7 @@ BEGIN;
 
 SET search_path TO %(tsm_schema)s;
 
+-- --- Helper view to get coordinates for every tsm_observation.result_time
 DROP VIEW IF EXISTS "ts_coordinates" CASCADE;
 CREATE OR REPLACE VIEW "ts_coordinates" AS
 SELECT DISTINCT
@@ -16,7 +17,7 @@ SELECT DISTINCT
             )
 		WHEN ts_action.action_type = 'static' THEN
 	        CASE
-				WHEN sla.z IS NULL THEN array[sla.x ,sl a.y]
+				WHEN sla.z IS NULL THEN array[sla.x ,sla.y]
 				ELSE array[sla.x ,sla.y, sla.z]
 			END
 	END AS "coordinates",
@@ -37,5 +38,6 @@ WHERE (dla.id = ts_action.action_id OR sla.id = ts_action.action_id)
         OR dla.y_property_id = dsl.device_property_id
         OR dla.z_property_id = dsl.device_property_id OR sla.id=ts_action.action_id)
 GROUP BY o.result_time, ts_action.action_type, sla.x, sla.y, sla.z, dla.begin_description, sla.begin_description, ts_action.action_id ;
+
 
 COMMIT;

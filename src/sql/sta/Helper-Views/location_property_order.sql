@@ -1,5 +1,8 @@
 BEGIN;
 
+SET search_path TO %(tsm_schema)s;
+
+--- Helper View to create order for coordinates (x->1, y->2, z->3) to obtain order for FoI coordinates
 DROP VIEW IF EXISTS "location_property_order" CASCADE;
 CREATE OR REPLACE VIEW "location_property_order" AS
 SELECT DISTINCT

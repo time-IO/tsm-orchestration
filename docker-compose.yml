@@ -1308,21 +1308,7 @@ services:
       -P "${MQTT_PASSWORD}"
       --id "mqtt-cat"
 
-  monitoring:
-    image: "${MONITORING_CADVISOR_IMAGE_REGISTRY}:${MONITORING_CADVISOR_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
-    container_name: cadvisor
-    ports:
-      - "${MONITORING_PORT}:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+  #monitoring: gelöscht
 
 volumes:
   frontend-statics:
