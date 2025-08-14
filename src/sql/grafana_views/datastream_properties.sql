@@ -4,7 +4,7 @@ SELECT DISTINCT
     case
         when dp.property_name is null or dp.unit_name is null
         then tsm_ds.position
-        else concat(dp.property_name, ' (', dp.unit_name, ') - ', dma.label, ' - ', tsm_ds."position"::text)
+        else concat(dp.property_name, ' - ', dp.label, ' (', dp.unit_name, ')', ' - ', tsm_ds."position"::text)
     end as "property",
     tsm_ds."position",
     tsm_ds.id as "ds_id",
