@@ -2,9 +2,19 @@ DROP VIEW IF EXISTS "datastream_properties" CASCADE;
 CREATE VIEW "datastream_properties" AS
 SELECT DISTINCT
     case
-        when dp.property_name is null or dp.unit_name is null
+        when dp.property_name is null or dp.property_name = '' or dp.unit_name is null
         then tsm_ds.position
-        else concat(dp.property_name, ' (', dp.unit_name, ') - ', dma.label, ' - ', tsm_ds."position"::text)
+        else concat_ws(
+                ' - ',
+                case
+                    when dp.unit_name IS NULL OR dp.unit_name = ''
+                        then dp.property_name
+                    else concat(dp.property_name, ' (', dp.unit_name, ')')
+                    end,
+                NULLIF(dp."label", ''),
+                NULLIF(dma."label", ''),
+                NULLIF(tsm_ds."position"::text, '')
+             )
     end as "property",
     tsm_ds."position",
     tsm_ds.id as "ds_id",
