@@ -221,6 +221,7 @@ class CsvParser(FileParser):
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
 
+
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
                 comment_regex = (comment_regex,)
@@ -230,7 +231,7 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
             if i == header_line:
                 # we might have comments at the header line as well
-                rows.append(re.sub(comment_regex, "", row))
+                header_raw = re.sub(comment_regex, "", row)
                 continue
             rows.append(row)
         rawdata = "\n".join(rows)
