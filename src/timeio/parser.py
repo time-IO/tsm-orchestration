@@ -221,7 +221,6 @@ class CsvParser(FileParser):
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
 
-
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
                 comment_regex = (comment_regex,)
