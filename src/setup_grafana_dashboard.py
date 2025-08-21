@@ -57,7 +57,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         p_uuid = thing.project.uuid
         self.api.organizations.switch_organization(org_id)
         if (ds := self.api.t.dsrc.get_by_uid(p_uuid)) is None:
-            ds = self.api.t.dsrc.create(thing, user_prefix="grf_")
+            ds = self.api.t.dsrc.create(thing, user_prefix="grf_", sslmode=self.sslmode)
 
         if (team_name := self.api.t.team.get_by_name(p_name)) is None and org_id == 1:
             # only create team in Main org
