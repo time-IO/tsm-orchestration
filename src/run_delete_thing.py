@@ -187,7 +187,7 @@ def delete_dashboard(host, user, password, thing_uuid):
     for org in resp.json():
 
         # switch org
-        switch_url = urljoin(host, f"api/user/using/{org['orgId']}" )
+        switch_url = urljoin(host, f"api/user/using/{org['orgId']}")
         resp = session.post(switch_url)
         if not resp.ok:
             raise RuntimeError(f"POST request failed: {switch_url}")
