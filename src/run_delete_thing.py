@@ -6,9 +6,11 @@ import logging
 import click
 import minio
 import psycopg
+import requests
+
+from urllib.parse import urljoin
 from crontab import CronTab
 from minio.credentials import StaticProvider
-
 
 # Configure logging to output to console
 logging.basicConfig(
@@ -171,6 +173,41 @@ def delete_thing_from_schema(cur, schema, thing_uuid):
     )
 
 
+def delete_dashboard(host, user, password, thing_uuid):
+
+    session = requests.Session()
+    session.auth = (user, password)
+
+    # get all orgs
+    orgs_url = urljoin(host, "api/user/orgs")
+    resp = session.get(orgs_url)
+    if not resp.ok:
+        raise RuntimeError(f"GET request failed: {orgs_url}")
+
+    for org in resp.json():
+
+        # switch org
+        switch_url = urljoin(host, f"api/user/using/{org['orgId']}" )
+        resp = session.post(switch_url)
+        if not resp.ok:
+            raise RuntimeError(f"POST request failed: {switch_url}")
+
+        # fetch dashboards
+        dashboards_url = urljoin(host, "api/search?query=&type=dash-db")
+        resp = session.get(dashboards_url)
+        if not resp.ok:
+            raise RuntimeError(f"GET request failed: {dashboards_url}")
+
+        dashboards = resp.json()
+        for d in dashboards:
+            if d["uid"] == thing_uuid:
+                # delete dashboard
+                delete_url = urljoin(host, f"api/dashboards/uid/{thing_uuid}")
+                resp = session.delete(delete_url)
+                if not resp.ok:
+                    raise RuntimeError(f"DELETE request failed: {delete_url}")
+
+
 def get_ids(cursor, thing_uuid):
     cursor.execute(
         "select s3_store_id, mqtt_id, ext_sftp_id, ext_api_id, legacy_qaqc_id from config_db.thing where uuid = %s",
@@ -199,8 +236,25 @@ def get_ids(cursor, thing_uuid):
 @click.option(
     "--minio-password", default="minioadmin", envvar="OBJECT_STORAGE_ROOT_PASWORD"
 )
+@click.option(
+    "--grafana-host",
+    default="http://localhost/visualization/",
+    envvar="OBJECT_STORAGE_HOST",
+)
+@click.option("--grafana-user", default="grafana", envvar="VISUALIZATION_USER")
+@click.option("--grafana-password", default="grafana", envvar="VISUALIZATION_PASSWORD")
 @click.option("--crontab-file", required=True)
-def main(thing_uuid, dsn, minio_host, minio_user, minio_password, crontab_file):
+def main(
+    thing_uuid,
+    dsn,
+    minio_host,
+    minio_user,
+    minio_password,
+    grafana_host,
+    grafana_user,
+    grafana_password,
+    crontab_file,
+):
     """
     * Deletes the given thing, related datastreams and observations from `obervationdb`
     * Deletes from configdb:
@@ -260,10 +314,11 @@ def main(thing_uuid, dsn, minio_host, minio_user, minio_password, crontab_file):
             logger.warning(
                 "There are SMS datastream links which need to be deleted manually from the SMS"
             )
-
         delete_thing_from_schema(cur, schema, thing_uuid)
         cur.close()
     conn.commit()
+
+    delete_dashboard(grafana_host, grafana_user, grafana_password, thing_uuid)
 
 
 if __name__ == "__main__":
