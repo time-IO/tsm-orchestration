@@ -1,7 +1,8 @@
 BEGIN;
 
 SET search_path TO %(tsm_schema)s;
-
+--
+--- CREATE VIEW FEATURE_OF_INTEREST ---
 --- CREATE VIEW FEATURE_OF_INTEREST ---
 DROP VIEW IF EXISTS "FEATURES" CASCADE;
 CREATE OR REPLACE VIEW "FEATURES" AS
@@ -28,7 +29,6 @@ JOIN observation o ON o.datastream_id = dsl.datastream_id
 JOIN ts_coordinates crd on crd.result_time =o.result_time
 WHERE dsl.datasource_id = %(tsm_schema)s AND c.is_public AND d.is_public
 GROUP BY crd."description", crd.coordinates, crd.action_id, c."label", dsl.begin_date, o.result_time;
-
 
 
 
@@ -61,5 +61,8 @@ GROUP BY crd."description", crd.coordinates, crd.action_id, c."label", dsl.begin
 --   "FEATURE" jsonb,
 --   "PROPERTIES" jsonb
 -- );
+
+
+
 
 COMMIT;
