@@ -68,17 +68,13 @@ class GrafanaMapDashboard:
 
     @classmethod
     def _locations_query_target(cls, datasource: DatasourceT) -> dict:
+        with open("timeio/grafana/sql/locations.sql", "r") as f:
+            sql = f.read()
         return {
             "datasource": datasource,
             "editorMode": "code",
             "format": "table",
             "rawQuery": True,
-            "rawSql": cls._locations_sql(),
+            "rawSql": sql,
             "refId": "A",
         }
-
-    @staticmethod
-    def _locations_sql() -> str:
-        with open("timeio/grafana/sql/locations.sql", "r") as f:
-            sql = f.read()
-        return sql
