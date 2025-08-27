@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from timeio.grafana.typehints import DatasourceT, FolderT
 from typing import TYPE_CHECKING
-from uuid import uuid5
+from uuid import uuid5, UUID
 
 from timeio.grafana.utils import _exists
 from timeio.thing import Thing
@@ -30,7 +30,7 @@ class GrafanaMapDashboard:
 
     def build(self, thing: Thing, folder: FolderT, datasource: DatasourceT) -> dict:
         dashboard_title = "STA Locations"
-        dashboard_uid = uuid5(thing.project.uuid, dashboard_title)
+        dashboard_uid = str(uuid5(UUID(thing.project.uuid), dashboard_title))
         dashboard = {
             "editable": True,
             "panels": [
