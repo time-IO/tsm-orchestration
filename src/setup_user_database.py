@@ -265,7 +265,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
             c.execute(
                 sql.SQL(
                     "GRANT SELECT ON TABLE thing, datastream, observation, "
-                    "journal, datastream_properties TO {grf_user}"
+                    'journal, datastream_properties, "LOCATIONS", "THINGS", '
+                    '"THINGS_LOCATIONS", "SENSORS", "OBS_PROPERTIES", "DATASTREAMS", '
+                    '"OBSERVATIONS" TO {grf_user}'
                 ).format(grf_user=grf_user, schema=schema)
             )
         # explicit commit to avoid idle in transaction on previous grant see: https://ufz-rdm.atlassian.net/browse/TSM-562
