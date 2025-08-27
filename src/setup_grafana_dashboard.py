@@ -69,7 +69,9 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         self.api.t.fldr.set_permissions(folder, team_name, role)
 
         dashboard = self.api.t.dash.build(thing, folder, ds)
+        geomap = self.api.t.map.build(thing, folder, ds)
         self.api.t.dash.upsert(dashboard)
+        self.api.t.map.upsert(geomap)
 
 
 if __name__ == "__main__":
