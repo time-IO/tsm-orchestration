@@ -6,7 +6,7 @@ CREATE OR REPLACE VIEW ts_coordinates  AS
 -- Da dür die dynamische Location die x-, y- und z-Koordinate in einzelnen Observations gespeichert werden,
 -- wird für jede Koordinate eine eigene CTE für die Abfrage der betreffenden Observation gestartet.
 -- Die Abfrage läuft über sms_datastream_link gebunden an die device_mount_action_id, die configuration_id und die datastream_id
-
+EXPLAIN ANALYZE
         WITH
         -- CTE für dynamische x-Koordinate
         xkoordinaten AS (
