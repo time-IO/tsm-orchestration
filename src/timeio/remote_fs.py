@@ -241,6 +241,11 @@ class FtpFS(RemoteFS):
         logger.debug(f"CREATE {path}")
         self.client.mkdir(path)
 
+    def last_modified(self, path: str) -> int:
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+        return self.files[path].st_mtime or 0
+
     @contextmanager
     def open(self, path):
         if not self.exist(path):
