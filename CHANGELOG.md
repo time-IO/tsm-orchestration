@@ -3,6 +3,19 @@
 
 ## [Unreleased]
 
+## 2025-08-28
+
+### Added
+- script to delete things ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/433))
+
+### Changed
+- Grafana panel headers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/430))
+
+### Fixed
+- Close SFTP connections ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/437))
+- Grafana connection issues ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/432))
+- CSV-Header Parsing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/431))
+
 ## 2025-08-12
 
 ### Added
