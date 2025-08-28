@@ -1,9 +1,10 @@
 html {
-    background: linear-gradient(120deg, #5FB4C0, #0071BC, #004F9F);
+    background-color: #f9fafb;
     background-attachment: fixed;
     background-size: cover;
     height: 100%;
     overflow-x: hidden;
+    color-scheme: light;
 }
 
 @keyframes bgCycle {
@@ -27,7 +28,7 @@ body {
     font-size: 1.5em;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     background-color: transparent;
-    color: #000;
+    color: #222;
 
     position: relative;
     z-index: 0;
@@ -55,22 +56,22 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    border-radius: 45%;
+    border-radius: 47%;
     animation: rotateWave 25s linear infinite;
 }
 
 .orbital-waves span:nth-child(1) {
-    background: rgba(0, 113, 188, 0.2);
+    background: rgba(0, 113, 188, 0.1);
     animation-duration: 35s;
 }
 
 .orbital-waves span:nth-child(2) {
-    background: rgba(0, 79, 159, 0.2);
+    background: rgba(0, 79, 159, 0.1);
     animation-duration: 50s;
 }
 
 .orbital-waves span:nth-child(3) {
-    background: rgba(95, 180, 192, 0.2);
+    background: rgba(95, 180, 192, 0.1);
     animation-duration: 70s;
 }
 
@@ -79,52 +80,35 @@ body {
     100% { transform: translateX(-50%) rotate(360deg); }
 }
 
-.wave-layer {
+.orbital-waves.mirrored {
     position: fixed;
-    width: 200%;
-    height: 12vh;
-    bottom: 0;
-    left: 0;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 1000% 1000% 0 0;
+    top: 70%;
+    right: 50%;
+    transform: translateX(0%);
+    width: 1225vh;
+    height: 1225vh;
     z-index: -1;
-    opacity: 0.8;
-    animation: wave 12s -3s linear infinite;
     pointer-events: none;
 }
 
-.wave-layer:nth-of-type(2) {
-    bottom: -1.25vh;
-    animation: wave 18s linear reverse infinite;
+/* Animation bleibt gleich, evtl. etwas langsamer */
+.orbital-waves.mirrored span:nth-child(1) {
+    animation-duration: 40s;
 }
 
-.wave-layer:nth-of-type(3) {
-    bottom: -2.5vh;
-    animation: wave 20s -1s reverse infinite;
+.orbital-waves.mirrored span:nth-child(2) {
+    animation-duration: 55s;
 }
 
-
-.wave-layer:nth-of-type(2) {
-    bottom: -1.25vh;
-    animation: wave 18s linear reverse infinite;
+.orbital-waves.mirrored span:nth-child(3) {
+    animation-duration: 75s;
 }
 
-.wave-layer:nth-of-type(3) {
-    bottom: -2.5vh;
-    animation: wave 20s -1s reverse infinite;
-}
-
-@keyframes wave {
-    0%, 100% { transform: translateX(1); }
-    25% { transform: translateX(-25%); }
-    50% { transform: translateX(-50%); }
-    75% { transform: translateX(-25%); }
-}
 
 /* General links */
 a {
     text-decoration: none;
-    color: #004F9F;
+    color: #004c70;;
 }
 
 a:hover {
@@ -183,11 +167,12 @@ a:hover {
     flex-grow: 1;
     margin: .3em;
     text-align: left;
-    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 76, 112, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: #222;
     transition: all .2s ease;
-    color: black;
     animation: cardFadeIn 1s ease-out;
     min-width: 10em;
     max-width: 22em;
@@ -212,11 +197,11 @@ a:hover {
     font-weight: 600;
     letter-spacing: .5px;
     margin-bottom: 1em;
-    color: #004F9F;
+    color: #00334d;
 }
 
 .link-card-text {
-    color: #333;
+    color: #444;
     font-size: .8em;
     font-weight: 100;
     margin-bottom: 1.5em;
@@ -228,7 +213,7 @@ a:hover {
     font-size: 1.2em;
     position: relative;
     bottom: 2em;
-    color: #0071BC;
+    color: #008b8b;
 }
 
 /* Footer */
@@ -250,13 +235,13 @@ a:hover {
 
 .footer-link a {
     text-decoration: none;
-    color: #EEEEEE;
+    color: #004c70;
     font-size: 1em;
     transition: color .1s;
 }
 
 .footer-link a:hover {
-    color: #FFFFFF;
+    color: #000;
 }
 
 /* keyframes */
@@ -336,22 +321,22 @@ a:hover {
 
 .sparkle-border {
     position: relative;
-    border: 3px solid transparent;
+    border: 3px solid #008b8b;
     border-radius: 10px;
     animation: sparkle 3s infinite;
 }
 
 @keyframes sparkle {
     0% {
-        box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        border-color: rgba(255, 215, 0, 0.5);
+        box-shadow: 0 0 5px rgba(0, 139, 139, 0.4);
+        border-color: rgba(0, 139, 139, 0.4);
     }
     50% {
-        box-shadow: 0 0 15px rgba(255, 215, 0, 1);
-        border-color: rgba(255, 215, 0, 1);
+        box-shadow: 0 0 15px rgba(0, 139, 139, 0.9);
+        border-color: rgba(0, 139, 139, 0.9);
     }
     100% {
-        box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        border-color: rgba(255, 215, 0, 0.5);
+        box-shadow: 0 0 5px rgba(0, 139, 139, 0.4);
+        border-color: rgba(0, 139, 139, 0.4);
     }
 }
