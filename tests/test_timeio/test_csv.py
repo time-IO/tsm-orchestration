@@ -18,7 +18,6 @@ RAWDATA = """
 1420, 2021/09/09 06:15:00,  987.1, 989.76, 991.12,   15.9, 128.9,  15.8,  14.6,  14.5, 76.1,119.0, 89.5, 11.855,      165,      103,     900,     900,  18.1, 63.2,  17.9, 63.8,        0
 """
 
-
 @pytest.mark.parametrize(
     "settings, columns",
     [
@@ -134,3 +133,22 @@ def test_multi_date_column_parsing():
     assert df.columns.equals(pd.RangeIndex(2, 10))
     assert (df[2] == [20.52, 20.38, 20.19, 20.02]).all()
     assert (df[9] == [12.5, 12.5, 12.4, 12.5]).all()
+
+RAWDATA_EMPTY_COLS = """time;var1;var2;var3;var4;var5;var6
+2025-08-28 17:00:00;1;1;;;;1
+2025-08-28 17:10:00;1;1;;;;1
+2025-08-28 17:20:00;1;1;;;;1
+"""
+
+def test_empty_col_csv():
+    settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        'timestamp_columns': [{'column': 0, 'format': '%Y-%m-%d %H:%M:%S'}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_EMPTY_COLS, "project", "thing")
+    assert df.shape == (3,6)
