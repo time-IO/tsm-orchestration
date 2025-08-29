@@ -16,5 +16,5 @@ paramiko==3.5.1
 pytest-subtests
 --index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
 minio-cli-wrapper>=0.0.16
---extra-index-url https://codebase.helmholtz.cloud/api/v4/projects/12173
+--index-url https://codebase.helmholtz.cloud/api/v4/projects/12173
 tsm_user_code
