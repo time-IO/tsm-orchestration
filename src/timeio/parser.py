@@ -231,13 +231,15 @@ class CsvParser(FileParser):
             if i == header_line:
                 # we might have comments at the header line as well
                 header_raw = re.sub(comment_regex, "", row)
+                header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
+                header_names = pandafy_headerline(header_raw_clean, delimiter)
+                settings["names"] = header_names
+                settings["header"] = None
                 continue
             rows.append(row)
         rawdata = "\n".join(rows)
 
         try:
-            if header_line is not None:
-                settings["header"] = None
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
@@ -248,9 +250,6 @@ class CsvParser(FileParser):
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
         if header_line is not None:
-            header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
-            header_names = pandafy_headerline(header_raw_clean, delimiter)
-
             if duplicate:
                 df_default_names = df.copy()
                 df_default_names.columns = range(len(df.columns))
@@ -274,8 +273,6 @@ class CsvParser(FileParser):
                         "data failed. Positions will be used instead.",
                         ParsingWarning,
                     )
-            else:
-                df.columns = header_names
 
         # If no header is given, we always use column positions
         else:
