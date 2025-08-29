@@ -49,7 +49,6 @@ def delete_bucket(minio_host, minio_user, minio_password, minio_bucket):
     # 3. Remove user
     admin_client.user_remove(minio_bucket)
 
-
 def delete_thing_entry(cursor, thing_uuid):
     cursor.execute(
         "DELETE FROM config_db.thing where uuid = %s RETURNING project_id", [thing_uuid]
@@ -184,7 +183,11 @@ def delete_dashboard(host, user, password, thing_uuid):
         switch_url = urljoin(host, f"api/user/using/{org['orgId']}")
         resp = session.post(switch_url)
         if not resp.ok:
-            raise RuntimeError(f"POST request failed: {switch_url}")
+            logger.warn(f"unable to switch to organization: {switch_url}")
+            continue
+                # raise RuntimeError(f"POST request failed: {switch_url}")
+
+        logger.info(f"switched to organization: {switch_url}")
 
         # fetch dashboards
         dashboards_url = urljoin(host, "api/search?query=&type=dash-db")
@@ -306,6 +309,7 @@ def main(
 
         if ext_sftp_id:
             delete_ext_sftp_entry(cur, ext_sftp_id)
+            delete_crontab_entry(crontab_file, thing_uuid)
 
         if ext_api_id:
             delete_ext_api_entry(cur, ext_api_id)
@@ -327,7 +331,3 @@ def main(
     conn.commit()
 
     delete_dashboard(grafana_host, grafana_user, grafana_password, thing_uuid)
-
-
-if __name__ == "__main__":
-    main()
