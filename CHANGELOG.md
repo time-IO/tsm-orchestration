@@ -3,6 +3,17 @@
 
 ## [Unreleased]
 
+## 2025-08-29
+
+### Added
+- Data Calibration function ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-dataprocessing-extension/-/merge_requests/1))
+
+### Changed
+- Improved failure tolerance of thr delete thing scripts ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/442))
+
+### Fixed
+- CSV-Header Parsing error with empty columns ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/441))
+
 ## 2025-08-28
 
 ### Added
