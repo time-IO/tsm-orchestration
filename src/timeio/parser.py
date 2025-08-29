@@ -230,8 +230,7 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
             if i == header_line:
                 # we might have comments at the header line as well
-                header_raw = re.sub(comment_regex, "", row)
-                header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
+                header_raw_clean = re.sub(comment_regex, "", row).strip()
                 header_names = pandafy_headerline(header_raw_clean, delimiter)
                 settings["names"] = header_names
                 settings["header"] = None
