@@ -239,7 +239,7 @@ def get_ids(cursor, thing_uuid):
 @click.option(
     "--grafana-host",
     default="http://localhost/visualization/",
-    envvar="OBJECT_STORAGE_HOST",
+    envvar="VISUALIZATION_HOST",
 )
 @click.option("--grafana-user", default="grafana", envvar="VISUALIZATION_USER")
 @click.option("--grafana-password", default="grafana", envvar="VISUALIZATION_PASSWORD")
@@ -266,7 +266,7 @@ def main(
 
     logger = logging.getLogger("DELETE THING")
     logger.info(
-        f"Deleting '{thing_uuid}' from database '{dsn}' and object-storage '{minio_host}'"
+        f"Deleting '{thing_uuid}' from database '{dsn}', object-storage '{minio_host}' and visualization '{grafana_host}'"
     )
 
     conn = psycopg.connect(dsn)
