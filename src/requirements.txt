@@ -16,3 +16,4 @@ cryptography>=43.0.0
 typing-extensions>=4.0.0
 paramiko==3.5.1
 pytest-subtests
+git+https://codebase.helmholtz.cloud/ufz-tsm/tsm-dataprocessing-extension.git
