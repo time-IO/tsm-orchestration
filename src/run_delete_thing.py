@@ -55,6 +55,7 @@ def delete_thing_entry(cursor, thing_uuid):
         "DELETE FROM config_db.thing where uuid = %s RETURNING project_id", [thing_uuid]
     )
 
+
 def delete_mqtt_user(cursor, thing_uuid):
     cursor.execute(
         """
@@ -224,7 +225,7 @@ def get_ids(cursor, thing_uuid):
         JOIN config_db.thing t on t.project_id = p.id
         WHERE t.uuid = %s
         """,
-        [thing_uuid]
+        [thing_uuid],
     )
 
     return cursor.fetchone() + ids
@@ -287,7 +288,6 @@ def main(
             legacy_qaqc_id,
             sta_datastream_ids,
         ) = get_ids(cur, thing_uuid)
-
 
         if s3_store_id:
             minio_bucket = delete_s3store_entry(cur, s3_store_id)
