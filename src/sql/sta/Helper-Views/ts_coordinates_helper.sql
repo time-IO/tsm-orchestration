@@ -1,6 +1,7 @@
 DROP VIEW IF EXISTS ts_coordinates_helper CASCADE;
 CREATE OR REPLACE VIEW ts_coordinates_helper  AS
 
+--  EXPLAIN ANALYZE
 
 WITH
     aktionen AS (
@@ -18,6 +19,10 @@ WITH
         )
 
 
+
+
+
+
         -- Hauptabfrage, Koordinatenabfrage über CTEs
         SELECT DISTINCT
             a.action_type,
@@ -28,12 +33,12 @@ WITH
             a.stat_dma_id,
 
             CASE
-                WHEN a.action_type = 'static' THEN
+                WHEN a.action_type = TRUE THEN
                     CASE
                         WHEN sla.z IS NULL THEN ARRAY[sla.x, sla.y]
                         ELSE ARRAY[sla.x, sla.y, sla.z]
                     END
-                WHEN a.action_type = 'dynamic' THEN
+                WHEN a.action_type = FALSE THEN
                     CASE
                         WHEN z.z_koor IS NULL THEN ARRAY[x.x_koor, y.y_koor]
                         ELSE ARRAY[x.x_koor, y.y_koor, z.z_koor]

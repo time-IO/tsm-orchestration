@@ -104,6 +104,9 @@ CREATE TABLE IF NOT EXISTS "observation"
     CONSTRAINT "observation_datastream_id_result_time_1d043396_uniq" UNIQUE ("datastream_id", "result_time"),
     CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
 );
+
+
+
 -- Conditionally create the index if it does not exist
 DO
 $$

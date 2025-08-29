@@ -6,13 +6,14 @@ CREATE OR REPLACE VIEW ts_coordinates  AS
 -- Da dür die dynamische Location die x-, y- und z-Koordinate in einzelnen Observations gespeichert werden,
 -- wird für jede Koordinate eine eigene CTE für die Abfrage der betreffenden Observation gestartet.
 -- Die Abfrage läuft über sms_datastream_link gebunden an die device_mount_action_id, die configuration_id und die datastream_id
-EXPLAIN ANALYZE
+   EXPLAIN ANALYZE
         WITH
         -- CTE für dynamische x-Koordinate
         xkoordinaten AS (
             SELECT
+
                 o.result_time,
-                o.result_number AS x_koor, -- unter result_number werden die Koordinaten bereitgehalten
+                  o.result_number AS x_koor,
                 dma.id AS dyn_dma_id --  device_mount_action_id für dynamic, da hier an dla gebunden
             FROM sms_datastream_link dsl
             JOIN sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
@@ -25,6 +26,7 @@ EXPLAIN ANALYZE
         -- CTE für dynamische y-Koordinate
         ykoordinaten AS (
             SELECT
+
                 o.result_time,
                 o.result_number AS y_koor,
                 --dsl.datastream_id AS y_datastream,
@@ -40,6 +42,7 @@ EXPLAIN ANALYZE
         -- CTE für dynamische Z-Koordinate
         zkoordinaten AS (
             SELECT
+
                 o.result_time,
                 o.result_number AS z_koor
             FROM sms_datastream_link dsl
@@ -54,16 +57,18 @@ EXPLAIN ANALYZE
         -- CTE Abfrage der Helper-View ts_action_type, inkl. Bestimmung der dma_id für static
         aktionen AS (
             SELECT
+
                 ts.result_time,
                 ts.action_type,
                 ts.action_id, -- sla/oder dla.id
 --                 ts.observation_id,
                 ts.datastream_id,
                 dma.configuration_id,
-                dma.id AS stat_dma_id -- dma_id nur für static, nicht für dyn. -> hier falsche Ausgabe (JOIN ... ON sla.id = ts.action_id)
+                dma.id AS stat_dma_id -- dma_id nur für static, nicht für dyn. -> hier falsche Ausgabe (JOIN ... ON sla.configuration_id)
             FROM ts_action_type ts
             JOIN sms_configuration_static_location_begin_action sla ON sla.id = ts.action_id
             JOIN sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
+            WHERE ts.action_id = dma.id
         )
 
 
@@ -77,12 +82,12 @@ EXPLAIN ANALYZE
             a.stat_dma_id,
 
             CASE
-                WHEN a.action_type = 'static' THEN
+                WHEN a.action_type = TRUE THEN
                     CASE
                         WHEN sla.z IS NULL THEN ARRAY[sla.x, sla.y]
                         ELSE ARRAY[sla.x, sla.y, sla.z]
                     END
-                WHEN a.action_type = 'dynamic' THEN
+                WHEN a.action_type = FALSE THEN
                     CASE
                         WHEN z.z_koor IS NULL THEN ARRAY[x.x_koor, y.y_koor]
                         ELSE ARRAY[x.x_koor, y.y_koor, z.z_koor]
@@ -93,7 +98,10 @@ EXPLAIN ANALYZE
         LEFT JOIN xkoordinaten x ON x.result_time = a.result_time
         LEFT JOIN ykoordinaten y ON y.result_time = a.result_time
         LEFT JOIN zkoordinaten z ON z.result_time = a.result_time
+
+
+
             -- damit keine Dopplung der Daten, müssen sowohl die sla_id als auch die dma_id aus 'aktionen' mit der action_id aus 'aktionen'
             -- übereinstimmen (letztere steht für die sla_id bei Überprüfung des Types)
           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = a.configuration_id AND sla.id = a.action_id
-            WHERE a.action_id = a.stat_dma_id
+--             WHERE a.action_id = a.stat_dma_id

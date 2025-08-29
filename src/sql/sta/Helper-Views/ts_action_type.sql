@@ -8,8 +8,8 @@ WITH configuration_type AS (
   SELECT
     c.id AS configuration_id,
     CASE
-    WHEN x IS NOT NULL THEN 'static' -- aus sla
-    WHEN x_property_id IS NOT NULL THEN 'dynamic' -- aus dla
+    WHEN x IS NOT NULL THEN TRUE -- aus sla
+    WHEN x_property_id IS NOT NULL THEN FALSE -- aus dla
     END AS action_type,
     CASE
     WHEN x IS NOT NULL THEN sla.begin_date
@@ -47,6 +47,7 @@ WITH configuration_type AS (
 --     o.id as observation_id,
     o.datastream_id,
     o.result_time,
+    o.id AS akt_observation_id,
     dm.action_type,
     dm.action_id
 

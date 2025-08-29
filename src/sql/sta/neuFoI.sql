@@ -1,6 +1,6 @@
 DROP VIEW IF EXISTS "FEATURES" CASCADE;
 CREATE OR REPLACE VIEW "FEATURES" AS
- EXPLAIN ANALYZE
+ -- EXPLAIN ANALYZE
 SELECT
     -- Zusammenbau der FoI_id: Hash aus Koordinaten und Aktion_ID (muss berechenbar sein,
     -- damit sie auch unabhängig dem observation_table zur Verfügung steht)
@@ -23,7 +23,7 @@ FROM public.sms_datastream_link dsl
 JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_configuration c ON c.id =dma.configuration_id
 JOIN public.sms_device d ON d.id = dma.device_id
-JOIN ts_coordinates_helper crd ON crd.datastream_id = dsl.datastream_id
+JOIN ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
     -- Bedingung, dma_id entweder für den Fall 'static' mit action_id aus CTE 'ts_action_type' identisch (entspricht der sla_id)
 -- oder für den Fall 'dynamic' mit der
     WHERE dma.id = crd.action_id OR dma.id = crd.dyn_dma_id
