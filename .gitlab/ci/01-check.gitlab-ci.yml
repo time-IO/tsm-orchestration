@@ -52,8 +52,6 @@ pytest:
   stage: check
   image: python:3.11-slim
   before_script:
-    - apt-get update -qq
-    - apt-get install -y --no-install-recommends git
     - pip install -r src/requirements.txt  pytest
   script:
     - python3 -m pytest tests/test_timeio
