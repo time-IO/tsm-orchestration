@@ -49,6 +49,7 @@ def delete_bucket(minio_host, minio_user, minio_password, minio_bucket):
     # 3. Remove user
     admin_client.user_remove(minio_bucket)
 
+
 def delete_thing_entry(cursor, thing_uuid):
     cursor.execute(
         "DELETE FROM config_db.thing where uuid = %s RETURNING project_id", [thing_uuid]
@@ -185,7 +186,7 @@ def delete_dashboard(host, user, password, thing_uuid):
         if not resp.ok:
             logger.warn(f"unable to switch to organization: {switch_url}")
             continue
-                # raise RuntimeError(f"POST request failed: {switch_url}")
+            # raise RuntimeError(f"POST request failed: {switch_url}")
 
         logger.info(f"switched to organization: {switch_url}")
 
