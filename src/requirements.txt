@@ -1,7 +1,7 @@
 --extra-index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
 --extra-index-url https://codebase.helmholtz.cloud/api/v4/projects/12173/packages/pypi/simple
 
-psycopg==3.2.9
+psycopg[binary]==3.2.9
 psycopg-pool==3.2.6
 click>=8.1.8
 pwgen==0.8.2.post0
