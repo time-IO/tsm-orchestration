@@ -1,7 +1,10 @@
-psycopg[binary]==3.2.1
-psycopg-pool==3.2.2
-click>=8.0.3
-pwgen>=0.8.2.post0
+--extra-index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
+--extra-index-url https://codebase.helmholtz.cloud/api/v4/projects/12173/packages/pypi/simple
+
+psycopg==3.2.9
+psycopg-pool==3.2.6
+click>=8.1.8
+pwgen==0.8.2.post0
 paho-mqtt==2.1.0
 PyYAML==6.0.2
 grafana-client>=3.6.0
@@ -14,7 +17,5 @@ cryptography>=43.0.0
 typing-extensions>=4.0.0
 paramiko==3.5.1
 pytest-subtests
---index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
 minio-cli-wrapper>=0.0.16
---index-url https://codebase.helmholtz.cloud/api/v4/projects/12173
-tsm_user_code
+tsm_user_code>=0.0.1
