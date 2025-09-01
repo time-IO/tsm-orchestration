@@ -332,3 +332,7 @@ def main(
     conn.commit()
 
     delete_dashboard(grafana_host, grafana_user, grafana_password, thing_uuid)
+
+
+if __name__ == "__main__":
+    main()
