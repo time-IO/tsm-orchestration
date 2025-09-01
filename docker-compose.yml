@@ -695,10 +695,7 @@ services:
 
   # brief: create a new bucket for a Thing in S3 storage
   worker-object-storage-setup:
-    # NOTE:
-    # Just changed to make the pipeline run. This has to be reverted before
-    # merging and we also need to provide an updated dispatcher image!
-    image: "${TIMEIO_IMAGE_REGISTRY}/test/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
       dockerfile: dispatcher/Dockerfile
