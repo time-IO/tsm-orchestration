@@ -105,7 +105,13 @@ CREATE TABLE IF NOT EXISTS "observation"
     CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
 );
 
+-- Für die häufigen Bitmap Scans:
+CREATE INDEX CONCURRENTLY idx_observation_datastream_result
+ON observation(datastream_id, result_time);
 
+-- Falls noch nicht vorhanden:
+CREATE INDEX CONCURRENTLY idx_observation_result_time
+ON observation(result_time);
 
 -- Conditionally create the index if it does not exist
 DO

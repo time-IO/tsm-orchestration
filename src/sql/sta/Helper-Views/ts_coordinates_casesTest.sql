@@ -2,19 +2,9 @@ DROP VIEW IF EXISTS ts_coordinates_cases CASCADE;
 CREATE OR REPLACE VIEW ts_coordinates_cases AS
 --     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
 --     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
-
-
- EXPLAIN ANALYZE
+--EXPLAIN ANALYZE
 WITH
--- CTE um mithile der ts_action_type-View den action_type zu bestimmen
-action_type_def AS (SELECT ts.result_time,
-                           ts.action_type,
-                           ts.action_id::int, -- entspricht der sla/dla_id
-                           ts.datastream_id
 
-                    FROM ts_action_type ts),
-
--- CTE um die Koordinaten der static actions über sla.x/y/z zu bestimmten (WHERE at.action_type = TRUE)
 static_coords AS (SELECT DISTINCT ON (datastream_id, sla.id) -- beschränkter Distinct
                       'static'      AS action_type,
                        at.action_id,
@@ -27,7 +17,7 @@ static_coords AS (SELECT DISTINCT ON (datastream_id, sla.id) -- beschränkter Di
                             ELSE ARRAY [sla.x, sla.y, sla.z]
                          END       AS coordinates
 
-                  FROM action_type_def at
+                  FROM ts_action_type at
                            LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                            JOIN sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
                   WHERE at.action_type = TRUE),
@@ -45,7 +35,7 @@ dynamic_coords AS (SELECT   'dynamic'        AS action_type,
                                     ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
                                 END          AS coordinates
 
-                   FROM action_type_def at
+                   FROM ts_action_type at
                             LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
                             LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
                             LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time

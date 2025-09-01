@@ -1,7 +1,7 @@
 DROP VIEW IF EXISTS "FEATURES2" CASCADE;
 CREATE OR REPLACE VIEW "FEATURES2" AS
-      EXPLAIN ANALYZE
 
+-- EXPLAIN ANALYZE
 SELECT DISTINCT ON ("ID") -- beschränkter Distinkt, um Dopplungen bei den static zu umgehen (dma und sla.id)
 
    ('x' || MD5(crd.coordinates::text || crd.action_id))::bit(63)::bigint AS "ID",
@@ -28,3 +28,4 @@ JOIN public.sms_device d ON d.id = dma.device_id
 JOIN ts_coordinates_cases crd ON crd.datastream_id = dsl.datastream_id
     WHERE dma.id = crd.stat_dma_id OR dma.id = crd.dyn_dma_id
 GROUP BY crd.action_type, crd.coordinates, crd.action_id, c."label", dsl.begin_date;
+
