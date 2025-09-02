@@ -3,32 +3,41 @@
 
 DROP VIEW IF EXISTS ts_action_type CASCADE;
 CREATE OR REPLACE VIEW ts_action_type AS
+
+--     EXPLAIN ANALYZE
     --CTE über sms_configuration (ID) für action_type, action_id, begin/end_date
 WITH configuration_type AS (
   SELECT
     c.id AS configuration_id,
-    CASE
-    WHEN x IS NOT NULL THEN TRUE -- aus sla
-    WHEN x_property_id IS NOT NULL THEN FALSE -- aus dla
-    END AS action_type,
-    CASE
-    WHEN x IS NOT NULL THEN sla.begin_date
-    WHEN x_property_id IS NOT NULL THEN dla.begin_date
-    END AS begin_date,
-    CASE
-    WHEN x IS NOT NULL THEN sla.id
-    WHEN x_property_id IS NOT NULL THEN dla.id
-    END AS action_id,
-    COALESCE(
+        CASE
+            WHEN sla.id IS NOT NULL THEN TRUE  -- statische Location-Action
+            WHEN dla.id IS NOT NULL THEN FALSE -- dynamische Location-Action
+            ELSE NULL -- Ungültige Konfiguration
+        END AS action_type,
+
+        CASE
+            WHEN x IS NOT NULL THEN sla.begin_date
+            WHEN x_property_id IS NOT NULL THEN dla.begin_date
+        END AS begin_date,
+
+        CASE
+            WHEN sla.id IS NOT NULL THEN sla.id
+            WHEN dla.id IS NOT NULL THEN dla.id
+            ELSE NULL
+        END AS action_id,
+
       CASE
-      WHEN x IS NOT NULL THEN sla.end_date
-      WHEN x_property_id IS NOT NULL THEN dla.end_date
-      END,
-      TIMESTAMPTZ '9999-12-31 23:59:59+00'
-    ) AS end_date
+                WHEN sla.id IS NOT NULL THEN COALESCE(sla.end_date, TIMESTAMPTZ '9999-12-31 23:59:59+00')
+                WHEN dla.id IS NOT NULL THEN COALESCE(dla.end_date, TIMESTAMPTZ '9999-12-31 23:59:59+00')
+                ELSE NULL
+      END AS end_date
+
+
     FROM sms_configuration c
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.ID
+    WHERE (sla.id IS NOT NULL AND dla.id IS NULL)
+           OR (sla.id IS NULL AND dla.id IS NOT NULL)
 ),
     --CTE über sms_datastream_link (device_mount_action_id) für datastream_id
   datastream_mapping AS (
