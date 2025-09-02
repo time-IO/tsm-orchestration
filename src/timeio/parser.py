@@ -222,7 +222,7 @@ class CsvParser(FileParser):
         if header_line is not None:
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
-        if timestamp_columns is not None:
+        if tz_info is not None:
             if tz_info not in pytz.all_timezones:
                 raise ValueError(f"Invalid timezone string: {tz_info}")
                 # Alternatively we can just throw a warning and proceed without timezone informations
