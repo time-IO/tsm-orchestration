@@ -1,20 +1,23 @@
+ALTER TABLE thing_management_db.function_parameter ALTER COLUMN type TYPE VARCHAR(255);
+ALTER TABLE thing_management_db.function_parameter
+DROP CONSTRAINT IF EXISTS function_parameter_type_check;
 
-INSERT INTO function (id, name, description) VALUES
-(1, 'flagIsolated', 'Find and flag temporally isolated data groups.'),
-(2, 'flagJumps', 'Flag jumps and drops in data where the mean significantly changes.'),
-(3, 'flagOffset', 'Detect and flag spikes or offset value courses in data.'),
-(4, 'flagPlateau', 'Flag anomalous value plateaus in a time series.'),
-(5, 'flagRange', 'Flag values exceeding the given min-max interval.'),
-(6, 'flagAll', 'Set the given flag at all unflagged positions.'),
-(7, 'flagUniLOF', 'Flag outliers using univariate Local Outlier Factor (LOF).'),
-(8, 'flagZScore', 'Flag data points where (rolling) Z-score exceeds threshold.'),
-(9, 'flagByScatterLowpass', 'Flag data chunks exceeding a deviation threshold.'),
-(10, 'propagateFlags', 'Extend existing flags to preceding or subsequent values.'),
-(11, 'renameField', 'Rename field to the given name.'),
-(12, 'rolling', 'Calculate a rolling-window function on the data.'),
-(13, 'transferFlags', 'Transfer flags from one variable to another.');
+INSERT INTO thing_management_db.function (id, name, description, created_by) VALUES
+(1, 'flagIsolated', 'Find and flag temporally isolated data groups.', 1),
+(2, 'flagJumps', 'Flag jumps and drops in data where the mean significantly changes.', 1),
+(3, 'flagOffset', 'Detect and flag spikes or offset value courses in data.', 1),
+(4, 'flagPlateau', 'Flag anomalous value plateaus in a time series.', 1),
+(5, 'flagRange', 'Flag values exceeding the given min-max interval.', 1),
+(6, 'flagAll', 'Set the given flag at all unflagged positions.', 1),
+(7, 'flagUniLOF', 'Flag outliers using univariate Local Outlier Factor (LOF).', 1),
+(8, 'flagZScore', 'Flag data points where (rolling) Z-score exceeds threshold.', 1),
+(9, 'flagByScatterLowpass', 'Flag data chunks exceeding a deviation threshold.', 1),
+(10, 'propagateFlags', 'Extend existing flags to preceding or subsequent values.', 1),
+(11, 'renameField', 'Rename field to the given name.', 1),
+(12, 'rolling', 'Calculate a rolling-window function on the data.', 1),
+(13, 'transferFlags', 'Transfer flags from one variable to another.', 1);
 
-INSERT INTO function_parameter (function_id, name, description, optional, type, default_value, position) VALUES
+INSERT INTO thing_management_db.function_parameter (function_id, name, description, optional, type, default_value, position) VALUES
 -- flagIsolated
 (1, 'gap_window', 'Minimum gap size required before and after a group to consider it isolated.', false, 'interval', NULL, 1),
 (1, 'group_window', 'Maximum size of a data chunk to consider for isolation.', false, 'interval', NULL, 2),
