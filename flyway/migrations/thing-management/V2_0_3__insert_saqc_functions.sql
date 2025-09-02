@@ -68,7 +68,7 @@ INSERT INTO thing_management_db.function_parameter (function_id, name, descripti
 (11, 'new_name', 'Name to assign to the field.', false, 'str', NULL, 1),
 -- rolling
 (12, 'window', 'Size of the rolling window.', false, 'interval', NULL, 1),
-(12, 'func', 'Function to apply over the rolling window.', false, 'Literal["sum", "mean", "median", "min", "max", "std", "var", "skew", "kurt"]', 'mean', 2),
+(12, 'func', 'Function to apply over the rolling window.', false, 'Literal["sum", "mean", "median", "min", "max", "std", "var", "skew", "kurt", "count"]', 'mean', 2),
 (12, 'min_periods', 'Minimum points required for a valid result.', true, 'int>0', '0', 3),
 (12, 'center', 'Whether to center the window.', true, 'boolean', 'true', 4),
 -- transferFlags
