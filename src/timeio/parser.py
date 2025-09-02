@@ -9,6 +9,7 @@ import re
 import warnings
 import yaml
 import os
+import pytz
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -217,9 +218,18 @@ class CsvParser(FileParser):
         header_line = settings.get("header", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
+        tz_info = settings.pop("timezone", None)
         if header_line is not None:
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
+        if timestamp_columns is not None:
+            if tz_info not in pytz.all_timezones:
+                raise ValueError(f"Invalid timezone string: {tz_info}")
+                # Alternatively we can just throw a warning and proceed without timezone informations
+                self.logger.warning(
+                    f"Invalid timezone string: {tz_info}! Proceeding without specific timezone"
+                )
+                tz_info = None
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
@@ -276,6 +286,9 @@ class CsvParser(FileParser):
             df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
+        if tz_info is not None:
+            df.index = df.index.tz_localize(tz_info)
+
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
 
