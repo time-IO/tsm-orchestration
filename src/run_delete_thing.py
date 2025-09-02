@@ -184,7 +184,11 @@ def delete_dashboard(host, user, password, thing_uuid):
         switch_url = urljoin(host, f"api/user/using/{org['orgId']}")
         resp = session.post(switch_url)
         if not resp.ok:
-            raise RuntimeError(f"POST request failed: {switch_url}")
+            logger.warn(f"unable to switch to organization: {switch_url}")
+            continue
+            # raise RuntimeError(f"POST request failed: {switch_url}")
+
+        logger.info(f"switched to organization: {switch_url}")
 
         # fetch dashboards
         dashboards_url = urljoin(host, "api/search?query=&type=dash-db")
@@ -306,6 +310,7 @@ def main(
 
         if ext_sftp_id:
             delete_ext_sftp_entry(cur, ext_sftp_id)
+            delete_crontab_entry(crontab_file, thing_uuid)
 
         if ext_api_id:
             delete_ext_api_entry(cur, ext_api_id)
