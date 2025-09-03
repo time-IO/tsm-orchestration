@@ -1,7 +1,7 @@
 DROP VIEW IF EXISTS "FEATURES2" CASCADE;
 CREATE OR REPLACE VIEW "FEATURES2" AS
 
---  EXPLAIN ANALYZE
+ EXPLAIN ANALYZE
 SELECT
 
    ('x' || MD5(crd.coordinates::text || crd.action_id))::bit(63)::bigint AS "ID",

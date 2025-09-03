@@ -2,7 +2,7 @@ DROP VIEW IF EXISTS ts_coordinates_cases CASCADE;
 CREATE OR REPLACE VIEW ts_coordinates_cases AS
 --     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
 --     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
---   EXPLAIN ANALYZE
+ EXPLAIN ANALYZE
 WITH
 
 static_coords AS (SELECT DISTINCT ON (sla.id) -- beschränkter Distinct, da bei static ein FoI für eine sla.id
