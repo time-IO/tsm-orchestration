@@ -225,11 +225,6 @@ class CsvParser(FileParser):
         if tz_info is not None:
             if tz_info not in pytz.all_timezones:
                 raise ValueError(f"Invalid timezone string: {tz_info}")
-                # Alternatively we can just throw a warning and proceed without timezone informations
-                self.logger.warning(
-                    f"Invalid timezone string: {tz_info}! Proceeding without specific timezone"
-                )
-                tz_info = None
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
