@@ -131,7 +131,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
         bearer_token = self.get_bearer_token(settings["username"], pw_dec)
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
-            "aggregationTime": "HOURLY",
+            "aggregationTime": "FINEST",
             "aggregationValues": "ALL_FIELDS",
             "from": content["datetime_from"],
             "to": content["datetime_to"],
