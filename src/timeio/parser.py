@@ -100,7 +100,7 @@ class FileParser(Parser):
         observations = []
 
         data.index.name = "result_time"
-        data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S%z")
+        data.index = data.index.map(lambda ts: ts.isoformat())
 
         to_process = [val for _, val in data.items()]
 
