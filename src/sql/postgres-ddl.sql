@@ -120,6 +120,55 @@ $$
     END
 $$;
 
+-- Performance optimization indexes for observation table
+-- These indexes are specifically needed for the ts_coordinates_cases view and neuFoI queries
+-- which perform multiple complex joins on observation data with result_time filtering
+
+DO
+$$
+    BEGIN
+        -- Covering index for ts_coordinates_cases dynamic_coords CTE
+        -- Avoids table lookups by including result_number directly in index
+        -- Used when joining observation with datastream_id + result_time filters
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'observation'
+                         AND indexname = 'idx_observation_covering') THEN
+            EXECUTE 'CREATE INDEX "idx_observation_covering" ON "observation" ("datastream_id", "result_time") INCLUDE ("result_number", "id")';
+        END IF;
+    END
+$$;
+
+DO
+$$
+    BEGIN
+        -- Index for result_time filtering in neuFoI query
+        -- Optimizes WHERE clauses that filter observations by time ranges
+        -- Critical for ts_action_type JOIN performance
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'observation'
+                         AND indexname = 'idx_observation_result_time') THEN
+            EXECUTE 'CREATE INDEX "idx_observation_result_time" ON "observation" ("result_time")';
+        END IF;
+    END
+$$;
+
+DO
+$$
+    BEGIN
+        -- Partial index for coordinate calculations
+        -- Only indexes observations that have numeric values (coordinates)
+        -- Reduces index size and improves performance for ts_coordinates_x/y/z_koor views
+        IF NOT EXISTS (SELECT 1
+                       FROM pg_indexes
+                       WHERE tablename = 'observation'
+                         AND indexname = 'idx_observation_result_number_not_null') THEN
+            EXECUTE 'CREATE INDEX "idx_observation_result_number_not_null" ON "observation" ("datastream_id", "result_time") WHERE "result_number" IS NOT NULL';
+        END IF;
+    END
+$$;
+
 
 --
 -- Create model Relation role
