@@ -155,3 +155,41 @@ def test_empty_col_csv():
     parser = CsvParser(settings)
     df = parser.do_parse(RAWDATA_EMPTY_COLS, "project", "thing")
     assert df.shape == (3, 6)
+
+
+RAWDATA_WITH_MS = """time;dachnummer;Temp_degC_1;Temp_degC_2
+2025-09-04 15:32:32.064000;2;24.66;26.18
+2025-09-04 15:32:32.065000;2;24.66;26.18
+"""
+
+
+def test_with_ms():
+    settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+    }
+
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_MS, "project", "thing")
+    obs = parser.to_observations(df, origin="test")
+    expected_df_index = pd.Index(
+        [
+            "2025-09-04T15:32:32.064000",
+            "2025-09-04T15:32:32.065000",
+        ],
+        name="result_time",
+    )
+    expected_obs_timestamps = [
+        "2025-09-04T15:32:32.064000",
+        "2025-09-04T15:32:32.065000",
+        "2025-09-04T15:32:32.064000",
+        "2025-09-04T15:32:32.065000",
+        "2025-09-04T15:32:32.064000",
+        "2025-09-04T15:32:32.065000",
+    ]
+    assert df.index.equals(expected_df_index)
+    assert [i["result_time"] for i in obs] == expected_obs_timestamps
