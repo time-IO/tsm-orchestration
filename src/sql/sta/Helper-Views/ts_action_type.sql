@@ -16,8 +16,8 @@ WITH configuration_type AS (
         END AS action_type,
 
         CASE
-            WHEN x IS NOT NULL THEN sla.begin_date
-            WHEN x_property_id IS NOT NULL THEN dla.begin_date
+            WHEN sla.id IS NOT NULL THEN sla.begin_date
+            WHEN dla.id IS NOT NULL THEN dla.begin_date
         END AS begin_date,
 
         CASE
@@ -51,6 +51,7 @@ WITH configuration_type AS (
            JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
            JOIN configuration_type ct ON dma.configuration_id = ct.configuration_id
   )
+
     -- Hauptabfrage über observation (datastream_id)
   SELECT DISTINCT
 --     o.id as observation_id,
@@ -65,4 +66,7 @@ WITH configuration_type AS (
         -- 'AND' Bedingung, dass result-time im Zeitraum der Configuration liegt
          LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id AND o.result_time >= dm.begin_date AND o.result_time <= dm.end_date
     -- filtern, nur wo beide gefüllt, damit action_type an die richtige action_id gebunden wird
-    WHERE action_type IS NOT NULL AND action_id IS NOT NULL;
+    WHERE action_type IS NOT NULL
+      AND action_id IS NOT NULL
+
+;

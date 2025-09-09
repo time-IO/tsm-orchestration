@@ -4,6 +4,7 @@ CREATE OR REPLACE VIEW ts_coordinates_x_koor  AS
             SELECT
                 o.result_time,
                 o.result_number AS x_koor,
+                o.datastream_id,
                 dma.id AS dyn_dma_id --  device_mount_action_id für dynamic, da hier an dla gebunden
             FROM sms_datastream_link dsl
             JOIN sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id

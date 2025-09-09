@@ -2,7 +2,7 @@ DROP VIEW IF EXISTS ts_coordinates_cases CASCADE;
 CREATE OR REPLACE VIEW ts_coordinates_cases AS
 --     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
 --     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
- EXPLAIN ANALYZE
+
 WITH
 
 static_coords AS (SELECT DISTINCT ON (sla.id) -- beschränkter Distinct, da bei static ein FoI für eine sla.id
@@ -25,21 +25,24 @@ static_coords AS (SELECT DISTINCT ON (sla.id) -- beschränkter Distinct, da bei 
 
 -- CTE um die Koordinaten der dynamic actions zu bestimmten (WHERE at.action_type = FALSE),
     -- Zugriff auf die einzelnen Helper-Views für die x/y/z- Koordinaten, über result-time
-dynamic_coords AS (SELECT   'dynamic'        AS action_type,
-                            at.action_id::int,
-                            at.datastream_id,
-                            NULL::integer    AS stat_dma_id, --Leerstelle für stat_dma_id
-                            x.dyn_dma_id,
-                                CASE
-                                    WHEN z.z_koor IS NULL THEN ARRAY [x.x_koor, y.y_koor]
-                                    ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
-                                END          AS coordinates
+dynamic_coords AS (SELECT 'dynamic'     AS action_type,
+                          at.action_id::int,
+                          at.datastream_id,
+                          NULL::integer AS stat_dma_id, --Leerstelle für stat_dma_id
+                          x.dyn_dma_id,
+                          CASE
+                              WHEN z.z_koor IS NULL THEN ARRAY [x.x_koor, y.y_koor]
+                              ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
+                              END       AS coordinates
 
                    FROM ts_action_type at
                             LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
                             LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
                             LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time
-                   WHERE at.action_type = FALSE)
+                   WHERE at.action_type = FALSE
+                    AND at.datastream_id IN (x.datastream_id, y.datastream_id, z.datastream_id)
+    )
+
 
 SELECT action_type,
        action_id,
