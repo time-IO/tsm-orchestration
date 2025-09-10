@@ -506,7 +506,9 @@ class TtnApiSyncer(ExtApiSyncer):
         elif isinstance(v, bool):
             return 3
         else:
-            raise ExtApiRequestError(f"Could not map parameter type of {repr(v)} to number, string, boolean or json!")
+            raise ExtApiRequestError(
+                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+            )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
