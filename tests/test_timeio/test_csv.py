@@ -193,3 +193,33 @@ def test_with_ms():
     ]
     assert df.index.equals(expected_df_index)
     assert [i["result_time"] for i in obs] == expected_obs_timestamps
+
+
+RAWDATA_WITHOUT_HEADER = """2025-09-04 15:32:32.064000;2;24.66;26.18
+2025-09-04 15:32:32.065000;2;24.66;26.18
+"""
+
+
+@pytest.mark.parametrize(
+    "settings, expected_columns, expected_index_name",
+    [
+        [
+            {"names": ["time", "dachnummer", "Temp_degC_1", "Temp_degC_2"]},
+            ["dachnummer", "Temp_degC_1", "Temp_degC_2"],
+            "time",
+        ],
+        [{}, [1, 2, 3], 0],
+    ],
+)
+def test_custom_names(settings, expected_columns, expected_index_name):
+    base_settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
+    assert list(df.columns) == expected_columns
+    assert df.index.name == expected_index_name

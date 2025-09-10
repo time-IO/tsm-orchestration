@@ -216,6 +216,7 @@ class CsvParser(FileParser):
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
+        custom_names = settings.pop("names", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
@@ -276,9 +277,20 @@ class CsvParser(FileParser):
                         ParsingWarning,
                     )
 
-        # If no header is given, we always use column positions
+        # If no header is given, we always use column positions or custom names if given
         else:
-            df.columns = range(len(df.columns))
+            if custom_names:
+                if len(custom_names) != len(df.columns):
+                    warnings.warn(
+                        "Length of custom_names does not match number of columns in CSV. "
+                        "Positions will be used instead.",
+                        ParsingWarning,
+                    )
+                    df.columns = range(len(df.columns))
+                else:
+                    df.columns = custom_names
+            else:
+                df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
