@@ -6,7 +6,7 @@ CREATE OR REPLACE VIEW ts_coordinates_y_koor  AS
 
                 o.result_time,
                 o.result_number AS y_koor,
-                O.datastream_id
+                o.datastream_id
             FROM sms_datastream_link dsl
             JOIN sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id

@@ -1,10 +1,11 @@
 
--- Helper-View "ts_action_type" ermittelt den Action-Type (static or dynamic) und die Action-ID (ID von sms_configuration_static/dynamic_location_begin_action)
+-- Helper-View "ts_action_type" ermittelt den Action-Type (static or dynamic)
+-- und die Action-ID (ID von sms_configuration_static/dynamic_location_begin_action)
 
 DROP VIEW IF EXISTS ts_action_type CASCADE;
 CREATE OR REPLACE VIEW ts_action_type AS
 
---     EXPLAIN ANALYZE
+
     --CTE über sms_configuration (ID) für action_type, action_id, begin/end_date
 WITH configuration_type AS (
   SELECT
@@ -35,9 +36,9 @@ WITH configuration_type AS (
 
     FROM sms_configuration c
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
-         LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.ID
-    WHERE (sla.id IS NOT NULL AND dla.id IS NULL)
-           OR (sla.id IS NULL AND dla.id IS NOT NULL)
+         LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
+--     WHERE (sla.id IS NOT NULL AND dla.id IS NULL)           -- nicht nötig?!, da automatisch, keine Auswirkung auf QueryPlan
+--            OR (sla.id IS NULL AND dla.id IS NOT NULL)
 ),
     --CTE über sms_datastream_link (device_mount_action_id) für datastream_id
   datastream_mapping AS (
@@ -63,8 +64,11 @@ WITH configuration_type AS (
 
 
     FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
-        -- 'AND' Bedingung, dass result-time im Zeitraum der Configuration liegt
-         LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id AND o.result_time >= dm.begin_date AND o.result_time <= dm.end_date
+
+         LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id
+         -- 'Filtern, result-time im Zeitraum der Configuration
+                                            AND o.result_time >= dm.begin_date
+                                            AND o.result_time <= dm.end_date
     -- filtern, nur wo beide gefüllt, damit action_type an die richtige action_id gebunden wird
     WHERE action_type IS NOT NULL
       AND action_id IS NOT NULL
