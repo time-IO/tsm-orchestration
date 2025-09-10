@@ -495,19 +495,20 @@ class DwdApiSyncer(ExtApiSyncer):
 
 
 class TtnApiSyncer(ExtApiSyncer):
-    PARAMETER_MAPPING = {
-        "BAT": 0,
-        "H1": 0,
-        "H2": 0,
-        "InputStatus": 1,
-        "T1": 0,
-        "Work_mode": 1,
-        "Bat": 0,
-        "Distance": 0,
-        "Interrupt_flag": 0,
-        "Sensor_flag": 0,
-        "TempC_DS18B20": 0,
-    }
+    @staticmethod
+    def dynamic_parameter_mapping(v):
+        if isinstance(v, (int, float)):
+            return 0
+        elif isinstance(v, str):
+            return 1
+        elif isinstance(v, dict):
+            return 2
+        elif isinstance(v, bool):
+            return 3
+        else:
+            raise ExtApiRequestError(
+                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+            )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -532,7 +533,7 @@ class TtnApiSyncer(ExtApiSyncer):
             values = msg["decoded_payload"]
             for k, v in values.items():
                 if v:
-                    result_type = self.PARAMETER_MAPPING[k]
+                    result_type = self.dynamic_parameter_mapping(v)
                     body = {
                         "result_time": timestamp,
                         "result_type": result_type,
