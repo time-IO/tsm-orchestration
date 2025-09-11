@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from timeio.parser import CsvParser
+from timeio.errors import ParsingError
 
 RAWDATA = """
 //Hydroinnova CRS-1000 Data
@@ -193,3 +194,128 @@ def test_with_ms():
     ]
     assert df.index.equals(expected_df_index)
     assert [i["result_time"] for i in obs] == expected_obs_timestamps
+
+
+RAWDATA_WITHOUT_HEADER = """2025-09-04 15:32:32.064000;2;24.66;26.18
+2025-09-04 15:32:32.065000;2;24.66;26.18
+"""
+
+
+@pytest.mark.parametrize(
+    "settings, expected_columns, expected_index_name",
+    [
+        [
+            {"names": ["time", "dachnummer", "Temp_degC_1", "Temp_degC_2"]},
+            ["dachnummer", "Temp_degC_1", "Temp_degC_2"],
+            "time",
+        ],
+        [{}, [1, 2, 3], 0],
+    ],
+)
+def test_custom_names(settings, expected_columns, expected_index_name):
+    base_settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
+    assert list(df.columns) == expected_columns
+    assert df.index.name == expected_index_name
+
+
+def test_custom_names_error():
+    settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+        "names": ["time", "dachnummer", "Temp_degC_1", "Temp_degC_2", "count"],
+    }
+    paser = CsvParser(settings)
+    with pytest.raises(
+        ParsingError,
+        match="Number of custom column names does not match number of columns in CSV.",
+    ):
+        df = paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
+
+
+RAWDATA_WITHOUT_TZ = """time,var1,var2,var3
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+"""
+
+RAWDATA_WITH_TZ = """time,var1,var2,var3
+2025-01-01 00:00:00+01:00,1,2,3
+2025-01-01 00:10:00+01:00,1,2,3
+2025-01-01 00:20:00+01:00,1,2,3
+"""
+
+
+@pytest.mark.parametrize(
+    "settings, rawdata, expected_index",
+    [
+        [
+            {
+                "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+                "timezone": "Europe/Berlin",
+            },
+            RAWDATA_WITHOUT_TZ,
+            pd.DatetimeIndex(
+                [
+                    "2025-01-01 00:00:00+01:00",
+                    "2025-01-01 00:10:00+01:00",
+                    "2025-01-01 00:20:00+01:00",
+                ],
+                name="time",
+                tz="Europe/Berlin",
+            ),
+        ],
+        [
+            {"timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}]},
+            RAWDATA_WITH_TZ,
+            pd.DatetimeIndex(
+                [
+                    "2025-01-01 00:00:00+01:00",
+                    "2025-01-01 00:10:00+01:00",
+                    "2025-01-01 00:20:00+01:00",
+                ],
+                name="time",
+                tz="UTC+01:00",
+            ),
+        ],
+    ],
+)
+def test_tz(settings, rawdata, expected_index):
+    base_settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(rawdata, "project", "thing")
+    assert df.index.equals(expected_index)
+
+
+def test_double_tz_error():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
+        "timezone": "Europe/Berlin",
+    }
+    paser = CsvParser(settings)
+    with pytest.raises(
+        ParsingError,
+        match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
+    ):
+        df = paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
