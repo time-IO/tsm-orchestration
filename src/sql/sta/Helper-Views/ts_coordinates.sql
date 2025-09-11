@@ -5,23 +5,25 @@ CREATE OR REPLACE VIEW ts_coordinates AS
 
 WITH
 
-static_coords AS (SELECT DISTINCT ON (stat_dma_id)
+static_coords AS (SELECT DISTINCT ON (action_id)
+--     DISTINCT ON (action_id)
 --    -- beschränkter Distinct, da bei static ein FoI für eine sla.id
                       'static'      AS action_type,
-                       ts.action_id,
-                       ts.datastream_id,
-                       dma.id        AS stat_dma_id,
-                       NULL::integer AS dyn_dma_id, -- Leerstelle für dyn_dma_id
+                       at.action_id,
+                       at.datastream_id,
+                       at.begin_date,
+--                        dma.id        AS stat_dma_id,
+--                        NULL::integer AS dyn_dma_id, -- Leerstelle für dyn_dma_id
 
                          CASE
                             WHEN sla.z IS NULL THEN ARRAY [sla.x, sla.y]
                             ELSE ARRAY [sla.x, sla.y, sla.z]
                          END       AS coordinates
 
-                  FROM ts_action_type ts
-                           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = ts.action_id
-                           JOIN sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
-                  WHERE ts.action_type = TRUE),
+                  FROM ts_action_type at
+                           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
+--                            JOIN sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
+                  WHERE at.action_type = TRUE),
 
 
 -- CTE um die Koordinaten der dynamic actions zu bestimmten (WHERE at.action_type = FALSE),
@@ -29,8 +31,9 @@ static_coords AS (SELECT DISTINCT ON (stat_dma_id)
 dynamic_coords AS (SELECT 'dynamic'     AS action_type,
                           at.action_id::int,
                           at.datastream_id,
-                          NULL::integer AS stat_dma_id, --Leerstelle für stat_dma_id
-                          x.dyn_dma_id,
+                         at.begin_date,
+--                           NULL::integer AS stat_dma_id, --Leerstelle für stat_dma_id
+--                           x.dyn_dma_id,
                           CASE
                               WHEN z.z_koor IS NULL THEN ARRAY [x.x_koor, y.y_koor]
                               ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
@@ -48,8 +51,9 @@ dynamic_coords AS (SELECT 'dynamic'     AS action_type,
 SELECT action_type,
        action_id,
        datastream_id,
-       dyn_dma_id,
-       stat_dma_id,
+       begin_date,
+--        dyn_dma_id,
+--        stat_dma_id,
        coordinates
 FROM static_coords
 
@@ -58,8 +62,9 @@ UNION ALL
 SELECT action_type,
        action_id,
        datastream_id,
-       dyn_dma_id,
-       stat_dma_id,
+       begin_date,
+--        dyn_dma_id,
+--        stat_dma_id,
        coordinates
 FROM dynamic_coords;
 

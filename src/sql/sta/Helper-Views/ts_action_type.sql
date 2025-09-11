@@ -60,7 +60,8 @@ WITH configuration_type AS (
     o.result_time,
     o.id AS akt_observation_id,
     dm.action_type,
-    dm.action_id
+    dm.action_id,
+   dm.begin_date
 
 
     FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
