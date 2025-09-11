@@ -294,7 +294,7 @@ def test_double_tz_error():
         "header": 0,
         "skipfooter": 0,
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
-        "timezone": "Europe/Berlin"
+        "timezone": "Europe/Berlin",
     }
     paser = CsvParser(settings)
     with pytest.raises(ParsingError):
