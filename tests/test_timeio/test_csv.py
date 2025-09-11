@@ -226,6 +226,23 @@ def test_custom_names(settings, expected_columns, expected_index_name):
     assert df.index.name == expected_index_name
 
 
+def test_custom_names_error():
+    settings = {
+        "decimal": ".",
+        "delimiter": ";",
+        "skiprows": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+        "names": ["time", "dachnummer", "Temp_degC_1", "Temp_degC_2", "count"],
+    }
+    paser = CsvParser(settings)
+    with pytest.raises(
+        ParsingError,
+        match="Number of custom column names does not match number of columns in CSV.",
+    ):
+        df = paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
+
+
 RAWDATA_WITHOUT_TZ = """time,var1,var2,var3
 2025-01-01 00:00:00,1,2,3
 2025-01-01 00:10:00,1,2,3
@@ -297,5 +314,8 @@ def test_double_tz_error():
         "timezone": "Europe/Berlin",
     }
     paser = CsvParser(settings)
-    with pytest.raises(ParsingError):
+    with pytest.raises(
+        ParsingError,
+        match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
+    ):
         df = paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
