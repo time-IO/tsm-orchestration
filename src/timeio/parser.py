@@ -291,7 +291,16 @@ class CsvParser(FileParser):
 
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
-            df.index = df.index.tz_localize(tz_info)
+            try:
+                df.index = df.index.tz_localize(tz_info)
+            except TypeError:
+                journal.error(
+                    "Timestamps of csv file are already timezone aware so no additional timezone info is required",
+                    thing_uuid,
+                )
+                raise ParsingError(
+                    f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."
+                )
 
         # remove rows with broken dates
         df = df.loc[df.index.notna()]

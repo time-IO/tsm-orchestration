@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from timeio.parser import CsvParser
+from timeio.errors import ParsingError
 
 RAWDATA = """
 //Hydroinnova CRS-1000 Data
@@ -283,3 +284,18 @@ def test_tz(settings, rawdata, expected_index):
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(rawdata, "project", "thing")
     assert df.index.equals(expected_index)
+
+
+def test_double_tz_error():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
+        "timezone": "Europe/Berlin"
+    }
+    paser = CsvParser(settings)
+    with pytest.raises(ParsingError):
+        df = paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
