@@ -281,12 +281,7 @@ class CsvParser(FileParser):
         else:
             if custom_names:
                 if len(custom_names) != len(df.columns):
-                    msg = "Number of custom column names does not match number of columns in CSV."
-                    journal.error(
-                        msg,
-                        thing_uuid,
-                    )
-                    raise ParsingError(msg)
+                    raise ParsingError("Number of custom column names does not match number of columns in CSV.")
                 else:
                     df.columns = custom_names
             else:
@@ -297,10 +292,6 @@ class CsvParser(FileParser):
             try:
                 df.index = df.index.tz_localize(tz_info)
             except TypeError:
-                journal.error(
-                    "Timestamps of csv file are already timezone aware so no additional timezone info is required",
-                    thing_uuid,
-                )
                 raise ParsingError(
                     f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."
                 )
