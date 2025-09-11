@@ -281,12 +281,9 @@ class CsvParser(FileParser):
         else:
             if custom_names:
                 if len(custom_names) != len(df.columns):
-                    warnings.warn(
-                        "Length of custom_names does not match number of columns in CSV. "
-                        "Positions will be used instead.",
-                        ParsingWarning,
+                    raise ParsingError(
+                        "Length of custom column names does not match number of columns in CSV."
                     )
-                    df.columns = range(len(df.columns))
                 else:
                     df.columns = custom_names
             else:
