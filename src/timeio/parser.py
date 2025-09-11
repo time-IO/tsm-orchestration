@@ -216,6 +216,7 @@ class CsvParser(FileParser):
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
+        custom_names = settings.pop("names", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
@@ -276,13 +277,26 @@ class CsvParser(FileParser):
                         ParsingWarning,
                     )
 
-        # If no header is given, we always use column positions
+        # If no header is given, we always use column positions or custom names if given
         else:
-            df.columns = range(len(df.columns))
+            if custom_names:
+                if len(custom_names) != len(df.columns):
+                    raise ParsingError(
+                        "Number of custom column names does not match number of columns in CSV."
+                    )
+                else:
+                    df.columns = custom_names
+            else:
+                df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
-            df.index = df.index.tz_localize(tz_info)
+            try:
+                df.index = df.index.tz_localize(tz_info)
+            except TypeError:
+                raise ParsingError(
+                    f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."
+                )
 
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
