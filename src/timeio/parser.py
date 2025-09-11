@@ -281,7 +281,9 @@ class CsvParser(FileParser):
         else:
             if custom_names:
                 if len(custom_names) != len(df.columns):
-                    raise ParsingError("Number of custom column names does not match number of columns in CSV.")
+                    raise ParsingError(
+                        "Number of custom column names does not match number of columns in CSV."
+                    )
                 else:
                     df.columns = custom_names
             else:
