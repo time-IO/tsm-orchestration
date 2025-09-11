@@ -5,8 +5,6 @@ CREATE OR REPLACE VIEW FEATURE AS
 SELECT DISTINCT
 
    ('x' || MD5(crd.coordinates::text || crd.action_id))::bit(63)::bigint AS "ID", -- action_type
-                -- Zusammenbau der FoI_id: Hash aus Koordinaten und action_id
-                -- (muss berechenbar sein, damit sie auch unabhängig dem observation_table zur Verfügung steht)
  	CONCAT(c.label, '_', crd.begin_date) AS "NAME",
 	crd.action_type AS "DESCRIPTION",
     'application/geo+json' AS "ENCODING_TYPE",

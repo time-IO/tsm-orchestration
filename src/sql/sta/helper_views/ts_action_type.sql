@@ -6,15 +6,14 @@ DROP VIEW IF EXISTS ts_action_type CASCADE;
 CREATE OR REPLACE VIEW ts_action_type AS
 
 
-    --CTE über sms_configuration (ID) für action_type, action_id, begin/end_date
 WITH configuration_type AS (
   SELECT
     c.id AS configuration_id,
         CASE
-            WHEN sla.id IS NOT NULL THEN TRUE  -- statische Location-Action
-            WHEN dla.id IS NOT NULL THEN FALSE -- dynamische Location-Action
-            ELSE NULL -- Ungültige Konfiguration
-        END AS action_type,
+            WHEN sla.id IS NOT NULL THEN FALSE
+            WHEN dla.id IS NOT NULL THEN TRUE
+            ELSE NULL
+        END AS is_dynamic,
 
         CASE
             WHEN sla.id IS NOT NULL THEN sla.begin_date
@@ -37,41 +36,36 @@ WITH configuration_type AS (
     FROM sms_configuration c
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
---     WHERE (sla.id IS NOT NULL AND dla.id IS NULL)           -- nicht nötig?!, da automatisch, keine Auswirkung auf QueryPlan
---            OR (sla.id IS NULL AND dla.id IS NOT NULL)
 ),
-    --CTE über sms_datastream_link (device_mount_action_id) für datastream_id
+
+
   datastream_mapping AS (
     SELECT
       dsl.datastream_id,
       ct.begin_date,
       ct.end_date,
-      ct.action_type,
+      ct.is_dynamic,
       ct.action_id
+
       FROM sms_datastream_link dsl
            JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
            JOIN configuration_type ct ON dma.configuration_id = ct.configuration_id
   )
 
-    -- Hauptabfrage über observation (datastream_id)
-  SELECT DISTINCT
---     o.id as observation_id,
+
+
+SELECT DISTINCT
+
     o.datastream_id,
     o.result_time,
-    o.id AS akt_observation_id,
-    dm.action_type,
+    dm.is_dynamic,
     dm.action_id,
-   dm.begin_date
+    dm.begin_date
 
 
-    FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
-
-         LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id
-         -- 'Filtern, result-time im Zeitraum der Configuration
+FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
+    LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id
                                             AND o.result_time >= dm.begin_date
                                             AND o.result_time <= dm.end_date
-    -- filtern, nur wo beide gefüllt, damit action_type an die richtige action_id gebunden wird
-    WHERE action_type IS NOT NULL
-      AND action_id IS NOT NULL
-
-;
+    WHERE is_dynamic IS NOT NULL
+      AND action_id IS NOT NULL;
