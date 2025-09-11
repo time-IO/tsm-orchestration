@@ -223,3 +223,63 @@ def test_custom_names(settings, expected_columns, expected_index_name):
     df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
     assert list(df.columns) == expected_columns
     assert df.index.name == expected_index_name
+
+
+RAWDATA_WITHOUT_TZ = """time,var1,var2,var3
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+"""
+
+RAWDATA_WITH_TZ = """time,var1,var2,var3
+2025-01-01 00:00:00+01:00,1,2,3
+2025-01-01 00:10:00+01:00,1,2,3
+2025-01-01 00:20:00+01:00,1,2,3
+"""
+
+
+@pytest.mark.parametrize(
+    "settings, rawdata, expected_index",
+    [
+        [
+            {
+                "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+                "timezone": "Europe/Berlin",
+            },
+            RAWDATA_WITHOUT_TZ,
+            pd.DatetimeIndex(
+                [
+                    "2025-01-01 00:00:00+01:00",
+                    "2025-01-01 00:10:00+01:00",
+                    "2025-01-01 00:20:00+01:00",
+                ],
+                name="time",
+                tz="Europe/Berlin",
+            ),
+        ],
+        [
+            {"timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}]},
+            RAWDATA_WITH_TZ,
+            pd.DatetimeIndex(
+                [
+                    "2025-01-01 00:00:00+01:00",
+                    "2025-01-01 00:10:00+01:00",
+                    "2025-01-01 00:20:00+01:00",
+                ],
+                name="time",
+                tz="UTC+01:00",
+            ),
+        ],
+    ],
+)
+def test_tz(settings, rawdata, expected_index):
+    base_settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(rawdata, "project", "thing")
+    assert df.index.equals(expected_index)
