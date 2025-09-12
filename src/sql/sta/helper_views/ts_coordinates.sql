@@ -7,11 +7,13 @@ CREATE OR REPLACE VIEW ts_coordinates AS
 
 WITH
 
-static_coords AS (SELECT DISTINCT ON (action_id)
+static_coords AS (SELECT
+--     DISTINCT ON (action_id)
                       'static'      AS action_type,
                        at.action_id,
                        at.datastream_id,
                        at.begin_date,
+                       at.result_time,
                          CASE
                             WHEN sla.z IS NULL THEN ARRAY [sla.x, sla.y]
                             ELSE ARRAY [sla.x, sla.y, sla.z]
@@ -27,6 +29,7 @@ dynamic_coords AS (SELECT
                      at.action_id::int,
                      at.datastream_id,
                      at.begin_date,
+                     at.result_time,
                         CASE
                           WHEN z.z_koor IS NULL THEN ARRAY [x.x_koor, y.y_koor]
                           ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
@@ -45,6 +48,7 @@ SELECT action_type,
        action_id,
        datastream_id,
        begin_date,
+       result_time,
        coordinates
 FROM static_coords
 
@@ -54,6 +58,7 @@ SELECT action_type,
        action_id,
        datastream_id,
        begin_date,
+       result_time,
        coordinates
 FROM dynamic_coords;
 

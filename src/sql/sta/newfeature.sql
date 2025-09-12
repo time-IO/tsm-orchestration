@@ -15,7 +15,8 @@ SELECT DISTINCT
 			'coordinates',jsonb_build_array(crd.coordinates)
 			)
 		) AS "FEATURE",
-	jsonb_build_object()  AS "PROPERTIES"
+	jsonb_build_object()  AS "PROPERTIES",
+    crd.result_time
 
 
 
@@ -29,5 +30,5 @@ JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_configuration c ON c.id =dma.configuration_id
 JOIN public.sms_device d ON d.id = dma.device_id
 JOIN ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
-GROUP BY crd.action_type, crd.coordinates, crd.action_id, c."label", crd.begin_date
+GROUP BY crd.action_type, crd.coordinates, crd.action_id, c."label", crd.begin_date,  crd.result_time
 ORDER BY "ID";
