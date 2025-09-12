@@ -3,6 +3,22 @@
 
 ## [Unreleased]
 
+## 2025-09-12
+
+### Added
+- tsm-dataprocessing-extensions in SaQC jobs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/444))
+- time zone handling in file parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/448))
+- millisecond handling in file parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/451))
+- custom headers for CSV Parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/454)) 
+
+### Changed
+- ConfigDB description columns to type TEXT  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/446))
+- T-Systems-API aggregation time  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/450))
+- parameter mapping for TTN API from hard-coded to dynamic  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/453))
+
+### Fixed
+- Thing Management DB data model  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/452))
+
 ## 2025-08-29
 
 ### Added
