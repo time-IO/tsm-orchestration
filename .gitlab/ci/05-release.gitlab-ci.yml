@@ -8,7 +8,7 @@ stage-tag-images-in-registry:
     # or if we manually decide to do so.
 
     # Run if pipeline is triggered by a push on main
-    # and changes to source files or Dockerfiles were made. 
+    # and changes to source files or Dockerfiles were made.
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       changes:
         - .env.example
@@ -18,7 +18,7 @@ stage-tag-images-in-registry:
         - init/**/*
         - tomcat/**/*
       when: always
-    # Run manually if pipeline is triggered by a push on main  
+    # Run manually if pipeline is triggered by a push on main
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       when: manual
   image: "docker:${DOCKER_IMAGE_TAG}"
@@ -45,7 +45,7 @@ stage-tag-images-in-registry:
   script:
     - docker compose pull -q $BUILD_SERVICES
     - |
-      for image in $(docker images --format '{{ .Repository }}'); do 
+      for image in $(docker images --format '{{ .Repository }}'); do
         docker tag $image:$BRANCH_NAME $image:latest;
         docker tag $image:$BRANCH_NAME $image:$BUILD_DATE;
         docker push $image:latest;

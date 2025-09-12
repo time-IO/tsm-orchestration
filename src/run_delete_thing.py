@@ -16,6 +16,7 @@ from minio.credentials import StaticProvider
 logging.basicConfig(
     level=logging.INFO, format="[%(asctime)s | %(name)s] %(levelname)s: %(message)s"
 )
+logger = logging.getLogger("DELETE THING")
 
 
 def delete_bucket(minio_host, minio_user, minio_password, minio_bucket):
@@ -53,16 +54,6 @@ def delete_thing_entry(cursor, thing_uuid):
     cursor.execute(
         "DELETE FROM config_db.thing where uuid = %s RETURNING project_id", [thing_uuid]
     )
-    cursor.execute(
-        """
-        SELECT schema from config_db.database d
-        JOIN config_db.project p on p.database_id = d.id
-        WHERE p.id = %s
-        """,
-        cursor.fetchone(),
-    )
-    schema = cursor.fetchall()[0][0]
-    return schema
 
 
 def delete_mqtt_user(cursor, thing_uuid):
@@ -179,6 +170,9 @@ def delete_dashboard(host, user, password, thing_uuid):
     session.auth = (user, password)
 
     # get all orgs
+
+    if not host.endswith("/"):
+        host = host + "/"
     orgs_url = urljoin(host, "api/user/orgs")
     resp = session.get(orgs_url)
     if not resp.ok:
@@ -190,7 +184,11 @@ def delete_dashboard(host, user, password, thing_uuid):
         switch_url = urljoin(host, f"api/user/using/{org['orgId']}")
         resp = session.post(switch_url)
         if not resp.ok:
-            raise RuntimeError(f"POST request failed: {switch_url}")
+            logger.warn(f"unable to switch to organization: {switch_url}")
+            continue
+            # raise RuntimeError(f"POST request failed: {switch_url}")
+
+        logger.info(f"switched to organization: {switch_url}")
 
         # fetch dashboards
         dashboards_url = urljoin(host, "api/search?query=&type=dash-db")
@@ -215,13 +213,26 @@ def get_ids(cursor, thing_uuid):
     )
     ids = cursor.fetchone()
     if ids is None:
-        raise ValueError(f"No such thing '{thing_uuid}'!")
+        logger.info(f"No such thing '{thing_uuid}'!")
+        return [None] * 7
 
     cursor.execute(
         """SELECT device_property_id FROM sms_datastream_link where thing_id = %s;""",
         [thing_uuid],
     )
-    return ids + ([row[0] for row in cursor.fetchall()],)
+    ids = ids + ([row[0] for row in cursor.fetchall()],)
+
+    cursor.execute(
+        """
+        SELECT schema from config_db.database d
+        JOIN config_db.project p on p.database_id = d.id
+        JOIN config_db.thing t on t.project_id = p.id
+        WHERE t.uuid = %s
+        """,
+        [thing_uuid],
+    )
+
+    return cursor.fetchone() + ids
 
 
 @click.command()
@@ -264,7 +275,6 @@ def main(
       - crontab entries
     """
 
-    logger = logging.getLogger("DELETE THING")
     logger.info(
         f"Deleting '{thing_uuid}' from database '{dsn}', object-storage '{minio_host}' and visualization '{grafana_host}'"
     )
@@ -274,6 +284,7 @@ def main(
     with conn.cursor() as cur:
 
         (
+            schema,
             s3_store_id,
             mqtt_id,
             ext_sftp_id,
@@ -281,8 +292,6 @@ def main(
             legacy_qaqc_id,
             sta_datastream_ids,
         ) = get_ids(cur, thing_uuid)
-
-        schema = delete_thing_entry(cur, thing_uuid)
 
         if s3_store_id:
             minio_bucket = delete_s3store_entry(cur, s3_store_id)
@@ -301,6 +310,7 @@ def main(
 
         if ext_sftp_id:
             delete_ext_sftp_entry(cur, ext_sftp_id)
+            delete_crontab_entry(crontab_file, thing_uuid)
 
         if ext_api_id:
             delete_ext_api_entry(cur, ext_api_id)
@@ -314,7 +324,10 @@ def main(
             logger.warning(
                 "There are SMS datastream links which need to be deleted manually from the SMS"
             )
-        delete_thing_from_schema(cur, schema, thing_uuid)
+        if schema:
+            delete_thing_from_schema(cur, schema, thing_uuid)
+
+        delete_thing_entry(cur, thing_uuid)
         cur.close()
     conn.commit()
 
