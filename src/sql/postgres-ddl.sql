@@ -128,16 +128,20 @@ DO
 $$
     BEGIN
         -- Covering index for ts_coordinates_cases dynamic_coords CTE
-        -- Avoids table lookups by including result_number directly in index
+        -- Avoids table lookups by including result_number etc. directly in index
         -- Used when joining observation with datastream_id + result_time filters
         IF NOT EXISTS (SELECT 1
                        FROM pg_indexes
                        WHERE tablename = 'observation'
                          AND indexname = 'idx_observation_covering') THEN
-            EXECUTE 'CREATE INDEX "idx_observation_covering" ON "observation" ("datastream_id", "result_time") INCLUDE ("result_number", "id")';
+            EXECUTE 'CREATE INDEX "idx_observation_covering" ON "observation" ("datastream_id", "result_time") INCLUDE ("result_number", "id", "result_boolean", "result_quality", "result_string", "result_json", "valid_time_start", "result_type", "valid_time_end" )';
         END IF;
     END
 $$;
+
+
+
+
 
 DO
 $$
