@@ -28,6 +28,7 @@ JOIN vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o ON o.datastream
 JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_device d ON d.id = dma.device_id
 JOIN public.sms_configuration c ON c.id = dma.configuration_id
- JOIN ts_coordinates crd ON crd.result_time = o.result_time
+JOIN ts_coordinates crd ON crd.result_time = o.result_time
 WHERE c.is_public AND d.is_public -- AND dsl.datasource_id ='vo_demogroup_887a7030491444e0aee126fbc215e9f7'
-AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp);
+AND  o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+ORDER BY "ID";
