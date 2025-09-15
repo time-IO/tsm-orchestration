@@ -1,5 +1,8 @@
 --     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
 --     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS ts_coordinates CASCADE;
 CREATE OR REPLACE VIEW ts_coordinates AS
@@ -65,3 +68,4 @@ SELECT action_type,
        coordinates
 FROM dynamic_coords;
 
+COMMIT;

@@ -1,6 +1,9 @@
 
 -- Helper-View "ts_action_type" ermittelt den Action-Type (static or dynamic)
 -- und die Action-ID (ID von sms_configuration_static/dynamic_location_begin_action)
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS ts_action_type CASCADE;
 CREATE OR REPLACE VIEW ts_action_type AS
@@ -67,9 +70,11 @@ SELECT DISTINCT
     dm.c_label
 
 
-FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
+FROM observation o
     LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id
                                             AND o.result_time >= dm.begin_date
                                             AND o.result_time <= dm.end_date
     WHERE is_dynamic IS NOT NULL
       AND action_id IS NOT NULL;
+
+COMMIT;

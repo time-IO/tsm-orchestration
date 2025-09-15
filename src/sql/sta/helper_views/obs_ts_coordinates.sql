@@ -1,6 +1,8 @@
 --     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
 --     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
+BEGIN;
 
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS obs_ts_coordinates CASCADE;
 CREATE OR REPLACE VIEW obs_ts_coordinates AS
@@ -107,3 +109,4 @@ SELECT
        coordinates
 FROM dynamic_coords;
 
+COMMIT;

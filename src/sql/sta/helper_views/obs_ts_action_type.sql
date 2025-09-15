@@ -1,6 +1,9 @@
 
 -- Helper-View "ts_action_type" ermittelt den Action-Type (static or dynamic)
 -- und die Action-ID (ID von sms_configuration_static/dynamic_location_begin_action)
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS obs_ts_action_type CASCADE;
 CREATE OR REPLACE VIEW obs_ts_action_type AS
@@ -39,7 +42,7 @@ WITH configuration_type AS (
            JOIN public.sms_configuration c ON c.id = dma.configuration_id
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
-     WHERE c.is_public AND d.is_public
+     WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
   )
 
 
@@ -61,7 +64,7 @@ SELECT DISTINCT
     o.valid_time_end
 
 
-FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
+FROM observation o
     LEFT JOIN configuration_type ct ON o.datastream_id = ct.datastream_id
                                             AND o.result_time >= ct.begin_date
                                             AND o.result_time <= ct.end_date
@@ -69,3 +72,5 @@ FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
       AND action_id IS NOT NULL
 
 ORDER BY o_id;
+
+COMMIT;

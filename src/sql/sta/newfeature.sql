@@ -1,3 +1,7 @@
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
+
 DROP VIEW IF EXISTS FEATURE CASCADE;
 CREATE OR REPLACE VIEW FEATURE AS
 
@@ -22,5 +26,6 @@ SELECT DISTINCT
 
 FROM public.sms_datastream_link dsl
 JOIN ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
--- GROUP BY crd.action_type, crd.coordinates, crd.action_id, c."label", crd.begin_date,  crd.result_time
 ORDER BY "ID";
+
+COMMIT;
