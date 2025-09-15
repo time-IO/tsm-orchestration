@@ -1,0 +1,9 @@
+{
+"Datetime": "2025-08-12T13:01:23", // Messzeitpunkt (UTC, ISO 8601)
+"Frame_count": 123, // Nachrichten-Sequenznummer, 0..65535
+"Voltage": 3.6, // Batteriespannung [V]
+"Firmware_version_THL": 0, // Firmware-Version, 0..15
+"Air_temperature": 25.51, // Umgebungstemperatur [°C]
+"Relative_humidity": 45.23, // rel. Luftfeuchtigkeit [%rH]
+"Illuminance": 123 // Beleuchtungsstärke [lx]
+}

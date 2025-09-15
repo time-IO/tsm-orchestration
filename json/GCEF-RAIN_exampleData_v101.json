@@ -1,0 +1,16 @@
+{
+"Datetime": "2025-08-12T13:01:23", // Messzeitpunkt (UTC, ISO 8601)
+"Frame_count": 123, // Nachrichten-Sequenznummer, 0..65535
+"Voltage": 3.6, // Batteriespannung [V]
+"Firmware_version_RAIN": 0, // Firmware-Version, 0..15
+"Air_temperature": 25.51, // Umgebungstemperatur [°C]
+"Relative_humidity": 45.23, // rel. Luftfeuchtigkeit [%rH]
+"Electrical_pulse_count_1": 0, // Impulszählerwert Eingang #1
+"Electrical_pulse_count_2": 10, // Impulszählerwert Eingang #2
+"Electrical_pulse_count_3": 3, // Impulszählerwert Eingang #3
+// fehlt, da im Beispiel inaktiv: "Electrical_pulse_count_4": 0, // Impulszählerwert Eingang #4
+"Pulse_count_active_status_1": 1, // Impulszähler Eingang #1 aktiv?
+"Pulse_count_active_status_2": 1, // Impulszähler Eingang #2 aktiv?
+"Pulse_count_active_status_3": 1, // Impulszähler Eingang #3 aktiv?
+"Pulse_count_active_status_4": 0 // Impulszähler Eingang #4 aktiv?
+}

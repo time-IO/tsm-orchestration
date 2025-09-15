@@ -1,0 +1,16 @@
+{
+"Datetime": "2025-08-12T13:01:23", // Messzeitpunkt (UTC, ISO 8601)
+"Frame_count": 123, // Nachrichten-Sequenznummer, 0..65535
+"Voltage": 3.6, // Batteriespannung [V]
+"Firmware_version_ANALOG": 0, // Firmware-Version, 0..15
+"Air_temperature": 25.51, // Umgebungstemperatur [°C]
+"Relative_humidity": 45.23, // rel. Luftfeuchtigkeit [%rH]
+"Electrical_voltage_1": 317, // Analogspannung Eingang #1 [μV]
+"Electrical_voltage_2": 20, // Analogspannung Eingang #2 [μV]
+"Electrical_voltage_3": 0, // Analogspannung Eingang #3 [μV]
+// fehlt, da im Beispiel inaktiv: "Electrical_voltage_4": 0, // Analogspannung Eingang #4 [μV]
+"Analog_input_voltage_range_1": 1, // Spannungsbereich Eingang #1
+"Analog_input_voltage_range_2": 2, // Spannungsbereich Eingang #2
+"Analog_input_voltage_range_3": 3, // Spannungsbereich Eingang #3
+"Analog_input_voltage_range_4": 0 // Spannungsbereich Eingang #4
+}

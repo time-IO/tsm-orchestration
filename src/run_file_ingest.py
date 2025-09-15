@@ -16,7 +16,7 @@ from timeio.errors import UserInputError, ParsingError, ParsingWarning
 from timeio.feta import Thing
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.parser import get_parser
+from timeio.parser.utils import get_parser
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
