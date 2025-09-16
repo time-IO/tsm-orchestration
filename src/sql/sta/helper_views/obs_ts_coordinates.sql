@@ -85,7 +85,8 @@ SELECT
        valid_time_start,
        result_type,
        valid_time_end,
-       coordinates
+       coordinates,
+       CONCAT(coordinates, action_id, 'stat') AS feature_id
 FROM static_coords
 
 UNION ALL
@@ -106,7 +107,8 @@ SELECT
        valid_time_start,
         result_type,
        valid_time_end,
-       coordinates
+       coordinates,
+       CONCAT(coordinates, action_id, 'dyn') AS feature_id
 FROM dynamic_coords;
 
 COMMIT;

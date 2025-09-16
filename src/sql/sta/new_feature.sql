@@ -2,13 +2,13 @@ BEGIN;
 
 SET search_path TO %(tsm_schema)s;
 
-DROP VIEW IF EXISTS FEATURE CASCADE;
-CREATE OR REPLACE VIEW FEATURE AS
+DROP VIEW IF EXISTS "NEW_FEATURE" CASCADE;
+CREATE OR REPLACE VIEW "NEW_FEATURE" AS
 
 
 SELECT DISTINCT
 
-   ('x' || MD5(crd.coordinates::text || crd.action_id))::bit(63)::bigint AS "ID", -- action_type
+   ('x' || MD5(crd.feature_id))::bit(63)::bigint AS "ID",
  	CONCAT(crd.c_label, '_', crd.begin_date) AS "NAME",
 	crd.action_type AS "DESCRIPTION",
     'application/geo+json' AS "ENCODING_TYPE",
@@ -19,8 +19,8 @@ SELECT DISTINCT
 			'coordinates',jsonb_build_array(crd.coordinates)
 			)
 		) AS "FEATURE",
-	jsonb_build_object()  AS "PROPERTIES",
-	crd.result_time
+	jsonb_build_object()  AS "PROPERTIES"
+
 
 
 

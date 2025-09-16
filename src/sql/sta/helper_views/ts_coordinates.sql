@@ -22,6 +22,7 @@ static_coords AS (SELECT  DISTINCT ON (action_id)
                             ELSE ARRAY [sla.x, sla.y, sla.z]
                          END AS coordinates
 
+
                   FROM ts_action_type at
                            LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                   WHERE at.is_dynamic = FALSE),
@@ -54,7 +55,8 @@ SELECT action_type,
        begin_date,
        result_time,
        c_label,
-       coordinates
+       coordinates,
+        CONCAT(coordinates, action_id, 'stat') AS feature_id
 FROM static_coords
 
 UNION ALL
@@ -65,7 +67,8 @@ SELECT action_type,
        begin_date,
        result_time,
        c_label,
-       coordinates
+       coordinates,
+       CONCAT(coordinates, action_id, 'dyn') AS feature_id
 FROM dynamic_coords;
 
 COMMIT;

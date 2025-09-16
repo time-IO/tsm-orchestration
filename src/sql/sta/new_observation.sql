@@ -2,8 +2,8 @@ BEGIN;
 
 SET search_path TO %(tsm_schema)s;
 
-DROP VIEW IF EXISTS "NEU_OBSERVATIONS" CASCADE;
-CREATE OR REPLACE VIEW "NEU_OBSERVATIONS" AS
+DROP VIEW IF EXISTS "NEW_OBSERVATIONS" CASCADE;
+CREATE OR REPLACE VIEW "NEW_OBSERVATIONS" AS
 
 SELECT
     crd.o_id AS "ID",
@@ -18,7 +18,7 @@ SELECT
     crd.result_time AS "PHENOMENON_TIME_END",
     CASE
         WHEN crd.coordinates IS NOT NULL THEN
-        ('x' || MD5(crd.coordinates::text || crd.action_id))::bit(63)::bigint
+        ('x' || MD5(crd.feature_id))::bit(63)::bigint
         ELSE NULL
         END AS  feature_ID,
     crd.result_json AS "RESULT_JSON",
