@@ -1,25 +1,25 @@
-ALTER TABLE thing_management_db."function"
+ALTER TABLE "function"
   DROP CONSTRAINT IF EXISTS fk_function_user;
 
-ALTER TABLE thing_management_db."function"
+ALTER TABLE "function"
   ALTER COLUMN created_by DROP NOT NULL;
 
-ALTER TABLE thing_management_db."function"
+ALTER TABLE "function"
   ALTER COLUMN created_at DROP NOT NULL;
 
-ALTER TABLE thing_management_db.function_parameter ALTER COLUMN type TYPE VARCHAR(255);
+ALTER TABLE function_parameter ALTER COLUMN type TYPE VARCHAR(255);
 
-ALTER TABLE thing_management_db.function_parameter
+ALTER TABLE function_parameter
   DROP CONSTRAINT IF EXISTS function_parameter_type_check;
 
-ALTER TABLE thing_management_db.function_parameter
+ALTER TABLE function_parameter
   DROP COLUMN IF EXISTS function_parameter;
 
-ALTER TABLE thing_management_db.function_parameter
+ALTER TABLE function_parameter
   ADD COLUMN IF NOT EXISTS type jsonb;
 
 
-INSERT INTO thing_management_db.function (id, name, description) VALUES
+INSERT INTO function (id, name, description) VALUES
 (1, 'flagIsolated', 'Find and flag temporally isolated data groups.'),
 (2, 'flagJumps', 'Flag jumps and drops in data where the mean significantly changes.'),
 (3, 'flagOffset', 'Detect and flag spikes or offset value courses in data.'),
@@ -45,7 +45,7 @@ DECLARE
     float_ge_0_le_1_type jsonb := '{"type": "float", "constraint": {"min": 0, "max": 1}}';
     bool_type jsonb := '{"type": "bool", "constraint": {}}';
 BEGIN
-    INSERT INTO thing_management_db.function_parameter
+    INSERT INTO function_parameter
         (function_id, name, description, optional, "type", default_value, position)
     VALUES
         -- flagIsolated
