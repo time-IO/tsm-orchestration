@@ -4,6 +4,7 @@ from typing import Any
 
 from timeio.parser.mqtt.parser import MqttParser, Observation
 
+
 class ChirpStackGenericParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = rawdata["time"]
@@ -26,4 +27,3 @@ class ChirpStackGenericParser(MqttParser):
                 # value is NaN or None
                 continue
         return out
-

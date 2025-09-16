@@ -15,6 +15,7 @@ from timeio.parser.typehints import ObservationPayloadT
 from timeio.common import ObservationResultType
 from timeio.errors import ParsingError
 
+
 class PandasParser(Parser):
     def __init__(self, settings: dict[str, Any]):
         self.logger = logging.getLogger(self.__class__.__qualname__)

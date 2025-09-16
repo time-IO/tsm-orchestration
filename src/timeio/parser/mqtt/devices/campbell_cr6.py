@@ -4,6 +4,7 @@ from typing import Any
 
 from timeio.parser.mqtt.parser import MqttParser, Observation
 
+
 class CampbellCr6Parser(MqttParser):
     # the basic data massage looked like this
     # {

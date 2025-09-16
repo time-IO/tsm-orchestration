@@ -16,6 +16,7 @@ from timeio.parser.typehints import ObservationPayloadT
 
 journal = Journal("MQTT-Parser")
 
+
 @dataclass
 class Observation:
     # This is a legacy class of the datastore_lib

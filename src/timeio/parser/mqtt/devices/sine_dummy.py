@@ -5,6 +5,7 @@ import datetime
 
 from timeio.parser.mqtt.parser import MqttParser, Observation
 
+
 class SineDummyParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         timestamp = datetime.now()

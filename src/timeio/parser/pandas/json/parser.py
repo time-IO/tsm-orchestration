@@ -7,6 +7,7 @@ import re
 from timeio.parser.pandas.parser import PandasParser
 from timeio.errors import ParsingError
 
+
 class JsonParser(PandasParser):
     def _clean(self, rawdata: str, comment) -> str:
         comment_re = re.escape(comment) + r".*"

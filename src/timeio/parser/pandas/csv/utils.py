@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from io import StringIO
 
+
 def filter_lines(rawdata: str, comment_regex: str) -> str:
     lines = []
     for line in rawdata.splitlines():

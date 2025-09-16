@@ -4,6 +4,7 @@ from typing import TypedDict
 from typing_extensions import Required
 from timeio.typehints import JsonT
 
+
 class ObservationPayloadT(TypedDict, total=False):
     phenomenon_time_start: str
     phenomenon_time_end: str

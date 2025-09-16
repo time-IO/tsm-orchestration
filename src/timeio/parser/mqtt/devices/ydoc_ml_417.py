@@ -5,6 +5,7 @@ from datetime import datetime
 
 from timeio.parser.mqtt.parser import MqttParser, Observation
 
+
 class YdocMl417Parser(MqttParser):
     # mqtt_ingest/test-logger-pb/test/data/jsn
     # {

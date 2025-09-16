@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 from timeio.parser.pandas.parser import PandasParser
-from timeio.parser.pandas.csv.utils import (get_header, pandafy_headerline)
+from timeio.parser.pandas.csv.utils import get_header, pandafy_headerline
 from timeio.errors import ParsingError, ParsingWarning
 from timeio.journaling import Journal
 
@@ -155,4 +155,3 @@ class CsvParser(PandasParser):
 
         self.logger.debug(f"data.shape={df.shape}")
         return df
-
