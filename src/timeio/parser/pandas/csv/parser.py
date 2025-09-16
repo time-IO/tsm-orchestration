@@ -19,7 +19,7 @@ from timeio.errors import ParsingError, ParsingWarning
 from timeio.journaling import Journal
 
 parsedT = TypeVar("parsedT")
-journal = Journal("Parser")
+journal = Journal("CsvParser")
 
 
 class CsvParser(PandasParser):

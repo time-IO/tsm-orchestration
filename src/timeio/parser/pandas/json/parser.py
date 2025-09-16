@@ -6,6 +6,9 @@ import re
 
 from timeio.parser.pandas.parser import PandasParser
 from timeio.errors import ParsingError
+from timeio.journaling import Journal
+
+journal = Journal("JsonParser")
 
 
 class JsonParser(PandasParser):
