@@ -14,7 +14,8 @@ from timeio.errors import UserInputError
 from timeio.journaling import Journal
 from timeio.databases import DBapi
 from timeio.feta import Thing
-from timeio.parser import get_parser, MqttDataParser
+from timeio.parser.utils import get_parser
+from timeio.parser.mqtt.parser import MqttParser
 
 logger = logging.getLogger("mqtt-ingest")
 journal = Journal("Parser")
@@ -45,7 +46,7 @@ class ParseMqttDataHandler(AbstractHandler):
         thing_uuid = thing.uuid
 
         logger.info(f"get parser")
-        parser: MqttDataParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
+        parser: MqttParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
 
         logger.info(f"parsing rawdata")
         try:
