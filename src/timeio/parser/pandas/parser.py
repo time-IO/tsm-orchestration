@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+
 import json
 import logging
 
 from abc import abstractmethod
 from typing import Any, cast
+from functools import reduce
 
 import pandas as pd
 
