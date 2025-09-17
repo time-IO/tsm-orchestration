@@ -86,17 +86,20 @@ class DatastreamSTA:
         # Note that, limit=None translates to 'LIMIT NULL'
         # in postgres which is equivalent to 'LIMIT ALL',
         # which effectively disables the limit for the query.
+        #
+        # See also ProductStream._fetch which basically do
+        # the same query on different tables.
         query = sql.SQL(
             """
-                select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
-                    "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id 
-                from "OBSERVATIONS" o 
-                join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id 
-                where o."DATASTREAM_ID" = %s 
-                  and o."RESULT_TIME" >= %s 
-                  and o."RESULT_TIME" <= %s 
-                order by o."RESULT_TIME" desc 
-                limit %s 
+            select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
+                "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id 
+            from "OBSERVATIONS" o 
+            join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id 
+            where o."DATASTREAM_ID" = %s 
+              and o."RESULT_TIME" >= %s 
+              and o."RESULT_TIME" <= %s 
+            order by o."RESULT_TIME" desc 
+            limit %s 
             """
         )
 
@@ -286,6 +289,9 @@ class ProductStream(Datastream):
         # Note that, limit=None translates to 'LIMIT NULL'
         # in postgres which is equivalent to 'LIMIT ALL',
         # which effectively disables the limit for the query.
+        #
+        # See also DatastreamSTA._fetch which basically do
+        # the same query on different tables.
         query = sql.SQL(
             """
             select o.result_time, o.result_type, o.result_number, o.result_string, 
