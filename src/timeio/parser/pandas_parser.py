@@ -5,20 +5,20 @@ from __future__ import annotations
 
 import json
 import logging
+import warnings
 
 from abc import abstractmethod
 from typing import Any, cast
-from functools import reduce
 
 import pandas as pd
 
-from timeio.parser.parser import Parser
+from timeio.parser.abc_parser import AbcParser
 from timeio.parser.typehints import ObservationPayloadT
 from timeio.common import ObservationResultType
 from timeio.errors import ParsingError
 
 
-class PandasParser(Parser):
+class PandasParser(AbcParser):
     def __init__(self, settings: dict[str, Any]):
         self.logger = logging.getLogger(self.__class__.__qualname__)
         self.settings = settings
@@ -30,33 +30,6 @@ class PandasParser(Parser):
         self, rawdata: Any, project_name: str, thing_uuid: str
     ) -> pd.DataFrame:
         raise NotImplementedError
-
-    def _set_index(self, df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-
-        date_columns = [df.columns[d["column"]] for d in timestamp_columns]
-        date_format = " ".join([d["format"] for d in timestamp_columns])
-
-        # for c in date_columns:
-        #     if c not in df.columns:
-        #         raise ParsingError(f"Timestamp column {c} does not exist. ")
-
-        index = reduce(
-            lambda x, y: x + " " + y,
-            [df[c].fillna("").astype(str).str.strip() for c in date_columns],
-        )
-        df = df.drop(columns=date_columns)
-        dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
-        if dt_index.isna().any():
-            nat = dt_index.isna()
-            warnings.warn(
-                f"Could not parse {nat.sum()} of {len(df)} timestamps "
-                f"with provided timestamp format {date_format!r}. First failing "
-                f"timestamp: '{index[nat].iloc[0]}'",
-                ParsingWarning,
-            )
-        index.name = None
-        df.index = dt_index
-        return df
 
     def to_observations(
         self, data: pd.DataFrame, origin: str

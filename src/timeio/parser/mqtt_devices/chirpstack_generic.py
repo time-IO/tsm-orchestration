@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from timeio.parser.mqtt.parser import MqttParser, Observation
+from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class ChirpStackGenericParser(MqttParser):

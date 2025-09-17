@@ -8,7 +8,7 @@ from timeio.parser.typehints import ObservationPayloadT
 parsedT = TypeVar("parsedT")
 
 
-class Parser(ABC):
+class AbcParser(ABC):
     @abstractmethod
     def do_parse(self, *args) -> parsedT:
         raise NotImplementedError

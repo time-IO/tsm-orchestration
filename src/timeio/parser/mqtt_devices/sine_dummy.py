@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 import datetime
 
-from timeio.parser.mqtt.parser import MqttParser, Observation
+from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class SineDummyParser(MqttParser):

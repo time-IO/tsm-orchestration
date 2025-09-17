@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from timeio.parser.parser import Parser
+from timeio.parser.abc_parser import AbcParser
 from timeio.journaling import Journal
 from timeio.common import ObservationResultType
 from timeio.parser.typehints import ObservationPayloadT
@@ -34,7 +34,7 @@ class Observation:
             raise ValueError("NaN is not allowed as observation value.")
 
 
-class MqttParser(Parser):
+class MqttParser(AbcParser):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__qualname__)
 

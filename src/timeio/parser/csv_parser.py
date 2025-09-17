@@ -5,16 +5,13 @@ import warnings
 import yaml
 import os
 import pytz
-
-from functools import reduce
-from io import StringIO
 from typing import TypeVar
-
 import pandas as pd
 import numpy as np
+from io import StringIO
+from functools import reduce
 
-from timeio.parser.pandas.parser import PandasParser
-from timeio.parser.pandas.csv.utils import get_header, pandafy_headerline
+from timeio.parser.pandas_parser import PandasParser
 from timeio.errors import ParsingError, ParsingWarning
 from timeio.journaling import Journal
 
@@ -48,6 +45,35 @@ class CsvParser(PandasParser):
                 f"Failed to create mapping yaml for thing {thing_uuid}: {e}",
                 ParsingWarning,
             )
+
+    @staticmethod
+    def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
+
+        date_columns = [df.columns[d["column"]] for d in timestamp_columns]
+        date_format = " ".join([d["format"] for d in timestamp_columns])
+
+        # for c in date_columns:
+        #     if c not in df.columns:
+        #         raise ParsingError(f"Timestamp column {c} does not exist. ")
+
+        index = reduce(
+            lambda x, y: x + " " + y,
+            [df[c].fillna("").astype(str).str.strip() for c in date_columns],
+        )
+        df = df.drop(columns=date_columns)
+        dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
+        if dt_index.isna().any():
+            nat = dt_index.isna()
+            warnings.warn(
+                f"Could not parse {nat.sum()} of {len(df)} timestamps "
+                f"with provided timestamp format {date_format!r}. First failing "
+                f"timestamp: '{index[nat].iloc[0]}'",
+                ParsingWarning,
+            )
+        index.name = None
+        df.index = dt_index
+        return df
+
 
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
@@ -134,7 +160,6 @@ class CsvParser(PandasParser):
                     df.columns = custom_names
             else:
                 df.columns = range(len(df.columns))
-
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
             try:
@@ -155,3 +180,23 @@ class CsvParser(PandasParser):
 
         self.logger.debug(f"data.shape={df.shape}")
         return df
+
+def filter_lines(rawdata: str, comment_regex: str) -> str:
+    lines = []
+    for line in rawdata.splitlines():
+        if not re.match(comment_regex, line):
+            lines.append(line)
+    return "\n".join(lines)
+
+
+def get_header(rawdata: str, header_line: int) -> str:
+    for i, line in enumerate(rawdata.splitlines()):
+        if i == header_line:
+            return line
+    raise ValueError(f"header line {header_line} not found")
+
+
+def pandafy_headerline(header_raw: str, delimiter: str) -> list[str]:
+    mock_cvs = StringIO(header_raw + "\n\n")
+    df = pd.read_csv(mock_cvs, delimiter=delimiter)
+    return df.columns.to_list()
