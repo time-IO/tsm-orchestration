@@ -20,32 +20,6 @@ journal = Journal("CsvParser")
 
 
 class CsvParser(PandasParser):
-    def _write_mapping_yaml(
-        self,
-        df_default: pd.DataFrame,
-        header_names: list,
-        ts_indices: list,
-        project_name: str,
-        thing_uuid: str,
-    ):
-        column_mapping = dict(zip(df_default.columns, header_names))
-        column_mapping = {
-            thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
-        }
-        output_dir = f"/tmp/datastream_mapping/{project_name}/mappings"
-        try:
-            os.makedirs(output_dir, exist_ok=True)
-            with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
-                yaml.dump(column_mapping, f, sort_keys=False)
-            self.logger.info(
-                f"Successfully created mapping yaml for thing {thing_uuid}"
-            )
-        except Exception as e:
-            warnings.warn(
-                f"Failed to create mapping yaml for thing {thing_uuid}: {e}",
-                ParsingWarning,
-            )
-
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
 
@@ -73,6 +47,32 @@ class CsvParser(PandasParser):
         index.name = None
         df.index = dt_index
         return df
+
+    def _write_mapping_yaml(
+        self,
+        df_default: pd.DataFrame,
+        header_names: list,
+        ts_indices: list,
+        project_name: str,
+        thing_uuid: str,
+    ):
+        column_mapping = dict(zip(df_default.columns, header_names))
+        column_mapping = {
+            thing_uuid: {k: v for k, v in column_mapping.items() if k not in ts_indices}
+        }
+        output_dir = f"/tmp/datastream_mapping/{project_name}/mappings"
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(f"{output_dir}/{thing_uuid}.yaml", "w") as f:
+                yaml.dump(column_mapping, f, sort_keys=False)
+            self.logger.info(
+                f"Successfully created mapping yaml for thing {thing_uuid}"
+            )
+        except Exception as e:
+            warnings.warn(
+                f"Failed to create mapping yaml for thing {thing_uuid}: {e}",
+                ParsingWarning,
+            )
 
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
