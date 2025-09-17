@@ -28,16 +28,16 @@ class JsonParser(PandasParser):
         return pd.json_normalize(json_data)
 
     @staticmethod
-    def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-        date_columns = [d["column"] for d in timestamp_columns]
-        date_format = " ".join([d["format"] for d in timestamp_columns])
+    def _set_index(df: pd.DataFrame, timestamp_keys: dict) -> pd.DataFrame:
+        date_keys = [d["key"] for d in timestamp_keys]
+        date_format = " ".join([d["format"] for d in timestamp_keys])
 
         index = reduce(
             lambda x, y: x + " " + y,
-            [df[c].fillna("").astype(str).str.strip() for c in date_columns],
+            [df[c].fillna("").astype(str).str.strip() for c in date_keys],
         )
 
-        df = df.drop(columns=date_columns)
+        df = df.drop(columns=date_keys)
         dt_index = pd.to_datetime(index, format=date_format, errors="coerce")
         if dt_index.isna().any():
             nat = dt_index.isna()
@@ -56,10 +56,10 @@ class JsonParser(PandasParser):
         self.logger.info(settings)
 
         comment = settings.get("comment")
-        timestamp_columns = settings.get("timestamp_columns", {})
+        timestamp_keys = settings.get("timestamp_keys", {})
         df = self._json_to_df(rawdata, comment)
         try:
-            df = self._set_index(df, timestamp_columns)
+            df = self._set_index(df, timestamp_keys)
         except KeyError as e:
             raise ParsingError(f"Timestamp path error: {e}")
         return df

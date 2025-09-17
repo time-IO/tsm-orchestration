@@ -47,10 +47,9 @@ def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
         if not settings:
             settings = {}
         default_settings = {
-            "comment": "//",
-            "timestamps": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+            "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
         }
-        kwargs = settings.pop("pandas_read_json") or {}
+        kwargs = settings.pop("pandas_json_normalize") or {}
         settings = {**default_settings, **kwargs, **settings}
         return klass(settings)
 

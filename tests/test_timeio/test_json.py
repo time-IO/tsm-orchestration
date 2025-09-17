@@ -31,7 +31,7 @@ RAWDATA = """
 
 def test_parsing():
     settings = {
-        "timestamp_columns": [{"column": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
         "comment": "//",
     }
     parser = JsonParser(settings)
@@ -79,9 +79,9 @@ MULTIDATECOLUMDATA = """
 
 def test_multi_date_column_parsing():
     settings = {
-        "timestamp_columns": [
-            {"column": "Date", "format": "%Y-%m-%d"},
-            {"column": "Time", "format": "%H:%M:%S"},
+        "timestamp_keys": [
+            {"key": "Date", "format": "%Y-%m-%d"},
+            {"key": "Time", "format": "%H:%M:%S"},
         ],
         "comment": "?",
     }
@@ -135,9 +135,9 @@ NESTEDDATA = """
 
 def test_nested_json_parsing():
     settings = {
-        "timestamp_columns": [
-            {"column": "Timestamp.Date", "format": "%Y%m%d"},
-            {"column": "Timestamp.Time", "format": "%H%M%S"},
+        "timestamp_keys": [
+            {"key": "Timestamp.Date", "format": "%Y%m%d"},
+            {"key": "Timestamp.Time", "format": "%H%M%S"},
         ],
         "comment": "#",
     }
@@ -202,7 +202,7 @@ ARRAYDATA = """
 
 def test_array_json_parsing():
     settings = {
-        "timestamp_columns": [{"column": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
     }
     parser = JsonParser(settings)
     df = parser.do_parse(ARRAYDATA.strip())
