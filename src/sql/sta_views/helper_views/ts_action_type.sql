@@ -30,8 +30,8 @@ WITH configuration_type AS (
         END AS action_id,
 
       CASE
-                WHEN sla.id IS NOT NULL THEN COALESCE(sla.end_date, TIMESTAMPTZ '9999-12-31 23:59:59+00')
-                WHEN dla.id IS NOT NULL THEN COALESCE(dla.end_date, TIMESTAMPTZ '9999-12-31 23:59:59+00')
+                WHEN sla.id IS NOT NULL THEN COALESCE(sla.end_date, 'infinity'::timestamp)
+                WHEN dla.id IS NOT NULL THEN COALESCE(dla.end_date, 'infinity'::timestamp)
                 ELSE NULL
       END AS end_date
 
