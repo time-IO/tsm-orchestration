@@ -74,7 +74,6 @@ class CsvParser(PandasParser):
         df.index = dt_index
         return df
 
-
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
         Parse rawdata string to pandas.DataFrame
@@ -180,6 +179,7 @@ class CsvParser(PandasParser):
 
         self.logger.debug(f"data.shape={df.shape}")
         return df
+
 
 def filter_lines(rawdata: str, comment_regex: str) -> str:
     lines = []

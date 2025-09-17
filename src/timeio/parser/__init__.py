@@ -12,7 +12,6 @@ from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
 from timeio.parser.mqtt_devices.sine_dummy import SineDummyParser
 
 
-
 def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
     types = {
         "csvparser": CsvParser,

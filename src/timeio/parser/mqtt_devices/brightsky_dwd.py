@@ -4,6 +4,7 @@ from typing import Any
 
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
+
 class BrightskyDwdApiParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         weather = rawdata["weather"]
