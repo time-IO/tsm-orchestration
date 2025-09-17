@@ -55,7 +55,7 @@ class TimeIOScheme(saqc.FloatScheme):
         for key, frame in flags.items():
             history = saqc.core.History(index=frame.index)
             for (flag, func, label), values in frame.groupby(
-                # see also datastreams.QUALITY_COLUMNS
+                # see also datastream.QUALITY_COLUMNS
                 ["annotation", "measure", "userLabel"]
             ):
                 kwargs = {"label": label}
