@@ -285,9 +285,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "datastream.sql"),
             os.path.join(base_path, "helper_views", "ts_action_type.sql"),
             os.path.join(base_path, "helper_views", "ts_coordinates.sql"),
-            os.path.join(base_path, "helper_views", "ts_coordinates_x_koor.sql"),
-            os.path.join(base_path, "helper_views", "ts_coordinates_y_koor.sql"),
-            os.path.join(base_path, "helper_views", "ts_coordinates_z_koor.sql"),
+            os.path.join(base_path, "helper_views", "ts_coordinates_dyn_x_y_z.sql"),
             os.path.join(base_path, "observation.sql"),
             os.path.join(base_path, "newfeature.sql"),
         ]

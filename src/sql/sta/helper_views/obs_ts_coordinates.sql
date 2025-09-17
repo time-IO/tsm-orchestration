@@ -11,7 +11,6 @@ CREATE OR REPLACE VIEW obs_ts_coordinates AS
 WITH
 
 static_coords AS (SELECT
---     DISTINCT ON (action_id)
                       'static'      AS action_type,
                        at.action_id,
                        at.o_datastream_id,
@@ -64,9 +63,6 @@ dynamic_coords AS (SELECT
                             LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
                             LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time
                    WHERE at.is_dynamic = TRUE
-
-
---                      AND at.o_datastream_id IN (x.datastream_id, y.datastream_id, z.datastream_id)
     )
 
 
