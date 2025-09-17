@@ -22,8 +22,8 @@ class JsonParser(PandasParser):
         return clean_string
 
     @classmethod
-    def _json_to_df(cls, rawdata: str, comment: str = "//") -> pd.DataFrame:
-        cleaned_data = cls._clean_string(rawdata, comment)
+    def _json_to_df(cls, rawdata: str, comment: str = None) -> pd.DataFrame:
+        cleaned_data = cls._clean_string(rawdata, comment) if comment else rawdata
         json_data = json.loads(cleaned_data)
         return pd.json_normalize(json_data)
 

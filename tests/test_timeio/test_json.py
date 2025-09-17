@@ -5,7 +5,6 @@
 import pandas as pd
 import pytest
 
-from test_csv import MULTIDATECOLUMDATA
 from timeio.parser.json_parser import JsonParser
 # from timeio.errors import ParsingError
 
@@ -138,3 +137,57 @@ def test_nested_json_parsing():
     assert df.index.equals(pd.to_datetime(["2024-07-01 12:34:56"]))
     assert df["Parameters.Frame_count"].tolist() == [123]
     assert df["Parameters.Soil_permittivity_3"].tolist() == [4.0]
+
+# Note: the array data must be an array of objects (not an object with an array property)
+# see also https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+ARRAYDATA = """
+[
+    {
+        "Datetime": "2025-01-01T00:00:00",
+        "Frame_count": 123,
+        "Voltage": 3.6,
+        "Firmware_version_THL": 0,
+        "Air_temperature": 25.51,
+        "Relative_humidity": 45.23,
+        "Illuminance": 123
+    },
+    {
+        "Datetime": "2025-01-01T01:00:00",
+        "Frame_count": 124,
+        "Voltage": 3.55,
+        "Firmware_version_THL": 0,
+        "Air_temperature": 25.45,
+        "Relative_humidity": 45.31,
+        "Illuminance": 130
+    },
+    {
+        "Datetime": "2025-01-01T02:00:00",
+        "Frame_count": 125,
+        "Voltage": 3.5,
+        "Firmware_version_THL": 0,
+        "Air_temperature": 25.37,
+        "Relative_humidity": 45.27,
+        "Illuminance": 128
+    }
+]
+"""
+
+def test_array_json_parsing():
+    settings = {
+        "timestamp_columns": [{"column": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(ARRAYDATA.strip())
+
+    assert df.columns.tolist() == [
+        'Frame_count', 'Voltage', 'Firmware_version_THL', 'Air_temperature',
+        'Relative_humidity', 'Illuminance'
+    ]
+    assert df.index.equals(pd.to_datetime([
+        "2025-01-01 00:00:00",
+        "2025-01-01 01:00:00",
+        "2025-01-01 02:00:00"
+    ]))
+    assert df["Frame_count"].tolist() == [123, 124, 125]
+    assert df["Illuminance"].tolist() == [123, 130, 128]
+
