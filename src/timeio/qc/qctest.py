@@ -16,6 +16,22 @@ if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import WindowT, TimestampT
 
 
+def parse_context_window(window: int | str | None) -> int | pd.Timedelta:
+    if window is None:
+        window = 0
+    if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
+        window = int(window)
+        is_negative = window < 0
+    else:
+        window = pd.Timedelta(window)
+        is_negative = window.days < 0
+
+    if is_negative:
+        raise ValueError("window must not be negative.")
+
+    return window
+
+
 class Param:
     """Dataclass that stores a parameter for a quality test function"""
 
@@ -36,11 +52,9 @@ class StreamInfo(Param):
         self.thing_id = thing_id
         self.stream_id = stream_id
 
-        # Frozen data is not allowed to change. In particular
-        # this means data points must not be overwritten in the DB.
         self.is_immutable = thing_id is not None and stream_id is not None
-        self.is_temporary = thing_id is None
         self.is_dataproduct = thing_id is not None and stream_id is None
+        self.is_temporary = thing_id is None # and stream_id is dont-care
 
     def parse(self):
         # cast according to Datatype
@@ -61,7 +75,7 @@ class QcTest:
         name,
         func_name,
         params: list[Param],
-        context_window: WindowT,
+        context_window: str | int,
         qctool: str | QcTool,
     ):
         self.name = name or "Unnamed QcTest"
@@ -73,44 +87,22 @@ class QcTest:
 
         if isinstance(qctool, str):
             qctool = get_qctool(qctool)
-        self._qctool = qctool()
+        self._qctool: QcTool = qctool()
 
         # filled by QcTest.parse()
         self._parsed_window = None
         self._parsed_args = {}
-        self._data = None
 
     def parse(self):
         self._qctool.check_func_name(self.func_name)
-        self._parse_window()
-        for p in self.params:
-            self._parsed_args[p.key] = p.parse()
-
-    def _parse_window(self):
-        window = self.context_window
-        if window is None:
-            window = 0
-        if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
-            window = int(window)
-            is_negative = window < 0
-        else:
-            window = pd.Timedelta(window)
-            is_negative = window.days < 0
-
-        if is_negative:
+        try:
+            self._parsed_window = parse_context_window(self.context_window)
+        except ValueError:
             raise UserInputError(
                 "Parameter 'context_window' must not have a negative value"
             )
-        self._parsed_window = window
-
-    def run(self) -> None:
-        func = self.func_name
-        kws = self._parsed_args
-        self._qctool.execute(func, **kws)
-        result = QcResult()
-        result.data = self._qctool.get_data()
-        result.quality = self._qctool.get_quality()
-        self.result = result
+        for p in self.params:
+            self._parsed_args[p.key] = p.parse()
 
     def load_data(
         self,
@@ -119,6 +111,8 @@ class QcTest:
         end_date: TimestampT | None = None,
     ):
         window = self._parsed_window
+        if window is None:
+            raise RuntimeError("Must call QcTest.parse before load_data.")
         data = {}
         qual = {}
         for stream_info in self.streams:
@@ -134,4 +128,14 @@ class QcTest:
             data[name] = stream.get_data(start_date, end_date, window)
             qual[name] = stream.get_quality_labels(start_date, end_date, window)
 
-        self._qctool.add_data(data)
+        self._qctool.add_data(data, qual)
+
+    def run(self) -> None:
+        func = self.func_name
+        kws = self._parsed_args
+        self._qctool.execute(func, **kws)
+
+        self.result = QcResult()
+        self.result.data = self._qctool.get_data()
+        self.result.quality = self._qctool.get_quality()
+

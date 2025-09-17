@@ -6,5 +6,5 @@ import datetime
 if typing.TYPE_CHECKING:
     import pandas as pd
 
-    TimestampT = datetime.datetime.timestamp | pd.Timestamp
+    TimestampT = datetime.datetime | pd.Timestamp
     WindowT = int | pd.Timedelta

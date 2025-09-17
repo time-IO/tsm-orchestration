@@ -104,8 +104,8 @@ class QcHandler(AbstractHandler):
 
             sm = StreamManager(conn)
             tests = collect_tests(config)
-            start_date = content.get("start_date")
-            end_date = content.get("end_date")
+            start_date = content.get("start_date", None)
+            end_date = content.get("end_date", None)
 
             for test in tests:  # type: QcTest
                 test.parse()
