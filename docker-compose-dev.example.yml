@@ -45,6 +45,18 @@ services:
     volumes:
       - ./src:/home/appuser/app/src
 
+  worker-sync-extsftp:
+    volumes:
+      - ./src:/home/appuser/app/src
+
+  worker-sync-extapis:
+    volumes:
+      - ./src:/home/appuser/app/src
+
+  worker-sync-sms:
+    volumes:
+      - ./src:/home/appuser/app/src
+
   frontend:
     environment:
       - "DJANGO_HELMHOLTZ_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
@@ -66,11 +78,17 @@ services:
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
-      - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
 
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
+
+  thing-management-api:
+    volumes:
+      - "${DEV_THING_MANAGEMENT_API_DIR:-../thing-management/backend}/app:/app"
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8002
+    restart: "no"  
 
 volumes:
   keycloak-data:

@@ -1,11 +1,8 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS "OBSERVATIONS" CASCADE;
 CREATE OR REPLACE VIEW "OBSERVATIONS" AS
 
-SELECT DISTINCT ON ("ID")
+SELECT
+
     o.result_boolean AS "RESULT_BOOLEAN",
     o.result_quality AS "RESULT_QUALITY",
     o.result_time AS "PHENOMENON_TIME_START",

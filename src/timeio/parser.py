@@ -9,6 +9,7 @@ import re
 import warnings
 import yaml
 import os
+import pytz
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -99,7 +100,7 @@ class FileParser(Parser):
         observations = []
 
         data.index.name = "result_time"
-        data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S%z")
+        data.index = data.index.map(lambda ts: ts.isoformat())
 
         to_process = [val for _, val in data.items()]
 
@@ -215,11 +216,16 @@ class CsvParser(FileParser):
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
+        custom_names = settings.pop("names", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
+        tz_info = settings.pop("timezone", None)
         if header_line is not None:
             header_raw = get_header(rawdata, header_line)
             self.logger.debug(f"HEADER: {header_raw}")
+        if tz_info is not None:
+            if tz_info not in pytz.all_timezones:
+                raise ValueError(f"Invalid timezone string: {tz_info}")
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
@@ -230,27 +236,23 @@ class CsvParser(FileParser):
         for i, row in enumerate(rawdata.splitlines()):
             if i == header_line:
                 # we might have comments at the header line as well
-                rows.append(re.sub(comment_regex, "", row))
+                header_raw_clean = re.sub(comment_regex, "", row).strip()
+                header_names = pandafy_headerline(header_raw_clean, delimiter)
+                settings["names"] = header_names
+                settings["header"] = None
                 continue
             rows.append(row)
         rawdata = "\n".join(rows)
 
         try:
-            if header_line is not None:
-                settings["header"] = None
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
 
-        # remove all-nan columns as artifacts
-        df = df.dropna(axis=1, how="all")
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
 
         if header_line is not None:
-            header_raw_clean = re.sub(comment_regex, "", header_raw).strip()
-            header_names = pandafy_headerline(header_raw_clean, delimiter)
-
             if duplicate:
                 df_default_names = df.copy()
                 df_default_names.columns = range(len(df.columns))
@@ -274,14 +276,28 @@ class CsvParser(FileParser):
                         "data failed. Positions will be used instead.",
                         ParsingWarning,
                     )
-            else:
-                df.columns = header_names
 
-        # If no header is given, we always use column positions
+        # If no header is given, we always use column positions or custom names if given
         else:
-            df.columns = range(len(df.columns))
+            if custom_names:
+                if len(custom_names) != len(df.columns):
+                    raise ParsingError(
+                        "Number of custom column names does not match number of columns in CSV."
+                    )
+                else:
+                    df.columns = custom_names
+            else:
+                df.columns = range(len(df.columns))
 
         df = self._set_index(df, timestamp_columns)
+        if tz_info is not None:
+            try:
+                df.index = df.index.tz_localize(tz_info)
+            except TypeError:
+                raise ParsingError(
+                    f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."
+                )
+
         # remove rows with broken dates
         df = df.loc[df.index.notna()]
 
