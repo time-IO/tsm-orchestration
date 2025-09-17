@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from timeio.parser.json_parser import JsonParser
+
 # from timeio.errors import ParsingError
 
 RAWDATA = """
@@ -37,18 +38,25 @@ def test_parsing():
     df = parser.do_parse(RAWDATA.strip())
 
     assert df.columns.tolist() == [
-        'Frame_count', 'Voltage', 'Firmware_version_ANALOG', 'Air_temperature',
-        'Relative_humidity', 'Electrical_voltage_1', 'Electrical_voltage_2',
-        'Electrical_voltage_3', 'Analog_input_voltage_range_1',
-        'Analog_input_voltage_range_2', 'Analog_input_voltage_range_3',
-        'Analog_input_voltage_range_4'
+        "Frame_count",
+        "Voltage",
+        "Firmware_version_ANALOG",
+        "Air_temperature",
+        "Relative_humidity",
+        "Electrical_voltage_1",
+        "Electrical_voltage_2",
+        "Electrical_voltage_3",
+        "Analog_input_voltage_range_1",
+        "Analog_input_voltage_range_2",
+        "Analog_input_voltage_range_3",
+        "Analog_input_voltage_range_4",
     ]
     assert df.index.equals(pd.to_datetime(["2025-08-12 13:01:23"]))
     assert df["Frame_count"].tolist() == [123]
     assert df["Analog_input_voltage_range_4"].tolist() == [0]
 
 
-MULTIDATECOLUMDATA="""    
+MULTIDATECOLUMDATA = """    
 {
 "Date": "2025-08-09",
 "Time": "06:15:00",
@@ -68,6 +76,7 @@ MULTIDATECOLUMDATA="""
 }
 """
 
+
 def test_multi_date_column_parsing():
     settings = {
         "timestamp_columns": [
@@ -80,11 +89,18 @@ def test_multi_date_column_parsing():
     df = parser.do_parse(MULTIDATECOLUMDATA.strip())
 
     assert df.columns.tolist() == [
-        'Frame_count', 'Voltage', 'Firmware_version_RAIN', 'Air_temperature',
-        'Relative_humidity', 'Electrical_pulse_count_1',
-        'Electrical_pulse_count_2', 'Electrical_pulse_count_3',
-        'Pulse_count_active_status_1', 'Pulse_count_active_status_2',
-        'Pulse_count_active_status_3', 'Pulse_count_active_status_4'
+        "Frame_count",
+        "Voltage",
+        "Firmware_version_RAIN",
+        "Air_temperature",
+        "Relative_humidity",
+        "Electrical_pulse_count_1",
+        "Electrical_pulse_count_2",
+        "Electrical_pulse_count_3",
+        "Pulse_count_active_status_1",
+        "Pulse_count_active_status_2",
+        "Pulse_count_active_status_3",
+        "Pulse_count_active_status_4",
     ]
     assert df.index.equals(pd.to_datetime(["2025-08-09 06:15:00"]))
     assert df["Frame_count"].tolist() == [123]
@@ -116,6 +132,7 @@ NESTEDDATA = """
 }
 """
 
+
 def test_nested_json_parsing():
     settings = {
         "timestamp_columns": [
@@ -128,15 +145,25 @@ def test_nested_json_parsing():
     df = parser.do_parse(NESTEDDATA.strip())
 
     assert df.columns.tolist() == [
-        'Parameters.Frame_count', 'Parameters.Voltage', 'Parameters.Firmware_version_SOIL',
-        'Parameters.Air_temperature', 'Parameters.Relative_humidity', 'Parameters.Soil_temperature_1',
-        'Parameters.Soil_temperature_2', 'Parameters.Soil_temperature_3', 'Parameters.Soil_moisture_1',
-        'Parameters.Soil_moisture_2', 'Parameters.Soil_moisture_3', 'Parameters.Soil_permittivity_1',
-        'Parameters.Soil_permittivity_2', 'Parameters.Soil_permittivity_3'
+        "Parameters.Frame_count",
+        "Parameters.Voltage",
+        "Parameters.Firmware_version_SOIL",
+        "Parameters.Air_temperature",
+        "Parameters.Relative_humidity",
+        "Parameters.Soil_temperature_1",
+        "Parameters.Soil_temperature_2",
+        "Parameters.Soil_temperature_3",
+        "Parameters.Soil_moisture_1",
+        "Parameters.Soil_moisture_2",
+        "Parameters.Soil_moisture_3",
+        "Parameters.Soil_permittivity_1",
+        "Parameters.Soil_permittivity_2",
+        "Parameters.Soil_permittivity_3",
     ]
     assert df.index.equals(pd.to_datetime(["2024-07-01 12:34:56"]))
     assert df["Parameters.Frame_count"].tolist() == [123]
     assert df["Parameters.Soil_permittivity_3"].tolist() == [4.0]
+
 
 # Note: the array data must be an array of objects (not an object with an array property)
 # see also https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
@@ -172,6 +199,7 @@ ARRAYDATA = """
 ]
 """
 
+
 def test_array_json_parsing():
     settings = {
         "timestamp_columns": [{"column": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
@@ -180,14 +208,17 @@ def test_array_json_parsing():
     df = parser.do_parse(ARRAYDATA.strip())
 
     assert df.columns.tolist() == [
-        'Frame_count', 'Voltage', 'Firmware_version_THL', 'Air_temperature',
-        'Relative_humidity', 'Illuminance'
+        "Frame_count",
+        "Voltage",
+        "Firmware_version_THL",
+        "Air_temperature",
+        "Relative_humidity",
+        "Illuminance",
     ]
-    assert df.index.equals(pd.to_datetime([
-        "2025-01-01 00:00:00",
-        "2025-01-01 01:00:00",
-        "2025-01-01 02:00:00"
-    ]))
+    assert df.index.equals(
+        pd.to_datetime(
+            ["2025-01-01 00:00:00", "2025-01-01 01:00:00", "2025-01-01 02:00:00"]
+        )
+    )
     assert df["Frame_count"].tolist() == [123, 124, 125]
     assert df["Illuminance"].tolist() == [123, 130, 128]
-
