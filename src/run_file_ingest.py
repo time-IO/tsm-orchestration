@@ -11,12 +11,11 @@ from minio import Minio
 from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
-from timeio.databases import DBapi
 from timeio.errors import UserInputError, ParsingError, ParsingWarning
 from timeio.feta import Thing
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.parser.utils import get_parser
+from timeio.parser import get_parser
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
