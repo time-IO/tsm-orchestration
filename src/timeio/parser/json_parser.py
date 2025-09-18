@@ -51,7 +51,7 @@ class JsonParser(PandasParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str) -> pd.DataFrame:
+    def do_parse(self, rawdata: str, thing, project) -> pd.DataFrame:
         settings = self.settings.copy()
         self.logger.info(settings)
 
