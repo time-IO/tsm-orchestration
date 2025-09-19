@@ -125,8 +125,9 @@ class QcTest:
             if start_date is None:
                 start_date, end_date = stream.get_unprocessed_range()
 
-            data[name] = stream.get_data(start_date, end_date, window)
-            qual[name] = stream.get_quality_labels(start_date, end_date, window)
+            df = stream.get_data(start_date, end_date, window)
+            data[name] = df['data']
+            qual[name] = df['quality']
 
         self._qctool.add_data(data, qual)
 
