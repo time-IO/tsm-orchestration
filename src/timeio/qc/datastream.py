@@ -13,7 +13,6 @@ if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
 
 __all__ = [
-    "QUALITY_COLUMNS",
     "Datastream",
     "ProductStream",
     "LocalStream",
@@ -24,7 +23,6 @@ This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.
 """
 
-QUALITY_COLUMNS = ["annotation", "measure", "userLabel", "version", "annotationType"]
 
 
 def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
@@ -46,7 +44,7 @@ class DatastreamSTA:
     and uploaded to the DB, but the data itself is readonly.
     """
 
-    _columns = ["data", "quality", "raw_stream_id"]
+    _columns = ["data", "quality", "stream_id"]
 
     def __init__(
         self,
@@ -81,7 +79,7 @@ class DatastreamSTA:
     ) -> pd.DataFrame:
         """
         Fetch data between two datetimes from the database.
-        Returns a pandas Series with datetime index.
+        Returns a pandas Dataframe with datetime index.
         """
         # Note that, limit=None translates to 'LIMIT NULL'
         # in postgres which is equivalent to 'LIMIT ALL',
@@ -174,13 +172,14 @@ class DatastreamSTA:
         date_start: TimestampT | None,
         date_end: TimestampT | None,
         context_window: WindowT,
-    ) -> pd.Series:
+    ) -> pd.DataFrame:
         """
         Return data between date_start and date_end.
         Fetch missing data from DB if needed.
+        Return dataframe with columns: [data, quality, stream_id]
         """
         if date_start is None:
-            return pd.Series(index=pd.DatetimeIndex([]))
+            return pd.DataFrame([], pd.DatetimeIndex([]), self._columns, "object")
 
         if self._data.empty:
             self._data = self._fetch(date_start, date_end)
@@ -201,19 +200,7 @@ class DatastreamSTA:
             return chunk
 
         context_start = self._fetch_context(date_start, context_window)
-        return self._data.loc[context_start:date_end, "data"]
-
-    def get_quality_labels(
-        self,
-        date_start: TimestampT | None,
-        date_end: TimestampT | None,
-        context_window: WindowT,
-    ) -> pd.DataFrame:
-        if date_start is None:
-            pass
-        # We might need to fetch the data first ...
-        self.get_data(date_start, date_end, context_window)
-        return self._data.loc[date_start:date_end, QUALITY_COLUMNS]
+        return self._data.loc[context_start:date_end, self._columns]
 
     def __repr__(self):
         klass = self.__class__.__name__
@@ -222,22 +209,23 @@ class DatastreamSTA:
             f"cached={len(self._data.index)} rows)"
         )
 
-    def update_quality_labels(self, labels: pd.DataFrame) -> None:
+    def update_quality_labels(self, labels: pd.DataFrame | pd.Series) -> None:
         """
         This acts like uploading data to the DB, but instead of
         really uploading the data, the data is stored within the
         stream abstraction (this class).
 
-        The passed dataframe must have all of datastream.QUALITY_COLUMNS
+        The quality labels must be passed in a column called 'quality'.
         """
         unknown = labels.index.difference(self._data.index)
         if not unknown.empty:
             pass  # todo warn about unknown labels
-        missing = labels.columns.difference(QUALITY_COLUMNS)
-        if not missing.empty:
-            raise ValueError(f"missing columns {missing}")
+        if isinstance(labels, pd.DataFrame):
+            if 'quality' not in labels.columns:
+                raise ValueError(f"missing column 'quality'")
+            labels = labels['quality']
         index = labels.index.intersection(self._data.index)
-        self._data.loc[index, QUALITY_COLUMNS] = labels.loc[index, QUALITY_COLUMNS]
+        self._data.loc[index, 'quality'] = labels.loc[index]
 
     def upload(self, overwrite=True):
         """Update locally stored quality labels to the DB"""
@@ -321,7 +309,7 @@ class ProductStream(Datastream):
                 timestamps, data = zip(*map(_extract, cur))
                 index = pd.to_datetime(timestamps)
 
-        return pd.DataFrame(data, columns=self._columns, index=index)
+        return pd.DataFrame(data, index=index, columns=self._columns, dtype='object')
 
     def get_unprocessed_range(self) -> tuple[None, None]:
         """
@@ -337,20 +325,23 @@ class ProductStream(Datastream):
         date_start: TimestampT,
         date_end: TimestampT,
         context_window: WindowT,
-    ) -> pd.Series:
+    ) -> pd.DataFrame:
         if self._thing_uuid is None:
             self._fetch_thing_uuid()
         return super().get_data(date_start, date_end, context_window)
 
-    def set_data(self, data: pd.Series) -> None:
-        """Sets new data unconditionally."""
+    def set_data(self, data: pd.DataFrame) -> None:
+        """Sets new data unconditionally.
+        Data must be a Dataframe with a 'data' and a 'quality'
+        column holding the data and the quality labels respectively.
+        """
         index = data.index
         if data.empty:
             index = pd.DatetimeIndex([])
         assert isinstance(index, pd.DatetimeIndex)
-
         self._data = pd.DataFrame(columns=self._columns, index=index)
-        self._data["data"] = data
+        self._data["data"] = data['data']
+        self._data["quality"] = data['quality']
 
     def upload(self, overwrite=True):
         """Update locally stored data and quality labels to the DB"""
@@ -388,7 +379,7 @@ class LocalStream(Datastream):
         date_start: TimestampT | None,
         date_end: TimestampT | None,
         context_window: WindowT,
-    ) -> pd.Series:
+    ) -> pd.DataFrame:
 
         # We can only get present data - in contrast to Datastream we
         # do not fetch data from the DB.
@@ -396,7 +387,7 @@ class LocalStream(Datastream):
         data = self._data
         if context_window == 0:
             # None is handled gracefully with slices
-            return data.loc[date_start:date_end, "data"]
+            return data.loc[date_start:date_end, self._columns]
 
         # Note that this also works for empty data !
         if date_start is None:
@@ -406,15 +397,15 @@ class LocalStream(Datastream):
 
         if isinstance(context_window, pd.Timedelta):
             new_start = date_start - context_window
-            return data.loc[new_start:date_end, "data"]
+            return data.loc[new_start:date_end, self._columns]
 
         assert isinstance(context_window, int)
-        chunk: pd.Series = data.loc[date_start:date_end, "data"]
-        pre_chunk = data.loc[:date_start, "data"]
-        context: pd.Series = pre_chunk.iloc[-(context_window + 1) : -1]
-        return pd.concat([context, chunk])
+        chunk: pd.DataFrame = data.loc[date_start:date_end, self._columns]
+        pre_chunk = data.loc[:date_start, self._columns]
+        context: pd.DataFrame = pre_chunk.iloc[-(context_window + 1) : -1]
+        return pd.concat([context, chunk], axis=0)
 
-    def set_data(self, data: pd.Series) -> None:
+    def set_data(self, data: pd.DataFrame) -> None:
         return ProductStream.set_data(self, data)
 
     def get_unprocessed_range(
