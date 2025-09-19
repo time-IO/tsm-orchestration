@@ -54,7 +54,7 @@ class StreamInfo(Param):
 
         self.is_immutable = thing_id is not None and stream_id is not None
         self.is_dataproduct = thing_id is not None and stream_id is None
-        self.is_temporary = thing_id is None # and stream_id is dont-care
+        self.is_temporary = thing_id is None  # and stream_id is dont-care
 
     def parse(self):
         # cast according to Datatype
@@ -126,8 +126,8 @@ class QcTest:
                 start_date, end_date = stream.get_unprocessed_range()
 
             df = stream.get_data(start_date, end_date, window)
-            data[name] = df['data']
-            qual[name] = df['quality']
+            data[name] = df["data"]
+            qual[name] = df["quality"]
 
         self._qctool.add_data(data, qual)
 
@@ -139,4 +139,3 @@ class QcTest:
         self.result = QcResult()
         self.result.data = self._qctool.get_data()
         self.result.quality = self._qctool.get_quality()
-
