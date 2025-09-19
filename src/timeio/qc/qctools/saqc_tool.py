@@ -23,7 +23,9 @@ QUALITY_COLUMNS = ["annotation", "measure", "userLabel", "version", "annotationT
 class TimeIOScheme(saqc.FloatScheme):
 
     def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
-        """Translate a dict of pandas.Dataframes (each with QUALITY_COLUMNS)
+        """Translate a dict of pandas.Dataframes (each with QUALITY_COLUMNS
+
+        )
         to a Flags object with a History (with metadata) for each frame.
         """
         data = {}
