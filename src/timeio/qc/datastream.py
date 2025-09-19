@@ -24,7 +24,6 @@ storing datastreams from/to the users observation database.
 """
 
 
-
 def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
     """
     This mainly extracts the data from the number-, string-,
@@ -221,11 +220,11 @@ class DatastreamSTA:
         if not unknown.empty:
             pass  # todo warn about unknown labels
         if isinstance(labels, pd.DataFrame):
-            if 'quality' not in labels.columns:
+            if "quality" not in labels.columns:
                 raise ValueError(f"missing column 'quality'")
-            labels = labels['quality']
+            labels = labels["quality"]
         index = labels.index.intersection(self._data.index)
-        self._data.loc[index, 'quality'] = labels.loc[index]
+        self._data.loc[index, "quality"] = labels.loc[index]
 
     def upload(self, overwrite=True):
         """Update locally stored quality labels to the DB"""
@@ -309,7 +308,7 @@ class ProductStream(Datastream):
                 timestamps, data = zip(*map(_extract, cur))
                 index = pd.to_datetime(timestamps)
 
-        return pd.DataFrame(data, index=index, columns=self._columns, dtype='object')
+        return pd.DataFrame(data, index=index, columns=self._columns, dtype="object")
 
     def get_unprocessed_range(self) -> tuple[None, None]:
         """
@@ -340,8 +339,8 @@ class ProductStream(Datastream):
             index = pd.DatetimeIndex([])
         assert isinstance(index, pd.DatetimeIndex)
         self._data = pd.DataFrame(columns=self._columns, index=index)
-        self._data["data"] = data['data']
-        self._data["quality"] = data['quality']
+        self._data["data"] = data["data"]
+        self._data["quality"] = data["quality"]
 
     def upload(self, overwrite=True):
         """Update locally stored data and quality labels to the DB"""
