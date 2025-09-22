@@ -1382,7 +1382,6 @@ services:
       -P "${MQTT_PASSWORD}"
       --id "mqtt-cat"
 
-
   monitoring:
     image: "${MONITORING_CADVISOR_IMAGE_REGISTRY}:${MONITORING_CADVISOR_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"

@@ -1,3 +1,4 @@
+-- Helper-View to get x/y/z-coordinates for dyn-action
 BEGIN;
 
 SET search_path TO %(tsm_schema)s;

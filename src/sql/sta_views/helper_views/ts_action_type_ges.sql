@@ -13,6 +13,7 @@ CREATE OR REPLACE VIEW obs_ts_action_type AS
 WITH configuration_type AS (
   SELECT
   dsl.datastream_id,
+  c.label AS c_label,
         CASE
             WHEN sla.id IS NOT NULL THEN FALSE
             WHEN dla.id IS NOT NULL THEN TRUE
@@ -55,6 +56,7 @@ SELECT DISTINCT
     ct.is_dynamic,
     ct.action_id,
     ct.begin_date,
+    ct.c_label,
     o.result_boolean,
     o.result_quality,
     o.result_string,

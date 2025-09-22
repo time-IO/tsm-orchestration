@@ -1,5 +1,5 @@
---     View zur Bestimmung der Koordinaten, Unterscheidung der static/dynamic actions,
---     später durch UNION wieder zusammengefügt, daher gleicher Aufbau (columns)
+-- View for determining the coordinates, distinguishing between static/dynamic actions,
+-- later merged again using UNION, therefore the same structure (columns).
 BEGIN;
 
 SET search_path TO %(tsm_schema)s;

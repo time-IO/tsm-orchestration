@@ -1,6 +1,5 @@
-
--- Helper-View "ts_action_type" ermittelt den Action-Type (static or dynamic)
--- und die Action-ID (ID von sms_configuration_static/dynamic_location_begin_action)
+-- Helper view ts_action_type determines the action type (static or dynamic)
+-- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
 BEGIN;
 
 SET search_path TO %(tsm_schema)s;
@@ -11,7 +10,8 @@ CREATE OR REPLACE VIEW ts_action_type AS
 
 WITH configuration_type AS (
   SELECT
-    c.id AS configuration_id,
+    dsl.datastream_id,
+    c.label AS c_label,
         CASE
             WHEN sla.id IS NOT NULL THEN FALSE
             WHEN dla.id IS NOT NULL THEN TRUE
@@ -36,44 +36,29 @@ WITH configuration_type AS (
       END AS end_date
 
 
-    FROM sms_configuration c
+   FROM sms_datastream_link dsl
+           JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
+           JOIN public.sms_device d ON d.id = dma.device_id
+           JOIN public.sms_configuration c ON c.id = dma.configuration_id
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
-),
-
-
-  datastream_mapping AS (
-    SELECT
-      dsl.datastream_id,
-      ct.begin_date,
-      ct.end_date,
-      ct.is_dynamic,
-      ct.action_id,
-      c.label AS c_label
-
-      FROM sms_datastream_link dsl
-           JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
-            JOIN public.sms_device d ON d.id = dma.device_id
-           JOIN public.sms_configuration c ON c.id = dma.configuration_id
-           JOIN configuration_type ct ON dma.configuration_id = ct.configuration_id
-  )
-
-
+    WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
+)
 
 SELECT DISTINCT
 
     o.datastream_id,
     o.result_time,
-    dm.is_dynamic,
-    dm.action_id,
-    dm.begin_date,
-    dm.c_label
+    ct.is_dynamic,
+    ct.action_id,
+    ct.begin_date,
+    ct.c_label
 
 
 FROM observation o
-    LEFT JOIN datastream_mapping dm ON o.datastream_id = dm.datastream_id
-                                            AND o.result_time >= dm.begin_date
-                                            AND o.result_time <= dm.end_date
+    LEFT JOIN configuration_type ct ON o.datastream_id = ct.datastream_id
+                                            AND o.result_time >= ct.begin_date
+                                            AND o.result_time <= ct.end_date
     WHERE is_dynamic IS NOT NULL
       AND action_id IS NOT NULL;
 
