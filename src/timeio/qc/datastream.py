@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import typing
 from typing import Any
 from datetime import datetime
 
 import pandas as pd
 import psycopg
+import requests
 from psycopg import sql
+
+from timeio.common import ObservationResultType, get_result_field_name
+from timeio.errors import DataNotFoundError
 
 if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
@@ -35,12 +40,28 @@ def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
     return row[0], (row[row[1]], row[6], row[7])
 
 
+def get_result_type(data: pd.Series):
+    if pd.api.types.is_numeric_dtype(data):
+        return ObservationResultType.Number
+    elif pd.api.types.is_string_dtype(data):
+        return ObservationResultType.String
+    elif pd.api.types.is_bool_dtype(data):
+        return ObservationResultType.Bool
+    elif pd.api.types.is_object_dtype(data):
+        return ObservationResultType.Json
+    else:
+        raise ValueError(f"Data of type {data.dtype} is not supported.")
+
+
 class DatastreamSTA:
     """
     A Datastream for immutable existing data.
 
     The data can be retrieved from the DB. Quality annotations can be added
-    and uploaded to the DB, but the data itself is readonly.
+    and uploaded to the DB, but the data itself cannot be altered.
+
+    Data that was never seen before (in the QC processing) is called >>unprocessed<<
+    data.
     """
 
     _columns = ["data", "quality", "stream_id"]
@@ -60,9 +81,30 @@ class DatastreamSTA:
         self.name = name
         self.schema = schema
 
+        self._thing_uuid = None
         self._conn = db_conn
         self._data = pd.DataFrame([], pd.DatetimeIndex([]), self._columns, "object")
         self._unflagged: tuple[datetime, datetime] | None = None
+
+        # To avoid to upload context data, we keep track
+        # of the beginning of the data we upload later.
+        self._upload_ptr = None
+
+    def _fetch_thing_uuid(self) -> str:
+        q = sql.SQL(
+            """ select thing_id as thing_uuid 
+            from public.sms_datastream_link 
+            where device_property_id = %s
+            """
+        ).format()
+        with self._conn.cursor() as cur:
+            row = cur.execute(q, [self.stream_id]).fetchone()
+        if row is None:
+            raise DataNotFoundError(
+                f"No thing_uuid for STA thing {self.thing_id} "
+                f"datastream {self.stream_id}"
+            )
+        return row[0]
 
     def _append(self, new_data, overwrite=False):
         """Appends given dataframe to the internal _data."""
@@ -117,6 +159,11 @@ class DatastreamSTA:
 
     def _fetch_context(self, date_start: TimestampT, window: WindowT) -> pd.Timestamp:
         """Fetches the context window and returns its first timestamp."""
+
+        if self._upload_ptr is None:
+            self._upload_ptr = date_start
+        self._upload_ptr = min(self._upload_ptr, date_start)
+
         present_data_start = self._data.index.min()
 
         if isinstance(window, pd.Timedelta):
@@ -162,7 +209,7 @@ class DatastreamSTA:
                 newest = cur.execute(q1, [self.stream_id]).fetchone() or [None]
                 oldest = cur.execute(q2, [self.stream_id]).fetchone() or [None]
 
-            self._unflagged = newest[0], oldest[0]
+            self._unflagged = oldest[0], newest[0]
 
         return self._unflagged
 
@@ -229,9 +276,22 @@ class DatastreamSTA:
 
         self._data.loc[index, "quality"] = labels.loc[index]
 
-    def upload(self, overwrite=True):
+    def upload(self, api_base_url):
         """Update locally stored quality labels to the DB"""
-        pass  # todo: Upload quality labels
+        df: pd.DataFrame = self._data.loc[self._upload_ptr :]
+        df["result_time"] = df.index
+        columns_map = {"stream_id": "datastream_id", "quality": "result_quality"}
+        df.drop(columns=["data"], inplace=True)
+        df.rename(columns=columns_map, inplace=True)
+        assert len(df.columns) == 4
+        labels = df.to_json(orient="records", date_format="iso")
+
+        r = requests.post(
+            f"{api_base_url}/observations/qaqc/{self.thing_id}",
+            json={"qaqc_labels": labels},
+            headers={"Content-type": "application/json"},
+        )
+        r.raise_for_status()
 
 
 Datastream = DatastreamSTA
@@ -240,10 +300,18 @@ Datastream = DatastreamSTA
 class ProductStream(Datastream):
     """
     A Datastream for mutable data a.k.a. Dataproducts.
+    Most often the data is calculated by user defined algorithms
+    other datastreams.
 
-    It never has  _unprocessed_ data, because the data is always generated
-    by user defined algorithms. In contrast to a default datastream.Datastream,
-    new data can be added and uploaded to the DB.
+    In comparison to the original data the time based index might change
+    as for example if the product stream calculates the median of another stream
+    and of course a product stream can also be a simple value based calculation, as
+    for example the conversion from voltage to temperature or Celsius to Fahrenheit.
+
+    In contrast to a default datastream.Datastream, new data can be added and
+    also uploaded to the DB, but a ProductStream never has so called >>unprocessed<<
+    data (data that was never seen before [-> get_unprocessed_range()]), because each
+    datapoint was generated by ourself.
     """
 
     def __init__(
@@ -255,8 +323,17 @@ class ProductStream(Datastream):
         schema: str,
     ):
         super().__init__(thing_id, stream_id, name, db_conn, schema)
+
+        # The position (sic!) is the name of the datastream in the DB.
+        # Unlike the naming suggest, it can be a number or string. For
+        # user defined streams (like here) the user choose a name which
+        # then become the identifier of the stream within the thing (for
+        # system defined streams the identifier is the stream_id which
+        # is None for user defined streams).
+        # The name of the stream is in the form `T{STA_THING_ID}S{UserGivenName}`
+        # e.g. T42Ssomefoo.
+        self.position = self.name.split("S", maxsplit=1)[1]
         assert stream_id is None
-        self._thing_uuid = None
 
     def _fetch_thing_uuid(self):
         query = (
@@ -300,10 +377,9 @@ class ProductStream(Datastream):
 
         with self._conn.cursor() as cur:
             cur.execute("set searchpath to %s", [self.schema])
-            # The name is the stream alias and has the
-            # form T{STA_THING_ID}S{AnyUserGivenName} e.g. 'T42Ssomefoo'
-            pos = self.name.split("S", maxsplit=1)[1]
-            cur.execute(query, (self._thing_uuid, pos, date_start, date_end, limit))
+            cur.execute(
+                query, (self._thing_uuid, self.position, date_start, date_end, limit)
+            )
 
             data = None
             index = pd.DatetimeIndex([])
@@ -315,10 +391,9 @@ class ProductStream(Datastream):
 
     def get_unprocessed_range(self) -> tuple[None, None]:
         """
-        Returns (None, None) tuple, because data products
-        quality labels are always created (and uploaded)
-        at the same time and therefore the data never qualifys
-        as __unprocessed__ data.
+        Returns (None, None) tuple, because a dataproduct never has
+        >>unprocessed<< (yet unseen) data by definition, because we
+        produce the data ourself.
         """
         return None, None
 
@@ -350,9 +425,28 @@ class ProductStream(Datastream):
             self._data["data"] = data["data"]
             self._data["quality"] = data["quality"]
 
-    def upload(self, overwrite=True):
+    def upload(self, api_base_url):
         """Update locally stored data and quality labels to the DB"""
-        pass  # todo: Upload data and quality labels
+        df: pd.DataFrame = self._data.loc[self._upload_ptr :]
+        df["result_type"] = rt = get_result_type(df["data"])
+        df["result_time"] = df.index
+        df["datastream_pos"] = self.position
+        columns_map = {
+            "quality": "result_quality",
+            "data": get_result_field_name(rt, errors="raise"),
+        }
+        df.drop(columns=["stream_id"], inplace=True)
+        df.rename(columns=columns_map, inplace=True)
+
+        assert len(df.columns) == 5
+        labels = df.to_json(orient="records", date_format="iso")
+
+        r = requests.post(
+            f"{api_base_url}/observations/upsert/{self.thing_id}",
+            json={"observations": labels},
+            headers={"Content-type": "application/json"},
+        )
+        r.raise_for_status()
 
 
 class LocalStream(Datastream):
