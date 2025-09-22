@@ -208,22 +208,25 @@ class DatastreamSTA:
             f"cached={len(self._data.index)} rows)"
         )
 
-    def update_quality_labels(self, labels: pd.DataFrame | pd.Series) -> None:
+    def update_quality_labels(self, labels: pd.Series | pd.DataFrame) -> None:
         """
         This acts like uploading data to the DB, but instead of
         really uploading the data, the data is stored within the
         stream abstraction (this class).
 
-        The quality labels must be passed in a column called 'quality'.
+        labels must be a datetime indexed Dataframe with a 'quality'
+        column holding the quality labels, OR a pandas.Series containing
+        only the quality labels.
         """
+        assert isinstance(labels.index, pd.DatetimeIndex)
         unknown = labels.index.difference(self._data.index)
         if not unknown.empty:
             pass  # todo warn about unknown labels
-        if isinstance(labels, pd.DataFrame):
-            if "quality" not in labels.columns:
-                raise ValueError(f"missing column 'quality'")
-            labels = labels["quality"]
         index = labels.index.intersection(self._data.index)
+
+        if isinstance(labels, pd.DataFrame):
+            labels = labels["quality"]
+
         self._data.loc[index, "quality"] = labels.loc[index]
 
     def upload(self, overwrite=True):
@@ -329,18 +332,23 @@ class ProductStream(Datastream):
             self._fetch_thing_uuid()
         return super().get_data(date_start, date_end, context_window)
 
-    def set_data(self, data: pd.DataFrame) -> None:
+    def set_data(self, data: pd.Series | pd.DataFrame) -> None:
         """Sets new data unconditionally.
         Data must be a Dataframe with a 'data' and a 'quality'
-        column holding the data and the quality labels respectively.
+        column holding the data and the quality labels respectively,
+        OR a pandas.Series containing only the data.
         """
         index = data.index
         if data.empty:
             index = pd.DatetimeIndex([])
         assert isinstance(index, pd.DatetimeIndex)
+
         self._data = pd.DataFrame(columns=self._columns, index=index)
-        self._data["data"] = data["data"]
-        self._data["quality"] = data["quality"]
+        if isinstance(data, pd.Series):
+            self._data["data"] = data
+        else:
+            self._data["data"] = data["data"]
+            self._data["quality"] = data["quality"]
 
     def upload(self, overwrite=True):
         """Update locally stored data and quality labels to the DB"""
@@ -413,4 +421,4 @@ class LocalStream(Datastream):
         return None, None
 
     def upload(self, overwrite=True):
-        raise RuntimeError("Temporary variables must not be uploaded to the DB.")
+        raise RuntimeError("Temporary data cannot be uploaded to the DB.")
