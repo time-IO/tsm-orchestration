@@ -48,7 +48,7 @@ class StreamInfo(Param):
     """Dataclass that stores a stream parameter for a quality test function"""
 
     def __init__(self, key, value: Any, thing_id, stream_id):
-        super().__init__(key, value, StreamInfo)
+        super().__init__(key, value)
         self.thing_id = thing_id
         self.stream_id = stream_id
 

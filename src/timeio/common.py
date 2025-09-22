@@ -5,7 +5,7 @@ import enum
 import logging
 import logging.config
 import os
-from typing import Any
+from typing import Any, Literal
 
 no_default = type("no_default", (), {})
 
@@ -15,6 +15,33 @@ class ObservationResultType(enum.IntEnum):
     String = 1
     Json = 2
     Bool = 3
+
+
+# todo: For python >= 3.13 use EnumDict
+class ObservationResultFieldName(enum.StrEnum):
+    ResultNumber = "result_number"
+    ResultString = "result_string"
+    ResultJson = "result_json"
+    ResultBool = "result_bool"
+
+
+def get_result_field_name(
+    result_type: ObservationResultType, errors: Literal["raise", "ignore"] = "ignore"
+) -> ObservationResultFieldName | None:
+    """Return the column name of the observation table, where the data
+    of a given type must be stored.
+
+    See also ->ObservationResultFieldName and ->ObservationResultType.
+    """
+    rt = {
+        ObservationResultType.Number: ObservationResultFieldName.ResultNumber,
+        ObservationResultType.String: ObservationResultFieldName.ResultString,
+        ObservationResultType.Json: ObservationResultFieldName.ResultJson,
+        ObservationResultType.Bool: ObservationResultFieldName.ResultBool,
+    }.get(result_type, None)
+    if rt is None and errors == "raise":
+        raise ValueError(f"Unknown Observation.ResultType {result_type}")
+    return result_type
 
 
 def get_envvar(name, default: Any = no_default, cast_to: type = None, cast_None=True):

@@ -126,7 +126,7 @@ class Saqc(QcTool):
 
     def from_STA_annotations(self, s: pd.Series) -> pd.DataFrame:
         """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
-        timeIO/STA standard quality labels (json strings).
+        timeIO/STA standard quality labels (structured JSON).
         """
         df = pd.json_normalize(s)
         df.index = s.index
@@ -140,16 +140,14 @@ class Saqc(QcTool):
 
         # Basically we just add a level of nesting here.
         def jsonify(row: pd.Series):
-            return json.dumps(
-                {
-                    "annotation": row["annotation"],
-                    "annotationType": row["annotationType"],
-                    "properties": {
-                        "version": row["version"],
-                        "measure": row["measure"],
-                        "userLabel": row["userLabel"],
-                    },
-                }
-            )
+            return {
+                "annotation": row["annotation"],
+                "annotationType": row["annotationType"],
+                "properties": {
+                    "version": row["version"],
+                    "measure": row["measure"],
+                    "userLabel": row["userLabel"],
+                },
+            }
 
         return frame.apply(jsonify, axis=1)
