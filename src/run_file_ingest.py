@@ -11,7 +11,6 @@ from minio import Minio
 from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
-from timeio.databases import DBapi
 from timeio.errors import UserInputError, ParsingError, ParsingWarning
 from timeio.feta import Thing
 from timeio.journaling import Journal
