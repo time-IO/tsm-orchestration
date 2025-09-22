@@ -52,16 +52,19 @@ class QcTool(abc.ABC):
     def execute(self, func_name: str, *args, **kwargs) -> Self: ...
 
     @abc.abstractmethod
-    def get_quality(self) -> dict[str, pd.DataFrame]:
+    def get_quality(self) -> dict[str, pd.Series]:
         """
-        Returns a dict of datetime index pandas Dataframes.
-        Each with at least one column called "quality", which
-        holds the QC information. Other columns that are
-        evaluated are:
-            * 'measure' (str) - name of the function that created the quality label
-            * 'userLabel' (str) - user given information string
+        Returns a dict of datetime indexed pandas Series
+        containing the quality annotations as STA conform json strings.
+        A json string contains the following keys.
 
-        See also -> qc.datastream.QUALITY_COLUMNS
+        * annotation - The quality annotation,
+        * annotationType - name of the tool,
+        * properties {
+            * version - the package version of the tool,
+            * measure - the measure that produced the annotation,
+            * userLabel - an optional user given label
+        }
         """
         ...
 

@@ -66,7 +66,7 @@ class QcResult:
 
     columns: list[str] | pd.Index
     data: dict[str, pd.Series]
-    quality: dict[str, pd.DataFrame]
+    quality: dict[str, pd.Series]
 
 
 class QcTest:
