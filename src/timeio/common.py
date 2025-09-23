@@ -33,15 +33,15 @@ def get_result_field_name(
 
     See also ->ObservationResultFieldName and ->ObservationResultType.
     """
-    rt = {
+    field_name = {
         ObservationResultType.Number: ObservationResultFieldName.ResultNumber,
         ObservationResultType.String: ObservationResultFieldName.ResultString,
         ObservationResultType.Json: ObservationResultFieldName.ResultJson,
         ObservationResultType.Bool: ObservationResultFieldName.ResultBool,
     }.get(result_type, None)
-    if rt is None and errors == "raise":
+    if field_name is None and errors == "raise":
         raise ValueError(f"Unknown Observation.ResultType {result_type}")
-    return result_type
+    return field_name
 
 
 def get_envvar(name, default: Any = no_default, cast_to: type = None, cast_None=True):
