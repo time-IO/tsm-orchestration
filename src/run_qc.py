@@ -44,6 +44,7 @@ class QcHandler(AbstractHandler):
                     "mandatory field '{key}' is not present in data"
                 )
 
+    @classmethod
     def get_config_from_thing(cls, conn: Connection, thing_uuid: str):
         thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
         proj = thing.project
