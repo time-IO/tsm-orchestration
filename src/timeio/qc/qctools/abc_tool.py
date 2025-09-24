@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
-
 class QcTool(abc.ABC):
 
     @property

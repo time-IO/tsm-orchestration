@@ -121,7 +121,7 @@ class QcHandler(AbstractHandler):
                 "version": 1,
                 "project_uuid": proj_uuid,
                 "thing_uuid": thing_uuid,  # None allowed
-                "config": config.name
+                "config": config.name,
             }
         )
         self.mqtt_client.publish(
@@ -132,4 +132,3 @@ class QcHandler(AbstractHandler):
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     QcHandler().run_loop()
-
