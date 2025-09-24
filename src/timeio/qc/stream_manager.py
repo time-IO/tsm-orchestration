@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import typing
 
 import psycopg
@@ -80,10 +81,10 @@ class StreamManager:
             qlabels = result.quality[name]
             stream.update_quality_labels(qlabels)
 
-    def upload(self):
+    def upload(self, api_base_url: str):
         for stream in self._streams.values():
             # Data from a local stream (aka a temporary
             # variable) is not intended to be uploaded.
             if isinstance(stream, LocalStream):
                 continue
-            stream.upload()
+            stream.upload(api_base_url)
