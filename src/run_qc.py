@@ -44,9 +44,7 @@ class QcHandler(AbstractHandler):
                     "mandatory field '{key}' is not present in data"
                 )
 
-    @classmethod
-    def get_config_from_thing(cls, conn: Connection, thing_uuid: str):
-        thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
+    def get_config_from_thing(self, thing: feta.Thing):
         proj = thing.project
         qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
         if qc is None:
@@ -94,8 +92,9 @@ class QcHandler(AbstractHandler):
             if version == 1:
                 content: MqttPayload.DataParsedV1
                 thing_uuid = content["thing_uuid"]
-                config = self.get_config_from_thing(conn, thing_uuid)
-                proj_uuid = config.project.uuid
+                thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
+                proj_uuid = thing.project.uuid
+                config = self.get_config_from_thing(thing)
             else:
                 content: MqttPayload.DataParsedV2
                 thing_uuid = None
@@ -114,7 +113,7 @@ class QcHandler(AbstractHandler):
                 test.run()
                 sm.update(test.result)
 
-            sm.upload()
+            sm.upload(self.dbapi.base_url)
 
         logger.debug(f"inform downstream services about success of qc.")
         payload = json.dumps(
@@ -122,6 +121,7 @@ class QcHandler(AbstractHandler):
                 "version": 1,
                 "project_uuid": proj_uuid,
                 "thing_uuid": thing_uuid,  # None allowed
+                "config": config.name
             }
         )
         self.mqtt_client.publish(
@@ -132,3 +132,4 @@ class QcHandler(AbstractHandler):
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     QcHandler().run_loop()
+
