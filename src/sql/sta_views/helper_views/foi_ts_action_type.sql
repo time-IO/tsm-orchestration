@@ -4,8 +4,8 @@ BEGIN;
 
 SET search_path TO %(tsm_schema)s;
 
-DROP VIEW IF EXISTS ts_action_type CASCADE;
-CREATE OR REPLACE VIEW ts_action_type AS
+DROP VIEW IF EXISTS foi_ts_action_type CASCADE;
+CREATE OR REPLACE VIEW foi_ts_action_type AS
 
 
 WITH configuration_type AS (

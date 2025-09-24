@@ -25,7 +25,7 @@ SELECT DISTINCT
 
 
 FROM public.sms_datastream_link dsl
-JOIN ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
+JOIN foi_ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
 ORDER BY "ID";
 
 COMMIT;
