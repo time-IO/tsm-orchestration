@@ -87,7 +87,7 @@ class QcHandler(AbstractHandler):
 
         self.dbapi.ping_dbapi()
         with self.db.connection() as conn:
-            logger.info("successfully connected to configdb")
+            logger.debug("successfully connected to configdb")
 
             if version == 1:
                 content: MqttPayload.DataParsedV1
@@ -102,12 +102,15 @@ class QcHandler(AbstractHandler):
                 config_name = content["qc_settings_name"]
                 config = self.get_config_from_project(conn, proj_uuid, config_name)
 
+            logger.info(f"Got config %s", config)
             sm = StreamManager(conn)
             tests = collect_tests(config)
             start_date = content.get("start_date", None)
             end_date = content.get("end_date", None)
 
-            for test in tests:  # type: QcTest
+            N = len(tests)
+            for i, test in enumerate(tests, start=1):  # type: QcTest
+                logger.info("Test %s of %s: %s", i, N, test)
                 test.parse()
                 test.load_data(sm, start_date, end_date)
                 test.run()
