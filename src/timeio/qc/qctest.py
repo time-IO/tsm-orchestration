@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import WindowT, TimestampT
 
 
-def parse_context_window(window: int | str | None) -> int | pd.Timedelta:
+def parse_context_window(window: int | str | None) -> WindowT:
     if window is None:
         window = 0
     if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
