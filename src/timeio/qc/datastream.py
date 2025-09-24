@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
+import logging
 import typing
 from typing import Any
 from datetime import datetime
@@ -27,6 +27,8 @@ __all__ = [
 This module provides a convenient abstraction for retrieving and 
 storing datastreams from/to the users observation database.
 """
+
+logger = logging.getLogger("Datastreams")
 
 
 def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
@@ -83,7 +85,7 @@ class DatastreamSTA:
 
         self._thing_uuid = None
         self._conn = db_conn
-        self._data = pd.DataFrame([], pd.DatetimeIndex([]), self._columns, "object")
+        self._data = pd.DataFrame([], pd.DatetimeIndex([]), self._columns, dtype=object)
         self._unflagged: tuple[datetime, datetime] | None = None
 
         # To avoid to upload context data, we keep track
@@ -145,6 +147,11 @@ class DatastreamSTA:
         if date_end is None:
             date_end = "Infinity"
 
+        we_are = f"{self.__class__.__name__}{self.name}"
+        logger.debug(
+            f"%s fetching data between dates %s and %s.", we_are, date_start, date_end
+        )
+
         with self._conn.cursor() as cur:
             cur.execute("set search_path to %s", [self.schema])
             cur.execute(query, (self.stream_id, date_start, date_end, limit))
@@ -155,7 +162,8 @@ class DatastreamSTA:
                 timestamps, data = zip(*map(_extract, cur))
                 index = pd.to_datetime(timestamps)
 
-        return pd.DataFrame(data, columns=self._columns, index=index)
+        logger.debug(f"%s got %s data points", we_are, len(index))
+        return pd.DataFrame(data, index, self._columns, dtype=object)
 
     def _fetch_context(self, date_start: TimestampT, window: WindowT) -> pd.Timestamp:
         """Fetches the context window and returns its first timestamp."""
@@ -225,7 +233,7 @@ class DatastreamSTA:
         Return dataframe with columns: [data, quality, stream_id]
         """
         if date_start is None:
-            return pd.DataFrame([], pd.DatetimeIndex([]), self._columns, "object")
+            return pd.DataFrame([], pd.DatetimeIndex([]), self._columns, dtype=object)
 
         if self._data.empty:
             self._data = self._fetch(date_start, date_end)
@@ -375,6 +383,11 @@ class ProductStream(Datastream):
             """
         )
 
+        we_are = f"{self.__class__.__name__}{self.name}"
+        logger.debug(
+            f"%s fetching data between dates %s and %s.", we_are, date_start, date_end
+        )
+
         with self._conn.cursor() as cur:
             cur.execute("set searchpath to %s", [self.schema])
             cur.execute(
@@ -387,7 +400,8 @@ class ProductStream(Datastream):
                 timestamps, data = zip(*map(_extract, cur))
                 index = pd.to_datetime(timestamps)
 
-        return pd.DataFrame(data, index=index, columns=self._columns, dtype="object")
+        logger.debug(f"%s got %s data points", we_are, len(index))
+        return pd.DataFrame(data, index, self._columns, dtype=object)
 
     def get_unprocessed_range(self) -> tuple[None, None]:
         """
