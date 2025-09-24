@@ -2,10 +2,17 @@
 from __future__ import annotations
 
 import abc
-from typing import Self, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+try:
+    # todo: python >= 3.11
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:
     import pandas as pd
+
 
 
 class QcTool(abc.ABC):

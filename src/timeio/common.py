@@ -17,8 +17,9 @@ class ObservationResultType(enum.IntEnum):
     Bool = 3
 
 
+# todo: For python >= 3.11 use StrEnum
 # todo: For python >= 3.13 use EnumDict
-class ObservationResultFieldName(enum.StrEnum):
+class ObservationResultFieldName:
     ResultNumber = "result_number"
     ResultString = "result_string"
     ResultJson = "result_json"

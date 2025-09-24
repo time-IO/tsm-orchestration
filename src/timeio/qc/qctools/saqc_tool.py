@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
 import warnings
-from typing import Self, Any
-
 import numpy as np
 import pandas as pd
 import saqc
+from saqc import DictOfSeries
 
 from timeio.qc.qctools import QcTool
 
@@ -95,7 +93,7 @@ class Saqc(QcTool):
         if not hasattr(saqc.SaQC, func_name):
             raise ValueError(f"Unknown qc routine {func_name} for SaQC")
 
-    def execute(self, func_name: str, *args, **kwargs) -> Self:
+    def execute(self, func_name: str, *args, **kwargs) -> Saqc:
         qc = self._qc
         func = getattr(qc, func_name)
         self._qc = func(*args, **kwargs)
@@ -108,6 +106,7 @@ class Saqc(QcTool):
         # dataframe with QUALITY_COLUMNS.
         if quality is not None:
             quality = {k: self.from_STA_annotations(q) for k, q in quality.items()}
+            quality = DictOfSeries(quality)
 
         # Second we implicitly (TimeIOScheme.toInternal) translate from
         # the dataframe with QUALITY_COLUMNS to internal Flags and History
