@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import logging
 import typing
 from typing import Any
 
@@ -60,6 +61,10 @@ class StreamInfo(Param):
         # cast according to Datatype
         return self.value
 
+    def __repr__(self):
+        klass = self.__class__.__name__
+        return f"{klass}({self.value}, {self.thing_id}, {self.stream_id})"
+
 
 class QcResult:
     """Simple dataclass to store the result of QcTest.run()"""
@@ -67,6 +72,7 @@ class QcResult:
     columns: list[str] | pd.Index
     data: dict[str, pd.Series]
     quality: dict[str, pd.Series]
+    origin: str
 
 
 class QcTest:
@@ -92,6 +98,9 @@ class QcTest:
         # filled by QcTest.parse()
         self._parsed_window = None
         self._parsed_args = {}
+
+    def __repr__(self):
+        return f"QcTest({self.name}, func={self.func_name})"
 
     def parse(self):
         self._qctool.check_func_name(self.func_name)
@@ -134,8 +143,12 @@ class QcTest:
     def run(self) -> None:
         func = self.func_name
         kws = self._parsed_args
+        logging.debug(
+            "executing tool: %s, func: %s,  kwargs: %s", self._qctool.name, func, kws
+        )
         self._qctool.execute(func, **kws)
 
         self.result = QcResult()
         self.result.data = self._qctool.get_data()
         self.result.quality = self._qctool.get_quality()
+        self.result.origin = repr(self)
