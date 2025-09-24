@@ -3,12 +3,15 @@ from __future__ import annotations
 import typing
 
 import psycopg
+import logging
 
 from timeio import feta
 from timeio.qc.datastream import Datastream, ProductStream, LocalStream
 
 if typing.TYPE_CHECKING:
     from timeio.qc.qctest import StreamInfo, QcResult
+
+logger = logging.getLogger("StreamManager")
 
 
 class StreamManager:
@@ -46,6 +49,7 @@ class StreamManager:
         tid = stream_info.thing_id
         sid = stream_info.stream_id
         name = stream_info.value
+        logger.debug(f"Get schema for {stream_info}")
         schema = self.get_schema(tid)
 
         if stream_info.is_dataproduct:
@@ -55,6 +59,7 @@ class StreamManager:
         else:
             new = Datastream(tid, sid, name, self._conn, schema)
 
+        logger.debug(f"Added new {new}")
         self._streams[name] = new
 
     def get_stream(self, stream_info: StreamInfo):
