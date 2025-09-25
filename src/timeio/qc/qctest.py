@@ -151,4 +151,5 @@ class QcTest:
         self.result = QcResult()
         self.result.data = self._qctool.get_data()
         self.result.quality = self._qctool.get_quality()
+        self.result.columns = pd.Index(self.result.quality.keys())
         self.result.origin = repr(self)

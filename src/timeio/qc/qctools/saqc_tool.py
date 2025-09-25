@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import warnings
 import numpy as np
 import pandas as pd
@@ -14,8 +15,8 @@ try:
 except ImportError:
     warnings.warn("could not import module 'tsm_user_code'")
 
-#                     flag         func        label      saqc.version   "saqc"
-QUALITY_COLUMNS = ["annotation", "measure", "userLabel", "version", "annotationType"]
+QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
+#                  "saqc"             flag         func       label        saqc.version
 
 
 class TimeIOScheme(saqc.FloatScheme):
@@ -55,15 +56,15 @@ class TimeIOScheme(saqc.FloatScheme):
             # The df has the index from series.
             df = pd.DataFrame(
                 {
-                    "annotation": series,
                     "annotationType": Saqc.name,
+                    "annotation": series,
                     "version": Saqc.version,
                     "measure": "",  # filled below
                     "userLabel": "",  # filled below
                 }
             )
 
-            assert (df.columns == pd.Index(QUALITY_COLUMNS)).all()
+            assert set(df.columns) == set(QUALITY_COLUMNS)
 
             history = flags.history[field]
             for col in history.columns:
@@ -129,6 +130,8 @@ class Saqc(QcTool):
         """
         df = pd.json_normalize(s)
         df.index = s.index
+        if df.empty:
+            df = df.reindex(columns=QUALITY_COLUMNS)
         df.columns = df.columns.str.removeprefix("properties.")
         return df[QUALITY_COLUMNS]
 
@@ -139,14 +142,16 @@ class Saqc(QcTool):
 
         # Basically we just add a level of nesting here.
         def jsonify(row: pd.Series):
-            return {
-                "annotation": row["annotation"],
-                "annotationType": row["annotationType"],
-                "properties": {
-                    "version": row["version"],
-                    "measure": row["measure"],
-                    "userLabel": row["userLabel"],
-                },
-            }
+            return json.dumps(
+                {
+                    "annotationType": row["annotationType"],
+                    "annotation": row["annotation"],
+                    "properties": {
+                        "version": row["version"],
+                        "measure": row["measure"],
+                        "userLabel": row["userLabel"],
+                    },
+                }
+            )
 
         return frame.apply(jsonify, axis=1)

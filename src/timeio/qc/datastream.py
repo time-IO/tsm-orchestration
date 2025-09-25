@@ -11,6 +11,7 @@ import psycopg
 import requests
 from psycopg import sql
 
+from timeio import feta
 from timeio.common import ObservationResultType, get_result_field_name
 from timeio.errors import DataNotFoundError
 
@@ -39,7 +40,7 @@ def _extract(row) -> tuple[datetime, tuple[Any, int, int]]:
     We return a nested tuple:
         (RESULT_TIME, (DATA, QUALITY, RAW_STREAM_ID))
     """
-    return row[0], (row[row[1]], row[6], row[7])
+    return row[0], (row[row[1] + 2], row[6], row[7])
 
 
 def get_result_type(data: pd.Series):
@@ -83,9 +84,10 @@ class DatastreamSTA:
         self.name = name
         self.schema = schema
 
-        self._thing_uuid = None
+        self._thing: feta.Thing | None = None
         self._conn = db_conn
-        self._data = pd.DataFrame([], pd.DatetimeIndex([]), self._columns, dtype=object)
+        index = pd.DatetimeIndex([], tz="UTC")
+        self._data = pd.DataFrame([], index, self._columns, dtype=object)
         self._unflagged: tuple[datetime, datetime] | None = None
 
         # To avoid to upload context data, we keep track
@@ -94,16 +96,14 @@ class DatastreamSTA:
 
     def _fetch_thing_uuid(self) -> str:
         q = sql.SQL(
-            """ select thing_id as thing_uuid 
-            from public.sms_datastream_link 
-            where device_property_id = %s
-            """
+            "select thing_id as thing_uuid from public.sms_datastream_link "  # noqa
+            "where device_property_id = %s"
         ).format()
         with self._conn.cursor() as cur:
             row = cur.execute(q, [self.stream_id]).fetchone()
         if row is None:
             raise DataNotFoundError(
-                f"No thing_uuid for STA thing {self.thing_id} "
+                f"Found no thing_uuid for STA thing {self.thing_id} "
                 f"datastream {self.stream_id}"
             )
         return row[0]
@@ -147,22 +147,26 @@ class DatastreamSTA:
         if date_end is None:
             date_end = "Infinity"
 
-        we_are = f"{self.__class__.__name__}{self.name}"
+        prefix = f"[Stream {self.name}]"
         logger.debug(
-            f"%s fetching data between dates %s and %s.", we_are, date_start, date_end
+            f"%s fetching data between dates %s and %s for %s",
+            prefix,
+            date_start,
+            date_end,
+            self._thing,
         )
 
         with self._conn.cursor() as cur:
-            cur.execute("set search_path to %s", [self.schema])
+            cur.execute(sql.SQL("set search_path to {}").format(self.schema))
             cur.execute(query, (self.stream_id, date_start, date_end, limit))
 
             data = None
-            index = pd.DatetimeIndex([])
+            index = pd.DatetimeIndex([], tz="UTC")
             if cur.rowcount > 0:
                 timestamps, data = zip(*map(_extract, cur))
-                index = pd.to_datetime(timestamps)
+                index = pd.to_datetime(timestamps, utc=True)
 
-        logger.debug(f"%s got %s data points", we_are, len(index))
+        logger.debug(f"%s got %s data points", prefix, len(index))
         return pd.DataFrame(data, index, self._columns, dtype=object)
 
     def _fetch_context(self, date_start: TimestampT, window: WindowT) -> pd.Timestamp:
@@ -175,7 +179,7 @@ class DatastreamSTA:
         present_data_start = self._data.index.min()
 
         if isinstance(window, pd.Timedelta):
-            new_start = date_start - window
+            new_start = pd.Timestamp(date_start) - window
             if new_start < present_data_start:
                 fetched = self._fetch(new_start, present_data_start)
                 self._append(fetched)
@@ -213,7 +217,7 @@ class DatastreamSTA:
             q2 = sql.SQL(query).format(order=sql.SQL("asc"))
 
             with self._conn.cursor() as cur:
-                cur.execute("set searchpath to %s", [self.schema])
+                cur.execute(sql.SQL("set search_path to {}").format(self.schema))
                 newest = cur.execute(q1, [self.stream_id]).fetchone() or [None]
                 oldest = cur.execute(q2, [self.stream_id]).fetchone() or [None]
 
@@ -232,11 +236,16 @@ class DatastreamSTA:
         Fetch missing data from DB if needed.
         Return dataframe with columns: [data, quality, stream_id]
         """
+        if self._thing is None:
+            thing_uuid = self._fetch_thing_uuid()
+            self._thing = feta.Thing.from_uuid(thing_uuid, dsn=self._conn)
+
         if date_start is None:
-            return pd.DataFrame([], pd.DatetimeIndex([]), self._columns, dtype=object)
+            index = pd.DatetimeIndex([], tz="UTC")
+            return pd.DataFrame([], index, self._columns, dtype=object)
 
         if self._data.empty:
-            self._data = self._fetch(date_start, date_end)
+            self._data = self._fetch(date_start, date_end).sort_index()
         else:
             missing_start = date_start < self._data.index.min()
             missing_end = (date_end or pd.NaT) > self._data.index.max()
@@ -287,16 +296,19 @@ class DatastreamSTA:
     def upload(self, api_base_url):
         """Update locally stored quality labels to the DB"""
         df: pd.DataFrame = self._data.loc[self._upload_ptr :]
+        if df.empty:
+            logger.debug("[%s] no quality labels to upload", self.name)
+            return
         df["result_time"] = df.index
         columns_map = {"stream_id": "datastream_id", "quality": "result_quality"}
         df.drop(columns=["data"], inplace=True)
         df.rename(columns=columns_map, inplace=True)
-        assert len(df.columns) == 4
+        assert set(df.columns) == {"datastream_id", "result_quality", "result_time"}
         labels = df.to_json(orient="records", date_format="iso")
 
         r = requests.post(
-            f"{api_base_url}/observations/qaqc/{self.thing_id}",
-            json={"qaqc_labels": labels},
+            f"{api_base_url}/observations/qaqc/{self._thing.uuid}",
+            data=f'{{"qaqc_labels":{labels}}}',
             headers={"Content-type": "application/json"},
         )
         r.raise_for_status()
@@ -344,6 +356,10 @@ class ProductStream(Datastream):
         assert stream_id is None
 
     def _fetch_thing_uuid(self):
+        # We fetch the thing uuid from the STA thing id
+        # THIS DIFFERS from Datastream._fetch_thing_uuid, where we use the
+        # DATASTREAM_ID to get the thing_uuid.
+        # Note: i'm currently not sure why we use two different approaches -- palmb
         query = (
             "select thing_id as thing_uuid from public.sms_datastream_link l "
             "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
@@ -351,7 +367,11 @@ class ProductStream(Datastream):
         )
         with self._conn.cursor() as cur:
             row = cur.execute(query, [self.thing_id]).fetchone()
-        self._thing_uuid = row[0]
+        if row is None:
+            raise DataNotFoundError(
+                f"Found no thing_uuid for STA thing {self.thing_id}"
+            )
+        return row[0]
 
     def _fetch(
         self, date_start: TimestampT, date_end: TimestampT, limit: int | None = None
@@ -389,16 +409,16 @@ class ProductStream(Datastream):
         )
 
         with self._conn.cursor() as cur:
-            cur.execute("set searchpath to %s", [self.schema])
+            cur.execute(sql.SQL("set search_path to {}").format(self.schema))
             cur.execute(
-                query, (self._thing_uuid, self.position, date_start, date_end, limit)
+                query, (self._thing.uuid, self.position, date_start, date_end, limit)
             )
 
             data = None
-            index = pd.DatetimeIndex([])
+            index = pd.DatetimeIndex([], tz="UTC")
             if cur.rowcount > 0:
                 timestamps, data = zip(*map(_extract, cur))
-                index = pd.to_datetime(timestamps)
+                index = pd.to_datetime(timestamps, utc=True)
 
         logger.debug(f"%s got %s data points", we_are, len(index))
         return pd.DataFrame(data, index, self._columns, dtype=object)
@@ -411,16 +431,6 @@ class ProductStream(Datastream):
         """
         return None, None
 
-    def get_data(
-        self,
-        date_start: TimestampT,
-        date_end: TimestampT,
-        context_window: WindowT,
-    ) -> pd.DataFrame:
-        if self._thing_uuid is None:
-            self._fetch_thing_uuid()
-        return super().get_data(date_start, date_end, context_window)
-
     def set_data(self, data: pd.Series | pd.DataFrame) -> None:
         """Sets new data unconditionally.
         Data must be a Dataframe with a 'data' and a 'quality'
@@ -429,7 +439,7 @@ class ProductStream(Datastream):
         """
         index = data.index
         if data.empty:
-            index = pd.DatetimeIndex([])
+            index = pd.DatetimeIndex([], tz="UTC")
         assert isinstance(index, pd.DatetimeIndex)
 
         self._data = pd.DataFrame(columns=self._columns, index=index)

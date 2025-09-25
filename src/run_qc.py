@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 
+import pandas as pd
 from paho.mqtt.client import MQTTMessage
 from psycopg import Connection
 
@@ -105,8 +106,11 @@ class QcHandler(AbstractHandler):
             logger.info(f"Got config %s", config)
             sm = StreamManager(conn)
             tests = collect_tests(config)
-            start_date = content.get("start_date", None)
-            end_date = content.get("end_date", None)
+
+            if start_date := content.get("start_date", None):
+                start_date = pd.Timestamp(start_date)
+            if end_date := content.get("end_date", None):
+                end_date = pd.Timestamp(end_date)
 
             N = len(tests)
             for i, test in enumerate(tests, start=1):  # type: QcTest
