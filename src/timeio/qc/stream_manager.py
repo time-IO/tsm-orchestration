@@ -42,8 +42,7 @@ class StreamManager:
             row = cur.execute(query, [sta_thing_id]).fetchone()
         if not row:
             raise RuntimeError(f"Thing with STA ID {sta_thing_id} has no SMS linking")
-        thing_uuid = row[0]
-        return feta.Thing.from_uuid(thing_uuid, self._conn).database.schema
+        return feta.Thing.from_uuid(row[0], self._conn).database.schema
 
     def add_stream(self, stream_info: StreamInfo):
         tid = stream_info.thing_id
@@ -93,3 +92,7 @@ class StreamManager:
             if isinstance(stream, LocalStream):
                 continue
             stream.upload(api_base_url)
+
+    def __repr__(self):
+        streams = list(self._streams.values())
+        return f"StreamManager({streams})"
