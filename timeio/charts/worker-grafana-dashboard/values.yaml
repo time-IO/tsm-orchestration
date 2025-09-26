@@ -4,7 +4,7 @@ name: worker-grafana-dashboard
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: "2025-07-29-064436"
+  tag: "prod-2025-09-12"
   pullPolicy: Always
 
 securityContext:
