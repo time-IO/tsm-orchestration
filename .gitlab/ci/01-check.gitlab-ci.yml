@@ -53,7 +53,8 @@ pytest:
   stage: check
   image: python:3.11-slim
   before_script:
-    - pip install -r src/constraints.txt  pytest
+    - pip install -r src/requirements.txt
+    - pip install pytest
   script:
     - python3 -m pytest tests/test_timeio
   rules:

@@ -18,6 +18,8 @@ from timeio.ext_api import (
     DwdApiSyncer,
     TtnApiSyncer,
     NmApiSyncer,
+    ExtApiRequestError,
+    NoHttpsError,
 )
 
 logger = logging.getLogger("sync-extapi-manager")
@@ -50,9 +52,16 @@ class SyncExtApiManager(AbstractHandler):
     def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
+        syncer = self.sync_handlers[ext_api_name]
         try:
-            parsed_observations = self.sync_handlers[ext_api_name].parse(thing, content)
-            self.write_observations(thing, parsed_observations)
+            data = syncer.fetch_api_data(thing, content)
+        except (ExtApiRequestError, NoHttpsError) as e:
+            journal.error(e.msg, thing.uuid)
+            return
+        try:
+            obs = syncer.do_parse(data)
+            self.write_observations(thing, obs)
+
         except HTTPError as e:
             journal.error(
                 f"Insert/upsert into timeioDB for thing '{thing.name} failed",
@@ -70,8 +79,8 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(parsed_observations['observations'])}"
-            f" observations from API '{ext_api_name}' "
+            f"Successfully inserted {len(obs['observations'])} "
+            f"observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,
         )

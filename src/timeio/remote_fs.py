@@ -7,7 +7,7 @@ import os
 import stat
 import time
 from urllib.parse import urlparse
-from typing import IO
+from typing import IO, Any
 from contextlib import contextmanager
 
 import minio
@@ -16,7 +16,6 @@ from paramiko import (
     SSHClient,
     SFTPClient,
     SFTPAttributes,
-    RejectPolicy,
     MissingHostKeyPolicy,
 )
 from paramiko.config import SSH_PORT
@@ -28,23 +27,31 @@ logger = logging.getLogger("sftp_sync")
 
 class RemoteFS(abc.ABC):
 
-    files: dict[str]
+    files: dict[str, Any]
 
     @abc.abstractmethod
     def exist(self, path: str) -> bool: ...
+
     @abc.abstractmethod
     def is_dir(self, path: str) -> bool: ...
+
     @abc.abstractmethod
     def last_modified(self, path: str) -> float: ...
+
     @abc.abstractmethod
     def size(self, path: str) -> int: ...
 
     @abc.abstractmethod
-    def open(self, path: str) -> IO[bytes]: ...
+    def open(self, path: str): ...
+
     @abc.abstractmethod
     def put(self, path: str, fo: IO[bytes], size: int) -> None: ...
+
     @abc.abstractmethod
     def mkdir(self, path: str) -> None: ...
+
+    @abc.abstractmethod
+    def close(self) -> None: ...
 
     def update(self, other: RemoteFS, path) -> None:
         """
@@ -101,10 +108,10 @@ class MinioFS(RemoteFS):
     def exist(self, path: str):
         return path in self.files
 
-    def size(self, path: str):
+    def size(self, path: str) -> int:
         if not self.exist(path):
             raise FileNotFoundError(path)
-        return self.files[path].size
+        return self.files[path].size or 0
 
     def is_dir(self, path: str):
         if not self.exist(path):
@@ -122,7 +129,7 @@ class MinioFS(RemoteFS):
         )
 
     @contextmanager
-    def open(self, path) -> IO[bytes]:
+    def open(self, path):
         if not self.exist(path):
             raise FileNotFoundError(path)
         resp = None
@@ -139,10 +146,13 @@ class MinioFS(RemoteFS):
         # automatically when files are created.
         pass
 
+    def close(self) -> None:
+        pass
+
 
 class FtpFS(RemoteFS):
 
-    cl: SFTPClient
+    client: SFTPClient
     files: dict[str, SFTPAttributes]
 
     @classmethod
@@ -159,6 +169,9 @@ class FtpFS(RemoteFS):
         # is interpreted as relative path
         uri_parts = urlparse(uri if "://" in uri else f"sftp://{uri}")
         if uri_parts.scheme != "sftp":
+            # NOTE:
+            # We log the wrong scheme but do try to connect anyways...
+            # Should we fail instead?
             logger.warning(
                 f"Expected URI to start with sftp://... , "
                 f"not with {uri_parts.scheme}://... '"
@@ -177,15 +190,19 @@ class FtpFS(RemoteFS):
             look_for_keys=False,  # todo maybe ?
             allow_agent=False,
             compress=True,
+            timeout=10,
         )
         cl = ssh.open_sftp()
-        return cls(cl, path)
+        return cls(connection=ssh, client=cl, path=path)
 
-    def __init__(self, client: SFTPClient, path: str = ".") -> None:
-        self.cl = client
+    def __init__(
+        self, connection: SSHClient, client: SFTPClient, path: str = "."
+    ) -> None:
+        self.connection = connection
+        self.client = client
         self.path = path
         self.files = {}
-        self.cl.chdir(self.path)
+        self.client.chdir(self.path)
         self._get_files()
 
     def _get_files(self, path=""):
@@ -196,7 +213,7 @@ class FtpFS(RemoteFS):
         # we must avoid calling listdir_iter multiple
         # times, otherwise it might cause a deadlock.
         # That's why we do not recurse within the loop.
-        for attrs in self.cl.listdir_iter(path):
+        for attrs in self.client.listdir_iter(path):
             file_path = os.path.join(path, attrs.filename)
             if stat.S_ISDIR(attrs.st_mode):
                 dirs.append(file_path)
@@ -210,31 +227,35 @@ class FtpFS(RemoteFS):
     def size(self, path: str):
         if not self.exist(path):
             raise FileNotFoundError(path)
-        return self.files[path].st_size
+        return self.files[path].st_size or 0
 
     def is_dir(self, path: str):
         if not self.exist(path):
             raise FileNotFoundError(path)
         return stat.S_ISDIR(self.files[path].st_mode)
 
-    def last_modified(self, path: str) -> float:
-        if not self.exist(path):
-            raise FileNotFoundError(path)
-        return self.files[path].st_mtime
-
     def put(self, path: str, fo: IO[bytes], size: int):
-        self.cl.putfo(fl=fo, remotepath=path, file_size=size)
+        self.client.putfo(fl=fo, remotepath=path, file_size=size)
 
     def mkdir(self, path: str) -> None:
         logger.debug(f"CREATE {path}")
-        self.cl.mkdir(path)
+        self.client.mkdir(path)
+
+    def last_modified(self, path: str) -> int:
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+        return self.files[path].st_mtime or 0
 
     @contextmanager
     def open(self, path):
         if not self.exist(path):
             raise FileNotFoundError(path)
-        with self.cl.open(path, mode="r") as fo:
+        with self.client.open(path, mode="r") as fo:
             yield fo
+
+    def close(self):
+        self.client.close()
+        self.connection.close()
 
 
 def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):

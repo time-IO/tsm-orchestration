@@ -11,11 +11,13 @@ from timeio.crypto import decrypt, get_crypt_key
 from timeio.remote_fs import MinioFS, FtpFS, sync
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
+from timeio.journaling import Journal
 
 logger = logging.getLogger("sync-ext-sftp")
+journal = Journal("sync_ext_sftp")
 
 USAGE = """
-Usage: sftp_sync.py THING_UUID 
+Usage: sftp_sync.py THING_UUID
 Sync external SFTP files to minio storage.
 
 Arguments
@@ -24,19 +26,19 @@ Arguments
 Additional set the following environment variables:
 
   MINIO_URL         Minio URL to sync to.
-  MINIO_USER        Minio user with r/w privileges 
+  MINIO_USER        Minio user with r/w privileges
   MINIO_PASSWORD    Password for minio user above.
-  MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
-  CONFIGDB_DSN      DB which stores the credentials for the external sftp server 
-                    (source of sync) and also the (existing) bucket-name for the 
-                    target S3 storage. See also DSN format below. 
-                    
+  MINIO_SECURE      Use minio secure connection; [true, false, 1, 0]
+  CONFIGDB_DSN      DB which stores the credentials for the external sftp server
+                    (source of sync) and also the (existing) bucket-name for the
+                    target S3 storage. See also DSN format below.
+
   LOG_LEVEL         Set the verbosity, defaults to INFO.
                     [DEBUG, INFO, WARNING, ERROR, CRITICAL]
-  FERNET_ENCRYPTION_SECRET  Secret used to decrypt sensitive information from 
-                    the Config-DB. 
+  FERNET_ENCRYPTION_SECRET  Secret used to decrypt sensitive information from
+                    the Config-DB.
 
-DSN format: 
+DSN format:
   postgresql://[user[:password]@][netloc][:port][/dbname]
 """
 
@@ -67,15 +69,22 @@ class SyncExtSftpManager(AbstractHandler):
         )
         priv_key = decrypt(thing.ext_sftp.ssh_priv_key, get_crypt_key())
         password = decrypt(thing.ext_sftp.password, get_crypt_key())
-        source = FtpFS.from_credentials(
-            uri=thing.ext_sftp.uri,
-            username=thing.ext_sftp.user,
-            password=password,
-            path=thing.ext_sftp.path,
-            keyfile_path=io.StringIO(priv_key),
-            missing_host_key_policy=WarningPolicy(),
-        )
+        try:
+            source = FtpFS.from_credentials(
+                uri=thing.ext_sftp.uri,
+                username=thing.ext_sftp.user,
+                password=password,
+                path=thing.ext_sftp.path,
+                keyfile_path=io.StringIO(priv_key),
+                missing_host_key_policy=WarningPolicy(),
+            )
+        except Exception as e:
+            msg = f"Failed to create SFTP client. Reason: {e}"
+            journal.error(msg, thing.uuid)
+            logger.error(msg)
+            return
         sync(source, target, thing.uuid)
+        source.close()
 
 
 if __name__ == "__main__":

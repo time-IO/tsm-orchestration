@@ -3,7 +3,7 @@ import json
 import base64
 import re
 
-from urllib.request import Request, urlopen
+from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
 
@@ -15,8 +15,42 @@ from timeio.crypto import decrypt, get_crypt_key
 
 
 class NoHttpsError(Exception):
-    def __init_(self, msg):
-        super().__init__(msg)
+    pass
+
+
+class ExtApiRequestError(Exception):
+    def __init__(self, msg, status_code=None):
+        self.msg = f"{msg}. Status code: {status_code}" if status_code else msg
+        super().__init__(self.msg)
+
+
+class ExtApiSyncer(ABC):
+    @abstractmethod
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+        raise NotImplementedError
+
+    @abstractmethod
+    def do_parse(self, api_response) -> dict:
+        raise NotImplementedError
+
+
+def request_with_handling(method, url, timeout=(10, 60), **kwargs):
+    try:
+        response = requests.request(method, url, timeout=timeout, **kwargs)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code
+        if status_code == 401:
+            raise ExtApiRequestError(
+                f"Unauthorized for url {url}", status_code=status_code
+            )
+        elif status_code == 403:
+            raise ExtApiRequestError("Forbidden", status_code=status_code)
+        else:
+            raise ExtApiRequestError("HTTP request failed", status_code)
+    except requests.exceptions.RequestException as e:
+        raise ExtApiRequestError(f"Network error: {e}")
 
 
 RESULT_TYPE_MAPPING = {
@@ -27,29 +61,52 @@ RESULT_TYPE_MAPPING = {
 }
 
 
-class BoschApiSyncer:
-    PARAMETER_MAPPING = {
-        "CO_3_CORR": 0,
-        "ESP_0_RH_AVG": 0,
-        "ESP_0_TEMP_AVG": 0,
-        "ES_0_PRESS": 0,
-        "NO2_1_CORR": 0,
-        "O3_0_CORR": 0,
-        "PS_0_PM10_CORR": 0,
-        "PS_0_PM2P5_CORR": 0,
-        "SO2_2_CORR": 0,
-        "SO2_2_CORR_1hr": 0,
-    }
+class BoschApiSyncer(ExtApiSyncer):
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        pw_dec = decrypt(settings["password"], get_crypt_key())
-        url = f"""{settings["endpoint"]}/{settings["sensor_id"]}/{content["datetime_from"]}/{content["datetime_to"]}"""
-        if urlparse(url).scheme != "https":
-            raise NoHttpsError(f"{url} is not https")
-        response = self.make_request(url, settings["username"], pw_dec)
-        parsed_observations = self.parse_api_response(response, origin="bosch_data")
-        return parsed_observations
+        password = decrypt(settings["password"], get_crypt_key())
+        server_url = (
+            f"{settings['endpoint']}/{settings['sensor_id']}/"
+            f"{content['datetime_from']}/{content['datetime_to']}"
+        )
+        if urlparse(server_url).scheme != "https":
+            raise NoHttpsError(f"{server_url} is not https")
+        headers = {
+            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        response = request_with_handling("GET", server_url, headers=headers)
+
+        return response.json()
+
+    def do_parse(self, api_response):
+        bodies = []
+        for entry in api_response:
+            obs = entry["payload"]
+            source = {
+                "sensor_id": obs.pop("deviceID") if "deviceID" in obs else "not found",
+                "observation_type": obs.pop("Type"),
+            }
+            if "LocalTime" in obs:
+                obs.pop("LocalTime", None)  # Remove LocalTime if present
+            if "IMEI" in obs:
+                obs["IMEI"] = int(obs["IMEI"])  # Convert IMEI to int if present
+            timestamp = obs.pop("UTC")
+            for parameter, value in obs.items():
+                if value:
+                    body = {
+                        "result_time": timestamp,
+                        "result_type": 0,
+                        "datastream_pos": parameter,
+                        "result_number": value,
+                        "parameters": json.dumps(
+                            {"origin": "bosch_data", "column_header": source}
+                        ),
+                    }
+                    bodies.append(body)
+        return {"observations": bodies}
 
     @staticmethod
     def basic_auth(username, password):
@@ -59,64 +116,56 @@ class BoschApiSyncer:
         )
         return f"Basic {b_encoded_credential}"
 
-    def make_request(self, server_url, user, password, post_data=None):
-        r = Request(server_url)
-        r.add_header("Authorization", self.basic_auth(user, password))
-        r.add_header("Content-Type", "application/json")
-        r.add_header("Accept", "application/json")
-        r_data = post_data
-        r.data = r_data
-        handle = urlopen(r)
-        content = handle.read().decode("utf8")
-        response = json.loads(content)
-        return response
 
-    def parse_api_response(self, response: list, origin: str):
-        bodies = []
-        for entry in response:
-            obs = entry["payload"]
-            source = {
-                "sensor_id": obs.pop("deviceID"),
-                "observation_type": obs.pop("Type"),
-            }
-            timestamp = obs.pop("UTC")
-            for parameter, value in obs.items():
-                if value:
-                    result_type = self.PARAMETER_MAPPING[parameter]
-                    body = {
-                        "result_time": timestamp,
-                        "result_type": result_type,
-                        "datastream_pos": parameter,
-                        RESULT_TYPE_MAPPING[result_type]: value,
-                        "parameters": json.dumps(
-                            {"origin": "bosch_data", "column_header": source}
-                        ),
-                    }
-                    bodies.append(body)
-        return {"observations": bodies}
-
-
-class TsystemsApiSyncer:
+class TsystemsApiSyncer(ExtApiSyncer):
     tsystems_base_url = (
         "https://moc.caritc.de/sensorstation-management/api/measurements/average"
     )
     tsytems_auth_url = (
-        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+        "https://moc.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
     )
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         pw_dec = decrypt(settings["password"], get_crypt_key())
-        response = self.request_tsystems_api(
-            settings["group"],
-            settings["station_id"],
-            settings["username"],
-            pw_dec,
-            content["datetime_from"],
-            content["datetime_to"],
+        bearer_token = self.get_bearer_token(settings["username"], pw_dec)
+        headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
+        params = {
+            "aggregationTime": "FINEST",
+            "aggregationValues": "ALL_FIELDS",
+            "from": content["datetime_from"],
+            "to": content["datetime_to"],
+        }
+        response = request_with_handling(
+            "GET",
+            f'{self.tsystems_base_url}/{settings["group"]}/{settings["station_id"]}',
+            headers=headers,
+            params=params,
         )
-        parsed_observations = self.parse_api_response(response)
-        return parsed_observations
+        return response.json()
+
+    def do_parse(self, api_response):
+        bodies = []
+        for entry in api_response:
+            source = {
+                "sensor_id": entry.pop("deviceId"),
+                "location_id": entry.pop("locationId"),
+                "aggregation_time": "hourly",
+            }
+            timestamp = entry.pop("timestamp")
+            for parameter, value in entry.items():
+                if value:
+                    body = {
+                        "result_time": self.unix_ts_to_str(timestamp),
+                        "result_type": 0,
+                        "result_number": value,
+                        "datastream_pos": parameter,
+                        "parameters": json.dumps(
+                            {"origin": "tsystems_data", "column_header": source}
+                        ),
+                    }
+                    bodies.append(body)
+        return {"observations": bodies}
 
     @staticmethod
     def unix_ts_to_str(ts_unix: int) -> str:
@@ -136,56 +185,13 @@ class TsystemsApiSyncer:
             "username": username,
             "password": password,
         }
-        response = requests.post(self.tsytems_auth_url, headers=headers, data=payload)
-        response.raise_for_status()
+        response = request_with_handling(
+            "POST", self.tsytems_auth_url, headers=headers, data=payload
+        )
         return response.json()["access_token"]
 
-    def request_tsystems_api(
-        self,
-        group: str,
-        station_id: str,
-        username: str,
-        password: str,
-        time_from: str,
-        time_to: str,
-    ) -> list:
-        bearer_token = self.get_bearer_token(username, password)
-        headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
-        params = {
-            "aggregationTime": "HOURLY",
-            "aggregationValues": "ALL_FIELDS",
-            "from": time_from,
-            "to": time_to,
-        }
-        response = requests.get(
-            f"{self.tsystems_base_url}/{group}/{station_id}",
-            headers=headers,
-            params=params,
-        )
-        response.raise_for_status()
-        return response.json()
 
-    def parse_api_response(self, response: list) -> dict:
-        bodies = []
-        for entry in response:
-            source = {"sensor_id": entry.pop("deviceId"), "aggregation_time": "hourly"}
-            timestamp = entry.pop("timestamp")
-            for parameter, value in entry.items():
-                if value:
-                    body = {
-                        "result_time": self.unix_ts_to_str(timestamp),
-                        "result_type": 0,
-                        "result_number": value,
-                        "datastream_pos": parameter,
-                        "parameters": json.dumps(
-                            {"origin": "tsystems_data", "column_header": source}
-                        ),
-                    }
-                    bodies.append(body)
-        return {"observations": bodies}
-
-
-class UbaApiSyncer:
+class UbaApiSyncer(ExtApiSyncer):
     uba_componsents_url = (
         "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
     )
@@ -196,7 +202,7 @@ class UbaApiSyncer:
         "https://www.umweltbundesamt.de/api/air_data/v3/airquality/json"
     )
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         station_id = settings["station_id"]
         date_from, time_from, date_to, time_to = self.parse_timeranges(
@@ -209,8 +215,19 @@ class UbaApiSyncer:
         aqi_data = self.get_airquality_data(
             station_id, date_from, date_to, time_from, time_to, components
         )
-        parsed_measure_data = self.parse_measure_data(measure_data, station_id)
-        parsed_aqi_data = self.parse_aqi_data(aqi_data, station_id)
+        return {
+            "measure_data": measure_data,
+            "aqi_data": aqi_data,
+            "station_id": station_id,
+        }
+
+    def do_parse(self, api_response):
+        parsed_measure_data = self.parse_measure_data(
+            api_response["measure_data"], api_response["station_id"]
+        )
+        parsed_aqi_data = self.parse_aqi_data(
+            api_response["aqi_data"], api_response["station_id"]
+        )
         return {"observations": parsed_measure_data + parsed_aqi_data}
 
     @staticmethod
@@ -237,10 +254,8 @@ class UbaApiSyncer:
         """Get components (i.e measured quantites) and scopes
         (aggregation infos) for later mapping
         """
-        response_components = requests.get(self.uba_componsents_url)
-        response_components.raise_for_status()
-        response_scopes = requests.get(self.uba_scopes_url)
-        response_scopes.raise_for_status()
+        response_components = request_with_handling("GET", self.uba_componsents_url)
+        response_scopes = request_with_handling("GET", self.uba_scopes_url)
         components = {
             int(v[0]): v[1]
             for k, v in response_components.json().items()
@@ -258,8 +273,7 @@ class UbaApiSyncer:
         station
         """
         station_info = list()
-        response = requests.get(self.uba_limits_url)
-        response.raise_for_status()
+        response = request_with_handling("GET", self.uba_limits_url)
         response_json = response.json()["data"]
         for k, v in response_json.items():
             if v[2] == station_id:
@@ -288,11 +302,11 @@ class UbaApiSyncer:
             "component": component_id,
             "scope": scope_id,
         }
-        response = requests.get(
-            url=self.uba_measures_url,
+        response = request_with_handling(
+            "GET",
+            self.uba_measures_url,
             params=params,
         )
-        response.raise_for_status()
         response_json = response.json()
         if response_json["data"]:
             return response_json["data"][station_id]
@@ -376,8 +390,7 @@ class UbaApiSyncer:
             "time_to": time_to,
             "station": station_id,
         }
-        response = requests.get(self.uba_airquality_url, params=params)
-        response.raise_for_status()
+        response = request_with_handling("GET", self.uba_airquality_url, params=params)
         response_json = response.json()
         if not response_json["data"]:
             return []
@@ -424,7 +437,7 @@ class UbaApiSyncer:
         return bodies
 
 
-class DwdApiSyncer:
+class DwdApiSyncer(ExtApiSyncer):
     PARAMETER_MAPPING = {
         "cloud_cover": 0,
         "condition": 1,
@@ -446,34 +459,25 @@ class DwdApiSyncer:
     }
     brightsky_base_url = "https://api.brightsky.dev/weather"
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        response = self.fetch_brightsky_data(
-            settings["station_id"], content["datetime_from"], content["datetime_to"]
-        )
-        parsed_observations = self.parse_brightsky_response(response)
-        return parsed_observations
-
-    def fetch_brightsky_data(self, station_id: str, dt_from: str, dt_to: str) -> dict:
-        """Returns DWD data with hourly resolution of yesterday"""
         params = {
-            "dwd_station_id": station_id,
-            "date": dt_from,
-            "last_date": dt_to,
+            "dwd_station_id": settings["station_id"],
+            "date": content["datetime_from"],
+            "last_date": content["datetime_to"],
             "units": "dwd",
         }
-        brightsky_response = requests.get(url=self.brightsky_base_url, params=params)
-        response_data = brightsky_response.json()
-        return response_data
+        response = request_with_handling("GET", self.brightsky_base_url, params=params)
+        return response.json()
 
-    def parse_brightsky_response(self, resp) -> dict:
-        """Uses Brightsky Response and returns body for POST request"""
-        observation_data = resp["weather"]
-        source = resp["sources"][0]
+    def do_parse(self, api_response):
+        observation_data = api_response["weather"]
+        source = api_response["sources"][0]
         bodies = []
         for obs in observation_data:
             timestamp = obs.pop("timestamp")
-            del obs["source_id"]
+            obs.pop("fallback_source_ids", None)
+            obs.pop("source_id", None)
             for parameter, value in obs.items():
                 if value:
                     result_type = self.PARAMETER_MAPPING[parameter]
@@ -490,51 +494,54 @@ class DwdApiSyncer:
         return {"observations": bodies}
 
 
-class TtnApiSyncer:
-    PARAMETER_MAPPING = {
-        "BAT": 0,
-        "H1": 0,
-        "H2": 0,
-        "InputStatus": 1,
-        "T1": 0,
-        "Work_mode": 1,
-    }
+class TtnApiSyncer(ExtApiSyncer):
+    @staticmethod
+    def dynamic_parameter_mapping(v):
+        if isinstance(v, (int, float)):
+            return 0
+        elif isinstance(v, str):
+            return 1
+        elif isinstance(v, dict):
+            return 2
+        elif isinstance(v, bool):
+            return 3
+        else:
+            raise ExtApiRequestError(
+                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+            )
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         url = settings["endpoint_uri"]
-        ttn_payload = self.fetch_ttn_data(url, api_key_dec)
-        parsed_observations = self.parse_ttn_response(ttn_payload, url)
-        return parsed_observations
-
-    def fetch_ttn_data(self, url, api_key):
-        res = requests.get(
+        res = request_with_handling(
+            "GET",
             url,
             headers={
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": f"Bearer {api_key_dec}",
                 "Accept": "text/event-stream",
             },
         )
-
         rep = self.cleanup_json(res.text)
-        return json.loads(rep)
+        return {"response": json.loads(rep), "url": url}
 
-    def parse_ttn_response(self, payload, url):
+    def do_parse(self, api_response):
         bodies = []
-        for entry in payload:
+        for entry in api_response["response"]:
             msg = entry["result"]["uplink_message"]
             timestamp = msg["received_at"]
             values = msg["decoded_payload"]
             for k, v in values.items():
                 if v:
-                    result_type = self.PARAMETER_MAPPING[k]
+                    result_type = self.dynamic_parameter_mapping(v)
                     body = {
                         "result_time": timestamp,
                         "result_type": result_type,
                         "datastream_pos": k,
                         RESULT_TYPE_MAPPING[result_type]: v,
-                        "parameters": json.dumps({"origin": url, "column_header": k}),
+                        "parameters": json.dumps(
+                            {"origin": api_response["url"], "column_header": k}
+                        ),
                     }
                     bodies.append(body)
         return {"observations": bodies}
@@ -549,30 +556,19 @@ class TtnApiSyncer:
         return f"[{rep}]".strip()
 
 
-class NmApiSyncer:
+class NmApiSyncer(ExtApiSyncer):
     nm_base_url = "http://www.nmdb.eu/nest/draw_graph.php"
 
-    def parse(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        station_id = settings["station_id"]
-        resolution = settings["time_resolution"]
         start_date = datetime.strptime(content["datetime_from"], "%Y-%m-%d %H:%M:%S")
         end_date = datetime.strptime(content["datetime_to"], "%Y-%m-%d %H:%M:%S")
-        nm_response = self.fetch_nm_data(station_id, resolution, start_date, end_date)
-        parsed_observations = self.parse_nm_response(
-            nm_response, station_id, resolution
-        )
-        return parsed_observations
-
-    def fetch_nm_data(
-        self, station: str, resolution: int, start_date: datetime, end_date: datetime
-    ) -> list:
         params = {
             "wget": 1,
-            "stations[]": station,
+            "stations[]": settings["station_id"],
             "tabchoice": "revori",
             "dtype": "corr_for_efficiency",
-            "tresolution": resolution,
+            "tresolution": settings["time_resolution"],
             "force": 1,
             "date_choice": "bydate",
             "start_year": {start_date.year},
@@ -587,26 +583,30 @@ class NmApiSyncer:
             "end_min": {end_date.min},
             "yunits": 0,
         }
-        res = requests.get(self.nm_base_url, params=params)
+        res = request_with_handling("GET", self.nm_base_url, params=params)
         rows = [
             r.split(";") for r in re.findall(r"^\d.*", res.text, flags=re.MULTILINE)
         ]
-        return rows
+        return {
+            "response_data": rows,
+            "station_id": settings["station_id"],
+            "resolution": settings["time_resolution"],
+        }
 
-    def parse_nm_response(self, resp, station, resolution) -> dict:
+    def do_parse(self, api_response):
         bodies = []
         header = {
-            "sensor_id": station,
-            "resolution": resolution,
+            "sensor_id": api_response["station_id"],
+            "resolution": api_response["resolution"],
             "nm_api_url": self.nm_base_url,
         }
-        for timestamp, value in resp:
+        for timestamp, value in api_response["response_data"]:
             if value:
                 bodies.append(
                     {
                         "result_time": timestamp,
                         "result_type": 0,
-                        "datastream_pos": station,
+                        "datastream_pos": api_response["station_id"],
                         "result_number": float(value),
                         "parameters": json.dumps(
                             {"origin": "nm_data", "column_header": header}

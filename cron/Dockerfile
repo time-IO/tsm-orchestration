@@ -1,4 +1,5 @@
-ARG BASE_IMAGE_TAG=bookworm-slim
+ARG BASE_IMAGE_REGISTRY=debian
+ARG BASE_IMAGE_TAG=bullseye-slim
 
 FROM debian:${BASE_IMAGE_TAG}
 
@@ -14,12 +15,11 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl tini python3 python3-pip python3-venv inotify-tools \
+    && apt-get install -y --no-install-recommends curl tini python3 python3-pip inotify-tools \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY src/constraints.txt .
-COPY src/requirements.cron-scheduler.txt ./requirements.txt
+COPY src/requirements.txt .
 COPY cron/supercronic-entrypoint.sh .
 COPY cron/supercronic-health.sh .
 
@@ -29,10 +29,8 @@ RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPE
     && chmod 755 /supercronic-entrypoint.sh \
     && chmod 755 /supercronic-health.sh
 
-RUN python3 -m venv /venv \
-    && . /venv/bin/activate \
-    && pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt -c constraints.txt
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 ARG UID=1000
 ARG USER=tsm

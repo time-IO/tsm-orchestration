@@ -19,6 +19,7 @@ services:
       args:
         UID: "${UID}"
         GID: "${GID}"
+        BASE_IMAGE_REGISTRY: "${INIT_ALPINE_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${INIT_ALPINE_BASE_IMAGE_TAG}"
     restart: no
     user: "${UID}:${GID}"
@@ -68,7 +69,7 @@ services:
   # for the scripts, which gets mounted and executed on startup.
   database:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "bitnami/postgresql:${DATABASE_POSTGRES_IMAGE_TAG}"
+    image: "${DATABASE_POSTGRES_IMAGE_REGISTRY}:${DATABASE_POSTGRES_IMAGE_TAG}"
     depends_on:
       init:
         condition: service_completed_successfully
@@ -77,9 +78,9 @@ services:
     environment:
       POSTGRES_USER: "${DATABASE_USER}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
-      PGDATA: "/bitnami/postgresql/data/pgdata"
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - "${DATABASE_PERSISTENCE_VOLUME:-database}:/bitnami/postgresql/data"
+      - "${DATABASE_PERSISTENCE_VOLUME:-database}:/var/lib/postgresql/data"
     user: "$UID"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $DATABASE_USER"]
@@ -109,7 +110,7 @@ services:
   # The upload can be done via (S)FTP or via a client or via a web frontend. The storage
   # sends mqtt messages to the broker on file upload (and other events).
   object-storage:
-    image: "minio/minio:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
+    image: "${OBJECT_STORAGE_MINIO_IMAGE_REGISTRY}:${OBJECT_STORAGE_MINIO_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     ports:
       - "${OBJECT_STORAGE_SFTP_PORT}:22"
@@ -170,7 +171,7 @@ services:
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_BROKER_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       flyway:
         condition: service_completed_successfully
@@ -237,7 +238,7 @@ services:
   # This visualize observations of a group or project that are stored in the database.
   visualization:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "grafana/grafana:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    image: "${VISUALIZATION_GRAFANA_IMAGE_REGISTRY}:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
     user: "${UID}:${GID}"
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
@@ -256,8 +257,14 @@ services:
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: eduperson_principal_name
       GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: true
       GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: true
+      MONITORING_DATABASE_HOST: "${MONITORING_DATABASE_HOST}"
+      MONITORING_DATABASE_USER: "${MONITORING_DATABASE_USER}"
+      MONITORING_DATABASE_PASS: "${MONITORING_DATABASE_PASS}"
+      MONITORING_DATABASE_DB: "${MONITORING_DATABASE_DB}"
+      MONITORING_DATABASE_SSLMODE: "${MONITORING_DATABASE_SSLMODE}"
     volumes:
       - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/var/lib/grafana"
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
@@ -338,6 +345,7 @@ services:
     build:
       context: tomcat
       args:
+        BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
         UID: "${UID}"
@@ -396,7 +404,7 @@ services:
   # ===========
   # TODO
   flyway:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
+    image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
     volumes:
@@ -417,6 +425,10 @@ services:
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_LEGACY_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
       FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_USER: "${KEYCLOAK_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
+      FLYWAY_PLACEHOLDERS_MONITORING_DB_USER: "${MONITORING_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_MONITORING_DB_PASSWORD: "${MONITORING_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_SMS_ACCESS_TYPE: "${SMS_ACCESS_TYPE}"
       FLYWAY_PLACEHOLDERS_SMS_DB_USER: "${SMS_DB_USER}"
       FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD: "${SMS_DB_PASSWORD}"
@@ -451,13 +463,18 @@ services:
     image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     environment:
+      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
       APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
       VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      OIDC_URL: "${THING_MANAGEMENT_FRONTEND_OIDC_URL}"
+      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
+      OIDC_REDIRECT_URL: "${THING_MANAGEMENT_FRONTEND_REDIRECT_URL}"
+      OIDC_POST_LOGOUT_URL: "${THING_MANAGEMENT_FRONTEND_POST_LOGOUT_URL}"
+      OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
     depends_on:
       thing-management-api:
-        condition: service_healthy
+        condition: service_started
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -481,7 +498,7 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      VERSION: "${THING_MANAGEMENT_API_VERSION}"
+      ENVIRONMENT: "${THING_MANAGEMENT_API_ENVIRONMENT}"
       DB_URL: "${THING_MANAGEMENT_API_DSN}"
       DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
       MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
@@ -492,13 +509,20 @@ services:
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
+      OIDC_CONF_URL: "${THING_MANAGEMENT_API_OIDC_URL}/.well-known/openid-configuration"
+      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
+      OIDC_CLIENT_SECRET: ""
+      OIDC_ADMIN_USERNAME: "${THING_MANAGEMENT_API_DATABASE_USER}"
+      OIDC_ADMIN_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
+      OIDC_ALLOWED_ISSUERS: "${THING_MANAGEMENT_API_ALLOWED_ISSUERS}"
+      OIDC_ALLOWED_AUDIENCES: "${THING_MANAGEMENT_API_ALLOWED_AUDIENCES}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
       flyway-thing-management:
         condition: service_completed_successfully
-    #  keycloak:
-    #    condition: service_started
+      keycloak:
+        condition: service_healthy
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -593,7 +617,7 @@ services:
   #  - the service  frost          to  URL/sta
   #  - the service  tsmdl          to  URL/tsmdl
   proxy:
-    image: "nginxinc/nginx-unprivileged:${PROXY_NGINX_IMAGE_TAG}"
+    image: "${PROXY_NGINX_IMAGE_REGISTRY}:${PROXY_NGINX_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID}:${GID}"
     ports:
@@ -620,6 +644,8 @@ services:
         condition: service_started
       thing-management-frontend:
         condition: service_started
+      keycloak:
+        condition: service_healthy
       init:
         condition: service_completed_successfully
     healthcheck:
@@ -643,6 +669,7 @@ services:
       dockerfile: configdb_updater/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -675,6 +702,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -724,6 +752,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -761,6 +790,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -799,6 +829,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -833,6 +864,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -877,6 +909,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -904,6 +937,8 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
     entrypoint: ["python3", "run_file_ingest.py"]
+    volumes:
+      - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
     logging:
       options:
         max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
@@ -917,6 +952,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -952,6 +988,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -986,6 +1023,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1026,6 +1064,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1070,6 +1109,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1109,6 +1149,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1149,6 +1190,7 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
@@ -1170,6 +1212,41 @@ services:
       CV_API_URL: "${CRON_CV_API_URL}"
     entrypoint: [ "python3", "sync_sms_manager.py" ]
 
+  # Summary
+  # =======
+  # brief:  trigger sync of mqtt monitoring metrics
+  #
+  # Description
+  # ===========
+  # Fetches monitoring metrics from the mqtt broker and inserts it into TimeIO.
+  worker-monitor-mqtt:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: monitor_mqtt
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: monitor_mqtt
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DSN: "${DATABASE_ADMIN_DSN}"
+      MONITORING_SCHEMA: "${MONITORING_DATABASE_USER}"
+    entrypoint: [ "python3", "run_mqtt_monitoring.py" ]
+
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
@@ -1178,6 +1255,7 @@ services:
       dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CRON_SCHEDULER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
@@ -1214,6 +1292,7 @@ services:
       API_SYNC_TOPIC: sync_ext_apis
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
+      MQTT_MONITORING_TOPIC: monitor_mqtt
       DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
       DB_HOST: "${DATABASE_ADMIN_HOST}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
@@ -1234,9 +1313,61 @@ services:
         max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
+  keycloak:
+    image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
+    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN_USER}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASS}"
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://${KEYCLOAK_DATABASE_HOST}/${KEYCLOAK_DATABASE_NAME}"
+      KC_DB_SCHEMA: "${KEYCLOAK_DATABASE_USER}"
+      KC_DB_USERNAME: "${KEYCLOAK_DATABASE_USER}"
+      KC_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
+      KC_PROXY_HEADERS: "${KEYCLOAK_PROXY_HEADERS}"
+      KC_HTTP_ENABLED: "${KEYCLOAK_HTTP_ENABLED}"
+      KC_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
+      KC_HTTP_RELATIVE_PATH: "${KEYCLOAK_HTTP_RELATIVE_PATH}"
+      KC_HEALTH_ENABLED: "true"
+      # Helmholtz AAI config (used in configuration template)
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_AUTH_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2-as/oauth2-authz"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_TOKEN_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/token"
+      KEYCLOAK_HELMHOLTZ_AAI_OAUTH_USER_INFO_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/userinfo"
+      KEYCLOAK_HELMHOLTZ_AAI_ISSUER: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2"
+      KEYCLOAK_HELMHOLTZ_AAI_JWKS_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/jwk"
+      KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
+      KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
+      # Keycloak client config (used in configuration template)
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: "[\"${THING_MANAGEMENT_FRONTEND_APP_URL}/login/callback\"]"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "${THING_MANAGEMENT_FRONTEND_APP_URL}/login"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
+      KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
+    healthcheck:
+      test: >
+        bash -c "
+          exec 3<>/dev/tcp/localhost/${KEYCLOAK_PORT} &&
+          echo -e "GET /keycloak/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3
+        "
+      interval: 3s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+    volumes:
+      - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
+    command:
+      - ${KEYCLOAK_START_COMMAND}
+      - --import-realm
+      - --http-port=${KEYCLOAK_PORT}
+
   mqtt-cat:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "eclipse-mosquitto:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
+    image: "${MQTT_CAT_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_CAT_MOSQUITTO_IMAGE_TAG}"
     depends_on:
       mqtt-broker:
         condition: service_started
@@ -1253,7 +1384,7 @@ services:
       --id "mqtt-cat"
 
   monitoring:
-    image: "gcr.io/cadvisor/cadvisor:${MONITORING_CADVISOR_IMAGE_TAG}"
+    image: "${MONITORING_CADVISOR_IMAGE_REGISTRY}:${MONITORING_CADVISOR_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     container_name: cadvisor
     ports:
