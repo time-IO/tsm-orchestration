@@ -24,6 +24,7 @@ services:
     restart: no
     user: "${UID}:${GID}"
     volumes:
+      - ./init/init.sh:/init.sh:ro
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/volume/minio"
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/volume/cron"
       - "${DATABASE_PERSISTENCE_VOLUME:-database}:/tmp/volume/database"

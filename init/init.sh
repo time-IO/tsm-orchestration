@@ -121,4 +121,5 @@ tree -pugfi /home/tsm/html
 if [ ! -f $CRONTAB ]; then
     touch $CRONTAB
     chmod 666 $CRONTAB
+    echo "# * * * * * /place-sms-and-other-manual-commands-here.sh" >> $CRONTAB
 fi
