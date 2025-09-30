@@ -14,7 +14,7 @@ from timeio.journaling import Journal
 from timeio.common import ObservationResultType
 from timeio.parser.typehints import ObservationPayloadT
 
-journal = Journal("MqttParser")
+journal = Journal("MqttParser", errors="warn")
 
 
 @dataclass

@@ -20,7 +20,7 @@ from timeio.parser import get_parser
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
 logger = logging.getLogger("file-ingest")
-journal = Journal("Parser")
+journal = Journal("Parser", errors="warn")
 
 
 class ParserJobHandler(AbstractHandler):
