@@ -29,7 +29,7 @@ FROM base AS build
 RUN apt-get -y update \
     && apt-get -y --no-install-recommends install \
       git openssh-client \
-      python3-pip python3-venv \
+      python3-pip \
       curl \
       unzip
 
@@ -38,9 +38,10 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc 
     && chmod a+x /usr/local/bin/mc
 
 # add requirements
-COPY src/requirements.dispatcher.txt /tmp/requirements.txt
+COPY src/requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip \
     && pip install \
+        -- user \
         --no-cache-dir \
         --no-warn-script-location -r \
         /tmp/requirements.txt
