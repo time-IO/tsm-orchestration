@@ -9,7 +9,7 @@ import warnings
 
 
 from abc import abstractmethod
-from typing import Any, cast
+from typing import Any, cast, Optional
 from datetime import datetime
 
 import pandas as pd
@@ -34,7 +34,7 @@ class PandasParser(AbcParser):
         raise NotImplementedError
 
     def to_observations(
-        self, data: pd.DataFrame, origin: str, parser_id: int
+        self, data: pd.DataFrame, origin: str, parser_id: Optional[int] = None
     ) -> list[ObservationPayloadT]:
         observations = []
 
@@ -87,7 +87,7 @@ class PandasParser(AbcParser):
                     "origin": origin,
                     "column_header": col,
                     "parsed_at": datetime.now().isoformat(),
-                    "parsed_with_parser": parser_id,
+                    "parsed_with_parser": parser_id if parser_id is not None else "n/a",
                 }
             )
 
