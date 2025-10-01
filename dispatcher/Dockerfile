@@ -41,7 +41,7 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc 
 COPY src/requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip \
     && pip install \
-        -- user \
+        --user \
         --no-cache-dir \
         --no-warn-script-location -r \
         /tmp/requirements.txt
