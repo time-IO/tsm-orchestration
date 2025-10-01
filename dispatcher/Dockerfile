@@ -38,15 +38,12 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc 
     && chmod a+x /usr/local/bin/mc
 
 # add requirements
-COPY src/constraints.txt /tmp/constraints.txt
 COPY src/requirements.dispatcher.txt /tmp/requirements.txt
-RUN python3 -m venv /venv \
-    && . /venv/bin/activate \
-    && pip install --upgrade pip \
+RUN pip install --upgrade pip \
     && pip install \
         --no-cache-dir \
-        --no-warn-script-location \
-        -r /tmp/requirements.txt -c /tmp/constraints.txt
+        --no-warn-script-location -r \
+        /tmp/requirements.txt
 
 FROM base AS dist
 
@@ -55,14 +52,13 @@ ARG UID=1000
 # Create a group and user
 RUN useradd --uid $UID -m appuser
 
-COPY --from=build /venv /venv
+COPY --chown=appuser --from=build /root/.local /home/appuser/.local
 COPY --from=build /usr/local/bin/mc /usr/local/bin/mc
 
 # Tell docker that all future commands should run as the appuser user
 USER appuser
 
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
-ENV PATH="/venv/bin:$PATH"
 WORKDIR /home/appuser/app/src
 
 COPY --chown=appuser src .

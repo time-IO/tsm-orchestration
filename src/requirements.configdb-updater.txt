@@ -1,6 +1,0 @@
-psycopg[binary]
-psycopg-pool
-paho-mqtt
-cryptography
-typing-extensions
-pytest-subtests
