@@ -285,7 +285,11 @@ class DatastreamSTA:
         assert isinstance(labels.index, pd.DatetimeIndex)
         unknown = labels.index.difference(self._data.index)
         if not unknown.empty:
-            pass  # todo warn about unknown labels
+            n = len(unknown)
+            logger.warning(
+                f"Some timestamps does not fit the data: {str(unknown[:5])}"
+                + (f"and {n - 5} more ..." if n > 5 else "")
+            )
         index = labels.index.intersection(self._data.index)
 
         if isinstance(labels, pd.DataFrame):
