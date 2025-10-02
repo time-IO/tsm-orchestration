@@ -122,7 +122,7 @@ class ParserJobHandler(AbstractHandler):
 
         object_tags = Tags.new_object_tags()
         object_tags["parsed_at"] = datetime.now().isoformat()
-        object_tags["parsed_with_parser"] = str(parser_id)
+        object_tags["parser_id"] = str(parser_id)
         self.minio.set_object_tags(bucket_name, filename, object_tags)
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}

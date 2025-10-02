@@ -84,14 +84,14 @@ def test_dirty_data_parsing():
     params = json.loads(obs[0]["parameters"])
     assert params["origin"] == "test"
     assert params["column_header"] == "3"
-    assert params["parsed_with_parser"] == "n/a"
+    assert params["parser_id"] == None
 
     assert obs[1]["result_time"] == "2021-09-09T05:45:00"
     assert obs[1]["result_number"] == 989.7
     params = json.loads(obs[1]["parameters"])
     assert params["origin"] == "test"
     assert params["column_header"] == "3"
-    assert params["parsed_with_parser"] == "n/a"
+    assert params["parser_id"] == None
 
 
 MULTIDATECOLUMDATA = """
