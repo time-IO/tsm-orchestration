@@ -273,9 +273,9 @@ class SmsMaterializedViewsSyncer:
                     for matview in self.materialized_views:
                         view_name = matview[0]
                         cur.execute(
-                            psysql.SQL("REFRESH MATERIALIZED VIEW {}").format(
-                                psysql.Identifier(view_name)
-                            )
+                            psysql.SQL(
+                                "REFRESH MATERIALIZED VIEW {} CONCURRENTLY"
+                            ).format(psysql.Identifier(view_name))
                         )
                         self.logger.info(
                             f"Refreshed materialized sms view: {view_name}"
