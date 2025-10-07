@@ -20,7 +20,7 @@ from timeio.parser import get_parser
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
 logger = logging.getLogger("file-ingest")
-journal = Journal("Parser")
+journal = Journal("Parser", errors="warn")
 
 
 class ParserJobHandler(AbstractHandler):
@@ -59,6 +59,7 @@ class ParserJobHandler(AbstractHandler):
         thing_uuid = thing.uuid
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
+        parser_id = thing.s3_store.file_parser_id
 
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
@@ -80,7 +81,7 @@ class ParserJobHandler(AbstractHandler):
             warnings.simplefilter("always", ParsingWarning)
             try:
                 df = parser.do_parse(rawdata, schema, thing_uuid)
-                obs = parser.to_observations(df, source_uri)
+                obs = parser.to_observations(df, source_uri, parser_id)
             except ParsingError as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
@@ -121,6 +122,7 @@ class ParserJobHandler(AbstractHandler):
 
         object_tags = Tags.new_object_tags()
         object_tags["parsed_at"] = datetime.now().isoformat()
+        object_tags["parser_id"] = str(parser_id)
         self.minio.set_object_tags(bucket_name, filename, object_tags)
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}

@@ -11,7 +11,7 @@ from timeio.parser.pandas_parser import PandasParser
 from timeio.errors import ParsingError, ParsingWarning
 from timeio.journaling import Journal
 
-journal = Journal("JsonParser")
+journal = Journal("JsonParser", errors="warn")
 
 
 class JsonParser(PandasParser):
