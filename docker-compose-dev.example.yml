@@ -45,6 +45,18 @@ services:
     volumes:
       - ./src:/home/appuser/app/src
 
+  worker-sync-extsftp:
+    volumes:
+      - ./src:/home/appuser/app/src
+
+  worker-sync-extapis:
+    volumes:
+      - ./src:/home/appuser/app/src
+
+  worker-sync-sms:
+    volumes:
+      - ./src:/home/appuser/app/src
+
   frontend:
     environment:
       - "DJANGO_HELMHOLTZ_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
