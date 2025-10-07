@@ -145,13 +145,14 @@ class Saqc(QcTool):
             return json.dumps(
                 {
                     "annotationType": row["annotationType"],
-                    "annotation": row["annotation"],
+                    "annotation": str(row["annotation"]),
                     "properties": {
                         "version": row["version"],
                         "measure": row["measure"],
                         "userLabel": row["userLabel"],
                     },
-                }
+                },
+                allow_nan=False,
             )
 
         return frame.apply(jsonify, axis=1)
