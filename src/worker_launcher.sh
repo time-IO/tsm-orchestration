@@ -17,11 +17,7 @@ start_time=$(date +%s)
 
 while true; do
   echo "Attempt $((attempts + 1)) of ${MAX_ATTEMPTS} to start container with command: $CMD"
-  $CMD
-  exit_code=$?
-  if [[ $exit_code -eq 0 ]]; then
-    exit 0
-  fi
+  $CMD && exit 0
 
   # Increment attempts and check time window
   attempts=$((attempts + 1))
