@@ -86,7 +86,7 @@ class DatastreamSTA:
 
         self._thing: feta.Thing | None = None
         self._conn = db_conn
-        index = pd.DatetimeIndex([], tz="UTC")
+        index = pd.DatetimeIndex([])
         self._data = pd.DataFrame([], index, self._columns, dtype=object)
         self._unflagged: tuple[datetime, datetime] | None = None
 
@@ -159,14 +159,21 @@ class DatastreamSTA:
         with self._conn.cursor() as cur:
             cur.execute(sql.SQL("set search_path to {}").format(self.schema))
             cur.execute(query, (self.stream_id, date_start, date_end, limit))
+            df = self._db_to_df(cur)
 
-            data = None
-            index = pd.DatetimeIndex([], tz="UTC")
-            if cur.rowcount > 0:
-                timestamps, data = zip(*map(_extract, cur))
-                index = pd.to_datetime(timestamps, utc=True)
+        logger.debug(f"%s got %s data points", prefix, len(df.index))
+        return df
 
-        logger.debug(f"%s got %s data points", prefix, len(index))
+    def _db_to_df(self, cur: psycopg.Cursor) -> pd.DataFrame:
+        data = None
+        index = pd.DatetimeIndex([])
+        if cur.rowcount > 0:
+            timestamps, data = zip(*map(_extract, cur))
+            index = pd.to_datetime(timestamps, utc=True)
+            # We remove the explicit TZ to avoid errors from mixing TZ aware
+            # and TZ unaware pandas objects. We handle all as if UTC.
+            index = index.tz_localize(None)
+
         return pd.DataFrame(data, index, self._columns, dtype=object)
 
     def _fetch_context(self, date_start: TimestampT, window: WindowT) -> pd.Timestamp:
@@ -183,9 +190,14 @@ class DatastreamSTA:
             if new_start < present_data_start:
                 fetched = self._fetch(new_start, present_data_start)
                 self._append(fetched)
-            return new_start
+            return self._data.loc[new_start:].index.min()
 
         assert isinstance(window, int)
+
+        # early exit for trivial case
+        if window == 0:
+            return date_start
+
         # We must account that pandas is inclusive and the
         # context-window is the number of data points BEFORE
         # the first data to process. The query to fetch the
@@ -195,10 +207,18 @@ class DatastreamSTA:
         # but this is acceptable.
         window += 1
         nr_obs = window - len(self._data.loc[:date_start])
+
         if nr_obs > 1:
+            # we fetch the missing (exactly nr_obs) observations
             fetched = self._fetch("-Infinity", present_data_start, limit=nr_obs)
             self._append(fetched)
-        return self._data.loc[:date_start].index[-window]
+
+        # read data again(!), because it might have changed
+        data_index = self._data.loc[:date_start].index
+        new_start = min(window, len(data_index))
+        return self._data.loc[:date_start].index[-new_start]
+
+
 
     def get_unprocessed_range(
         self,
@@ -241,7 +261,7 @@ class DatastreamSTA:
             self._thing = feta.Thing.from_uuid(thing_uuid, dsn=self._conn)
 
         if date_start is None:
-            index = pd.DatetimeIndex([], tz="UTC")
+            index = pd.DatetimeIndex([])
             return pd.DataFrame([], index, self._columns, dtype=object)
 
         if self._data.empty:
@@ -412,20 +432,14 @@ class ProductStream(Datastream):
             f"%s fetching data between dates %s and %s.", we_are, date_start, date_end
         )
 
+        uuid = self._thing.uuid
         with self._conn.cursor() as cur:
             cur.execute(sql.SQL("set search_path to {}").format(self.schema))
-            cur.execute(
-                query, (self._thing.uuid, self.position, date_start, date_end, limit)
-            )
+            cur.execute(query, (uuid, self.position, date_start, date_end, limit))
+            df = self._db_to_df(cur)
 
-            data = None
-            index = pd.DatetimeIndex([], tz="UTC")
-            if cur.rowcount > 0:
-                timestamps, data = zip(*map(_extract, cur))
-                index = pd.to_datetime(timestamps, utc=True)
-
-        logger.debug(f"%s got %s data points", we_are, len(index))
-        return pd.DataFrame(data, index, self._columns, dtype=object)
+        logger.debug(f"%s got %s data points", we_are, len(df.index))
+        return df
 
     def get_unprocessed_range(self) -> tuple[None, None]:
         """
@@ -443,7 +457,7 @@ class ProductStream(Datastream):
         """
         index = data.index
         if data.empty:
-            index = pd.DatetimeIndex([], tz="UTC")
+            index = pd.DatetimeIndex([])
         assert isinstance(index, pd.DatetimeIndex)
 
         self._data = pd.DataFrame(columns=self._columns, index=index)
