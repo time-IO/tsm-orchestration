@@ -7,8 +7,10 @@ import json
 import logging
 import warnings
 
+
 from abc import abstractmethod
 from typing import Any, cast
+from datetime import datetime
 
 import pandas as pd
 
@@ -32,7 +34,7 @@ class PandasParser(AbcParser):
         raise NotImplementedError
 
     def to_observations(
-        self, data: pd.DataFrame, origin: str
+        self, data: pd.DataFrame, origin: str, parser_id: int | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
 
@@ -80,7 +82,14 @@ class PandasParser(AbcParser):
             chunk = chunk.reset_index()
             chunk["result_type"] = result_type
             chunk["datastream_pos"] = str(col)
-            chunk["parameters"] = json.dumps({"origin": origin, "column_header": col})
+            chunk["parameters"] = json.dumps(
+                {
+                    "origin": origin,
+                    "column_header": col,
+                    "parsed_at": datetime.now().isoformat(),
+                    "parser_id": parser_id,
+                }
+            )
 
             observations.extend(chunk.to_dict(orient="records"))
         return observations

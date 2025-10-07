@@ -34,7 +34,7 @@ COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info
 RUN mkdir -p $CATALINA_HOME/conf/Catalina/localhost \
-    && apt-get update && apt-get install wget \
+    && apt-get -y update && apt-get -y install wget \
     && apt-get clean \
     && addgroup --system --gid ${GID} tomcat \
     && adduser --system --uid ${UID} --gid ${GID} --home /home/tomcat tomcat \

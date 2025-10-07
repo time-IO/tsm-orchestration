@@ -1,7 +1,9 @@
 ARG BASE_IMAGE_REGISTRY=python
-ARG BASE_IMAGE_TAG=3.11-slim
+ARG BASE_IMAGE_TAG=3.13-slim
 
-FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
+# see https://hub.docker.com/_/python/
+# e.g. python:3.13-slim
+FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG} as base
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -13,24 +15,30 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.revision=$VCS_REF \
     org.opencontainers.image.created=$BUILD_DATE
 
-# Dockerfile template from:
-# https://hub.docker.com/_/python/
 
-WORKDIR /usr/src/app
+FROM base as build
 
-COPY src/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY src/requirements.txt /tmp/requirements.txt
+RUN python -m venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY src .
 
-# create a non-root user
+FROM base AS dist
+
+# copy the python binaries (with baked-in requirement packages) to the actual stage
+COPY --from=build /opt/venv opt/venv
+# first serach in /opt/venv/bin for binaries (e.g. python3)
+ENV PATH="/opt/venv/bin:$PATH"
+
+# create a non-root user and run all further commands as 'appuser'
 ARG UID=1000
 RUN adduser --uid ${UID} --disabled-password appuser
-RUN chown -R appuser:appuser /usr/src/app
 USER appuser
 
-# enable sslmode verify-full
+# Certificaters are needed if sslmode=verify-full
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
+WORKDIR /home/appuser/app
+COPY --chown=appuser src .
 
 ENTRYPOINT ["python3"]
 

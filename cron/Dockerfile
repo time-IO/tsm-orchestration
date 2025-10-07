@@ -1,5 +1,5 @@
 ARG BASE_IMAGE_REGISTRY=debian
-ARG BASE_IMAGE_TAG=bullseye-slim
+ARG BASE_IMAGE_TAG=stable-slim
 
 FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
 
@@ -15,7 +15,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl tini python3 python3-pip inotify-tools \
+    && apt-get install -y --no-install-recommends curl tini python3 python3-venv inotify-tools \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
@@ -29,8 +29,9 @@ RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPE
     && chmod 755 /supercronic-entrypoint.sh \
     && chmod 755 /supercronic-health.sh
 
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+ENV PATH="/opt/venv/bin:$PATH"
 
 ARG UID=1000
 ARG USER=tsm
