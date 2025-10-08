@@ -218,8 +218,6 @@ class DatastreamSTA:
         new_start = min(window, len(data_index))
         return self._data.loc[:date_start].index[-new_start]
 
-
-
     def get_unprocessed_range(
         self,
     ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
