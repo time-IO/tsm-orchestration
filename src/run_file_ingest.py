@@ -59,12 +59,19 @@ class ParserJobHandler(AbstractHandler):
         thing_uuid = thing.uuid
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
-        parser_id = thing.s3_store.file_parser_id
+        prev_tags = self.get_previous_tags(bucket_name, filename)
+        if prev_tags:
+            parser_id = int(prev_tags["parser_id"])
+            logger.info(f"File was previously parsed by parser with id '{parser_id}'")
+        else:
+            parser_id = thing.s3_store.file_parser_id
+            logger.info(
+                f"No previous successful parsing run found. Using parser with id '{parser_id}'"
+            )
 
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
             return
-
         source_uri = f"{bucket_name}/{filename}"
 
         logger.debug(f"loading parser for {thing_uuid}")
@@ -86,9 +93,11 @@ class ParserJobHandler(AbstractHandler):
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
+                self.tag_parsing_failed(bucket_name, filename)
                 raise e
             except Exception as e:
                 journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
+                self.tag_parsing_failed(bucket_name, filename)
                 raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
@@ -109,6 +118,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
+            self.tag_parsing_failed(bucket_name, filename)
             raise e
 
         if len(obs) > 0:
@@ -137,6 +147,30 @@ class ParserJobHandler(AbstractHandler):
             "s3:ObjectCreated:Put",
             "s3:ObjectCreated:CompleteMultipartUpload",
         )
+
+    def get_previous_tags(self, bucket_name, filename):
+        versions = list(
+            self.minio.list_objects(bucket_name, prefix=filename, include_version=True)
+        )
+        if not versions:
+            return None
+        versions.sort(key=lambda v: v.last_modified, reverse=True)
+        for obj in versions:
+            # latest object version refers always to the current run
+            if obj.is_latest == "true":
+                continue
+            tags = self.minio.get_object_tags(
+                bucket_name, filename, version_id=obj.version_id
+            )
+            if tags and "parsed_at" in tags and "parser_id" in tags:
+                return tags
+
+        return None
+
+    def tag_parsing_failed(self, bucket_name, filename):
+        object_tags = Tags.new_object_tags()
+        object_tags["parsing_job_failed"] = "True"
+        self.minio.set_object_tags(bucket_name, filename, object_tags)
 
     def read_file(self, bucket_name, object_name) -> str:
         stat = self.minio.stat_object(bucket_name, object_name)
