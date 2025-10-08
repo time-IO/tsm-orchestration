@@ -55,5 +55,6 @@ def main(interval, project_uuid, qc_settings_name):
     json_payload = json.dumps(payload)
     publish_single(topic, json_payload)
 
+
 if __name__ == "__main__":
     main()
