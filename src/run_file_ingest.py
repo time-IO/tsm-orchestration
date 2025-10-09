@@ -156,9 +156,6 @@ class ParserJobHandler(AbstractHandler):
             return None
         versions.sort(key=lambda v: v.last_modified, reverse=True)
         for obj in versions:
-            # latest object version refers always to the current run
-            if obj.is_latest == "true":
-                continue
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
