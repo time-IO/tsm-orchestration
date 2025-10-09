@@ -59,15 +59,13 @@ class ParserJobHandler(AbstractHandler):
         thing_uuid = thing.uuid
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
-        prev_tags = self.get_previous_tags(bucket_name, filename)
-        if prev_tags:
-            parser_id = int(prev_tags["parser_id"])
-            logger.info(f"File was previously parsed by parser with id '{parser_id}'")
+        tags = self.get_parser_tags(bucket_name, filename)
+        if tags is not None:
+            parser_id = int(tags["parser_id"])
+            logger.info(f"Re-parsing file with parser from file tag {parser_id}")
         else:
             parser_id = thing.s3_store.file_parser_id
-            logger.info(
-                f"No previous successful parsing run found. Using parser with id '{parser_id}'"
-            )
+            logger.info(f"No parser file tag found, using default parser {parser_id=}")
 
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
@@ -118,7 +116,6 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
-            self.tag_parsing_failed(bucket_name, filename)
             raise e
 
         if len(obs) > 0:
@@ -148,7 +145,7 @@ class ParserJobHandler(AbstractHandler):
             "s3:ObjectCreated:CompleteMultipartUpload",
         )
 
-    def get_previous_tags(self, bucket_name, filename):
+    def get_parser_tags(self, bucket_name, filename):
         versions = list(
             self.minio.list_objects(bucket_name, prefix=filename, include_version=True)
         )
