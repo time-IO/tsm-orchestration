@@ -160,7 +160,14 @@ class ParserJobHandler(AbstractHandler):
         return None
 
     def set_tags(self, bucket_name, filename, parser_id, parsing_successfull):
-        object_tags = Tags.new_object_tags()
+        # reparsing won't create new object version so we need to overwrite the latest version tags
+        try:
+            object_tags = self.minio.get_object_tags(bucket_name, filename)
+            if object_tags is None:
+                object_tags = Tags.new_object_tags()
+        except Exception:
+            object_tags = Tags.new_object_tags()
+
         object_tags["parsed_at"] = datetime.now().isoformat()
         object_tags["parser_id"] = parser_id
         object_tags["parsing_successfull"] = parsing_successfull
