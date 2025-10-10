@@ -31,15 +31,11 @@ def parser_interval(interval_str):
 @click.command()
 @click.help_option("--help", "-h")
 @click.option(
-    "--interval", required=False, help="Time interval (e.g., '5m', '1h', '1d')"
+    "--interval", required=True, help="Time interval (e.g., '5m', '1h', '1d')"
 )
-@click.option("--project-uuid", required=False, help="Project UUID")
-@click.option("--qc-settings-name", required=False, help="QC Settings Name")
+@click.option("--project-uuid", required=True, help="Project UUID")
+@click.option("--qc-settings-name", required=True, help="QC Settings Name")
 def main(interval, project_uuid, qc_settings_name):
-    if len(sys.argv) < 4:
-        # Nicht alle Argumente: Hilfe anzeigen und beenden
-        click.echo(main.get_help(click.Context(main)))
-        sys.exit(0)
     interval_td = parser_interval(interval)
     end_date = datetime.now().replace(microsecond=0)
     start_date = end_date - interval_td
@@ -57,4 +53,8 @@ def main(interval, project_uuid, qc_settings_name):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        with click.Context(main) as ctx:
+            click.echo(main.get_help(ctx))
+        sys.exit(0)
     main()
