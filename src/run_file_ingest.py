@@ -91,11 +91,11 @@ class ParserJobHandler(AbstractHandler):
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
-                self.tag_parsing_failed(bucket_name, filename)
+                self.set_tags(bucket_name, filename, str(parser_id), "False")
                 raise e
             except Exception as e:
                 journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.tag_parsing_failed(bucket_name, filename)
+                self.set_tags(bucket_name, filename, str(parser_id), "False")
                 raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
@@ -116,6 +116,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
+            self.set_tags(bucket_name, filename, str(parser_id), "False")
             raise e
 
         if len(obs) > 0:
@@ -127,10 +128,7 @@ class ParserJobHandler(AbstractHandler):
                 thing_uuid,
             )
 
-        object_tags = Tags.new_object_tags()
-        object_tags["parsed_at"] = datetime.now().isoformat()
-        object_tags["parser_id"] = str(parser_id)
-        self.minio.set_object_tags(bucket_name, filename, object_tags)
+        self.set_tags(bucket_name, filename, str(parser_id), "True")
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}
         )
@@ -156,14 +154,16 @@ class ParserJobHandler(AbstractHandler):
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
-            if tags and "parsed_at" in tags and "parser_id" in tags:
+            if tags and tags["parsing_successfull"] == "True":
                 return tags
 
         return None
 
-    def tag_parsing_failed(self, bucket_name, filename):
+    def set_tags(self, bucket_name, filename, parser_id, parsing_successfull):
         object_tags = Tags.new_object_tags()
-        object_tags["parsing_job_failed"] = "True"
+        object_tags["parsed_at"] = datetime.now().isoformat()
+        object_tags["parser_id"] = parser_id
+        object_tags["parsing_successfull"] = parsing_successfull
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
     def read_file(self, bucket_name, object_name) -> str:
