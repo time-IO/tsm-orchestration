@@ -6,6 +6,7 @@ import json
 from fnmatch import fnmatch
 
 import click
+from datetime import datetime, timezone
 from minio import Minio
 import paho.mqtt.client as mqtt
 
@@ -52,6 +53,8 @@ def setupMQTT(host, username, password):
 @click.option("--mqtt-user", default="mqtt", envvar="MQTT_USER")
 @click.option("--mqtt-password", default="mqtt", envvar="MQTT_PASSWORD")
 @click.option("--filename-pattern", default=None)
+@click.option("--start-date", default=None)
+@click.option("--end-date", default=None)
 def main(
     configdb_dsn,
     thing_uuid,
@@ -61,7 +64,9 @@ def main(
     mqtt_host,
     mqtt_user,
     mqtt_password,
-    filename_pattern
+    filename_pattern,
+    start_date,
+    end_date,
 ):
     store = Thing.from_uuid(thing_uuid, dsn=configdb_dsn).raw_data_storage
 
@@ -76,24 +81,35 @@ def main(
     bucket = store.bucket
     fnpattern_from_thing = store.filename_pattern
     fnpattern_from_job = filename_pattern
+    if start_date:
+        start = datetime.fromisoformat(start_date)
+        start = start if start.tzinfo else start.replace(tzinfo=timezone.utc)
+    if end_date:
+        end = datetime.fromisoformat(end_date)
+        end = end if end.tzinfo else end.replace(tzinfo=timezone.utc)
 
     mqtt.loop_start()
 
-    message = {"EventName": "s3:ObjectCreated:Put"}
+    message = {"EventName": "s3:ObjectCreated:Put", "reparsing": True}
     for obj in minio.list_objects(bucket):
         fname = obj.object_name
-        cond1 = fnmatch(fname, fnpattern_from_thing)
-        cond2 = not fnpattern_from_job or fnmatch(fname, fnpattern_from_job)
-        if cond1 and cond2:
-            message["Key"] = f"{bucket}/{fname}"
-            logging.info(f"republishing file: {message['Key']}")
-            result = mqtt.publish(
-                topic="object_storage_notification", payload=json.dumps(message), qos=1
-            )
-            if result[0] != 0:
-                logger.warning(
-                    f"Failed to deliver reprocessing message for file: {message['Key']}"
+        fdate = obj.last_modified
+        if fnmatch(fname, fnpattern_from_thing):
+            cond2 = not fnpattern_from_job or fnmatch(fname, fnpattern_from_job)
+            cond3 = True if not start_date else fdate >= start
+            cond4 = True if not end_date else fdate <= end
+            if cond2 and cond3 and cond4:
+                message["Key"] = f"{bucket}/{fname}"
+                logging.info(f"republishing file: {message['Key']}")
+                result = mqtt.publish(
+                    topic="object_storage_notification_test",
+                    payload=json.dumps(message),
+                    qos=1,
                 )
+                if result[0] != 0:
+                    logger.warning(
+                        f"Failed to deliver reprocessing message for file: {message['Key']}"
+                    )
 
     mqtt.loop_stop()
     mqtt.disconnect()
