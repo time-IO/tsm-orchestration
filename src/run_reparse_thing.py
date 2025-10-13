@@ -51,6 +51,7 @@ def setupMQTT(host, username, password):
 @click.option("--mqtt-host", default="localhost:1883", envvar="MQTT_HOST")
 @click.option("--mqtt-user", default="mqtt", envvar="MQTT_USER")
 @click.option("--mqtt-password", default="mqtt", envvar="MQTT_PASSWORD")
+@click.option("--filename-pattern", default=None)
 def main(
     configdb_dsn,
     thing_uuid,
@@ -60,6 +61,7 @@ def main(
     mqtt_host,
     mqtt_user,
     mqtt_password,
+    filename_pattern
 ):
     store = Thing.from_uuid(thing_uuid, dsn=configdb_dsn).raw_data_storage
 
@@ -72,14 +74,17 @@ def main(
     mqtt = setupMQTT(mqtt_host, mqtt_user, mqtt_password)
 
     bucket = store.bucket
-    fnpattern = store.filename_pattern
+    fnpattern_from_thing = store.filename_pattern
+    fnpattern_from_job = filename_pattern
 
     mqtt.loop_start()
 
     message = {"EventName": "s3:ObjectCreated:Put"}
     for obj in minio.list_objects(bucket):
         fname = obj.object_name
-        if fnmatch(fname, fnpattern):
+        cond1 = fnmatch(fname, fnpattern_from_thing)
+        cond2 = not fnpattern_from_job or fnmatch(fname, fnpattern_from_job)
+        if cond1 and cond2:
             message["Key"] = f"{bucket}/{fname}"
             logging.info(f"republishing file: {message['Key']}")
             result = mqtt.publish(
