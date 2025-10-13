@@ -92,11 +92,11 @@ class AbstractHandler(ABC):
                 f"Status: PARSING ERROR  (Decoding/parsing of payload failed)\n"
                 f"Payload:\n{message.payload!r}\n"
                 f"{traceback.format_exc()}"
-                f"========================= SYS EXIT =========================\n",
+                f"========================= CRITICAL ERROR =========================\n",
             )
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
-            sys.exit(1)
+            return
 
         try:
             logger.debug(f"calling %s.act()", self.__class__.__qualname__)
@@ -111,6 +111,7 @@ class AbstractHandler(ABC):
                 f"======================== USER ERROR ========================\n",
             )
             return
+
         except (DataNotFoundError, NoDataWarning):
             logger.error(
                 f"\n======================== DATA ERROR ========================\n"
@@ -127,11 +128,11 @@ class AbstractHandler(ABC):
                 f"Status: UNHANDLED ERROR  (See exception and traceback below)\n"
                 f"Content:\n{content!r}\n"
                 f"{traceback.format_exc()}"
-                f"========================= SYS EXIT =========================\n",
+                f"========================= CRITICAL ERROR =========================\n",
             )
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
-            sys.exit(1)
+            return
 
         logger.info(
             f"\n===================== PROCESSING DONE ======================\n"
