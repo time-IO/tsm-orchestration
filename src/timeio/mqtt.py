@@ -56,26 +56,18 @@ class AbstractHandler(ABC):
         # healthcheck settings
         self._last_message = time.time()
         self._healthcheck_topic = f"health/{self.mqtt_client_id}"
-        self._healthcheck_interval = int(os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60))  # seconds
-        self._healthcheck_timeout = int(os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300))  # seconds
-        self._healthcheck_watcher_interval = int(os.getenv("MQTT_HEALTHCHECK_WATCHER_INTERVAL", 60))
+        self._healthcheck_interval = int(
+            os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60)
+        )  # seconds
+        self._healthcheck_timeout = int(
+            os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300)
+        )  # seconds
+        self._healthcheck_watcher_interval = int(
+            os.getenv("MQTT_HEALTHCHECK_WATCHER_INTERVAL", 60)
+        )
         threading.Thread(target=self._healthcheck_sender, daemon=True).start()
         threading.Thread(target=self._healthcheck_watcher, daemon=True).start()
         self._mid_to_topic = {}
-
-    def _healthcheck_sender(self):
-        while True:
-            payload = json.dumps({"ping": time.asctime()})
-            self.mqtt_client.publish(self._healthcheck_topic, payload=payload, qos=0, retain=False)
-            time.sleep(self._healthcheck_interval)
-
-    def _healthcheck_watcher(self):
-        while True:
-            if time.time() - self._last_message > self._healthcheck_timeout:
-                logger.error("Healthcheck-Timeout: MQTT-Loop seems to be stuck. Exiting.")
-                self.mqtt_client.disconnect()
-                os._exit(1)
-            time.sleep(self._healthcheck_watcher_interval)
 
     def run_loop(self) -> typing.NoReturn:
         logger.info(f"Setup ok, starting listening loop")
@@ -127,7 +119,11 @@ class AbstractHandler(ABC):
             # the exception again (with unnecessary clutter)
             return
 
-        if message.topic == self._healthcheck_topic and isinstance(content, dict) and "ping" in content:
+        if (
+            message.topic == self._healthcheck_topic
+            and isinstance(content, dict)
+            and "ping" in content
+        ):
             logger.debug(f"Healthcheck pong received: {content['ping']}")
             return
 
@@ -172,6 +168,24 @@ class AbstractHandler(ABC):
             f"Status: Success  (Message was processed successfully)\n"
             f"===================== PROCESSING DONE ======================\n",
         )
+
+    def _healthcheck_sender(self):
+        while True:
+            payload = json.dumps({"ping": time.asctime()})
+            self.mqtt_client.publish(
+                self._healthcheck_topic, payload=payload, qos=0, retain=False
+            )
+            time.sleep(self._healthcheck_interval)
+
+    def _healthcheck_watcher(self):
+        while True:
+            if time.time() - self._last_message > self._healthcheck_timeout:
+                logger.error(
+                    "Healthcheck-Timeout: MQTT-Loop seems to be stuck. Exiting."
+                )
+                self.mqtt_client.disconnect()
+                os._exit(1)
+            time.sleep(self._healthcheck_watcher_interval)
 
     def _decode(self, message: MQTTMessage) -> typing.Any:
         """
