@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import os
 import threading
 import time
@@ -64,7 +65,7 @@ class AbstractHandler(ABC):
         )  # seconds
         self._healthcheck_watcher_interval = int(
             os.getenv("MQTT_HEALTHCHECK_WATCHER_INTERVAL", 60)
-        )
+        )  # seconds
         threading.Thread(target=self._healthcheck_sender, daemon=True).start()
         threading.Thread(target=self._healthcheck_watcher, daemon=True).start()
         self._mid_to_topic = {}
@@ -93,7 +94,7 @@ class AbstractHandler(ABC):
 
     def on_subscribe(self, client: mqtt.Client, userdata, mid, granted_qos):
         topic = self._mid_to_topic.get(mid, "(unknown)")
-        logger.info(f"Subscribed to topic {topic!r} with QoS {granted_qos[0]}")
+        logger.info(f"Subscribed to topic {topic} with QoS {granted_qos[0]}")
 
     def on_message(self, client: mqtt.Client, userdata, message: MQTTMessage):
         logger.info(
@@ -113,11 +114,11 @@ class AbstractHandler(ABC):
                 f"Status: PARSING ERROR  (Decoding/parsing of payload failed)\n"
                 f"Payload:\n{message.payload!r}\n"
                 f"{traceback.format_exc()}"
-                f"========================= CRITICAL ERROR =========================\n",
+                f"========================= SYS EXIT =========================\n",
             )
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
-            return
+            sys.exit(1)
 
         if (
             message.topic == self._healthcheck_topic
@@ -140,7 +141,6 @@ class AbstractHandler(ABC):
                 f"======================== USER ERROR ========================\n",
             )
             return
-
         except (DataNotFoundError, NoDataWarning):
             logger.error(
                 f"\n======================== DATA ERROR ========================\n"
@@ -157,11 +157,11 @@ class AbstractHandler(ABC):
                 f"Status: UNHANDLED ERROR  (See exception and traceback below)\n"
                 f"Content:\n{content!r}\n"
                 f"{traceback.format_exc()}"
-                f"========================= CRITICAL ERROR =========================\n",
+                f"========================= SYS EXIT =========================\n",
             )
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
-            return
+            sys.exit(1)
 
         logger.info(
             f"\n===================== PROCESSING DONE ======================\n"
