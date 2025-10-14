@@ -84,12 +84,31 @@ services:
     ports:
       - "127.0.0.1:8001:8001"
 
-  thing-management-api:
+  thing-management-frontend:
+    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/quasar:latest
+    working_dir: /app
+    user: "node"
+    tty: true
+    command: ./start.sh
+    networks:
+      - default
+    environment:
+      APP_PORT: 80
+      NODE_ENV: development
+      APP_DEV_PATH: /thing-management
     volumes:
-      - "${DEV_THING_MANAGEMENT_API_DIR:-../thing-management/backend}/app:/app"
+      - "${DEV_TMM_FE_DIR:?Missing dev var}/app:/app"
+
+  thing-management-api:
     command: uvicorn main:app --reload --host 0.0.0.0 --port 8002
-    restart: "no"  
+    restart: "no"
+    volumes:
+      - "${DEV_TMM_BE_DIR:?Missing dev var}/app:/app"
+
 
 volumes:
   keycloak-data:
+  npm:
+    external: true
+  node_modules:
 
