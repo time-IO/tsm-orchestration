@@ -63,14 +63,14 @@ class AbstractHandler(ABC):
         self._healthcheck_timeout = int(
             os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300)
         )  # seconds
-        self._ts = threading.Thread(target=self._healthcheck_sender, daemon=True)
-        self._tw = threading.Thread(target=self._healthcheck_watcher, daemon=True)
+        self._st = threading.Thread(target=self._healthcheck_sender, daemon=True)
+        self._wt = threading.Thread(target=self._healthcheck_watcher, daemon=True)
         self._mid_to_topic = {}
 
     def run_loop(self) -> typing.NoReturn:
         logger.info("Setup ok, starting listening loop, healtcheck sender and watcher")
-        self._ts.start()
-        self._tw.start()
+        self._st.start()
+        self._wt.start()
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port)
         res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
         self._mid_to_topic[mid] = self.topic
