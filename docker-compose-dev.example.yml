@@ -80,11 +80,6 @@ services:
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/plugins:/opt/keycloak/providers"
-    command:
-      - ${KEYCLOAK_START_COMMAND}
-      - --import-realm
-      - --http-port=${KEYCLOAK_PORT}
-      - --spi-event-listener-mqtt-listener-enabled=true
 
   timeio-db-api:
     ports:
