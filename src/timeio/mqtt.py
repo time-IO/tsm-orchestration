@@ -63,15 +63,14 @@ class AbstractHandler(ABC):
         self._healthcheck_timeout = int(
             os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300)
         )  # seconds
-        self._healthcheck_watcher_interval = int(
-            os.getenv("MQTT_HEALTHCHECK_WATCHER_INTERVAL", 60)
-        )  # seconds
-        threading.Thread(target=self._healthcheck_sender, daemon=True).start()
-        threading.Thread(target=self._healthcheck_watcher, daemon=True).start()
+        self._ts = threading.Thread(target=self._healthcheck_sender, daemon=True)
+        self._tw = threading.Thread(target=self._healthcheck_watcher, daemon=True)
         self._mid_to_topic = {}
 
     def run_loop(self) -> typing.NoReturn:
-        logger.info(f"Setup ok, starting listening loop")
+        logger.info("Setup ok, starting listening loop, healtcheck sender and watcher")
+        self._ts.start()
+        self._tw.start()
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port)
         res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
         self._mid_to_topic[mid] = self.topic
@@ -125,7 +124,10 @@ class AbstractHandler(ABC):
             and isinstance(content, dict)
             and "ping" in content
         ):
-            logger.debug(f"Healthcheck pong received: {content['ping']}")
+            logger.info(
+                f"Healthcheck pong received: {content['ping']}\n"
+                f"===================== PONG RECEIVED ======================\n",
+            )
             return
 
         try:
@@ -185,7 +187,7 @@ class AbstractHandler(ABC):
                 )
                 self.mqtt_client.disconnect()
                 os._exit(1)
-            time.sleep(self._healthcheck_watcher_interval)
+            time.sleep(self._healthcheck_interval)
 
     def _decode(self, message: MQTTMessage) -> typing.Any:
         """
