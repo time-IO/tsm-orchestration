@@ -1381,7 +1381,7 @@
   "adminTheme" : "",
   "emailTheme" : "",
   "eventsEnabled" : false,
-  "eventsListeners" : [ "jboss-logging" ],
+  "eventsListeners" : [ "jboss-logging", "mqtt-notifier" ],
   "enabledEventTypes" : [ ],
   "adminEventsEnabled" : false,
   "adminEventsDetailsEnabled" : false,
