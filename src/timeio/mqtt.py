@@ -4,6 +4,8 @@ import json
 import logging
 import sys
 import os
+import threading
+import time
 import traceback
 import typing
 from abc import ABC, abstractmethod
@@ -52,11 +54,28 @@ class AbstractHandler(ABC):
         self.mqtt_client.on_subscribe = self.on_subscribe
         self.mqtt_client.on_message = self.on_message
         self.mqtt_client.on_log = self.on_log
+        # healthcheck settings
+        self._last_message = time.time()
+        self._healthcheck_topic = f"health/{self.mqtt_client_id}"
+        self._healthcheck_interval = int(
+            os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60)
+        )  # seconds
+        self._healthcheck_timeout = int(
+            os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300)
+        )  # seconds
+        self._st = threading.Thread(target=self._healthcheck_sender, daemon=True)
+        self._wt = threading.Thread(target=self._healthcheck_watcher, daemon=True)
+        self._mid_to_topic = {}
 
     def run_loop(self) -> typing.NoReturn:
-        logger.info(f"Setup ok, starting listening loop")
+        logger.info("Setup ok, starting listening loop, healtcheck sender and watcher")
+        self._st.start()
+        self._wt.start()
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port)
-        self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
+        res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
+        self._mid_to_topic[mid] = self.topic
+        res, mid = self.mqtt_client.subscribe(self._healthcheck_topic, 0)
+        self._mid_to_topic[mid] = self._healthcheck_topic
         self.mqtt_client.loop_forever()
 
     def on_log(self, client: mqtt.Client, userdata, level, buf):
@@ -73,7 +92,8 @@ class AbstractHandler(ABC):
         logger.error(f"Failed to connect to %r, return code: %s", self.mqtt_broker, rc)
 
     def on_subscribe(self, client: mqtt.Client, userdata, mid, granted_qos):
-        logger.info(f"Subscribed to topic {self.topic} with QoS {granted_qos[0]}")
+        topic = self._mid_to_topic.get(mid, "(unknown)")
+        logger.info(f"Subscribed to topic {topic} with QoS {granted_qos[0]}")
 
     def on_message(self, client: mqtt.Client, userdata, message: MQTTMessage):
         logger.info(
@@ -83,6 +103,7 @@ class AbstractHandler(ABC):
             message.qos,
             message.timestamp,
         )
+        self._last_message = time.time()
 
         try:
             content = self._decode(message)
@@ -97,6 +118,17 @@ class AbstractHandler(ABC):
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
             sys.exit(1)
+
+        if (
+            message.topic == self._healthcheck_topic
+            and isinstance(content, dict)
+            and "ping" in content
+        ):
+            logger.info(
+                f"Healthcheck pong received: {content['ping']}\n"
+                f"===================== PONG RECEIVED ======================\n",
+            )
+            return
 
         try:
             logger.debug(f"calling %s.act()", self.__class__.__qualname__)
@@ -138,6 +170,24 @@ class AbstractHandler(ABC):
             f"Status: Success  (Message was processed successfully)\n"
             f"===================== PROCESSING DONE ======================\n",
         )
+
+    def _healthcheck_sender(self):
+        while True:
+            payload = json.dumps({"ping": time.asctime()})
+            self.mqtt_client.publish(
+                self._healthcheck_topic, payload=payload, qos=0, retain=False
+            )
+            time.sleep(self._healthcheck_interval)
+
+    def _healthcheck_watcher(self):
+        while True:
+            if time.time() - self._last_message > self._healthcheck_timeout:
+                logger.error(
+                    "Healthcheck-Timeout: MQTT-Loop seems to be stuck. Exiting."
+                )
+                self.mqtt_client.disconnect()
+                os._exit(1)
+            time.sleep(self._healthcheck_interval)
 
     def _decode(self, message: MQTTMessage) -> typing.Any:
         """
