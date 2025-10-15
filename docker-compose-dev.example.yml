@@ -97,13 +97,13 @@ services:
       NODE_ENV: development
       APP_DEV_PATH: /thing-management
     volumes:
-      - "${DEV_TMM_FE_DIR:?Missing dev var}/app:/app"
+      - "${DEV_TMM_FE_DIR::-thing-management/frontend}/app:/app"
 
   thing-management-api:
     command: uvicorn main:app --reload --host 0.0.0.0 --port 8002
     restart: "no"
     volumes:
-      - "${DEV_TMM_BE_DIR:?Missing dev var}/app:/app"
+      - "${DEV_TMM_BE_DIR:-thing-management/backend}/app:/app"
 
 
 volumes:
