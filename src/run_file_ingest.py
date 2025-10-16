@@ -128,7 +128,7 @@ class ParserJobHandler(AbstractHandler):
                 thing_uuid,
             )
 
-        self.set_tags(bucket_name, filename, str(parser_id), "True")
+        self.set_tags(bucket_name, filename, str(parser_id))
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}
         )
@@ -154,12 +154,12 @@ class ParserJobHandler(AbstractHandler):
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
-            if tags and tags["parsing_successfull"] == "True":
+            if tags and tags["run_successfull"] == "True":
                 return tags
 
         return None
 
-    def set_tags(self, bucket_name, filename, parser_id, parsing_successfull):
+    def set_tags(self, bucket_name, filename, parser_id, run_successfull="True"):
         # reparsing won't create new object version so we need to overwrite the latest version tags
         try:
             object_tags = self.minio.get_object_tags(bucket_name, filename)
@@ -170,7 +170,7 @@ class ParserJobHandler(AbstractHandler):
 
         object_tags["parsed_at"] = datetime.now().isoformat()
         object_tags["parser_id"] = parser_id
-        object_tags["parsing_successfull"] = parsing_successfull
+        object_tags["run_successfull"] = run_successfull
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
     def read_file(self, bucket_name, object_name) -> str:
