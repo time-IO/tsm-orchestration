@@ -39,6 +39,8 @@ class PublishAllThings:
             logger.info(
                 f"Publishing thing uuid: {thing_uuid} to topic: {self.publish_topic}"
             )
+            # TODO: use a regular mqtt client. publish_single is for
+            #  one-time use only.
             mqtt.publish_single(
                 self.publish_topic, json.dumps({"thing_uuid": thing_uuid})
             )
