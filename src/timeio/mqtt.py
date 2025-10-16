@@ -245,7 +245,7 @@ def _get_settings_from_env():
             "qos": int(os.environ["MQTT_QOS"]),
             "hostname": _broker.split(":")[0],
             "port": int(_broker.split(":")[1]),
-            "client_id": os.environ["MQTT_QOS"],
+            "client_id": os.environ.get("MQTT_CLIENT_ID", ""),
             "auth": {
                 "username": os.environ["MQTT_USER"],
                 "password": os.environ["MQTT_PASSWORD"],
@@ -258,5 +258,7 @@ def _get_settings_from_env():
 def publish_single(topic, payload: str):
     """
     Publish a single mqtt message to a broker, then disconnect cleanly.
+    DO NOT CALL THIS RAPIDLY REPEATEDLY, use a normal paho.mqtt.client
+    instead.
     """
     paho.mqtt.publish.single(**_get_settings_from_env(), topic=topic, payload=payload)
