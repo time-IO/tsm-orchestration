@@ -49,7 +49,7 @@ def main(interval, project_uuid, qc_settings_name):
     }
     topic = os.getenv("TOPIC_DATA_PARSED", "data_parsed")
     json_payload = json.dumps(payload)
-    publish_single(topic, json_payload)
+    publish_single(topic, json_payload, client_id="trigger-qaqc")
 
 
 if __name__ == "__main__":
