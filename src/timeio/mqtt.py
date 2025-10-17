@@ -56,12 +56,13 @@ class AbstractHandler(ABC):
         self.mqtt_client.on_log = self.on_log
         # healthcheck settings
         self._last_message = time.time()
-        self._healthcheck_topic = f"health/{self.mqtt_client_id}"
+        self._healthcheck_topic = f"health/{self.mqtt_client_id}/ping"
+        self._healthcheck_status_topic = f"health/{self.mqtt_client_id}/status"
         self._healthcheck_interval = int(
             os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60)
         )  # seconds
         self._healthcheck_timeout = int(
-            os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 300)
+            os.getenv("MQTT_HEALTHCHECK_TIMEOUT", 600)
         )  # seconds
         self._st = threading.Thread(target=self._healthcheck_sender, daemon=True)
         self._wt = threading.Thread(target=self._healthcheck_watcher, daemon=True)
@@ -96,6 +97,11 @@ class AbstractHandler(ABC):
         logger.info(f"Subscribed to topic {topic} with QoS {granted_qos[0]}")
 
     def on_message(self, client: mqtt.Client, userdata, message: MQTTMessage):
+        self._last_message = time.time()
+        if message.topic == self._healthcheck_topic:
+            logger.debug(f"Ping received.")
+            return
+
         logger.info(
             "\n\n======================= NEW MESSAGE ========================\n"
             f"Topic: %r, QoS: %s, Timestamp: %s",
@@ -103,7 +109,6 @@ class AbstractHandler(ABC):
             message.qos,
             message.timestamp,
         )
-        self._last_message = time.time()
 
         try:
             content = self._decode(message)
@@ -118,17 +123,6 @@ class AbstractHandler(ABC):
             # We exit now, because otherwise the client.on_log would print
             # the exception again (with unnecessary clutter)
             sys.exit(1)
-
-        if (
-            message.topic == self._healthcheck_topic
-            and isinstance(content, dict)
-            and "ping" in content
-        ):
-            logger.info(
-                f"Healthcheck pong received: {content['ping']}\n"
-                f"===================== PONG RECEIVED ======================\n",
-            )
-            return
 
         try:
             logger.debug(f"calling %s.act()", self.__class__.__qualname__)
@@ -182,11 +176,11 @@ class AbstractHandler(ABC):
     def _healthcheck_watcher(self):
         while True:
             if time.time() - self._last_message > self._healthcheck_timeout:
-                logger.error(
-                    "Healthcheck-Timeout: MQTT-Loop seems to be stuck. Exiting."
+                msg = f"MQTT-Loop stuck! Last message received at {time.asctime(time.localtime(self._last_message))}"
+                logger.error(msg)
+                self.mqtt_client.publish(
+                    self._healthcheck_status_topic, payload=msg, qos=0, retain=False
                 )
-                self.mqtt_client.disconnect()
-                os._exit(1)
             time.sleep(self._healthcheck_interval)
 
     def _decode(self, message: MQTTMessage) -> typing.Any:
