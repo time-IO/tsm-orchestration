@@ -56,7 +56,8 @@ class AbstractHandler(ABC):
         self.mqtt_client.on_log = self.on_log
         # healthcheck settings
         self._last_message = time.time()
-        self._healthcheck_topic = f"health/{self.mqtt_client_id}"
+        self._healthcheck_topic = f"health/ping/{self.mqtt_client_id}"
+        self._healthcheck_status_topic = f"health/status/{self.mqtt_client_id}"
         self._healthcheck_interval = int(
             os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60)
         )  # seconds
@@ -175,8 +176,10 @@ class AbstractHandler(ABC):
     def _healthcheck_watcher(self):
         while True:
             if time.time() - self._last_message > self._healthcheck_timeout:
-                logger.error(
-                    f"MQTT-Loop is stuck! Last message received at {time.asctime(time.localtime(self._last_message))}"
+                msg = f"MQTT-Loop stuck! Last message received at {time.asctime(time.localtime(self._last_message))}"
+                logger.error(msg)
+                self.mqtt_client.publish(
+                    self._healthcheck_status_topic, payload=msg, qos=0, retain=False
                 )
             time.sleep(self._healthcheck_interval)
 
