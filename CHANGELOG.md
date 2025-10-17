@@ -3,13 +3,29 @@
 
 ## [Unreleased]
 
+## 2025-10-17
+
+### Added
+- basic JSON-Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/457))
+- cron triggered qc jobs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/470))
+
+### Changed
+- added parsing tags to S3 objects ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/466))
+- bumped debian images and python versions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/468))
+- improve reparse script ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/473))
+
+### Fixed
+- stalling SMS synchronization ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/464))
+- journal writing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/465))
+- fix duplicated mqtt client ids ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/479))
+
 ## 2025-09-12
 
 ### Added
 - tsm-dataprocessing-extensions in SaQC jobs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/444))
 - time zone handling in file parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/448))
 - millisecond handling in file parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/451))
-- custom headers for CSV Parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/454)) 
+- custom headers for CSV Parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/454))
 
 ### Changed
 - ConfigDB description columns to type TEXT  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/446))
