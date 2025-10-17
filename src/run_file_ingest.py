@@ -91,11 +91,11 @@ class ParserJobHandler(AbstractHandler):
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
-                self.set_tags(bucket_name, filename, str(parser_id), "False")
+                self.set_tags(bucket_name, filename, str(parser_id), "parsing failed")
                 raise e
             except Exception as e:
                 journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.set_tags(bucket_name, filename, str(parser_id), "False")
+                self.set_tags(bucket_name, filename, str(parser_id), "parsing failed")
                 raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
@@ -116,7 +116,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
-            self.set_tags(bucket_name, filename, str(parser_id), "False")
+            self.set_tags(bucket_name, filename, str(parser_id), "db insert failed")
             raise e
 
         if len(obs) > 0:
