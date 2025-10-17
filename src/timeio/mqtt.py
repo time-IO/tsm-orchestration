@@ -56,8 +56,8 @@ class AbstractHandler(ABC):
         self.mqtt_client.on_log = self.on_log
         # healthcheck settings
         self._last_message = time.time()
-        self._healthcheck_topic = f"health/ping/{self.mqtt_client_id}"
-        self._healthcheck_status_topic = f"health/status/{self.mqtt_client_id}"
+        self._healthcheck_topic = f"health/{self.mqtt_client_id}/ping"
+        self._healthcheck_status_topic = f"health/{self.mqtt_client_id}/status"
         self._healthcheck_interval = int(
             os.getenv("MQTT_HEALTHCHECK_INTERVAL", 60)
         )  # seconds
