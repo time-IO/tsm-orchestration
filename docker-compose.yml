@@ -1347,6 +1347,12 @@ services:
       KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
+      # MQTT connection for user_login message
+      MQTT_BROKER: "tcp://mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_TOPIC: "user_login"
+      MQTT_QOS: "${MQTT_QOS}"
     healthcheck:
       test: >
         bash -c "
