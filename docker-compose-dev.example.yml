@@ -59,17 +59,17 @@ services:
 
   frontend:
     environment:
-      - "DJANGO_HELMHOLTZ_CLIENT_ID=${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
-      - "DJANGO_HELMHOLTZ_CLIENT_SECRET=${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
-      - "DJANGO_HELMHOLTZ_AAI_CONF_URL=${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_AAI_CONF_URL:-http://keycloak:8081/keycloak/realms/demo/.well-known/openid-configuration}"
+      - "DJANGO_HELMHOLTZ_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
+      - "DJANGO_HELMHOLTZ_CLIENT_SECRET=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
+      - "DJANGO_HELMHOLTZ_AAI_CONF_URL=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_AAI_CONF_URL:-http://keycloak:8081/keycloak/realms/demo/.well-known/openid-configuration}"
     volumes:
       - "${DEV_FRONTEND_DIR:-../tsm-frontend}:/home/appuser/app"
 
   visualization:
     environment:
       - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
-      - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
-      - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
+      - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
       - "GF_AUTH_GENERIC_OAUTH_AUTH_URL=${VISUALIZATION_GENERIC_OAUTH_AUTH_URL:-http://localhost/keycloak/realms/demo/protocol/openid-connect/auth}"
       - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/token}"
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${VISUALIZATION_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
@@ -82,7 +82,6 @@ services:
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/plugins:/opt/keycloak/providers"
-
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
