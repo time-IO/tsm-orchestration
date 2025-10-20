@@ -73,10 +73,6 @@ class AbstractHandler(ABC):
         self._st.start()
         self._wt.start()
         self.mqtt_client.connect(self.mqtt_host, self.mqtt_port)
-        res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
-        self._mid_to_topic[mid] = self.topic
-        res, mid = self.mqtt_client.subscribe(self._healthcheck_topic, 0)
-        self._mid_to_topic[mid] = self._healthcheck_topic
         self.mqtt_client.loop_forever()
 
     def on_log(self, client: mqtt.Client, userdata, level, buf):
@@ -89,6 +85,12 @@ class AbstractHandler(ABC):
                 self.mqtt_broker,
                 self.mqtt_client._client_id.decode(),
             )
+            # Subscribe to topic in on_connect callback
+            # to make sure we re-subscribe after a reconnect
+            res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
+            self._mid_to_topic[mid] = self.topic
+            res, mid = self.mqtt_client.subscribe(self._healthcheck_topic, 0)
+            self._mid_to_topic[mid] = self._healthcheck_topic
             return
         logger.error(f"Failed to connect to %r, return code: %s", self.mqtt_broker, rc)
 
