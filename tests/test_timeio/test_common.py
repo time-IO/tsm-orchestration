@@ -21,7 +21,7 @@ no_cast = None
 
 
 def is_equal(a, b):
-    return (type(a) is type(b)) and (a == b) or (a is None and b is None)
+    return type(a) == type(b) and (a == b or a is None and b is None)
 
 
 # ############################################################
