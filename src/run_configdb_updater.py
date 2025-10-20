@@ -154,6 +154,7 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
     else:
         logger.info(f"Successfully updated thing {thing_uuid}")
 
+
 def on_connect(client, userdata, flags, rc, properties=None):
     logger.info("Connected to MQTT Broker, rc=%s", rc)
     client.subscribe("frontend_thing_update", qos=subscribe_qos)
@@ -161,11 +162,13 @@ def on_connect(client, userdata, flags, rc, properties=None):
     logger.info("Subscribed to frontend_thing_update, qaqc_settings_update")
     logger.info(f"Waiting for messages ...")
 
+
 def on_disconnect(client, userdata, flags, rc, properties=None):
     if rc != 0:
         logger.warning("Unexpected disconnect from MQTT Broker. rc=%s", rc)
     else:
         logger.info("Disconnected from MQTT Broker.")
+
 
 def on_log(client, userdata, level, buf):
     logger.debug(f"MQTT Log: {buf}")
