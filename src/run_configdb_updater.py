@@ -155,6 +155,25 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
         logger.info(f"Successfully updated thing {thing_uuid}")
 
 
+def on_connect(client, userdata, flags, rc, properties=None):
+    logger.info("Connected to MQTT Broker, rc=%s", rc)
+    client.subscribe("frontend_thing_update", qos=subscribe_qos)
+    client.subscribe("qaqc_settings_update", qos=subscribe_qos)
+    logger.info("Subscribed to frontend_thing_update, qaqc_settings_update")
+    logger.info(f"Waiting for messages ...")
+
+
+def on_disconnect(client, userdata, flags, rc, properties=None):
+    if rc != 0:
+        logger.warning("Unexpected disconnect from MQTT Broker. rc=%s", rc)
+    else:
+        logger.info("Disconnected from MQTT Broker.")
+
+
+def on_log(client, userdata, level, buf):
+    logger.debug(f"MQTT Log: {buf}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 1:
         if sys.argv[1] in ["-v", "--version"]:
@@ -209,20 +228,16 @@ if __name__ == "__main__":
             "db": db_conn_pool,
         }
     )
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_disconnect = on_disconnect
+    mqtt_client.on_log = on_log
+    # Assign message handlers
+    mqtt_client.message_callback_add("frontend_thing_update", thing_update)
+    mqtt_client.message_callback_add("qaqc_settings_update", qaqc_update)
 
     try:
+        # Connect to MQTT broker and subscribe to topics (via on_connect callback)
         mqtt_client.connect(broker_host, int(broker_port))
-        logger.info("connected to mqtt broker")
-
-        mqtt_client.message_callback_add("frontend_thing_update", thing_update)
-        mqtt_client.subscribe("frontend_thing_update", qos=subscribe_qos)
-        logger.info(f"subscribed to topics frontend_thing_update")
-
-        mqtt_client.message_callback_add("qaqc_settings_update", qaqc_update)
-        mqtt_client.subscribe("qaqc_settings_update", qos=subscribe_qos)
-        logger.info(f"subscribed to topics qaqc_settings_update")
-
-        logger.info(f"waiting for messages ...")
         mqtt_client.loop_forever()
     finally:
         db_conn_pool.close()
