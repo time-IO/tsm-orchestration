@@ -13,7 +13,7 @@ ALTER TABLE function_parameter
   DROP CONSTRAINT IF EXISTS function_parameter_type_check;
 
 ALTER TABLE function_parameter
-  DROP COLUMN IF EXISTS function_parameter;
+  DROP COLUMN IF EXISTS type;
 
 ALTER TABLE function_parameter
   ADD COLUMN IF NOT EXISTS type jsonb;
@@ -44,6 +44,7 @@ DECLARE
     float_ge_0_type jsonb := '{"type": "float", "constraint": {"min": 0}}';
     float_ge_0_le_1_type jsonb := '{"type": "float", "constraint": {"min": 0, "max": 1}}';
     bool_type jsonb := '{"type": "bool", "constraint": {}}';
+    str_type jsonb := '{"type": "str", "constraint": {}}';
 BEGIN
     INSERT INTO function_parameter
         (function_id, name, description, optional, "type", default_value, position)
@@ -66,8 +67,8 @@ BEGIN
         (4, 'min_jump', 'Minimum difference from preceding/succeeding periods.', TRUE, json_build_array(float_ge_0_type), NULL, 3),
         (4, 'granularity', 'Precision of the search.', TRUE, json_build_array(int_gt_0_type, offset_type), NULL, 4),
         -- flagRange
-        (5, 'min', 'Lower bound for valid data.', TRUE, json_build_array(float_type), '-Infinity', 1),
-        (5, 'max', 'Upper bound for valid data.', TRUE, json_build_array(float_type), 'Infinity', 2),
+        (5, 'min', 'Lower bound for valid data.', FALSE, json_build_array(float_type), NULL, 1),
+        (5, 'max', 'Upper bound for valid data.', FALSE, json_build_array(float_type), NULL, 2),
         -- flagUniLOF
         (7, 'n', 'Number of periods to include in LOF calculation.', TRUE, json_build_array(int_type), '20', 1),
         (7, 'thresh', 'LOF cutoff value.', TRUE, json_build_array(float_ge_0_type, '{"type": "enum", "constraint": {"only": ["auto"]}}'::jsonb), 'auto', 2),
@@ -95,7 +96,7 @@ BEGIN
         (9, 'sub_thresh', 'Threshold for sub-chunk deviation.', TRUE, json_build_array(float_ge_0_type), NULL, 5),
         (9, 'min_periods', 'Minimum points required in a chunk.', TRUE, json_build_array(int_ge_0_type), NULL, 6),
         -- renameField
-        (11, 'new_name', 'Name to assign to the field.', FALSE, 'str', NULL, 1),
+        (11, 'new_name', 'Name to assign to the field.', FALSE, json_build_array(str_type), NULL, 1),
         -- rolling
         (12, 'window', 'Size of the rolling window.', FALSE, json_build_array(offset_type), NULL, 1),
         (12, 'func', 'Function to apply over the rolling window.', FALSE, json_build_array('{"type": "enum", "constraint": {"only":["sum","mean","median","min","max","std","var","skew","kurt"]}}'::jsonb), 'mean', 2),
