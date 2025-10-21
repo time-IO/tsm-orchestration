@@ -4,8 +4,7 @@ import logging
 import json
 import time
 
-from psycopg import sql as psysql
-from psycopg import connection, cursor
+from psycopg import sql as psysql, Connection, Cursor
 from typing import Union, Dict, Optional, Any
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
@@ -28,6 +27,7 @@ class SmsCVSyncer:
         self.cv_api_url = cv_api_url
         self.db_conn_str = db_conn_str
         self.db = self.connect()
+        self.logger = logging.getLogger("sync_sms_cv")
 
     def sync(self):
         file_path_list = [
@@ -35,33 +35,28 @@ class SmsCVSyncer:
             for file_name in self.file_names
         ]
 
-        try:
-            with self.db:
+        with self.db as conn:
+            with conn.cursor() as c:
                 for file_path in file_path_list:
-                    with self.db.cursor() as c:
-                        with open(file_path, "r") as f:
-                            table_dict = json.load(f)
-                        self.create_table(c=c, table_dict=table_dict)
-                        self.upsert_table(
-                            c=c, url=self.cv_api_url, table_dict=table_dict
-                        )
-        finally:
-            self.db.close()
+                    with open(file_path, "r") as f:
+                        table_dict = json.load(f)
+                    self.create_table(c=c, table_dict=table_dict)
+                    self.upsert_table(c=c, url=self.cv_api_url, table_dict=table_dict)
 
     @staticmethod
     def get_utc_str() -> str:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
-    def connect(self, retries: int = 4, sleep: int = 3) -> connection:
+    def connect(self, retries: int = 4, sleep: int = 3) -> Connection:
         err = None
         for _ in range(retries):
             try:
                 return psycopg.connect(self.db_conn_str)
             except Exception as e:
                 err = e
-                print(f"{self.get_utc_str()}: Retrying...")
+                self.logger.debug(f"{self.get_utc_str()}: Retrying...")
                 time.sleep(sleep)
-        raise RuntimeError(f"Could not connect to database") from err
+        raise ConnectionError(f"Could not connect to database") from err
 
     def get_data_from_url(
         self, url: str, endpoint: str, token: Optional[str] = None
@@ -77,10 +72,7 @@ class SmsCVSyncer:
             response = urlopen(request)
             data = json.loads(response.read())
             all_data.extend(data["data"])
-            try:
-                target = data["links"]["next"]
-            except KeyError:
-                break
+            target = data.get("links", {}).get("next", None)
             if target is None:
                 break
         data["data"] = all_data
@@ -97,14 +89,13 @@ class SmsCVSyncer:
         return uniq
 
     @staticmethod
-    def _value_from_dict(dict: dict, path: list) -> Union[str, int, float, bool, None]:
-        return reduce(getitem, path, dict)
+    def _value_from_dict(dict_: dict, path: list) -> Union[str, int, float, bool, None]:
+        return reduce(getitem, path, dict_)
 
     @staticmethod
     def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
         if val is None:
-            # in postgres None is NULL
-            return "NULL"
+            return "NULL"  # in postgres None is NULL
         if type(val) == bool:
             return f"{val}"
         if type(val) == int:
@@ -126,7 +117,7 @@ class SmsCVSyncer:
                 return f"'{val}'"
 
     @staticmethod
-    def _table_is_foreign(c: cursor, table_name: str) -> bool:
+    def _table_is_foreign(c: Cursor, table_name: str) -> bool:
         query = psysql.SQL(
             "SELECT table_type FROM information_schema.tables WHERE table_name=%s"
         )
@@ -137,16 +128,15 @@ class SmsCVSyncer:
         else:
             return r[0] == "FOREIGN"
 
-    def _drop_foreign_table(self, c: cursor, table_name: str) -> None:
-        query = psysql.SQL("DROP FOREIGN TABLE IF EXISTS {table_identifier};").format(
-            table_identifier=psysql.Identifier(table_name)
+    def _drop_foreign_table(self, c: Cursor, table_name: str) -> None:
+        query = psysql.SQL("DROP FOREIGN TABLE IF EXISTS {table}").format(
+            table=psysql.Identifier(table_name)
         )
         if self._table_is_foreign(c=c, table_name=table_name):
             try:
-                c.execute(query, (table_name,))
-                # return c.fetchall()
+                c.execute(query)
             except Exception as e:
-                print(f"Can not drop foreign table {table_name}:\n{e}")
+                self.logger.error(f"Could not drop foreign table {table_name}:\n{e}")
 
     @staticmethod
     def _table_create_query(table_dict: dict) -> str:
@@ -156,11 +146,9 @@ class SmsCVSyncer:
             query += f"{key} {value['type']}, "
         return query.rstrip(", ") + ");"
 
-    def create_table(self, c: cursor, table_dict: Dict) -> None:
+    def create_table(self, c: Cursor, table_dict: Dict) -> None:
         """
         creates table based on table_dict (loaded from foo-table.json in ./tables)
-
-        query is built by _table_create_query()
 
         e.g.:
         CREATE TABLE IF NOT EXISTS foo-table (
@@ -175,6 +163,7 @@ class SmsCVSyncer:
         c.execute(create_query)
 
     def _table_upsert_query(self, table_dict: dict, data: dict) -> str:
+        # TODO simplyfy with ", ".join(Iterable)
         query = f"INSERT INTO {table_dict['name']} ("
         for key in table_dict["keys"]:
             query += f"{key}, "
@@ -197,7 +186,7 @@ class SmsCVSyncer:
         return query
 
     def upsert_table(
-        self, c: cursor, url: str, table_dict: dict, token: Optional[str] = None
+        self, c: Cursor, url: str, table_dict: dict, token: Optional[str] = None
     ) -> None:
         """
         updates table based on table_dict (loaded from foo-table.json in ./tables)
@@ -217,19 +206,17 @@ class SmsCVSyncer:
             column_c = EXCLUDED.column_c,
             ...
         """
-        if token:
-            r = self.get_data_from_url(
-                url=url, endpoint=table_dict["endpoint"], token=token
-            )
-        else:
-            r = self.get_data_from_url(url=url, endpoint=table_dict["endpoint"])
+        name = table_dict["name"]
+        endpoint = table_dict["endpoint"]
+        r = self.get_data_from_url(url=url, endpoint=endpoint, token=token)
         data = self._remove_id_duplicates(r["data"])
         query = self._table_upsert_query(table_dict, data)
+
         try:
             c.execute(query)
-            print(f"Data successfully synced to table {table_dict['name']}")
-        except Exception as e:
-            print(f"Could not sync data to table {table_dict['name']}:\n{e}")
+            self.logger.info(f"Data successfully synced to table {name}")
+        except psycopg.Error as e:
+            self.logger.error(f"Could not sync data to table {name}:\n{e}")
             raise e
 
 
@@ -237,61 +224,36 @@ class SmsMaterializedViewsSyncer:
     def __init__(self, db_conn_str):
         self.db = Database(db_conn_str)
         self.materialized_views = []
-        self.logger = logging.getLogger("sync_sms_materialized_views")
+        self.logger = logging.getLogger("sync_sms_views")
 
     def collect_materialized_views(self):
-        with self.db.connection() as conn:
-            try:
+        # Get a list of materialized views with the prefix "sms_"
+        query = (
+            "SELECT matviewname FROM pg_matviews WHERE "
+            "schemaname = 'public' AND matviewname LIKE 'sms_%' "
+        )
+        try:
+            with self.db.connection() as conn:
                 with conn.cursor() as cur:
-                    # Query to get the list of materialized views starting with the prefix "sms_"
-                    cur.execute(
-                        """
-                        SELECT matviewname
-                        FROM pg_matviews
-                        WHERE schemaname = 'public'
-                        AND matviewname LIKE 'sms_%'
-                        """
-                    )
-
+                    cur.execute(query)
                     self.materialized_views = cur.fetchall()
-
                     return self
-            except psycopg.Error as e:
-                self.logger.error(
-                    f"Error occurred during fetching materialized view: {e}"
-                )
-                if conn:
-                    conn.rollback()
+
+        except psycopg.Error as e:
+            self.logger.error(
+                f"Error occurred during fetching materialized views: {e!r}"
+            )
 
     def update_materialized_views(self) -> None:
-        with self.db.connection() as conn:
-            try:
-                # Create a cursor object to execute SQL queries
+        template = psysql.SQL("REFRESH MATERIALIZED VIEW CONCURRENTLY {}")
+        try:
+            with self.db.connection() as conn:
                 with conn.cursor() as cur:
-
-                    # Iterate over the materialized views and refresh them
                     for matview in self.materialized_views:
                         view_name = matview[0]
-                        cur.execute(
-                            psysql.SQL(
-                                "REFRESH MATERIALIZED VIEW CONCURRENTLY {}"
-                            ).format(psysql.Identifier(view_name))
-                        )
-                        self.logger.info(
-                            f"Refreshed materialized sms view: {view_name}"
-                        )
-
-                # Commit the changes
-                conn.commit()
-
-            except psycopg.Error as e:
-                self.logger.error(
-                    f"Error occurred during refreshing materialized view: {e}"
-                )
-                if conn:
-                    conn.rollback()
-
-            finally:
-                # Close the connection
-                if conn:
-                    conn.close()
+                        cur.execute(template.format(psysql.Identifier(view_name)))
+                        self.logger.info(f"Refreshed materialized view: {view_name}")
+        except psycopg.Error as e:
+            self.logger.error(
+                f"Error occurred during refreshing materialized view: {e!r}"
+            )
