@@ -1,38 +1,35 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS "SENSORS" CASCADE;
-CREATE OR REPLACE VIEW "SENSORS" AS WITH
-device_role_responsible_persons AS (
-    SELECT DISTINCT
-    d.id AS "device_id",
-    dcr.role_name AS "role_name",
-    dcr.role_uri AS "role_uri",
-    array_agg(DISTINCT jsonb_build_object(
-        'jsonld.id', %(sms_url)s || 'contacts/' || co.id,
-        'jsonld.type', 'Person',
-        'givenName', co.given_name,
-        'familyName', co.family_name,
-        'email', co.email,
-        'affiliation', jsonb_build_object(
-            'jsonld.type', 'Organization',
-            'name', co.organization,
-            'identifier', NULL
-        ),
-        'identifier', co.orcid
-    )) AS "responsible_persons"
-FROM public.sms_device d
-JOIN public.sms_device_contact_role dcr ON dcr.device_id = d.id
-JOIN public.sms_contact co ON dcr.contact_id = co.id
-GROUP BY d.id, dcr.role_name, dcr.role_uri
-),
-device_properties AS (
-    SELECT DISTINCT
+CREATE VIEW "SENSORS" AS
+WITH
+    device_role_responsible_persons AS (
+        SELECT DISTINCT
+        d.id AS "device_id",
+        dcr.role_name AS "role_name",
+        dcr.role_uri AS "role_uri",
+        array_agg(DISTINCT jsonb_build_object(
+            'jsonld.id', '{sms_url}' || 'contacts/' || co.id,
+            'jsonld.type', 'Person',
+            'givenName', co.given_name,
+            'familyName', co.family_name,
+            'email', co.email,
+            'affiliation', jsonb_build_object(
+                'jsonld.type', 'Organization',
+                'name', co.organization,
+                'identifier', NULL
+            ),
+            'identifier', co.orcid
+        )) AS "responsible_persons"
+        FROM public.sms_device d
+        JOIN public.sms_device_contact_role dcr ON dcr.device_id = d.id
+        JOIN public.sms_contact co ON dcr.contact_id = co.id
+        GROUP BY d.id, dcr.role_name, dcr.role_uri),
+
+    device_properties AS (
+        SELECT DISTINCT
         d.id AS "device_id",
         jsonb_build_object(
             '@context', public.get_schema_org_context(),
-            'jsonld.id', %(sms_url)s || 'devices/' || d.id,
+            'jsonld.id', '{sms_url}' || 'devices/' || d.id,
             'jsonld.type', 'SensorProperties',
             'identifier', d.persistent_identifier,
             'isVariantOf', jsonb_build_object(
@@ -68,17 +65,14 @@ device_properties AS (
     HAVING ((cdl.configuration_id IS NOT NULL) OR (csl.configuration_id IS NOT NULL))
         AND d.is_public
         AND c.is_public
-        AND dsl.datasource_id = %(tsm_schema)s
-)
+        AND dsl.datasource_id = '{tsm_schema}')
 SELECT
     d.id AS "ID",
     d.short_name AS "NAME",
     d.description AS "DESCRIPTION",
     'html' AS "ENCODING_TYPE",
-    %(sms_url)s || 'backend/api/v1/devices/' || d.id || '/sensorml' AS "METADATA",
+    '{sms_url}' || 'backend/api/v1/devices/' || d.id || '/sensorml' AS "METADATA",
     dp.properties AS "PROPERTIES"
 FROM public.sms_device d
 JOIN device_properties dp ON d.id = dp.device_id
 ORDER BY d.id ASC;
-
-COMMIT;

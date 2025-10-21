@@ -3,6 +3,76 @@
 
 ## [Unreleased]
 
+## 2025-10-17
+
+### Added
+- basic JSON-Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/457))
+- cron triggered qc jobs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/470))
+
+### Changed
+- added parsing tags to S3 objects ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/466))
+- bumped debian images and python versions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/468))
+- improve reparse script ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/473))
+
+### Fixed
+- stalling SMS synchronization ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/464))
+- journal writing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/465))
+- fix duplicated mqtt client ids ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/479))
+
+## 2025-09-12
+
+### Added
+- tsm-dataprocessing-extensions in SaQC jobs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/444))
+- time zone handling in file parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/448))
+- millisecond handling in file parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/451))
+- custom headers for CSV Parser  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/454))
+
+### Changed
+- ConfigDB description columns to type TEXT  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/446))
+- T-Systems-API aggregation time  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/450))
+- parameter mapping for TTN API from hard-coded to dynamic  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/453))
+
+### Fixed
+- Thing Management DB data model  ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/452))
+
+## 2025-08-29
+
+### Added
+- Data Calibration function ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-dataprocessing-extension/-/merge_requests/1))
+
+### Changed
+- Improved failure tolerance of thr delete thing scripts ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/442))
+
+### Fixed
+- CSV-Header Parsing error with empty columns ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/441))
+
+## 2025-08-28
+
+### Added
+- script to delete things ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/433))
+
+### Changed
+- Grafana panel headers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/430))
+
+### Fixed
+- Close SFTP connections ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/437))
+- Grafana connection issues ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/432))
+- CSV-Header Parsing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/431))
+
+## 2025-08-12
+
+### Added
+- Keycloak as an AAI proxy
+- Hidden Alpha version of the new Thing-Management
+- Option to use csv-file headers as datastream names
+- Mosquitto Monitoring
+
+### Changed
+- Mosquitto resource settings
+
+### Fixed
+- extSFTP service failures
+
 ## 2025-07-09
 
 ### Added

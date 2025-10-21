@@ -17,7 +17,7 @@ logger = logging.getLogger("sync-ext-sftp")
 journal = Journal("sync_ext_sftp")
 
 USAGE = """
-Usage: sftp_sync.py THING_UUID 
+Usage: sftp_sync.py THING_UUID
 Sync external SFTP files to minio storage.
 
 Arguments
@@ -26,19 +26,19 @@ Arguments
 Additional set the following environment variables:
 
   MINIO_URL         Minio URL to sync to.
-  MINIO_USER        Minio user with r/w privileges 
+  MINIO_USER        Minio user with r/w privileges
   MINIO_PASSWORD    Password for minio user above.
-  MINIO_SECURE      Use minio secure connection; [true, false, 1, 0] 
-  CONFIGDB_DSN      DB which stores the credentials for the external sftp server 
-                    (source of sync) and also the (existing) bucket-name for the 
-                    target S3 storage. See also DSN format below. 
-                    
+  MINIO_SECURE      Use minio secure connection; [true, false, 1, 0]
+  CONFIGDB_DSN      DB which stores the credentials for the external sftp server
+                    (source of sync) and also the (existing) bucket-name for the
+                    target S3 storage. See also DSN format below.
+
   LOG_LEVEL         Set the verbosity, defaults to INFO.
                     [DEBUG, INFO, WARNING, ERROR, CRITICAL]
-  FERNET_ENCRYPTION_SECRET  Secret used to decrypt sensitive information from 
-                    the Config-DB. 
+  FERNET_ENCRYPTION_SECRET  Secret used to decrypt sensitive information from
+                    the Config-DB.
 
-DSN format: 
+DSN format:
   postgresql://[user[:password]@][netloc][:port][/dbname]
 """
 
@@ -84,6 +84,7 @@ class SyncExtSftpManager(AbstractHandler):
             logger.error(msg)
             return
         sync(source, target, thing.uuid)
+        source.close()
 
 
 if __name__ == "__main__":

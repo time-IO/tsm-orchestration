@@ -8,6 +8,7 @@ from timeio.grafana.team import GrafanaTeam
 from timeio.grafana.folder import GrafanaFolder
 from timeio.grafana.datasource import GrafanaDatasource
 from timeio.grafana.dashboard import GrafanaDashboard
+from timeio.grafana.geomap import GrafanaMapDashboard
 from timeio.grafana.user import GrafanaUser
 from timeio.grafana.utils import logger
 
@@ -21,6 +22,7 @@ class TimeioGrafanaApi(GrafanaApi):
         self.t.fldr = GrafanaFolder(self)
         self.t.dsrc = GrafanaDatasource(self)
         self.t.dash = GrafanaDashboard(self)
+        self.t.map = GrafanaMapDashboard(self)
         self.t.user = GrafanaUser(self)
 
     @classmethod
