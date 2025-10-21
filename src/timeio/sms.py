@@ -90,10 +90,19 @@ class SmsCVSyncer:
 
     @staticmethod
     def _value_from_dict(dict_: dict, path: list) -> Union[str, int, float, bool, None]:
-        return reduce(getitem, path, dict_)
+        """Extracts a value from a nested dict by a path of keys.
+        Example:
+            >>> data = {"a": {"b": 99}, "c": 42}
+            >>> SmsCVSyncer._value_from_dict(data, ["c"])
+            42
+            >>> SmsCVSyncer._value_from_dict(data, ["a", "b"])
+            99
+        """
+        return reduce(getitem, path, dict_)  # type: ignore
 
     @staticmethod
     def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
+        # TODO: maybe json.dumps
         if val is None:
             return "NULL"  # in postgres None is NULL
         if type(val) == bool:
@@ -108,13 +117,15 @@ class SmsCVSyncer:
                 # some integer keys are provided as string by the api
                 # and need to be converted to int for postgres
                 return f"{int(val)}"
-            except:
+            except (ValueError, TypeError):
                 # replace single quotes with double single quotes
                 # to escape single quote string termination in postgres
                 val = val.replace("'", "''")
                 # return string in single quotes
                 # to mark it as a string for postgres
                 return f"'{val}'"
+        else:
+            raise TypeError(f"Unconvertible type {type(val).__qualname__}")
 
     @staticmethod
     def _table_is_foreign(c: Cursor, table_name: str) -> bool:
@@ -140,11 +151,11 @@ class SmsCVSyncer:
 
     @staticmethod
     def _table_create_query(table_dict: dict) -> str:
-        columns = table_dict["keys"]
-        query = f"CREATE TABLE IF NOT EXISTS {table_dict['name']} ("
-        for key, value in columns.items():
-            query += f"{key} {value['type']}, "
-        return query.rstrip(", ") + ");"
+        table = table_dict['name']
+        columns = [f"{k} {v['type']}" for k, v in table_dict["keys"].items()]
+        # e.g. CREATE TABLE IF NOT EXISTS foo (c1 BIGINT, c2 VARCHAR(200), ... )"
+        column_str = ", ".join(columns)
+        return f"CREATE TABLE IF NOT EXISTS {table} ({column_str})"
 
     def create_table(self, c: Cursor, table_dict: Dict) -> None:
         """
