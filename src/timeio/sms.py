@@ -17,7 +17,6 @@ from timeio.databases import Database
 
 class SmsCVSyncer:
     def __init__(self, cv_api_url, db_conn_str):
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.file_names = [
             "sms_cv_measured_quantity.json",
             "sms_cv_license.json",
@@ -30,8 +29,9 @@ class SmsCVSyncer:
         self.logger = logging.getLogger("sync_sms_cv")
 
     def sync(self):
+        here = os.path.dirname(os.path.abspath(__file__))
         file_path_list = [
-            os.path.join(self.script_dir, "..", "cv_tables", file_name)
+            os.path.join(here, "..", "cv_tables", file_name)
             for file_name in self.file_names
         ]
 
@@ -79,7 +79,7 @@ class SmsCVSyncer:
         return data
 
     @staticmethod
-    def _remove_id_duplicates(data: list) -> list:
+    def _remove_id_duplicates(data: list[dict]) -> list[dict]:
         seen = set()
         uniq = []
         for item in data:
@@ -162,13 +162,13 @@ class SmsCVSyncer:
         create_query = self._table_create_query(table_dict)
         c.execute(create_query)
 
-    def _table_upsert_query(self, table_dict: dict, data: dict) -> str:
+    def _table_upsert_query(self, table_dict: dict, data: list[dict]) -> str:
         # TODO simplyfy with ", ".join(Iterable)
         query = f"INSERT INTO {table_dict['name']} ("
         for key in table_dict["keys"]:
             query += f"{key}, "
         query = query.rstrip(", ") + ") VALUES "
-        for item in data:
+        for item in data:  # type: dict
             values = "("
             for key, val in table_dict["keys"].items():
                 value = self._value_from_dict(item, val["path"])
