@@ -19,7 +19,7 @@ def mock_grafana_api():
 
 
 @pytest.fixture
-def grafana_dashboard(mock_grafana_api):
+def mock_grafana_dashboard(mock_grafana_api):
     return GrafanaDashboard(api=mock_grafana_api)
 
 
@@ -38,15 +38,15 @@ def test_exists_returns_false():
     assert result is False
 
 
-def test_dashboard_exists_true(grafana_dashboard, mock_grafana_api):
+def test_dashboard_exists_true(mock_grafana_dashboard, mock_grafana_api):
     mock_grafana_api.dashboard.get_dashboard.return_value = {
         "dashboard": {"uid": "123"}
     }
-    assert grafana_dashboard._exists("123") is True
+    assert mock_grafana_dashboard._exists("123") is True
 
 
-def test_dashboard_exists_false(grafana_dashboard, mock_grafana_api):
+def test_dashboard_exists_false(mock_grafana_dashboard, mock_grafana_api):
     mock_grafana_api.dashboard.get_dashboard.side_effect = GrafanaException(
         response=None, message="msg", status_code=404
     )
-    assert grafana_dashboard._exists("123") is False
+    assert mock_grafana_dashboard._exists("123") is False
