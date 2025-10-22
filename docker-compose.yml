@@ -1399,7 +1399,6 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-
 volumes:
   frontend-statics:
   sftp-private-keys:
