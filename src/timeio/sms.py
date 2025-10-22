@@ -1,10 +1,12 @@
 import os
+import warnings
+
 import psycopg
 import logging
 import json
 import time
 
-from psycopg import sql as psysql, Connection, Cursor
+from psycopg import sql, Connection, Cursor
 from typing import Union, Dict, Optional, Any
 from urllib.request import urlopen, Request
 from urllib.parse import urljoin
@@ -102,7 +104,10 @@ class SmsCVSyncer:
 
     @staticmethod
     def _to_postgres_str(val: Union[str, int, float, bool, None]) -> str:
-        # TODO: maybe json.dumps
+        warnings.warn(
+            "Deprecated method use sql.Literal and SmsCVSyncer.convert_special instead",
+            DeprecationWarning,
+        )
         if val is None:
             return "NULL"  # in postgres None is NULL
         if type(val) == bool:
@@ -128,20 +133,24 @@ class SmsCVSyncer:
             raise TypeError(f"Unconvertible type {type(val).__qualname__}")
 
     @staticmethod
+    def convert_special(value):
+        # some integers are send as strings
+        if isinstance(value, str) and str.isnumeric(value):
+            value = int(value)
+        return value
+
+    @staticmethod
     def _table_is_foreign(c: Cursor, table_name: str) -> bool:
-        query = psysql.SQL(
+        query = sql.SQL(
             "SELECT table_type FROM information_schema.tables WHERE table_name=%s"
         )
         c.execute(query, (table_name,))
         r = c.fetchone()
-        if r is None:
-            return False
-        else:
-            return r[0] == "FOREIGN"
+        return r is not None and r[0] == "FOREIGN"
 
     def _drop_foreign_table(self, c: Cursor, table_name: str) -> None:
-        query = psysql.SQL("DROP FOREIGN TABLE IF EXISTS {table}").format(
-            table=psysql.Identifier(table_name)
+        query = sql.SQL("DROP FOREIGN TABLE IF EXISTS {table}").format(
+            table=sql.Identifier(table_name)
         )
         if self._table_is_foreign(c=c, table_name=table_name):
             try:
@@ -150,12 +159,18 @@ class SmsCVSyncer:
                 self.logger.error(f"Could not drop foreign table {table_name}:\n{e}")
 
     @staticmethod
-    def _table_create_query(table_dict: dict) -> str:
-        table = table_dict['name']
-        columns = [f"{k} {v['type']}" for k, v in table_dict["keys"].items()]
+    def _table_create_query(table_dict: dict) -> sql.Composed:
         # e.g. CREATE TABLE IF NOT EXISTS foo (c1 BIGINT, c2 VARCHAR(200), ... )"
-        column_str = ", ".join(columns)
-        return f"CREATE TABLE IF NOT EXISTS {table} ({column_str})"
+        template = sql.SQL("CREATE TABLE IF NOT EXISTS {table} ({columns})")
+
+        table = sql.Identifier(table_dict["name"])
+        columns = [
+            sql.SQL("{col} {type}").format(
+                col=sql.Identifier(k), type=sql.SQL(v["type"])
+            )
+            for k, v in table_dict["keys"].items()
+        ]
+        return template.format(table=table, columns=sql.SQL(", ").join(columns))
 
     def create_table(self, c: Cursor, table_dict: Dict) -> None:
         """
@@ -173,28 +188,33 @@ class SmsCVSyncer:
         create_query = self._table_create_query(table_dict)
         c.execute(create_query)
 
-    def _table_upsert_query(self, table_dict: dict, data: list[dict]) -> str:
-        # TODO simplyfy with ", ".join(Iterable)
-        query = f"INSERT INTO {table_dict['name']} ("
-        for key in table_dict["keys"]:
-            query += f"{key}, "
-        query = query.rstrip(", ") + ") VALUES "
+    def _table_upsert_query(self, table_dict: dict, data: list[dict]) -> sql.Composed:
+        template = sql.SQL(
+            "INSERT INTO {table} ({columns}) VALUES {values} ON CONFLICT (id) DO UPDATE SET {excludeds}",
+        )
+        columns = [key for key in table_dict["keys"]]
+        value_tuples = []
         for item in data:  # type: dict
-            values = "("
+            values = []
             for key, val in table_dict["keys"].items():
                 value = self._value_from_dict(item, val["path"])
-                val_str = self._to_postgres_str(value)
-                values += val_str + ", "
-            values = values.rstrip(", ") + "), "
-            query += values
-        query = query.rstrip(", ")
-        query += " ON CONFLICT (id) DO UPDATE SET "
-        for key in table_dict["keys"]:
-            if key == "id":
-                continue
-            query += f"{key} = EXCLUDED.{key}, "
-        query = query.rstrip(", ")
-        return query
+                value = self.convert_special(value)
+                values.append(value)
+
+            # create a tuple e.g. ('val' 'val2' 99)
+            tup = sql.SQL("({})").format(sql.SQL(", ").join(map(sql.Literal, values)))
+            value_tuples.append(tup)
+
+        return template.format(
+            table=sql.Identifier(table_dict["name"]),
+            columns=sql.SQL(", ").join(map(sql.Identifier, columns)),
+            values=sql.SQL(", ").join(value_tuples),
+            excludeds=sql.SQL(", ").join(
+                sql.SQL("{c} = EXCLUDED.{c}").format(c=sql.Identifier(c))
+                for c in columns
+                if c != "id"
+            ),
+        )
 
     def upsert_table(
         self, c: Cursor, url: str, table_dict: dict, token: Optional[str] = None
@@ -256,13 +276,13 @@ class SmsMaterializedViewsSyncer:
             )
 
     def update_materialized_views(self) -> None:
-        template = psysql.SQL("REFRESH MATERIALIZED VIEW CONCURRENTLY {}")
+        template = sql.SQL("REFRESH MATERIALIZED VIEW CONCURRENTLY {}")
         try:
             with self.db.connection() as conn:
                 with conn.cursor() as cur:
                     for matview in self.materialized_views:
                         view_name = matview[0]
-                        cur.execute(template.format(psysql.Identifier(view_name)))
+                        cur.execute(template.format(sql.Identifier(view_name)))
                         self.logger.info(f"Refreshed materialized view: {view_name}")
         except psycopg.Error as e:
             self.logger.error(
