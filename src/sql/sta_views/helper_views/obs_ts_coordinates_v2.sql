@@ -9,8 +9,8 @@
 --
 -- SET search_path TO %(tsm_schema)s;
 
-DROP VIEW IF EXISTS obs_ts_coordinates CASCADE;
-CREATE OR REPLACE VIEW obs_ts_coordinates AS
+DROP VIEW IF EXISTS obs_ts_coordinates_v3 CASCADE;
+CREATE OR REPLACE VIEW obs_ts_coordinates_v3 AS
 
 
 WITH
@@ -18,10 +18,10 @@ WITH
 static_coords AS (SELECT
                       'static'      AS action_type,
                        at.action_id,
-                       at.o_datastream_id,
+                       at.datastream_id,
                        at.begin_date,
                        at.result_time,
-                       at.o_id,
+                       at.id,
                        at.result_boolean,
                        at.result_quality,
                        at.result_string,
@@ -35,7 +35,7 @@ static_coords AS (SELECT
                             ELSE ARRAY [sla.x, sla.y, sla.z]
                          END AS coordinates
 
-                  FROM obs_ts_action_type at
+                  FROM obs_ts_action_type_v3 at
                            LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                   WHERE at.is_dynamic = FALSE),
 
@@ -43,10 +43,10 @@ static_coords AS (SELECT
 dynamic_coords AS (SELECT
                     'dynamic'     AS action_type,
                      at.action_id::int,
-                     at.o_datastream_id,
+                     at.datastream_id,
                      at.begin_date,
                      at.result_time,
-                     at.o_id,
+                     at.id,
                      at.result_boolean,
                      at.result_quality,
                      at.result_string,
@@ -63,7 +63,7 @@ dynamic_coords AS (SELECT
                         ELSE NULL
                         END AS coordinates
 
-                   FROM obs_ts_action_type at
+                   FROM obs_ts_action_type_v3 at
                             LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
                             LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
                             LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time
@@ -72,10 +72,10 @@ dynamic_coords AS (SELECT
 
 
 SELECT
-       o_id,
+       id,
        action_type,
        action_id,
-       o_datastream_id,
+       datastream_id,
        begin_date,
        result_time,
        result_boolean,
@@ -94,10 +94,10 @@ UNION ALL
 
 SELECT
 
-       o_id,
+       id,
        action_type,
        action_id,
-       o_datastream_id,
+       datastream_id,
        begin_date,
        result_time,
        result_boolean,
