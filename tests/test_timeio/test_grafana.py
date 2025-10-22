@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from timeio.grafana.dashboard import GrafanaDashboard
 from grafana_client.client import GrafanaException
 from timeio.grafana.user import GrafanaUser
+from timeio.grafana.team import GrafanaTeam
 
 
 @pytest.fixture
@@ -27,6 +28,11 @@ def mock_grafana_dashboard(mock_grafana_api):
 @pytest.fixture
 def mock_grafana_user(mock_grafana_api):
     return GrafanaUser(api=mock_grafana_api)
+
+
+@pytest.fixture
+def mock_grafana_team(mock_grafana_api):
+    return GrafanaTeam(api=mock_grafana_api)
 
 
 def test_exists_returns_true():
@@ -142,3 +148,45 @@ def test_user_update_orgs(mock_grafana_api, mock_grafana_user):
     mock_grafana_user.add_to_org.assert_called_once_with("member", "user")
     mock_grafana_user.remove_from_org.assert_called_once_with(10)
     mock_grafana_user.add_to_team.assert_called_once_with("org_2", 10)
+
+
+def test_team_get_by_name(mock_grafana_api, mock_grafana_team):
+    mock_grafana_api.teams.search_teams.return_value = [
+        {"id": 1, "name": "team_1"},
+        {"id": 2, "name": "team_2"},
+    ]
+    result = mock_grafana_team.get_by_name("team_2")
+    mock_grafana_api.teams.search_teams.assert_called_once()
+    assert result == {"id": 2, "name": "team_2"}
+
+
+def test_team_get_by_name_missing(mock_grafana_api, mock_grafana_team):
+    mock_grafana_api.teams.search_teams.return_value = [
+        {"id": 1, "name": "team_1"},
+    ]
+    result = mock_grafana_team.get_by_name("team_2")
+    assert result is None
+
+
+def test_team_get_id_by_name(mock_grafana_team):
+    mock_grafana_team.get_by_name = MagicMock(return_value={"id": 1})
+    result = mock_grafana_team.get_id_by_name("team")
+    assert result == 1
+    mock_grafana_team.get_by_name.assert_called_once_with("team")
+
+
+def test_team_get_id_by_name_missing(mock_grafana_team):
+    mock_grafana_team.get_by_name = MagicMock(return_value=None)
+    result = mock_grafana_team.get_id_by_name("team")
+    assert result is None
+
+
+def test_team_create(mock_grafana_api, mock_grafana_team):
+    mock_grafana_team.get_by_name = MagicMock(return_value={"id": 1, "name": "team"})
+    mock_grafana_api.teams.add_team.return_value = {"message": "created"}
+    result = mock_grafana_team.create("team", 2)
+    mock_grafana_api.teams.add_team.assert_called_once_with(
+        {"name": "team", "orgId": 2}
+    )
+    mock_grafana_team.get_by_name.assert_called_once_with("team")
+    assert result == {"id": 1, "name": "team"}
