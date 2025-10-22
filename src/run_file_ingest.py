@@ -91,11 +91,11 @@ class ParserJobHandler(AbstractHandler):
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
-                self.set_tags(bucket_name, filename, str(parser_id), "parsing failed")
+                self.set_tags(bucket_name, filename, str(parser_id), "parsing_failed")
                 raise e
             except Exception as e:
                 journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.set_tags(bucket_name, filename, str(parser_id), "parsing failed")
+                self.set_tags(bucket_name, filename, str(parser_id), "parsing_failed")
                 raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
@@ -116,7 +116,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
-            self.set_tags(bucket_name, filename, str(parser_id), "db insert failed")
+            self.set_tags(bucket_name, filename, str(parser_id), "db_insert_failed")
             raise e
 
         if len(obs) > 0:
@@ -154,12 +154,12 @@ class ParserJobHandler(AbstractHandler):
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
-            if tags and tags["run_successful"] == "True":
+            if tags and tags["run_successful"] == "true":
                 return tags
 
         return None
 
-    def set_tags(self, bucket_name, filename, parser_id, run_successful="True"):
+    def set_tags(self, bucket_name, filename, parser_id, run_successful="true"):
         # reparsing won't create new object version so we need to overwrite the latest version tags
         try:
             object_tags = self.minio.get_object_tags(bucket_name, filename)
