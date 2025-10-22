@@ -1,11 +1,8 @@
 -- Helper view ts_action_type determines the action type (static or dynamic)
 -- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS foi_ts_action_type CASCADE;
-CREATE OR REPLACE VIEW foi_ts_action_type AS
+CREATE VIEW foi_ts_action_type AS
 
 
 WITH configuration_type AS (
@@ -61,5 +58,3 @@ FROM observation o
                                             AND o.result_time <= ct.end_date
     WHERE is_dynamic IS NOT NULL
       AND action_id IS NOT NULL;
-
-COMMIT;

@@ -2,12 +2,8 @@
 -- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
 -- with arguments for the observation-View
 
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS obs_ts_action_type CASCADE;
-CREATE OR REPLACE VIEW obs_ts_action_type AS
+CREATE VIEW obs_ts_action_type AS
 
 
 WITH configuration_type AS (
@@ -73,5 +69,3 @@ FROM observation o
       AND action_id IS NOT NULL
 
 ORDER BY o_id;
-
-COMMIT;

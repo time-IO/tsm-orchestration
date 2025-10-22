@@ -1,11 +1,8 @@
 -- View for determining the coordinates, distinguishing between static/dynamic actions,
 -- later merged again using UNION, therefore the same structure (columns).
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS foi_ts_coordinates CASCADE;
-CREATE OR REPLACE VIEW foi_ts_coordinates AS
+CREATE VIEW foi_ts_coordinates AS
 
 
 WITH
@@ -70,5 +67,3 @@ SELECT action_type,
        coordinates,
        CONCAT(coordinates, action_id, 'dyn') AS feature_id
 FROM dynamic_coords;
-
-COMMIT;

@@ -1,9 +1,5 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
-DROP VIEW IF EXISTS "NEW_FEATURE" CASCADE;
-CREATE OR REPLACE VIEW "NEW_FEATURE" AS
+DROP VIEW IF EXISTS "NEW_FEATURES" CASCADE;
+CREATE VIEW "NEW_FEATURES" AS
 
 
 SELECT DISTINCT
@@ -21,11 +17,6 @@ SELECT DISTINCT
 		) AS "FEATURE",
 	jsonb_build_object()  AS "PROPERTIES"
 
-
-
-
 FROM public.sms_datastream_link dsl
 JOIN foi_ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
 ORDER BY "ID";
-
-COMMIT;

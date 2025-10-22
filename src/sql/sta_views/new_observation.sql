@@ -1,9 +1,5 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS "NEW_OBSERVATIONS" CASCADE;
-CREATE OR REPLACE VIEW "NEW_OBSERVATIONS" AS
+CREATE VIEW "NEW_OBSERVATIONS" AS
 
 SELECT
     crd.o_id AS "ID",
@@ -34,7 +30,4 @@ SELECT
 FROM public.sms_datastream_link dsl
 JOIN obs_ts_coordinates crd ON dsl.datastream_id = crd.o_datastream_id
 WHERE crd.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
-
 ORDER BY "ID";
-
-COMMIT;
