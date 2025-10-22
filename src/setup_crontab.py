@@ -71,7 +71,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if thing.ext_api is not None:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
-            job.enable(enabled=thing.ext_api.sync_enabled)
+            job.enable(enabled=thing.ext_api.enabled)
             job.set_comment(comment, pre_comment=True)
             job.setall(schedule)
             job.set_command(command)
@@ -88,7 +88,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         current_interval = cls.get_current_interval(job)
         if thing.ext_sftp is not None:
             new_interval = int(thing.ext_sftp.sync_interval)
-            job.enable(enabled=thing.ext_sftp.enabled)
+            job.enable(enabled=thing.ext_sftp.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             # if the interval has changed we want to ensure consistent starting times with the previous one
             if current_interval != new_interval:
