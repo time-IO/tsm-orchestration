@@ -33,12 +33,12 @@ WITH configuration_type AS (
       END AS end_date
 
 
-   FROM sms_datastream_link dsl
-           JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
+   FROM public.sms_datastream_link dsl
+           JOIN public.sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
            JOIN public.sms_device d ON d.id = dma.device_id
            JOIN public.sms_configuration c ON c.id = dma.configuration_id
-         LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
-         LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
+         LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
+         LEFT JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
     WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
 )
 

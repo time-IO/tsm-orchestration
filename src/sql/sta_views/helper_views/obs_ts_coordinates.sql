@@ -28,7 +28,7 @@ static_coords AS (SELECT
                          END AS coordinates
 
                   FROM obs_ts_action_type at
-                           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
+                           LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                   WHERE at.is_dynamic = FALSE),
 
 
