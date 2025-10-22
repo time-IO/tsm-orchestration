@@ -8,15 +8,17 @@ from timeio.grafana.dashboard import GrafanaDashboard
 from grafana_client.client import GrafanaException
 from timeio.grafana.user import GrafanaUser
 from timeio.grafana.team import GrafanaTeam
+from timeio.grafana.organization import GrafanaOrganization
 
 
 @pytest.fixture
 def mock_grafana_api():
     api = MagicMock()
     api.dashboard.get_dashboard.return_value = {
-        "dashboard": {"uid": "thing_uuid", "title": "dashboar_title"}
+        "dashboard": {"uid": "thing_uuid", "title": "dashboard_title"}
     }
     api.dashboard.update_dashboard.return_value = None
+    api.organizations.list_organization.return_value = [{"id": 1, "name": "org_1"}]
     return api
 
 
@@ -33,6 +35,11 @@ def mock_grafana_user(mock_grafana_api):
 @pytest.fixture
 def mock_grafana_team(mock_grafana_api):
     return GrafanaTeam(api=mock_grafana_api)
+
+
+@pytest.fixture
+def mock_grafana_organization(mock_grafana_api):
+    return GrafanaOrganization(api=mock_grafana_api)
 
 
 def test_exists_returns_true():
@@ -190,3 +197,24 @@ def test_team_create(mock_grafana_api, mock_grafana_team):
     )
     mock_grafana_team.get_by_name.assert_called_once_with("team")
     assert result == {"id": 1, "name": "team"}
+
+
+def test_organization_create_new(mock_grafana_api, mock_grafana_organization):
+    mock_grafana_api.organizations.list_organization.return_value = [
+        {"id": 1, "name": "org_1"}
+    ]
+    mock_grafana_api.organization.create_organization.return_value = {
+        "id": 2,
+        "name": "org_2",
+    }
+    org = mock_grafana_organization.create("org_2")
+    mock_grafana_api.organization.create_organization.assert_called_once_with(
+        {"name": "org_2"}
+    )
+    assert org == {"id": 2, "name": "org_2"}
+
+
+def test_organization_create_existing(mock_grafana_api, mock_grafana_organization):
+    org = mock_grafana_organization.create("org_1")
+    mock_grafana_api.organization.create_organization.assert_not_called()
+    assert org == {"id": 1, "name": "org_1"}

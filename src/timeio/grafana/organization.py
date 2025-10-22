@@ -31,9 +31,10 @@ class GrafanaOrganization:
         return {org.get("name"): org.get("id") for org in orgs}
 
     def create(self, name: str) -> OrgT:
-        if not self.get_by_name(name):
-            self.api.organization.create_organization({"name": name})
-            logger.debug(f"Created new organization '{name}'")
-        else:
+        existing_org = self.get_by_name(name)
+        if existing_org:
             logger.debug(f"Organization '{name}' already exists")
-        return self.get_by_name(name)
+            return existing_org
+        new_org = self.api.organization.create_organization({"name": name})
+        logger.debug(f"Created new organization '{name}'")
+        return new_org
