@@ -39,7 +39,7 @@ WITH configuration_type AS (
            JOIN public.sms_configuration c ON c.id = dma.configuration_id
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
-     WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
+     WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'s
   )
 
 
