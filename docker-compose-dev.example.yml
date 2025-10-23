@@ -75,11 +75,13 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${VISUALIZATION_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
 
   keycloak:
+    environment:
+      KC_LOG_LEVEL: "com.timeio.mqtt:DEBUG,org.keycloak:INFO"
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
-
+  
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"

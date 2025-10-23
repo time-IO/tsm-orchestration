@@ -16,3 +16,4 @@ data/
 docker-compose-dev.yml
 cron/crontab.txt
 **/__pycache__
+keycloak/mqtt-notifier/target

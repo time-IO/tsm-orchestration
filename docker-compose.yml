@@ -1319,6 +1319,8 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+      mqtt-broker:
+        condition: service_healthy
     environment:
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN_USER}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASS}"
@@ -1347,6 +1349,12 @@ services:
       KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
       KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
+      # MQTT connection for user_login message
+      MQTT_BROKER: "tcp://mqtt-broker:1883"
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_TOPIC: "userinfo_keycloak"
+      MQTT_QOS: "${MQTT_QOS}"
     healthcheck:
       test: >
         bash -c "
@@ -1360,6 +1368,7 @@ services:
     volumes:
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
+      - "./keycloak/plugins:/opt/keycloak/providers"
     command:
       - ${KEYCLOAK_START_COMMAND}
       - --import-realm
