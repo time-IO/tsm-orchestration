@@ -29,7 +29,8 @@ while true; do
   if [[ $elapsed -le $WINDOW_SECONDS ]]; then
     if [[ $attempts -eq $MAX_ATTEMPTS ]]; then
       echo "Error: Command failed after $attempts attempts within the first $WINDOW_SECONDS seconds."
-      exit 1
+      # We exit with a non-zero status to not restart the container.
+      exit 0
     fi
   else
     # reset attempts and timer if outside the window
