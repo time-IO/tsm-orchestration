@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import urllib.request
-from http.client import HTTPResponse
+import json
+import logging
 from unittest.mock import patch
 
 import pytest
-from requests import Response
 
 from timeio.sms import SmsCVSyncer
 from time import strptime
@@ -60,6 +59,19 @@ def test__SmsCvSyncer_value_from_dict__raise_KeyError():
 def test__SmsCvSyncer_to_postgres_str__warns_deprecated():
     with pytest.deprecated_call():
         SmsCVSyncer._to_postgres_str("foo")
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (42, 42),
+        ("42", 42),  # string ints are converted to ints ...
+        ("42.1", "42.1"),  # ... but string floats not
+    ],
+)
+def test__SmsCvSyncer_convert_special(value, expected):
+    result = SmsCVSyncer.convert_special(value)
+    assert result == expected
 
 
 @pytest.mark.filterwarnings("ignore:Deprecated method")
@@ -172,6 +184,72 @@ def test__SmsCvSyncer_table_create_query(data, expected):
     ],
 )
 def test__SmsCvSyncer_table_upsert_query(table_dict, data, expected):
-    self = SmsCVSyncer
-    result = SmsCVSyncer._table_upsert_query(self, table_dict, data)
+    # hack to bypass init, which works because we just use static methods,
+    # within the called function
+    syncer = object.__new__(SmsCVSyncer)
+    result = syncer._table_upsert_query(table_dict, data)
     assert result.as_string() == expected
+
+
+@pytest.mark.parametrize(
+    "table_dict, exception, errmsg",
+    [
+        ({}, KeyError, "Missing mandatory top-level field 'keys'"),
+        ({"name": "foo"}, KeyError, "Missing mandatory top-level field 'keys'"),
+        ({"keys": {}}, KeyError, "Missing mandatory top-level field 'name'"),
+        ({"name": "foo", "keys": {}}, KeyError, "Missing mandatory field 'id'"),
+    ],
+)
+def test__SmsCvSyncer_table_upsert_query__raisesErrors(table_dict, exception, errmsg):
+    # hack to bypass init, which works because we just use static methods,
+    # within the called function
+    syncer = object.__new__(SmsCVSyncer)  # hack to bypass init
+    with pytest.raises(exception, match=errmsg):
+        syncer._table_upsert_query(table_dict, [])
+
+
+@pytest.mark.parametrize(
+    "the_internet",
+    [
+        # this is a single dict which is passed as one data set to the function
+        {
+            "https://foo.org/some/end/point": {"data": [1, 2, 3], "other": 42},
+            "http://data/1": {"data": [3, 4, 5], "links": {"next": "http://data/2"}},
+            "http://data/2": {"data": [5, 6], "links": {"next": "http://data/3"}},
+            "http://data/3": {"data": [7, 7], "bar": 99},
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        ("https://foo.org/some/end/point", [1, 2, 3]),
+        ("http://data/2", [5, 6, 7, 7]),
+        ("http://data/1", [3, 4, 5, 5, 6, 7, 7]),
+    ],
+)
+def test__SmsCvSyncer_get_data_from_url(the_internet, url, expected):
+
+    def urlopen_mock(req):
+        """Fake urlopen.
+
+        This is called instead of urllib.request.urlopen and an urllib.request.Request
+        object is passed to us. We return a fake Response object, on which `read` can
+        be called, which is sufficient for the code we test here.
+
+        Depending on the url (Request.full_url) we return differnt data, which we
+        look up in `the_internet` (a dictionary).
+        """
+
+        class Response:
+            def read(self):
+                return json.dumps(the_internet[req.full_url])
+
+        return Response()
+
+    syncer = object.__new__(SmsCVSyncer)  # hack to bypass init
+    syncer.logger = logging.getLogger("dummy")
+    with patch("timeio.sms.urlopen", urlopen_mock):
+        result = syncer.get_data_from_url(url, "")
+
+    assert result == expected

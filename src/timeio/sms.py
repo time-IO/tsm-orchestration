@@ -77,8 +77,7 @@ class SmsCVSyncer:
             target = data.get("links", {}).get("next", None)
             if target is None:
                 break
-        data["data"] = all_data
-        return data
+        return all_data
 
     @staticmethod
     def _remove_id_duplicates(data: list[dict]) -> list[dict]:
@@ -166,7 +165,8 @@ class SmsCVSyncer:
         table = sql.Identifier(table_dict["name"])
         columns = [
             sql.SQL("{col} {type}").format(
-                col=sql.Identifier(k), type=sql.SQL(v["type"])
+                col=sql.Identifier(k),
+                type=sql.SQL(v["type"]),
             )
             for k, v in table_dict["keys"].items()
         ]
@@ -189,10 +189,19 @@ class SmsCVSyncer:
         c.execute(create_query)
 
     def _table_upsert_query(self, table_dict: dict, data: list[dict]) -> sql.Composed:
+
+        if "keys" not in table_dict.keys():
+            raise KeyError("Missing mandatory top-level field 'keys'")
+        if "name" not in table_dict.keys():
+            raise KeyError("Missing mandatory top-level field 'name'")
+        if "id" not in table_dict["keys"].keys():
+            raise KeyError("Missing mandatory field 'id' in 'keys'")
+
         template = sql.SQL(
             "INSERT INTO {table} ({columns}) VALUES {values} ON CONFLICT (id) DO UPDATE SET {excludeds}",
         )
         columns = [key for key in table_dict["keys"]]
+
         value_tuples = []
         for item in data:  # type: dict
             values = []
@@ -239,8 +248,8 @@ class SmsCVSyncer:
         """
         name = table_dict["name"]
         endpoint = table_dict["endpoint"]
-        r = self.get_data_from_url(url=url, endpoint=endpoint, token=token)
-        data = self._remove_id_duplicates(r["data"])
+        data = self.get_data_from_url(url=url, endpoint=endpoint, token=token)
+        data = self._remove_id_duplicates(data)
         query = self._table_upsert_query(table_dict, data)
 
         try:
