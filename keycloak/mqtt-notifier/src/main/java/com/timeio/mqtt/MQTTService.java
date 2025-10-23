@@ -36,8 +36,6 @@ public class MQTTService {
                 public void messageArrived(String topic, MqttMessage message) {}
                 public void deliveryComplete(IMqttDeliveryToken token) {}
             });
-
-            LOG.debug("Trying to connect to MQTT-Broker");
             mqttClient.connect(options);
             LOG.info("Connection to MQTT-Broker established");
         } catch (Exception e) {
