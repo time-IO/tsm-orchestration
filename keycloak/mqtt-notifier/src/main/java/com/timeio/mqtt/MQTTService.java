@@ -18,25 +18,25 @@ public class MQTTService {
     private MqttClient mqttClient;
 
     private MQTTService() {
+        mqttClient = new MqttClient(MQTT_BROKER, MqttClient.generateClientId(), new MemoryPersistence());
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setUserName(MQTT_USER);
+        options.setPassword(MQTT_PASSWORD.toCharArray());
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(true);
+
+        mqttClient.setCallback(new MqttCallbackExtended() {
+            public void connectComplete(boolean reconnect, String brokerURI) {
+                LOG.debugf("MQTT connected%s: %s", reconnect ? " (Reconnect)" : "", brokerURI);
+            }
+            public void connectionLost(Throwable cause) {
+                LOG.warn("MQTT connection lost", cause);
+            }
+            public void messageArrived(String topic, MqttMessage message) {}
+            public void deliveryComplete(IMqttDeliveryToken token) {}
+        });
+
         try {
-            mqttClient = new MqttClient(MQTT_BROKER, MqttClient.generateClientId(), new MemoryPersistence());
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setUserName(MQTT_USER);
-            options.setPassword(MQTT_PASSWORD.toCharArray());
-            options.setAutomaticReconnect(true);
-            options.setCleanSession(true);
-
-            mqttClient.setCallback(new MqttCallbackExtended() {
-                public void connectComplete(boolean reconnect, String brokerURI) {
-                    LOG.debugf("MQTT connected%s: %s", reconnect ? " (Reconnect)" : "", brokerURI);
-                }
-                public void connectionLost(Throwable cause) {
-                    LOG.warn("MQTT connection lost", cause);
-                }
-                public void messageArrived(String topic, MqttMessage message) {}
-                public void deliveryComplete(IMqttDeliveryToken token) {}
-            });
-
             mqttClient.connect(options);
             LOG.info("Connection to MQTT-Broker established");
         } catch (Exception e) {

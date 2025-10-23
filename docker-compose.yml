@@ -1319,6 +1319,8 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+      mqtt-broker:
+        condition: service_healthy
     environment:
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN_USER}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASS}"
