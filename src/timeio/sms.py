@@ -267,7 +267,8 @@ class SmsMaterializedViewsSyncer:
             with self.db.connection() as conn:
                 with conn.cursor() as cur:
                     cur.execute(query)
-                    self.materialized_views = cur.fetchall()
+                    tuples = cur.fetchall()
+                    self.materialized_views = [tup[0] for tup in tuples]
                     return self
 
         except psycopg.Error as e:
@@ -280,10 +281,9 @@ class SmsMaterializedViewsSyncer:
         try:
             with self.db.connection() as conn:
                 with conn.cursor() as cur:
-                    for matview in self.materialized_views:
-                        view_name = matview[0]
-                        cur.execute(template.format(sql.Identifier(view_name)))
-                        self.logger.info(f"Refreshed materialized view: {view_name}")
+                    for view in self.materialized_views:
+                        cur.execute(template.format(sql.Identifier(view)))
+                        self.logger.info(f"Refreshed materialized view: {view}")
         except psycopg.Error as e:
             self.logger.error(
                 f"Error occurred during refreshing materialized view: {e!r}"
