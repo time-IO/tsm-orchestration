@@ -1,6 +1,6 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
+-- BEGIN;
+--
+-- SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS "NEW_FEATURE" CASCADE;
 CREATE OR REPLACE VIEW "NEW_FEATURE" AS
@@ -25,7 +25,7 @@ SELECT DISTINCT
 
 
 FROM public.sms_datastream_link dsl
-JOIN foi_ts_coordinates crd ON crd.datastream_id = dsl.datastream_id
+JOIN foi_ts_coordinates_v2 crd ON crd.datastream_id = dsl.datastream_id
 ORDER BY "ID";
 
-COMMIT;
+-- COMMIT;

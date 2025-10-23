@@ -4,8 +4,8 @@
 --
 -- SET search_path TO %(tsm_schema)s;
 
-DROP VIEW IF EXISTS foi_ts_coordinates CASCADE;
-CREATE OR REPLACE VIEW foi_ts_coordinates AS
+DROP VIEW IF EXISTS foi_ts_coordinates_v2 CASCADE;
+CREATE OR REPLACE VIEW foi_ts_coordinates_v2 AS
 
 
 WITH
@@ -23,7 +23,7 @@ static_coords AS (SELECT  DISTINCT ON (action_id)
                          END AS coordinates
 
 
-                  FROM foi_ts_action_type at
+                  FROM foi_ts_action_type_v2 at
                            LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                   WHERE at.is_dynamic = FALSE),
 
@@ -40,7 +40,7 @@ dynamic_coords AS (SELECT
                           ELSE ARRAY [x.x_koor, y.y_koor, z.z_koor]
                         END AS coordinates
 
-                   FROM foi_ts_action_type at
+                   FROM foi_ts_action_type_v2 at
                             LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
                             LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
                             LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time

@@ -32,7 +32,7 @@ SELECT
     ) AS "PROPERTIES"
 
 FROM public.sms_datastream_link dsl
-JOIN obs_ts_coordinates crd ON dsl.datastream_id = crd.o_datastream_id
+JOIN obs_ts_coordinates_v2 crd ON dsl.datastream_id = crd.o_datastream_id
 WHERE crd.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
 
 ORDER BY "ID";
