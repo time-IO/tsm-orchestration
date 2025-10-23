@@ -64,7 +64,7 @@ class SmsCVSyncer:
         self, url: str, endpoint: str, token: Optional[str] = None
     ) -> Dict:
         target = urljoin(url, endpoint)
-        print(f"{self.get_utc_str()}: Getting data from {target}")
+        self.logger.info(f"{self.get_utc_str()}: Getting data from {target}")
         all_data = []
         headers = {}
         if token:
