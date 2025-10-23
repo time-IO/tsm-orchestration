@@ -1,5 +1,8 @@
 ARG BASE_IMAGE_REGISTRY=debian
-ARG BASE_IMAGE_TAG=bullseye-slim
+ARG BASE_IMAGE_TAG=stable-slim
+# which python version is supported by the version:
+# -> https://wiki.debian.org/Python#Supported_Python_Versions
+# debian-trixie contains python 3.13
 
 FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG} AS base
 
@@ -18,7 +21,7 @@ RUN apt-get -y update \
     && apt-get -y --no-install-recommends install \
       python3 \
       python3-tk \
-      libaio1 \
+      python3-venv \
       ca-certificates \
     && apt-get -y autoremove \
     && apt-get -y autoclean \
@@ -29,7 +32,6 @@ FROM base AS build
 RUN apt-get -y update \
     && apt-get -y --no-install-recommends install \
       git openssh-client \
-      python3-pip \
       curl \
       unzip
 
@@ -39,24 +41,21 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc 
 
 # add requirements
 COPY src/requirements.txt /tmp/requirements.txt
-RUN pip install --upgrade pip \
-    && pip install \
-        --user \
-        --no-cache-dir \
-        --no-warn-script-location -r \
-        /tmp/requirements.txt
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
 FROM base AS dist
 
-ARG UID=1000
-
-# Create a group and user
-RUN useradd --uid $UID -m appuser
-
-COPY --chown=appuser --from=build /root/.local /home/appuser/.local
+# copy the minio client and the python binaries (with baked-in requirement packages)
+# to the actual stage
 COPY --from=build /usr/local/bin/mc /usr/local/bin/mc
+COPY --from=build /opt/venv opt/venv
+# first serach in /opt/venv/bin for binaries (e.g. python3)
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Tell docker that all future commands should run as the appuser user
+# Create a group and user and then tell docker to run all future commands as 'appuser'
+ARG UID=1000
+RUN useradd --uid $UID -m appuser
 USER appuser
 
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
