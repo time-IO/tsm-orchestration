@@ -23,6 +23,7 @@ def test__SmsCvSyncer_get_utc_str():
         ([{"id": 1}], [{"id": 1}]),
         ([{"id": 1}, {"id": 1}], [{"id": 1}]),
         ([{"id": 1}, {"id": 2}, {"id": 2}, {"id": 1}], [{"id": 1}, {"id": 2}]),
+        ([{"id": 1, "val": "a"}, {"id": 1, "val": "b"}], [{"id": 1, "val": "a"}]),
     ],
 )
 def test__SmsCvSyncer_remove_id_duplicates(data, expected):
@@ -78,6 +79,7 @@ def test__SmsCvSyncer_to_postgres_str__warns_deprecated():
         ("foo", "'foo'"),
         ("42.", "'42.'"),  # string floats are converted to strings
         ("42.0001", "'42.0001'"),  # string floats are converted to strings
+        ("x'mas", "'x''mas'"),  # single quote escaped
     ],
 )
 def test__SmsCvSyncer_to_postgres_str(val, expected):
