@@ -31,5 +31,5 @@ while [[ $attempts -le $MAX_ATTEMPTS ]]; do
 done
 
 echo "Error: Command failed after $attempts attempts, each within the first $WINDOW_SECONDS seconds."
-# We exit with a non-zero status to not restart the container.
+# We exit with the zero (success) status to prevent a restart of the container.
 exit 0
