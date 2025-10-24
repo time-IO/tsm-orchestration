@@ -3,11 +3,21 @@ CREATE OR REPLACE VIEW obs_ts_action_type_v2 AS
 
 WITH static_action AS (
     SELECT
-        o.*,
+    o.id,
+    o.datastream_id,
+    o.result_time,
+    o.result_boolean,
+    o.result_quality,
+    o.result_string,
+    o.result_json,
+    o.result_number,
+    o.valid_time_start,
+    o.result_type,
+    o.valid_time_end,
         sla.id AS action_id,
         sla.begin_date,
         FALSE AS is_dynamic
-    FROM sms_configuration_static_location_begin_action_neu sla
+    FROM sms_configuration_static_location_begin_action_newrange sla
     JOIN sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
     JOIN sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o ON o.datastream_id = dsl.datastream_id
@@ -15,11 +25,21 @@ WITH static_action AS (
 ),
 dynamic_action AS (
     SELECT
-        o.*,
+    o.id,
+    o.datastream_id,
+    o.result_time,
+    o.result_boolean,
+    o.result_quality,
+    o.result_string,
+    o.result_json,
+    o.result_number,
+    o.valid_time_start,
+    o.result_type,
+    o.valid_time_end,
         dla.id AS action_id,
         dla.begin_date,
         TRUE AS is_dynamic
-    FROM sms_configuration_dynamic_location_begin_action_neu dla
+    FROM sms_configuration_dynamic_location_begin_action_newrange dla
     JOIN sms_device_mount_action dma ON dma.configuration_id = dla.configuration_id
     JOIN sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o ON o.datastream_id = dsl.datastream_id
