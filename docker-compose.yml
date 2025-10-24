@@ -671,7 +671,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -688,7 +688,9 @@ services:
       MQTT_PUBLISH_QOS: "${MQTT_QOS}"
       CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
       CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
-    entrypoint: ["python3", "run_configdb_updater.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "run_configdb_updater.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -704,7 +706,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -729,7 +731,9 @@ services:
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_minio.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_minio.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -754,7 +758,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -776,7 +780,9 @@ services:
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_user_database.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_user_database.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -792,7 +798,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -814,7 +820,9 @@ services:
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_frost.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_frost.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -831,7 +839,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -850,7 +858,9 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_mqtt_user.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_mqtt_user.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -866,7 +876,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -891,7 +901,9 @@ services:
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_grafana_dashboard.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_grafana_dashboard.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -911,7 +923,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -936,7 +948,9 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-    entrypoint: ["python3", "run_file_ingest.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "run_file_ingest.py"]
     volumes:
       - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
     logging:
@@ -954,7 +968,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -974,7 +988,9 @@ services:
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-    entrypoint: ["python3", "run_qc.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "run_qc.py"]
     logging:
       options:
         max-size: "${WORKER_RUN_QAQC_MAX_LOG_FILE_SIZE}"
@@ -990,7 +1006,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1009,7 +1025,9 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-    entrypoint: ["python3", "run_mqtt_ingest.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "run_mqtt_ingest.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1025,7 +1043,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
         mqtt-broker:
           condition: service_healthy
@@ -1045,7 +1063,9 @@ services:
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "setup_crontab.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_crontab.py"]
     volumes:
       - ./cron/crontab.txt:/tmp/cron/crontab.txt
     logging:
@@ -1066,7 +1086,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1089,7 +1109,9 @@ services:
       ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       JOURNALING: "${JOURNALING}"
-    entrypoint: ["python3", "setup_grafana_user.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_grafana_user.py"]
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1111,7 +1133,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1132,7 +1154,9 @@ services:
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-    entrypoint: ["python3", "sync_extapi_manager.py"]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "sync_extapi_manager.py"]
 
 
   # Summary
@@ -1151,7 +1175,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1174,7 +1198,9 @@ services:
       MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
       MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
-    entrypoint: [ "python3", "sync_extsftp_manager.py" ]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: [ "./worker_launcher.sh", "python3", "sync_extsftp_manager.py" ]
 
   # Summary
   # =======
@@ -1192,7 +1218,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1210,7 +1236,9 @@ services:
       JOURNALING: "${JOURNALING}"
       DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
       CV_API_URL: "${CRON_CV_API_URL}"
-    entrypoint: [ "python3", "sync_sms_manager.py" ]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: [ "./worker_launcher.sh", "python3", "sync_sms_manager.py" ]
 
   # Summary
   # =======
@@ -1228,7 +1256,7 @@ services:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
         condition: service_healthy
@@ -1245,7 +1273,9 @@ services:
       MQTT_QOS: "${MQTT_QOS}"
       DSN: "${DATABASE_ADMIN_DSN}"
       MONITORING_SCHEMA: "${MONITORING_DATABASE_USER}"
-    entrypoint: [ "python3", "run_mqtt_monitoring.py" ]
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: [ "./worker_launcher.sh", "python3", "run_mqtt_monitoring.py" ]
 
 
   cron-scheduler:
@@ -1315,6 +1345,7 @@ services:
 
   keycloak:
     image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
+    restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
       flyway:
