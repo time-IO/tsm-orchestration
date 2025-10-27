@@ -4,10 +4,7 @@ from __future__ import annotations
 import logging
 import typing
 from typing import Any
-
 import pandas as pd
-
-from timeio.errors import UserInputError
 from timeio.qc.qctools import QcTool, get_qctool
 
 __all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
@@ -85,33 +82,20 @@ class QcTest:
         qctool: str | QcTool,
     ):
         self.name = name or "Unnamed QcTest"
-        self.func_name = func_name
-        self.params = params
-        self.streams = [p for p in self.params if isinstance(p, StreamInfo)]
-        self.context_window = context_window
-        self.result: QcResult | None = None
-
         if isinstance(qctool, str):
             qctool = get_qctool(qctool)
         self._qctool: QcTool = qctool()
+        self._qctool.check_func_name(func_name)
+        self.func_name: str = func_name
+        self.context_window: WindowT = parse_context_window(context_window)
+        self.streams = [p for p in params if isinstance(p, StreamInfo)]
+        self.params = {p.key: p.parse() for p in params}
 
-        # filled by QcTest.parse()
-        self._parsed_window = None
-        self._parsed_args = {}
+        # filled by run
+        self.result: QcResult | None = None
 
     def __repr__(self):
-        return f"QcTest({self.name}, func={self.func_name})"
-
-    def parse(self):
-        self._qctool.check_func_name(self.func_name)
-        try:
-            self._parsed_window = parse_context_window(self.context_window)
-        except ValueError:
-            raise UserInputError(
-                "Parameter 'context_window' must not have a negative value"
-            )
-        for p in self.params:
-            self._parsed_args[p.key] = p.parse()
+        return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
 
     def load_data(
         self,
@@ -119,9 +103,6 @@ class QcTest:
         start_date: TimestampT | None = None,
         end_date: TimestampT | None = None,
     ):
-        window = self._parsed_window
-        if window is None:
-            raise RuntimeError("Must call QcTest.parse before load_data.")
         data = {}
         qual = {}
         for stream_info in self.streams:
@@ -134,19 +115,20 @@ class QcTest:
             if start_date is None:
                 start_date, end_date = stream.get_unprocessed_range()
 
-            df = stream.get_data(start_date, end_date, window)
+            df = stream.get_data(start_date, end_date, self.context_window)
             data[name] = df["data"]
             qual[name] = df["quality"]
 
         self._qctool.add_data(data, qual)
 
     def run(self) -> None:
-        func = self.func_name
-        kws = self._parsed_args
         logging.debug(
-            "executing tool: %s, func: %s,  kwargs: %s", self._qctool.name, func, kws
+            "executing tool: %s, func: %s,  kwargs: %s",
+            self._qctool.name,
+            self.func_name,
+            self.params,
         )
-        self._qctool.execute(func, **kws)
+        self._qctool.execute(self.func_name, **self.params)
 
         self.result = QcResult()
         self.result.data = self._qctool.get_data()
