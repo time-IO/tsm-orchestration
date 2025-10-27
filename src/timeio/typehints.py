@@ -5,7 +5,6 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
-
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
 JsonObjectT = dict[str, "JsonT"]
@@ -196,7 +195,16 @@ class ConfDB:
         description: str | None
 
 
-def check_dict_by_TypedDict(value: dict, expected: type[_t.TypedDict], name: str):
+typedDict = _t.TypeVar("typedDict")
+
+
+def check_dict_by_TypedDict(
+    value: dict, expected: type[typedDict], name: str
+) -> typedDict:
+    """Check if all mandatory keys of the expected TypedDict are present in value.
+    Returns the unmodified value. The return type is cast to the requested type.
+    """
     missing = expected.__required_keys__ - value.keys()
     if missing:
         raise KeyError(f"{', '.join(missing)} are a mandatory keys for {name!r}")
+    return _t.cast(expected, value)  # type: ignore
