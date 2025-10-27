@@ -77,7 +77,7 @@ class QcHandler(AbstractHandler):
 
     def act(self, content: dict, message: MQTTMessage):
 
-        if (version := content.setdefault("version", 1)) not in [1,2]:
+        if (version := content.setdefault("version", 1)) not in [1, 2]:
             raise NotImplementedError(
                 f"data_parsed payload version {version} is not supported yet."
             )
@@ -87,12 +87,16 @@ class QcHandler(AbstractHandler):
             logger.debug("successfully connected to configdb")
 
             if version == 1:
-                content = _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
+                content = _chkmsg(
+                    content, MqttPayload.DataParsedV1, "data-parsed message v1"
+                )
                 logger.info(f"QC was triggered by data upload to thing. {content=}")
                 project, config, thing_uuid = self.parse_version1(conn, content)
 
             else:
-                content =_chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
+                content = _chkmsg(
+                    content, MqttPayload.DataParsedV2, "data-parsed message v2"
+                )
                 logger.info(f"QC was triggered by user (in frontend). {content=}")
                 project, config, thing_uuid = self.parse_version2(conn, content)
 
@@ -111,7 +115,6 @@ class QcHandler(AbstractHandler):
             N = len(tests)
             for i, test in enumerate(tests, start=1):  # type: QcTest
                 logger.info("Test %s of %s: %s", i, N, test)
-                test.parse()
                 test.load_data(sm, start_date, end_date)
                 test.run()
                 sm.update(test.result)
