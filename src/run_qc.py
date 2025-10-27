@@ -45,43 +45,39 @@ class QcHandler(AbstractHandler):
                     "mandatory field '{key}' is not present in data"
                 )
 
-    def get_config_from_thing(self, thing: feta.Thing):
-        proj = thing.project
-        qc = proj.get_default_qaqc() or thing.get_legacy_qaqc()
-        if qc is None:
-            raise NoDataWarning(
-                f"Neither found active QC-Settings for project {proj.name}, "
-                f"nor legacy QC-Settings for thing {thing.name}."
-            )
-        return qc
-
+    @staticmethod
     def get_config_from_project(
-        self, conn: Connection, proj_uuid: str, config_name: str | None = None
-    ):
-        proj = feta.Project.from_uuid(proj_uuid, dsn=conn)
-        if config_name is None:
-            if (qc := proj.get_default_qaqc()) is None:
-                raise NoDataWarning(
-                    f"No active QC-Settings found in project {proj.name}"
-                )
-        else:
-            if not (qcs := proj.get_qaqcs(name=config_name)):
-                raise DataNotFoundError(
-                    f"No QC-Settings with name {config_name} "
-                    f"found in project {proj.name}"
-                )
-            qc = qcs[0]
-        return qc
+        project: feta.Project, config_name: str | None = None
+    ) -> feta.QAQC | None:
+        pass
+
+    @staticmethod
+    def parse_version1(
+        conn, content: MqttPayload.DataParsedV1
+    ) -> tuple[feta.Project, feta.QAQC | None, str]:
+        thing_uuid = content["thing_uuid"]
+        thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
+        project = thing.project
+        config = project.get_default_qaqc()
+        if config is None:
+            logger.info(f"No active QC-Settings found for {project}")
+        return project, config, thing_uuid
+
+    @staticmethod
+    def parse_version2(
+        conn, content: MqttPayload.DataParsedV2
+    ) -> tuple[feta.Project, feta.QAQC | None, None]:
+        proj_uuid = content["project_uuid"]
+        config_name = content["qc_settings_name"]
+        project = feta.Project.from_uuid(proj_uuid, dsn=conn)
+        config = (project.get_qaqcs(name=config_name) or [None])[0]
+        if config is None:
+            logger.info(f"No QC-Settings with name {config_name} found in {project}")
+        return project, config, None
 
     def act(self, content: dict, message: MQTTMessage):
-        version = content.setdefault("version", 1)
-        if version == 1:  # data was parsed
-            _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
-            logger.info(f"QC was triggered by data upload to thing. {content=}")
-        elif version == 2:  # triggered by frontend
-            _chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
-            logger.info(f"QC was triggered by user (in frontend). {content=}")
-        else:
+
+        if (version := content.setdefault("version", 1)) not in [1,2]:
             raise NotImplementedError(
                 f"data_parsed payload version {version} is not supported yet."
             )
@@ -91,17 +87,17 @@ class QcHandler(AbstractHandler):
             logger.debug("successfully connected to configdb")
 
             if version == 1:
-                content: MqttPayload.DataParsedV1
-                thing_uuid = content["thing_uuid"]
-                thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
-                proj_uuid = thing.project.uuid
-                config = self.get_config_from_thing(thing)
+                content = _chkmsg(content, MqttPayload.DataParsedV1, "data-parsed message v1")
+                logger.info(f"QC was triggered by data upload to thing. {content=}")
+                project, config, thing_uuid = self.parse_version1(conn, content)
+
             else:
-                content: MqttPayload.DataParsedV2
-                thing_uuid = None
-                proj_uuid = content["project_uuid"]
-                config_name = content["qc_settings_name"]
-                config = self.get_config_from_project(conn, proj_uuid, config_name)
+                content =_chkmsg(content, MqttPayload.DataParsedV2, "data-parsed message v2")
+                logger.info(f"QC was triggered by user (in frontend). {content=}")
+                project, config, thing_uuid = self.parse_version2(conn, content)
+
+            if config is None:
+                return
 
             logger.info(f"Got config %s", config)
             sm = StreamManager(conn)
@@ -126,7 +122,7 @@ class QcHandler(AbstractHandler):
         payload = json.dumps(
             {
                 "version": 1,
-                "project_uuid": proj_uuid,
+                "project_uuid": project.uuid,
                 "thing_uuid": thing_uuid,  # None allowed
                 "config": config.name,
             }
