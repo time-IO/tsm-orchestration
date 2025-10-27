@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import typing
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 import psycopg
@@ -13,6 +13,7 @@ from psycopg import sql
 
 from timeio import feta
 from timeio.common import ObservationResultType, get_result_field_name
+from timeio.cast import rm_tz
 from timeio.errors import DataNotFoundError
 
 if typing.TYPE_CHECKING:
@@ -88,7 +89,7 @@ class DatastreamSTA:
         self._conn = db_conn
         index = pd.DatetimeIndex([])
         self._data = pd.DataFrame([], index, self._columns, dtype=object)
-        self._unflagged: tuple[datetime, datetime] | None = None
+        self._unflagged: tuple[pd.Timestamp, pd.Timestamp] | None = None
 
         # To avoid to upload context data, we keep track
         # of the beginning of the data we upload later.
@@ -144,7 +145,7 @@ class DatastreamSTA:
             """
         )
 
-        if date_end is None:
+        if date_end in [None, pd.NaT]:
             date_end = "Infinity"
 
         prefix = f"[Stream {self.name}]"
@@ -170,9 +171,9 @@ class DatastreamSTA:
         if cur.rowcount > 0:
             timestamps, data = zip(*map(_extract, cur))
             index = pd.to_datetime(timestamps, utc=True)
-            # We remove the explicit TZ to avoid errors from mixing TZ aware
-            # and TZ unaware pandas objects. We handle all as if UTC.
-            index = index.tz_localize(None)
+            # To avoid errors from mixing TZ aware and TZ unaware objects.
+            # We handle everything in UTC without TZ.
+            index = rm_tz(index)
 
         return pd.DataFrame(data, index, self._columns, dtype=object)
 
@@ -236,10 +237,13 @@ class DatastreamSTA:
 
             with self._conn.cursor() as cur:
                 cur.execute(sql.SQL("set search_path to {}").format(self.schema))
-                newest = cur.execute(q1, [self.stream_id]).fetchone() or [None]
-                oldest = cur.execute(q2, [self.stream_id]).fetchone() or [None]
+                newest = cur.execute(q1, [self.stream_id]).fetchone()
+                oldest = cur.execute(q2, [self.stream_id]).fetchone()
 
-            self._unflagged = oldest[0], newest[0]
+            newest = rm_tz(pd.Timestamp(newest[0])) if newest else None
+            oldest = rm_tz(pd.Timestamp(oldest[0])) if oldest else None
+
+            self._unflagged = oldest, newest
 
         return self._unflagged
 
@@ -262,11 +266,17 @@ class DatastreamSTA:
             index = pd.DatetimeIndex([])
             return pd.DataFrame([], index, self._columns, dtype=object)
 
+        if date_end is None:
+            date_end = pd.NaT
+
+        date_start = rm_tz(date_start)
+        date_end = rm_tz(date_end)
+
         if self._data.empty:
             self._data = self._fetch(date_start, date_end).sort_index()
         else:
             missing_start = date_start < self._data.index.min()
-            missing_end = (date_end or pd.NaT) > self._data.index.max()
+            missing_end = date_end > self._data.index.max()
 
             if missing_start:
                 fetched = self._fetch(date_start, self._data.index.min())
@@ -456,14 +466,17 @@ class ProductStream(Datastream):
         index = data.index
         if data.empty:
             index = pd.DatetimeIndex([])
+
         assert isinstance(index, pd.DatetimeIndex)
 
-        self._data = pd.DataFrame(columns=self._columns, index=index)
+        _data = pd.DataFrame(columns=self._columns, index=index)
         if isinstance(data, pd.Series):
-            self._data["data"] = data
+            _data["data"] = data
         else:
-            self._data["data"] = data["data"]
-            self._data["quality"] = data["quality"]
+            _data["data"] = data["data"]
+            _data["quality"] = data["quality"]
+        _data.index = rm_tz(index)
+        self._data = _data
 
     def upload(self, api_base_url):
         """Update locally stored data and quality labels to the DB"""
@@ -533,14 +546,20 @@ class LocalStream(Datastream):
         # Note that this also works for empty data !
         if date_start is None:
             date_start = data.index.min()
+        else:
+            date_start = rm_tz(date_start)
+
         if date_end is None:
             date_end = data.index.max()
+        else:
+            date_end = rm_tz(date_end)
 
         if isinstance(context_window, pd.Timedelta):
             new_start = date_start - context_window
             return data.loc[new_start:date_end, self._columns]
 
         assert isinstance(context_window, int)
+
         chunk: pd.DataFrame = data.loc[date_start:date_end, self._columns]
         pre_chunk = data.loc[:date_start, self._columns]
         context: pd.DataFrame = pre_chunk.iloc[-(context_window + 1) : -1]
@@ -549,10 +568,8 @@ class LocalStream(Datastream):
     def set_data(self, data: pd.DataFrame) -> None:
         return ProductStream.set_data(self, data)
 
-    def get_unprocessed_range(
-        self,
-    ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
+    def get_unprocessed_range(self) -> tuple[None, None]:
         return None, None
 
     def upload(self, overwrite=True):
-        raise RuntimeError("Temporary data cannot be uploaded to the DB.")
+        raise RuntimeError("Temporary data never is uploaded to the DB.")
