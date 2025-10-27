@@ -200,18 +200,15 @@ def test_team_create(mock_grafana_api, mock_grafana_team):
 
 
 def test_organization_create_new(mock_grafana_api, mock_grafana_organization):
-    mock_grafana_api.organizations.list_organization.return_value = [
-        {"id": 1, "name": "org_1"}
-    ]
-    mock_grafana_api.organization.create_organization.return_value = {
-        "id": 2,
-        "name": "org_2",
-    }
-    org = mock_grafana_organization.create("org_2")
-    mock_grafana_api.organization.create_organization.assert_called_once_with(
-        {"name": "org_2"}
+    mock_grafana_organization.get_by_name = MagicMock(
+        side_effect=[None, {"id": 1, "name": "org_1"}]
     )
-    assert org == {"id": 2, "name": "org_2"}
+    result = mock_grafana_organization.create("org_1")
+    mock_grafana_api.organization.create_organization.assert_called_once_with(
+        {"name": "org_1"}
+    )
+    mock_grafana_organization.get_by_name.assert_called_with("org_1")
+    assert result == {"id": 1, "name": "org_1"}
 
 
 def test_organization_create_existing(mock_grafana_api, mock_grafana_organization):
