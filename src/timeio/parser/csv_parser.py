@@ -112,6 +112,8 @@ class CsvParser(PandasParser):
                 settings["names"] = header_names
                 settings["header"] = None
                 continue
+            if re.match(comment_regex, row.strip()):
+                continue
             rows.append(row)
         rawdata = "\n".join(rows)
 
