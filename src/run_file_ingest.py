@@ -91,11 +91,11 @@ class ParserJobHandler(AbstractHandler):
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
-                self.set_tags(bucket_name, filename, str(parser_id), "failed", "false")
+                self.set_tags(bucket_name, filename, str(parser_id), "failed")
                 raise e
             except Exception as e:
                 journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.set_tags(bucket_name, filename, str(parser_id), "failed", "false")
+                self.set_tags(bucket_name, filename, str(parser_id), "failed")
                 raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
@@ -116,9 +116,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
-            self.set_tags(
-                bucket_name, filename, str(parser_id), "db_insert_failed", "false"
-            )
+            self.set_tags(bucket_name, filename, str(parser_id), "db_insert_failed")
             raise e
 
         if len(obs) > 0:
@@ -130,7 +128,7 @@ class ParserJobHandler(AbstractHandler):
                 thing_uuid,
             )
 
-        self.set_tags(bucket_name, filename, str(parser_id), "successful", "true")
+        self.set_tags(bucket_name, filename, str(parser_id), "successful")
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}
         )
@@ -156,7 +154,7 @@ class ParserJobHandler(AbstractHandler):
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
-            if tags and tags["run_successful"] == "true":
+            if tags and tags["parsing_status"] == "successful":
                 return tags
 
         return None
@@ -167,7 +165,6 @@ class ParserJobHandler(AbstractHandler):
         filename,
         parser_id,
         parsing_status,
-        parsing_successful,
     ):
         # reparsing won't create new object version so we need to overwrite the latest version tags
         try:
@@ -180,7 +177,6 @@ class ParserJobHandler(AbstractHandler):
         object_tags["parsed_at"] = datetime.now().isoformat()
         object_tags["parser_id"] = parser_id
         object_tags["parsing_status"] = parsing_status
-        object_tags["parsing_successful"] = parsing_successful
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
     def read_file(self, bucket_name, object_name) -> str:
