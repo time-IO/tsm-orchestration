@@ -656,7 +656,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "sub", "email" ],
+    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "sub", "preferred_username", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   } ],
   "clientScopes" : [ {
@@ -1254,6 +1254,52 @@
       }
     } ]
   }, {
+    "id" : "6e1fe118-870f-4d8d-89b0-d1da2513f043",
+    "name" : "preferred_username",
+    "description" : "",
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "include.in.token.scope" : "false",
+      "display.on.consent.screen" : "true",
+      "gui.order" : "",
+      "consent.screen.text" : ""
+    },
+    "protocolMappers" : [ {
+      "id" : "4d347e3a-7cfb-43e1-9634-afaa8f76b9a4",
+      "name" : "preferred_username_attribute",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "aggregate.attrs": "false",
+        "introspection.token.claim" : "true",
+        "multivalued" : "false",
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "preferred_username",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "claim.name" : "preferred_username",
+        "jsonType.label" : "String"
+      }
+    }, {
+      "id": "8e5daf71-bbe2-4d0b-991c-7f7c321c3ae2",
+      "name": "Mapper preferred_username",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-group-membership-mapper",
+      "consentRequired": false,
+      "config": {
+        "full.path": "false",
+        "introspection.token.claim": "true",
+        "userinfo.token.claim": "true",
+        "multivalued": "false",
+        "id.token.claim": "true",
+        "lightweight.claim": "false",
+        "access.token.claim": "true",
+        "claim.name": "preferred_username"
+      }
+    } ]
+  }, {
     "id" : "63f1b831-f8b8-4b86-9124-1149e00de529",
     "name" : "email",
     "description" : "OpenID Connect built-in scope: email",
@@ -1451,6 +1497,16 @@
       "syncMode" : "INHERIT",
       "claim" : "sub",
       "user.attribute" : "sub"
+    }
+  }, {
+    "id" : "2d8fd0a2-0ed3-4205-b411-adcc6303c872",
+    "name" : "preferred_username",
+    "identityProviderAlias" : "helmholtz-aai",
+    "identityProviderMapper" : "oidc-user-attribute-idp-mapper",
+    "config" : {
+      "syncMode" : "INHERIT",
+      "claim" : "preferred_username",
+      "user.attribute" : "preferred_username"
     }
   }, {
     "id" : "f500a799-4c7d-4fd9-a3e1-89b5b49c8fd9",
