@@ -39,7 +39,7 @@ def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
             "header": None,
         }
 
-        kwargs = settings.pop("pandas_read_csv") or {}
+        kwargs = settings.pop("pandas_read_csv", {})
         settings = {**default_settings, **kwargs, **settings}
         return klass(settings)
 
@@ -49,7 +49,7 @@ def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
         default_settings = {
             "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
         }
-        kwargs = settings.pop("pandas_json_normalize") or {}
+        kwargs = settings.pop("pandas_json_normalize", {})
         settings = {**default_settings, **kwargs, **settings}
         return klass(settings)
 
