@@ -1156,19 +1156,37 @@
     },
     "protocolMappers" : [ {
       "id" : "90dc5e66-a0d1-437d-9896-a7bf0801f31e",
-      "name" : "Mapper eduperson_principal_name",
+      "name" : "eduperson_principal_name_attribute",
       "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-usermodel-property-mapper",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs": "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
-        "user.attribute" : "username",
+        "user.attribute" : "eduperson_principal_name",
         "id.token.claim" : "true",
         "lightweight.claim" : "false",
         "access.token.claim" : "true",
         "claim.name" : "eduperson_principal_name",
         "jsonType.label" : "String"
+      }
+    }, {
+      "id": "6937a726-c07f-445f-b1d0-d1bfb2b24f96",
+      "name": "Mapper eduperson_principal_name",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-group-membership-mapper",
+      "consentRequired": false,
+      "config": {
+        "full.path": "false",
+        "introspection.token.claim": "true",
+        "userinfo.token.claim": "true",
+        "multivalued": "false",
+        "id.token.claim": "true",
+        "lightweight.claim": "false",
+        "access.token.claim": "true",
+        "claim.name": "eduperson_principal_name"
       }
     } ]
   }, {
@@ -1313,7 +1331,7 @@
       "syncMode" : "IMPORT",
       "clientSecret" : "-",
       "allowedClockSkew" : "0",
-      "defaultScope" : "email profile eduperson_entitlement eduperson_unique_id",
+      "defaultScope" : "email profile eduperson_entitlement eduperson_principal_name eduperson_unique_id",
       "hideOnLoginPage" : "false",
       "userInfoUrl" : "${KEYCLOAK_HELMHOLTZ_AAI_OAUTH_USER_INFO_URL}",
       "validateSignature" : "true",
@@ -1339,6 +1357,16 @@
       "syncMode" : "INHERIT",
       "claim" : "eduperson_entitlement",
       "user.attribute" : "eduperson_entitlement"
+    }
+  }, {
+    "id" : "5fecd498-afb8-4d20-ba1a-d4808459adba",
+    "name" : "eduperson_principal_name",
+    "identityProviderAlias" : "helmholtz-aai",
+    "identityProviderMapper" : "oidc-user-attribute-idp-mapper",
+    "config" : {
+      "syncMode" : "INHERIT",
+      "claim" : "eduperson_principal_name",
+      "user.attribute" : "eduperson_principal_name"
     }
   }, {
     "id" : "f500a799-4c7d-4fd9-a3e1-89b5b49c8fd9",
