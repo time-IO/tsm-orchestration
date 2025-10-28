@@ -88,6 +88,7 @@ class CsvParser(PandasParser):
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
         skiprows = settings.pop("skiprows", 0)
+        skipfooter = settings.pop("skipfooter", 0)
         custom_names = settings.pop("names", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
@@ -114,8 +115,11 @@ class CsvParser(PandasParser):
             settings["names"] = header_names
             settings["header"] = None
 
-        # handle 'skiprows' parameter
-        lines = lines[skiprows:]
+        # handle 'skiprows' and 'skipfooter' parameter
+        if skipfooter > 0:
+            lines = lines[skiprows:-skipfooter]
+        else:
+            lines = lines[skiprows:]
 
         # handle 'comment' parameter
         for line in lines:
