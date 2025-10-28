@@ -92,8 +92,6 @@ services:
     user: "node"
     tty: true
     command: ./start.sh
-    networks:
-      - default
     environment:
       APP_PORT: 80
       NODE_ENV: development
