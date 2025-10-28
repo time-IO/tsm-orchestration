@@ -87,34 +87,44 @@ class CsvParser(PandasParser):
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
+        skiprows = settings.pop("skiprows", 0)
         custom_names = settings.pop("names", None)
         delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
-        if header_line is not None:
-            header_raw = get_header(rawdata, header_line)
-            self.logger.debug(f"HEADER: {header_raw}")
+
         if tz_info is not None:
             if tz_info not in pytz.all_timezones:
                 raise ValueError(f"Invalid timezone string: {tz_info}")
+
+        rows = []
+        lines = rawdata.splitlines()
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
                 comment_regex = (comment_regex,)
             comment_regex = "|".join(comment_regex)
 
-        rows = []
-        for i, row in enumerate(rawdata.splitlines()):
-            if i == header_line:
-                # we might have comments at the header line as well
-                header_raw_clean = re.sub(comment_regex, "", row).strip()
-                header_names = pandafy_headerline(header_raw_clean, delimiter)
-                settings["names"] = header_names
-                settings["header"] = None
+        # handle 'header' parameter
+        if header_line is not None:
+            raw_header = lines[header_line]
+            self.logger.debug(f"HEADER: {raw_header}")
+            header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
+            header_names = pandafy_headerline(header_raw_clean, delimiter)
+            settings["names"] = header_names
+            settings["header"] = None
+
+        # handle 'skiprows' parameter
+        lines = lines[skiprows:]
+
+        # handle 'comment' parameter
+        for line in lines:
+            if re.match(comment_regex, line.strip()):
                 continue
-            if re.match(comment_regex, row.strip()):
+            if header_line is not None and line == raw_header:
                 continue
-            rows.append(row)
+            rows.append(line)
+
         rawdata = "\n".join(rows)
 
         try:
