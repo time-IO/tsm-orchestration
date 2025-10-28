@@ -1190,22 +1190,6 @@
         "claim.name" : "eduperson_principal_name",
         "jsonType.label" : "String"
       }
-    }, {
-      "id": "6937a726-c07f-445f-b1d0-d1bfb2b24f96",
-      "name": "Mapper eduperson_principal_name",
-      "protocol": "openid-connect",
-      "protocolMapper": "oidc-group-membership-mapper",
-      "consentRequired": false,
-      "config": {
-        "full.path": "false",
-        "introspection.token.claim": "true",
-        "userinfo.token.claim": "true",
-        "multivalued": "false",
-        "id.token.claim": "true",
-        "lightweight.claim": "false",
-        "access.token.claim": "true",
-        "claim.name": "eduperson_principal_name"
-      }
     } ]
   }, {
     "id" : "4dbfa693-93d9-4fe9-a5ef-12df7c465f09",
@@ -1236,22 +1220,6 @@
         "claim.name" : "sub",
         "jsonType.label" : "String"
       }
-    }, {
-      "id": "2f8e17f2-0ad2-4520-93a0-56ea5ffac8da",
-      "name": "Mapper sub",
-      "protocol": "openid-connect",
-      "protocolMapper": "oidc-group-membership-mapper",
-      "consentRequired": false,
-      "config": {
-        "full.path": "false",
-        "introspection.token.claim": "true",
-        "userinfo.token.claim": "true",
-        "multivalued": "false",
-        "id.token.claim": "true",
-        "lightweight.claim": "false",
-        "access.token.claim": "true",
-        "claim.name": "sub"
-      }
     } ]
   }, {
     "id" : "6e1fe118-870f-4d8d-89b0-d1da2513f043",
@@ -1281,22 +1249,6 @@
         "access.token.claim" : "true",
         "claim.name" : "preferred_username",
         "jsonType.label" : "String"
-      }
-    }, {
-      "id": "8e5daf71-bbe2-4d0b-991c-7f7c321c3ae2",
-      "name": "Mapper preferred_username",
-      "protocol": "openid-connect",
-      "protocolMapper": "oidc-group-membership-mapper",
-      "consentRequired": false,
-      "config": {
-        "full.path": "false",
-        "introspection.token.claim": "true",
-        "userinfo.token.claim": "true",
-        "multivalued": "false",
-        "id.token.claim": "true",
-        "lightweight.claim": "false",
-        "access.token.claim": "true",
-        "claim.name": "preferred_username"
       }
     } ]
   }, {
