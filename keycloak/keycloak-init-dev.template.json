@@ -769,6 +769,24 @@
       "consent.screen.text" : ""
     },
     "protocolMappers" : [ {
+      "id": "b8841833-3fb9-466c-bd22-c851c4b7b931",
+      "name" : "eduperson_unique_id_attribute",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-attribute-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "aggregate.attrs" : "false",
+        "introspection.token.claim" : "true",
+        "multivalued" : "false",
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "eduperson_unique_id",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "claim.name" : "eduperson_unique_id",
+        "jsonType.label" : "String"
+      }
+    },{
       "id" : "772e6018-944b-4bd9-967b-542ce1105f07",
       "name" : "Mapper eduperson_unique_id",
       "protocol" : "openid-connect",
@@ -1447,6 +1465,16 @@
     }
   } ],
   "identityProviderMappers" : [ {
+    "id" : "ccbacd4a-f639-41e7-94c0-d14b246cd199",
+    "name" : "eduperson_unique_id",
+    "identityProviderAlias" : "helmholtz-aai",
+    "identityProviderMapper" : "oidc-user-attribute-idp-mapper",
+    "config" : {
+      "syncMode" : "INHERIT",
+      "claim" : "eduperson_unique_id",
+      "user.attribute" : "eduperson_unique_id"
+    }
+  }, {
     "id" : "368fed7e-6b0a-4f6a-ac1d-f1260310d275",
     "name" : "eduperson_entitlement",
     "identityProviderAlias" : "helmholtz-aai",
