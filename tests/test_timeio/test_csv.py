@@ -25,7 +25,7 @@ RAWDATA = """
     "settings, columns",
     [
         [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 4, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
         [{"skiprows": 0, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
@@ -318,3 +318,72 @@ def test_double_tz_error():
         match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
     ):
         df = paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+
+
+RAWDATA_SKIP_WITH_HEADER = """Skipline
+#Commentline
+time,var1,var2,var3
+#A second commentline
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+#Third Commentline
+Skipfooter1
+Skipfooter2
+"""
+
+
+def test_skipping_and_comments_with_header():
+    settings = {
+        "skiprows": 1,
+        "comment": "#",
+        "header": 2,
+        "skipfooter": 2,
+        "delimiter": ",",
+        "decimal": ".",
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_SKIP_WITH_HEADER, "project", "thing")
+    expected_index = pd.DatetimeIndex(
+        ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
+        name="time",
+    )
+    expected_col_names = ["var1", "var2", "var3"]
+    assert df.shape == (3, 3)
+    assert df.index.equals(expected_index)
+    assert list(df.columns) == expected_col_names
+
+
+RAWDATA_SKIP_WITHOUT_HEADER = """Skipline
+#Commentline
+#A second commentline
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+#Third Commentline
+Skipfooter1
+Skipfooter2
+"""
+
+
+def test_skipping_and_comments_without_header():
+    settings = {
+        "skiprows": 1,
+        "comment": "#",
+        "skipfooter": 2,
+        "delimiter": ",",
+        "decimal": ".",
+        "header": None,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")
+    expected_index = pd.DatetimeIndex(
+        ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
+        name="time",
+    )
+    expected_col_names = [1, 2, 3]
+    assert df.shape == (3, 3)
+    assert df.index.equals(expected_index)
+    assert list(df.columns) == expected_col_names

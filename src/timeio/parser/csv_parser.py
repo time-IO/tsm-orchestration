@@ -94,11 +94,13 @@ class CsvParser(PandasParser):
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
 
-        if tz_info is not None:
-            if tz_info not in pytz.all_timezones:
-                raise ValueError(f"Invalid timezone string: {tz_info}")
+        # TODO: Maybe FE can already check user input to prevent this case?
+        if header_line is not None and skiprows > header_line:
+            raise ValueError("'skiprows' removes the header line")
 
-        rows = []
+        if tz_info is not None and tz_info not in pytz.all_timezones:
+            raise ValueError(f"Invalid timezone string: {tz_info}")
+
         lines = rawdata.splitlines()
 
         if comment_regex := settings.pop("comment", r"(?!.*)"):
@@ -106,30 +108,23 @@ class CsvParser(PandasParser):
                 comment_regex = (comment_regex,)
             comment_regex = "|".join(comment_regex)
 
+        # handle 'skiprows' and 'skipfooter' parameter
+        lines = lines[skiprows : -skipfooter or None]
+
         # handle 'header' parameter
         if header_line is not None:
-            raw_header = lines[header_line]
-            self.logger.debug(f"HEADER: {raw_header}")
+            header_pos = header_line - skiprows
+            raw_header = lines[header_pos]
             header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
             header_names = pandafy_headerline(header_raw_clean, delimiter)
             settings["names"] = header_names
+            lines = lines[:header_pos] + lines[header_pos + 1 :]
             settings["header"] = None
 
-        # handle 'skiprows' and 'skipfooter' parameter
-        if skipfooter > 0:
-            lines = lines[skiprows:-skipfooter]
-        else:
-            lines = lines[skiprows:]
-
         # handle 'comment' parameter
-        for line in lines:
-            if re.match(comment_regex, line.strip()):
-                continue
-            if header_line is not None and line == raw_header:
-                continue
-            rows.append(line)
+        lines = [line for line in lines if not re.match(comment_regex, line.strip())]
 
-        rawdata = "\n".join(rows)
+        rawdata = "\n".join(lines)
 
         try:
             df = pd.read_csv(StringIO(rawdata), **settings)
