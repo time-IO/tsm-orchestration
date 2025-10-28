@@ -74,25 +74,11 @@ class CsvParser(PandasParser):
                 ParsingWarning,
             )
 
-    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
-        """
-        Parse rawdata string to pandas.DataFrame
-        rawdata: the unparsed content
-        NOTE:
-            we need to preserve the original column numbering
-        """
-        settings = self.settings.copy()
-        self.logger.info(settings)
-
-        timestamp_columns = settings.pop("timestamp_columns")
-        ts_indices = [i["column"] for i in timestamp_columns]
+    @staticmethod
+    def _validate_settings(settings):
         header_line = settings.get("header", None)
-        skiprows = settings.pop("skiprows", 0)
-        skipfooter = settings.pop("skipfooter", 0)
-        custom_names = settings.pop("names", None)
-        delimiter = settings.get("delimiter", ",")
-        duplicate = settings.pop("duplicate", False)
-        tz_info = settings.pop("timezone", None)
+        skiprows = settings.get("skiprows", 0)
+        tz_info = settings.get("timezone", None)
 
         # TODO: Maybe FE can already check user input to prevent this case?
         if header_line is not None and skiprows > header_line:
@@ -101,28 +87,71 @@ class CsvParser(PandasParser):
         if tz_info is not None and tz_info not in pytz.all_timezones:
             raise ValueError(f"Invalid timezone string: {tz_info}")
 
-        lines = rawdata.splitlines()
+        return settings
 
+    @staticmethod
+    def _define_comment_regex(settings):
         if comment_regex := settings.pop("comment", r"(?!.*)"):
             if isinstance(comment_regex, str):
                 comment_regex = (comment_regex,)
-            comment_regex = "|".join(comment_regex)
+        return "|".join(comment_regex)
+
+    @staticmethod
+    def _apply_skipping(lines, skiprows, skipfooter):
+        return lines[skiprows : -skipfooter or None]
+
+    @staticmethod
+    def _handle_header(lines, settings, header_line, comment_regex, skiprows):
+        if header_line is None:
+            return lines, None
+
+        header_pos = header_line - skiprows
+        raw_header = lines[header_pos]
+        header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
+        delimiter = settings.get("delimiter", ",")
+        header_names = pandafy_headerline(header_raw_clean, delimiter)
+
+        settings["names"] = header_names
+        settings["header"] = None
+        lines = lines[:header_pos] + lines[header_pos + 1 :]
+        return lines, header_names
+
+    @staticmethod
+    def _filter_comments(lines: list[str], comment_regex: str) -> list[str]:
+        return [line for line in lines if not re.match(comment_regex, line.strip())]
+
+    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
+        """
+        Parse rawdata string to pandas.DataFrame
+        rawdata: the unparsed content
+        NOTE:
+            we need to preserve the original column numbering
+        """
+        settings = self._validate_settings(self.settings.copy())
+        self.logger.info(settings)
+
+        timestamp_columns = settings.pop("timestamp_columns")
+        ts_indices = [i["column"] for i in timestamp_columns]
+        header_line = settings.get("header", None)
+        skiprows = settings.pop("skiprows", 0)
+        skipfooter = settings.pop("skipfooter", 0)
+        custom_names = settings.pop("names", None)
+        duplicate = settings.pop("duplicate", False)
+        tz_info = settings.pop("timezone", None)
+
+        lines = rawdata.splitlines()
+        comment_regex = self._define_comment_regex(settings)
 
         # handle 'skiprows' and 'skipfooter' parameter
-        lines = lines[skiprows : -skipfooter or None]
+        lines = self._apply_skipping(lines, skiprows, skipfooter)
 
         # handle 'header' parameter
-        if header_line is not None:
-            header_pos = header_line - skiprows
-            raw_header = lines[header_pos]
-            header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
-            header_names = pandafy_headerline(header_raw_clean, delimiter)
-            settings["names"] = header_names
-            lines = lines[:header_pos] + lines[header_pos + 1 :]
-            settings["header"] = None
+        lines, header_names = self._handle_header(
+            lines, settings, header_line, comment_regex, skiprows
+        )
 
         # handle 'comment' parameter
-        lines = [line for line in lines if not re.match(comment_regex, line.strip())]
+        lines = self._filter_comments(lines, comment_regex)
 
         rawdata = "\n".join(lines)
 
