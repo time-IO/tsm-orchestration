@@ -109,6 +109,5 @@ services:
 volumes:
   keycloak-data:
   npm:
-    external: true
   node_modules:
 
