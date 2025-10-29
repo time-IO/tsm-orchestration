@@ -94,7 +94,7 @@ def test_bosch_do_parse():
             "payload": {
                 "Type": "DATA",
                 "UTC": "2025-05-21T09:12:49.000Z",
-                "deviceID": "359072067791943",
+                "deviceID": "device_id",
                 "param1": 1,
                 "param2": 2,
                 "param3": 3,
@@ -104,7 +104,7 @@ def test_bosch_do_parse():
             "payload": {
                 "Type": "DATA",
                 "UTC": "2025-05-21T09:13:49.000Z",
-                "deviceID": "359072067791943",
+                "deviceID": "device_id",
                 "param1": 3,
                 "param2": 2,
                 "param3": 1,
