@@ -63,13 +63,13 @@ class BoschApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        password = decrypt(settings["password"], get_crypt_key())
         server_url = (
             f"{settings['endpoint']}/{settings['sensor_id']}/"
             f"{content['datetime_from']}/{content['datetime_to']}"
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
+        password = decrypt(settings["password"], get_crypt_key())
         headers = {
             "Authorization": f"{self.basic_auth(settings['username'], password)}",
             "Content-Type": "application/json",

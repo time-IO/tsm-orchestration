@@ -38,9 +38,7 @@ def mock_response():
     return _response
 
 
-@patch("timeio.ext_api.decrypt", return_value="dec_pw")
-@patch("timeio.ext_api.get_crypt_key", return_value="secret_key")
-def test_no_https_error(mock_decrypt, mock_key, mock_thing):
+def test_no_https_error(mock_thing):
     settings = {
         "version": 1,
         "endpoint": "http://bosch.test",
