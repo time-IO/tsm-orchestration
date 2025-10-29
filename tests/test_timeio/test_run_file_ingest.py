@@ -22,7 +22,8 @@ def test__ParserJobHandler_is_valid_event(content, expected):
     "content, expected",
     [
         ({}, KeyError("EventName")),
-        (None, TypeError("'NoneType' object is not subscriptable")),
+        (None, TypeError(".* object is not subscriptable$")),
+        (99, TypeError(".* object is not subscriptable$")),
     ],
 )
 def test__ParserJobHandler_is_valid_event__raises(content, expected):

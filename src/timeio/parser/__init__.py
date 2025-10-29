@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from timeio.parser.abc_parser import AbcParser
 from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
@@ -12,7 +14,12 @@ from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
 from timeio.parser.mqtt_devices.sine_dummy import SineDummyParser
 
 
-def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
+def get_parser(
+    parser_type: str, settings: dict[str, Any] | None
+) -> CsvParser | JsonParser | MqttParser:
+    """Get initialized parser by name."""
+
+    settings = settings or {}
     types = {
         "csvparser": CsvParser,
         "jsonparser": JsonParser,
@@ -27,8 +34,6 @@ def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
         raise NotImplementedError(f"parser {parser_type!r} not known")
 
     if issubclass(klass, CsvParser):
-        if not settings:
-            settings = {}
         default_settings = {
             "comment": "#",
             "decimal": ".",
@@ -39,13 +44,11 @@ def get_parser(parser_type, settings) -> CsvParser | JsonParser | MqttParser:
             "header": None,
         }
 
-        kwargs = settings.pop("pandas_read_csv", {})
-        settings = {**default_settings, **kwargs, **settings}
+        pd_kws = settings.pop("pandas_read_csv", {})
+        settings = {**default_settings, **pd_kws, **settings}
         return klass(settings)
 
     elif issubclass(klass, JsonParser):
-        if not settings:
-            settings = {}
         default_settings = {
             "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
         }
