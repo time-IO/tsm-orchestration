@@ -106,7 +106,7 @@ class CsvParser(PandasParser):
 
         settings["names"] = header_names
         settings["header"] = None
-        lines = lines[:header_line] + lines[header_line + 1 :]
+        lines = lines[header_line + 1 :]
 
         return lines, header_names
 
@@ -133,18 +133,13 @@ class CsvParser(PandasParser):
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
 
-        lines = rawdata.splitlines()
         comment_regex = self._define_comment_regex(settings)
 
-        # handle 'skiprows' and 'skipfooter' parameter
+        lines = rawdata.splitlines()
         lines = self._apply_skipping(lines, skiprows, skipfooter)
-
-        # handle 'header' parameter
         lines, header_names = self._handle_header(
             lines, settings, header_line, comment_regex
         )
-
-        # handle 'comment' parameter
         lines = self._filter_comments(lines, comment_regex)
 
         rawdata = "\n".join(lines)
