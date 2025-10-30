@@ -367,9 +367,15 @@ Skipfooter2
 """
 
 
-def test_skipping_and_comments_without_header():
-    settings = {
-        "skiprows": 1,
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {"skiprows": 1},
+        {"skiprows": 2},
+    ],
+)
+def test_skipping_and_comments_without_header(settings):
+    base_settings = {
         "comment": "#",
         "skipfooter": 2,
         "delimiter": ",",
@@ -377,7 +383,7 @@ def test_skipping_and_comments_without_header():
         "header": None,
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
     }
-    parser = CsvParser(settings)
+    parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")
     expected_index = pd.DatetimeIndex(
         ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
