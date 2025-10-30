@@ -85,10 +85,14 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _define_comment_regex(settings):
-        if comment_regex := settings.pop("comment", r"(?!.*)"):
-            if isinstance(comment_regex, str):
-                comment_regex = (comment_regex,)
-        return "|".join(comment_regex)
+        comments = settings.pop("comment", "")
+        if not comments:
+            return ""
+        if isinstance(comments, str):
+            comments = [comments]
+        comments = [re.escape(c) for c in comments]
+        comment_regex = "|".join(comments)
+        return rf"({comment_regex}).*"
 
     @staticmethod
     def _apply_skipping(lines, skiprows, skipfooter):
@@ -112,7 +116,7 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _filter_comments(lines: list[str], comment_regex: str) -> list[str]:
-        return [line for line in lines if not re.match(comment_regex, line.strip())]
+        return [re.sub(comment_regex, "", line.strip()) for line in lines]
 
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
