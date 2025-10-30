@@ -24,9 +24,9 @@ RAWDATA = """
 @pytest.mark.parametrize(
     "settings, columns",
     [
-        [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 3, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
-        [{"skiprows": 0, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 4, "header": None}, [2, 4, 8]],
+        [{"skiprows": 3, "header": 0}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 3, "header": 0, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
 def test_parsing(settings, columns):
@@ -335,9 +335,9 @@ Skipfooter2
 
 def test_skipping_and_comments_with_header():
     settings = {
-        "skiprows": 1,
+        "skiprows": 2,
         "comment": "#",
-        "header": 2,
+        "header": 0,
         "skipfooter": 2,
         "delimiter": ",",
         "decimal": ".",

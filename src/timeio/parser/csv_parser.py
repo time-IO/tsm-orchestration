@@ -76,13 +76,7 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _validate_settings(settings):
-        header_line = settings.get("header", None)
-        skiprows = settings.get("skiprows", 0)
         tz_info = settings.get("timezone", None)
-
-        # TODO: Maybe FE can already check user input to prevent this case?
-        if header_line is not None and skiprows > header_line:
-            raise ValueError("'skiprows' removes the header line")
 
         if tz_info is not None and tz_info not in pytz.all_timezones:
             raise ValueError(f"Invalid timezone string: {tz_info}")
@@ -101,19 +95,19 @@ class CsvParser(PandasParser):
         return lines[skiprows : -skipfooter or None]
 
     @staticmethod
-    def _handle_header(lines, settings, header_line, comment_regex, skiprows):
+    def _handle_header(lines, settings, header_line, comment_regex):
         if header_line is None:
             return lines, None
 
-        header_pos = header_line - skiprows
-        raw_header = lines[header_pos]
+        raw_header = lines[header_line]
         header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
         delimiter = settings.get("delimiter", ",")
         header_names = pandafy_headerline(header_raw_clean, delimiter)
 
         settings["names"] = header_names
         settings["header"] = None
-        lines = lines[:header_pos] + lines[header_pos + 1 :]
+        lines = lines[:header_line] + lines[header_line + 1 :]
+
         return lines, header_names
 
     @staticmethod
@@ -147,7 +141,7 @@ class CsvParser(PandasParser):
 
         # handle 'header' parameter
         lines, header_names = self._handle_header(
-            lines, settings, header_line, comment_regex, skiprows
+            lines, settings, header_line, comment_regex
         )
 
         # handle 'comment' parameter
