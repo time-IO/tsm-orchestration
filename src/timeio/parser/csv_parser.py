@@ -5,7 +5,7 @@ import warnings
 import yaml
 import os
 import pytz
-from typing import TypeVar
+from typing import TypeVar, Any
 import pandas as pd
 import numpy as np
 from io import StringIO
@@ -84,15 +84,14 @@ class CsvParser(PandasParser):
         return settings
 
     @staticmethod
-    def _define_comment_regex(settings):
+    def _define_comment_regex(settings: dict[str, Any]) -> str:
         comments = settings.pop("comment", "")
         if not comments:
             return ""
         if isinstance(comments, str):
             comments = [comments]
         comments = [re.escape(c) for c in comments]
-        comment_regex = "|".join(comments)
-        return rf"({comment_regex}).*"
+        return "|".join(comments)
 
     @staticmethod
     def _apply_skipping(lines, skiprows, skipfooter):
@@ -116,7 +115,11 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _filter_comments(lines: list[str], comment_regex: str) -> list[str]:
-        return [re.sub(comment_regex, "", line.strip()) for line in lines]
+        """Remove everything after a comment marker in each line"""
+        if not comment_regex:
+            return lines
+        regex = rf"({comment_regex}).*"
+        return [re.sub(regex, "", line.strip()) for line in lines]
 
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
