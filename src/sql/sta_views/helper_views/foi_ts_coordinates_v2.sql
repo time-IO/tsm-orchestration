@@ -1,9 +1,5 @@
 -- View for determining the coordinates, distinguishing between static/dynamic actions,
 -- later merged again using UNION, therefore the same structure (columns).
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS foi_ts_coordinates_v2 CASCADE;
 CREATE OR REPLACE VIEW foi_ts_coordinates_v2 AS
 
@@ -24,7 +20,7 @@ static_coords AS (SELECT  DISTINCT ON (action_id)
 
 
                   FROM foi_ts_action_type_v2 at
-                           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
+                           LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
                   WHERE at.is_dynamic = FALSE),
 
 
@@ -71,4 +67,3 @@ SELECT action_type,
        CONCAT(coordinates, action_id, 'dyn') AS feature_id
 FROM dynamic_coords;
 
-COMMIT;

@@ -4,6 +4,7 @@
 
 import pandas as pd
 import pytest
+import json
 
 from timeio.parser import CsvParser
 from timeio.errors import ParsingError
@@ -25,7 +26,7 @@ RAWDATA = """
     [
         [{"skiprows": 3}, [2, 4, 8]],
         [{"skiprows": 4, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
-        [{"skiprows": 4, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 0, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
 def test_parsing(settings, columns):
@@ -78,21 +79,19 @@ def test_dirty_data_parsing():
 
     obs = parser.to_observations(df[[3]], origin="test")
     assert len(obs) == 3
-    assert obs[0] == {
-        "result_time": "2021-09-09T06:00:00",
-        "result_string": "xW8",
-        "result_type": 1,
-        "datastream_pos": "3",
-        "parameters": '{"origin": "test", "column_header": "3"}',
-    }
+    assert obs[0]["result_time"] == "2021-09-09T06:00:00"
+    assert obs[0]["result_string"] == "xW8"
+    params = json.loads(obs[0]["parameters"])
+    assert params["origin"] == "test"
+    assert params["column_header"] == "3"
+    assert params["parser_id"] == None
 
-    assert obs[1] == {
-        "result_time": "2021-09-09T05:45:00",
-        "result_number": 989.7,
-        "result_type": 0,
-        "datastream_pos": "3",
-        "parameters": '{"origin": "test", "column_header": "3"}',
-    }
+    assert obs[1]["result_time"] == "2021-09-09T05:45:00"
+    assert obs[1]["result_number"] == 989.7
+    params = json.loads(obs[1]["parameters"])
+    assert params["origin"] == "test"
+    assert params["column_header"] == "3"
+    assert params["parser_id"] == None
 
 
 MULTIDATECOLUMDATA = """

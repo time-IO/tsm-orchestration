@@ -1,17 +1,10 @@
 -- View for determining the coordinates, distinguishing between static/dynamic actions,
 -- later merged again using UNION, therefore the same structure (columns).
 
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS obs_ts_coordinates CASCADE;
-CREATE OR REPLACE VIEW obs_ts_coordinates AS
+CREATE VIEW obs_ts_coordinates AS
 
-
-WITH
-
-static_coords AS (SELECT
+WITH  static_coords AS (SELECT
                       'static'      AS action_type,
                        at.action_id,
                        at.o_datastream_id,
@@ -32,8 +25,8 @@ static_coords AS (SELECT
                          END AS coordinates
 
                   FROM obs_ts_action_type at
-                           LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
-                  WHERE at.is_dynamic = FALSE),
+                    LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.id = at.action_id
+                        WHERE at.is_dynamic = FALSE),
 
 
 dynamic_coords AS (SELECT
@@ -60,10 +53,12 @@ dynamic_coords AS (SELECT
                         END AS coordinates
 
                    FROM obs_ts_action_type at
-                            LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
-                            LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
-                            LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time
-                   WHERE at.is_dynamic = TRUE)
+                        LEFT JOIN ts_coordinates_x_koor x ON x.result_time = at.result_time
+                        LEFT JOIN ts_coordinates_y_koor y ON y.result_time = at.result_time
+                        LEFT JOIN ts_coordinates_z_koor z ON z.result_time = at.result_time
+                            WHERE at.is_dynamic = TRUE
+  )
+
 
 
 SELECT
@@ -83,7 +78,7 @@ SELECT
        valid_time_end,
        coordinates,
        CONCAT(coordinates, action_id, 'stat') AS feature_id
-FROM static_coords
+    FROM static_coords
 
 UNION ALL
 
@@ -105,11 +100,5 @@ SELECT
        valid_time_end,
        coordinates,
        CONCAT(coordinates, action_id, 'dyn') AS feature_id
-FROM dynamic_coords;
-
-COMMIT;
-
-
-
-
+    FROM dynamic_coords;
 

@@ -1,7 +1,3 @@
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS "OBSERVATIONS" CASCADE;
 CREATE VIEW "OBSERVATIONS" AS
 
@@ -33,8 +29,6 @@ JOIN observation o ON o.datastream_id = dsl.datastream_id
 JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
 JOIN public.sms_device d ON d.id = dma.device_id
 JOIN public.sms_configuration c ON c.id = dma.configuration_id
-WHERE c.is_public AND d.is_public AND dsl.datasource_id = %(tsm_schema)s
-AND  o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
-ORDER BY "ID";
-
-COMMIT;
+    WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
+    AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+    ORDER BY "ID";

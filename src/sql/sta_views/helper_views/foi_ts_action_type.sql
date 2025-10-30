@@ -1,11 +1,8 @@
 -- Helper view ts_action_type determines the action type (static or dynamic)
 -- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
-BEGIN;
-
-SET search_path TO %(tsm_schema)s;
-
 DROP VIEW IF EXISTS foi_ts_action_type CASCADE;
-CREATE OR REPLACE VIEW foi_ts_action_type AS
+CREATE VIEW foi_ts_action_type AS
+
 
 
 WITH configuration_type AS (
@@ -36,14 +33,15 @@ WITH configuration_type AS (
       END AS end_date
 
 
-   FROM sms_datastream_link dsl
-           JOIN sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
+
+   FROM public.sms_datastream_link dsl
+           JOIN public.sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
            JOIN public.sms_device d ON d.id = dma.device_id
            JOIN public.sms_configuration c ON c.id = dma.configuration_id
-         LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
-         LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
-    WHERE c.is_public AND d.is_public
-      AND dsl.datasource_id = %(tsm_schema)s
+         LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
+         LEFT JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
+    WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
+
 )
 
 SELECT DISTINCT
@@ -63,4 +61,3 @@ FROM observation o
     WHERE is_dynamic IS NOT NULL
       AND action_id IS NOT NULL;
 
-COMMIT;
