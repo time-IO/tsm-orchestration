@@ -75,6 +75,8 @@ services:
       - "GF_AUTH_GENERIC_OAUTH_API_URL=${VISUALIZATION_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
 
   keycloak:
+    environment:
+      KC_LOG_LEVEL: "com.timeio.mqtt:DEBUG,org.keycloak:INFO"
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
@@ -90,8 +92,6 @@ services:
     user: "node"
     tty: true
     command: ./start.sh
-    networks:
-      - default
     environment:
       APP_PORT: 80
       NODE_ENV: development
@@ -109,6 +109,5 @@ services:
 volumes:
   keycloak-data:
   npm:
-    external: true
   node_modules:
 

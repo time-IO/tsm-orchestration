@@ -37,7 +37,7 @@ def parser_interval(interval_str):
 @click.option("--qc-settings-name", required=True, help="QC Settings Name")
 def main(interval, project_uuid, qc_settings_name):
     interval_td = parser_interval(interval)
-    end_date = datetime.now().replace(microsecond=0)
+    end_date = datetime.now().astimezone().replace(microsecond=0)
     start_date = end_date - interval_td
 
     payload = {
