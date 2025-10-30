@@ -1,8 +1,8 @@
 -- Helper view ts_action_type determines the action type (static or dynamic)
 -- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
--- BEGIN;
---
--- SET search_path TO %(tsm_schema)s;
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS foi_ts_action_type CASCADE;
 CREATE OR REPLACE VIEW foi_ts_action_type AS
@@ -43,7 +43,7 @@ WITH configuration_type AS (
          LEFT JOIN sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
          LEFT JOIN sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
     WHERE c.is_public AND d.is_public
---       AND dsl.datasource_id = %(tsm_schema)s
+      AND dsl.datasource_id = %(tsm_schema)s
 )
 
 SELECT DISTINCT
@@ -56,11 +56,11 @@ SELECT DISTINCT
     ct.c_label
 
 
-FROM vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o
+FROM observation o
     LEFT JOIN configuration_type ct ON o.datastream_id = ct.datastream_id
                                             AND o.result_time >= ct.begin_date
                                             AND o.result_time <= ct.end_date
     WHERE is_dynamic IS NOT NULL
       AND action_id IS NOT NULL;
 
--- COMMIT;
+COMMIT;

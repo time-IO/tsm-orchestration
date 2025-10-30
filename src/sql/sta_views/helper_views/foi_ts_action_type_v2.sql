@@ -1,3 +1,7 @@
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
+
 DROP VIEW IF EXISTS foi_ts_action_type_v2 CASCADE;
 CREATE OR REPLACE VIEW foi_ts_action_type_v2 AS
 
@@ -14,8 +18,10 @@ WITH static_action AS (
     JOIN sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN public.sms_configuration c ON c.id = dma.configuration_id
     JOIN public.sms_device d ON d.id = dma.device_id
-    JOIN vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o ON o.datastream_id = dsl.datastream_id
-    WHERE o.result_time <@ sla.valid_range AND c.is_public AND d.is_public
+    JOIN observation o ON o.datastream_id = dsl.datastream_id
+    WHERE o.result_time <@ sla.valid_range
+      AND c.is_public AND d.is_public
+      AND dsl.datasource_id = %(tsm_schema)s
 ),
 dynamic_action AS (
     SELECT
@@ -30,9 +36,12 @@ dynamic_action AS (
     JOIN sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN public.sms_configuration c ON c.id = dma.configuration_id
     JOIN public.sms_device d ON d.id = dma.device_id
-    JOIN vo_demogroup_887a7030491444e0aee126fbc215e9f7.observation o ON o.datastream_id = dsl.datastream_id
+    JOIN observation o ON o.datastream_id = dsl.datastream_id
     WHERE c.is_public AND d.is_public
+        AND dsl.datasource_id = %(tsm_schema)s
 )
 SELECT DISTINCT * FROM static_action
 UNION ALL
 SELECT * FROM dynamic_action;
+
+COMMIT;

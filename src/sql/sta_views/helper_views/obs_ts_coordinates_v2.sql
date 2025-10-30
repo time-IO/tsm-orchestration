@@ -1,13 +1,9 @@
 -- View for determining the coordinates, distinguishing between static/dynamic actions,
 -- later merged again using UNION, therefore the same structure (columns).
--- BEGIN;
---
--- SET search_path TO %(tsm_schema)s;
--- View for determining the coordinates, distinguishing between static/dynamic actions,
--- later merged again using UNION, therefore the same structure (columns).
--- BEGIN;
---
--- SET search_path TO %(tsm_schema)s;
+
+BEGIN;
+
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS obs_ts_coordinates_v2 CASCADE;
 CREATE OR REPLACE VIEW obs_ts_coordinates_v2 AS
@@ -112,7 +108,7 @@ SELECT
        CONCAT(coordinates, action_id, 'dyn') AS feature_id
 FROM dynamic_coords;
 
--- COMMIT;
+COMMIT;
 
 
 

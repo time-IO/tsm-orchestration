@@ -1,6 +1,6 @@
--- BEGIN;
+BEGIN;
 
--- SET search_path TO %(tsm_schema)s;
+SET search_path TO %(tsm_schema)s;
 
 DROP VIEW IF EXISTS "NEW_OBSERVATIONS" CASCADE;
 CREATE OR REPLACE VIEW "NEW_OBSERVATIONS" AS
@@ -37,4 +37,4 @@ WHERE crd.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinit
 
 ORDER BY "ID";
 
--- COMMIT;
+COMMIT;
