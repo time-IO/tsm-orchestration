@@ -495,14 +495,14 @@ class DwdApiSyncer(ExtApiSyncer):
 class TtnApiSyncer(ExtApiSyncer):
     @staticmethod
     def dynamic_parameter_mapping(v):
-        if isinstance(v, (int, float)):
+        if isinstance(v, bool):
+            return 3
+        elif isinstance(v, (int, float)):
             return 0
         elif isinstance(v, str):
             return 1
         elif isinstance(v, dict):
             return 2
-        elif isinstance(v, bool):
-            return 3
         else:
             raise ExtApiRequestError(
                 f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
