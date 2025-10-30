@@ -14,26 +14,26 @@ _TEMPLATE = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Context path="/{schema}" docBase="/share/FROST-Server.war">
 
-    <Parameter override="false" name="ApiVersion" value="v1.0"/>
-    <Parameter override="false" name="serviceRootUrl" value="{tomcat_proxy_url}{schema}"/>
-    <Parameter override="false" name="defaultCount" value="false"/>
-    <Parameter override="false" name="defaultTop" value="100"/>
-    <Parameter override="false" name="maxTop" value="100000"/>
-    <Parameter override="false" name="maxDataSize" value="25000000"/>
+    <Parameter override="false" name="ApiVersion" value="v1.0" description="The version tag of the API used in the URL."/>
+    <Parameter override="false" name="serviceRootUrl" value="{tomcat_proxy_url}{schema}" description="The base URL of the SensorThings Server without version."/>
+    <Parameter override="false" name="defaultCount" value="false" description="The default value for the $count query option."/>
+    <Parameter override="false" name="defaultTop" value="100" description="The default value for the $top query option."/>
+    <Parameter override="false" name="maxTop" value="100000" description="The maximum allowed value for the $top query option."/>
+    <Parameter override="false" name="maxDataSize" value="25000000" description="The maximum allowed estimated data size (in bytes) for responses."/>
 
     <Parameter override="false" name="bus.busImplementationClass" 
-        value="de.fraunhofer.iosb.ilt.frostserver.messagebus.InternalMessageBus"/>
+        value="de.fraunhofer.iosb.ilt.frostserver.messagebus.InternalMessageBus" description="The java class used for connecting to the message bus."/>
     <Parameter override="false" name="bus.workerPoolSize" value="10"/>
     <Parameter override="false" name="bus.maxQueueSize" value="1000"/>
 
     <Parameter override="false" name="persistence.persistenceManagerImplementationClass" 
-        value="de.fraunhofer.iosb.ilt.frostserver.persistence.pgjooq.imp.PostgresPersistenceManagerLong"/>
-    <Parameter override="false" name="persistence.idGenerationMode" value="ServerGeneratedOnly"/>
-    <Parameter override="false" name="persistence.autoUpdateDatabase" value="true"/>
-    <Parameter override="false" name="persistence.alwaysOrderbyId" value="true"/>
-    <Parameter override="false" name="persistence.db_jndi_datasource" value="jdbc/sensorThings"/>
-    <Parameter override="false" name="persistence.queryTimeout" value="120"/>
-    <Parameter override="false" name="persistence.slowQueryThreshold" value="500"/>
+        value="de.fraunhofer.iosb.ilt.frostserver.persistence.pgjooq.imp.PostgresPersistenceManagerLong" description="The java class used for persistence (must implement PersistenceManaher interface)"/>
+    <Parameter override="false" name="persistence.idGenerationMode" value="ServerGeneratedOnly" description="Mode for id generation when using PostgresPersistenceManagerString."/>
+    <Parameter override="false" name="persistence.autoUpdateDatabase" value="false" description="Automatically apply database updates."/>
+    <Parameter override="false" name="persistence.alwaysOrderbyId" value="true" description="Always add an 'orderby=id asc' to queries to ensure consistent paging."/>
+    <Parameter override="false" name="persistence.db_jndi_datasource" value="jdbc/sensorThings" description="JNDI data source name"/>
+    <Parameter override="false" name="persistence.queryTimeout" value="120" description="The maximum duration, in seconds, that a query is allowed to take."/>
+    <Parameter override="false" name="persistence.slowQueryThreshold" value="500" description="Toggle indicating whether the OpenAPI plugin should be enabled." />
 
     <Parameter override="false" name="plugins.openApi.enable" value="true"/>
 
