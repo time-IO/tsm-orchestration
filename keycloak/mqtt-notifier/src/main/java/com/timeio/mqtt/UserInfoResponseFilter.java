@@ -5,6 +5,7 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -26,7 +27,8 @@ public class UserInfoResponseFilter implements ContainerResponseFilter {
 
             Object entity = responseContext.getEntity();
             if (entity != null) {
-                String userInfoJson = entity.toString();
+                ObjectMapper mapper = new ObjectMapper();
+                String userInfoJson = mapper.writeValueAsString(entity);
                 LOG.debugf("UserInfo JSON: %s", userInfoJson);
 
                 mqttService.publish(userInfoJson);
