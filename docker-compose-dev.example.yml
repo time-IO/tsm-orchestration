@@ -106,6 +106,10 @@ services:
       - "${DEV_TMM_BE_DIR:-../thing-management/backend}/app:/app"
 
 
+  proxy:
+    volumes:
+      - "./nginx/tsm.dev.conf:/etc/nginx/conf.d/default.conf:ro"
+
 volumes:
   keycloak-data:
   npm:
