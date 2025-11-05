@@ -8,8 +8,6 @@ from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
 
 from timeio.feta import Thing
-from timeio.common import get_envvar
-from timeio.mqtt import publish_single
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
@@ -65,13 +63,13 @@ class BoschApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        password = decrypt(settings["password"], get_crypt_key())
         server_url = (
             f"{settings['endpoint']}/{settings['sensor_id']}/"
             f"{content['datetime_from']}/{content['datetime_to']}"
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
+        password = decrypt(settings["password"], get_crypt_key())
         headers = {
             "Authorization": f"{self.basic_auth(settings['username'], password)}",
             "Content-Type": "application/json",
@@ -497,14 +495,14 @@ class DwdApiSyncer(ExtApiSyncer):
 class TtnApiSyncer(ExtApiSyncer):
     @staticmethod
     def dynamic_parameter_mapping(v):
-        if isinstance(v, (int, float)):
+        if isinstance(v, bool):
+            return 3
+        elif isinstance(v, (int, float)):
             return 0
         elif isinstance(v, str):
             return 1
         elif isinstance(v, dict):
             return 2
-        elif isinstance(v, bool):
-            return 3
         else:
             raise ExtApiRequestError(
                 f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"

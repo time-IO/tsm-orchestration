@@ -27,6 +27,7 @@ fi
   echo ""
   echo "user $MQTT_INGEST_USER"
   echo "topic read mqtt_ingest/#"
+  echo "topic readwrite health/#"
   echo ""
   echo "user $FRONTEND_MQTT_USER"
   echo "topic readwrite #"
