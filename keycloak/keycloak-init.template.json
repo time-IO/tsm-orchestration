@@ -1183,7 +1183,7 @@
         "introspection.token.claim" : "true",
         "multivalued" : "false",
         "userinfo.token.claim" : "true",
-        "user.attribute" : "username",
+        "user.attribute" : "email",
         "id.token.claim" : "true",
         "lightweight.claim" : "false",
         "access.token.claim" : "true",
@@ -1485,7 +1485,7 @@
     "identityProviderMapper" : "oidc-username-idp-mapper",
     "config" : {
       "syncMode" : "INHERIT",
-      "template" : "${CLAIM.preferred_username}-${CLAIM.eduperson_unique_id}",
+      "template" : "${CLAIM.given_name}.${CLAIM.family_name}-${CLAIM.eduperson_unique_id}",
       "target" : "LOCAL"
     }
   } ],
