@@ -1173,6 +1173,24 @@
       "consent.screen.text" : ""
     },
     "protocolMappers" : [ {
+      "id" : "7ce8f526-32ec-4db6-9d74-f1877de9bbc7",
+      "name" : "eduperson_principal_name_fallback",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-property-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "aggregate.attrs": "false",
+        "introspection.token.claim" : "true",
+        "multivalued" : "false",
+        "userinfo.token.claim" : "true",
+        "user.attribute" : "username",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "claim.name" : "eduperson_principal_name",
+        "jsonType.label" : "String"
+        }
+      }, {
       "id" : "90dc5e66-a0d1-437d-9896-a7bf0801f31e",
       "name" : "eduperson_principal_name_attribute",
       "protocol" : "openid-connect",
