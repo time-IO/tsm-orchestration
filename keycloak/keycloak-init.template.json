@@ -1251,6 +1251,24 @@
       "consent.screen.text" : ""
     },
     "protocolMappers" : [ {
+        "id" : "a8455d86-39bb-4edf-b2b4-14c3580071c3",
+        "name" : "preferred_username_fallback",
+        "protocol" : "openid-connect",
+        "protocolMapper" : "oidc-usermodel-property-mapper",
+        "consentRequired" : false,
+        "config" : {
+          "aggregate.attrs": "false",
+          "introspection.token.claim" : "true",
+          "multivalued" : "false",
+          "userinfo.token.claim" : "true",
+          "user.attribute" : "email",
+          "id.token.claim" : "true",
+          "lightweight.claim" : "false",
+          "access.token.claim" : "true",
+          "claim.name" : "preferred_username",
+          "jsonType.label" : "String"
+        }
+      }, {
       "id" : "4d347e3a-7cfb-43e1-9634-afaa8f76b9a4",
       "name" : "preferred_username_attribute",
       "protocol" : "openid-connect",
