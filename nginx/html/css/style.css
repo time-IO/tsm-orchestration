@@ -7,12 +7,6 @@ html {
     color-scheme: light;
 }
 
-@keyframes bgCycle {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 body {
     min-height: 100vh;
     margin: 0;
@@ -32,11 +26,7 @@ body {
 
     position: relative;
     z-index: 0;
-
-    animation: bgCycle 20s ease-in-out infinite;
 }
-
-
 
 /* Orbital waves */
 
@@ -50,7 +40,6 @@ body {
     z-index: -1;
     pointer-events: none;
 }
-
 
 .orbital-waves span {
     position: absolute;
@@ -75,11 +64,6 @@ body {
     animation-duration: 70s;
 }
 
-@keyframes rotateWave {
-    0% { transform: translateX(-50%) rotate(0deg); }
-    100% { transform: translateX(-50%) rotate(360deg); }
-}
-
 .orbital-waves.mirrored {
     position: fixed;
     top: 70%;
@@ -91,7 +75,6 @@ body {
     pointer-events: none;
 }
 
-/* Animation bleibt gleich, evtl. etwas langsamer */
 .orbital-waves.mirrored span:nth-child(1) {
     animation-duration: 40s;
 }
@@ -268,6 +251,11 @@ a:hover {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+@keyframes rotateWave {
+    0% { transform: translateX(-50%) rotate(0deg); }
+    100% { transform: translateX(-50%) rotate(360deg); }
 }
 
 /* mobile */
