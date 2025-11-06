@@ -154,8 +154,10 @@ a:hover {
 }
 
 .img-head {
-    height: 3em;
+    height: auto;
+    max-height: 3em;
     margin: 0 .5em;
+    max-width: 10em;
 }
 
 #img-title {
