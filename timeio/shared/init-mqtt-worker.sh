@@ -17,14 +17,14 @@ echo "MQTT_PORT: ${MQTT_PORT}"
 echo "MQTT_TEST_TOPIC: ${MQTT_TEST_TOPIC:-test}"
 echo "MQTT_USER: ${MQTT_USER:-not set}"
 echo "MQTT_PASSWORD: ${MQTT_PASSWORD:-not set}"
+echo "MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-not set}"
 
 while [ $COUNT -lt $MAX_ATTEMPTS ]; do
   echo "[MQTT CHECK] Attempt $(($COUNT + 1)) of $MAX_ATTEMPTS..."
 
-  timeout 1 mosquitto_sub -h "$MQTT_HOST" -p "$MQTT_PORT" -t "$MQTT_TEST_TOPIC" -C 1 -q 0\
-    -u "$MQTT_USER" -P "$MQTT_PASSWORD"
-
-  if [ $? -eq 0 ]; then
+  # Teste nur Connect/Auth mit mosquitto_pub (kein Subscribe nötig)
+  if timeout 2 mosquitto_pub -h "$MQTT_HOST" -p "$MQTT_PORT" -t "$MQTT_TEST_TOPIC" \
+    -m "ping:${MQTT_CLIENT_ID}" -u "$MQTT_USER" -P "$MQTT_PASSWORD" -i "$MQTT_CLIENT_ID" -q 0 > /dev/null 2>&1; then
     echo "[MQTT CHECK] Successfully connected to MQTT broker."
     exit 0
   fi
@@ -33,6 +33,7 @@ while [ $COUNT -lt $MAX_ATTEMPTS ]; do
   COUNT=$(($COUNT + 1))
   sleep $SLEEP_SECONDS
 done
+
 
 echo "[MQTT CHECK] Failed to connect to MQTT broker after $MAX_ATTEMPTS attempts."
 exit 1

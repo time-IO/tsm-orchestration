@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  ENVIRONMENT: "{{ .Values.global.envvars.THING_MANAGEMENT_ENVIRONMENT }}"
+  DB_SCHEMA: "{{ .Values.global.secrets.THING_MANAGEMENT_DB_USER }}"
+  MQTT_PORT: "1883"
+  MQTT_BROKER_HOST: "mosquitto"
+  MQTT_CLIENT_ID: "thing_management_api"
+  MINIO_SFTP_PORT: "{{ .Values.global.envvars.MINIO_SFTP_PORT }}"
+  PROXY_URL: "{{ .Values.global.ingress.url }}"
+  ALLOWED_VOS: "{{ .Values.global.envvars.ALLOWED_VOS }}"
+  OIDC_CONF_URL: "http://keycloak:8081/keycloak/realms/timeio/.well-known/openid-configuration"
+  OIDC_ALLOWED_ISSUERS: '["http://keycloak:8081/keycloak/realms/timeio", "http://localhost/keycloak/realms/timeio", "{{ .Values.global.ingress.url }}/keycloak/realms/timeio"]'
+  OIDC_ALLOWED_AUDIENCES: '["account"]'

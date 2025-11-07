@@ -1,0 +1,8 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-init
+data:
+  keycloak-init.template.json: {{ .Files.Get "conf/keycloak-init.template.json" | quote }}
+{{- end }}

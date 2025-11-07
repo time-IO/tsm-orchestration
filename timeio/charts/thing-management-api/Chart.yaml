@@ -1,0 +1,4 @@
+apiVersion: v2
+name: thing-management-api
+version: 0.0.1
+description: A Helm chart for the thing-management-api service

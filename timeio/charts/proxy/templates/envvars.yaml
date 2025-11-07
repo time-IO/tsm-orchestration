@@ -12,7 +12,7 @@ data:
   MQTT_BROKER: "mosquitto:1883"
   MQTT_BROKER_HOST: "{{  .Values.global.envvars.FRONTEND_MQTT_HOST }}"
   MQTT_BROKER_PORT: "1883"
-  MQTT_CLIENT_ID: ""
+  MQTT_CLIENT_ID: "frontend"
   DJANGO_SUPERUSER_EMAIL: "{{  .Values.global.envvars.FRONTEND_DJANGO_SUPERUSER_EMAIL }}"
   DJANGO_DEBUG: "{{  .Values.global.envvars.DJANGO_DEBUG }}"
   DJANGO_TRUSTED_ORIGINS: "https://{{ .Values.global.envvars.PROXY_HOST }}"

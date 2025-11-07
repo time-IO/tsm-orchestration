@@ -2,11 +2,23 @@ apiVersion: v2
 name: timeio
 description: "A Helm chart for time.IO"
 type: application
-version: 0.1.12
+version: 0.2.0
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
 dependencies:
+
+  - name: keycloak
+    version: 0.0.1
+    repository: "file://charts/keycloak"
+
+  - name: thing-management-api
+    version: 0.0.1
+    repository: "file://charts/thing-management-api"
+
+  - name: thing-management-frontend
+    version: 0.0.1
+    repository: "file://charts/thing-management-frontend"
 
   - name: cron-scheduler
     version: 0.0.1
@@ -15,6 +27,10 @@ dependencies:
   - name: flyway
     version: 0.0.1
     repository: "file://charts/flyway"
+
+  - name: flyway-thing-management
+    version: 0.0.1
+    repository: "file://charts/flyway-thing-management"
 
   - name: frost
     version: 0.0.1

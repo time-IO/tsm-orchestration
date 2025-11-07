@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,3 +12,4 @@ data:
   MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_QOS_LOCAL_BROKER }}"
   MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_KEEP_ALIVE_INTERVAL_LOCAL_BROKER }}"
   MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER: "{{  .Values.global.envvars.MINIO_NOTIFY_MQTT_RECONNECT_INTERVAL_LOCAL_BROKER }}"
+{{- end }}

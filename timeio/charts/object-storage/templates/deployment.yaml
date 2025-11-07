@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{- $secretName := "" }}
 {{- if .Values.global.createSecrets }}
   {{- $secretName = printf "%s-secret" .Values.name }}
@@ -64,3 +65,4 @@ spec:
       - name: {{ .Values.name }}-certs
         secret:
           secretName: {{ .Values.name }}-certs
+{{- end }}

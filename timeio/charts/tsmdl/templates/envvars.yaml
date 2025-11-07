@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,3 +9,4 @@ data:
   ROOT_PATH: "/tsmdl"
   ORGANIZATION: "ufz"
   IDP_USERINFO_URL: {{ .Values.global.envvars.OIDC_API_URL | quote }}
+{{- end }}
