@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{- $secretName := "" }}
 {{- if .Values.global.createSecrets }}
   {{- $secretName = printf "%s-secret" .Values.name }}
@@ -37,10 +38,11 @@ spec:
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
         ports:
-          - containerPort: 8000
+          - containerPort: {{ .Values.port }}
         command: ["/app/start.{{ .Values.global.envvars.TSM_DL_ENVIRONMENT }}.sh"]
         envFrom:
         - configMapRef:
             name: {{ .Values.name }}-envvars
         - secretRef:
             name: {{ $secretName }}
+{{- end }}

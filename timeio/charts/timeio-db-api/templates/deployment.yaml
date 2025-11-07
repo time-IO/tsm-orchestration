@@ -37,7 +37,7 @@ spec:
           seccompProfile:
             type: {{ .Values.securityContext.seccompProfile.type }}
         ports:
-          - containerPort: 8001
+          - containerPort: {{ .Values.port }}
         command:
         - "/bin/sh"
         - "/app/start.sh"

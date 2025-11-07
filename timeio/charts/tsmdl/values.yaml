@@ -1,10 +1,13 @@
 replicaCount: 1
 
+enabled: true
+
 image:
   repository: "registry.hzdr.de/ufz-tsm/timeio-images/tsmdl"
   tag: latest
   pullPolicy: Always
 name: tsmdl
+port: 8000
 
 securityContext:
   allowPrivilegeEscalation: False

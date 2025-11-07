@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  APP_URL: "{{ .Values.global.ingress.url }}/thing-management"
+  API_URL: "{{ .Values.global.ingress.url }}/thing-management/api"
+  APP_PATH: "/thing-management"
+  VERSION: "production"
+  OIDC_URL: "{{ .Values.global.ingress.url }}/keycloak/realms/timeio"
+  OIDC_SCOPES: "openid profile email eduperson_entitlement"
+  OIDC_REDIRECT_URL: "{{ .Values.global.ingress.url }}/thing-management/login/callback"
+  OIDC_POST_LOGOUT_REDIRECT_URL: "{{ .Values.global.ingress.url }}/thing-management/login"

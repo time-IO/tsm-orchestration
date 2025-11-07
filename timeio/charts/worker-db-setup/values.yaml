@@ -1,8 +1,10 @@
 replicaCount: 1
 
+enabled: true
+
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: "prod-2025-09-12"
+  tag: "prod-2025-10-17"
   pullPolicy: Always
 name: worker-db-setup
 
