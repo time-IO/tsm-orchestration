@@ -47,19 +47,19 @@ def test_ttn_fetch_api_data(
     )
 
     mock_request.return_value = mock_response(text=raw_json)
-    settings = {"endpoint_uri": "endpoint_uri", "api_key": "enc_api_key"}
+    settings = {"endpoint_uri": "https://endpoint_uri", "api_key": "enc_api_key"}
     thing = mock_thing(settings)
     data = ext_api.TtnApiSyncer().fetch_api_data(thing, CONTENT)
     mock_decrypt.assert_called_once_with("enc_api_key", "secret")
     mock_request.assert_called_once()
     mock_request.assert_called_once_with(
         "GET",
-        "endpoint_uri",
+        "https://endpoint_uri",
         headers={"Authorization": "Bearer dec_api_key", "Accept": "text/event-stream"},
     )
     assert "response" in data
     assert isinstance(data["response"], list)
-    assert data["url"] == "endpoint_uri"
+    assert data["url"] == "https://endpoint_uri"
 
 
 def test_ttn_do_parse():
