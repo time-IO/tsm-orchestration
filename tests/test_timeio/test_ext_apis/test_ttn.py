@@ -9,6 +9,14 @@ from .conf import CONTENT, mock_thing, mock_response
 from timeio import ext_api
 
 
+def test_no_https_error(mock_thing):
+    settings = {"endpoint_uri": "http://endpoint_uri", "api_key": "enc_api_key"}
+    thing = mock_thing(settings)
+    syncer = ext_api.TtnApiSyncer()
+    with pytest.raises(ext_api.NoHttpsError) as r:
+        syncer.fetch_api_data(thing, CONTENT)
+
+
 @pytest.mark.parametrize(
     "value, expected", [(1, 0), (1.1, 0), ("string", 1), ({"key": "val"}, 2), (True, 3)]
 )
