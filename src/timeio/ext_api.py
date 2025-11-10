@@ -510,8 +510,10 @@ class TtnApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         url = settings["endpoint_uri"]
+        if urlparse(url).scheme != "https":
+            raise NoHttpsError(f"{url} is not https")
+        api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         res = request_with_handling(
             "GET",
             url,
