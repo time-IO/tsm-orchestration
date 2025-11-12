@@ -65,7 +65,7 @@ class GrafanaUser:
 
     def remove_from_team(self, org_name: str, user_id: int) -> None:
         team_id = self.api.t.team.get_id_by_name(org_name)
-        if team_id and self.is_in_team(team_id.user_id):
+        if team_id and self.is_in_team(team_id, user_id):
             self.api.teams.remove_team_member(team_id, user_id)
 
     def update_orgs(

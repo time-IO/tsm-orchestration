@@ -50,7 +50,7 @@ def get_envvar_as_bool(
     If 'empty_is_False' is True:
         Same logic as above, but an empty string is considered False
 
-    The false_list not case-sensitive. (faLsE == FALSE = false)
+    The false_list is not case-sensitive. (faLsE == FALSE = false)
     """
     val = os.environ.get(name, None)
     if val is None:
