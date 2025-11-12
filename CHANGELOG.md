@@ -3,6 +3,16 @@
 
 ## [Unreleased]
 
+## 2025-11-12
+
+### Added
+- unittests (several merge requests)
+
+### Fixed
+- parser skiprows, comment and header handling ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489))
+- stalling workers ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/484), [Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/485))
+- sms data syncing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/483))
+
 ## 2025-10-17
 
 ### Added
