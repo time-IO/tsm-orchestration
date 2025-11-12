@@ -60,22 +60,19 @@ class CreateThingInCrontabHandler(AbstractHandler):
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
         command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
-        if thing.ext_sftp is not None:
+        if thing.ext_sftp:
             interval = int(thing.ext_sftp.sync_interval)
             schedule = cls.get_schedule(interval)
             job.enable(enabled=thing.ext_sftp.sync_enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
             info = f"sFTP {thing.ext_sftp.uri} @ {interval}m and schedule {schedule}"
-        if thing.ext_api is not None:
+        if thing.ext_api:
             interval = int(thing.ext_api.sync_interval)
             schedule = cls.get_schedule(interval)
             job.enable(enabled=thing.ext_api.enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
             info = f"{thing.ext_api.api_type_name}-API @ {interval}m and schedule {schedule}"
+        job.set_comment(comment, pre_comment=True)
+        job.setall(schedule)
+        job.set_command(command)
         return info
 
     @classmethod
@@ -85,33 +82,23 @@ class CreateThingInCrontabHandler(AbstractHandler):
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
         command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
-        current_interval = cls.get_current_interval(job)
         if thing.ext_sftp is not None:
             new_interval = int(thing.ext_sftp.sync_interval)
             job.enable(enabled=thing.ext_sftp.sync_enabled)
             job.set_comment(comment, pre_comment=True)
             # if the interval has changed we want to ensure consistent starting times with the previous one
-            if current_interval != new_interval:
-                schedule = cls.update_cron_expression(job, new_interval)
-            else:
-                schedule = str(job.slices)
-            job.setall(schedule)
-            job.set_command(command)
             info = (
                 f"sFTP {thing.ext_sftp.uri} @ {new_interval}m and schedule {schedule}"
             )
         elif thing.ext_api is not None:
             new_interval = int(thing.ext_api.sync_interval)
             # if the interval has changed we want to ensure consistent starting dates
-            if current_interval != new_interval:
-                schedule = cls.update_cron_expression(job, new_interval)
-            else:
-                schedule = str(job.slices)
+            schedule = cls.update_cron_expression(job, new_interval)
             job.enable(enabled=thing.ext_api.enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
             info = f"{thing.ext_api.api_type_name}-API @ {new_interval}m and schedule {schedule}"
+        job.set_comment(comment, pre_comment=True)
+        job.setall(schedule)
+        job.set_command(command)
         return info
 
     @staticmethod
@@ -125,21 +112,41 @@ class CreateThingInCrontabHandler(AbstractHandler):
         return f"{now_str} | {thing.project.name} | {thing.name} | {thing.uuid}"
 
     @staticmethod
-    def get_schedule(interval: int) -> str:
+    def new_base_minute(interval: int) -> int:
+        return randint(0, min(interval - 1, 59))
+
+    @staticmethod
+    def new_base_hour(interval: int) -> int:
+        return randint(0, min(interval // 60 - 1, 23))
+
+    @staticmethod
+    def new_base_dom(interval: int) -> int:
+        return randint(0, min(interval // 1440 - 1, 30))
+
+    @classmethod
+    def get_schedule(cls, interval: int) -> str:
         # set a random delay to avoid all jobs running at the same time
         # maximum delay is the interval or 59, whichever is smaller
-        delay_m = randint(0, min(interval - 1, 59))
+        delay_m = cls.new_base_minute(interval)
         # interval is smaller than an hour
         if interval < 60:
-            return f"{delay_m}-59/{interval} * * * *"
+            step_minutes = interval
+            return f"{delay_m}-59/{step_minutes} * * * *"
+        delay_h = cls.new_base_hour(interval)
         # interval is smaller than a day
-        elif interval < 1440:
-            delay_h = randint(0, min(interval // 60 - 1, 23))
-            return f"{delay_m} {delay_h}-23/{interval//60} * * *"
+        if interval < 1440:
+            delay_h = cls.new_base_hour(interval)
+            step_hours = interval // 60
+            return f"{delay_m} {delay_h}-23/{step_hours} * * *"
+        # interval is exactly weekly
+        elif interval == 10080:
+            delay_dow = randint(0, 6)
+            return f"{delay_m} {delay_h} * * {delay_dow}"
+        # interval is larger than a day but not weekly
         else:
-            delay_h = randint(0, min(interval // 60 - 1, 23))
-            delay_wd = randint(0, min(interval // 1440 - 1, 6))
-            return f"{delay_m} {delay_h} * * {delay_wd}-6/{interval//1440}"
+            delay_dom = cls.new_base_dom(interval)
+            step_days = interval // 1440
+            return f"{delay_m} {delay_h} {delay_dom}-6/{step_days} * *"
 
     @staticmethod
     def get_current_interval(job: CronItem) -> int:
@@ -148,32 +155,57 @@ class CreateThingInCrontabHandler(AbstractHandler):
         next_run = schedule.get_next()
         prev_run = schedule.get_prev()
         interval = next_run - prev_run
-        return int(interval.seconds / 60)
+        return int(interval.total_seconds() / 60)
 
     @staticmethod
     def extract_base_minute(schedule: str) -> int:
-        """Extract the minute value from the cron expression. In the case
-        of multiple values, the first one is returned.
+        """Extract the minute value from the cron expression.
+        Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
+        Returns the first numeric start value or 0 on parse failure.
         """
-        minute_part = schedule.split()[0]
-        if "," in minute_part:
-            return int(minute_part.split(",")[0])
-        elif minute_part.isdigit():
-            return int(minute_part)
-        return 0
+        minutes = schedule.split()[0]
+        minutes = minutes.split(",")[0] # cut next values if list of commas
+        minutes = minutes.split("/")[0]  # cut handling step values
+        minutes = minutes.split("-")[0]  # cut handling ranges
+        if minutes == "*" or minutes[0] == "@":
+            return 0
+        try:
+            return int(minutes)
+        except ValueError:
+            return None
 
     @classmethod
     def update_cron_expression(cls, job, new_interval: int) -> str:
-        """Update cron while keeping the same base minute for consistency."""
-        base_minute = cls.extract_base_minute(str(job.slices))
-        if new_interval < 60:
-            minutes = sorted(
-                (base_minute + i * new_interval) % 60 for i in range(60 // new_interval)
-            )
-            return f"{','.join(map(str, minutes))} * * * *"
+        """Update cron while keeping the same base minute for consistency.
+        If the existing schedule already encodes the requested periodicity
+        (produced by `get_schedule`, e.g. contains '/{step}', range-with-step
+        or a matching comma-list for minutes), return the original string unchanged.
+        """
+        current_interval = cls.get_current_interval(job)
+        original = str(job.slices)
 
+        if current_interval == new_interval:
+            return original
+
+        parts = original.split()
+        hour_part = parts[1] if len(parts) > 1 else ""
+        dow_part = parts[4] if len(parts) > 4 else ""
+
+        base_minute = cls.extract_base_minute(original) or cls.new_base_minute(new_interval)
+
+        # interval below 60 minutes
+        if new_interval < 60:
+            if base_minute >= new_interval:
+                base_minute = cls.new_base_minute(new_interval)
+            return f"{base_minute}-59/{new_interval} * * * *"
+
+        # interval between one hour and a day
         elif new_interval < 1440:
-            return f"{base_minute} */{new_interval // 60} * * *"
+            hour_step = new_interval // 60
+            return f"{base_minute} */{hour_step} * * *"
+
+        elif new_interval == 10080:
+            dow = randint(0, 6)
 
         else:
             return f"{base_minute} 0 */{new_interval // 1440} * *"
