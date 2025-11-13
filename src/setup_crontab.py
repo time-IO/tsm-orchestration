@@ -66,12 +66,20 @@ class CreateThingInCrontabHandler(AbstractHandler):
         command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         if thing.ext_sftp:
             interval = int(thing.ext_sftp.sync_interval)
-            schedule = cls.get_schedule(interval) if is_new else cls.update_cron_expression(job, interval)
+            schedule = (
+                cls.get_schedule(interval)
+                if is_new
+                else cls.update_cron_expression(job, interval)
+            )
             job.enable(enabled=thing.ext_sftp.sync_enabled)
             info = f"sFTP {thing.ext_sftp.uri} @ {interval}m and schedule {schedule}"
         elif thing.ext_api:
             interval = int(thing.ext_api.sync_interval)
-            schedule = cls.get_schedule(interval) if is_new else cls.update_cron_expression(job, interval)
+            schedule = (
+                cls.get_schedule(interval)
+                if is_new
+                else cls.update_cron_expression(job, interval)
+            )
             job.enable(enabled=thing.ext_api.enabled)
             info = f"{thing.ext_api.api_type_name}-API @ {interval}m and schedule {schedule}"
         else:
@@ -143,8 +151,10 @@ class CreateThingInCrontabHandler(AbstractHandler):
         Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
         Returns the first numeric start value or 0 on parse failure.
         """
-        minutes = schedule.split()[0] # split along spaces and take first part (minutes)
-        minutes = minutes.split(",")[0] # cut next values if list of commas
+        minutes = schedule.split()[
+            0
+        ]  # split along spaces and take first part (minutes)
+        minutes = minutes.split(",")[0]  # cut next values if list of commas
         minutes = minutes.split("/")[0]  # cut handling step values
         minutes = minutes.split("-")[0]  # cut handling ranges
         if minutes == "*" or minutes[0] == "@":
@@ -170,7 +180,9 @@ class CreateThingInCrontabHandler(AbstractHandler):
         hour_part = parts[1] if len(parts) > 1 else ""
         dow_part = parts[4] if len(parts) > 4 else ""
 
-        base_minute = cls.extract_base_minute(original) or cls.new_base_minute(new_interval)
+        base_minute = cls.extract_base_minute(original) or cls.new_base_minute(
+            new_interval
+        )
 
         # interval below 60 minutes
         if new_interval < 60:
