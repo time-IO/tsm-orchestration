@@ -154,9 +154,10 @@ class ParserJobHandler(AbstractHandler):
             tags = self.minio.get_object_tags(
                 bucket_name, filename, version_id=obj.version_id
             )
-            if tags and tags["parsing_status"] == "successful":
+            if not tags:
+                continue
+            if tags.get("parsing_status") == "successful":
                 return tags
-
         return None
 
     def set_tags(
