@@ -37,13 +37,13 @@ class CreateThingInCrontabHandler(AbstractHandler):
             for job in crontab:
                 if self.job_belongs_to_thing(job, thing):
                     logger.info(f"Updating cronjob for thing {thing.name}")
-                    info = self.update_job(job, thing)
+                    info = self.apply_job(job, thing, is_new=False)
                     journal.info(f"Updated cronjob to sync {info}", thing.uuid)
                     return
             # if no job was found, create a new one
             job = crontab.new()
             logger.info(f"Creating job for thing {thing.name}")
-            info = self.make_job(job, thing)
+            info = self.apply_job(job, thing, is_new=True)
             if not info:
                 logger.warning(
                     "no Cronjob was created, because neither extAPI, "
@@ -54,51 +54,31 @@ class CreateThingInCrontabHandler(AbstractHandler):
             journal.info(f"Created cronjob to sync {info}", thing.uuid)
 
     @classmethod
-    def make_job(cls, job: CronItem, thing: Thing) -> str:
-        info = ""
+    def apply_job(cls, job: CronItem, thing: Thing, is_new: bool = True) -> str:
+        """Create or update a cron job for `thing`.
+        If `is_new` is True the schedule is generated with `get_schedule`,
+        otherwise it is adapted with `update_cron_expression`.
+        Returns info string (or empty if nothing to do).
+        """
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
         command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
         if thing.ext_sftp:
             interval = int(thing.ext_sftp.sync_interval)
-            schedule = cls.get_schedule(interval)
+            schedule = cls.get_schedule(interval) if is_new else cls.update_cron_expression(job, interval)
             job.enable(enabled=thing.ext_sftp.sync_enabled)
             info = f"sFTP {thing.ext_sftp.uri} @ {interval}m and schedule {schedule}"
-        if thing.ext_api:
+        elif thing.ext_api:
             interval = int(thing.ext_api.sync_interval)
-            schedule = cls.get_schedule(interval)
+            schedule = cls.get_schedule(interval) if is_new else cls.update_cron_expression(job, interval)
             job.enable(enabled=thing.ext_api.enabled)
             info = f"{thing.ext_api.api_type_name}-API @ {interval}m and schedule {schedule}"
+        else:
+            return ""
         job.set_comment(comment, pre_comment=True)
-        job.setall(schedule)
         job.set_command(command)
-        return info
-
-    @classmethod
-    def update_job(cls, job: CronItem, thing: Thing) -> str:
-        info = ""
-        comment = cls.mk_comment(thing)
-        uuid = thing.uuid
-        script = "/scripts/mqtt_sync_wrapper.py"
-        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
-        if thing.ext_sftp is not None:
-            new_interval = int(thing.ext_sftp.sync_interval)
-            job.enable(enabled=thing.ext_sftp.sync_enabled)
-            job.set_comment(comment, pre_comment=True)
-            # if the interval has changed we want to ensure consistent starting times with the previous one
-            info = (
-                f"sFTP {thing.ext_sftp.uri} @ {new_interval}m and schedule {schedule}"
-            )
-        elif thing.ext_api is not None:
-            new_interval = int(thing.ext_api.sync_interval)
-            # if the interval has changed we want to ensure consistent starting dates
-            schedule = cls.update_cron_expression(job, new_interval)
-            job.enable(enabled=thing.ext_api.enabled)
-            info = f"{thing.ext_api.api_type_name}-API @ {new_interval}m and schedule {schedule}"
-        job.set_comment(comment, pre_comment=True)
         job.setall(schedule)
-        job.set_command(command)
         return info
 
     @staticmethod
@@ -158,12 +138,12 @@ class CreateThingInCrontabHandler(AbstractHandler):
         return int(interval.total_seconds() / 60)
 
     @staticmethod
-    def extract_base_minute(schedule: str) -> int:
+    def extract_base_minute(schedule: str) -> int | None:
         """Extract the minute value from the cron expression.
         Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
         Returns the first numeric start value or 0 on parse failure.
         """
-        minutes = schedule.split()[0]
+        minutes = schedule.split()[0] # split along spaces and take first part (minutes)
         minutes = minutes.split(",")[0] # cut next values if list of commas
         minutes = minutes.split("/")[0]  # cut handling step values
         minutes = minutes.split("-")[0]  # cut handling ranges
@@ -183,7 +163,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
         """
         current_interval = cls.get_current_interval(job)
         original = str(job.slices)
-
         if current_interval == new_interval:
             return original
 
