@@ -59,6 +59,9 @@ class ParserJobHandler(AbstractHandler):
         thing_uuid = thing.uuid
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
+        if not fnmatch.fnmatch(filename, pattern):
+            logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
+            return
         tags = self.get_parser_tags(bucket_name, filename)
         if tags is not None:
             parser_id = int(tags["parser_id"])
@@ -67,9 +70,6 @@ class ParserJobHandler(AbstractHandler):
             parser_id = thing.s3_store.file_parser_id
             logger.info(f"No parser file tag found, using default parser {parser_id=}")
 
-        if not fnmatch.fnmatch(filename, pattern):
-            logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
-            return
         source_uri = f"{bucket_name}/{filename}"
 
         logger.debug(f"loading parser for {thing_uuid}")
