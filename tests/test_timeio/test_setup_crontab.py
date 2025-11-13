@@ -6,6 +6,7 @@ import uuid
 from unittest.mock import MagicMock
 from setup_crontab import CreateThingInCrontabHandler
 
+
 class JobMock:
     def __init__(self):
         self.enable_calls = []
@@ -45,15 +46,18 @@ class JobMock:
 
         return ScheduleFake(self._current_interval_min)
 
+
 class ProjectMock:
     def __init__(self, name):
         self.name = name
+
 
 BASE_THING_ATTRS = {
     "uuid": str(uuid.uuid4()),
     "name": "thing-name",
     "project": ProjectMock(name="project-name"),
 }
+
 
 def ThingMock(**overrides):
     thing = MagicMock()
@@ -62,6 +66,7 @@ def ThingMock(**overrides):
     for k, v in overrides.items():
         setattr(thing, k, v)
     return thing
+
 
 @pytest.mark.parametrize(
     ["ext_sftp", "ext_api", "expected_in_info"],
@@ -84,6 +89,7 @@ def test_new_job_info(ext_sftp, ext_api, expected_in_info):
     info = CreateThingInCrontabHandler.apply_job(job, thing)
     assert info.startswith(expected_in_info)
 
+
 def test_new_job_no_external_sftp_or_api():
     thing = ThingMock(ext_sftp=None, ext_api=None)
     job = JobMock()
@@ -91,6 +97,7 @@ def test_new_job_no_external_sftp_or_api():
     assert info == ""
     assert job.commands == []
     assert job.enable_calls == []
+
 
 @pytest.mark.parametrize(
     "kind, initial_kwargs, update_kwargs",
@@ -120,7 +127,9 @@ def test_update_job_parametrized(kind, initial_kwargs, update_kwargs):
 
     job = JobMock()
     # robustes Setzen mit Fallback
-    job._current_interval_min = int(initial_kwargs.get("sync_interval") or initial_kwargs.get("interval") or 30)
+    job._current_interval_min = int(
+        initial_kwargs.get("sync_interval") or initial_kwargs.get("interval") or 30
+    )
 
     CreateThingInCrontabHandler.apply_job(job, thing_make)
     CreateThingInCrontabHandler.apply_job(job, thing_update, is_new=False)
@@ -157,6 +166,7 @@ def test_get_current_interval_returns_expected_minutes(interval_min):
     cur_int = CreateThingInCrontabHandler.get_current_interval(job)
     assert cur_int == interval_min
 
+
 @pytest.mark.parametrize(
     ("schedule", "expected_base_minute"),
     [
@@ -165,28 +175,48 @@ def test_get_current_interval_returns_expected_minutes(interval_min):
         ("@daily", 0),
         ("10,30,50 * * * *", 10),
         ("7-59/12 3-23/5 * * *", 7),
-    ]
+    ],
 )
 def test_extract_base_minute(schedule, expected_base_minute):
     base_minute = CreateThingInCrontabHandler.extract_base_minute(schedule)
     assert base_minute == expected_base_minute
 
+
 @pytest.mark.parametrize(
     ("old_schedule", "old_interval_min", "new_interval_min", "expect_change"),
     [
-        ("*/15 * * * *", 15, 30, True), # going form 15 to 30 minutes -> change expected
-        ("16 1-23/2 * * *", 120, 120, False), # already 2-hourly -> no change expected
-        ("37 5 */2 * *", 2880, 1440, True), # going from bi-daily to daily -> change expected
-        ("5,15,25,35,45,55 * * * *", 10, 10, False),  # already every 10 minutes -> no change expected
+        (
+            "*/15 * * * *",
+            15,
+            30,
+            True,
+        ),  # going form 15 to 30 minutes -> change expected
+        ("16 1-23/2 * * *", 120, 120, False),  # already 2-hourly -> no change expected
+        (
+            "37 5 */2 * *",
+            2880,
+            1440,
+            True,
+        ),  # going from bi-daily to daily -> change expected
+        (
+            "5,15,25,35,45,55 * * * *",
+            10,
+            10,
+            False,
+        ),  # already every 10 minutes -> no change expected
         ("30 3-23/6 * * *", 360, 240, True),  # no change expected
-        ("56 15 * * 0", 10080, 10080, False), # already weekly -> no change expected
+        ("56 15 * * 0", 10080, 10080, False),  # already weekly -> no change expected
     ],
 )
-def test_update_cron_expression(old_schedule, old_interval_min, new_interval_min, expect_change):
+def test_update_cron_expression(
+    old_schedule, old_interval_min, new_interval_min, expect_change
+):
     job = JobMock()
-    job._current_interval_min=old_interval_min
+    job._current_interval_min = old_interval_min
     job.setall(old_schedule)
-    new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval_min)
+    new_schedule = CreateThingInCrontabHandler.update_cron_expression(
+        job, new_interval_min
+    )
     changed = new_schedule != old_schedule
     print(f"\n{old_schedule} -> {new_schedule} for interval {new_interval_min}m")
     assert changed == expect_change
