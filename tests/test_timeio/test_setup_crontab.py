@@ -78,16 +78,16 @@ def ThingMock(**overrides):
         ),
     ],
 )
-def test_make_job_info(ext_sftp, ext_api, expected_in_info):
+def test_new_job_info(ext_sftp, ext_api, expected_in_info):
     thing = ThingMock(ext_sftp=ext_sftp, ext_api=ext_api)
     job = JobMock()
-    info = CreateThingInCrontabHandler.make_job(job, thing)
+    info = CreateThingInCrontabHandler.apply_job(job, thing)
     assert info.startswith(expected_in_info)
 
-def test_make_job_no_external_sftp_or_api():
+def test_new_job_no_external_sftp_or_api():
     thing = ThingMock(ext_sftp=None, ext_api=None)
     job = JobMock()
-    info = CreateThingInCrontabHandler.make_job(job, thing)
+    info = CreateThingInCrontabHandler.apply_job(job, thing)
     assert info == ""
     assert job.commands == []
     assert job.enable_calls == []
@@ -122,8 +122,8 @@ def test_update_job_parametrized(kind, initial_kwargs, update_kwargs):
     # robustes Setzen mit Fallback
     job._current_interval_min = int(initial_kwargs.get("sync_interval") or initial_kwargs.get("interval") or 30)
 
-    CreateThingInCrontabHandler.make_job(job, thing_make)
-    CreateThingInCrontabHandler.update_job(job, thing_update)
+    CreateThingInCrontabHandler.apply_job(job, thing_make)
+    CreateThingInCrontabHandler.apply_job(job, thing_update, is_new=False)
 
     assert job.enable_calls[0] is True
     assert job.enable_calls[-1] is False
@@ -172,21 +172,21 @@ def test_extract_base_minute(schedule, expected_base_minute):
     assert base_minute == expected_base_minute
 
 @pytest.mark.parametrize(
-    ("old_schedule", "new_interval_min", "expect_change"),
+    ("old_schedule", "old_interval_min", "new_interval_min", "expect_change"),
     [
-        ("*/15 * * * *", 30, True), # going form 15 to 30 minutes -> change expected
-        ("16 1-23/2 * * *", 120, False), # already 2-hourly -> no change expected
-        ("37 5 */2 * *", 1440, True), # going from bi-daily to daily -> change expected
-        ("5,15,25,35,45,55 * * * *", 10, False),  # already every 10 minutes -> no change expected
-        ("30 3-23/4 * * *", 240, False),  # no change expected
-        ("56 15 * * 0", 10080, False), # already weekly -> no change expected
+        ("*/15 * * * *", 15, 30, True), # going form 15 to 30 minutes -> change expected
+        ("16 1-23/2 * * *", 120, 120, False), # already 2-hourly -> no change expected
+        ("37 5 */2 * *", 2880, 1440, True), # going from bi-daily to daily -> change expected
+        ("5,15,25,35,45,55 * * * *", 10, 10, False),  # already every 10 minutes -> no change expected
+        ("30 3-23/6 * * *", 360, 240, True),  # no change expected
+        ("56 15 * * 0", 10080, 10080, False), # already weekly -> no change expected
     ],
 )
-def test_update_cron_expression(old_schedule, new_interval_min, expect_change):
+def test_update_cron_expression(old_schedule, old_interval_min, new_interval_min, expect_change):
     job = JobMock()
+    job._current_interval_min=old_interval_min
     job.setall(old_schedule)
     new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval_min)
     changed = new_schedule != old_schedule
-    if changed:
-        print(f"\n{old_schedule} -> {new_schedule} for interval {new_interval_min}m")
+    print(f"\n{old_schedule} -> {new_schedule} for interval {new_interval_min}m")
     assert changed == expect_change
