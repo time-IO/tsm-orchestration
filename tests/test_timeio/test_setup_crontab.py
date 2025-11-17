@@ -218,5 +218,4 @@ def test_update_cron_expression(
         job, new_interval_min
     )
     changed = new_schedule != old_schedule
-    print(f"\n{old_schedule} -> {new_schedule} for interval {new_interval_min}m")
     assert changed == expect_change
