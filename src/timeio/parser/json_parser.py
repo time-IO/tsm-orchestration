@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from typing import Any
+
 import pandas as pd
 import re
 import warnings
@@ -15,17 +17,31 @@ journal = Journal("JsonParser", errors="warn")
 
 
 class JsonParser(PandasParser):
+
+    def __init__(
+        self, settings: dict[str, Any], normalize_kws: dict[str, Any] | None = None
+    ):
+        super().__init__(settings)
+        if normalize_kws is None:
+            normalize_kws = {}
+
+        # Remove keywords that control program flow
+        for key in ["data", "errors"]:
+            if key in normalize_kws.keys():
+                self.logger.warning("ignoring keyword data in normalisation kwargs.")
+                normalize_kws.pop(key, None)
+        self.normalize_kws = normalize_kws
+
     @staticmethod
     def _clean_string(rawdata: str, comment) -> str:
         comment_re = re.escape(comment) + r".*"
         clean_string = re.sub(comment_re, "", rawdata)
         return clean_string
 
-    @classmethod
-    def _json_to_df(cls, rawdata: str, comment: str = None) -> pd.DataFrame:
-        cleaned_data = cls._clean_string(rawdata, comment) if comment else rawdata
+    def _json_to_df(self, rawdata: str, comment: str = None) -> pd.DataFrame:
+        cleaned_data = self._clean_string(rawdata, comment) if comment else rawdata
         json_data = json.loads(cleaned_data)
-        return pd.json_normalize(json_data)
+        return pd.json_normalize(json_data, **self.normalize_kws)
 
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_keys: dict) -> pd.DataFrame:
@@ -52,11 +68,9 @@ class JsonParser(PandasParser):
         return df
 
     def do_parse(self, rawdata: str, thing, project) -> pd.DataFrame:
-        settings = self.settings.copy()
-        self.logger.info(settings)
-
-        comment = settings.get("comment")
-        timestamp_keys = settings.get("timestamp_keys", {})
+        self.logger.info(self.settings)
+        comment = self.settings.get("comment")
+        timestamp_keys = self.settings.get("timestamp_keys", {})
         df = self._json_to_df(rawdata, comment)
         try:
             df = self._set_index(df, timestamp_keys)

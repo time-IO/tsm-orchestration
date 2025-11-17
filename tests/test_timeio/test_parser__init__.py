@@ -13,28 +13,30 @@ from timeio.parser import (
     ChirpStackGenericParser,
     SineDummyParser,
     AbcParser,
+    _default_settings,
 )
 
 
 @pytest.mark.parametrize(
-    "parser_type, has_settings, expected",
+    "parser_type, expected, attrs",
     [
-        ("csvparser", True, CsvParser),
-        ("jsonparser", True, JsonParser),
-        ("campbell_cr6", False, CampbellCr6Parser),
-        ("brightsky_dwd_api", False, BrightskyDwdApiParser),
-        ("ydoc_ml417", False, YdocMl417Parser),
-        ("chirpstack_generic", False, ChirpStackGenericParser),
-        ("sine_dummy", False, SineDummyParser),
+        ("csvparser", CsvParser, {"settings": dict}),
+        ("jsonparser", JsonParser, {"settings": dict, "normalize_kws": dict}),
+        ("campbell_cr6", CampbellCr6Parser, {}),
+        ("brightsky_dwd_api", BrightskyDwdApiParser, {}),
+        ("ydoc_ml417", YdocMl417Parser, {}),
+        ("chirpstack_generic", ChirpStackGenericParser, {}),
+        ("sine_dummy", SineDummyParser, {}),
     ],
 )
-def test__get_parser__type(parser_type, has_settings, expected):
+def test__get_parser__type(parser_type, expected, attrs):
     parser = get_parser(parser_type, {})
     assert isinstance(parser, AbcParser)
     assert isinstance(parser, expected)
-    if has_settings:
-        assert hasattr(parser, "settings")
-        assert isinstance(parser.settings, dict)
+    for name, typ in attrs.items():
+        assert hasattr(parser, name)
+        attr = getattr(parser, name)
+        assert isinstance(attr, typ)
 
 
 def test__get_parser__unknown_type():
@@ -42,19 +44,8 @@ def test__get_parser__unknown_type():
         get_parser("NonExistentType", {})
 
 
-CSV_DEFAULT_SETTINGS = {
-    "comment": "#",
-    "decimal": ".",
-    "na_values": None,
-    "encoding": "utf-8",
-    "engine": "python",
-    "on_bad_lines": "warn",
-    "header": None,
-}
-
-JSON_DEFAULT_SETTINGS = {
-    "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
-}
+CSV_DEFAULT_SETTINGS = _default_settings[CsvParser]
+JSON_DEFAULT_SETTINGS = _default_settings[JsonParser]
 
 
 @pytest.mark.parametrize(
@@ -84,22 +75,14 @@ JSON_DEFAULT_SETTINGS = {
         ("jsonparser", None, JSON_DEFAULT_SETTINGS),
         ("jsonparser", {"newkey": "spam"}, JSON_DEFAULT_SETTINGS | {"newkey": "spam"}),
         ("jsonparser", {"header": "new"}, JSON_DEFAULT_SETTINGS | {"header": "new"}),
-        # TODO: is pandas_json_normalize really a dictionary, or just a parameter?
-        # (
-        #         "jsonparser",
-        #         {"pandas_json_normalize": {"newkey": "spam"}},
-        #         JSON_DEFAULT_SETTINGS | {"newkey": "spam"},
-        # ),
-        # (
-        #         "jsonparser",
-        #         {"pandas_json_normalize": {"header": "new"}},
-        #         JSON_DEFAULT_SETTINGS | {"header": "new"},
-        # ),
-        # (
-        #         "jsonparser",
-        #         {"header": "b", "pandas_json_normalize": {"header": "a"}},
-        #         JSON_DEFAULT_SETTINGS | {"header": "b"},
-        # ),
+        (
+            # pandas_json_normalize keywords are NOT merged with settings, in contrary
+            # to pandas_read_csv with the CSV parser. Instead, the normalisation
+            # keywords are stored as attribute within the class (see JsonParser.normalize_kws)
+            "jsonparser",
+            {"pandas_json_normalize": {"newkey": "spam"}},
+            JSON_DEFAULT_SETTINGS,
+        ),
     ],
 )
 def test__get_parser__settings(parser_type, settings, expected):
