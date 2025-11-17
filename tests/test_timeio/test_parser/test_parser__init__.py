@@ -18,7 +18,7 @@ from timeio.parser import (
 
 
 @pytest.mark.parametrize(
-    "parser_type, expected, attrs",
+    "parser_type, expected_type, expected_attrs",
     [
         ("csvparser", CsvParser, {"settings": dict}),
         ("jsonparser", JsonParser, {"settings": dict, "normalize_kws": dict}),
@@ -29,13 +29,13 @@ from timeio.parser import (
         ("sine_dummy", SineDummyParser, {}),
     ],
 )
-def test__get_parser__type(parser_type, expected, attrs):
+def test__get_parser__type(parser_type, expected_type, expected_attrs):
     parser = get_parser(parser_type, {})
     assert isinstance(parser, AbcParser)
-    assert isinstance(parser, expected)
-    for name, typ in attrs.items():
-        assert hasattr(parser, name)
-        attr = getattr(parser, name)
+    assert isinstance(parser, expected_type)
+    for attr_name, typ in expected_attrs.items():
+        assert hasattr(parser, attr_name)
+        attr = getattr(parser, attr_name)
         assert isinstance(attr, typ)
 
 
