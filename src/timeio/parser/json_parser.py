@@ -28,7 +28,10 @@ class JsonParser(PandasParser):
         # Remove keywords that control program flow
         for key in ["data", "errors"]:
             if key in normalize_kws.keys():
-                self.logger.warning("ignoring keyword data in normalisation kwargs.")
+                self.logger.warning(
+                    f"Removing keyword {key} from normalize_kws, "
+                    f"because its not allowed to be set by the user."
+                )
                 normalize_kws.pop(key, None)
         self.normalize_kws = normalize_kws
 
