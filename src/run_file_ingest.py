@@ -3,11 +3,12 @@ from __future__ import annotations
 import fnmatch
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import warnings
+
 import requests
 
-from minio import Minio
+from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
@@ -136,14 +137,18 @@ class ParserJobHandler(AbstractHandler):
             topic=self.pub_topic, payload=payload, qos=self.mqtt_qos
         )
 
-    def is_valid_event(self, content: dict):
+    @staticmethod
+    def is_valid_event(content: dict):
         logger.debug(f'{content["EventName"]=}')
         return content["EventName"] in (
             "s3:ObjectCreated:Put",
             "s3:ObjectCreated:CompleteMultipartUpload",
         )
 
-    def get_parser_tags(self, bucket_name, filename):
+    def get_parser_tags(self, bucket_name, filename) -> Tags | None:
+        """Search the latest object that was parsed successful and return its tags.
+        If no object version was parsed successful or no tags exist, return None.
+        """
         versions = list(
             self.minio.list_objects(bucket_name, prefix=filename, include_version=True)
         )
@@ -167,15 +172,17 @@ class ParserJobHandler(AbstractHandler):
         parser_id,
         parsing_status,
     ):
-        # reparsing won't create new object version so we need to overwrite the latest version tags
+        # Reparsing won't create a new object version, so we need to
+        # overwrite the tags of the latest version
         try:
             object_tags = self.minio.get_object_tags(bucket_name, filename)
-            if object_tags is None:
-                object_tags = Tags.new_object_tags()
-        except Exception:
+        except S3Error:
+            object_tags = None
+
+        if object_tags is None:
             object_tags = Tags.new_object_tags()
 
-        object_tags["parsed_at"] = datetime.now().isoformat()
+        object_tags["parsed_at"] = datetime.now(tz=timezone.utc).isoformat()
         object_tags["parser_id"] = parser_id
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
