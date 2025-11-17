@@ -46,9 +46,7 @@ def update_datastreams(schema: str, dsn: str, frnt_schema: str, cfg_schema: str)
                     comparer = DatastreamComparer(dsn, schema, mapping_path)
                     compare_result = comparer.compare_datastreams()
                     if any(not ds["equal"] for ds in compare_result["compare"]):
-                        print(
-                            "At least one datastream is unequal — skipping."
-                        )
+                        print("At least one datastream is unequal — skipping.")
                         with psycopg.connect(dsn, autocommit=True) as conn2:
                             with conn2.cursor() as cur2:
                                 add_datastream_pos_constraint(cur2, schema)

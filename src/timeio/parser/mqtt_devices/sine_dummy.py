@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from typing import Any
-import datetime
+from datetime import datetime, timezone
 
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class SineDummyParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
-        timestamp = datetime.now()
+        timestamp = datetime.now(tz=timezone.utc)
         return [
             Observation(
                 timestamp=timestamp,

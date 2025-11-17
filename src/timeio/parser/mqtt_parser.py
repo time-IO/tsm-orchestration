@@ -50,6 +50,7 @@ class MqttParser(AbcParser):
             if isinstance(ts := ob.timestamp, datetime):
                 ts = ts.isoformat()
             obpay: ObservationPayloadT = {
+                "result_type": -99999,  # dummy value
                 "result_time": str(ts),
                 "datastream_pos": str(ob.position),
                 "parameters": json.dumps(
