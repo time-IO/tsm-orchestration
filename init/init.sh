@@ -30,7 +30,7 @@ mkdir -p /tmp/volume/database/pgdata
 #  object-storage  #
 ####################
 
-# 1. Always copy SSH key from host if it exists
+# 1. Copy SSH key from host if it exists
 #    - If not, check if it exists in volume
 #    - If not, generate a new SSH key
 echo "Preparing SSH key for MinIO."
@@ -44,18 +44,34 @@ else
     echo "SSH key already present in MinIO persistence volume."
 fi
 
-# 2. Always copy FTP cert and key from host if they exist
+# 2. Check if FTP cert and key from host match those in volume
+#    - If yes, skip copying/generation
 #    - If not, check if they exist in volume and are valid
 #    - If not, generate new self-signed certificates
 echo "Preparing FTP certificate and key for MinIO."
-if [ -f "${MINIO_CERT_SOURCE}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_SOURCE}/minio-ftp.key" ]; then
+# Check if source files exist and compare with target
+if [ -f "${MINIO_CERT_SOURCE}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_SOURCE}/minio-ftp.key" ] && \
+   [ -f "${MINIO_CERT_TARGET}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_TARGET}/minio-ftp.key" ]; then
+    # Compare files using cmp (silent mode)
+    if cmp -s "${MINIO_CERT_SOURCE}/minio-ftp.crt" "${MINIO_CERT_TARGET}/minio-ftp.crt" && \
+       cmp -s "${MINIO_CERT_SOURCE}/minio-ftp.key" "${MINIO_CERT_TARGET}/minio-ftp.key"; then
+        echo "FTP certificate and key in volume are identical to host files. No action needed."
+    else
+        echo "FTP certificate different in host and volume."
+        echo "Copying FTP certificate and key from host to MinIO persistence volume."
+        cp ${MINIO_CERT_SOURCE}/minio-ftp.crt ${MINIO_CERT_TARGET}/minio-ftp.crt
+        cp ${MINIO_CERT_SOURCE}/minio-ftp.key ${MINIO_CERT_TARGET}/minio-ftp.key
+    fi
+elif [ -f "${MINIO_CERT_SOURCE}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_SOURCE}/minio-ftp.key" ]; then
+    echo "No FTP certificate and key in MinIO persistent volume."
     echo "Copying FTP certificate and key from host to MinIO persistence volume."
     cp ${MINIO_CERT_SOURCE}/minio-ftp.crt ${MINIO_CERT_TARGET}/minio-ftp.crt
     cp ${MINIO_CERT_SOURCE}/minio-ftp.key ${MINIO_CERT_TARGET}/minio-ftp.key
 else
     if [ ! -f "${MINIO_CERT_TARGET}/minio-ftp.crt" ] || [ ! -f "${MINIO_CERT_TARGET}/minio-ftp.key" ] || \
        ! openssl x509 -checkend 604800 -noout -in ${MINIO_CERT_TARGET}/minio-ftp.crt; then
-        echo "No valid certificate found in MinIO persistence volume, generating new self-signed certificate."
+        echo "No valid certificate found in host or MinIO persistence volume."
+        echo "Generating self-signed certificate and key."
         openssl req -new -newkey rsa:2048 -days 90 -nodes -x509 \
             -keyout ${MINIO_CERT_TARGET}/minio-ftp.key \
             -out ${MINIO_CERT_TARGET}/minio-ftp.crt \
@@ -73,19 +89,34 @@ fi
 # 1. Always copy ca.crt, server.cert and server.key from host if they exist
 #    - If not, check if cert exist in volume and are valid
 #    - If not, generate new self-signed certificates
+
+# needs a bit of cleanup
+
 echo "Preparing TLS certificate and key for Mosquitto."
-if [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && \
-   [ -f "${MQTT_CERT_SOURCE}/server.key" ] && \
-   [ -f "${MQTT_CERT_SOURCE}/ca.crt" ]; then
-    echo "Copying ca.crt, server.crt and server.key from host to MQTT persistence volume."
+
+if [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server.key" ] && [ -f "${MQTT_CERT_SOURCE}/ca.crt" ]; then
+    if [ -f "${MQTT_CERT_TARGET}/server.crt" ] && [ -f "${MQTT_CERT_TARGET}/server.key" ] && [ -f "${MQTT_CERT_TARGET}/ca.crt" ]; then
+        if cmp -s "${MQTT_CERT_SOURCE}/server.crt" "${MQTT_CERT_TARGET}/server.crt" && \
+        cmp -s "${MQTT_CERT_SOURCE}/server.key" "${MQTT_CERT_TARGET}/server.key" && \
+        cmp -s "${MQTT_CERT_SOURCE}/ca.crt" "${MQTT_CERT_TARGET}/ca.crt"; then
+            echo "TLS certificates and key in volume are identical to host files. No action needed."
+        else
+            echo "TLS certificate and key different in host and volume."
+            echo "Copying TLS certificates and key from host to MQTT persistence volume."
+            cp ${MQTT_CERT_SOURCE}/server.crt ${MQTT_CERT_TARGET}/server.crt
+            cp ${MQTT_CERT_SOURCE}/server.key ${MQTT_CERT_TARGET}/server.key
+            cp ${MQTT_CERT_SOURCE}/ca.key ${MQTT_CERT_TARGET}/ca.key
+        fi
+    fi
+elif [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server.key" ] && [ -f "${MQTT_CERT_SOURCE}/ca.crt" ]; then
+    echo "No TLS certificate and key yet in persistence volume."
+    echo "Copying TLS certificates and key from host to MQTT persistence volume."
     cp ${MQTT_CERT_SOURCE}/server.crt ${MQTT_CERT_TARGET}/server.crt
     cp ${MQTT_CERT_SOURCE}/server.key ${MQTT_CERT_TARGET}/server.key
     cp ${MQTT_CERT_SOURCE}/ca.crt ${MQTT_CERT_TARGET}/ca.crt
 else
-    if [ ! -f "${MQTT_CERT_TARGET}/server.crt" ] || \
-       [ ! -f "${MQTT_CERT_TARGET}/server.key" ] || \
-       [ ! -f "${MQTT_CERT_TARGET}/ca.crt" ] || \
-       ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt; then
+    if [ ! -f "${MQTT_CERT_TARGET}/server.crt" ] || [ ! -f "${MQTT_CERT_TARGET}/server.key" ] || [ ! -f "${MQTT_CERT_TARGET}/ca.crt" ] || \
+    ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt; then
         echo "No valid certificates found in MQTT persistence volume."
         echo "Generating new self-signed ca.crt ..."
         openssl req -new -newkey rsa:2048 -days 90 -nodes -x509 \
@@ -123,14 +154,19 @@ chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
       /tmp/volume/minio \
       /tmp/volume/mqtt \
       /tmp/volume/cron \
-      /tmp/volume/database
+      /tmp/volume/database \
+      /tmp/volume/visualization \
+      /tmp/volume/tomcat
 
 
-chmod -R u+rwX,g+rwX \
-      /tmp/volume/minio \
-      /tmp/volume/mqtt \
-      /tmp/volume/cron \
-      /tmp/volume/database
+#chmod -R u+rwX,g+rwX \
+#      /tmp/volume/minio \
+#      /tmp/volume/mqtt \
+#      /tmp/volume/cron \
+#      /tmp/volume/database \
+#      /tmp/volume/visualization \
+#      /tmp/volume/tomcat
+
 
 ###########################################
 #  set local file permissions for others  #
