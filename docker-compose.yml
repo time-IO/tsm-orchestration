@@ -29,6 +29,8 @@ services:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/volume/cron"
       - "${DATABASE_PERSISTENCE_VOLUME:-database}:/tmp/volume/database"
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/volume/mqtt"
+      - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/tmp/volume/visualization"
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/tmp/volume/tomcat"
       # Mount local MinIO FTP TLS certificate and SSH host key
       - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/bind/minio/minio-ftp.crt:ro"
       - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/bind/minio/minio-ftp.key:ro"
