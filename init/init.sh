@@ -9,7 +9,10 @@ MINIO_CERT_TARGET="/tmp/volume/minio/certs"
 MQTT_CERT_SOURCE="/tmp/bind/mqtt"
 MQTT_CERT_TARGET="/tmp/volume/mqtt/certs"
 CRONTAB="/tmp/volume/cron/crontab.txt"
-
+FLYWAY_CONFIG="/tmp/conf/flyway"
+MOSQUITTO_CONFIG="/tmp/conf/mosquitto"
+NGINX_CONFIG="/tmp/conf/nginx"
+KEYCLOAK_CONFIG="/tmp/conf/keycloak"
 
 ##################################
 #  create volume subdirectories  #
@@ -105,19 +108,6 @@ else
     fi
 fi
 
-
-
-# Make nginx proxy landing page content accessible for all users
-
-tree -pugfi /home/tsm/html
-
-chmod a+x /home/tsm/html
-chmod a+x /home/tsm/html/css
-chmod a+x /home/tsm/html/images
-chmod -R a+r /home/tsm/html
-
-tree -pugfi /home/tsm/html
-
 # Create crontab.txt if it not already exists
 if [ ! -f $CRONTAB ]; then
     touch $CRONTAB
@@ -142,3 +132,10 @@ chmod -R u+rwX,g+rwX \
       /tmp/volume/cron \
       /tmp/volume/database
 
+###########################################
+#  set local file permissions for others  #
+#  inherit from group, except read        #
+###########################################
+
+chmod -R o=g-w $FLYWAY_CONFIG $MOSQUITTO_CONFIG $NGINX_CONFIG $KEYCLOAK_CONFIG
+echo "Updated permissions for flyway, mosquitto, nginx and keycloak config files."
