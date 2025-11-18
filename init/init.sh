@@ -10,6 +10,7 @@ MQTT_CERT_SOURCE="/tmp/bind/mqtt"
 MQTT_CERT_TARGET="/tmp/volume/mqtt/certs"
 CRONTAB="/tmp/volume/cron/crontab.txt"
 
+
 ##################################
 #  create volume subdirectories  #
 ##################################
@@ -123,3 +124,21 @@ if [ ! -f $CRONTAB ]; then
     chmod 666 $CRONTAB
     echo "# * * * * * /place-sms-and-other-manual-commands-here.sh" >> $CRONTAB
 fi
+
+###########################################
+#  set volume ownerships and permissions  #
+###########################################
+
+chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
+      /tmp/volume/minio \
+      /tmp/volume/mqtt \
+      /tmp/volume/cron \
+      /tmp/volume/database
+
+
+chmod -R u+rwX,g+rwX \
+      /tmp/volume/minio \
+      /tmp/volume/mqtt \
+      /tmp/volume/cron \
+      /tmp/volume/database
+
