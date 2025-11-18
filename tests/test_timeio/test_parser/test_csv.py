@@ -24,9 +24,9 @@ RAWDATA = """
 @pytest.mark.parametrize(
     "settings, columns",
     [
-        [{"skiprows": 3}, [2, 4, 8]],
-        [{"skiprows": 4, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
-        [{"skiprows": 0, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
+        ({"skiprows": 4, "header": None}, [2, 4, 8]),
+        ({"skiprows": 3, "header": 0}, ["P1_mb", "P4_mb", "T4_C"]),
+        ({"skiprows": 3, "header": 0, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]),
     ],
 )
 def test_parsing(settings, columns):
@@ -84,14 +84,14 @@ def test_dirty_data_parsing():
     params = json.loads(obs[0]["parameters"])
     assert params["origin"] == "test"
     assert params["column_header"] == "3"
-    assert params["parser_id"] == None
+    assert params["parser_id"] is None
 
     assert obs[1]["result_time"] == "2021-09-09T05:45:00"
     assert obs[1]["result_number"] == 989.7
     params = json.loads(obs[1]["parameters"])
     assert params["origin"] == "test"
     assert params["column_header"] == "3"
-    assert params["parser_id"] == None
+    assert params["parser_id"] is None
 
 
 MULTIDATECOLUMDATA = """
@@ -239,7 +239,7 @@ def test_custom_names_error():
         ParsingError,
         match="Number of custom column names does not match number of columns in CSV.",
     ):
-        df = paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
+        paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
 
 
 RAWDATA_WITHOUT_TZ = """time,var1,var2,var3
@@ -258,7 +258,7 @@ RAWDATA_WITH_TZ = """time,var1,var2,var3
 @pytest.mark.parametrize(
     "settings, rawdata, expected_index",
     [
-        [
+        (
             {
                 "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
                 "timezone": "Europe/Berlin",
@@ -273,8 +273,8 @@ RAWDATA_WITH_TZ = """time,var1,var2,var3
                 name="time",
                 tz="Europe/Berlin",
             ),
-        ],
-        [
+        ),
+        (
             {"timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}]},
             RAWDATA_WITH_TZ,
             pd.DatetimeIndex(
@@ -286,7 +286,7 @@ RAWDATA_WITH_TZ = """time,var1,var2,var3
                 name="time",
                 tz="UTC+01:00",
             ),
-        ],
+        ),
     ],
 )
 def test_tz(settings, rawdata, expected_index):
@@ -317,4 +317,84 @@ def test_double_tz_error():
         ParsingError,
         match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
     ):
-        df = paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+        paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+
+
+RAWDATA_SKIP_WITH_HEADER = """Skipline
+#Commentline
+time,var1,var2,var3
+#A second commentline
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+#Third Commentline
+Skipfooter1
+Skipfooter2
+"""
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {"skiprows": 2, "header": 0},
+        {"header": 2},
+    ],
+)
+def test_skipping_and_comments_with_header(settings):
+    base_settings = {
+        "comment": "#",
+        "skipfooter": 2,
+        "delimiter": ",",
+        "decimal": ".",
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(RAWDATA_SKIP_WITH_HEADER, "project", "thing")
+    expected_index = pd.DatetimeIndex(
+        ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
+        name="time",
+    )
+    expected_col_names = ["var1", "var2", "var3"]
+    assert df.shape == (3, 3)
+    assert df.index.equals(expected_index)
+    assert list(df.columns) == expected_col_names
+
+
+RAWDATA_SKIP_WITHOUT_HEADER = """Skipline
+#Commentline
+#A second commentline
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+#Third Commentline
+Skipfooter1
+Skipfooter2
+"""
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {"skiprows": 1},
+        {"skiprows": 2},
+    ],
+)
+def test_skipping_and_comments_without_header(settings):
+    base_settings = {
+        "comment": "#",
+        "skipfooter": 2,
+        "delimiter": ",",
+        "decimal": ".",
+        "header": None,
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser({**base_settings, **settings})
+    df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")
+    expected_index = pd.DatetimeIndex(
+        ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
+        name="time",
+    )
+    expected_col_names = [1, 2, 3]
+    assert df.shape == (3, 3)
+    assert df.index.equals(expected_index)
+    assert list(df.columns) == expected_col_names
