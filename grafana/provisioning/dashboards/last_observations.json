@@ -1,0 +1,293 @@
+{
+    "__inputs": [
+      {
+        "name": "DS_MONITORING",
+        "label": "monitoring",
+        "description": "",
+        "type": "datasource",
+        "pluginId": "grafana-postgresql-datasource",
+        "pluginName": "PostgreSQL"
+      }
+    ],
+    "__elements": {},
+    "__requires": [
+      {
+        "type": "panel",
+        "id": "gauge",
+        "name": "Gauge",
+        "version": ""
+      },
+      {
+        "type": "grafana",
+        "id": "grafana",
+        "name": "Grafana",
+        "version": "11.6.7"
+      },
+      {
+        "type": "datasource",
+        "id": "grafana-postgresql-datasource",
+        "name": "PostgreSQL",
+        "version": "11.6.7"
+      },
+      {
+        "type": "panel",
+        "id": "table",
+        "name": "Table",
+        "version": ""
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_MONITORING}"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "left",
+              "cellOptions": {
+                "type": "auto"
+              },
+              "inspect": false
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green"
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Projekt"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 446
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 12,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "options": {
+          "cellHeight": "sm",
+          "footer": {
+            "countRows": false,
+            "fields": "",
+            "reducer": [
+              "sum"
+            ],
+            "show": false
+          },
+          "showHeader": true,
+          "sortBy": []
+        },
+        "pluginVersion": "11.6.7",
+        "targets": [
+          {
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "${DS_MONITORING}"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "WITH last_obs AS (\n  SELECT * FROM get_last_observations()\n  WHERE schema_name in ($project)\n)\nSELECT \n  schema_name as \"Projekt\",\n  result_time as \"Letzter Datenpunkt\",\n  EXTRACT(EPOCH FROM (NOW() - result_time)) as \"Sekunden seit letztem Wert\",\n  NOW() - result_time as \"Zeit seit letztem Wert\",\n  CASE \n    WHEN NOW() - result_time < INTERVAL '6 hour' THEN '🟢 Aktuell'\n    WHEN NOW() - result_time < INTERVAL '24 day' THEN '🟡 Fast aktuell'\n    WHEN NOW() - result_time < INTERVAL '48 days' THEN '🟠 Verzögert'\n    ELSE '🔴 Alt'\n  END as \"Status\"\nFROM last_obs\n\nORDER BY result_time DESC;",
+            "refId": "A",
+            "sql": {
+              "columns": [
+                {
+                  "parameters": [],
+                  "type": "function"
+                }
+              ],
+              "groupBy": [
+                {
+                  "property": {
+                    "type": "string"
+                  },
+                  "type": "groupBy"
+                }
+              ],
+              "limit": 50
+            }
+          }
+        ],
+        "title": "Panel Title",
+        "type": "table"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_MONITORING}"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "max": 259200,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green"
+                },
+                {
+                  "color": "yellow",
+                  "value": 21600
+                },
+                {
+                  "color": "orange",
+                  "value": 86400
+                },
+                {
+                  "color": "red",
+                  "value": 172800
+                }
+              ]
+            },
+            "unit": "s"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 24,
+          "x": 0,
+          "y": 12
+        },
+        "id": 2,
+        "maxPerRow": 6,
+        "options": {
+          "minVizHeight": 75,
+          "minVizWidth": 75,
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true,
+          "sizing": "auto"
+        },
+        "pluginVersion": "11.6.7",
+        "repeat": "project",
+        "repeatDirection": "h",
+        "targets": [
+          {
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "${DS_MONITORING}"
+            },
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  extract(epoch FROM now() - result_time)::bigint AS seconds_since_last\nFROM monitor.get_last_observations()\nWHERE schema_name = $project",
+            "refId": "A",
+            "sql": {
+              "columns": [
+                {
+                  "parameters": [],
+                  "type": "function"
+                }
+              ],
+              "groupBy": [
+                {
+                  "property": {
+                    "type": "string"
+                  },
+                  "type": "groupBy"
+                }
+              ],
+              "limit": 50
+            }
+          }
+        ],
+        "title": "$project",
+        "type": "gauge"
+      }
+    ],
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "allowCustomValue": false,
+          "current": {},
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_MONITORING}"
+          },
+          "definition": "select schema_name from get_last_observations() order by result_time desc;",
+          "description": "Project",
+          "includeAll": true,
+          "label": "Project",
+          "multi": true,
+          "name": "project",
+          "options": [],
+          "query": "select schema_name from get_last_observations() order by result_time desc;",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Last Observations",
+    "uid": "af4ecdd3594hsd",
+    "version": 1,
+    "weekStart": ""
+  }
