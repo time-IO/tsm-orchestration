@@ -161,8 +161,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
     @staticmethod
     def extract_base_minute(slices: str | CronSlices) -> int | None:
         """Extract the minute value from the cron expression.
-        Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
-        Returns the first numeric start value or 0 on parse failure.
+        Returns the first numeric start value.
         """
         if isinstance(slices, str):
             slices = CronSlices(slices)
@@ -179,8 +178,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
     @staticmethod
     def extract_base_hour(slices: str | CronSlices) -> int | None:
         """Extract the hour value from the cron expression.
-        Handles comma lists, ranges with step (e.g. '7-24/10'), '*' with step (e.g. '*/15'), etc.
-        Returns the first numeric start value or 0 on parse failure.
+        Returns the first numeric start value.
         """
         if isinstance(slices, str):
             slices = CronSlices(slices)
@@ -208,10 +206,8 @@ class CreateThingInCrontabHandler(AbstractHandler):
         if current_interval == new_interval:
             return original
 
-        base_minute = cls.extract_base_minute(original) or cls.new_base_minute(
-            new_interval
-        )
-        base_hour = cls.extract_base_hour(original) or cls.new_base_hour(new_interval)
+        base_minute = cls.extract_base_minute(original)
+        base_hour = cls.extract_base_hour(original)
 
         # interval below 60 minutes
         if new_interval < 60:
