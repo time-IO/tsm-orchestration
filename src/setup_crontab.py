@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timedelta
 from random import randint
 
-from crontab import CronItem, CronTab
+from crontab import CronItem, CronTab, CronRange, CronSlices
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -101,14 +101,20 @@ class CreateThingInCrontabHandler(AbstractHandler):
 
     @staticmethod
     def new_base_minute(interval: int) -> int:
+        if interval == 0:
+            return 0
         return randint(0, min(interval - 1, 59))
 
     @staticmethod
     def new_base_hour(interval: int) -> int:
+        if interval < 60:
+            return 0
         return randint(0, min(interval // 60 - 1, 23))
 
     @staticmethod
     def new_base_dom(interval: int) -> int:
+        if interval < 1440:
+            return 0
         return randint(0, min(interval // 1440 - 1, 30))
 
     @classmethod
@@ -134,11 +140,18 @@ class CreateThingInCrontabHandler(AbstractHandler):
         else:
             delay_dom = cls.new_base_dom(interval)
             step_days = interval // 1440
-            return f"{delay_m} {delay_h} {delay_dom}-6/{step_days} * *"
+            return f"{delay_m} {delay_h} {delay_dom}-31/{step_days} * *"
 
     @staticmethod
     def get_current_interval(job: CronItem) -> int:
         """Get interval in minutes from crontab.txt entry"""
+        # TODO:
+        #  This is not reliable to extract the interval.
+        #  because if we have a 40 min schedule (5-59/40 * * * *)
+        #  and current time is 12:00, get_last returns 11:45 and get_next returns 12:05
+        #  which results in an interval of 20 minutes.
+        #  In contrast if current time is 12:30, get_last returns 12:05 and get_next
+        #  returns 12:45 which results in an interval of 40 minutes.
         schedule = job.schedule()
         next_run = schedule.get_next()
         prev_run = schedule.get_prev()
@@ -146,21 +159,43 @@ class CreateThingInCrontabHandler(AbstractHandler):
         return int(interval.total_seconds() / 60)
 
     @staticmethod
-    def extract_base_minute(schedule: str) -> int | None:
+    def extract_base_minute(schedule: str | CronSlices) -> int | None:
         """Extract the minute value from the cron expression.
         Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
         Returns the first numeric start value or 0 on parse failure.
         """
-        minutes = schedule.split()[
-            0
-        ]  # split along spaces and take first part (minutes)
-        minutes = minutes.split(",")[0]  # cut next values if list of commas
-        minutes = minutes.split("/")[0]  # cut handling step values
-        minutes = minutes.split("-")[0]  # cut handling ranges
+        if isinstance(schedule, CronSlices):
+            schedule = schedule.render()
+        minutes = schedule.split()[0]  # split along spaces and take minutes part
+        minutes = minutes.split(",")[0]  # rm possible list of values
+        minutes = minutes.split("/")[0]  # rm possible step value
+        minutes = minutes.split("-")[0]  # rm possible ranges value
         if minutes == "*" or minutes[0] == "@":
             return 0
         try:
             return int(minutes)
+        except ValueError:
+            return None
+
+    @staticmethod
+    def extract_base_hour(schedule: str) -> int | None:
+        """Extract the hour value from the cron expression.
+        Handles comma lists, ranges with step (e.g. '7-24/10'), '*' with step (e.g. '*/15'), etc.
+        Returns the first numeric start value or 0 on parse failure.
+        """
+        if isinstance(schedule, CronSlices):
+            schedule = schedule.render()
+        parts = schedule.split()
+        if len(parts) == 1:
+            return None
+        hour = parts[1]
+        hour = hour.split(",")[0]  # rm possible list of values
+        hour = hour.split("/")[0]  # rm possible step value
+        hour = hour.split("-")[0]  # rm possible ranges value
+        if hour == "*" or hour[0] == "@":
+            return 0
+        try:
+            return int(hour)
         except ValueError:
             return None
 
@@ -173,16 +208,15 @@ class CreateThingInCrontabHandler(AbstractHandler):
         """
         current_interval = cls.get_current_interval(job)
         original = str(job.slices)
+        # TODO: see comment in get_current_interval, maybe we should save the interval
+        #  somewhere relivable for example within the job.comment ?
         if current_interval == new_interval:
             return original
-
-        parts = original.split()
-        hour_part = parts[1] if len(parts) > 1 else ""
-        dow_part = parts[4] if len(parts) > 4 else ""
 
         base_minute = cls.extract_base_minute(original) or cls.new_base_minute(
             new_interval
         )
+        base_hour = cls.extract_base_hour(original) or cls.new_base_hour(new_interval)
 
         # interval below 60 minutes
         if new_interval < 60:
@@ -197,9 +231,10 @@ class CreateThingInCrontabHandler(AbstractHandler):
 
         elif new_interval == 10080:
             dow = randint(0, 6)
+            return f"{base_minute} {base_hour} * * {dow}"
 
-        else:
-            return f"{base_minute} 0 */{new_interval // 1440} * *"
+        else:  # new_interval > 10080
+            return f"{base_minute} {base_hour} */{new_interval // 1440} * *"
 
 
 if __name__ == "__main__":

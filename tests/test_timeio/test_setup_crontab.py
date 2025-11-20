@@ -1,50 +1,12 @@
 # python
-from datetime import datetime, timedelta
-
 import pytest
 import uuid
+import random
+
 from unittest.mock import MagicMock
+from crontab import CronItem
+
 from setup_crontab import CreateThingInCrontabHandler
-
-
-class JobMock:
-    def __init__(self):
-        self.enable_calls = []
-        self.commands = []
-        self.comments = []
-        self.comment = ""
-        self.slices = ""
-        self._current_interval_min = 30
-
-    def enable(self, *args, **kwargs):
-        enabled = kwargs.get("enabled", True) if kwargs else (args[0] if args else True)
-        self.enable_calls.append(enabled)
-
-    def set_command(self, command):
-        self.commands.append(str(command))
-
-    def set_comment(self, comment, pre_comment=False):
-        # keep compatibility with code that reads job.comment
-        self.comment = str(comment)
-        self.comments.append((str(comment), bool(pre_comment)))
-
-    def setall(self, schedule):
-        self.slices = str(schedule)
-
-    def schedule(self):
-        class ScheduleFake:
-            def __init__(self, interval_min):
-                self.interval = interval_min
-                self._dt_now = datetime.now().replace(second=0, microsecond=0)
-
-            # Assume we are in-between two runs for testing purposes
-            def get_next(self):
-                return self._dt_now + timedelta(minutes=self.interval // 2)
-
-            def get_prev(self):
-                return self._dt_now - timedelta(minutes=self.interval // 2)
-
-        return ScheduleFake(self._current_interval_min)
 
 
 class ProjectMock:
@@ -52,16 +14,16 @@ class ProjectMock:
         self.name = name
 
 
-BASE_THING_ATTRS = {
-    "uuid": str(uuid.uuid4()),
-    "name": "thing-name",
-    "project": ProjectMock(name="project-name"),
-}
-
-
 def ThingMock(**overrides):
+    _base_attrs = {
+        "uuid": str(uuid.uuid4()),
+        "name": "thing-name",
+        "project": ProjectMock(name="project-name"),
+        "ext_api": None,
+        "ext_sftp": None,
+    }
     thing = MagicMock()
-    for k, v in BASE_THING_ATTRS.items():
+    for k, v in _base_attrs.items():
         setattr(thing, k, v)
     for k, v in overrides.items():
         setattr(thing, k, v)
@@ -69,102 +31,136 @@ def ThingMock(**overrides):
 
 
 @pytest.mark.parametrize(
-    ["ext_sftp", "ext_api", "expected_in_info"],
+    ["thing", "expected"],
     [
         (
-            MagicMock(sync_interval=15, sync_enabled=True, uri="sftp://test:22"),
-            None,
+            ThingMock(
+                ext_sftp=MagicMock(
+                    sync_interval=15, sync_enabled=True, uri="sftp://test:22"
+                ),
+            ),
             "sFTP sftp://test:22 @ 15m and schedule",
         ),
         (
-            None,
-            MagicMock(sync_interval=120, enabled=True, api_type_name="TestAPI"),
+            ThingMock(
+                ext_api=MagicMock(
+                    sync_interval=120, enabled=True, api_type_name="TestAPI"
+                ),
+            ),
             "TestAPI-API @ 120m and schedule",
+        ),
+        (ThingMock(ext_sftp=None, ext_api=None), ""),
+    ],
+)
+def test_create_job(thing, expected):
+    job = CronItem()
+    info = CreateThingInCrontabHandler.apply_job(job, thing)
+    assert info == expected or info.startswith(expected)
+
+
+
+@pytest.mark.parametrize("uuid", ["000-001-99"])
+@pytest.mark.parametrize(
+    "typ, kwargs",
+    [
+        ("sftp", {"uri": "sftp://make:22"}),
+        (
+            "ext_api",
+            {"api_type_name": "MakeAPI"},
         ),
     ],
 )
-def test_new_job_info(ext_sftp, ext_api, expected_in_info):
-    thing = ThingMock(ext_sftp=ext_sftp, ext_api=ext_api)
-    job = JobMock()
-    info = CreateThingInCrontabHandler.apply_job(job, thing)
-    assert info.startswith(expected_in_info)
+@pytest.mark.parametrize("enabled", [True, False])
+@pytest.mark.parametrize("interval", [10, 1000, 10080])
+def test_update_job_sftp(uuid, typ, kwargs, enabled, interval):
+    if typ == "sftp":
+        ext_sftp = MagicMock(**kwargs, sync_enabled=enabled, sync_interval=interval)
+        thing = ThingMock(ext_sftp=ext_sftp, uuid=uuid)
+    elif typ == "ext_api":
+        ext_api = MagicMock(**kwargs, enabled=enabled, sync_interval=interval)
+        thing = ThingMock(ext_api=ext_api, uuid=uuid)
+    else:
+        raise RuntimeError("wong test setup")
+    job = CronItem()
 
+    # create a job
+    CreateThingInCrontabHandler.apply_job(job, thing)
+    assert job.enabled == enabled
+    assert uuid in job.comment
+    assert uuid in job.command
 
-def test_new_job_no_external_sftp_or_api():
-    thing = ThingMock(ext_sftp=None, ext_api=None)
-    job = JobMock()
-    info = CreateThingInCrontabHandler.apply_job(job, thing)
-    assert info == ""
-    assert job.commands == []
-    assert job.enable_calls == []
+    # call render() to actual create a copy (and convert to a string),
+    # job.slices would be just a reference, that would update on job update.
+    old_slices = job.slices.render()
+
+    # we mock an external thing update ...
+    if typ == "sftp":
+        thing.ext_sftp.sync_enabled = not enabled
+        thing.ext_sftp.sync_interval = 1717
+    else:
+        thing.ext_api.enabled = not enabled
+        thing.ext_api.sync_interval = 1717
+
+    # ... and update the job with the modified thing
+    CreateThingInCrontabHandler.apply_job(job, thing, is_new=False)
+    assert job.enabled == (not enabled)
+    assert uuid in job.comment
+    assert uuid in job.command
+
+    # We just assert that a change in schedule happened, to test the explicit
+    # update of the schedule/slices we have an extra test below
+    assert job.slices.render() != old_slices
 
 
 @pytest.mark.parametrize(
-    "kind, initial_kwargs, update_kwargs",
+    "thing, expected",
     [
         (
-            "sftp",
-            {"sync_interval": 30, "sync_enabled": True, "uri": "sftp://make:22"},
-            {"sync_interval": 120, "sync_enabled": False, "uri": "sftp://update:22"},
-        ),
-        (
-            "api",
-            {"sync_interval": 30, "enabled": True, "api_type_name": "MakeAPI"},
-            {"sync_interval": 120, "enabled": False, "api_type_name": "UpdateAPI"},
-        ),
+            ThingMock(name="thing", uuid="uuid", project=ProjectMock("project")),
+            "project | thing | uuid",
+        )
     ],
 )
-def test_update_job_parametrized(kind, initial_kwargs, update_kwargs):
-    if kind == "sftp":
-        thing_make = ThingMock(ext_api=None, ext_sftp=MagicMock(**initial_kwargs))
-        thing_update = ThingMock(ext_api=None, ext_sftp=MagicMock(**update_kwargs))
-    else:
-        thing_make = ThingMock(ext_api=MagicMock(**initial_kwargs), ext_sftp=None)
-        thing_update = ThingMock(ext_api=MagicMock(**update_kwargs), ext_sftp=None)
-
-    # ensure update uses the same uuid (no new uuid should be generated for the update)
-    thing_update.uuid = thing_make.uuid
-
-    job = JobMock()
-    # robustes Setzen mit Fallback
-    job._current_interval_min = int(
-        initial_kwargs.get("sync_interval") or initial_kwargs.get("interval") or 30
-    )
-
-    CreateThingInCrontabHandler.apply_job(job, thing_make)
-    CreateThingInCrontabHandler.apply_job(job, thing_update, is_new=False)
-
-    assert job.enable_calls[0] is True
-    assert job.enable_calls[-1] is False
-
-    # Prüfe, dass jede command die thing.uuid enthält
-    assert job.commands, "expected at least one command"
-    assert all(str(thing_update.uuid) in c for c in job.commands)
-
-    # Prüfe, dass jedes comment die thing.uuid enthält
-    assert job.comments, "expected at least one comment"
-    assert all(str(thing_update.uuid) in c for c, _ in job.comments)
+def test_mk_comment(thing, expected):
+    comment = CreateThingInCrontabHandler.mk_comment(thing)
+    # remove the time as it is harder to check
+    comment_chunk = " | ".join(comment.split(" | ")[1:])
+    assert comment_chunk == expected
 
 
-def test_job_belongs_to_thing_true_and_false():
-    thing = ThingMock()
-    job = JobMock()
-
-    # positives Szenario: Kommentar im erwarteten Format mit der Thing-UUID
-    job.set_comment(CreateThingInCrontabHandler.mk_comment(thing))
-    assert CreateThingInCrontabHandler.job_belongs_to_thing(job, thing) is True
-
-    # negatives Szenario: andere UUID im Kommentar
-    job.set_comment("2025-01-01 00:00:00 | other-project | other-thing | not-the-uuid")
-    assert CreateThingInCrontabHandler.job_belongs_to_thing(job, thing) is False
+@pytest.mark.parametrize(
+    "job, thing, expected",
+    [
+        (CronItem(comment="project | thing | 0001"), ThingMock(uuid="0001"), True),
+        (CronItem(comment="project | thing | 0001"), ThingMock(uuid="0002"), False),
+    ],
+)
+def test_job_belongs_to_thing(job, thing, expected):
+    assert CreateThingInCrontabHandler.job_belongs_to_thing(job, thing) == expected
 
 
-@pytest.mark.parametrize("interval_min", [2, 30, 60, 120, 1440, 2880])
-def test_get_current_interval_returns_expected_minutes(interval_min):
-    job = JobMock()
-    job._current_interval_min = interval_min
-    cur_int = CreateThingInCrontabHandler.get_current_interval(job)
-    assert cur_int == interval_min
+@pytest.mark.parametrize(
+    "schedule, expected",
+    [
+        ("* * * * *", 1),
+        ("*/2 * * * *", 2),
+        ("0-59/3 * * * *", 3),
+        ("19-59/20 * * * *", 20),
+        ("20-59/30 * * * *", 30),
+        ("30-59/37 * * * *", 37),
+        ("30-59/40 * * * *", 40),
+        ("58-59/59 * * * *", 59),
+        ("11 */1 * * *", 60),
+        ("5 */2 * * *", 120),
+        ("1 5 */1 * *", 1440),
+        ("1 5 */2 * *", 2880),
+    ],
+)
+def test_get_current_interval_returns_expected_minutes(schedule, expected):
+    job = CronItem()
+    job.setall(schedule)
+    interval = CreateThingInCrontabHandler.get_current_interval(job)
+    assert interval == expected
 
 
 @pytest.mark.parametrize(
@@ -178,44 +174,36 @@ def test_get_current_interval_returns_expected_minutes(interval_min):
     ],
 )
 def test_extract_base_minute(schedule, expected_base_minute):
-    base_minute = CreateThingInCrontabHandler.extract_base_minute(schedule)
+    job = CronItem()
+    job.setall(schedule)
+    base_minute = CreateThingInCrontabHandler.extract_base_minute(job.slices)
     assert base_minute == expected_base_minute
 
 
 @pytest.mark.parametrize(
-    ("old_schedule", "old_interval_min", "new_interval_min", "expect_change"),
+    ("schedule", "new_interval", "expected"),
     [
-        (
-            "*/15 * * * *",
-            15,
-            30,
-            True,
-        ),  # going form 15 to 30 minutes -> change expected
-        ("16 1-23/2 * * *", 120, 120, False),  # already 2-hourly -> no change expected
-        (
-            "37 5 */2 * *",
-            2880,
-            1440,
-            True,
-        ),  # going from bi-daily to daily -> change expected
-        (
-            "5,15,25,35,45,55 * * * *",
-            10,
-            10,
-            False,
-        ),  # already every 10 minutes -> no change expected
-        ("30 3-23/6 * * *", 360, 240, True),  # no change expected
-        ("56 15 * * 0", 10080, 10080, False),  # already weekly -> no change expected
+        # change form 15 to 30 minutes
+        ("*/15 * * * *", 30, "20-59/30 * * * *"),
+        ("0-59/15 * * * *", 30, "20-59/30 * * * *"),
+        # already 2-hourly -> no change
+        ("16 1-23/2 * * *", 120, "16 1-23/2 * * *"),
+        ("16 */2 * * *", 120, "16 */2 * * *"),
+        # change from bi-daily to daily
+        ("37 5 */2 * *", 1440, "37 5 */1 * *"),
+        # already every 10 minutes -> no change
+        ("5,15,25,35,45,55 * * * *", 10, "5,15,25,35,45,55 * * * *"),
+        # no change
+        ("30 3-23/6 * * *", 360, "30 3-23/6 * * *"),
+        # already weekly -> no change expected
+        ("56 15 * * 0", 10080, "56 15 * * 0"),
     ],
 )
-def test_update_cron_expression(
-    old_schedule, old_interval_min, new_interval_min, expect_change
-):
-    job = JobMock()
-    job._current_interval_min = old_interval_min
-    job.setall(old_schedule)
-    new_schedule = CreateThingInCrontabHandler.update_cron_expression(
-        job, new_interval_min
-    )
-    changed = new_schedule != old_schedule
-    assert changed == expect_change
+def test_update_cron_expression(schedule, new_interval, expected):
+    # make random deterministic to ensure we always have the same test results
+    random.seed(42)
+
+    job = CronItem()
+    job.setall(schedule)
+    new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval)
+    assert new_schedule == expected
