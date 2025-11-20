@@ -209,7 +209,7 @@ class CreateThingInCrontabHandler(AbstractHandler):
         current_interval = cls.get_current_interval(job)
         original = str(job.slices)
         # TODO: see comment in get_current_interval, maybe we should save the interval
-        #  somewhere relivable for example within the job.comment ?
+        #  somewhere reliable for example within the job.comment ?
         if current_interval == new_interval:
             return original
 
