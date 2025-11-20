@@ -58,7 +58,6 @@ def test_create_job(thing, expected):
     assert info == expected or info.startswith(expected)
 
 
-
 @pytest.mark.parametrize("uuid", ["000-001-99"])
 @pytest.mark.parametrize(
     "typ, kwargs",
