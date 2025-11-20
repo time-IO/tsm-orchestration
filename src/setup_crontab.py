@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timedelta
 from random import randint
 
-from crontab import CronItem, CronTab, CronRange, CronSlices
+from crontab import CronItem, CronTab, CronRange, CronSlices, CronSlice, CronValue
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -159,45 +159,40 @@ class CreateThingInCrontabHandler(AbstractHandler):
         return int(interval.total_seconds() / 60)
 
     @staticmethod
-    def extract_base_minute(schedule: str | CronSlices) -> int | None:
+    def extract_base_minute(slices: str | CronSlices) -> int | None:
         """Extract the minute value from the cron expression.
         Handles comma lists, ranges with step (e.g. '7-59/10'), '*' with step (e.g. '*/15'), etc.
         Returns the first numeric start value or 0 on parse failure.
         """
-        if isinstance(schedule, CronSlices):
-            schedule = schedule.render()
-        minutes = schedule.split()[0]  # split along spaces and take minutes part
-        minutes = minutes.split(",")[0]  # rm possible list of values
-        minutes = minutes.split("/")[0]  # rm possible step value
-        minutes = minutes.split("-")[0]  # rm possible ranges value
-        if minutes == "*" or minutes[0] == "@":
-            return 0
-        try:
-            return int(minutes)
-        except ValueError:
-            return None
+        if isinstance(slices, str):
+            slices = CronSlices(slices)
+        # if we have a list of expressions like 1,2,4-59/5
+        # we extract the base minute only from the first one.
+        minutes = slices[0].parts[0]
+        if isinstance(minutes, int):
+            return minutes
+        if isinstance(minutes, CronValue):
+            return minutes.value
+        assert isinstance(minutes, CronRange)
+        return minutes.vfrom
 
     @staticmethod
-    def extract_base_hour(schedule: str) -> int | None:
+    def extract_base_hour(slices: str | CronSlices) -> int | None:
         """Extract the hour value from the cron expression.
         Handles comma lists, ranges with step (e.g. '7-24/10'), '*' with step (e.g. '*/15'), etc.
         Returns the first numeric start value or 0 on parse failure.
         """
-        if isinstance(schedule, CronSlices):
-            schedule = schedule.render()
-        parts = schedule.split()
-        if len(parts) == 1:
-            return None
-        hour = parts[1]
-        hour = hour.split(",")[0]  # rm possible list of values
-        hour = hour.split("/")[0]  # rm possible step value
-        hour = hour.split("-")[0]  # rm possible ranges value
-        if hour == "*" or hour[0] == "@":
-            return 0
-        try:
-            return int(hour)
-        except ValueError:
-            return None
+        if isinstance(slices, str):
+            slices = CronSlices(slices)
+        # If we have a list of expressions like 1,2,4-23/5
+        # we extract the base hour only from the first one.
+        hour = slices[1].parts[0]
+        if isinstance(hour, int):
+            return hour
+        if isinstance(hour, CronValue):
+            return hour.value
+        assert isinstance(hour, CronRange)
+        return hour.vfrom
 
     @classmethod
     def update_cron_expression(cls, job, new_interval: int) -> str:
