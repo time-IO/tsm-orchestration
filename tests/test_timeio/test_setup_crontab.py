@@ -170,6 +170,8 @@ def test_get_current_interval_returns_expected_minutes(schedule, expected):
         ("@daily", 0),
         ("10,30,50 * * * *", 10),
         ("7-59/12 3-23/5 * * *", 7),
+        ("*/12,3-23/5 * * * *", 0),
+        ("3-4/12,3-23/5 * * * *", 3),
     ],
 )
 def test_extract_base_minute(schedule, expected_base_minute):
@@ -180,11 +182,32 @@ def test_extract_base_minute(schedule, expected_base_minute):
 
 
 @pytest.mark.parametrize(
+    ("interval", "expected"),
+    [
+        (30, "20-59/30 * * * *"),
+        (120, "40 0-23/2 * * *"),
+        (1440, "40 3 0-31/1 * *"),
+        (10, "1-59/10 * * * *"),
+        (360, "40 0-23/6 * * *"),
+        (10080, "40 3 * * 0"),
+    ],
+)
+def test_get_schedule(interval, expected):
+    # make random deterministic to ensure we always have the same test results
+    random.seed(42)
+
+    schedule = CreateThingInCrontabHandler.get_schedule(interval)
+    schedule2 = CreateThingInCrontabHandler.get_schedule(interval)
+    assert schedule == expected
+    assert schedule != schedule2
+
+
+@pytest.mark.parametrize(
     ("schedule", "new_interval", "expected"),
     [
         # change form 15 to 30 minutes
-        ("*/15 * * * *", 30, "20-59/30 * * * *"),
-        ("0-59/15 * * * *", 30, "20-59/30 * * * *"),
+        ("*/15 * * * *", 30, "0-59/30 * * * *"),
+        ("0-59/15 * * * *", 30, "0-59/30 * * * *"),
         # already 2-hourly -> no change
         ("16 1-23/2 * * *", 120, "16 1-23/2 * * *"),
         ("16 */2 * * *", 120, "16 */2 * * *"),
@@ -199,9 +222,6 @@ def test_extract_base_minute(schedule, expected_base_minute):
     ],
 )
 def test_update_cron_expression(schedule, new_interval, expected):
-    # make random deterministic to ensure we always have the same test results
-    random.seed(42)
-
     job = CronItem()
     job.setall(schedule)
     new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval)
