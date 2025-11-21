@@ -146,13 +146,19 @@ def test_job_belongs_to_thing(job, thing, expected):
         ("0-59/3 * * * *", 3),
         ("19-59/20 * * * *", 20),
         ("20-59/30 * * * *", 30),
-        ("30-59/37 * * * *", 37),
-        ("30-59/40 * * * *", 40),
-        ("58-59/59 * * * *", 59),
+        ("30-59/37 * * * *", 60),
+        ("30-59/40 * * * *", 60),
+        ("0-59/40 * * * *", 40),
+        ("58-59/59 * * * *", 60),
         ("11 */1 * * *", 60),
         ("5 */2 * * *", 120),
         ("1 5 */1 * *", 1440),
         ("1 5 */2 * *", 2880),
+        # tricky values
+        ("8-59/9 * * * *", 9),  # [8,17,..,53],[8,17,.. -> 9,14,9 --> majority 9
+        ("5-59/25 * * * *", 25),  # [5,30,55],[5,30,.. -> 25,10,25 --> majority: 25
+        ("0-59/40 * * * *", 40),  # [0,40],[0,40].. -> 20,40,20 or 40,20,40 --> max: 40
+        ("0-59/35 * * * *", 35),  # [0,35],[0,35].. -> 35,25,35 or 25,35,25 --> max: 35
     ],
 )
 def test_get_current_interval_returns_expected_minutes(schedule, expected):
@@ -182,8 +188,28 @@ def test_extract_base_minute(schedule, expected_base_minute):
 
 
 @pytest.mark.parametrize(
+    ("schedule", "expected_base_hour"),
+    [
+        ("* 0 * * *", 0),
+        ("* */12 * * *", 0),
+        ("@daily", 0),
+        ("* 10,15,20 * * *", 10),
+        ("* 7-23/12 * * *", 7),
+        ("* */12,3-23/5 * * *", 0),
+        ("* 3-4/12,3-23/5 * * *", 3),
+    ],
+)
+def test_extract_base_hour(schedule, expected_base_hour):
+    job = CronItem()
+    job.setall(schedule)
+    base_hour = CreateThingInCrontabHandler.extract_base_hour(job.slices)
+    assert base_hour == expected_base_hour
+
+
+@pytest.mark.parametrize(
     ("interval", "expected"),
     [
+        # all following params need random.seed(42)
         (30, "20-59/30 * * * *"),
         (120, "40 0-23/2 * * *"),
         (1440, "40 3 0-31/1 * *"),
@@ -205,23 +231,44 @@ def test_get_schedule(interval, expected):
 @pytest.mark.parametrize(
     ("schedule", "new_interval", "expected"),
     [
-        # change form 15 to 30 minutes
+        # base minute < 60
+        ("0-59/5 * * * *", 10, "0-59/10 * * * *"),
+        ("0-59/10 * * * *", 5, "0-59/5 * * * *"),
         ("*/15 * * * *", 30, "0-59/30 * * * *"),
-        ("0-59/15 * * * *", 30, "0-59/30 * * * *"),
-        # already 2-hourly -> no change
-        ("16 1-23/2 * * *", 120, "16 1-23/2 * * *"),
-        ("16 */2 * * *", 120, "16 */2 * * *"),
-        # change from bi-daily to daily
+        ("5-59/15 * * * *", 30, "5-59/30 * * * *"),
+        # base minute >= new interval -> creates a new random base minute
+        ("20-59/30 * * * *", 15, "10-59/15 * * * *"),  # needs random.seed(42)
+        # 60 < new interval < 1440
+        ("16 */4 * * *", 120, "16 */2 * * *"),
+        ("16 0-23/4 * * *", 120, "16 */2 * * *"),
+        ("16 */4 * * *", 121, "16 */2 * * *"),
+        ("16 */4 * * *", 122, "16 */2 * * *"),
+        ("16 */4 * * *", 179, "16 */2 * * *"),
+        ("16 */4 * * *", 180, "16 */3 * * *"),
+        # interval > 1440 (1day) and interval != 10080 (7days)
         ("37 5 */2 * *", 1440, "37 5 */1 * *"),
-        # already every 10 minutes -> no change
+        ("37 5 * * *", 7200, "37 5 */5 * *"),
+        ("37 5 * * *", 7201, "37 5 */5 * *"),
+        ("37 5 * * *", 18719, "37 5 */12 * *"),
+        ("37 5 * * *", 18720, "37 5 */13 * *"),
+        ("37 5 * * *", 19000, "37 5 */13 * *"),
+        ("37 5 * * *", 20000, "37 5 */13 * *"),
+        ("37 5 * * *", 20160, "37 5 */14 * *"),
+        # interval == 10080 (7days) -> uses a random weekday
+        ("37 5 * * *", 10080, "37 5 * * 5"),  # needs random.seed(42)
+        # no changes expected
         ("5,15,25,35,45,55 * * * *", 10, "5,15,25,35,45,55 * * * *"),
-        # no change
-        ("30 3-23/6 * * *", 360, "30 3-23/6 * * *"),
-        # already weekly -> no change expected
-        ("56 15 * * 0", 10080, "56 15 * * 0"),
+        ("16 */2 * * *", 120, "16 */2 * * *"),
+        ("30 */6 * * *", 360, "30 */6 * * *"),
+        ("37 5 */13 * *", 20000, "37 5 */13 * *"),
+        ("37 5 */13 * *", 20001, "37 5 */13 * *"),
+        ("56 15 * * 2", 10080, "56 15 * * 2"),
     ],
 )
 def test_update_cron_expression(schedule, new_interval, expected):
+    # make random deterministic to ensure we always have the same test results
+    random.seed(42)
+
     job = CronItem()
     job.setall(schedule)
     new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval)

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import randint
 
-from crontab import CronItem, CronTab, CronRange, CronSlices, CronSlice, CronValue
+from crontab import CronItem, CronTab, CronRange, CronSlices
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -145,18 +144,12 @@ class CreateThingInCrontabHandler(AbstractHandler):
     @staticmethod
     def get_current_interval(job: CronItem) -> int:
         """Get interval in minutes from crontab.txt entry"""
-        # TODO:
-        #  This is not reliable to extract the interval.
-        #  because if we have a 40 min schedule (5-59/40 * * * *)
-        #  and current time is 12:00, get_last returns 11:45 and get_next returns 12:05
-        #  which results in an interval of 20 minutes.
-        #  In contrast if current time is 12:30, get_last returns 12:05 and get_next
-        #  returns 12:45 which results in an interval of 40 minutes.
-        schedule = job.schedule()
-        next_run = schedule.get_next()
-        prev_run = schedule.get_prev()
-        interval = next_run - prev_run
-        return int(interval.total_seconds() / 60)
+        schedule = job.schedule(datetime(2020, 1, 1, 23, 59, 59))
+        # avoid to have one value in the last hour and one in the next,
+        # therefore we avoid schedule.get_prev()
+        base = schedule.get_next()
+        next = schedule.get_next()
+        return int((next - base).total_seconds() / 60)
 
     @staticmethod
     def extract_base_minute(slices: str | CronSlices) -> int | None:
@@ -170,8 +163,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
         minutes = slices[0].parts[0]
         if isinstance(minutes, int):
             return minutes
-        if isinstance(minutes, CronValue):
-            return minutes.value
         assert isinstance(minutes, CronRange)
         return minutes.vfrom
 
@@ -187,8 +178,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
         hour = slices[1].parts[0]
         if isinstance(hour, int):
             return hour
-        if isinstance(hour, CronValue):
-            return hour.value
         assert isinstance(hour, CronRange)
         return hour.vfrom
 
