@@ -147,9 +147,9 @@ class CreateThingInCrontabHandler(AbstractHandler):
         schedule = job.schedule(datetime(2020, 1, 1, 23, 59, 59))
         # avoid to have one value in the last hour and one in the next,
         # therefore we avoid schedule.get_prev()
-        base = schedule.get_next()
-        next = schedule.get_next()
-        return int((next - base).total_seconds() / 60)
+        next_run = schedule.get_next()
+        after_next_run = schedule.get_next()
+        return int((after_next_run - next_run).total_seconds() / 60)
 
     @staticmethod
     def extract_base_minute(slices: str | CronSlices) -> int | None:
@@ -190,8 +190,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
         """
         current_interval = cls.get_current_interval(job)
         original = str(job.slices)
-        # TODO: see comment in get_current_interval, maybe we should save the interval
-        #  somewhere reliable for example within the job.comment ?
         if current_interval == new_interval:
             return original
 
