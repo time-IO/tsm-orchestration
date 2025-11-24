@@ -19,7 +19,7 @@ QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "vers
 #                  "saqc"             flag         func       label        saqc.version
 
 
-class TimeIOScheme(saqc.FloatScheme):
+class STAMPLATEScheme(saqc.FloatScheme):
 
     def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
         """Translate a dict of pandas.Dataframes (each with QUALITY_COLUMNS
@@ -84,7 +84,7 @@ class Saqc(QcTool):
     version = saqc.__version__
 
     def __init__(self):
-        self._qc = saqc.SaQC(scheme=TimeIOScheme())
+        self._qc = saqc.SaQC(scheme=STAMPLATEScheme())
 
     @property
     def columns(self) -> pd.Index:
@@ -112,7 +112,7 @@ class Saqc(QcTool):
         # Second we implicitly (TimeIOScheme.toInternal) translate from
         # the dataframe with QUALITY_COLUMNS to internal Flags and History
         # with metadata.
-        new = saqc.SaQC(data, quality, scheme=TimeIOScheme())
+        new = saqc.SaQC(data, quality, scheme=STAMPLATEScheme())
         self._qc[new.columns] = new
 
     def get_quality(self) -> dict[str, pd.Series]:
