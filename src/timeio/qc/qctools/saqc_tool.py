@@ -21,14 +21,42 @@ QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "vers
 
 class STAMPLATEScheme(saqc.FloatScheme):
 
-    def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
-        """Translate a dict of pandas.Dataframes (each with QUALITY_COLUMNS
-
+    @staticmethod
+    def toSTAannotations(row: pd.Series) -> str:
+        """Make a json string according to STAMPLATE specs."""
+        return json.dumps(
+            {
+                "annotationType": row["annotationType"],
+                "annotation": str(row["annotation"]),
+                "properties": {
+                    "measure": row["measure"],
+                    "userLabel": row["userLabel"],
+                    "version": row["version"],
+                },
+            },
+            allow_nan=False,
         )
-        to a Flags object with a History (with metadata) for each frame.
+
+    @staticmethod
+    def fromSTAannotations(s: pd.Series[str]) -> pd.DataFrame:
+        """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
+        timeIO/STA standard quality labels (structured JSON).
         """
+        df = pd.json_normalize(s)
+        df.index = s.index
+        if df.empty:
+            df = df.reindex(columns=QUALITY_COLUMNS)
+        df.columns = df.columns.str.removeprefix("properties.")
+        return df[QUALITY_COLUMNS]
+
+    def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
+        """Translate a dict of pandas.Series of json quality annotations
+        to a Flags object with a History (with metadata) for each series.
+        """
+
         data = {}
-        for key, df in flags.items():  # type: str, pd.Series
+        for key, series in flags.items():  # type: str, pd.Series
+            df: pd.DataFrame = self.fromSTAannotations(series)
             history = saqc.core.History(index=df.index)
             for (anno, measure, user_label), values in df.groupby(
                 ["annotation", "measure", "userLabel"]
@@ -73,7 +101,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
                 meta = history.meta[col]
                 df.loc[valid, "measure"] = meta["func"]
                 df.loc[valid, "userLabel"] = meta["kwargs"].get("label", None)
-                out[field] = df
+                out[field] = df.apply(self.toSTAannotations, axis=1)
 
         return out
 
@@ -103,56 +131,20 @@ class Saqc(QcTool):
     def add_data(
         self, data: dict[str, pd.Series], quality: dict[str, pd.Series] | None = None
     ):
-        # First we translate from STA conform json annotations to a
-        # dataframe with QUALITY_COLUMNS.
         if quality is not None:
-            quality = {k: self.from_STA_annotations(q) for k, q in quality.items()}
             quality = DictOfSeries(quality)
 
-        # Second we implicitly (TimeIOScheme.toInternal) translate from
-        # the dataframe with QUALITY_COLUMNS to internal Flags and History
-        # with metadata.
-        new = saqc.SaQC(data, quality, scheme=STAMPLATEScheme())
+        # If quality is not None we will end up in STAMPLATEScheme.toInternal
+        # which then do the parsing of the STA-json annotations.
+        new = saqc.SaQC(DictOfSeries(data), quality, scheme=STAMPLATEScheme())
         self._qc[new.columns] = new
 
     def get_quality(self) -> dict[str, pd.Series]:
-        # First we do an implicit back translation (TimeIOScheme.toExternal), then we
-        # translate the resulting dataframe with QUALITY_COLUMNS back to STA compatible
-        # json annotations.
-        return {k: self.to_STA_annotations(df) for k, df in self._qc.flags.items()}
+        # The back translation to STA-compatible json annotations is
+        # done in the STAMPLATEScheme.toExternal .
+        return self._qc.flags  # type: ignore
 
     def get_data(self) -> dict[str, pd.Series]:
         return self._qc.data  # type: ignore
 
-    def from_STA_annotations(self, s: pd.Series) -> pd.DataFrame:
-        """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
-        timeIO/STA standard quality labels (structured JSON).
-        """
-        df = pd.json_normalize(s)
-        df.index = s.index
-        if df.empty:
-            df = df.reindex(columns=QUALITY_COLUMNS)
-        df.columns = df.columns.str.removeprefix("properties.")
-        return df[QUALITY_COLUMNS]
 
-    def to_STA_annotations(self, frame: pd.DataFrame) -> pd.Series:
-        """Make a pandas.Series with standard timeIO/STA json quality labels
-        from a flag dataframe (from a saqc result).
-        """
-
-        # Basically we just add a level of nesting here.
-        def jsonify(row: pd.Series):
-            return json.dumps(
-                {
-                    "annotationType": row["annotationType"],
-                    "annotation": str(row["annotation"]),
-                    "properties": {
-                        "version": row["version"],
-                        "measure": row["measure"],
-                        "userLabel": row["userLabel"],
-                    },
-                },
-                allow_nan=False,
-            )
-
-        return frame.apply(jsonify, axis=1)
