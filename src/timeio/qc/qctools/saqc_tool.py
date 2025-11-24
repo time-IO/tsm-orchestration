@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import warnings
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import saqc
@@ -22,8 +24,9 @@ QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "vers
 class STAMPLATEScheme(saqc.FloatScheme):
 
     @staticmethod
-    def toSTAannotations(row: pd.Series) -> str:
-        """Make a json string according to STAMPLATE specs."""
+    def toSTAannotations(row: pd.Series) -> dict[str, str | dict[str, str]]:
+        """Create a dict that can be translated to a structured json according to
+        the STAMPLATE specs."""
         return {
             "annotationType": row["annotationType"],
             "annotation": str(row["annotation"]),
@@ -35,11 +38,11 @@ class STAMPLATEScheme(saqc.FloatScheme):
         }
 
     @staticmethod
-    def fromSTAannotations(s: pd.Series[str]) -> pd.DataFrame:
+    def fromSTAannotations(s: pd.Series[dict]) -> pd.DataFrame:
         """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
-        timeIO/STA standard quality labels (structured JSON).
+        timeIO/STA standard quality labels (dicts parsed from a structured JSON).
         """
-        df = pd.json_normalize(s)
+        df = pd.json_normalize(list(s))
         df.index = s.index
         if df.empty:
             df = df.reindex(columns=QUALITY_COLUMNS)
