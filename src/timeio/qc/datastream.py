@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import logging
 import typing
 from typing import Any
@@ -327,7 +328,7 @@ class DatastreamSTA:
 
     def upload(self, api_base_url):
         """Update locally stored quality labels to the DB"""
-        df: pd.DataFrame = self._data.loc[self._upload_ptr :]
+        df: pd.DataFrame = self._data.loc[self._upload_ptr :].copy()
         if df.empty:
             logger.debug("[%s] no quality labels to upload", self.name)
             return
@@ -336,6 +337,8 @@ class DatastreamSTA:
         df.drop(columns=["data"], inplace=True)
         df.rename(columns=columns_map, inplace=True)
         assert set(df.columns) == {"datastream_id", "result_quality", "result_time"}
+
+        df["result_quality"] = df["result_quality"].map(json.dumps)
         labels = df.to_json(orient="records", date_format="iso")
 
         r = requests.post(

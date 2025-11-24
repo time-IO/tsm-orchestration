@@ -24,18 +24,15 @@ class STAMPLATEScheme(saqc.FloatScheme):
     @staticmethod
     def toSTAannotations(row: pd.Series) -> str:
         """Make a json string according to STAMPLATE specs."""
-        return json.dumps(
-            {
-                "annotationType": row["annotationType"],
-                "annotation": str(row["annotation"]),
-                "properties": {
-                    "measure": row["measure"],
-                    "userLabel": row["userLabel"],
-                    "version": row["version"],
-                },
+        return {
+            "annotationType": row["annotationType"],
+            "annotation": str(row["annotation"]),
+            "properties": {
+                "measure": row["measure"],
+                "userLabel": row["userLabel"],
+                "version": row["version"],
             },
-            allow_nan=False,
-        )
+        }
 
     @staticmethod
     def fromSTAannotations(s: pd.Series[str]) -> pd.DataFrame:
@@ -101,7 +98,10 @@ class STAMPLATEScheme(saqc.FloatScheme):
                 meta = history.meta[col]
                 df.loc[valid, "measure"] = meta["func"]
                 df.loc[valid, "userLabel"] = meta["kwargs"].get("label", None)
-                out[field] = df.apply(self.toSTAannotations, axis=1)
+                series = pd.Series(index=df.index, dtype=object)
+                if not df.empty:
+                    series = df.apply(self.toSTAannotations, axis=1)
+                out[field] = series
 
         return out
 
@@ -146,5 +146,3 @@ class Saqc(QcTool):
 
     def get_data(self) -> dict[str, pd.Series]:
         return self._qc.data  # type: ignore
-
-
