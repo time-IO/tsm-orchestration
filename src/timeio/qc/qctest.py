@@ -38,7 +38,8 @@ class Param:
         self.value = value
 
     def parse(self):
-        # cast according to Datatype
+        """Parse values that are not automatically parsed by json serialization.
+        Overwrite this method in child classes."""
         return self.value
 
 
@@ -53,10 +54,6 @@ class StreamInfo(Param):
         self.is_immutable = thing_id is not None and stream_id is not None
         self.is_dataproduct = thing_id is not None and stream_id is None
         self.is_temporary = thing_id is None  # and stream_id is dont-care
-
-    def parse(self):
-        # cast according to Datatype
-        return self.value
 
     def __repr__(self):
         klass = self.__class__.__name__
