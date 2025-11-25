@@ -161,7 +161,7 @@ def test_job_belongs_to_thing(job, thing, expected):
         ("0-59/35 * * * *", 35),  # [0,35],[0,35].. -> 35,25,35 or 25,35,25 --> max: 35
     ],
 )
-def test_get_current_interval_returns_expected_minutes(schedule, expected):
+def test_get_current_interval(schedule, expected):
     job = CronItem()
     job.setall(schedule)
     interval = CreateThingInCrontabHandler.get_current_interval(job)
@@ -210,35 +210,54 @@ def test_extract_base_hour(schedule, expected_base_hour):
     ("interval", "expected"),
     [
         # all following params need random.seed(42)
+        (0, "0-59/1 * * * *"),
+        (1, "0-59/1 * * * *"),
+        (60, "40 0-23/1 * * *"),
+        (60 * 24, "40 3 1-31/1 * *"),
+        (60 * 24 * 7, "40 3 * * 0"),
+        # other
         (30, "20-59/30 * * * *"),
         (120, "40 0-23/2 * * *"),
         (1440, "40 3 1-31/1 * *"),
         (10, "1-59/10 * * * *"),
         (360, "40 0-23/6 * * *"),
-        (10080, "40 3 * * 0"),
-        # odd values get adjusted to the next lower proper divisor
+        (1500, "40 3 1-31/1 * *"),
+        # minute adjustment: odd values get adjusted to the next lower
+        # proper divisor of 60
         (17, "10-59/15 * * * *"),
         (19, "10-59/15 * * * *"),
         (11, "1-59/10 * * * *"),
         (7, "5-59/6 * * * *"),
         (8, "5-59/6 * * * *"),
-        (122, "40 0-23/2 * * *"),
-        (10085, "40 3 * * 0"),
-        (1500, "40 3 1-31/1 * *"),
-        # all between 30-59 is adjusted to 30
         (31, "20-59/30 * * * *"),
         (32, "20-59/30 * * * *"),
         (45, "20-59/30 * * * *"),
         (55, "20-59/30 * * * *"),
+        # hour adjustment: 1,2,3,4,6,8,12
+        (122, "40 0-23/2 * * *"),
+        (60 * 5, "40 0-23/4 * * *"),
+        (60 * 7, "40 0-23/6 * * *"),
+        (60 * 9, "40 0-23/8 * * *"),
+        (60 * 10, "40 0-23/8 * * *"),
+        (60 * 11, "40 0-23/8 * * *"),
+        (60 * 14, "40 0-23/12 * * *"),
+        (60 * 17, "40 0-23/12 * * *"),
+        (60 * 20, "40 0-23/12 * * *"),
+        (60 * 23, "40 0-23/12 * * *"),
+        (1439, "40 0-23/12 * * *"),
+        # week adjustment
+        (10085, "40 3 * * 0"),
     ],
 )
-def test_get_schedule(interval, expected):
+def test_new_schedule(interval, expected):
     # make random deterministic to ensure we always have the same test results
     random.seed(42)
 
     schedule = CreateThingInCrontabHandler.new_schedule(interval)
     schedule2 = CreateThingInCrontabHandler.new_schedule(interval)
     assert schedule == expected
+    if interval in [0, 1]:
+        return
     assert schedule != schedule2
 
 

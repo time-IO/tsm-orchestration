@@ -168,6 +168,8 @@ class CreateThingInCrontabHandler(AbstractHandler):
     @staticmethod
     def adjust_interval(interval: int) -> int:
         """Adjust the interval to a value we can process cleanly in a cron schedule."""
+        if interval == 0:
+            return 1
 
         # We adjust the interval to proper divisor of 60.
         if interval <= MINUTES_PER_HOUR:
