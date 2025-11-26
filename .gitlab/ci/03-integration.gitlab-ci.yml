@@ -11,7 +11,8 @@ docker-service-test:
     - "docker compose logs init"
     - "sleep 20"
   script:
-    - "docker ps"
+    - "docker compose logs worker-object-storage-setup"
+    - "docker compose ps"
     - "docker compose logs flyway"
     - "cd .gitlab/ci"
     - "./dockertest.sh"
