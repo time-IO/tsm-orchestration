@@ -5,5 +5,4 @@ providers:
     folder: Monitoring # The folder where to place the dashboards
     type: file
     options:
-      path:
-        - /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards
