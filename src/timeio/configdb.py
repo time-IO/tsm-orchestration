@@ -437,7 +437,7 @@ def upsert_table_thing(
     api_id: int,
     thing_id: int | None,
     description: str,
-    qid: int,
+    qid: int | None,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -478,7 +478,7 @@ def store_project_config(conn: Connection, data: dict):
     return pid
 
 
-def store_thing_config(conn: Connection, data: dict, qid: int, proj_id: int):
+def store_thing_config(conn: Connection, data: dict, qid: int | None, proj_id: int):
     # version: 4,
     # uuid: <str/uuid>
     # name: <str>

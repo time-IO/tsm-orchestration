@@ -54,8 +54,12 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
     elif data["version"] == 6:
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
+
+    elif data["version"] == 7:
+        pass
+
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             f"Content version {data['version']} is not implemented yet."
         )
 
@@ -123,23 +127,25 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
 
             proj_id = store_project_config(conn, data)
 
-            # Currently we have two different qc workflows.
-            # The legacy workflow, by which the QC Settings are stored with the
-            # thing itself and the new qc workflow which has its own input mask
-            # in the frontend and is bound to a project.
-            # The former is handled here by extracting the relevant keys from the
-            # mqtt message and with them calling `store_qaqc_config`.
-            # The latter is triggererd by another mqtt message and processed in its
-            # own mqtt handler `qaqc_update` above.
-            section = "Processing legacy QC"
-            proj_uuid = data["project"]["uuid"]
-            idx = data["qaqc"]["default"]
-            cnf = data["qaqc"]["configs"][idx]
-            cnf["version"] = v1
-            cnf["project_uuid"] = proj_uuid
-            cnf: MqttPayload.QaqcConfigV1_T
-            logger.info(f"Processing legacy QC settings from thing {thing_uuid}")
-            qid = store_qaqc_config(conn, cnf, legacy=True)
+            qid = None
+            if version <= 6:
+                # Currently we have two different qc workflows.
+                # The legacy workflow, by which the QC Settings are stored with the
+                # thing itself and the new qc workflow which has its own input mask
+                # in the frontend and is bound to a project.
+                # The former is handled here by extracting the relevant keys from the
+                # mqtt message and with them calling `store_qaqc_config`.
+                # The latter is triggererd by another mqtt message and processed in its
+                # own mqtt handler `qaqc_update` above.
+                section = "Processing legacy QC"
+                proj_uuid = data["project"]["uuid"]
+                idx = data["qaqc"]["default"]
+                cnf = data["qaqc"]["configs"][idx]
+                cnf["version"] = v1
+                cnf["project_uuid"] = proj_uuid
+                cnf: MqttPayload.QaqcConfigV1_T
+                logger.info(f"Processing legacy QC settings from thing {thing_uuid}")
+                qid = store_qaqc_config(conn, cnf, legacy=True)
 
             section = "Processing thing"
             logger.info(f"processing data for thing {thing_uuid}")
