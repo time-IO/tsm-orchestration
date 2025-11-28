@@ -1,4 +1,3 @@
---extra-index-url https://git.ufz.de/api/v4/projects/2959/packages/pypi/simple
 --extra-index-url https://codebase.helmholtz.cloud/api/v4/projects/12173/packages/pypi/simple
 
 psycopg[binary]~=3.2.10
