@@ -16,7 +16,6 @@ saqc==2.7.0.post3
 cryptography>=46.0.1
 typing-extensions>=4.15.0
 paramiko~=4.0.0
-minio-cli-wrapper>=0.1.1
 # TODO: fix minio client wrapper
 # TODO: Instance creation of Minio(..) (see [1]) must use keyword only arguments
 # TODO: before we can use versions >7.2.19
