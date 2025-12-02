@@ -35,21 +35,21 @@ def collect_params(test: feta.QAQCTest):
 def collect_tests(conf: feta.QAQC) -> list[QcTest]:
     context_window = conf.context_window
     tests = []
-    for i, test in enumerate(conf.get_tests()):  # type: int, feta.QAQCTest
-        params = collect_params(test)
-        name = test.name
+    for i, test in enumerate(conf.get_tests(), start=1):  # type: int, feta.QAQCTest
         try:
+            params = collect_params(test)
             qctest = QcTest(
-                name=name,
+                name=test.name,
                 func_name=test.function,
                 params=params,
                 context_window=context_window,
                 qctool="saqc",
             )
-        except (NotImplementedError, ValueError) as e:
-            e.add_note(f"Qc test {name=} {i=}")
+        except Exception as e:
+            e.add_note(f"Qc test {i} ({test})")
             e.add_note(f"Config {conf}")
             raise e
 
         tests.append(qctest)
+
     return tests

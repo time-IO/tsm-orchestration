@@ -5,7 +5,10 @@ import typing
 import psycopg
 import logging
 
+from requests import HTTPError
+
 from timeio import feta
+from timeio.errors import UploadError
 from timeio.qc.datastream import Datastream, ProductStream, LocalStream
 
 if typing.TYPE_CHECKING:
@@ -91,7 +94,14 @@ class StreamManager:
             # variable) is not intended to be uploaded.
             if isinstance(stream, LocalStream):
                 continue
-            stream.upload(api_base_url)
+
+            try:
+                stream.upload(api_base_url)
+            except HTTPError as e:
+                raise UploadError(f"Upload failed for stream {stream}") from e
+            except Exception as e:
+                e.add_note(f"Stream: {stream}")
+                raise e
 
     def __repr__(self):
         streams = list(self._streams.values())

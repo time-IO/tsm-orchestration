@@ -5,6 +5,8 @@ import logging
 import typing
 from typing import Any
 import pandas as pd
+
+from timeio.errors import ParsingError
 from timeio.qc.qctools import QcTool, get_qctool
 
 __all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
@@ -15,17 +17,25 @@ if typing.TYPE_CHECKING:
 
 
 def parse_context_window(window: int | str | None) -> WindowT:
+    orig = window
     if window is None:
         window = 0
-    if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
-        window = int(window)
-        is_negative = window < 0
-    else:
-        window = pd.Timedelta(window)
-        is_negative = window.days < 0
 
-    if is_negative:
-        raise ValueError("window must not be negative.")
+    try:
+        if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
+            window = int(window)
+            is_negative = window < 0
+        else:
+            window = pd.Timedelta(window)
+            is_negative = window.days < 0
+
+        if is_negative:
+            raise ValueError("window must not be negative.")
+
+    except Exception as e:
+        raise ParsingError(
+            f"Parsing context window failed. type={type(orig)}, value={orig}"
+        ) from e
 
     return window
 
@@ -41,6 +51,9 @@ class Param:
         """Parse values that are not automatically parsed by json serialization.
         Overwrite this method in child classes."""
         return self.value
+
+    def __repr__(self):
+        return f"Param(key={self.key}, value={self.value})"
 
 
 class StreamInfo(Param):
@@ -86,7 +99,13 @@ class QcTest:
         self.func_name: str = func_name
         self.context_window: WindowT = parse_context_window(context_window)
         self.streams = [p for p in params if isinstance(p, StreamInfo)]
-        self.params = {p.key: p.parse() for p in params}
+
+        self.params = {}
+        for p in params:
+            try:
+                self.params[p.key] = p.parse()
+            except Exception as e:
+                raise ParsingError(f"Parameter: {p}") from e
 
         # filled by run
         self.result: QcResult | None = None

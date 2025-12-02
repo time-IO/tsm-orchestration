@@ -12,7 +12,11 @@ from psycopg import Connection
 from timeio import feta
 from timeio.common import get_envvar, setup_logging
 from timeio.databases import Database, DBapi
-from timeio.errors import DataNotFoundError, NoDataWarning
+from timeio.errors import (
+    DataNotFoundError,
+    ParsingError,
+    ProcessingError,
+)
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
 from timeio.qc import QcTest, StreamManager, collect_tests
@@ -53,20 +57,30 @@ class QcHandler(AbstractHandler):
 
     @staticmethod
     def parse_version1(
-        conn, content: MqttPayload.DataParsedV1
-    ) -> tuple[feta.Project, feta.QAQC | None, str]:
+        conn, content: dict
+    ) -> tuple[feta.Project, feta.QAQC | None, feta.Thing]:
+        try:
+            content = _chkmsg(content, MqttPayload.DataParsedV1, "v1 message")
+        except KeyError as e:
+            raise ParsingError("Message not in version 1 specs") from e
+
         thing_uuid = content["thing_uuid"]
         thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
         project = thing.project
         config = project.get_default_qaqc()
         if config is None:
             logger.info(f"No active QC-Settings found for {project}")
-        return project, config, thing_uuid
+        return project, config, thing
 
     @staticmethod
     def parse_version2(
-        conn, content: MqttPayload.DataParsedV2
+        conn, content: dict
     ) -> tuple[feta.Project, feta.QAQC | None, None]:
+        try:
+            content = _chkmsg(content, MqttPayload.DataParsedV2, "v2 message")
+        except KeyError as e:
+            raise ParsingError("Message not in version 2 specs") from e
+
         proj_uuid = content["project_uuid"]
         config_name = content["qc_settings_name"]
         project = feta.Project.from_uuid(proj_uuid, dsn=conn)
@@ -87,46 +101,63 @@ class QcHandler(AbstractHandler):
             logger.debug("successfully connected to configdb")
 
             if version == 1:
-                content = _chkmsg(
-                    content, MqttPayload.DataParsedV1, "data-parsed message v1"
-                )
                 logger.info(f"QC was triggered by data upload to thing. {content=}")
-                project, config, thing_uuid = self.parse_version1(conn, content)
+                project, config, thing = self.parse_version1(conn, content)
 
             else:
-                content = _chkmsg(
-                    content, MqttPayload.DataParsedV2, "data-parsed message v2"
-                )
-                logger.info(f"QC was triggered by user (in frontend). {content=}")
-                project, config, thing_uuid = self.parse_version2(conn, content)
+                logger.info(f"QC was triggered by user (or scheduled). {content=}")
+                project, config, thing = self.parse_version2(conn, content)
 
             if config is None:
                 return
 
             logger.info(f"Got config %s", config)
-            sm = StreamManager(conn)
-            tests = collect_tests(config)
 
-            if start_date := content.get("start_date", None):
-                start_date = pd.Timestamp(start_date)
-            if end_date := content.get("end_date", None):
-                end_date = pd.Timestamp(end_date)
+            sm = StreamManager(conn)
+            try:
+                tests = collect_tests(config)
+
+                if start_date := content.get("start_date", None):
+                    start_date = pd.Timestamp(start_date)
+                if end_date := content.get("end_date", None):
+                    end_date = pd.Timestamp(end_date)
+            except (NotImplementedError, ValueError, TypeError, ParsingError) as e:
+                msg = f"Parsing QC tests or parsing start/end failed"
+                if thing:
+                    journal.error(f"{msg}, because of {e}", thing.uuid)
+                raise ParsingError(msg) from e
 
             N = len(tests)
             for i, test in enumerate(tests, start=1):  # type: QcTest
                 logger.info("Test %s of %s: %s", i, N, test)
-                test.load_data(sm, start_date, end_date)
-                test.run()
-                sm.update(test.result)
+                try:
+                    stage = "Loading data for"
+                    test.load_data(sm, start_date, end_date)
+                    stage = "Running QC function of"
+                    test.run()
+                    stage = "Storing result of"
+                    sm.update(test.result)
+                except Exception as e:
+                    msg = f"{stage} QC-Test {i} of {N} ({test}) failed"
+                    if thing:
+                        journal.error(f"{msg}, because of {e}", thing.uuid)
+                    raise ProcessingError(msg) from e
 
             sm.upload(self.dbapi.base_url)
+
+        if thing:
+            journal.info(
+                f"Successfully executed QC Setup {config.name}, which was "
+                f"triggered by new data for thing {thing.name} ({thing.uuid})",
+                thing.uuid,
+            )
 
         logger.debug(f"inform downstream services about success of qc.")
         payload = json.dumps(
             {
                 "version": 1,
                 "project_uuid": project.uuid,
-                "thing_uuid": thing_uuid,  # None allowed
+                "thing_uuid": thing and thing.uuid,  # uuid if thing is not None
                 "config": config.name,
             }
         )
