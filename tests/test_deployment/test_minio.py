@@ -13,12 +13,12 @@ from ftplib import FTP, FTP_TLS
 from minio import Minio
 import timeio.crypto
 from timeio.common import get_envvar
+from test_deployment import LOCAL_DEV
 
 if not dotenv.load_dotenv():
     raise EnvironmentError("No .env file found")
 
 
-LOCAL_DEV = socket.gethostname() != "tsm"
 DECRYPT_KEY = timeio.crypto.get_crypt_key()
 DATA_QUERY = (
     'select t.uuid, it.name as "ingest_type", s3."user", s3.password, s3.bucket '
