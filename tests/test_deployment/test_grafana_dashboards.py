@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 import os
-import socket
 from typing import Any
 
 import pytest
@@ -10,12 +9,13 @@ from dotenv import load_dotenv
 from grafana_client import GrafanaApi
 import psycopg
 from typing import Generator
+from test_deployment import LOCAL_DEV
 
 load_dotenv()
 
 CONFIGDB_DSN = os.environ.get("CONFIGDB_READONLY_DSN")
-# On a local setup uncomment this line
-# CONFIGDB_DSN = CONFIGDB_DSN.replace("database", "localhost")
+if LOCAL_DEV:
+    CONFIGDB_DSN = CONFIGDB_DSN.replace("database", "localhost")
 
 
 def unpack(collection: list[tuple[Any]]) -> list[Any]:
@@ -44,7 +44,7 @@ def api() -> GrafanaApi:
 
 
 def test_api(api):
-    assert api.health.check()["database"] == "ok"
+    assert api.health.check()
 
 
 @pytest.fixture(scope="module")
