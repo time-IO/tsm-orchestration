@@ -44,7 +44,10 @@ def api() -> GrafanaApi:
 
 
 def test_api(api):
-    assert api.health.check()
+    # Since grafana_client version 5.0, api.health does not query the
+    # /health endpoint anymore, so we do it manually, which should works
+    # for all versions.
+    assert api.client.GET("/health").get("database") == "ok"
 
 
 @pytest.fixture(scope="module")
