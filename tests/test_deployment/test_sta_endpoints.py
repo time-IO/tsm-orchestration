@@ -6,11 +6,14 @@ import os
 import psycopg
 import pytest
 
+from test_deployment import LOCAL_DEV
 from dotenv import load_dotenv
 
 load_dotenv()
 sta_base_url = os.environ.get("STA_PROXY_URL")
 configdb_dsn = os.environ.get("CONFIGDB_READONLY_DSN")
+if LOCAL_DEV:
+    configdb_dsn = configdb_dsn.replace("database", "localhost")
 
 
 def get_all_projects():
