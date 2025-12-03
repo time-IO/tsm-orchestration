@@ -83,12 +83,12 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL("CREATE ROLE {user} WITH LOGIN PASSWORD {password}").format(
                         user=user, password=sql.Literal(passw)
                     )
-                   )
+                )
                 c.execute(
                     sql.SQL("GRANT {user} TO {creator}").format(
                         user=user, creator=sql.Identifier(self.db.info.user)
                     )
-                   )
+                )
 
     def create_ro_user(self, thing, user_prefix: str = ""):
         with self.db.connection() as conn:
@@ -102,26 +102,26 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL(
                         "CREATE ROLE {ro_user} WITH LOGIN PASSWORD {ro_password}"
                     ).format(ro_user=ro_user, ro_password=sql.Literal(ro_passw))
-                   )
+                )
 
                 c.execute(
                     sql.SQL("GRANT {ro_user} TO {creator}").format(
                         ro_user=ro_user, creator=sql.Identifier(self.db.info.user)
                     )
-                   )
+                )
 
                 # Allow tcp connections to database with new user
                 c.execute(
                     sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {ro_user}").format(
                         ro_user=ro_user, db_name=sql.Identifier(self.db.info.dbname)
                     )
-                   )
+                )
 
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
                         ro_user=ro_user, schema=schema
                     )
-                   )
+                )
 
     def password_has_changed(self, url, user, password):
         try:
@@ -147,7 +147,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL("ALTER USER {user} WITH PASSWORD {password}").format(
                         user=sql.Identifier(user), password=sql.Identifier(password)
                     )
-                   )
+                )
 
     def create_schema(self, thing):
         with self.db.connection() as conn:
@@ -156,7 +156,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL(
                         "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
                     ).format(user=sql.Identifier(thing.database.username.lower()))
-                   )
+                )
 
     def deploy_ddl(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
@@ -173,21 +173,23 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {user}").format(
                         user=user, db_name=sql.Identifier(self.db.info.dbname)
                     )
-                   )
+                )
                 # Set default schema when connecting as user
                 c.execute(
-                    sql.SQL("ALTER ROLE {user} SET search_path to {user}, public").format(
-                        user=user
-                    )
-                   )
+                    sql.SQL(
+                        "ALTER ROLE {user} SET search_path to {user}, public"
+                    ).format(user=user)
+                )
                 # Grant schema to new user
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
                         user=user
                     )
-                   )
+                )
                 # Equip new user with all grants
-                c.execute(sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user))
+                c.execute(
+                    sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
+                )
                 # deploy the tables and indices and so on
                 c.execute(query)
 
@@ -195,13 +197,13 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"
                     ).format(user=user)
-                   )
+                )
 
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {user} TO {user}"
                     ).format(user=user)
-                   )
+                )
 
     def deploy_dml(self):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
@@ -223,26 +225,26 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL(
                         "ALTER ROLE {sta_user} SET search_path to {schema}, public"
                     ).format(sta_user=sta_user, schema=schema)
-                   )
+                )
 
                 # grant read rights to newly created views in schema to user
                 c.execute(
                     sql.SQL(
                         "GRANT SELECT ON ALL TABLES in SCHEMA {schema} TO {sta_user}"
                     ).format(sta_user=sta_user, schema=schema)
-                   )
+                )
 
                 c.execute(
                     sql.SQL(
                         "GRANT SELECT ON ALL SEQUENCES in SCHEMA {schema} TO {sta_user}"
                     ).format(sta_user=sta_user, schema=schema)
-                   )
+                )
 
                 c.execute(
                     sql.SQL(
                         "GRANT EXECUTE ON ALL FUNCTIONS in SCHEMA {schema} TO {sta_user}"
                     ).format(sta_user=sta_user, schema=schema)
-                   )
+                )
 
     def grant_grafana_select(self, thing, user_prefix: str):
         with self.db.connection() as conn:
@@ -250,14 +252,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 schema = sql.Identifier(thing.database.username.lower())
                 grf_user = sql.Identifier(
                     user_prefix.lower() + thing.database.ro_username.lower()
-                   )
+                )
 
                 # Set default schema when connecting as user
                 c.execute(
                     sql.SQL("ALTER ROLE {grf_user} SET search_path to {schema}").format(
                         grf_user=grf_user, schema=schema
                     )
-                   )
+                )
 
                 c.execute(sql.SQL("SET search_path TO {schema}").format(schema=schema))
 
@@ -265,7 +267,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     sql.SQL(
                         "REVOKE ALL ON ALL TABLES IN SCHEMA {schema}, public FROM {grf_user}"
                     ).format(grf_user=grf_user, schema=schema)
-                   )
+                )
 
                 c.execute(
                     sql.SQL(
@@ -274,7 +276,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                         '"THINGS_LOCATIONS", "SENSORS", "OBS_PROPERTIES", "DATASTREAMS", '
                         '"OBSERVATIONS" TO {grf_user}'
                     ).format(grf_user=grf_user, schema=schema)
-                   )
+                )
 
     def create_frost_views(self, thing):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
