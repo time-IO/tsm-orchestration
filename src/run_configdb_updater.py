@@ -22,9 +22,30 @@ __version__ = "0.2.0"
 
 
 def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
-    # Hint for developer:
-    # Try to be gentle here, do not raise Errors.
-    # Just modify data and let errors be raised later.
+    """
+    Modify the mqtt content by version to get a uniform structure.
+    Note that keys have no fix order !
+
+    Returns :
+    {
+     version: <int>,
+     uuid: <str/uuid>
+     name: <str>
+     description: <str>
+     ingest_type: <str>
+     project: {...}
+     database: {...}
+     # ==== OPTIONAL DATA (keys are mandatory) ====
+     parsers: {default: <int> | None, parsers: [{...},...]} | None
+     raw_data_storage: {...} | None
+     mqtt_device_type: <str> | None
+     mqtt: {...} | None
+     external_sftp: {...} | None
+     external_api: {...} | None
+     qaqc: {...} | None     (legacy (thing-)qaqc! not used in versions > 6)
+    }
+
+    """
     if data["version"] == 4:
         # tsm-frontend/GL71
         if d := data.get("external_sftp"):
@@ -54,10 +75,44 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
     elif data["version"] == 6:
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
+
+    elif data["version"] == 7:
+        if d := data.get("mqtt"):
+            d.pop("uri", None)  # unused
+
     else:
-        NotImplementedError(
+        raise NotImplementedError(
             f"Content version {data['version']} is not implemented yet."
         )
+
+    # general stuff
+    # =============
+
+    # set raw_data_storage (S3) to None if keys have no relevant values
+    if data.get("raw_data_storage", {}).get("bucket_name", None) is None:
+        data["raw_data_storage"] = None
+
+    # set parsers to None if keys have no relevant values
+    if data.get("parsers", {}).get("default", None) is None:
+        data["parsers"] = None
+
+    # set mqtt to None if keys have no relevant values
+    if data.get("mqtt", {}).get("username", None) is None:
+        data["mqtt"] = None
+    else:
+        # move top level mqtt_device_type to mqtt key
+        data["mqtt"]["mqtt_device_type"] = data["mqtt_device_type"]
+
+    # set ext_sftp to None if keys have no relevant values
+    if data.get("external_sftp", {}).get("uri", None) is None:
+        data["external_sftp"] = None
+
+    # set ext_sftp to None if keys have no relevant values
+    if data.get("external_api", {}).get("type", None) is None:
+        data["external_api"] = None
+
+    # only relevant for versions <= 6
+    data.setdefault("qaqc", None)
 
     return data
 
@@ -123,23 +178,25 @@ def thing_update(client: mqtt.Client, userdata: dict, msg: mqtt.MQTTMessage):
 
             proj_id = store_project_config(conn, data)
 
-            # Currently we have two different qc workflows.
-            # The legacy workflow, by which the QC Settings are stored with the
-            # thing itself and the new qc workflow which has its own input mask
-            # in the frontend and is bound to a project.
-            # The former is handled here by extracting the relevant keys from the
-            # mqtt message and with them calling `store_qaqc_config`.
-            # The latter is triggererd by another mqtt message and processed in its
-            # own mqtt handler `qaqc_update` above.
-            section = "Processing legacy QC"
-            proj_uuid = data["project"]["uuid"]
-            idx = data["qaqc"]["default"]
-            cnf = data["qaqc"]["configs"][idx]
-            cnf["version"] = v1
-            cnf["project_uuid"] = proj_uuid
-            cnf: MqttPayload.QaqcConfigV1_T
-            logger.info(f"Processing legacy QC settings from thing {thing_uuid}")
-            qid = store_qaqc_config(conn, cnf, legacy=True)
+            qid = None
+            if version <= 6:
+                # Currently we have two different qc workflows.
+                # The legacy workflow, by which the QC Settings are stored with the
+                # thing itself and the new qc workflow which has its own input mask
+                # in the frontend and is bound to a project.
+                # The former is handled here by extracting the relevant keys from the
+                # mqtt message and with them calling `store_qaqc_config`.
+                # The latter is triggererd by another mqtt message and processed in its
+                # own mqtt handler `qaqc_update` above.
+                section = "Processing legacy QC"
+                proj_uuid = data["project"]["uuid"]
+                idx = data["qaqc"]["default"]
+                cnf = data["qaqc"]["configs"][idx]
+                cnf["version"] = v1
+                cnf["project_uuid"] = proj_uuid
+                cnf: MqttPayload.QaqcConfigV1_T
+                logger.info(f"Processing legacy QC settings from thing {thing_uuid}")
+                qid = store_qaqc_config(conn, cnf, legacy=True)
 
             section = "Processing thing"
             logger.info(f"processing data for thing {thing_uuid}")

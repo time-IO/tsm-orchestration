@@ -23,4 +23,9 @@ COPY init.sh /init.sh
 RUN chown tsm /init.sh
 USER tsm
 RUN mkdir /home/tsm/html
+RUN mkdir -p /tmp/volume/minio \
+    && mkdir -p /tmp/volume/cron \
+    && mkdir -p /tmp/volume/database \
+    && mkdir -p /tmp/volume/mqtt
+
 CMD ["/init.sh"]

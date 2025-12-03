@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-import psycopg
 import pytest
-from fontTools.misc.cython import returns
-
 from timeio.sms import SmsMaterializedViewsSyncer
 from psycopg import sql
 
