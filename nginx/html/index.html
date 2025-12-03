@@ -8,6 +8,19 @@
 </head>
 
 <body>
+
+<div class="orbital-waves">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+<div class="orbital-waves mirrored">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+
+
 <div id="section-container">
     <div id="section-images">
         <a href="https://www.ufz.de">
@@ -25,11 +38,11 @@
     <div id="section-links">
         <ul id="link-card-list">
             <!-- remove list item when frontend switch is complete -->
-            <li class="link-card-wrapper draggable" id="draggable-card" draggable="true">
+            <li class="link-card-wrapper draggable" id="draggable-card" draggable="true" style="animation-duration: .4s;">
                 <a href="frontend/tsm">
                     <div class="link-card">
-                        <div class="link-card-header">frontend</div>
-                        <div class="link-card-text">User Interface</div>
+                        <div class="link-card-header">thing management</div>
+                        <div class="link-card-text">Set up and manage things, data ingests, and quality checks</div>
                         <div class="link-card-arrow">&nearr;</div>
                     </div>
                 </a>
@@ -38,35 +51,35 @@
             <li class="link-card-wrapper hidden" id="hidden-card" style="animation-duration: .4s;">
                 <a href="thing-management">
                     <div class="link-card">
-                        <div class="link-card-header">thing management</div>
-                        <div class="link-card-text">The new fancy Frontend</div>
+                        <div class="link-card-header">new thing management</div>
+                        <div class="link-card-text">Set up and manage things, data ingests, and quality checks</div>
+                        <div class="link-card-arrow">&nearr;</div>
+                    </div>
+                </a>
+            </li>
+            <li class="link-card-wrapper" style="animation-duration: .5s;">
+                <a href="object-storage/login">
+                    <div class="link-card">
+                        <div class="link-card-header">Object Storage</div>
+                        <div class="link-card-text">Store and access time series data securely in organized storage buckets</div>
                         <div class="link-card-arrow">&nearr;</div>
                     </div>
                 </a>
             </li>
             <li class="link-card-wrapper" style="animation-duration: .6s;">
-                <a href="object-storage/login">
-                    <div class="link-card">
-                        <div class="link-card-header">minio</div>
-                        <div class="link-card-text">Object storage</div>
-                        <div class="link-card-arrow">&nearr;</div>
-                    </div>
-                </a>
-            </li>
-            <li class="link-card-wrapper" style="animation-duration: .8s;">
                 <a href="visualization">
                     <div class="link-card">
                         <div class="link-card-header">grafana</div>
-                        <div class="link-card-text">Data visualization</div>
+                        <div class="link-card-text">Visualize datastreams with interactive charts and dashboards</div>
                         <div class="link-card-arrow">&nearr;</div>
                     </div>
                 </a>
             </li>
-            <li class="link-card-wrapper" style="animation-duration: 1s;">
+            <li class="link-card-wrapper" style="animation-duration: .7s;">
                 <a href="sta">
                     <div class="link-card">
-                        <div class="link-card-header">sta</div>
-                        <div class="link-card-text">Sensor Things API</div>
+                        <div class="link-card-header">Sensor Things API (STA)</div>
+                        <div class="link-card-text">Access datastreams and sensor metadata through a standardized API</div>
                         <div class="link-card-arrow">&nearr;</div>
                     </div>
                 </a>
