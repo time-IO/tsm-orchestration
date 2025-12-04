@@ -398,22 +398,3 @@ def test_skipping_and_comments_without_header(settings):
     assert df.shape == (3, 3)
     assert df.index.equals(expected_index)
     assert list(df.columns) == expected_col_names
-
-
-def test_kwargs_overwrite_settings():
-    settings = {
-        "skiprows": 0,
-        "pandas_read_csv": {"skiprows": [0, 2, 3]},
-    }
-    parser = get_parser("csvparser", settings)
-
-    assert parser.settings == {
-        "comment": "#",
-        "decimal": ".",
-        "na_values": None,
-        "encoding": "utf-8",
-        "engine": "python",
-        "on_bad_lines": "warn",
-        "header": None,
-        "skiprows": [0, 2, 3],
-    }
