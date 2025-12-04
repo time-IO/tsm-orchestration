@@ -201,7 +201,7 @@ class Mc:
         lock_config = ObjectLockConfig(GOVERNANCE, 100, YEARS)
         self.minio.set_object_lock_config(bucket_name, lock_config)
 
-    def enable_bucket_notification(self, bucket_name, event=["put"]):
+    def enable_bucket_notification(self, bucket_name, event=("put",)):
         # Find notification targets
         info = self._command(["admin", "info", self.alias])
         targets = info.get("info").get("sqsARN")
