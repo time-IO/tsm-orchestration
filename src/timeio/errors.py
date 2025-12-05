@@ -10,9 +10,7 @@ class ParsingError(RuntimeError):
 
 class ProcessingError(RuntimeError):
     """
-    Processing failed due to
-    - bad system state (e.g. a service is not reachable, etc.)
-    - faulty implementation
+    Processing failed
     """
 
     pass
@@ -21,6 +19,14 @@ class ProcessingError(RuntimeError):
 class ParsingWarning(RuntimeWarning):
     """
     Report parsing issues not severe enough to abort the process.
+    """
+
+    pass
+
+
+class UploadError(IOError):
+    """
+    Upload failed
     """
 
     pass
