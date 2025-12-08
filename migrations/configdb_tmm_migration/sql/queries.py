@@ -3,44 +3,48 @@ INGEST_QUERIES = {
         INSERT INTO thing_management_db.external_api_ingest
             (thing_id, api_type_id, sync_interval, sync_enabled, settings)
         VALUES (%(id)s, %(ea_api_type_id)s, %(ea_sync_interval)s, %(ea_sync_enabled)s, %(ea_settings)s)
-        ON CONFLICT (thing_id) DO UPDATE SET sync_interval = EXCLUDED.sync_interval,
-                                             sync_enabled  = EXCLUDED.sync_enabled,
-                                             settings      = EXCLUDED.settings,
-                                             api_type_id   = EXCLUDED.api_type_id
+        ON CONFLICT (thing_id) DO UPDATE SET 
+            sync_interval = EXCLUDED.sync_interval,
+            sync_enabled  = EXCLUDED.sync_enabled,
+            settings      = EXCLUDED.settings,
+            api_type_id   = EXCLUDED.api_type_id
         """,
     "extsftp": """
         INSERT INTO thing_management_db.external_sftp_ingest
-        (thing_id, uri, path, "user", "password", ssh_priv_key, ssh_pub_key, sync_interval, sync_enabled)
+            (thing_id, uri, path, "user", "password", ssh_priv_key, ssh_pub_key, sync_interval, sync_enabled)
         VALUES (%(id)s, %(es_uri)s, %(es_path)s, %(es_user)s, %(es_password)s,
                 %(es_ssh_priv_key)s, %(es_ssh_pub_key)s, %(es_sync_interval)s, %(es_sync_enabled)s)
-        ON CONFLICT (thing_id) DO UPDATE SET uri           = EXCLUDED.uri,
-                                             path          = EXCLUDED.path,
-                                             "user"        = EXCLUDED."user",
-                                             "password"    = EXCLUDED."password",
-                                             ssh_priv_key  = EXCLUDED.ssh_priv_key,
-                                             ssh_pub_key   = EXCLUDED.ssh_pub_key,
-                                             sync_interval = EXCLUDED.sync_interval,
-                                             sync_enabled  = EXCLUDED.sync_enabled
+        ON CONFLICT (thing_id) DO UPDATE SET 
+            uri           = EXCLUDED.uri,
+            path          = EXCLUDED.path,
+            "user"        = EXCLUDED."user",
+            "password"    = EXCLUDED."password",
+            ssh_priv_key  = EXCLUDED.ssh_priv_key,
+            ssh_pub_key   = EXCLUDED.ssh_pub_key,
+            sync_interval = EXCLUDED.sync_interval,
+            sync_enabled  = EXCLUDED.sync_enabled
         """,
     "mqtt": """
         INSERT INTO thing_management_db.mqtt_ingest
-        (thing_id, "user", "password", password_hashed, topic, mqtt_device_type_id)
+            (thing_id, "user", "password", password_hashed, topic, mqtt_device_type_id)
         VALUES (%(id)s, %(mqtt_user)s, %(mqtt_password)s, %(mqtt_password_hashed)s,
                 %(mqtt_topic)s, %(mqtt_device_type_id)s)
-        ON CONFLICT (thing_id) DO UPDATE SET "user"            = EXCLUDED."user",
-                                             "password"        = EXCLUDED."password",
-                                             "password_hashed" = EXCLUDED.password_hashed,
-                                             topic             = EXCLUDED.topic
+        ON CONFLICT (thing_id) DO UPDATE SET 
+            "user"            = EXCLUDED."user",
+            "password"        = EXCLUDED."password",
+            "password_hashed" = EXCLUDED.password_hashed,
+            topic             = EXCLUDED.topic
         """,
     "sftp": """
         INSERT INTO thing_management_db.rawdatastorage
-        (thing_id, "user", "password", bucket_name, file_name_pattern, file_parser_id)
+            (thing_id, "user", "password", bucket_name, file_name_pattern, file_parser_id)
         VALUES (%(id)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(s3_filename_pattern)s, %(file_parser_id)s)
-        ON CONFLICT (thing_id) DO UPDATE SET "user"            = EXCLUDED."user",
-                                             "password"        = EXCLUDED."password",
-                                             bucket_name       = EXCLUDED.bucket_name,
-                                             file_name_pattern = EXCLUDED.file_name_pattern,
-                                             file_parser_id    = EXCLUDED.file_parser_id
+        ON CONFLICT (thing_id) DO UPDATE SET
+            "user"            = EXCLUDED."user",
+            "password"        = EXCLUDED."password",
+            bucket_name       = EXCLUDED.bucket_name,
+            file_name_pattern = EXCLUDED.file_name_pattern,
+            file_parser_id    = EXCLUDED.file_parser_id
         """,
 }
 
@@ -69,15 +73,15 @@ INSERT_PROJECT = """
 
 GET_PARSER = """
     SELECT fp.file_parser_type_id,
-        fp."name", \
-        fp.params, \
-        fp."uuid"  AS "parser_uuid", \
-        t.uuid   AS "thing_uuid", \
+        fp."name",
+        fp.params,
+        fp."uuid"  AS "parser_uuid",
+        t.uuid   AS "thing_uuid",
         p."uuid" AS "project_uuid"
     FROM config_db.file_parser fp
     JOIN config_db.s3_store s3 ON s3.file_parser_id = fp.id
     JOIN config_db.thing t ON t.s3_store_id = s3.id
-    JOIN config_db.project p ON p.id = t.project_id \
+    JOIN config_db.project p ON p.id = t.project_id
 """
 
 INSERT_PARSER = """
