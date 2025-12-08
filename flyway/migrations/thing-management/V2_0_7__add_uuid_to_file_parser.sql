@@ -4,6 +4,10 @@ ALTER TABLE file_parser ADD CONSTRAINT file_parser_name_project_uniq UNIQUE ("na
 
 ALTER TABLE mqtt_ingest ALTER COLUMN uri DROP NOT NULL;
 
+ALTER TABLE thing ADD CONSTRAINT uuid_uniq UNIQUE (uuid);
+
+ALTER TABLE rawdatastorage ALTER COLUMN fileserver_uri
+
 INSERT INTO external_api_type (name)
 VALUES ('uba'::varchar(200)),
        ('tsystems'::varchar(200));
