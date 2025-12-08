@@ -15,7 +15,7 @@ import psycopg
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
 import logging
-from timeio.typehints import JsonT
+from timeio.typehints import JsonObjectT
 
 logger = logging.getLogger("feta")
 
@@ -571,7 +571,7 @@ class QAQCTest(Base):
     id: int = _prop(lambda self: self._attrs["id"])
     qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
     function: str = _prop(lambda self: self._attrs["function"])
-    args: JsonT | None = _prop(lambda self: self._attrs["args"])
+    args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
     streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])

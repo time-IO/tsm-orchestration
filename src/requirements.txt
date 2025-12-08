@@ -16,7 +16,6 @@ saqc==2.7.0.post3
 cryptography>=46.0.1
 typing-extensions>=4.15.0
 paramiko~=4.0.0
-pytest-subtests>=0.14.2
 minio-cli-wrapper>=0.1.1
 # TODO: fix minio client wrapper
 # TODO: Instance creation of Minio(..) (see [1]) must use keyword only arguments
@@ -24,4 +23,5 @@ minio-cli-wrapper>=0.1.1
 # TODO: [1] https://git.ufz.de/rdm/minio-cli-wrapper/-/blob/master/Dockerfile?ref_type=heads#L15
 minio==7.2.18
 tsm_user_code>=0.0.1
-packaging
+pytest-subtests>=0.14.2
+python-dotenv~=1.1.1
