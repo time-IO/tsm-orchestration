@@ -4,6 +4,8 @@ import atexit
 import warnings
 from typing import Any, TypedDict
 
+from timeio.errors import DataNotFoundError
+
 try:
     from typing import Self
 except ImportError:
@@ -34,8 +36,6 @@ complete[1]) drop-in replacement for classes in thing.py.
     don't use/need it anymore. 
 """
 
-_cfgdb = "config_db"
-
 
 class QcStreamT(TypedDict):
     arg_name: str
@@ -54,13 +54,54 @@ def _prop(f):
     return property(f)
 
 
-def _fetch(query: str, id_attr: str, cls: type[Base]):
+def _fetch(query, id_attr: str, column: str):
+    """
+    Return a property, with a getter that returns a single value (str, int, float, etc.)
+
+    :param id_attr: The attr on the `cls` to put in the query
+    :param column: key to unpack the result from dict-row where the
+                   keys are the columns of the table.
+    """
+
+    def fetch(self: Base) -> None | Base:
+        id_value = getattr(self, id_attr)
+        if id_value is None:
+            return None
+        # use the query, which fetch a value for cacheing, because
+        # we don't have an instance of feta.Base as result.
+        key = (query, id_value)
+        if cached := self._cache_get(key):
+            return cached
+        res = self._fetchall(self._conn, query, id_value)
+        if not res:
+            return None
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {query} with {id_attr}={id_value}"
+                f"Using the first result only.\n"
+                f"First 5 results: {res[:5]}",
+                UserWarning,
+                stacklevel=2,
+            )
+        try:
+            return res[0][column]
+        except KeyError as e:
+            e.add_note(
+                f"Key not found in result {res[0]!r} of "
+                f"query {query!r} with {id_attr}={id_value}"
+            )
+            raise e
+
+    return property(fetch)
+
+
+def _create(cls: type[Base], query: str, id_attr: str):
     """
     Return a property, with a getter that returns another Model
 
     :param query: The query to execute on request of the property
     :param id_attr: The attr on the `cls` to put in the query
-    :param cls: The final class to create from the restult of the query
+    :param cls: The final class to create from the result of the query
     """
 
     def fetch(self: Base) -> None | Base:
@@ -74,12 +115,12 @@ def _fetch(query: str, id_attr: str, cls: type[Base]):
         if not res:
             raise ObjectNotFound(
                 f"Could not create {cls.__qualname__}"
-                f"(table={_cfgdb}.{cls._table_name}) "
+                f"(table={cls._schema}.{cls._table_name}) "
                 f"with {id_attr}={id_value} from {self}"
             )
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"Got multiple results from {cls._schema}.{cls._table_name} "
                 f"with {id_attr}={id_value}. Creating {cls.__qualname__} "
                 f"from the first result only.",
                 UserWarning,
@@ -110,6 +151,7 @@ def connect(dsn: str, **kwargs):
 class Base:
     __cls_connection: Connection | None = None
     _table_name: str = "<not set>"
+    _schema: str = "<not set>"
     _protected_values = frozenset()
 
     def __init__(self, attrs, conn: Connection, caching: bool):
@@ -192,11 +234,11 @@ class Base:
         )
 
     @staticmethod
-    def _fetchall(conn: Connection, query, *params):
+    def _fetchall(conn: Connection, query, *params) -> list[dict[str, Any]]:
         logger.debug("fetchall(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
-            return cur.fetchall()
+            return cur.fetchall()  # type: ignore
 
     @staticmethod
     def _fetchone(conn: Connection, query, *params):
@@ -247,14 +289,14 @@ class Base:
         :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
         :return: Returns an instance of a subclass of `feta.Base`
         """
-        tab = sql.Identifier(_cfgdb, cls._table_name)
+        tab = sql.Identifier(cls._schema, cls._table_name)
         query = sql.SQL("select * from {tab} where id = %s").format(tab=tab)
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, id_)):
             raise ObjectNotFound(f"No {cls.__name__} found for id={id_}")
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"Got multiple results from {cls._schema}.{cls._table_name} "
                 f"for id={id_}. The returned object will be created from "
                 f"the first result."
             )
@@ -282,14 +324,14 @@ class FromNameMixin:
         :param kwargs: All kwargs are passed on to the function `psycopg.connection`.
         :return: Returns an instance of a subclass of `feta.Base`
         """
-        tab = sql.Identifier(_cfgdb, cls._table_name)
+        tab = sql.Identifier(cls._schema, cls._table_name)
         query = sql.SQL("select * from {tab} where name = %s").format(tab=tab)
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, name)):
             raise ObjectNotFound(f"No {cls.__name__} found with {name=}")
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"Got multiple results from {cls._schema}.{cls._table_name} "
                 f"for {name=}. The returned object will be created from "
                 f"the first result."
             )
@@ -318,14 +360,14 @@ class FromUUIDMixin:
         :return: Returns an instance of a subclass of `feta.Base`
         """
         uuid = str(uuid)  # prevent UUID object
-        tab = sql.Identifier(_cfgdb, cls._table_name)
+        tab = sql.Identifier(cls._schema, cls._table_name)
         query = sql.SQL("select * from {tab} where uuid::text = %s").format(tab=tab)
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, uuid)):
             raise ObjectNotFound(f"No {cls.__name__} found for {uuid=}")
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.{cls._table_name} "
+                f"Got multiple results from {cls._schema}.{cls._table_name} "
                 f"for {uuid=}. The returned object will be created from "
                 f"the first result."
             )
@@ -333,30 +375,35 @@ class FromUUIDMixin:
 
 
 class IngestType(Base, FromNameMixin):
+    _schema = "config_db"
     _table_name = "ingest_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class FileParserType(Base, FromNameMixin):
+    _schema = "config_db"
     _table_name = "file_parser_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class MQTTDeviceType(Base, FromNameMixin):
+    _schema = "config_db"
     _table_name = "mqtt_device_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class ExtAPIType(Base, FromNameMixin):
+    _schema = "config_db"
     _table_name = "ext_api_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class Database(Base):
+    _schema = "config_db"
     _table_name = "database"
     _protected_values = frozenset({"password", "ro_password"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -376,20 +423,21 @@ class Database(Base):
 
 
 class Project(Base, FromNameMixin, FromUUIDMixin):
+    _schema = "config_db"
     _table_name = "project"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
     uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
     database_id: int = _prop(lambda self: self._attrs["database_id"])
-    database: Database = _fetch(
-        f"SELECT * FROM {_cfgdb}.database WHERE id = %s", "database_id", Database
+    database: Database = _create(
+        Database, f"SELECT * FROM {_schema}.database WHERE id = %s", "database_id"
     )
 
     # thing.Project interface
     # uuid and name are already defines above
 
     def get_things(self) -> list[Thing]:
-        query = f"select * from {_cfgdb}.thing where project_id = %s"
+        query = f"select * from {self._schema}.thing where project_id = %s"
         conn = self._conn
         return [
             Thing._from_parent(attr, self)
@@ -398,7 +446,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_default_qaqc(self) -> QAQC | None:
         query = (
-            f"select * from {_cfgdb}.qaqc q "
+            f"select * from {self._schema}.qaqc q "
             f"where q.project_id = %s and q.default = true "
             f"order by q.id desc"
         )
@@ -408,7 +456,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
         params = [self.id]
-        query = f"select * from {_cfgdb}.qaqc where project_id = %s "
+        query = f"select * from {self._schema}.qaqc where project_id = %s "
         if id is not None:
             query += "and id = %s "
             params += [id]
@@ -422,14 +470,15 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
 
 class ExtAPI(Base):
+    _schema = "config_db"
     _table_name = "ext_api"
     id: int = _prop(lambda self: self._attrs["id"])
     api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
     sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
-    settings: JsonObjectT | None = _prop(lambda self: self._attrs["settings"])
-    api_type: ExtAPIType = _fetch(
-        f"SELECT * FROM {_cfgdb}.ext_api_type WHERE id = %s", "api_type_id", ExtAPIType
+    settings: JsonT | None = _prop(lambda self: self._attrs["settings"])
+    api_type: ExtAPIType = _create(
+        ExtAPIType, f"SELECT * FROM {_schema}.ext_api_type WHERE id = %s", "api_type_id"
     )
 
     # thing.ExternalApi interface
@@ -440,6 +489,7 @@ class ExtAPI(Base):
 
 
 class ExtSFTP(Base):
+    _schema = "config_db"
     _table_name = "ext_sftp"
     _protected_values = frozenset({"password", "ssh_priv_key"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -463,19 +513,21 @@ class ExtSFTP(Base):
 
 
 class FileParser(Base):
+    _schema = "config_db"
     _table_name = "file_parser"
     id: int = _prop(lambda self: self._attrs["id"])
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
     name: str = _prop(lambda self: self._attrs["name"])
-    params: JsonObjectT | None = _prop(lambda self: self._attrs["params"])
-    file_parser_type: FileParserType = _fetch(
-        f"SELECT * FROM {_cfgdb}.file_parser_type WHERE id = %s",
-        "file_parser_type_id",
+    params: JsonT | None = _prop(lambda self: self._attrs["params"])
+    file_parser_type: FileParserType = _create(
         FileParserType,
+        f"SELECT * FROM {_schema}.file_parser_type WHERE id = %s",
+        "file_parser_type_id",
     )
 
 
 class MQTT(Base):
+    _schema = "config_db"
     _table_name = "mqtt"
     _protected_values = frozenset({"password", "password_hashed"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -486,25 +538,26 @@ class MQTT(Base):
     mqtt_device_type_id: int | None = _prop(
         lambda self: self._attrs["mqtt_device_type_id"]
     )
-    mqtt_device_type: MQTTDeviceType | None = _fetch(
-        f"SELECT * FROM {_cfgdb}.mqtt_device_type WHERE id = %s",
-        "mqtt_device_type_id",
+    mqtt_device_type: MQTTDeviceType | None = _create(
         MQTTDeviceType,
+        f"SELECT * FROM {_schema}.mqtt_device_type WHERE id = %s",
+        "mqtt_device_type_id",
     )
 
 
 class QAQC(Base):
+    _schema = "config_db"
     _table_name = "qaqc"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
     project_id: int | None = _prop(lambda self: self._attrs["project_id"])
     context_window: str = _prop(lambda self: self._attrs["context_window"])
-    project: Project | None = _fetch(
-        f"select * from {_cfgdb}.project where id = %s", "project_id", Project
+    project: Project | None = _create(
+        Project, f"select * from {_schema}.project where id = %s", "project_id"
     )
 
     def get_tests(self) -> list[QAQCTest]:
-        query = f"select * from {_cfgdb}.qaqc_test where qaqc_id = %s"
+        query = f"select * from {self._schema}.qaqc_test where qaqc_id = %s"
         conn = self._conn
         return [
             QAQCTest._from_parent(attr, self)
@@ -513,6 +566,7 @@ class QAQC(Base):
 
 
 class QAQCTest(Base):
+    _schema = "config_db"
     _table_name = "qaqc_test"
     id: int = _prop(lambda self: self._attrs["id"])
     qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
@@ -521,10 +575,11 @@ class QAQCTest(Base):
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
     streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
-    qaqc: QAQC = _fetch(f"select * from {_cfgdb}.qaqc where id = %s", "qaqc_id", QAQC)
+    qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
 
 
 class S3Store(Base):
+    _schema = "config_db"
     _table_name = "s3_store"
     _protected_values = frozenset({"password"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -533,10 +588,10 @@ class S3Store(Base):
     bucket: str = _prop(lambda self: self._attrs["bucket"])
     filename_pattern: str | None = _prop(lambda self: self._attrs["filename_pattern"])
     file_parser_id: int = _prop(lambda self: self._attrs["file_parser_id"])
-    file_parser: FileParser = _fetch(
-        f"select * from {_cfgdb}.file_parser where id = %s",
-        "file_parser_id",
+    file_parser: FileParser = _create(
         FileParser,
+        f"select * from {_schema}.file_parser where id = %s",
+        "file_parser_id",
     )
 
     # thing.RawDataStorage interface
@@ -547,6 +602,7 @@ class S3Store(Base):
 
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
+    _schema = "config_db"
     _table_name = "thing"
     id: int = _prop(lambda self: self._attrs["id"])
     uuid = _prop(lambda self: str(self._attrs["uuid"]))
@@ -558,12 +614,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
-    project: Project = _fetch(f"select * from {_cfgdb}.project where id = %s", "project_id", Project)  # fmt: skip
-    ingest_type: IngestType = _fetch(f"select * from {_cfgdb}.ingest_type where id = %s", "ingest_type_id", IngestType)  # fmt: skip
-    s3_store: S3Store | None = _fetch(f"select * from {_cfgdb}.s3_store where id = %s", "s3_store_id", S3Store)  # fmt: skip
-    mqtt: MQTT = _fetch(f"select * from {_cfgdb}.mqtt where id = %s", "mqtt_id", MQTT)  # fmt: skip
-    ext_sftp: ExtSFTP | None = _fetch(f"select * from {_cfgdb}.ext_sftp where id = %s", "ext_sftp_id", ExtSFTP)  # fmt: skip
-    ext_api: ExtAPI | None = _fetch(f"select * from {_cfgdb}.ext_api where id = %s", "ext_api_id", ExtAPI)  # fmt: skip
+    project: Project = _create(Project, f"select * from {_schema}.project where id = %s", "project_id")  # fmt: skip
+    ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
+    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.s3_store where id = %s", "s3_store_id")  # fmt: skip
+    mqtt: MQTT = _create(MQTT, f"select * from {_schema}.mqtt where id = %s", "mqtt_id")  # fmt: skip
+    ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
+    ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
     legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))
 
     # thing.Thing interface
@@ -578,7 +634,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     def get_legacy_qaqc(self) -> QAQC | None:
         if self.legacy_qaqc_id is None:
             return None
-        query = f"select * from {_cfgdb}.qaqc where id = %s"
+        query = f"select * from {self._schema}.qaqc where id = %s"
         res = self._fetchone(self._conn, query, self.legacy_qaqc_id)
         return QAQC._from_parent(res, self)
 
@@ -604,7 +660,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :return: Returns a feta.Thing instance.
         """
         query = (
-            f"select t.* from {_cfgdb}.thing t join s3_store s3 on "
+            f"select t.* from {cls._schema}.thing t join s3_store s3 on "
             "t.s3_store_id = s3.id where s3.bucket = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
@@ -612,7 +668,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
             raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.thing for "
+                f"Got multiple results from {cls._schema}.thing for "
                 f"{bucket_name=}. The returned Thing will be created "
                 f"from the first result."
             )
@@ -640,7 +696,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :return: Returns a feta.Thing instance.
         """
         query = (
-            f"select t.* from {_cfgdb}.thing t join mqtt m on "
+            f"select t.* from {cls._schema}.thing t join mqtt m on "
             "t.mqtt_id = m.id where m.user = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
@@ -648,7 +704,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
             raise ObjectNotFound(f"No {cls.__name__} found for {mqtt_user_name=}")
         if len(res) > 1:
             warnings.warn(
-                f"Got multiple results from {_cfgdb}.thing for "
+                f"Got multiple results from {cls._schema}.thing for "
                 f"{mqtt_user_name=}. The returned Thing will be created "
                 f"from the first result."
             )
