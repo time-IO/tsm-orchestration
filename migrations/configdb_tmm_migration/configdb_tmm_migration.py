@@ -53,7 +53,7 @@ def migrate_parsers(cfgdb_cur, tmm_cur, django_things):
             row["created_by"] = 1
             adapt_json_fields(row)
             valid_rows.append(row)
-    tmm_cur.executemany(queries.INSERT_PARSER, valid_rows)
+    tmm_cur.executemany(queries.UPSERT_PARSER, valid_rows)
 
 
 def map_ids_by_name(cfgdb_cur, tmm_cur, cfgdb_query, tmm_query):

@@ -84,11 +84,13 @@ GET_PARSER = """
     JOIN config_db.project p ON p.id = t.project_id
 """
 
-INSERT_PARSER = """
+UPSERT_PARSER = """
     INSERT INTO thing_management_db.file_parser
         (file_parser_type_id, project_id, "name", settings, created_by, "uuid")
     VALUES (%(file_parser_type_id)s, %(project_id)s, %(name)s, %(params)s, %(created_by)s, %(parser_uuid)s)
-    ON CONFLICT ("uuid") DO UPDATE SET settings = EXCLUDED.settings 
+    ON CONFLICT (project_id, "name") DO UPDATE SET 
+        settings = EXCLUDED.settings,
+        "uuid" = EXCLUDED."uuid"
 """
 
 SELECT_THING_AND_INGEST = """
