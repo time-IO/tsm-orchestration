@@ -7,6 +7,7 @@ from minio import Minio
 from minio.commonconfig import GOVERNANCE, Tags
 from minio.objectlockconfig import ObjectLockConfig, YEARS
 
+logger = logging.getLogger("minio-cli-wrapper")
 
 class MinIoClientError(Exception):
     pass
@@ -57,8 +58,6 @@ class Mc:
             secret_key=self.secret_key,
         )
 
-        self.logger = logging.getLogger("minio-cli-wrapper")
-
         self._check_setup()
 
     def _check_setup(self):
@@ -102,11 +101,11 @@ class Mc:
                 or err_from_stdout
                 or '"Unspecified error: Empty response from minio ' 'client" '
             )
-            self.logger.error(msg)
+            logger.error(msg)
             raise MinIoClientError(json.dumps(json.loads(msg), indent=4))
 
         if not confidential:
-            self.logger.info(ret.stdout)
+            logger.info(ret.stdout)
 
         # Workaround for multiline json returned by mc
         val = self.parse_mc_output(ret)
@@ -134,7 +133,7 @@ class Mc:
         # manually remove confidential parts before logging
         ret["secretKey"] = "*****"
 
-        self.logger.info(ret)
+        logger.info(ret)
 
     def policy_add(self, policy_name: str, policy: dict):
         policy_file = tempfile.NamedTemporaryFile(mode="w+")
@@ -148,7 +147,7 @@ class Mc:
     def policy_set_user(self, policy_name: str, username: str):
 
         if self.policy_user_mapping_exists(policy_name, username):
-            self.logger.info(
+            logger.info(
                 f'Policy mapping from user "{username}" to policy "{policy_name}" already set'
             )
             return
@@ -160,7 +159,7 @@ class Mc:
     def policy_unset_user(self, policy_name: str, username: str):
 
         if not self.policy_user_mapping_exists(policy_name, username):
-            self.logger.info(
+            logger.info(
                 f'Policy mapping from user "{username}" to policy "{policy_name}" not set'
             )
             return
@@ -268,7 +267,7 @@ class Mc:
             ]
         )
 
-        self.logger.info(ret)
+        logger.info(ret)
         return ret
 
     def policy_unset_ldap_user(self, policy_name: str, ldap_dn: str):
@@ -285,7 +284,7 @@ class Mc:
             ]
         )
 
-        self.logger.info(ret)
+        logger.info(ret)
         return ret
 
     def set_bucket_quota(self, bucket_name: str, bucket_quota: str):
@@ -299,5 +298,5 @@ class Mc:
             ]
         )
 
-        self.logger.info(ret)
+        logger.info(ret)
         return ret
