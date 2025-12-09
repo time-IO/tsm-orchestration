@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources:
   - name: "monitoring"
+    uid: "d271adae-f18f-4bd8-bd2e-a4c57d50ff73"
     type: postgres
     url: ${MONITORING_DATABASE_HOST}
     user: ${MONITORING_DATABASE_USER}
