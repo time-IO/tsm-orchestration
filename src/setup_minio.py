@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from timeio.minio import Mc
+from timeio.minio_client import Mc
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
