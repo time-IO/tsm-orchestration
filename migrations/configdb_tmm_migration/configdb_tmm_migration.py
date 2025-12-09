@@ -148,7 +148,7 @@ def run_migration(configdb_conn, tmm_conn, django_conn):
 
 
 if __name__ == "__main__":
-
+    # HINTS FOR LOCAL TESTING
     # add respective DSN Entries here for accessing PROD DB!
     # Later we can use the same DSN for cfgdb and tmm. But for testing you can requets PROD config_db schema and write
     # into local thing_management_db schema (same for django DB)
