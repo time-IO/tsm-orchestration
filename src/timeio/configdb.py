@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+from uuid import uuid5, NAMESPACE_DNS
 from typing import Any, Literal, Sequence, cast, Optional
 
 from psycopg import Connection, sql
@@ -282,8 +283,8 @@ def upsert_table_file_parser(conn: Connection, values: dict, fp_id: int | None) 
     id_ = _upsert(
         conn,
         table="file_parser",
-        columns=["file_parser_type_id", "name", "params"],
-        values=[type_id, v.pop("name"), v.pop("settings")],
+        columns=["file_parser_type_id", "name", "params", "uuid"],
+        values=[type_id, v.pop("name"), v.pop("settings"), v.pop("uuid")],
         id=fp_id,
     )
     maybe_inform_unused_keys(v)
@@ -497,6 +498,7 @@ def store_thing_config(conn: Connection, data: dict, qid: int | None, proj_id: i
     # external_api: {...}
     uuid = data["uuid"]
     name = data["name"]
+    proj_uuid = data["project"]["uuid"]
     schema = data["database"]["schema"]
     upsert_schema_thing_mapping(conn, uuid, schema)
     ids = fetch_thing_related_ids(conn, uuid)
@@ -520,6 +522,9 @@ def store_thing_config(conn: Connection, data: dict, qid: int | None, proj_id: i
     if parsers := data["parsers"]:
         idx = parsers["default"]
         parser = parsers["parsers"][idx]
+        uuid_base = f"{parser["name"]}{proj_uuid}"
+        parser_uuid = uuid5(NAMESPACE_DNS, uuid_base)
+        parser["uuid"] = parser_uuid
         parser_id = upsert_table_file_parser(conn, parser, ids["file_parser_id"])
 
     s3_id = None
