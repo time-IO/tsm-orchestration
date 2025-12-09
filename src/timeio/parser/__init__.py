@@ -53,7 +53,7 @@ def get_parser(
 
     if issubclass(klass, CsvParser):
         pd_kws = settings.pop("pandas_read_csv", {})
-        settings = {**default_settings, **pd_kws, **settings}
+        settings = {**default_settings, **settings, **pd_kws}
         instance = klass(settings)
 
     elif issubclass(klass, JsonParser):
