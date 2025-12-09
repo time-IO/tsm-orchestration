@@ -5,6 +5,13 @@ from psycopg.types.json import Json
 from sql import queries
 
 
+TABLE_MAP = {
+    "ingest_types": ("ingest_type", None),
+    "extapi_types": ("ext_api_type", "external_api_type"),
+    "mqtt_device_types": ("mqtt_device_type", None),
+}
+
+
 def get_django_things(django_cur):
     django_cur.execute("SELECT thing_id FROM frontenddb.tsm_thing")
     rows = django_cur.fetchall()
@@ -60,31 +67,17 @@ def map_ids_by_name(cfgdb_cur, tmm_cur, cfgdb_query, tmm_query):
     return {cfgdb_id: tmm_by_name[name] for name, cfgdb_id in cfgdb_by_name.items()}
 
 
-def map_ingest_types(cfgdb_cur, tmm_cur):
-    return map_ids_by_name(
-        cfgdb_cur,
-        tmm_cur,
-        'SELECT id, "name" FROM config_db.ingest_type',
-        'SELECT id, "name" FROM thing_management_db.ingest_type',
-    )
+def map_table(cfgdb_cur, tmm_cur, cfg_table, tmm_table=None):
+    if tmm_table is None:
+        tmm_table = cfg_table
+    cfg_query = f'SELECT id, "name" FROM config_db.{cfg_table}'
+    tmm_query = f'SELECT id, "name" FROM thing_management_db.{tmm_table}'
+    return map_ids_by_name(cfgdb_cur, tmm_cur, cfg_query, tmm_query)
 
 
-def map_extapi_types(cfgdb_cur, tmm_cur):
-    return map_ids_by_name(
-        cfgdb_cur,
-        tmm_cur,
-        'SELECT id, "name" FROM config_db.ext_api_type',
-        'SELECT id, "name" FROM thing_management_db.external_api_type',
-    )
-
-
-def map_mqtt_device_types(cfgdb_cur, tmm_cur):
-    return map_ids_by_name(
-        cfgdb_cur,
-        tmm_cur,
-        'SELECT id, "name" FROM config_db.mqtt_device_type',
-        'SELECT id, "name" FROM thing_management_db.mqtt_device_type',
-    )
+def map_type(cfgdb_cur, tmm_cur, key):
+    cfg_table, tmm_table = TABLE_MAP[key]
+    return map_table(cfgdb_cur, tmm_cur, cfg_table, tmm_table)
 
 
 def adapt_json_fields(row):
@@ -104,9 +97,9 @@ def migrate_thing_and_ingest(cfgdb_cur, tmm_cur, django_things):
     tmm_cur.execute('SELECT "uuid", id FROM thing_management_db.file_parser')
     existing_parser = {r["uuid"]: r["id"] for r in tmm_cur.fetchall()}
 
-    ingest_id_mapping = map_ingest_types(cfgdb_cur, tmm_cur)
-    extapi_types_mapping = map_extapi_types(cfgdb_cur, tmm_cur)
-    mqtt_device_type_mapping = map_mqtt_device_types(cfgdb_cur, tmm_cur)
+    ingest_id_mapping = map_type(cfgdb_cur, tmm_cur, "ingest_types")
+    extapi_types_mapping = map_type(cfgdb_cur, tmm_cur, "extapi_types")
+    mqtt_device_type_mapping = map_type(cfgdb_cur, tmm_cur, "mqtt_device_types")
 
     for row in rows:
         if row["uuid"] not in django_things:
