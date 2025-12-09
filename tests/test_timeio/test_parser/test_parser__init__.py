@@ -68,7 +68,7 @@ JSON_DEFAULT_SETTINGS = _default_settings[JsonParser]
         (
             "csvparser",
             {"header": "b", "pandas_read_csv": {"header": "a"}},
-            CSV_DEFAULT_SETTINGS | {"header": "b"},
+            CSV_DEFAULT_SETTINGS | {"header": "a"},
         ),
         # JSON PARSER
         ("jsonparser", {}, JSON_DEFAULT_SETTINGS),
