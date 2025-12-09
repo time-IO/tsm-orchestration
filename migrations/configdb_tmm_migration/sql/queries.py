@@ -2,7 +2,7 @@ INGEST_QUERIES = {
     "extapi": """
         INSERT INTO thing_management_db.external_api_ingest
             (thing_id, api_type_id, sync_interval, sync_enabled, settings)
-        VALUES (%(id)s, %(ea_api_type_id)s, %(ea_sync_interval)s, %(ea_sync_enabled)s, %(ea_settings)s)
+        VALUES (%(thing_id)s, %(ea_api_type_id)s, %(ea_sync_interval)s, %(ea_sync_enabled)s, %(ea_settings)s)
         ON CONFLICT (thing_id) DO UPDATE SET 
             sync_interval = EXCLUDED.sync_interval,
             sync_enabled  = EXCLUDED.sync_enabled,
@@ -12,7 +12,7 @@ INGEST_QUERIES = {
     "extsftp": """
         INSERT INTO thing_management_db.external_sftp_ingest
             (thing_id, uri, path, "user", "password", ssh_priv_key, ssh_pub_key, sync_interval, sync_enabled)
-        VALUES (%(id)s, %(es_uri)s, %(es_path)s, %(es_user)s, %(es_password)s,
+        VALUES (%(thing_id)s, %(es_uri)s, %(es_path)s, %(es_user)s, %(es_password)s,
                 %(es_ssh_priv_key)s, %(es_ssh_pub_key)s, %(es_sync_interval)s, %(es_sync_enabled)s)
         ON CONFLICT (thing_id) DO UPDATE SET 
             uri           = EXCLUDED.uri,
@@ -27,7 +27,7 @@ INGEST_QUERIES = {
     "mqtt": """
         INSERT INTO thing_management_db.mqtt_ingest
             (thing_id, "user", "password", password_hashed, topic, mqtt_device_type_id)
-        VALUES (%(id)s, %(mqtt_user)s, %(mqtt_password)s, %(mqtt_password_hashed)s,
+        VALUES (%(thing_id)s, %(mqtt_user)s, %(mqtt_password)s, %(mqtt_password_hashed)s,
                 %(mqtt_topic)s, %(mqtt_device_type_id)s)
         ON CONFLICT (thing_id) DO UPDATE SET 
             "user"            = EXCLUDED."user",
@@ -38,7 +38,7 @@ INGEST_QUERIES = {
     "sftp": """
         INSERT INTO thing_management_db.rawdatastorage
             (thing_id, "user", "password", bucket_name, file_name_pattern, file_parser_id)
-        VALUES (%(id)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(s3_filename_pattern)s, %(file_parser_id)s)
+        VALUES (%(thing_id)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(s3_filename_pattern)s, %(file_parser_id)s)
         ON CONFLICT (thing_id) DO UPDATE SET
             "user"            = EXCLUDED."user",
             "password"        = EXCLUDED."password",
