@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 import json
 
-from timeio.parser import CsvParser, get_parser
+from timeio.parser import CsvParser
 from timeio.errors import ParsingError
 
 RAWDATA = """
