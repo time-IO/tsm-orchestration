@@ -2,6 +2,19 @@
 - Use `Added`, `Changed`, `Fixed`, `Removed`
 
 ## [Unreleased]
+### Added
+### Fixed
+### Changed
+### Removed
+
+## 2025-12-10
+### Added
+- Parsers get UUID ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/530))
+- Monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/515))
+### Fixed
+- Fixed scheduler intervals ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/518))
+### Changed
+- Parser 'Pandas read csv' settings are prioritized ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/531))
 
 ## 2025-11-12
 
@@ -9,7 +22,7 @@
 - unittests (several merge requests)
 
 ### Fixed
-- parser skiprows, comment and header handling ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489))
+- parser skiprows, comment and header handling ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489))
 - stalling workers ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/484), [Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/485))
 - sms data syncing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/483))
 
