@@ -1,3 +1,3 @@
 insert into external_api_type (name)
-values ('tsystems'::varchar(200)),
-       ('uba'::varchar(200));
+values ('uba'::varchar(200)),
+       ('tsystems'::varchar(200));
