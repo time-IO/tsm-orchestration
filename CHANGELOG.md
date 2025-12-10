@@ -2,6 +2,19 @@
 - Use `Added`, `Changed`, `Fixed`, `Removed`
 
 ## [Unreleased]
+### Added
+### Fixed
+### Changed
+### Removed
+
+## 2025-12-10
+### Added
+- Parsers gets UUID ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/530))
+- Monitoring dashboard ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/515))
+### Fixed
+- Fixed scheduler intervals ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/518))
+### Changed
+- Parser 'Pandas read csv' settings are prioritized ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/489), [Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/531))
 
 ## 2025-11-12
 
