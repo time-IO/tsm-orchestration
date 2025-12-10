@@ -2,8 +2,8 @@
 combined-e2e-test:
   image: "docker:${DOCKER_IMAGE_TAG}"
   stage: "end-to-end"
-  needs:
-    - "build-and-push-images"
+  # needs:
+  #   - "build-and-push-images"
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache curl python3 postgresql-client jq"
@@ -57,7 +57,11 @@ combined-e2e-test:
     - "export DB_RO_PASSWORD=$(cat database.json | jq -r '.[].fields.ro_password')"
     - "export DB_NAME=$(cat database.json | jq -r '.[].fields.name')"
     # Check if database table "thing" is accessible with user credentials
-    - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" || exit 1"
+    - >
+      CMD="PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME}
+      -tAc \"SELECT * from ${DB_USER}.thing\"";
+      eval "$CMD" || (echo "$CMD" && exit 1)
+    # - "PGPASSWORD=${DB_PASSWORD} psql -U ${DB_USER} -h docker -d ${DB_NAME} -tAc \"SELECT * from ${DB_USER}.thing\" || echo  exit 1"
     - "sleep 5"
     - "echo 'testing frost end-to-end...'"
     # Check if frost service is accessible
