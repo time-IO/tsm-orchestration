@@ -2,11 +2,7 @@
     DROP VIEW IF EXISTS foi_ts_action_type_v2 CASCADE;
 CREATE OR REPLACE VIEW foi_ts_action_type_v2 AS
 
-WITH has_dynamic AS (
-    SELECT EXISTS (
-        SELECT 1 FROM sms_configuration_dynamic_location_begin_action LIMIT 1
-    ) AS flag
-),
+WITH
 static_action AS (
     SELECT DISTINCT ON (sla.id)
         o.datastream_id,
@@ -33,16 +29,15 @@ dynamic_action AS (
         dla.id AS action_id,
         dla.begin_date,
         TRUE AS is_dynamic
-    FROM has_dynamic
-    CROSS JOIN public.sms_configuration_dynamic_location_begin_action dla
+    FROM  public.sms_configuration_dynamic_location_begin_action dla
     JOIN public.sms_device_mount_action dma ON dma.configuration_id = dla.configuration_id
     JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN public.sms_configuration c ON c.id = dma.configuration_id
     JOIN public.sms_device d ON d.id = dma.device_id
     JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o ON o.datastream_id = dsl.datastream_id
-    WHERE has_dynamic.flag = TRUE
-        AND c.is_public AND d.is_public
+    WHERE  c.is_public AND d.is_public
         AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+    AND EXISTS (SELECT 1 FROM sms_configuration_dynamic_location_begin_action LIMIT 1)
 )
 SELECT * FROM static_action
 UNION ALL

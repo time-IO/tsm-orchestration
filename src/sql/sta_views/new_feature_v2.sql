@@ -4,7 +4,7 @@ CREATE VIEW "NEW_FEATURES" AS
 
 SELECT DISTINCT
 
-   ('x' || MD5(crd.feature_id))::bit(63)::bigint AS "ID",
+   crd.feature_id "ID",
  	CONCAT(crd.c_label, '_', crd.begin_date) AS "NAME",
 	crd.action_type AS "DESCRIPTION",
     'application/geo+json' AS "ENCODING_TYPE",
