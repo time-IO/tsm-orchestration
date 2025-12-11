@@ -3,7 +3,7 @@ DROP VIEW IF EXISTS foi_ts_coordinates_v2 CASCADE;
 CREATE VIEW foi_ts_coordinates_v2 AS
 
 WITH
--- Zuerst: Materialisiere die Basis-View einmalig
+
 base_actions AS MATERIALIZED (
     SELECT
         action_id,
@@ -24,10 +24,9 @@ static_coords AS MATERIALIZED (
         ba.result_time,
         ba.c_label,
         CASE
-            WHEN sla.z IS NULL THEN ARRAY[sla.x, sla.y]
+            WHEN sla.z IS NULL THEN ARRAY[sla.x, sla.y, 0]
             ELSE ARRAY[sla.x, sla.y, sla.z]
-        END AS coordinates,
-         hashtextextended(CONCAT(ARRAY[sla.x, sla.y, COALESCE(sla.z, 0)]::text, ba.action_id, 'stat'),0) AS feature_id
+        END AS coordinates
     FROM base_actions ba
     LEFT JOIN public.sms_configuration_static_location_begin_action sla
            ON sla.id = ba.action_id
@@ -43,10 +42,9 @@ dynamic_coords AS MATERIALIZED (
         ba.result_time,
         ba.c_label,
         CASE
-            WHEN z.z_koor IS NULL THEN ARRAY[x.x_koor, y.y_koor]
+            WHEN z.z_koor IS NULL THEN ARRAY[x.x_koor, y.y_koor, 0]
             ELSE ARRAY[x.x_koor, y.y_koor, z.z_koor]
-        END AS coordinates,
-        hashtextextended(CONCAT(ARRAY[x.x_koor, y.y_koor, COALESCE(z.z_koor, 0)]::text, ba.action_id, 'dyn'),0) AS feature_id
+        END AS coordinates
     FROM base_actions ba
     LEFT JOIN ts_coordinates_x_koor_test x
            ON x.result_time = ba.result_time

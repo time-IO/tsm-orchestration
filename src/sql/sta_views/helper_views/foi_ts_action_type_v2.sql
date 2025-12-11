@@ -1,5 +1,4 @@
-
-    DROP VIEW IF EXISTS foi_ts_action_type_v2 CASCADE;
+DROP VIEW IF EXISTS foi_ts_action_type_v2 CASCADE;
 CREATE OR REPLACE VIEW foi_ts_action_type_v2 AS
 
 WITH

@@ -3,8 +3,7 @@ CREATE VIEW "NEW_FEATURES" AS
 
 
 SELECT DISTINCT
-
-   crd.feature_id "ID",
+    hashtextextended(CONCAT(crd.feature_id),0) AS "ID",
  	CONCAT(crd.c_label, '_', crd.begin_date) AS "NAME",
 	crd.action_type AS "DESCRIPTION",
     'application/geo+json' AS "ENCODING_TYPE",
@@ -20,5 +19,5 @@ SELECT DISTINCT
 
 FROM public.sms_datastream_link dsl
 JOIN foi_ts_coordinates_v2 crd ON crd.datastream_id = dsl.datastream_id
-ORDER BY "ID";
+;
 
