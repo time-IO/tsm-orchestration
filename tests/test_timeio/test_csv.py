@@ -26,7 +26,7 @@ RAWDATA = """
     [
         [{"skiprows": 3}, [2, 4, 8]],
         [{"skiprows": 4, "header": 3}, ["P1_mb", "P4_mb", "T4_C"]],
-        [{"skiprows": 4, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
+        [{"skiprows": 0, "header": 3, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]],
     ],
 )
 def test_parsing(settings, columns):
