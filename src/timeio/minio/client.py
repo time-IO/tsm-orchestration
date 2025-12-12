@@ -50,10 +50,6 @@ class MinioClient:
         self.minio.make_bucket(bucket_name, object_lock=object_lock)
         return self.get_bucket(bucket_name)
 
-    def set_bucket_retention(self, bucket_name: str, years: int = 100) -> None:
-        lock_config = ObjectLockConfig(GOVERNANCE, years, YEARS)
-        self.minio.set_object_lock_config(bucket_name, lock_config)
-
     def get_bucket_retention(self, bucket_name: str) -> ObjectLockConfig | None:
         try:
             return self.minio.get_object_lock_config(bucket_name)
@@ -61,6 +57,11 @@ class MinioClient:
             if e.code == "ObjectLockConfigurationNotFoundError":
                 return None
             raise
+
+    def set_bucket_retention(self, bucket_name: str, years: int = 100) -> ObjectLockConfig:
+        lock_config = ObjectLockConfig(GOVERNANCE, years, YEARS)
+        self.minio.set_object_lock_config(bucket_name, lock_config)
+        return self.get_bucket_retention(bucket_name=bucket_name)
 
     def set_bucket_notification(
         self, bucket_name: str, events: list[str] | None = None
