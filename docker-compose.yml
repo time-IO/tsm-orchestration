@@ -709,7 +709,11 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-  # brief: create a new bucket for a Thing in S3 storage
+
+  # =================================================================
+  # Thing setup worker (topic: configdb_update)
+  # =================================================================
+
   worker-thing-setup:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
@@ -740,50 +744,6 @@ services:
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
-      DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      JOURNALING: "${JOURNALING}"
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
-      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "--database", "--minio", "--frost", "--crontab", "--mqtt"]
-    volumes:
-      - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
-
-
-  worker-grafana-dashboard:
-    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
-    build:
-      context: .
-      dockerfile: dispatcher/Dockerfile
-      args:
-        UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_WORKER_RESTART_POLICY}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-      visualization:
-        condition: service_started
-      timeio-db-api:
-        condition: service_healthy
-    environment:
-      LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
-      MQTT_BROKER: mqtt-broker:1883
-      MQTT_USER: "${MQTT_USER}"
-      MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: grafana-dashboard
-      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
-      MQTT_QOS: "${MQTT_QOS}"
       GRAFANA_URL: "${VISUALIZATION_URL}"
       GRAFANA_USER: "${VISUALIZATION_USER}"
       GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
@@ -794,7 +754,10 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "setup_grafana_dashboard.py"]
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "--database", "--minio", "--grafana", "--frost", "--crontab", "--mqtt"]
+    volumes:
+      - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -925,43 +888,6 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  worker-crontab-setup:
-    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
-    build:
-      context: .
-      dockerfile: dispatcher/Dockerfile
-      args:
-        UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_WORKER_RESTART_POLICY}"
-    depends_on:
-        mqtt-broker:
-          condition: service_healthy
-        init:
-          condition: service_completed_successfully
-        timeio-db-api:
-          condition: service_healthy
-    environment:
-      LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
-      MQTT_BROKER: mqtt-broker:1883
-      MQTT_USER: "${MQTT_USER}"
-      MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: crontab-setup
-      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
-      MQTT_QOS: "${MQTT_QOS}"
-      DB_API_BASE_URL: "${DB_API_BASE_URL}"
-      JOURNALING: "${JOURNALING}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
-      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
-      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "setup_crontab.py"]
-
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   # =================================================================
   # other worker
