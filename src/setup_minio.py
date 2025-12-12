@@ -37,7 +37,7 @@ class CreateThingInMinioHandler(AbstractHandler):
             url=get_envvar("MINIO_URL"),
             access_key=get_envvar("MINIO_ACCESS_KEY"),
             secret_key=get_envvar("MINIO_SECURE_KEY"),
-            secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool), 
+            secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
@@ -52,7 +52,6 @@ class CreateThingInMinioHandler(AbstractHandler):
         user = thing.raw_data_storage.username
         passw = decrypt(thing.raw_data_storage.password, get_crypt_key())
         bucket = thing.raw_data_storage.bucket_name
-
 
         logger.debug(f"Adding MinIO user {user}")
         self.minio_admin.user_add(access_key=user, secret_key=passw)
@@ -78,10 +77,10 @@ class CreateThingInMinioHandler(AbstractHandler):
         else:
             logger.debug(f"Setting retention for bucket {bucket}")
             self.minio.set_bucket_retention(bucket_name=bucket, years=100)
-        
+
         logger.debug(f"Setting notification for bucket {bucket}")
         self.minio.set_bucket_notification(bucket_name=bucket)
-        
+
         # we could set bucket quotas here...
 
 
