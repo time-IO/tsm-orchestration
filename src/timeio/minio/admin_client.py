@@ -4,7 +4,7 @@ import logging
 from minio import MinioAdmin
 from minio.credentials import StaticProvider
 
-from typehints import BucketQuotaT, UserT, PolicyT, PolicyEntitiesT, ServiceAccountT
+from .typehints import BucketQuotaT, UserT, PolicyT, PolicyEntitiesT, ServiceAccountT
 
 logger = logging.getLogger("minio-cli-wrapper")
 
