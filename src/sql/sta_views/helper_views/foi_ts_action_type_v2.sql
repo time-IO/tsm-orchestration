@@ -15,10 +15,10 @@ static_action AS (
     JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN public.sms_configuration c ON c.id = dma.configuration_id
     JOIN public.sms_device d ON d.id = dma.device_id
-    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o ON o.datastream_id = dsl.datastream_id
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o ON o.datastream_id = dsl.datastream_id
     WHERE o.result_time >= sla.begin_date AND (o.result_time <= sla.end_date OR sla.end_date IS NULL)
       AND c.is_public AND d.is_public
-      AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+      AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
 ),
 dynamic_action AS (
     SELECT
@@ -33,12 +33,13 @@ dynamic_action AS (
     JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
     JOIN public.sms_configuration c ON c.id = dma.configuration_id
     JOIN public.sms_device d ON d.id = dma.device_id
-    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o ON o.datastream_id = dsl.datastream_id
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o ON o.datastream_id = dsl.datastream_id
     WHERE  c.is_public AND d.is_public
-        AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
     AND EXISTS (SELECT 1 FROM sms_configuration_dynamic_location_begin_action LIMIT 1)
 )
 SELECT * FROM static_action
 UNION ALL
-SELECT * FROM dynamic_action;
+SELECT * FROM dynamic_action
+;
 

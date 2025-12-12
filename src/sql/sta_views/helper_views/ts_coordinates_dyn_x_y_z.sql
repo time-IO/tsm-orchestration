@@ -10,7 +10,7 @@ CREATE VIEW ts_coordinates_x_koor  AS
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id
-            JOIN observation o ON o.datastream_id = dsl.datastream_id
+            JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o ON o.datastream_id = dsl.datastream_id
                 WHERE dsl.device_property_id = dla.x_property_id;
 
 -- Helper-View to get y-coordinate for dyn-action
@@ -25,7 +25,7 @@ CREATE VIEW ts_coordinates_y_koor  AS
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id
-            JOIN observation o ON o.datastream_id = dsl.datastream_id
+            JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o ON o.datastream_id = dsl.datastream_id
                 WHERE dsl.device_property_id = dla.y_property_id;
 
 -- Helper-View to get z-coordinate for dyn-action
@@ -39,5 +39,5 @@ CREATE VIEW ts_coordinates_z_koor  AS
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id
-            JOIN observation o ON o.datastream_id = dsl.datastream_id
+            JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o ON o.datastream_id = dsl.datastream_id
                 WHERE dsl.device_property_id = dla.z_property_id;
