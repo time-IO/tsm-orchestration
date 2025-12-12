@@ -73,7 +73,7 @@ class CreateThingInMinioHandler(AbstractHandler):
             logger.debug(f"Creating bucket {bucket}")
             self.minio.make_bucket(bucket_name=bucket)
 
-        if self.minio.get_bucket_retention(bucket_name=bucket) is not None:
+        if self.minio.get_bucket_retention(bucket_name=bucket):
             logger.debug(f"Bucket {bucket} already has retention set")
         else:
             logger.debug(f"Setting retention for bucket {bucket}")
