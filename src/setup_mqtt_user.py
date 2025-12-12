@@ -32,7 +32,7 @@ class CreateMqttUserHandler(AbstractHandler):
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        self.db = self.db_conn.connect()   
+        self.db = self.db_conn.connect()
 
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         user = thing.mqtt.user

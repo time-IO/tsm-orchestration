@@ -21,7 +21,7 @@ logger = logging.getLogger("thing-setup")
 
 class SetupThingHandler(AbstractHandler):
     """Consolidated handler that orchestrates multiple setup actions"""
-    
+
     def __init__(self, actions: list[str]):
         super().__init__(
             topic=get_envvar("TOPIC"),
@@ -32,7 +32,7 @@ class SetupThingHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        
+
         # Map action names to handler instances
         self.available_handlers = {
             "database": CreateThingInPostgresHandler,
@@ -42,7 +42,7 @@ class SetupThingHandler(AbstractHandler):
             "frost": CreateFrostInstanceHandler,
             "crontab": CreateThingInCrontabHandler,
         }
-        
+
         # Initialize only the requested handlers
         self.handlers = []
         for action in actions:
@@ -59,7 +59,7 @@ class SetupThingHandler(AbstractHandler):
         """Process all configured actions in sequence"""
         thing_uuid = content.get("thing")
         logger.info(f"Processing thing {thing_uuid} with {len(self.handlers)} actions")
-        
+
         for action_name, handler in self.handlers:
             logger.info(f"Executing action: {action_name}")
             try:
@@ -88,21 +88,30 @@ def main():
         
         # Custom order
         python setup_thing.py --crontab --frost --database
-        """
+        """,
     )
-    
+
     # Add flag for each action
-    parser.add_argument("--database", action="store_true", help="Setup PostgreSQL user/schema/tables")
-    parser.add_argument("--minio", action="store_true", help="Setup MinIO user/bucket/policy")
+    parser.add_argument(
+        "--database", action="store_true", help="Setup PostgreSQL user/schema/tables"
+    )
+    parser.add_argument(
+        "--minio", action="store_true", help="Setup MinIO user/bucket/policy"
+    )
     parser.add_argument("--mqtt", action="store_true", help="Setup MQTT user")
-    parser.add_argument("--grafana", action="store_true", help="Setup Grafana dashboard")
-    parser.add_argument("--frost", action="store_true", help="Setup FROST-Server instance")
+    parser.add_argument(
+        "--grafana", action="store_true", help="Setup Grafana dashboard"
+    )
+    parser.add_argument(
+        "--frost", action="store_true", help="Setup FROST-Server instance"
+    )
     parser.add_argument("--crontab", action="store_true", help="Setup crontab entry")
-    
+
     args = parser.parse_args()
-    
+
     # Collect actions in the order they appear in sys.argv
     import sys
+
     actions = []
     action_flags = {
         "--database": "database",
@@ -112,17 +121,17 @@ def main():
         "--frost": "frost",
         "--crontab": "crontab",
     }
-    
+
     for arg in sys.argv[1:]:
         if arg in action_flags and getattr(args, arg.lstrip("--").replace("-", "_")):
             actions.append(action_flags[arg])
-    
+
     if not actions:
         parser.error("At least one action must be specified")
-    
+
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     logger.info(f"Starting consolidated handler with actions: {', '.join(actions)}")
-    
+
     handler = SetupThingHandler(actions)
     handler.run_loop()
 
