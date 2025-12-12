@@ -58,7 +58,9 @@ class MinioClient:
                 return None
             raise
 
-    def set_bucket_retention(self, bucket_name: str, years: int = 100) -> ObjectLockConfig:
+    def set_bucket_retention(
+        self, bucket_name: str, years: int = 100
+    ) -> ObjectLockConfig:
         lock_config = ObjectLockConfig(GOVERNANCE, years, YEARS)
         self.minio.set_object_lock_config(bucket_name, lock_config)
         return self.get_bucket_retention(bucket_name=bucket_name)
