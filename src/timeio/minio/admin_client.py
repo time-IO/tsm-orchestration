@@ -71,14 +71,14 @@ class MinioAdminClient:
         r = self.minio_admin.policy_info(policy_name=policy_name)
         return self._parse(r)
 
-    def user_policy_set(self, policy_name: str, access_key: str) -> UserT:
-        self.minio_admin.policy_set(policy_name=policy_name, access_key=access_key)
-        r = self.minio_admin.user_info(access_key=access_key)
+    def user_policy_set(self, policy_name: str, user: str) -> UserT:
+        self.minio_admin.policy_set(policy_name=policy_name, user=user)
+        r = self.minio_admin.user_info(access_key=user)
         return self._parse(r)
 
-    def user_policy_unset(self, policy_name: str, access_key: str) -> UserT:
-        self.minio_admin.policy_unset(policy_name=policy_name, access_key=access_key)
-        r = self.minio_admin.user_info(access_key=access_key)
+    def user_policy_unset(self, policy_name: str, user: str) -> UserT:
+        self.minio_admin.policy_unset(policy_name=policy_name, user=user)
+        r = self.minio_admin.user_info(access_key=user)
         return self._parse(r)
 
     def get_policy_entities(
