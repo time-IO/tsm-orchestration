@@ -57,7 +57,7 @@ class CreateThingInMinioHandler(AbstractHandler):
         self.minio_admin.user_add(access_key=user, secret_key=passw)
 
         logger.debug(f"Creating MinIO policy {user} for bucket {bucket}")
-        policy = self.minio_admin.policy_build(bucket_name=bucket)
+        policy = self.minio_admin.build_bucket_policy(bucket_name=bucket)
         self.minio_admin.policy_add(
             policy_name=user,
             policy=policy,
