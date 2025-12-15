@@ -85,7 +85,6 @@ Available actions:
   grafana    Setup Grafana dashboard
   frost      Setup FROST-Server instance
   crontab    Setup crontab entry
-  all        Run all actions (default)
 
 Examples:
   # Run all setup actions (default order)
