@@ -512,12 +512,13 @@ class ExtSFTP(Base):
     public_key = ssh_pub_key
 
 
-class FileParser(Base):
+class FileParser(Base, FromUUIDMixin):
     _schema = "config_db"
     _table_name = "file_parser"
     id: int = _prop(lambda self: self._attrs["id"])
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
     name: str = _prop(lambda self: self._attrs["name"])
+    uuid = _prop(lambda self: self._attrs["uuid"])
     params: JsonT | None = _prop(lambda self: self._attrs["params"])
     file_parser_type: FileParserType = _create(
         FileParserType,
