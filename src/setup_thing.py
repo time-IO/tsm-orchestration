@@ -73,7 +73,7 @@ class SetupThingHandler(AbstractHandler):
 
 def main():
     all_actions = list(SetupThingHandler.HANDLERS.keys())
-    
+
     parser = argparse.ArgumentParser(
         description="Consolidated thing setup handler - orchestrates multiple setup actions",
         formatter_class=argparse.RawDescriptionHelpFormatter,
