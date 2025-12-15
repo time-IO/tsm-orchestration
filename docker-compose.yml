@@ -754,7 +754,7 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "--database", "--minio", "--grafana", "--frost", "--crontab", "--mqtt"]
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py"]
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
