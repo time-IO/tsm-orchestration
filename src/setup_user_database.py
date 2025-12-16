@@ -86,7 +86,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
                 c.execute(
                     sql.SQL("GRANT {user} TO {creator}").format(
-                        user=user, creator=sql.Identifier(self.db.info.user)
+                        user=user, creator=sql.Identifier(conn.info.user)
                     )
                 )
 
@@ -106,14 +106,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
                 c.execute(
                     sql.SQL("GRANT {ro_user} TO {creator}").format(
-                        ro_user=ro_user, creator=sql.Identifier(self.db.info.user)
+                        ro_user=ro_user, creator=sql.Identifier(conn.info.user)
                     )
                 )
 
                 # Allow tcp connections to database with new user
                 c.execute(
                     sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {ro_user}").format(
-                        ro_user=ro_user, db_name=sql.Identifier(self.db.info.dbname)
+                        ro_user=ro_user, db_name=sql.Identifier(conn.info.dbname)
                     )
                 )
 
@@ -171,7 +171,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 # Allow tcp connections to database with new user
                 c.execute(
                     sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {user}").format(
-                        user=user, db_name=sql.Identifier(self.db.info.dbname)
+                        user=user, db_name=sql.Identifier(conn.info.dbname)
                     )
                 )
                 # Set default schema when connecting as user
