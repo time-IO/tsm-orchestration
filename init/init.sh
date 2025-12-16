@@ -155,9 +155,7 @@ fi
 ###########################################
 
 # only run if USE_CHOWN is set to "true"
-if [ "${USE_CHOWN}" == "false" ]; then
-    echo "Skipping chown of volume directories as USE_CHOWN is to 'false'."
-else
+if [ "${USE_CHOWN}" == "true" ]; then
     echo "Setting ownership of volume directories to ${SYSTEM_USER}:${SYSTEM_USER}."
     chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
         /tmp/volume/minio \
@@ -166,6 +164,8 @@ else
         /tmp/volume/database \
         /tmp/volume/visualization \
         /tmp/volume/tomcat
+else
+    echo "Skipping chown of volume directories as USE_CHOWN is not set to 'true'."
 fi
 
 #chmod -R u+rwX,g+rwX \
