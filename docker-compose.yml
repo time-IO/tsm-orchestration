@@ -46,6 +46,7 @@ services:
       - "./keycloak:/tmp/conf/keycloak"
     environment:
       SYSTEM_USER: "${UID}"
+      USE_CHOWN: "${INIT_USE_CHOWN}"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
