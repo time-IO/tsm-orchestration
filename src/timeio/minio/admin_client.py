@@ -46,7 +46,6 @@ class MinioAdminClient:
 
     def build_bucket_policy(self, bucket_name: str) -> PolicyT:
         policy = {
-            "Something": "else",
             "Version": "2012-10-17",
             "Statement": [
                 {
