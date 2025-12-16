@@ -661,7 +661,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :return: Returns a feta.Thing instance.
         """
         query = (
-            f"select t.* from {cls._schema}.thing t join s3_store s3 on "
+            f"select t.* from {cls._schema}.thing t join {cls._schema}.s3_store s3 on "
             "t.s3_store_id = s3.id where s3.bucket = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
