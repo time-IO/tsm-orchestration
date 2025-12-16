@@ -120,7 +120,7 @@ elif [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server
     cp ${MQTT_CERT_SOURCE}/ca.crt ${MQTT_CERT_TARGET}/ca.crt
 else
     if [ ! -f "${MQTT_CERT_TARGET}/server.crt" ] || [ ! -f "${MQTT_CERT_TARGET}/server.key" ] || [ ! -f "${MQTT_CERT_TARGET}/ca.crt" ] || \
-    [ ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt ] ; then
+    ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt ; then
         echo "No valid certificates found in MQTT persistence volume."
         echo "Generating new self-signed ca.crt ..."
         openssl req -new -newkey rsa:2048 -days 90 -nodes -x509 \
@@ -154,14 +154,19 @@ fi
 #  set volume ownerships and permissions  #
 ###########################################
 
-chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
-      /tmp/volume/minio \
-      /tmp/volume/mqtt \
-      /tmp/volume/cron \
-      /tmp/volume/database \
-      /tmp/volume/visualization \
-      /tmp/volume/tomcat
-
+# only run if USE_CHOWN is set to "true"
+if [ "${USE_CHOWN}" == "true" ]; then
+    echo "Setting ownership of volume directories to ${SYSTEM_USER}:${SYSTEM_USER}."
+    chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
+        /tmp/volume/minio \
+        /tmp/volume/mqtt \
+        /tmp/volume/cron \
+        /tmp/volume/database \
+        /tmp/volume/visualization \
+        /tmp/volume/tomcat
+else
+    echo "Skipping chown of volume directories as USE_CHOWN is to 'false'."
+fi
 
 #chmod -R u+rwX,g+rwX \
 #      /tmp/volume/minio \
