@@ -7,6 +7,14 @@
 ### Changed
 ### Removed
 
+## 2025-12-17
+### Added
+- Option to send Grafana warnings via email ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/543))
+### Fixed
+- Fixed parser failing without pandas kwargs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/539))
+### Changed
+### Removed
+
 ## 2025-12-10
 ### Added
 - Parsers get UUID ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/530))
