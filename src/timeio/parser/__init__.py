@@ -52,7 +52,7 @@ def get_parser(
     default_settings = _default_settings.get(klass, {})
 
     if issubclass(klass, CsvParser):
-        pd_kws = settings.pop("pandas_read_csv", {})
+        pd_kws = settings.pop("pandas_read_csv", None) or {}
         settings = {**default_settings, **settings, **pd_kws}
         instance = klass(settings)
 
