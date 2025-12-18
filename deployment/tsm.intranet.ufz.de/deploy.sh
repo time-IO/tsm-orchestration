@@ -5,7 +5,7 @@ TOOLS_DIR="./tools"
 
 # temp.env is a temporary file that contains the .env.example from the main branch
 TEMP_ENV_FILE=$(mktemp)
-git fetch origin cleanup2-25-12
+git fetch origin main
 git show origin/main:.env.example > $TEMP_ENV_FILE
 
 # compare the .env file with the .env.example file from the main branch
@@ -18,7 +18,7 @@ if [ $? -ne 0 ]; then
 fi
 rm $TEMP_ENV_FILE
 
-git checkout cleanup2-25-12
+git checkout main
 git pull origin main
 rm ${TOOLS_DIR}/remove-all-data.sh
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.prod.yml"
