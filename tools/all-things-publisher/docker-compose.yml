@@ -4,7 +4,10 @@ services:
   # A service to re publish all saved thing of configDB
   # it uses the configdb-updater which contains the necessary script
   all-things-publisher:
-    image: "${TIMEIO_IMAGE_REGISTRY}/configdb-updater:${TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/configdb-updater:${TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG}"    
+    build:
+      context: ../../
+      dockerfile: build/configdb_updater
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       MQTT_BROKER: mqtt-broker:1883

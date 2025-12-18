@@ -6,7 +6,7 @@ services:
   # =======
   # brief: create certificates
   # dir: init
-  # see also: init/Dockerfile
+  # see also: build/init/Dockerfile
   #
   # Description
   # ===========
@@ -15,7 +15,7 @@ services:
   init:
     image: "${TIMEIO_IMAGE_REGISTRY}/init:${TIMEIO_INIT_IMAGE_TAG}"
     build:
-      context: init
+      context: build/init
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${INIT_ALPINE_BASE_IMAGE_REGISTRY}"
@@ -23,7 +23,6 @@ services:
     restart: no
     user: "root"
     volumes:
-      - ./init/init.sh:/init.sh:ro
       # Mount Persistence Volumes to set ownership and permissions
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/volume/minio"
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/volume/cron"
@@ -359,7 +358,7 @@ services:
   frost:
     image: "${TIMEIO_IMAGE_REGISTRY}/frost:${TIMEIO_FROST_IMAGE_TAG}"
     build:
-      context: tomcat
+      context: build/tomcat
       args:
         BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
         BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
@@ -686,7 +685,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/configdb-updater:${TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: configdb_updater/Dockerfile
+      dockerfile: build/configdb_updater/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
@@ -721,7 +720,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -773,7 +772,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -813,7 +812,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -854,7 +853,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -891,7 +890,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -938,7 +937,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -983,7 +982,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1021,7 +1020,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1058,7 +1057,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1101,7 +1100,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1148,7 +1147,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1193,7 +1192,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1240,7 +1239,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1282,7 +1281,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: dispatcher/Dockerfile
+      dockerfile: build/dispatcher/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1317,7 +1316,7 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
     build:
       context: .
-      dockerfile: cron/Dockerfile
+      dockerfile: build/cron/Dockerfile
       args:
         UID: "${UID}"
         BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
@@ -1325,8 +1324,6 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 0.5
-    mem_limit: 4g
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
       CREATEDB_POSTGRES_USER: "${CRON_DATABASE_ADMIN_USER}"
@@ -1371,7 +1368,6 @@ services:
       retries: 5
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - ./src:/scripts:ro
       - sftp-private-keys:/sftp-private-keys:ro
     logging:
       options:
