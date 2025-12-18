@@ -104,6 +104,11 @@ def migrate_thing_and_ingest(cfgdb_cur, tmm_cur, django_things):
     for row in rows:
         if row["uuid"] not in django_things:
             continue
+        if row["name"] in [
+            "AIRCULES-520255632-Schmetterlingswiese",
+            "AIRCULES-520273649-Hauptbahnhof",
+        ]:
+            continue
         row["project_id"] = project_uuid_to_id[row["project_uuid"]]
         row["ingest_type_id"] = ingest_id_mapping[row["ingest_type_id"]]
         # TODO
@@ -120,6 +125,8 @@ def migrate_thing_and_ingest(cfgdb_cur, tmm_cur, django_things):
         ingest_name = row["ingest_type_name"]
         upsert_ingest_query = queries.INGEST_QUERIES[ingest_name]
         tmm_cur.execute(upsert_ingest_query, row)
+        if ingest_name == "extsftp":
+            tmm_cur.execute(queries.UPSERT_RAWDATASTORAGE, row)
 
 
 def run_migration(configdb_conn, tmm_conn, django_conn):

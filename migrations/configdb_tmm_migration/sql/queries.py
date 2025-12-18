@@ -1,3 +1,15 @@
+UPSERT_RAWDATASTORAGE = """
+        INSERT INTO thing_management_db.rawdatastorage
+            (thing_id, "user", "password", bucket_name, file_name_pattern, file_parser_id)
+        VALUES (%(thing_id)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(s3_filename_pattern)s, %(file_parser_id)s)
+        ON CONFLICT (thing_id) DO UPDATE SET
+            "user"            = EXCLUDED."user",
+            "password"        = EXCLUDED."password",
+            bucket_name       = EXCLUDED.bucket_name,
+            file_name_pattern = EXCLUDED.file_name_pattern,
+            file_parser_id    = EXCLUDED.file_parser_id
+        """
+
 INGEST_QUERIES = {
     "extapi": """
         INSERT INTO thing_management_db.external_api_ingest
@@ -35,17 +47,7 @@ INGEST_QUERIES = {
             "password_hashed" = EXCLUDED.password_hashed,
             topic             = EXCLUDED.topic
         """,
-    "sftp": """
-        INSERT INTO thing_management_db.rawdatastorage
-            (thing_id, "user", "password", bucket_name, file_name_pattern, file_parser_id)
-        VALUES (%(thing_id)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(s3_filename_pattern)s, %(file_parser_id)s)
-        ON CONFLICT (thing_id) DO UPDATE SET
-            "user"            = EXCLUDED."user",
-            "password"        = EXCLUDED."password",
-            bucket_name       = EXCLUDED.bucket_name,
-            file_name_pattern = EXCLUDED.file_name_pattern,
-            file_parser_id    = EXCLUDED.file_parser_id
-        """,
+    "sftp": UPSERT_RAWDATASTORAGE,
 }
 
 SELECT_PROJECT_AND_DB = """
