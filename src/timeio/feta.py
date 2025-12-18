@@ -709,3 +709,39 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
                 f"from the first result."
             )
         return cls(res[0], conn, caching)
+
+class MQTTSub(Base):
+    _table_name = "MQTTSub"
+
+    # Primary key
+    id: int = _prop(lambda self: self._attrs["id"])
+
+    # User reference
+    user = _prop(lambda self: self._attrs["user"])
+
+    # External MQTT Broker Configuration (for outside subscribe)
+    broker_address: str = _prop(lambda self: self._attrs["broker_address"])
+    broker_port: int = _prop(lambda self: self._attrs["broker_port"])
+    broker_username: str = _prop(lambda self: self._attrs["broker_username"])
+    broker_password: str = _prop(lambda self: self._attrs["broker_password"])
+    broker_ca_cert: str = _prop(lambda self: self._attrs["broker_ca_cert"])
+    broker_client_cert: str = _prop(lambda self: self._attrs["broker_client_cert"])
+    broker_client_key: str = _prop(lambda self: self._attrs["broker_client_key"])
+
+    # Topic configuration
+    topic_external: str = _prop(lambda self: self._attrs["topic_external"])
+    topic_internal: str = _prop(lambda self: self._attrs["topic_internal"])
+
+    # Security and authentication
+    password = _prop(lambda self: self._attrs["password"])
+    password_hashed: str = _prop(lambda self: self._attrs["password_hashed"])
+
+    # Device type mapping
+    mqtt_device_type_id: int | None = _prop(lambda self: self._attrs["mqtt_device_type_id"])
+
+    # Internal device type reference (matching internal topics)
+    mqtt_device_type: MQTTDeviceType | None = _fetch(
+        f"SELECT * FROM {_cfgdb}.mqtt_device_type WHERE id = %s",
+        "mqtt_device_type_id",
+        MQTTDeviceType,
+    )
