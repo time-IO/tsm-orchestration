@@ -1,0 +1,61 @@
+## HTTP - INPUT
+## Allows Bento to save stream-configs - in case of restart, ...
+
+# All config fields, showing default values
+input:
+  http_server:
+    address: "0.0.0.0:4200"
+    path: /streams/
+    # expects somthing like /streams/{ingest-type}/{thing-uuid}
+    ws_path: /streams/ws
+    ws_welcome_message: ""
+    ws_rate_limit_message: ""
+    allowed_verbs:
+      - POST
+    timeout: 5s
+    rate_limit: ""
+    cert_file: ""
+    key_file: ""
+    cors:
+      enabled: false
+      allowed_origins: []
+    sync_response:
+      status: "200"
+      headers:
+        Content-Type: application/octet-stream
+      metadata_headers:
+        include_prefixes: []
+        include_patterns: []
+
+buffer:
+  type: none
+
+pipeline:
+  processors:
+    - mapping: |
+        root = content()
+        # ignores * for mqtt
+        meta path_for_api = metadata("http_server_request_path").replace("/streams/mqtt/", "/streams/")
+
+output:
+  broker:
+    pattern: fan_out
+    outputs:
+    - stdout:
+        codec: lines
+    - http_client:
+        url: 'http://localhost:4195${! metadata("path_for_api") }'
+        verb: POST
+        headers: {}
+        rate_limit: "" # No default (optional)
+        timeout: 5s
+        max_in_flight: 64
+        batching:
+          count: 0
+          byte_size: 0
+          period: ""
+          jitter: 0
+          check: ""
+    - file:
+        path: '${! metadata("http_server_request_path") }.yaml'
+        codec: all-bytes
