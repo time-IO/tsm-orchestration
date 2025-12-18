@@ -1,6 +1,8 @@
 #!/bin/bash
 cd "$(dirname "$0")/../.."
 
+TOOLS_DIR="./tools"
+
 TEMP_ENV_FILE=$(mktemp)
 TAG=${SSH_ORIGINAL_COMMAND}
 git fetch origin
@@ -10,7 +12,7 @@ git show ${TAG}:.env.example > $TEMP_ENV_FILE
 # if it fails, rm TEMP_ENV_FILE and exit
 # if it passes, rm TEMP_ENV_FILE and continue
 # use venv with dotenv and click pre-installed
-venv/bin/python3 compare_dotenv_files.py .env $TEMP_ENV_FILE
+venv/bin/python3 ${TOOLS_DIR}/compare_dotenv_files.py .env $TEMP_ENV_FILE
 if [ $? -ne 0 ]; then
   rm $TEMP_ENV_FILE
   exit 1
@@ -18,11 +20,11 @@ fi
 rm $TEMP_ENV_FILE
 
 git checkout ${TAG}
-rm remove-all-data.sh
+rm ${TOOLS_DIR}/remove-all-data.sh
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.prod.yml"
 ENV_FILES="--env-file .env --env-file releases/release.env"
 # ... otherwise deploy time.IO with the tag env file
-sudo docker compose $COMPOSE_FILES $ENV_FILES create --build
-sudo docker compose $COMPOSE_FILES $ENV_FILES up -d
+docker compose $COMPOSE_FILES $ENV_FILES create --build
+docker compose $COMPOSE_FILES $ENV_FILES up -d
 sleep 10
-sudo docker compose $COMPOSE_FILES $ENV_FILES ps
+docker compose $COMPOSE_FILES $ENV_FILES ps
