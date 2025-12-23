@@ -9,7 +9,8 @@ static_action AS (
         c.label AS c_label,
         sla.id AS action_id,
         sla.begin_date,
-        FALSE AS is_dynamic
+        FALSE AS is_dynamic,
+        dma.configuration_id
     FROM public.sms_configuration_static_location_begin_action sla
     JOIN public.sms_device_mount_action dma ON dma.configuration_id = sla.configuration_id
     JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
@@ -27,7 +28,8 @@ dynamic_action AS (
         c.label AS c_label,
         dla.id AS action_id,
         dla.begin_date,
-        TRUE AS is_dynamic
+        TRUE AS is_dynamic,
+        dma.configuration_id
     FROM  public.sms_configuration_dynamic_location_begin_action dla
     JOIN public.sms_device_mount_action dma ON dma.configuration_id = dla.configuration_id
     JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id

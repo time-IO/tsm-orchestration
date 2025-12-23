@@ -6,7 +6,8 @@ CREATE VIEW ts_coordinates_x_koor  AS
             SELECT
                 o.result_time,
                 o.result_number AS x_koor,
-                o.datastream_id
+                o.datastream_id,
+                dma.configuration_id
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id
@@ -21,7 +22,8 @@ CREATE VIEW ts_coordinates_y_koor  AS
   SELECT
                 o.result_time,
                 o.result_number AS y_koor,
-                o.datastream_id
+                o.datastream_id,
+                dma.configuration_id
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id
@@ -35,7 +37,8 @@ CREATE VIEW ts_coordinates_z_koor  AS
             SELECT
                 o.result_time,
                 o.result_number AS z_koor,
-                o.datastream_id
+                o.datastream_id,
+                dma.configuration_id
             FROM public.sms_datastream_link dsl
             JOIN public.sms_device_mount_action dma ON dma.id = dsl.device_mount_action_id
             JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = dma.configuration_id

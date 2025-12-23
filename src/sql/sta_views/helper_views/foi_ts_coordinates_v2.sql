@@ -1,14 +1,9 @@
-
 DROP VIEW IF EXISTS foi_ts_coordinates_v2 CASCADE;
 CREATE VIEW foi_ts_coordinates_v2 AS
 
-WITH
-
-
-
-static_coords AS (
+WITH static_coords AS (
     SELECT
-        'static' AS action_type,
+        FALSE AS is_dynamic,
         ba.action_id,
         ba.datastream_id,
         ba.begin_date,
@@ -23,43 +18,62 @@ static_coords AS (
            ON sla.id = ba.action_id
     WHERE ba.is_dynamic = FALSE
 ),
+-- for the dynamic things
+--    assigning the three datastream_ids (x/y/z) for each main_datastream_id
+xyzDatastream AS MATERIALIZED
+    (
+SELECT DISTINCT
+    dma.configuration_id,
+    dla.id as dla_id,
+    dsl_main.datastream_id AS main_datastream_id,
+    dsl_x.datastream_id AS x_datastream_id,
+    dsl_y.datastream_id AS y_datastream_id,
+    dsl_z.datastream_id AS z_datastream_id
+FROM sms_configuration_dynamic_location_begin_action dla
+JOIN sms_device_mount_action dma
+    ON dma.configuration_id = dla.configuration_id
+-- main_datastream
+JOIN sms_datastream_link dsl_main
+    ON dsl_main.device_mount_action_id = dma.id
+    AND dsl_main.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+-- x_datastream_id
+JOIN sms_datastream_link dsl_x
+    ON dsl_x.device_mount_action_id = dma.id
+    AND dsl_x.device_property_id = dla.x_property_id
+-- y_datastream_id
+JOIN sms_datastream_link dsl_y
+    ON dsl_y.device_mount_action_id = dma.id
+    AND dsl_y.device_property_id = dla.y_property_id
+-- z_datastream_id
+LEFT JOIN sms_datastream_link dsl_z
+    ON dsl_z.device_mount_action_id = dma.id
+    AND dsl_z.device_property_id = dla.z_property_id),
 
-dynamic_coords AS (
+    dynamic_coords AS (
     SELECT
-        'dynamic' AS action_type,
-        ba.action_id::int,
-        ba.datastream_id,
-        ba.begin_date,
-        ba.result_time,
-        ba.c_label,
+        TRUE AS is_dynamic,
+        at.action_id::int,
+        at.datastream_id,  -- original datastream!
+        at.begin_date,
+        at.result_time,
+        at.c_label,
         CASE
-            WHEN z.z_koor IS NULL THEN ARRAY[x.x_koor, y.y_koor]
-            ELSE ARRAY[x.x_koor, y.y_koor, z.z_koor]
+            WHEN oz.result_number IS NULL THEN ARRAY[ox.result_number, oy.result_number]
+            ELSE ARRAY[ox.result_number, oy.result_number, oz.result_number]
         END AS coordinates
-    FROM foi_ts_action_type_v2 ba
-    LEFT JOIN ts_coordinates_x_koor x
-           ON x.result_time = ba.result_time
-    LEFT JOIN ts_coordinates_y_koor y
-           ON y.result_time = ba.result_time
-    LEFT JOIN ts_coordinates_z_koor z
-           ON z.result_time = ba.result_time
-    WHERE ba.is_dynamic = TRUE
-      AND ba.datastream_id IN (x.datastream_id, y.datastream_id, z.datastream_id)
-)
-
-SELECT action_type, action_id, datastream_id, begin_date, result_time, c_label, coordinates,
-       CONCAT(coordinates, action_id, 'stat') AS feature_id
-FROM static_coords
-
+        FROM foi_ts_action_type_v2 at
+    JOIN xyzDatastream data ON data.configuration_id = at.configuration_id
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation ox
+        ON ox.datastream_id = data.x_datastream_id
+        AND ox.result_time = at.result_time
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oy
+        ON oy.datastream_id = data.y_datastream_id
+        AND oy.result_time = at.result_time
+    LEFT JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oz
+        ON oz.datastream_id = data.z_datastream_id
+        AND oz.result_time = at.result_time
+  )
+SELECT * FROM static_coords
 UNION ALL
-
-SELECT action_type, action_id, datastream_id, begin_date, result_time, c_label, coordinates,
-       CONCAT(coordinates, action_id, 'dyn') AS feature_id
-FROM dynamic_coords;
-
-
-
-
-
-
+SELECT * FROM dynamic_coords;
 
