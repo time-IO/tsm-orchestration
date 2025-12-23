@@ -1,63 +1,60 @@
--- Helper view ts_action_type determines the action type (static or dynamic)
--- and the action ID (ID from sms_configuration_static / dynamic_location_begin_action).
 DROP VIEW IF EXISTS foi_ts_action_type CASCADE;
-CREATE VIEW foi_ts_action_type AS
+CREATE OR REPLACE VIEW foi_ts_action_type AS
+
+WITH
+static_action AS (
+    SELECT DISTINCT ON (sla.id)
+        o.datastream_id,
+        o.result_time,
+        c.label AS c_label,
+        sla.id AS action_id,
+        sla.begin_date,
+        FALSE AS is_dynamic,
+        dma.configuration_id
+    FROM public.sms_configuration_static_location_begin_action sla
+    JOIN public.sms_device_mount_action dma
+        ON dma.configuration_id = sla.configuration_id
+    JOIN public.sms_configuration c
+        ON c.id = dma.configuration_id AND c.is_public
+    JOIN public.sms_device d
+        ON d.id = dma.device_id AND d.is_public
+    JOIN public.sms_datastream_link dsl
+        ON dsl.device_mount_action_id = dma.id
+        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+        ON o.datastream_id = dsl.datastream_id
+         WHERE o.result_time >= sla.begin_date
+            AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)
+            AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
 
 
-
-WITH configuration_type AS (
-  SELECT
-    dsl.datastream_id,
-    c.label AS c_label,
-        CASE
-            WHEN sla.id IS NOT NULL THEN FALSE
-            WHEN dla.id IS NOT NULL THEN TRUE
-            ELSE NULL
-        END AS is_dynamic,
-
-        CASE
-            WHEN sla.id IS NOT NULL THEN sla.begin_date
-            WHEN dla.id IS NOT NULL THEN dla.begin_date
-        END AS begin_date,
-
-        CASE
-            WHEN sla.id IS NOT NULL THEN sla.id
-            WHEN dla.id IS NOT NULL THEN dla.id
-            ELSE NULL
-        END AS action_id,
-
-      CASE
-                WHEN sla.id IS NOT NULL THEN COALESCE(sla.end_date, 'infinity'::timestamp)
-                WHEN dla.id IS NOT NULL THEN COALESCE(dla.end_date, 'infinity'::timestamp)
-                ELSE NULL
-      END AS end_date
-
-
-
-   FROM public.sms_datastream_link dsl
-           JOIN public.sms_device_mount_action dma ON dsl.device_mount_action_id = dma.id
-           JOIN public.sms_device d ON d.id = dma.device_id
-           JOIN public.sms_configuration c ON c.id = dma.configuration_id
-         LEFT JOIN public.sms_configuration_static_location_begin_action sla ON sla.configuration_id = c.id
-         LEFT JOIN public.sms_configuration_dynamic_location_begin_action dla ON dla.configuration_id = c.id
-    WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
-
+),
+dynamic_action AS (
+    SELECT
+        o.datastream_id,
+        o.result_time,
+        c.label AS c_label,
+        dla.id AS action_id,
+        dla.begin_date,
+        TRUE AS is_dynamic,
+        dma.configuration_id
+    FROM public.sms_configuration_dynamic_location_begin_action dla
+    JOIN public.sms_device_mount_action dma
+        ON dma.configuration_id = dla.configuration_id
+    JOIN public.sms_configuration c
+        ON c.id = dma.configuration_id AND c.is_public
+    JOIN public.sms_device d ON d.id = dma.device_id AND d.is_public
+    JOIN public.sms_datastream_link dsl
+        ON dsl.device_mount_action_id = dma.id
+        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+        ON o.datastream_id = dsl.datastream_id
+        WHERE   o.result_time BETWEEN dsl.begin_date
+          AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+    AND EXISTS (SELECT 1 FROM sms_configuration_dynamic_location_begin_action LIMIT 1)
 )
-
-SELECT DISTINCT
-
-    o.datastream_id,
-    o.result_time,
-    ct.is_dynamic,
-    ct.action_id,
-    ct.begin_date,
-    ct.c_label
-
-
-FROM observation o
-    LEFT JOIN configuration_type ct ON o.datastream_id = ct.datastream_id
-                                            AND o.result_time >= ct.begin_date
-                                            AND o.result_time <= ct.end_date
-    WHERE is_dynamic IS NOT NULL
-      AND action_id IS NOT NULL;
+SELECT * FROM static_action
+UNION ALL
+SELECT * FROM dynamic_action
+;
 
