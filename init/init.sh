@@ -35,8 +35,12 @@ mkdir -p /tmp/volume/database/pgdata
 #    - If not, generate a new SSH key
 echo "Preparing SSH key for MinIO."
 if [ -f "${MINIO_CERT_SOURCE}/id_ed25519" ]; then
-    echo "Copying SSH key from host."
-    cp ${MINIO_CERT_SOURCE}/id_ed25519 ${MINIO_CERT_TARGET}/id_ed25519
+    if ! cmp "${MINIO_CERT_SOURCE}/id_ed25519" "${MINIO_CERT_TARGET}/id_ed25519"; then
+        echo "Copying SSH key from host."
+        cp ${MINIO_CERT_SOURCE}/id_ed25519 ${MINIO_CERT_TARGET}/id_ed25519
+    else
+        echo "SSH key in volume is identical to host file. No action needed."
+    fi
 elif [ ! -f "${MINIO_CERT_TARGET}/id_ed25519" ]; then
     echo "No SSH key found in MinIO persistence volume, generating new SSH key."
     ssh-keygen -t ed25519 -f ${MINIO_CERT_TARGET}/id_ed25519 -N ""
@@ -53,8 +57,8 @@ echo "Preparing FTP certificate and key for MinIO."
 if [ -f "${MINIO_CERT_SOURCE}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_SOURCE}/minio-ftp.key" ] && \
    [ -f "${MINIO_CERT_TARGET}/minio-ftp.crt" ] && [ -f "${MINIO_CERT_TARGET}/minio-ftp.key" ]; then
     # Compare files using cmp (silent mode)
-    if cmp -s "${MINIO_CERT_SOURCE}/minio-ftp.crt" "${MINIO_CERT_TARGET}/minio-ftp.crt" && \
-       cmp -s "${MINIO_CERT_SOURCE}/minio-ftp.key" "${MINIO_CERT_TARGET}/minio-ftp.key"; then
+    if cmp "${MINIO_CERT_SOURCE}/minio-ftp.crt" "${MINIO_CERT_TARGET}/minio-ftp.crt" && \
+       cmp "${MINIO_CERT_SOURCE}/minio-ftp.key" "${MINIO_CERT_TARGET}/minio-ftp.key"; then
         echo "FTP certificate and key in volume are identical to host files. No action needed."
     else
         echo "FTP certificate different in host and volume."
@@ -105,7 +109,7 @@ if [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server.k
             echo "Copying TLS certificates and key from host to MQTT persistence volume."
             cp ${MQTT_CERT_SOURCE}/server.crt ${MQTT_CERT_TARGET}/server.crt
             cp ${MQTT_CERT_SOURCE}/server.key ${MQTT_CERT_TARGET}/server.key
-            cp ${MQTT_CERT_SOURCE}/ca.key ${MQTT_CERT_TARGET}/ca.key
+            cp ${MQTT_CERT_SOURCE}/ca.crt ${MQTT_CERT_TARGET}/ca.crt
         fi
     fi
 elif [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server.key" ] && [ -f "${MQTT_CERT_SOURCE}/ca.crt" ]; then
@@ -116,7 +120,7 @@ elif [ -f "${MQTT_CERT_SOURCE}/server.crt" ] && [ -f "${MQTT_CERT_SOURCE}/server
     cp ${MQTT_CERT_SOURCE}/ca.crt ${MQTT_CERT_TARGET}/ca.crt
 else
     if [ ! -f "${MQTT_CERT_TARGET}/server.crt" ] || [ ! -f "${MQTT_CERT_TARGET}/server.key" ] || [ ! -f "${MQTT_CERT_TARGET}/ca.crt" ] || \
-    ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt; then
+    ! openssl x509 -checkend 604800 -noout -in ${MQTT_CERT_TARGET}/server.crt ; then
         echo "No valid certificates found in MQTT persistence volume."
         echo "Generating new self-signed ca.crt ..."
         openssl req -new -newkey rsa:2048 -days 90 -nodes -x509 \
@@ -150,14 +154,19 @@ fi
 #  set volume ownerships and permissions  #
 ###########################################
 
-chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
-      /tmp/volume/minio \
-      /tmp/volume/mqtt \
-      /tmp/volume/cron \
-      /tmp/volume/database \
-      /tmp/volume/visualization \
-      /tmp/volume/tomcat
-
+# only run if USE_CHOWN is set to "true"
+if [ "${USE_CHOWN}" == "true" ]; then
+    echo "Setting ownership of volume directories to ${SYSTEM_USER}:${SYSTEM_USER}."
+    chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
+        /tmp/volume/minio \
+        /tmp/volume/mqtt \
+        /tmp/volume/cron \
+        /tmp/volume/database \
+        /tmp/volume/visualization \
+        /tmp/volume/tomcat
+else
+    echo "Skipping chown of volume directories as USE_CHOWN is not set to 'true'."
+fi
 
 #chmod -R u+rwX,g+rwX \
 #      /tmp/volume/minio \

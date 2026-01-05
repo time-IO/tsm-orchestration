@@ -522,7 +522,7 @@ def store_thing_config(conn: Connection, data: dict, qid: int | None, proj_id: i
     if parsers := data["parsers"]:
         idx = parsers["default"]
         parser = parsers["parsers"][idx]
-        uuid_base = f"{parser["name"]}{proj_uuid}"
+        uuid_base = f"{parser['name']}{proj_uuid}"
         parser_uuid = uuid5(NAMESPACE_DNS, uuid_base)
         parser["uuid"] = parser_uuid
         parser_id = upsert_table_file_parser(conn, parser, ids["file_parser_id"])
