@@ -32,7 +32,7 @@ static_action AS (
 ),
 dynamic_action AS (
     SELECT
-         dla.id AS action_id,
+        dla.id AS action_id,
         TRUE AS is_dynamic,
         o.datastream_id,
         o.result_time,

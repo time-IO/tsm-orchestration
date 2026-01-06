@@ -3,8 +3,8 @@ CREATE VIEW foi_ts_coordinates AS
 
 WITH static_coords AS (
     SELECT
-        FALSE AS is_dynamic,
         at.action_id,
+        FALSE AS is_dynamic,
         at.datastream_id,
         at.begin_date,
         at.result_time,
@@ -20,7 +20,7 @@ WITH static_coords AS (
     WHERE at.is_dynamic = FALSE
 
 ),
--- for the dynamic things
+-- for the dynamic data
 --    assigning the three datastream_ids (x/y/z) for each main_datastream_id
 xyzDatastream AS MATERIALIZED
     (
@@ -53,8 +53,8 @@ LEFT JOIN sms_datastream_link dsl_z
 
     dynamic_coords AS (
     SELECT
-        TRUE AS is_dynamic,
         at.action_id::int,
+        TRUE AS is_dynamic,
         at.datastream_id,  -- original datastream!
         at.begin_date,
         at.result_time,
