@@ -4,19 +4,21 @@ CREATE VIEW foi_ts_coordinates AS
 WITH static_coords AS (
     SELECT
         FALSE AS is_dynamic,
-        ba.action_id,
-        ba.datastream_id,
-        ba.begin_date,
-        ba.result_time,
-        ba.c_label,
+        at.action_id,
+        at.datastream_id,
+        at.begin_date,
+        at.result_time,
+        at.c_label,
         CASE
             WHEN sla.z IS NULL THEN ARRAY[sla.x, sla.y, 0]
             ELSE ARRAY[sla.x, sla.y, sla.z]
-        END AS coordinates
-    FROM foi_ts_action_type ba
+        END AS coordinates,
+        hashtextextended(CONCAT(ARRAY[sla.x, sla.y, COALESCE(sla.z, 0)]::text, at.action_id, at.is_dynamic),0) AS feature_id
+    FROM foi_ts_action_type at
     LEFT JOIN public.sms_configuration_static_location_begin_action sla
-           ON sla.id = ba.action_id
-    WHERE ba.is_dynamic = FALSE
+           ON sla.id = at.action_id
+    WHERE at.is_dynamic = FALSE
+
 ),
 -- for the dynamic things
 --    assigning the three datastream_ids (x/y/z) for each main_datastream_id
@@ -35,7 +37,7 @@ JOIN sms_device_mount_action dma
 -- main_datastream
 JOIN sms_datastream_link dsl_main
     ON dsl_main.device_mount_action_id = dma.id
-    AND dsl_main.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+    AND dsl_main.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
 -- x_datastream_id
 JOIN sms_datastream_link dsl_x
     ON dsl_x.device_mount_action_id = dma.id
@@ -60,16 +62,17 @@ LEFT JOIN sms_datastream_link dsl_z
         CASE
             WHEN oz.result_number IS NULL THEN ARRAY[ox.result_number, oy.result_number]
             ELSE ARRAY[ox.result_number, oy.result_number, oz.result_number]
-        END AS coordinates
+        END AS coordinates,
+         hashtextextended(CONCAT(ARRAY[ox.result_number, oy.result_number, COALESCE(oz.result_number, 0)]::text, at.action_id, at.is_dynamic),0) AS feature_id
         FROM foi_ts_action_type at
     JOIN xyzDatastream data ON data.main_datastream_id = at.datastream_id
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation ox
+    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation ox
         ON ox.datastream_id = data.x_datastream_id
         AND ox.result_time = at.result_time
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oy
+    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oy
         ON oy.datastream_id = data.y_datastream_id
         AND oy.result_time = at.result_time
-    LEFT JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oz
+    LEFT JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oz
         ON oz.datastream_id = data.z_datastream_id
         AND oz.result_time = at.result_time
   )

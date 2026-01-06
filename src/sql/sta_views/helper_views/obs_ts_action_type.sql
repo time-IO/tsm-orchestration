@@ -7,6 +7,7 @@ WITH
 static_action AS (
     SELECT
         o.id AS o_id,
+        FALSE AS is_dynamic,
         o.datastream_id,
         o.result_time,
         o.result_boolean,
@@ -21,7 +22,6 @@ static_action AS (
         sla.begin_date,
         dsl.device_property_id,
         c.label,
-        FALSE AS is_dynamic,
         dma.configuration_id
 
     FROM public.sms_configuration_static_location_begin_action sla
@@ -33,16 +33,20 @@ static_action AS (
         ON d.id = dma.device_id AND d.is_public
     JOIN public.sms_datastream_link dsl
         ON dsl.device_mount_action_id = dma.id
-        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+--         AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+       AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+--     JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+            JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
         ON o.datastream_id = dsl.datastream_id
       WHERE o.result_time >= sla.begin_date
         AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)
-        AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+--         AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+
 ),
 dynamic_action AS (
     SELECT
         o.id AS o_id,
+        TRUE AS is_dynamic,
         o.datastream_id,
         o.result_time,
         o.result_boolean,
@@ -57,7 +61,6 @@ dynamic_action AS (
         dla.begin_date,
         dsl.device_property_id,
         c.label,
-        TRUE AS is_dynamic,
         dma.configuration_id
     FROM public.sms_configuration_dynamic_location_begin_action dla
     JOIN public.sms_device_mount_action dma
@@ -67,12 +70,15 @@ dynamic_action AS (
     JOIN public.sms_device d ON d.id = dma.device_id AND d.is_public
     JOIN public.sms_datastream_link dsl
         ON dsl.device_mount_action_id = dma.id
-        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+       --         AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+       AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+--     JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+            JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
         ON o.datastream_id = dsl.datastream_id
-    WHERE  o.result_time BETWEEN dsl.begin_date
-          AND COALESCE(dsl.end_date, 'infinity'::timestamp)
-      AND EXISTS (SELECT 1 FROM sms_configuration_dynamic_location_begin_action LIMIT 1)
+--     WHERE  o.result_time BETWEEN dsl.begin_date
+--           AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+--       AND
+
 )
 SELECT * FROM static_action
 UNION ALL

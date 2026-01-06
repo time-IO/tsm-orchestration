@@ -46,7 +46,8 @@ JOIN sms_device_mount_action dma
 -- main_datastream
 JOIN sms_datastream_link dsl_main
     ON dsl_main.device_mount_action_id = dma.id
-    AND dsl_main.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+--     AND dsl_main.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+       AND dsl_main.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
 -- x_datastream_id
 JOIN sms_datastream_link dsl_x
     ON dsl_x.device_mount_action_id = dma.id
@@ -84,13 +85,16 @@ dynamic_coords AS (
            hashtextextended(CONCAT(ARRAY[ox.result_number, oy.result_number, COALESCE(oz.result_number, 0)]::text, at.action_id, at.is_dynamic),0) AS feature_id
     FROM obs_ts_action_type at
      JOIN xyzDatastream data ON data.main_datastream_id = at.datastream_id
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation ox
+--     JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation ox
+     JOIN  ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation ox
         ON ox.datastream_id = data.x_datastream_id
         AND ox.result_time = at.result_time
-    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oy
+--     JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oy
+     JOIN  ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oy
         ON oy.datastream_id = data.y_datastream_id
         AND oy.result_time = at.result_time
-    LEFT JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oz
+ --    LEFT JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oz
+     LEFT JOIN  ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oz
         ON oz.datastream_id = data.z_datastream_id
         AND oz.result_time = at.result_time)
 

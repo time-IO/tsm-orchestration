@@ -1,30 +1,23 @@
-DROP MATERIALIZED VIEW IF EXISTS sms_configuration_static_location_begin_action
-CREATE MATERIALIZED VIEW sms_configuration_static_location_begin_action AS
-SELECT *,
-       tstzrange(begin_date, COALESCE(end_date,'infinity'::timestamptz)) AS valid_range
-FROM foreign_table_configuration_static_location_begin_action;
-
-DROP MATERIALIZED VIEW IF EXISTS sms_configuration_dynamic_location_begin_action
-CREATE MATERIALIZED VIEW sms_configuration_dynamic_location_begin_action AS
-SELECT *,
-       tstzrange(begin_date, COALESCE(end_date,'infinity'::timestamptz)) AS valid_range
-FROM foreign_table_configuration_dynamic_location_begin_action;
-
-
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sla_id
 ON sms_configuration_static_location_begin_action (id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_dla_id
 ON sms_configuration_dynamic_location_begin_action (id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sla_begin_date
+ON sms_configuration_static_location_begin_action (begin_date);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dla_begin_date
+ON sms_configuration_dynamic_location_begin_action (begin_date);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sla_end_date
+ON sms_configuration_static_location_begin_action (end_date);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dla_end_date
+ON sms_configuration_dynamic_location_begin_action (end_date);
 
 CREATE INDEX IF NOT EXISTS idx_sla_configuration_id
 ON sms_configuration_static_location_begin_action (configuration_id);
 CREATE INDEX IF NOT EXISTS idx_dla_configuration_id
 ON sms_configuration_dynamic_location_begin_action (configuration_id);
 
-CREATE INDEX IF NOT EXISTS idx_sla_valid_range
-ON sms_configuration_static_location_begin_action (valid_range);
-CREATE INDEX IF NOT EXISTS idx_dla_valid_range
-ON sms_configuration_dynamic_location_begin_action (valid_range);
 
 CREATE INDEX IF NOT EXISTS idx_dsl_datastream
 ON sms_datastream_link(datastream_id);

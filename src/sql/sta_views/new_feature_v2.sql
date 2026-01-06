@@ -1,11 +1,14 @@
 DROP VIEW IF EXISTS "NEW_FEATURES" CASCADE;
 CREATE VIEW "NEW_FEATURES" AS
-EXPLAIN ANALYZE
+
 
 SELECT DISTINCT
-    hashtextextended(CONCAT(crd.feature_id),0) AS "ID",
+    crd.feature_id AS "ID",
  	CONCAT(crd.c_label, '_', crd.begin_date) AS "NAME",
-	crd.action_type AS "DESCRIPTION",
+ 	    CASE
+ 	        WHEN crd.is_dynamic IS FALSE THEN 'static'
+ 	            ELSE 'dynamic'
+ 	        END AS "DESCRIPTION",
     'application/geo+json' AS "ENCODING_TYPE",
 	jsonb_build_object(
 		'type', 'Feature',
@@ -18,6 +21,6 @@ SELECT DISTINCT
 
 
 FROM public.sms_datastream_link dsl
-JOIN foi_ts_coordinates_v2 crd ON crd.datastream_id = dsl.datastream_id
+JOIN foi_ts_action_type_coord crd ON crd.datastream_id = dsl.datastream_id
 ;
 
