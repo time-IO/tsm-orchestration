@@ -1324,7 +1324,8 @@ services:
       init:
         condition: service_completed_successfully
     environment:
-      # GET/POST
+      BENTO_API_URL: http://bento:4195
+      BENTO_API_URL_POST: http://bento:4200
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: bento
       MQTT_BROKER: mqtt-broker:1883

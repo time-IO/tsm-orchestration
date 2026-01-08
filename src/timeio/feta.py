@@ -600,6 +600,18 @@ class S3Store(Base):
     username = user
     bucket_name = bucket
 
+class ExtMQTT(Base):
+    _table_name = "ext_mqtt"
+    id: int = _prop(lambda self: self._attrs["id"])
+    external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
+    external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
+    external_mqtt_username: str = _prop(lambda self: self._attrs["external_mqtt_username"])
+    external_mqtt_password: str = _prop(lambda self: self._attrs["external_mqtt_password"])
+    external_mqtt_ca_cert: str = _prop(lambda self: self._attrs["external_mqtt_ca_cert"])
+    external_mqtt_client_cert: str = _prop(lambda self: self._attrs["external_mqtt_client_cert"])
+    external_mqtt_client_key: str = _prop(lambda self: self._attrs["external_mqtt_client_key"])
+    external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])
+
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _schema = "config_db"
@@ -618,7 +630,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
     s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.s3_store where id = %s", "s3_store_id")  # fmt: skip
     mqtt: MQTT = _create(MQTT, f"select * from {_schema}.mqtt where id = %s", "mqtt_id")  # fmt: skip
-    mqtt_sub: MQTTSub | None = _create(MQTTSub, f"select * from {_schema}.mqtt_sub where id = %s", "mqtt_sub_id")
+    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "mqtt_sub_id")
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
     legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))
@@ -710,15 +722,3 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
                 f"from the first result."
             )
         return cls(res[0], conn, caching)
-
-class MQTTSub(Base):
-    _table_name = "mqtt_sub"
-    id: int = _prop(lambda self: self._attrs["id"])
-    external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
-    external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
-    external_mqtt_username: str = _prop(lambda self: self._attrs["external_mqtt_username"])
-    external_mqtt_password: str = _prop(lambda self: self._attrs["external_mqtt_password"])
-    external_mqtt_ca_cert: str = _prop(lambda self: self._attrs["external_mqtt_ca_cert"])
-    external_mqtt_client_cert: str = _prop(lambda self: self._attrs["external_mqtt_client_cert"])
-    external_mqtt_client_key: str = _prop(lambda self: self._attrs["external_mqtt_client_key"])
-    external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])

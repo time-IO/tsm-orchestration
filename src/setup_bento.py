@@ -22,8 +22,8 @@ class CreateBentoMQTTHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-        self.bento_api_url = "http://bento:4195"
-        self.bento_api_url_POST = "http://bento:4200"
+        self.bento_api_url = get_envvar("BENTO_API_URL")
+        self.bento_api_url_POST = get_envvar("BENTO_API_URL_POST")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
@@ -42,10 +42,10 @@ class CreateBentoMQTTHandler(AbstractHandler):
             "name": f"thing-{thing.uuid}",
             "input": {
                 "mqtt": {
-                    "url": thing.mqtt_sub.external_mqtt_address,
-                    "username": thing.mqtt_sub.external_mqtt_username,
-                    "password": thing.mqtt_sub.external_mqtt_password,
-                    "topics": thing.mqtt_sub.external_mqtt_topic
+                    "url": thing.ext_mqtt.external_mqtt_address,
+                    "username": thing.ext_mqtt.external_mqtt_username,
+                    "password": thing.ext_mqtt.external_mqtt_password,
+                    "topics": thing.ext_mqtt.external_mqtt_topic
                 }
             },
             "pipeline": {
@@ -89,7 +89,7 @@ class CreateBentoMQTTHandler(AbstractHandler):
                                          json=stream_config,
                                          timeout=30)
 
-            if response.status_code in [200, 201]:
+            if response.ok:
                 logger.info(f"Successfully configured stream: {stream_name}")
             else:
                 logger.error(f"Failed to configure stream {stream_name}: {response.status_code} - {response.text}")
