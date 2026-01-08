@@ -150,7 +150,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 "location_id": entry.pop("locationId"),
                 "aggregation_time": "hourly",
             }
-            timestamp = entry.pop("timestamp")
+            timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
                 if value:
                     body = {
