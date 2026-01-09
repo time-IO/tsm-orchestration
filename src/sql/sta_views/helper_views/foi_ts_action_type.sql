@@ -6,8 +6,8 @@ static_action AS (
     SELECT DISTINCT ON (sla.id)
         sla.id AS action_id,
         FALSE AS is_dynamic,
-        o.datastream_id,
-        o.result_time,
+        dsl.datastream_id,
+        NULL::timestamp AS result_time,
         c.label AS c_label,
         sla.begin_date,
         dma.configuration_id
@@ -20,13 +20,15 @@ static_action AS (
         ON d.id = dma.device_id AND d.is_public
     JOIN public.sms_datastream_link dsl
         ON dsl.device_mount_action_id = dma.id
-        AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
-    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
-        ON o.datastream_id = dsl.datastream_id
-         WHERE o.result_time >= sla.begin_date
-            AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)
---             AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
-
+        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+--     JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+--         ON o.datastream_id = dsl.datastream_id
+--          WHERE o.result_time >= sla.begin_date
+--             AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)
+-- --             AND o.result_time BETWEEN dsl.begin_date AND COALESCE(dsl.end_date, 'infinity'::timestamp)
+-- für Indexnutzung Alternative:
+--     WHERE o.result_time >= sla.begin_date
+--    AND (sla.end_date IS NULL OR o.result_time <= sla.end_date)
 
 
 ),
@@ -47,8 +49,8 @@ dynamic_action AS (
     JOIN public.sms_device d ON d.id = dma.device_id AND d.is_public
     JOIN public.sms_datastream_link dsl
         ON dsl.device_mount_action_id = dma.id
-        AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
-    JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
+        AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+    JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
         ON o.datastream_id = dsl.datastream_id
 --         WHERE   o.result_time BETWEEN dsl.begin_date
 --           AND COALESCE(dsl.end_date, 'infinity'::timestamp)

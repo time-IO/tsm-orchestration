@@ -17,7 +17,7 @@ xyzDatastream AS MATERIALIZED (
         ON dma.configuration_id = dla.configuration_id
     JOIN sms_datastream_link dsl_main
         ON dsl_main.device_mount_action_id = dma.id
-        AND dsl_main.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+        AND dsl_main.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
     JOIN sms_datastream_link dsl_x
         ON dsl_x.device_mount_action_id = dma.id
         AND dsl_x.device_property_id = dla.x_property_id
@@ -47,10 +47,6 @@ xyzDatastream AS MATERIALIZED (
             dsl.device_property_id,
             c.label,
             dma.configuration_id,
-            CASE
-                WHEN sla.z IS NULL THEN ARRAY [sla.x, sla.y]
-                ELSE ARRAY [sla.x, sla.y, sla.z]
-                END AS coordinates,
             hashtextextended(
                     CONCAT(
                             ARRAY [sla.x, sla.y, COALESCE(sla.z, 0)]::text,
@@ -70,11 +66,12 @@ xyzDatastream AS MATERIALIZED (
                        AND d.is_public
               JOIN public.sms_datastream_link dsl
                    ON dsl.device_mount_action_id = dma.id
-                       AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
-              JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
+                       AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+              JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
                    ON o.datastream_id = dsl.datastream_id
      WHERE o.result_time >= sla.begin_date
-       AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)),
+       AND o.result_time <= COALESCE(sla.end_date, 'infinity'::timestamp)
+     ),
 
     dynamic_data AS
         (
@@ -96,11 +93,6 @@ xyzDatastream AS MATERIALIZED (
     dsl.device_property_id,
     c.label,
     dma.configuration_id,
-    CASE
-        WHEN oz.result_number IS NULL
-        THEN ARRAY[ox.result_number, oy.result_number]
-        ELSE ARRAY[ox.result_number, oy.result_number, oz.result_number]
-    END AS coordinates,
     hashtextextended(
         CONCAT(
             ARRAY[ox.result_number, oy.result_number, COALESCE(oz.result_number, 0)]::text,
@@ -120,18 +112,18 @@ JOIN public.sms_device d
     AND d.is_public
 JOIN public.sms_datastream_link dsl
     ON dsl.device_mount_action_id = dma.id
-    AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
-JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
+    AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
     ON o.datastream_id = dsl.datastream_id
 JOIN xyzDatastream data
     ON data.main_datastream_id = o.datastream_id
-JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation ox
+JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation ox
     ON ox.datastream_id = data.x_datastream_id
     AND ox.result_time = o.result_time
-JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oy
+JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oy
     ON oy.datastream_id = data.y_datastream_id
     AND oy.result_time = o.result_time
-LEFT JOIN ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation oz
+LEFT JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation oz
     ON oz.datastream_id = data.z_datastream_id
     AND oz.result_time = o.result_time)
 

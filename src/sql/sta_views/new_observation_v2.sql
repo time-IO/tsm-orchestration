@@ -27,5 +27,7 @@ SELECT
   "jsonld.type": "ObservationProperties",
   "dataSource": null
 }'::jsonb AS "PROPERTIES"
-FROM obs_ts_coordinates;
+FROM obs_ts_action_type_coord ct
+
+;
 
