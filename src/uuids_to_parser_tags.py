@@ -12,11 +12,7 @@ from timeio.feta import FileParser, Thing, ObjectNotFound
 
 
 @click.command()
-# @click.option("--dsn", default="postgresql://postgres:postgres@localhost:5432/postgres")
-@click.option(
-    "--dsn",
-    default="postgresql://rdm_tsm_adm:7KX[3ocaCoU2!h0NNwH]]Gc8K<3F>odG@postgres.intranet.ufz.de/rdm_tsm",
-)
+@click.option("--dsn", default="postgresql://postgres:postgres@localhost:5432/postgres")
 @click.option("--minio-host", default="localhost:9000")
 @click.option("--minio-user", default="minioadmin")
 @click.option("--minio-password", default="minioadmin")
