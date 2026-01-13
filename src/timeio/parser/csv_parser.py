@@ -165,7 +165,7 @@ class CsvParser(PandasParser):
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
         except Exception as e:
-            raise ParsingError("Parsing failed") from e
+            raise ParsingError("Parsing failed. Reason:\n{e}") from e
 
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
