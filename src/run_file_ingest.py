@@ -89,16 +89,11 @@ class ParserJobHandler(AbstractHandler):
             try:
                 df = parser.do_parse(rawdata, schema, thing_uuid)
                 obs = parser.to_observations(df, source_uri, parser_id)
-            except ParsingError as e:
+            except Exception as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
                 self.set_tags(bucket_name, filename, str(parser_id), "failed")
-                raise e
-            except Exception as e:
-                journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.set_tags(bucket_name, filename, str(parser_id), "failed")
-                raise UserInputError("Parsing failed") from e
 
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
