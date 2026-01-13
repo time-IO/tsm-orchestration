@@ -73,31 +73,28 @@ class ParserJobHandler(AbstractHandler):
 
         source_uri = f"{bucket_name}/{filename}"
 
-        logger.debug(f"loading parser for {thing_uuid}")
+        logger.debug(f"loading parser for: '{thing_uuid}'")
 
         pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
-        logger.debug(f"reading raw data file {source_uri}")
+        logger.debug(f"reading raw data file: '{source_uri}'")
         rawdata = self.read_file(bucket_name, filename)
 
-        logger.info("parsing rawdata ... ")
         file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
+        logger.info(f"parsing rawdata file: '{file}'")
+
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
                 df = parser.do_parse(rawdata, schema, thing_uuid)
                 obs = parser.to_observations(df, source_uri, parser_id)
-            except ParsingError as e:
+            except Exception as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
                 self.set_tags(bucket_name, filename, str(parser_id), "failed")
-                raise e
-            except Exception as e:
-                journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
-                self.set_tags(bucket_name, filename, str(parser_id), "failed")
-                raise UserInputError("Parsing failed") from e
+
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
                 journal.warning(f"{w.message}", thing_uuid)
