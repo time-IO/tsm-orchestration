@@ -62,6 +62,8 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
             if "parser_id" in tags:
                 if tags["parser_id"].isdigit():
                     parser = FileParser.from_id(tags["parser_id"], dsn)
+                elif tags["parser_id"] == "None":
+                    parser = thing.s3_store.file_parser
                 else:
                     continue
             else:
