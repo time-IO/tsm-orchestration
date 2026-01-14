@@ -5,7 +5,7 @@ import enum
 import logging
 import logging.config
 import os
-from typing import Any
+from typing import Any, Literal
 
 no_default = type("no_default", (), {})
 
@@ -15,6 +15,34 @@ class ObservationResultType(enum.IntEnum):
     String = 1
     Json = 2
     Bool = 3
+
+
+# todo: For python >= 3.11 use StrEnum
+# todo: For python >= 3.13 use EnumDict
+class ObservationResultFieldName:
+    ResultNumber = "result_number"
+    ResultString = "result_string"
+    ResultJson = "result_json"
+    ResultBool = "result_bool"
+
+
+def get_result_field_name(
+    result_type: ObservationResultType, errors: Literal["raise", "ignore"] = "ignore"
+) -> ObservationResultFieldName | None:
+    """Return the column name of the observation table, where the data
+    of a given type must be stored.
+
+    See also ->ObservationResultFieldName and ->ObservationResultType.
+    """
+    field_name = {
+        ObservationResultType.Number: ObservationResultFieldName.ResultNumber,
+        ObservationResultType.String: ObservationResultFieldName.ResultString,
+        ObservationResultType.Json: ObservationResultFieldName.ResultJson,
+        ObservationResultType.Bool: ObservationResultFieldName.ResultBool,
+    }.get(result_type, None)
+    if field_name is None and errors == "raise":
+        raise ValueError(f"Unknown Observation.ResultType {result_type}")
+    return field_name
 
 
 def get_envvar(name, default: Any = no_default, cast_to: type = None, cast_None=True):
@@ -50,7 +78,7 @@ def get_envvar_as_bool(
     If 'empty_is_False' is True:
         Same logic as above, but an empty string is considered False
 
-    The false_list not case-sensitive. (faLsE == FALSE = false)
+    The false_list is not case-sensitive. (faLsE == FALSE = false)
     """
     val = os.environ.get(name, None)
     if val is None:

@@ -19,6 +19,7 @@ from timeio.errors import (
     DataNotFoundError,
     ParsingError,
     NoDataWarning,
+    ProcessingError,
 )
 
 logger = logging.getLogger("mqtt-handler")
@@ -146,6 +147,16 @@ class AbstractHandler(ABC):
                 f"Content:\n{content!r}\n"
                 f"{traceback.format_exc()}"
                 f"======================== DATA ERROR ========================\n",
+            )
+            return
+
+        except ProcessingError:
+            logger.error(
+                f"\n=================== PROCESSING ERROR ========================\n"
+                f"Status: ERROR  (Processing failed)\n"
+                f"Content:\n{content!r}\n"
+                f"{traceback.format_exc()}"
+                f"===================== PROCESSING ERROR ========================\n",
             )
             return
 

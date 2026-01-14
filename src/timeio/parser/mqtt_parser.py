@@ -50,6 +50,7 @@ class MqttParser(AbcParser):
             if isinstance(ts := ob.timestamp, datetime):
                 ts = ts.isoformat()
             obpay: ObservationPayloadT = {
+                "result_type": -99999,  # dummy value
                 "result_time": str(ts),
                 "datastream_pos": str(ob.position),
                 "parameters": json.dumps(
@@ -59,15 +60,15 @@ class MqttParser(AbcParser):
                     }
                 ),
             }
-            if isinstance(ob.value, (float, int)):
+            if isinstance(ob.value, bool):
+                obpay["result_boolean"] = ob.value  # noqa
+                obpay["result_type"] = ObservationResultType.Bool
+            elif isinstance(ob.value, (float, int)):
                 obpay["result_number"] = ob.value
                 obpay["result_type"] = ObservationResultType.Number
             elif isinstance(ob.value, str):
                 obpay["result_string"] = ob.value
                 obpay["result_type"] = ObservationResultType.String
-            elif isinstance(ob.value, bool):
-                obpay["result_boolean"] = ob.value  # noqa
-                obpay["result_type"] = ObservationResultType.Bool
             elif isinstance(ob.value, dict):
                 obpay["result_json"] = json.dumps(ob.value)
                 obpay["result_type"] = ObservationResultType.Json

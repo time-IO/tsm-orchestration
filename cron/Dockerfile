@@ -5,6 +5,7 @@ FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
 
 ARG BUILD_DATE
 ARG VCS_REF
+ARG SUPERCRONIC_VERSION=0.2.33
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
@@ -22,7 +23,7 @@ COPY src/requirements.txt .
 COPY cron/supercronic-entrypoint.sh .
 COPY cron/supercronic-health.sh .
 
-RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.32/supercronic-linux-amd64 \
+RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-amd64 \
     && chmod 755 supercronic-linux-amd64 \
     && mv supercronic-linux-amd64 /usr/local/bin/supercronic \
     && chmod 755 /supercronic-entrypoint.sh \

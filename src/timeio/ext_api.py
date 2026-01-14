@@ -63,13 +63,13 @@ class BoschApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        password = decrypt(settings["password"], get_crypt_key())
         server_url = (
             f"{settings['endpoint']}/{settings['sensor_id']}/"
             f"{content['datetime_from']}/{content['datetime_to']}"
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
+        password = decrypt(settings["password"], get_crypt_key())
         headers = {
             "Authorization": f"{self.basic_auth(settings['username'], password)}",
             "Content-Type": "application/json",
@@ -150,7 +150,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 "location_id": entry.pop("locationId"),
                 "aggregation_time": "hourly",
             }
-            timestamp = entry.pop("timestamp")
+            timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
                 if value:
                     body = {
@@ -495,14 +495,14 @@ class DwdApiSyncer(ExtApiSyncer):
 class TtnApiSyncer(ExtApiSyncer):
     @staticmethod
     def dynamic_parameter_mapping(v):
-        if isinstance(v, (int, float)):
+        if isinstance(v, bool):
+            return 3
+        elif isinstance(v, (int, float)):
             return 0
         elif isinstance(v, str):
             return 1
         elif isinstance(v, dict):
             return 2
-        elif isinstance(v, bool):
-            return 3
         else:
             raise ExtApiRequestError(
                 f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
@@ -510,8 +510,10 @@ class TtnApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         url = settings["endpoint_uri"]
+        if urlparse(url).scheme != "https":
+            raise NoHttpsError(f"{url} is not https")
+        api_key_dec = decrypt(settings["api_key"], get_crypt_key())
         res = request_with_handling(
             "GET",
             url,

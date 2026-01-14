@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import randint
 
-from crontab import CronItem, CronTab
+from crontab import CronItem, CronTab, CronRange, CronSlices
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -15,6 +14,10 @@ from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("crontab-setup")
 journal = Journal("Cron")
+
+MINUTES_PER_HOUR = 60
+MINUTES_PER_DAY = 60 * 24
+MINUTES_PER_WEEK = 60 * 24 * 7
 
 
 class CreateThingInCrontabHandler(AbstractHandler):
@@ -37,13 +40,13 @@ class CreateThingInCrontabHandler(AbstractHandler):
             for job in crontab:
                 if self.job_belongs_to_thing(job, thing):
                     logger.info(f"Updating cronjob for thing {thing.name}")
-                    info = self.update_job(job, thing)
+                    info = self.apply_job(job, thing, is_new=False)
                     journal.info(f"Updated cronjob to sync {info}", thing.uuid)
                     return
             # if no job was found, create a new one
             job = crontab.new()
             logger.info(f"Creating job for thing {thing.name}")
-            info = self.make_job(job, thing)
+            info = self.apply_job(job, thing, is_new=True)
             if not info:
                 logger.warning(
                     "no Cronjob was created, because neither extAPI, "
@@ -54,64 +57,39 @@ class CreateThingInCrontabHandler(AbstractHandler):
             journal.info(f"Created cronjob to sync {info}", thing.uuid)
 
     @classmethod
-    def make_job(cls, job: CronItem, thing: Thing) -> str:
-        info = ""
+    def apply_job(cls, job: CronItem, thing: Thing, is_new: bool = True) -> str:
+        """Create or update a cron job for `thing`.
+        If `is_new` is True the schedule is generated with `get_schedule`,
+        otherwise it is adapted with `update_cron_expression`.
+        Returns info string (or empty if nothing to do).
+        """
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
         command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
-        if thing.ext_sftp is not None:
+        if thing.ext_sftp:
             interval = int(thing.ext_sftp.sync_interval)
-            schedule = cls.get_schedule(interval)
-            job.enable(enabled=thing.ext_sftp.sync_enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
-            info = f"sFTP {thing.ext_sftp.uri} @ {interval}m and schedule {schedule}"
-        if thing.ext_api is not None:
-            interval = int(thing.ext_api.sync_interval)
-            schedule = cls.get_schedule(interval)
-            job.enable(enabled=thing.ext_api.sync_enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
-            info = f"{thing.ext_api.api_type_name}-API @ {interval}m and schedule {schedule}"
-        return info
-
-    @classmethod
-    def update_job(cls, job: CronItem, thing: Thing) -> str:
-        info = ""
-        comment = cls.mk_comment(thing)
-        uuid = thing.uuid
-        script = "/scripts/mqtt_sync_wrapper.py"
-        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
-        current_interval = cls.get_current_interval(job)
-        if thing.ext_sftp is not None:
-            new_interval = int(thing.ext_sftp.sync_interval)
-            job.enable(enabled=thing.ext_sftp.enabled)
-            job.set_comment(comment, pre_comment=True)
-            # if the interval has changed we want to ensure consistent starting times with the previous one
-            if current_interval != new_interval:
-                schedule = cls.update_cron_expression(job, new_interval)
-            else:
-                schedule = str(job.slices)
-            job.setall(schedule)
-            job.set_command(command)
-            info = (
-                f"sFTP {thing.ext_sftp.uri} @ {new_interval}m and schedule {schedule}"
+            schedule = (
+                cls.new_schedule(interval)
+                if is_new
+                else cls.update_cron_expression(job, interval)
             )
-        elif thing.ext_api is not None:
-            new_interval = int(thing.ext_api.sync_interval)
-            # if the interval has changed we want to ensure consistent starting dates
-            if current_interval != new_interval:
-                schedule = cls.update_cron_expression(job, new_interval)
-            else:
-                schedule = str(job.slices)
+            job.enable(enabled=thing.ext_sftp.sync_enabled)
+            info = f"sFTP {thing.ext_sftp.uri} @ {interval}m and schedule {schedule}"
+        elif thing.ext_api:
+            interval = int(thing.ext_api.sync_interval)
+            schedule = (
+                cls.new_schedule(interval)
+                if is_new
+                else cls.update_cron_expression(job, interval)
+            )
             job.enable(enabled=thing.ext_api.enabled)
-            job.set_comment(comment, pre_comment=True)
-            job.setall(schedule)
-            job.set_command(command)
-            info = f"{thing.ext_api.api_type_name}-API @ {new_interval}m and schedule {schedule}"
+            info = f"{thing.ext_api.api_type_name}-API @ {interval}m and schedule {schedule}"
+        else:
+            return ""
+        job.set_comment(comment, pre_comment=True)
+        job.set_command(command)
+        job.setall(schedule)
         return info
 
     @staticmethod
@@ -125,58 +103,156 @@ class CreateThingInCrontabHandler(AbstractHandler):
         return f"{now_str} | {thing.project.name} | {thing.name} | {thing.uuid}"
 
     @staticmethod
-    def get_schedule(interval: int) -> str:
-        # set a random delay to avoid all jobs running at the same time
-        # maximum delay is the interval or 59, whichever is smaller
-        delay_m = randint(0, min(interval - 1, 59))
-        # interval is smaller than an hour
-        if interval < 60:
-            return f"{delay_m}-59/{interval} * * * *"
-        # interval is smaller than a day
-        elif interval < 1440:
-            delay_h = randint(0, min(interval // 60 - 1, 23))
-            return f"{delay_m} {delay_h}-23/{interval//60} * * *"
+    def new_base_minute(interval: int) -> int:
+        if interval == 0:
+            return 0
+        if 30 < interval < 60:
+            # If for example the interval is 40min, we need to ensure
+            # it can run twice an hour and therefor the start minute
+            # must be lower than 20.
+            return randint(0, 60 % interval - 1)
+        return randint(0, min(interval - 1, 59))
+
+    @staticmethod
+    def new_base_hour(interval: int) -> int:
+        if interval < MINUTES_PER_HOUR:
+            return 0
+        return randint(0, min(interval // MINUTES_PER_HOUR - 1, 23))
+
+    @staticmethod
+    def new_base_dom(interval: int) -> int:
+        if interval < 2 * MINUTES_PER_DAY:
+            return 1
+        return randint(1, min(interval // MINUTES_PER_DAY - 1, 28))
+
+    @classmethod
+    def new_schedule(cls, interval: int) -> str:
+        """Creates a new schedule with a random start point to avoid that
+        all jobs run at the same time.
+        """
+        interval = cls.adjust_interval(_orig := interval)
+        if _orig != interval:
+            logger.info(f"adjusted interval form {_orig} minutes to {interval} minutes")
+
+        start_m = cls.new_base_minute(interval)
+        if interval < MINUTES_PER_HOUR:
+            step_m = interval
+            return f"{start_m}-59/{step_m} * * * *"
+
+        start_h = cls.new_base_hour(interval)
+        if interval < MINUTES_PER_DAY:
+            start_h = cls.new_base_hour(interval)
+            step_h = interval // MINUTES_PER_HOUR
+            return f"{start_m} {start_h}-23/{step_h} * * *"
+
+        elif interval == MINUTES_PER_WEEK:
+            day_of_week = randint(0, 6)
+            return f"{start_m} {start_h} * * {day_of_week}"
+
+        # interval is larger than a day but not weekly
         else:
-            delay_h = randint(0, min(interval // 60 - 1, 23))
-            delay_wd = randint(0, min(interval // 1440 - 1, 6))
-            return f"{delay_m} {delay_h} * * {delay_wd}-6/{interval//1440}"
+            start_dom = cls.new_base_dom(interval)
+            step_day = interval // MINUTES_PER_DAY
+            return f"{start_m} {start_h} {start_dom}-31/{step_day} * *"
 
     @staticmethod
     def get_current_interval(job: CronItem) -> int:
         """Get interval in minutes from crontab.txt entry"""
-        schedule = job.schedule()
+        schedule = job.schedule(datetime(2020, 1, 1, 23, 59, 59))
+        # avoid to have one value in the last hour and one in the next,
+        # therefore we avoid schedule.get_prev()
         next_run = schedule.get_next()
-        prev_run = schedule.get_prev()
-        interval = next_run - prev_run
-        return int(interval.seconds / 60)
+        after_next_run = schedule.get_next()
+        return int((after_next_run - next_run).total_seconds() / 60)
 
     @staticmethod
-    def extract_base_minute(schedule: str) -> int:
-        """Extract the minute value from the cron expression. In the case
-        of multiple values, the first one is returned.
+    def adjust_interval(interval: int) -> int:
+        """Adjust the interval to a value we can process cleanly in a cron schedule."""
+        if interval == 0:
+            return 1
+
+        # We adjust the interval to proper divisor of 60.
+        if interval <= MINUTES_PER_HOUR:
+            divisors = [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60]
+            return max(d for d in divisors if d <= interval)
+
+        # We adjust the interval to an exact hourly value which
+        # also is a proper divisor of 24h (1,2,3,4,6,8,12,24).
+        elif interval <= MINUTES_PER_DAY:
+            divisors = [60, 120, 180, 240, 360, 480, 720, 1440]
+            return max(d for d in divisors if d <= interval)
+
+        # We adjust the interval to exactly a 7-day value if it's close.
+        elif MINUTES_PER_WEEK <= interval < MINUTES_PER_DAY * 8:
+            return MINUTES_PER_WEEK
+
+        # We adjust the interval to an exact daily value.
+        return (interval // MINUTES_PER_DAY) * MINUTES_PER_DAY
+
+    @staticmethod
+    def extract_base_minute(slices: str | CronSlices) -> int | None:
+        """Extract the minute value from the cron expression.
+        Returns the first numeric start value.
         """
-        minute_part = schedule.split()[0]
-        if "," in minute_part:
-            return int(minute_part.split(",")[0])
-        elif minute_part.isdigit():
-            return int(minute_part)
-        return 0
+        if isinstance(slices, str):
+            slices = CronSlices(slices)
+        # if we have a list of expressions like 1,2,4-59/5
+        # we extract the base minute only from the first one.
+        minutes = slices[0].parts[0]
+        if isinstance(minutes, int):
+            return minutes
+        assert isinstance(minutes, CronRange)
+        return minutes.vfrom
+
+    @staticmethod
+    def extract_base_hour(slices: str | CronSlices) -> int | None:
+        """Extract the hour value from the cron expression.
+        Returns the first numeric start value.
+        """
+        if isinstance(slices, str):
+            slices = CronSlices(slices)
+        # If we have a list of expressions like 1,2,4-23/5
+        # we extract the base hour only from the first one.
+        hour = slices[1].parts[0]
+        if isinstance(hour, int):
+            return hour
+        assert isinstance(hour, CronRange)
+        return hour.vfrom
 
     @classmethod
-    def update_cron_expression(cls, job, new_interval: int) -> str:
-        """Update cron while keeping the same base minute for consistency."""
-        base_minute = cls.extract_base_minute(str(job.slices))
-        if new_interval < 60:
-            minutes = sorted(
-                (base_minute + i * new_interval) % 60 for i in range(60 // new_interval)
-            )
-            return f"{','.join(map(str, minutes))} * * * *"
+    def update_cron_expression(cls, job, interval: int) -> str:
+        """Update cron while keeping the same base minute for consistency.
+        If the existing schedule already encodes the requested periodicity
+        (produced by `get_schedule`, e.g. contains '/{step}', range-with-step
+        or a matching comma-list for minutes), return the original string unchanged.
+        """
+        interval = cls.adjust_interval(_orig := interval)
+        if _orig != interval:
+            logger.info(f"adjusted interval form {_orig} minutes to {interval} minutes")
 
-        elif new_interval < 1440:
-            return f"{base_minute} */{new_interval // 60} * * *"
+        current_interval = cls.get_current_interval(job)
+        if current_interval == interval:
+            return str(job.slices)
 
-        else:
-            return f"{base_minute} 0 */{new_interval // 1440} * *"
+        base_minute = cls.extract_base_minute(job.slices)
+        base_hour = cls.extract_base_hour(job.slices)
+
+        if interval < MINUTES_PER_HOUR:
+            if base_minute >= interval:
+                base_minute = cls.new_base_minute(interval)
+            return f"{base_minute}-59/{interval} * * * *"
+
+        elif interval < MINUTES_PER_DAY:
+            hour_step = interval // 60
+            return f"{base_minute} */{hour_step} * * *"
+
+        elif interval == MINUTES_PER_WEEK:
+            dow = randint(0, 6)
+            return f"{base_minute} {base_hour} * * {dow}"
+
+        else:  # new_interval > DAY_MINUTES
+            day_step = interval // (60 * 24)
+            return f"{base_minute} {base_hour} */{day_step} * *"
 
 
 if __name__ == "__main__":

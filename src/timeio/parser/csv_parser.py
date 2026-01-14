@@ -5,7 +5,7 @@ import warnings
 import yaml
 import os
 import pytz
-from typing import TypeVar
+from typing import TypeVar, Any
 import pandas as pd
 import numpy as np
 from io import StringIO
@@ -74,6 +74,62 @@ class CsvParser(PandasParser):
                 ParsingWarning,
             )
 
+    @staticmethod
+    def _validate_settings(settings):
+        tz_info = settings.get("timezone", None)
+
+        if tz_info is not None and tz_info not in pytz.all_timezones:
+            raise ValueError(f"Invalid timezone string: {tz_info}")
+
+        return settings
+
+    @staticmethod
+    def _define_comment_regex(settings: dict[str, Any]) -> str:
+        comments = settings.pop("comment", "")
+        if not comments:
+            return ""
+        if isinstance(comments, str):
+            comments = [comments]
+        comments = [re.escape(c) for c in comments]
+        return "|".join(comments)
+
+    @staticmethod
+    def _apply_skipping(lines, skiprows, skipfooter):
+
+        if skiprows is None:
+            skiprows = []
+        if isinstance(skiprows, int):
+            skiprows = range(skiprows)
+        skiprows = set(skiprows)
+
+        lines = [line for i, line in enumerate(lines) if i not in skiprows]
+        return lines[: -skipfooter or None]
+
+    @staticmethod
+    def _handle_header(lines, settings, header_line, comment_regex):
+
+        if header_line is None:
+            return lines, None
+
+        raw_header = lines[header_line]
+        header_raw_clean = re.sub(comment_regex, "", raw_header).strip()
+        delimiter = settings.get("delimiter", ",")
+        header_names = pandafy_headerline(header_raw_clean, delimiter)
+
+        settings["names"] = header_names
+        settings["header"] = None
+        lines = lines[header_line + 1 :]
+
+        return lines, header_names
+
+    @staticmethod
+    def _filter_comments(lines: list[str], comment_regex: str) -> list[str]:
+        """Remove everything after a comment marker in each line"""
+        if not comment_regex:
+            return lines
+        regex = rf"({comment_regex}).*"
+        return [re.sub(regex, "", line.strip()) for line in lines]
+
     def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
         """
         Parse rawdata string to pandas.DataFrame
@@ -81,46 +137,35 @@ class CsvParser(PandasParser):
         NOTE:
             we need to preserve the original column numbering
         """
-        settings = self.settings.copy()
+        settings = self._validate_settings(self.settings.copy())
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
+        skiprows = settings.pop("skiprows", 0)
+        skipfooter = settings.pop("skipfooter", 0)
         custom_names = settings.pop("names", None)
-        delimiter = settings.get("delimiter", ",")
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
-        if header_line is not None:
-            header_raw = get_header(rawdata, header_line)
-            self.logger.debug(f"HEADER: {header_raw}")
-        if tz_info is not None:
-            if tz_info not in pytz.all_timezones:
-                raise ValueError(f"Invalid timezone string: {tz_info}")
 
-        if comment_regex := settings.pop("comment", r"(?!.*)"):
-            if isinstance(comment_regex, str):
-                comment_regex = (comment_regex,)
-            comment_regex = "|".join(comment_regex)
+        comment_regex = self._define_comment_regex(settings)
 
-        rows = []
-        for i, row in enumerate(rawdata.splitlines()):
-            if i == header_line:
-                # we might have comments at the header line as well
-                header_raw_clean = re.sub(comment_regex, "", row).strip()
-                header_names = pandafy_headerline(header_raw_clean, delimiter)
-                settings["names"] = header_names
-                settings["header"] = None
-                continue
-            if re.match(comment_regex, row.strip()):
-                continue
-            rows.append(row)
-        rawdata = "\n".join(rows)
+        lines = rawdata.splitlines()
+        lines = self._apply_skipping(lines, skiprows, skipfooter)
+        lines, header_names = self._handle_header(
+            lines, settings, header_line, comment_regex
+        )
+        lines = self._filter_comments(lines, comment_regex)
+
+        rawdata = "\n".join(lines)
 
         try:
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
+        except Exception as e:
+            raise ParsingError("Parsing failed") from e
 
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))

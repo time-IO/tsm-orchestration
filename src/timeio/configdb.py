@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+from uuid import uuid5, NAMESPACE_DNS
 from typing import Any, Literal, Sequence, cast, Optional
 
 from psycopg import Connection, sql
@@ -282,8 +283,8 @@ def upsert_table_file_parser(conn: Connection, values: dict, fp_id: int | None) 
     id_ = _upsert(
         conn,
         table="file_parser",
-        columns=["file_parser_type_id", "name", "params"],
-        values=[type_id, v.pop("name"), v.pop("settings")],
+        columns=["file_parser_type_id", "name", "params", "uuid"],
+        values=[type_id, v.pop("name"), v.pop("settings"), v.pop("uuid")],
         id=fp_id,
     )
     maybe_inform_unused_keys(v)
@@ -437,7 +438,7 @@ def upsert_table_thing(
     api_id: int,
     thing_id: int | None,
     description: str,
-    qid: int,
+    qid: int | None,
 ) -> int:
     id_ = _upsert(
         conn,
@@ -478,7 +479,7 @@ def store_project_config(conn: Connection, data: dict):
     return pid
 
 
-def store_thing_config(conn: Connection, data: dict, qid: int, proj_id: int):
+def store_thing_config(conn: Connection, data: dict, qid: int | None, proj_id: int):
     # version: 4,
     # uuid: <str/uuid>
     # name: <str>
@@ -497,38 +498,45 @@ def store_thing_config(conn: Connection, data: dict, qid: int, proj_id: int):
     # external_api: {...}
     uuid = data["uuid"]
     name = data["name"]
+    proj_uuid = data["project"]["uuid"]
     schema = data["database"]["schema"]
     upsert_schema_thing_mapping(conn, uuid, schema)
     ids = fetch_thing_related_ids(conn, uuid)
 
-    mqtt: dict = data["mqtt"]
-    mqtt["mqtt_device_type"] = data["mqtt_device_type"]
-    mqtt_id = upsert_table_mqtt(conn, mqtt, ids["mqtt_id"])
+    ingest_type = data["ingest_type"].lower()
+    ingest_type_id = fetch_ingest_type_id(conn, ingest_type)
+
+    mqtt_id = None
+    if mqtt := data["mqtt"]:
+        mqtt_id = upsert_table_mqtt(conn, mqtt, ids["mqtt_id"])
 
     sftp_id = None
-    if data["external_sftp"]["uri"] is not None:
-        sftp_id = upsert_table_ext_sftp(conn, data["external_sftp"], ids["ext_sftp_id"])
+    if ext_sftp := data["external_sftp"]:
+        sftp_id = upsert_table_ext_sftp(conn, ext_sftp, ids["ext_sftp_id"])
 
     api_id = None
-    if data["external_api"]["type"]:
-        api_id = upsert_table_ext_api(conn, data["external_api"], ids["ext_api_id"])
+    if ext_api := data["external_api"]:
+        api_id = upsert_table_ext_api(conn, ext_api, ids["ext_api_id"])
 
-    ingest_type = data["ingest_type"].lower()
-    s3_id = None
-    if ingest_type in ["sftp", "extsftp"]:
-        idx = data["parsers"]["default"]
-        parser = data["parsers"]["parsers"][idx]
+    parser_id = None
+    if parsers := data["parsers"]:
+        idx = parsers["default"]
+        parser = parsers["parsers"][idx]
+        uuid_base = f"{parser['name']}{proj_uuid}"
+        parser_uuid = uuid5(NAMESPACE_DNS, uuid_base)
+        parser["uuid"] = parser_uuid
         parser_id = upsert_table_file_parser(conn, parser, ids["file_parser_id"])
-        s3_id = upsert_table_s3_store(
-            conn, data["raw_data_storage"], parser_id, ids["s3_store_id"]
-        )
+
+    s3_id = None
+    if s3 := data["raw_data_storage"]:
+        s3_id = upsert_table_s3_store(conn, s3, parser_id, ids["s3_store_id"])
 
     upsert_table_thing(
         conn,
         uuid,
         name,
         proj_id,
-        fetch_ingest_type_id(conn, ingest_type),
+        ingest_type_id,
         s3_id,
         mqtt_id,
         sftp_id,
