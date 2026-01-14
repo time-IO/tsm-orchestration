@@ -290,7 +290,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
             os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
             os.path.join(base_path, "feature.sql"),
-            os.path.join(base_path, "observation.sql")
+            os.path.join(base_path, "observation.sql"),
         ]
 
         schema = thing.database.schema.lower()
