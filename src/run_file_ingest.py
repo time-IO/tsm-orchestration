@@ -69,11 +69,9 @@ class ParserJobHandler(AbstractHandler):
         tags = self.get_parser_tags(bucket_name, filename)
         if tags is not None:
             parser_uuid = tags["parser_id"]
-            parser_id = FileParser.from_uuid(parser_uuid, dsn=self.configdb_dsn).id
             logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
         else:
             parser_uuid = file_parser.uuid
-            parser_id = thing.s3_store.file_parser_id
             logger.info(f"No parser file tag found, using default parser {parser_uuid}")
 
         source_uri = f"{bucket_name}/{filename}"
@@ -92,7 +90,7 @@ class ParserJobHandler(AbstractHandler):
             warnings.simplefilter("always", ParsingWarning)
             try:
                 df = parser.do_parse(rawdata, schema, thing_uuid)
-                obs = parser.to_observations(df, source_uri, parser_id)
+                obs = parser.to_observations(df, source_uri, str(parser_uuid))
             except ParsingError as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
@@ -174,7 +172,7 @@ class ParserJobHandler(AbstractHandler):
         self,
         bucket_name,
         filename,
-        parser_id,
+        parser_uuid,
         parsing_status,
     ):
         # Reparsing won't create a new object version, so we need to
@@ -188,7 +186,7 @@ class ParserJobHandler(AbstractHandler):
             object_tags = Tags.new_object_tags()
 
         object_tags["parsed_at"] = datetime.now(tz=timezone.utc).isoformat()
-        object_tags["parser_id"] = parser_id
+        object_tags["parser_id"] = parser_uuid
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
