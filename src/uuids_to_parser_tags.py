@@ -64,7 +64,7 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
                     parser = FileParser.from_id(tags["parser_id"], dsn)
                 elif tags["parser_id"] == "None":
                     parser = thing.s3_store.file_parser
-                else:
+                else:  # we already have a uuid
                     continue
             else:
                 parser = thing.s3_store.file_parser
@@ -75,7 +75,7 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
             )
 
             logging.info(
-                f"Set 'parser_id' tag for {bucket_name}/{v.object_name} (version {v.version_id}) to {parser.uuid}"
+                f"set 'parser_id' tag for {bucket_name}/{v.object_name} (version {v.version_id}) to {parser.uuid}"
             )
 
         except Exception:
