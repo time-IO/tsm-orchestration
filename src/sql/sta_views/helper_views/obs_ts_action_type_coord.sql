@@ -4,12 +4,12 @@ CREATE OR REPLACE VIEW obs_ts_action_type_coord AS
 
 WITH static_data AS (
     SELECT
-        FALSE AS is_dynamic,
         sla.id  AS action_id,
+        FALSE AS is_dynamic,
         o.datastream_id,
         sla.begin_date,
         o.result_time,
-        o.id    AS o_id,
+        o.id AS o_id,
         o.result_boolean,
         o.result_quality,
         o.result_string,
@@ -50,7 +50,7 @@ WITH static_data AS (
 xyzDatastream AS MATERIALIZED (
     SELECT DISTINCT
         dma.configuration_id,
-        dla.id as dla_id,
+        dla.id AS dla_id,
         dsl_main.datastream_id AS main_datastream_id,
         dsl_x.datastream_id AS x_datastream_id,
         dsl_y.datastream_id AS y_datastream_id,
@@ -74,8 +74,8 @@ xyzDatastream AS MATERIALIZED (
 
 dynamic_data AS(
     SELECT
-        TRUE AS is_dynamic,
         dla.id AS action_id,
+        TRUE AS is_dynamic,
         o.datastream_id,
         dla.begin_date,
         o.result_time,

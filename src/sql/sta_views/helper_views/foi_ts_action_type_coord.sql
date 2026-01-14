@@ -26,8 +26,7 @@ WITH static_coords AS (
             AND dsl.datasource_id = '{tsm_schema}'
 ),
 
-xyzDatastream AS MATERIALIZED
-    (
+xyzDatastream AS MATERIALIZED (
     SELECT DISTINCT
         dma.configuration_id,
         dla.id as dla_id,
@@ -50,7 +49,7 @@ FROM sms_configuration_dynamic_location_begin_action dla
 
 dynamic_coords AS (
     SELECT
-        dla.id AS is_dynamic,
+        dla.id AS action_id,
         TRUE AS is_dynamic,
         o.datastream_id,
         dla.begin_date,
