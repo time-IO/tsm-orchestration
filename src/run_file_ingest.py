@@ -80,7 +80,7 @@ class ParserJobHandler(AbstractHandler):
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
         logger.debug(f"reading raw data file: '{source_uri}'")
-        encoding = pobj.params.get("encoding", "utf-8")
+        encoding = pobj.params.pop("encoding", "utf-8")
         rawdata = self.read_file(bucket_name, filename, encoding)
 
         file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
