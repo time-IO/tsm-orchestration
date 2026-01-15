@@ -205,9 +205,7 @@ class ParserJobHandler(AbstractHandler):
         try:
             codecs.lookup(encoding)
         except LookupError:
-            raise ValueError(
-                f"Invalid encoding '{encoding}'."
-            )
+            raise ValueError(f"Invalid encoding '{encoding}'.")
 
 
 if __name__ == "__main__":
