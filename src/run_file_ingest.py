@@ -186,7 +186,7 @@ class ParserJobHandler(AbstractHandler):
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
-    def read_file(self, bucket_name, object_name, encoding="utf-8") -> str:
+    def read_file(self, bucket_name, object_name, encoding) -> str:
         stat = self.minio.stat_object(bucket_name, object_name)
         if stat.size > _FILE_MAX_SIZE:
             raise IOError("Maximum filesize of 256M exceeded")
