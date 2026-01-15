@@ -398,3 +398,33 @@ def test_skipping_and_comments_without_header(settings):
     assert df.shape == (3, 3)
     assert df.index.equals(expected_index)
     assert list(df.columns) == expected_col_names
+
+
+RAWDATA_SKIP_ROWS = """Skipline_0
+datetime,val1,val2,val3
+Skipline_2
+Skiptline_3
+2025-01-01 00:00:00,1,2,3
+2025-01-01 00:10:00,1,2,3
+2025-01-01 00:20:00,1,2,3
+"""
+
+
+def test_skiprows():
+    settings = {
+        "delimiter": ",",
+        "decimal": ".",
+        "header": 0,
+        "skiprows": [0, 2, 3],
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser({**settings})
+    df = parser.do_parse(RAWDATA_SKIP_ROWS, "project", "thing")
+    expected_index = pd.DatetimeIndex(
+        ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
+        name="datetime",
+    )
+    expected_col_names = ["val1", "val2", "val3"]
+    assert df.shape == (3, 3)
+    assert df.index.equals(expected_index)
+    assert list(df.columns) == expected_col_names

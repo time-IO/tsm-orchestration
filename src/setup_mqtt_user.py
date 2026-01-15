@@ -11,6 +11,7 @@ from timeio.databases import ReentrantConnection
 from timeio.common import get_envvar, setup_logging
 from timeio.journaling import Journal
 from timeio.typehints import MqttPayload
+from timeio.databases import Database
 
 logger = logging.getLogger("mqtt-user-setup")
 journal = Journal("System")
@@ -27,8 +28,7 @@ class CreateMqttUserHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.db_conn = ReentrantConnection(get_envvar("DATABASE_URL"))
-        self.db = self.db_conn.connect()
+        self.db = Database(get_envvar("DATABASE_URL"))
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
@@ -58,8 +58,8 @@ class CreateMqttUserHandler(AbstractHandler):
             " db_schema = EXCLUDED.db_schema "
             "RETURNING (xmax = 0)"
         )
-        with self.db:
-            with self.db.cursor() as c:
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
                 c.execute(
                     sql,
                     (

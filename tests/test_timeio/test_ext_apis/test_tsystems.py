@@ -76,14 +76,14 @@ def test_tsytsems_do_parse():
         {
             "deviceId": "device_id",
             "locationId": "location_id",
-            "timestamp": 1730548000,
+            "sendTimestamp": 1730548000,
             "param1": 1,
             "param2": 2,
         },
         {
             "deviceId": "device_id",
             "locationId": "location_id",
-            "timestamp": 1730448000,
+            "sendTimestamp": 1730448000,
             "param1": 3,
             "param2": 2,
         },

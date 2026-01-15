@@ -95,10 +95,19 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _apply_skipping(lines, skiprows, skipfooter):
-        return lines[skiprows : -skipfooter or None]
+
+        if skiprows is None:
+            skiprows = []
+        if isinstance(skiprows, int):
+            skiprows = range(skiprows)
+        skiprows = set(skiprows)
+
+        lines = [line for i, line in enumerate(lines) if i not in skiprows]
+        return lines[: -skipfooter or None]
 
     @staticmethod
     def _handle_header(lines, settings, header_line, comment_regex):
+
         if header_line is None:
             return lines, None
 
@@ -155,6 +164,8 @@ class CsvParser(PandasParser):
             df = pd.read_csv(StringIO(rawdata), **settings)
         except (pd.errors.EmptyDataError, IndexError):  # both indicate no data
             df = pd.DataFrame()
+        except Exception as e:
+            raise ParsingError("Parsing failed") from e
 
         if df.empty:
             return pd.DataFrame(index=pd.DatetimeIndex([]))
