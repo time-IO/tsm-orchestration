@@ -734,6 +734,8 @@ services:
     depends_on:
       mqtt-broker:
         condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
@@ -761,7 +763,7 @@ services:
       CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py"]
+    entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "all"]
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
