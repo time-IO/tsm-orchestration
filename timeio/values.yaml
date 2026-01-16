@@ -2,6 +2,11 @@
 # bitnami postgresql helm chart is used,
 # ENVVARs and SECRETS defined further below can not be used here
 database:
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: "latest"
+    pullPolicy: IfNotPresent
   enabled: true
   fullnameOverride: "database"
   global:
@@ -233,3 +238,66 @@ global:
     TSM_DL_ENVIRONMENT: "staging"
     SAQC_VERSION: "v2.6.0"
     THING_MANAGEMENT_ENVIRONMENT: "production"
+
+
+# Here we can enable/disable certain deployments/statefulsets
+
+keycloak:
+  enabled: true
+
+thing-management-api:
+  enabled: true
+
+thing-management-frontend:
+  enabled: true
+
+tsmdl:
+  enabled: true
+
+frost:
+  enabled: true
+
+cron-scheduler:
+  enabled: true
+
+visualization:
+  enabled: true
+
+object-storage:
+  enabled: true
+
+worker-db-setup:
+  enabled: true
+
+worker-configdb-updater:
+  enabled: true
+
+worker-file-ingest:
+  enabled: true
+
+worker-grafana-dashboard:
+  enabled: true
+
+worker-grafana-user-orgs:
+  enabled: true
+
+worker-mqtt-ingest:
+  enabled: true
+
+worker-mqtt-user-creation:
+  enabled: true
+
+worker-object-storage-setup:
+  enabled: true
+
+worker-run-qaqc:
+  enabled: true
+
+worker-sync-extapis:
+  enabled: true
+
+worker-sync-extsftp:
+  enabled: true
+
+worker-sync-sms:
+  enabled: true

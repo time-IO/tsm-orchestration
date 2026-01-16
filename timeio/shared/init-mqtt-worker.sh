@@ -10,10 +10,16 @@ MQTT_TEST_TOPIC=${MQTT_TEST_TOPIC:-"test"}
 echo $(env | grep MQTT)
 
 echo "MQTT_BROKER: ${MQTT_BROKER:-'mqtt-broker:1883'}"
-MQTT_HOST=$(echo "$MQTT_BROKER" | cut -d':' -f1)
+
+# Remove protocol prefix if present (tcp://, mqtts://, mqtt://)
+MQTT_BROKER_CLEAN=$(echo "$MQTT_BROKER" | sed 's|^[a-z]*://||')
+
+MQTT_HOST=$(echo "$MQTT_BROKER_CLEAN" | cut -d':' -f1)
 echo "MQTT_HOST: ${MQTT_HOST}"
-MQTT_PORT=$(echo "$MQTT_BROKER" | cut -d':' -f2)
+
+MQTT_PORT=$(echo "$MQTT_BROKER_CLEAN" | cut -d':' -f2)
 echo "MQTT_PORT: ${MQTT_PORT}"
+
 echo "MQTT_TEST_TOPIC: ${MQTT_TEST_TOPIC:-test}"
 echo "MQTT_USER: ${MQTT_USER:-not set}"
 echo "MQTT_PASSWORD: ${MQTT_PASSWORD:-not set}"
