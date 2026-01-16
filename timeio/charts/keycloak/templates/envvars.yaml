@@ -15,6 +15,7 @@ data:
   MQTT_BROKER: "tcp://mosquitto:1883"
   MQTT_TOPIC: "userinfo_keycloak"
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
+  MQTT_CLIENT_ID: keycloak
   KC_LOG_LEVEL: "{{ .Values.global.envvars.KC_LOG_LEVEL }}"
   KC_PROXY: "edge"
   KEYCLOAK_GENERIC_OIDC_ALIAS: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_ALIAS }}"

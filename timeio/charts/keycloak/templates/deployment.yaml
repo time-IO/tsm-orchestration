@@ -25,6 +25,18 @@ spec:
         checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
+      initContainers:
+      - name: "mqtt-connection-check"
+        image: "eclipse-mosquitto:2.0"
+        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+        volumeMounts:
+          - name: init-mqtt-worker
+            mountPath: /tmp/init-mqtt-worker
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.name }}-envvars
+        - secretRef:
+            name: {{ $secretName }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -56,4 +68,7 @@ spec:
         - name: {{ .Values.name }}-init
           configMap:
             name: {{ .Values.name }}-init
+        - name: init-mqtt-worker
+          configMap:
+            name: init-mqtt-worker
 {{- end }}
