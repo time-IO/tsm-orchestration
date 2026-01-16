@@ -4,7 +4,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
   TOPIC: "configdb_update"
   MQTT_BROKER: "mosquitto:1883"
   MQTT_CLIENT_ID: "db-setup"

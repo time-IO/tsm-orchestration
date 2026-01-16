@@ -4,12 +4,12 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
   TOPIC: "sync_ext_sftp"
   MQTT_BROKER: "mosquitto:1883"
   MQTT_CLIENT_ID: "sync-extsftp"
-  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
-  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
   MINIO_URL: "{{ .Values.global.envvars.MINIO_HOST }}"

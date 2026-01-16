@@ -4,11 +4,11 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
   TOPIC: "configdb_update"
   MQTT_BROKER: "mosquitto:1883"
   MQTT_CLIENT_ID: "grafana-dashboard"
-  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
   GRAFANA_URL: "{{  .Values.global.envvars.GRAFANA_URL }}"
   GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "{{  .Values.global.envvars.GRAFANA_DEFAULT_DATASOURCE_SSLMODE }}"
