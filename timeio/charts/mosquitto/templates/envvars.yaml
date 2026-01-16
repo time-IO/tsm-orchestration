@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  MQTT_AUTH_POSTGRES_HOST: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_HOST }}"
-  MQTT_AUTH_POSTGRES_PORT: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_PORT }}"
-  MQTT_AUTH_POSTGRES_DB: "{{  .Values.global.envvars.MQTT_AUTH_POSTGRES_DB }}"
-  MQTT_AUTH_PG_TLSMODE: "{{  .Values.global.envvars.MQTT_AUTH_PG_TLSMODE }}"
+  MQTT_AUTH_POSTGRES_HOST: "{{ .Values.global.envvars.MQTT_AUTH_POSTGRES_HOST }}"
+  MQTT_AUTH_POSTGRES_PORT: "{{ .Values.global.envvars.MQTT_AUTH_POSTGRES_PORT }}"
+  MQTT_AUTH_POSTGRES_DB: "{{ .Values.global.envvars.MQTT_AUTH_POSTGRES_DB }}"
+  MQTT_AUTH_PG_TLSMODE: "{{ .Values.global.envvars.MQTT_AUTH_PG_TLSMODE }}"

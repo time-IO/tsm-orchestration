@@ -4,12 +4,12 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
   TOPIC: "data_parsed"
   MQTT_BROKER: "mosquitto:1883"
   MQTT_CLIENT_ID: "run-qaqc"
-  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
-  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
   TOPIC_QC_DONE: "qaqc_done"
   TOPIC_QC_DONE_QOS: "1"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"

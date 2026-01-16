@@ -4,12 +4,12 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  SETUP_SERVICE: "{{  .Values.global.envvars.CRON_SETUP_SERVICE }}"
-  CREATEDB_POSTGRES_HOST: "{{  .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
-  CREATEDB_POSTGRES_DATABASE: "{{  .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
-  SMS_ACCESS_TYPE: "{{  .Values.global.envvars.SMS_ACCESS_TYPE }}"
-  SMS_API_URL: "{{  .Values.global.envvars.SMS_URL }}backend/api/v1/"
-  CV_ACCESS_TYPE: "{{  .Values.global.envvars.CV_ACCESS_TYPE }}"
+  SETUP_SERVICE: "{{ .Values.global.envvars.CRON_SETUP_SERVICE }}"
+  CREATEDB_POSTGRES_HOST: "{{ .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
+  CREATEDB_POSTGRES_DATABASE: "{{ .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
+  SMS_ACCESS_TYPE: "{{ .Values.global.envvars.SMS_ACCESS_TYPE }}"
+  SMS_API_URL: "{{ .Values.global.envvars.SMS_URL }}backend/api/v1/"
+  CV_ACCESS_TYPE: "{{ .Values.global.envvars.CV_ACCESS_TYPE }}"
   CV_API_URL: "{{  .Values.global.envvars.CV_API_URL }}api/v1/"
   LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
   MINIO_URL: "{{  .Values.global.envvars.MINIO_HOST }}"
