@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -14,3 +15,4 @@ data:
   OIDC_CONF_URL: "http://keycloak:8081/keycloak/realms/timeio/.well-known/openid-configuration"
   OIDC_ALLOWED_ISSUERS: '["http://keycloak:8081/keycloak/realms/timeio", "http://localhost/keycloak/realms/timeio", "{{ .Values.global.ingress.url }}/keycloak/realms/timeio"]'
   OIDC_ALLOWED_AUDIENCES: '["account"]'
+{{- end }}
