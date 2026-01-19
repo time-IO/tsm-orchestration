@@ -3,6 +3,7 @@ from __future__ import annotations
 import fnmatch
 import json
 import logging
+import codecs
 from datetime import datetime, timezone
 import warnings
 
@@ -76,16 +77,18 @@ class ParserJobHandler(AbstractHandler):
 
         source_uri = f"{bucket_name}/{filename}"
 
-        logger.debug(f"loading parser for {thing_uuid}")
+        logger.debug(f"loading parser for: '{thing_uuid}'")
 
         pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
-        logger.debug(f"reading raw data file {source_uri}")
-        rawdata = self.read_file(bucket_name, filename)
+        logger.debug(f"reading raw data file: '{source_uri}'")
+        encoding = pobj.params.pop("encoding", "utf-8")
+        rawdata = self.read_file(bucket_name, filename, encoding)
 
-        logger.info("parsing rawdata ... ")
         file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
+        logger.info(f"parsing rawdata file: '{file}'")
+
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
@@ -190,18 +193,26 @@ class ParserJobHandler(AbstractHandler):
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
-    def read_file(self, bucket_name, object_name) -> str:
+    def read_file(self, bucket_name, object_name, encoding) -> str:
         stat = self.minio.stat_object(bucket_name, object_name)
         if stat.size > _FILE_MAX_SIZE:
             raise IOError("Maximum filesize of 256M exceeded")
+        self.is_valid_encoding(encoding)
         rawdata = (
             self.minio.get_object(bucket_name, object_name)
             .read()
-            .decode()
+            .decode(encoding)
             # remove the ASCII control character ETX (end-of-text)
             .rstrip("\x03")
         )
         return rawdata
+
+    @staticmethod
+    def is_valid_encoding(encoding: str):
+        try:
+            codecs.lookup(encoding)
+        except LookupError:
+            raise ValueError(f"Invalid encoding '{encoding}'.")
 
 
 if __name__ == "__main__":
