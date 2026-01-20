@@ -15,6 +15,10 @@ __all__ = [
     "collect_tests",
 ]
 
+import logging
+
+logger = logging.getLogger("run-quality-control")
+
 
 def collect_params(test: feta.QAQCTest):
     params = []
@@ -32,24 +36,72 @@ def collect_params(test: feta.QAQCTest):
     return params
 
 
-def collect_tests(conf: feta.QAQC) -> list[QcTest]:
+def filter_thing_funcs(funcs: list[QcTest], thing_id: int) -> list[QcTest]:
+    out = []
+    for func in funcs:
+        if int(thing_id) in (int(f.thing_id) for f in func.fields):
+            out.append(func)
+    return out
+
+
+def collect_tests_to_execute(all_funcs, selected_funcs):
+
+    to_check = []
+    for func in selected_funcs:
+        for target in func.targets:
+            to_check.append(target)
+
+    # build up the function look up table
+    lut = {}
+    for func in all_funcs:
+        for field in func.fields:
+            lut[field] = func
+
+    seen = set(selected_funcs)
+
+    # NOTE:
+    # we explicitly allow cyclic dependencies, they are resolved in definition order
+    # in a setting like
+    # func1(field=x, target=y)
+    # func2(field=y, target=x)
+    # we allow func1 to write y and func2 to overwrite x
+    for target in to_check:
+        if target in lut:
+            func = lut[target]
+            to_check.append(func)
+            if func not in seen:
+                selected_funcs.append(func)
+
+    return selected_funcs
+
+
+def collect_tests(conf: feta.QAQC, thing: feta.Thing) -> list[QcTest]:
     context_window = conf.context_window
-    tests = []
-    for i, test in enumerate(conf.get_tests(), start=1):  # type: int, feta.QAQCTest
-        try:
-            params = collect_params(test)
-            qctest = QcTest(
-                name=test.name,
-                func_name=test.function,
-                params=params,
-                context_window=context_window,
-                qctool="saqc",
-            )
-        except Exception as e:
-            e.add_note(f"Qc test {i} ({test})")
-            e.add_note(f"Config {conf}")
-            raise e
 
-        tests.append(qctest)
+    logging.info(f"THING: {thing}")
 
-    return tests
+    def collect_all_funcs(funcs):
+        out = []
+        for i, func in enumerate(funcs, start=1):
+            try:
+                params = collect_params(func)
+                qctest = QcTest(
+                    name=func.name,
+                    func_name=func.function,
+                    params=params,
+                    context_window=context_window,
+                    qctool="saqc",
+                )
+            except Exception as e:
+                e.add_note(f"Qc test {i} ({func})")
+                e.add_note(f"Config {conf}")
+                raise e
+            out.append(qctest)
+        return out
+
+    all_funcs = collect_all_funcs(conf.get_tests())
+    thing_funcs = filter_thing_funcs(all_funcs, thing.id)
+    funcs_to_process = collect_tests_to_execute(all_funcs, thing_funcs)
+    breakpoint()
+
+    return funcs_to_process

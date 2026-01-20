@@ -89,7 +89,7 @@ class QcTest:
         func_name,
         params: list[Param],
         context_window: str | int,
-        qctool: str | QcTool,
+        qctool: str | QcTool = "saqc",
     ):
         self.name = name or "Unnamed QcTest"
         if isinstance(qctool, str):
@@ -99,11 +99,18 @@ class QcTest:
         self.func_name: str = func_name
         self.context_window: WindowT = parse_context_window(context_window)
         self.streams = [p for p in params if isinstance(p, StreamInfo)]
+        self.fields: list[Param] = []
+        self.targets: list[Param] = []
 
         self.params = {}
         for p in params:
             try:
-                self.params[p.key] = p.parse()
+                k, v = p.key, p.parse()
+                self.params[k] = v
+                if k == "field":
+                    self.fields.append(p)
+                if k == "target":
+                    self.targets.append(p)
             except Exception as e:
                 raise ParsingError(f"Parameter: {p}") from e
 
@@ -111,7 +118,7 @@ class QcTest:
         self.result: QcResult | None = None
 
     def __repr__(self):
-        return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
+        return f"QcTest({self.name}, fields={self.fields}, targets={self.targets}, func={self.func_name}, params={self.params})"
 
     def load_data(
         self,

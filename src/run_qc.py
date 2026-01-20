@@ -7,7 +7,6 @@ import logging
 
 import pandas as pd
 from paho.mqtt.client import MQTTMessage
-from psycopg import Connection
 
 from timeio import feta
 from timeio.common import get_envvar, setup_logging
@@ -115,7 +114,8 @@ class QcHandler(AbstractHandler):
 
             sm = StreamManager(conn)
             try:
-                tests = collect_tests(config)
+                tests = collect_tests(config, thing)
+                logger.info(f"COLLECTED TESTS: {tests}")
 
                 if start_date := content.get("start_date", None):
                     start_date = pd.Timestamp(start_date)

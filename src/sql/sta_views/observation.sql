@@ -16,6 +16,7 @@ SELECT
     o.result_time AS "RESULT_TIME",
     o.result_number AS "RESULT_NUMBER",
     o.valid_time_start AS "VALID_TIME_START",
+    NULL AS "MULTI_DATASTREAM_ID",
     jsonb_build_object(
         '@context', public.get_schema_org_context(),
         'jsonld.type', 'ObservationProperties',
