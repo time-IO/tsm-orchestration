@@ -4,7 +4,6 @@ import logging
 from typing import Any
 from grafana_client.client import GrafanaException
 
-
 logger = logging.getLogger("timeio-grafana-api")
 
 
