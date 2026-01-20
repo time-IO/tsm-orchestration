@@ -14,7 +14,7 @@ from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
 from timeio.errors import UserInputError, ParsingError, ParsingWarning
-from timeio.feta import Thing
+from timeio.feta import Thing, FileParser
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
@@ -59,6 +59,9 @@ class ParserJobHandler(AbstractHandler):
 
         thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
+        file_parser = FileParser.from_id(
+            thing.s3_store.file_parser_id, dsn=self.configdb_dsn
+        )
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
         if not fnmatch.fnmatch(filename, pattern):
@@ -66,11 +69,11 @@ class ParserJobHandler(AbstractHandler):
             return
         tags = self.get_parser_tags(bucket_name, filename)
         if tags is not None:
-            parser_id = int(tags["parser_id"])
-            logger.info(f"Re-parsing file with parser from file tag {parser_id}")
+            parser_uuid = tags["parser_id"]
+            logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
         else:
-            parser_id = thing.s3_store.file_parser_id
-            logger.info(f"No parser file tag found, using default parser {parser_id=}")
+            parser_uuid = file_parser.uuid
+            logger.info(f"No parser file tag found, using default parser {parser_uuid}")
 
         source_uri = f"{bucket_name}/{filename}"
 
@@ -90,13 +93,17 @@ class ParserJobHandler(AbstractHandler):
             warnings.simplefilter("always", ParsingWarning)
             try:
                 df = parser.do_parse(rawdata, schema, thing_uuid)
-                obs = parser.to_observations(df, source_uri, parser_id)
-            except Exception as e:
+                obs = parser.to_observations(df, source_uri, str(parser_uuid))
+            except ParsingError as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
                 )
-                self.set_tags(bucket_name, filename, str(parser_id), "failed")
-
+                self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
+                raise e
+            except Exception as e:
+                journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
+                self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
+                raise UserInputError("Parsing failed") from e
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
                 journal.warning(f"{w.message}", thing_uuid)
@@ -116,7 +123,7 @@ class ParserJobHandler(AbstractHandler):
                 f"in database failed. File: {file!r}",
                 thing_uuid,
             )
-            self.set_tags(bucket_name, filename, str(parser_id), "db_insert_failed")
+            self.set_tags(bucket_name, filename, str(parser_uuid), "db_insert_failed")
             raise e
 
         if len(obs) > 0:
@@ -128,7 +135,7 @@ class ParserJobHandler(AbstractHandler):
                 thing_uuid,
             )
 
-        self.set_tags(bucket_name, filename, str(parser_id), "successful")
+        self.set_tags(bucket_name, filename, str(parser_uuid), "successful")
         payload = json.dumps(
             {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}
         )
@@ -168,7 +175,7 @@ class ParserJobHandler(AbstractHandler):
         self,
         bucket_name,
         filename,
-        parser_id,
+        parser_uuid,
         parsing_status,
     ):
         # Reparsing won't create a new object version, so we need to
@@ -182,7 +189,7 @@ class ParserJobHandler(AbstractHandler):
             object_tags = Tags.new_object_tags()
 
         object_tags["parsed_at"] = datetime.now(tz=timezone.utc).isoformat()
-        object_tags["parser_id"] = parser_id
+        object_tags["parser_id"] = parser_uuid
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
