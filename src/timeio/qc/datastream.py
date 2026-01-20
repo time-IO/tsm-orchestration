@@ -132,8 +132,7 @@ class DatastreamSTA:
         #
         # See also ProductStream._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
+        query = sql.SQL("""
             select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
                 "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id 
             from "OBSERVATIONS" o 
@@ -143,8 +142,7 @@ class DatastreamSTA:
               and o."RESULT_TIME" <= %s 
             order by o."RESULT_TIME" desc 
             limit %s 
-            """
-        )
+            """)
 
         if date_end in [None, pd.NaT]:
             date_end = "Infinity"
@@ -422,8 +420,7 @@ class ProductStream(Datastream):
         #
         # See also DatastreamSTA._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
+        query = sql.SQL("""
             select o.result_time, o.result_type, o.result_number, o.result_string, 
                    o.result_json, o.result_boolean, o.result_quality, o.datastream_id
             from observation o
@@ -435,8 +432,7 @@ class ProductStream(Datastream):
               and o.result_time <= %s
             order by o.result_time desc
             limit %s
-            """
-        )
+            """)
 
         we_are = f"{self.__class__.__name__}{self.name}"
         logger.debug(
