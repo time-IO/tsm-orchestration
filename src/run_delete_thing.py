@@ -136,16 +136,12 @@ def delete_thing_from_schema(cur, schema, thing_uuid):
     )
     datastream_ids = [str(i[0]) for i in cur.fetchall()]
     if datastream_ids:
-        cur.execute(
-            f"""
+        cur.execute(f"""
             DELETE FROM {schema}.observation WHERE datastream_id in ({",". join(datastream_ids)})
-            """
-        )
-        cur.execute(
-            f"""
+            """)
+        cur.execute(f"""
             DELETE FROM {schema}.datastream WHERE id in ({",". join(datastream_ids)});
-            """
-        )
+            """)
 
     cur.execute(
         f"""
