@@ -1,0 +1,5 @@
+FROM node:25.2.1
+RUN npm i -g @quasar/cli
+
+RUN mkdir -p /home/node/app
+WORKDIR /home/node/app

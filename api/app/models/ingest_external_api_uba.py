@@ -1,0 +1,46 @@
+from sqlmodel import Field, SQLModel, Relationship
+import uuid as uuid_pkg
+from datetime import datetime, timezone
+
+
+class IngestExternalApiUbaBase(SQLModel):
+    project_id: int = Field(foreign_key="project.id")
+    name: str
+    station_id: str
+    description: str | None = None
+    sync_enabled: bool = False
+
+
+class IngestExternalApiUbaCreate(IngestExternalApiUbaBase):
+    pass
+
+
+class IngestExternalApiUbaUpdate(SQLModel):
+    project_id: int | None
+    name: str | None
+    station_id: str | None
+    description: str | None
+    sync_enabled: bool | None
+
+
+class IngestExternalApiUbaPublic(IngestExternalApiUbaBase):
+    id: int
+    uuid: uuid_pkg.UUID
+    sync_interval_in_minutes: int
+    created_by_id: int
+    created_at: datetime
+    project: "Project"
+
+
+class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
+    sync_interval_in_minutes: int = 60
+    created_by_id: int = Field(foreign_key="user.id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    project: "Project" = Relationship(back_populates="ingest_external_api_uba")
+
+# fix to avoid circular imports
+from .project import Project
+IngestExternalApiUba.model_rebuild()

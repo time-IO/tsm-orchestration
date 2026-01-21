@@ -1,0 +1,27 @@
+services:
+
+  api:
+    image: time-io-datasource-management-api:dev
+    build:
+      context: ./api
+      dockerfile: docker/Dockerfile-Dev
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api/app:/app:rw,cached
+    command: "fastapi dev --host 0.0.0.0 --port 8000 main.py"
+
+  frontend:
+    image: time-io-datasource-management-frontend:dev
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile-Dev
+    user: "node"
+    working_dir: /home/node/app
+    ports:
+      - "3000:9000"
+    volumes:
+      - ./frontend/app:/home/node/app:rw,cached
+    command: "quasar dev"

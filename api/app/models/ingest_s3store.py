@@ -1,0 +1,34 @@
+import uuid as uuid_pkg
+from sqlmodel import Field, SQLModel
+from datetime import datetime, timezone
+# from .user import User # needs to be imported for relationship reasons otherwise an error is thrown during delete todo check this
+
+class IngestS3StoreBase(SQLModel):
+    project_id: int = Field(foreign_key="project.id")
+    name: str
+    description: str | None = None
+    filename_pattern: str
+
+class IngestS3StoreCreate(IngestS3StoreBase):
+    pass
+
+class IngestS3StoreUpdate(SQLModel):
+    project_id: int | None = None
+    name: str | None = None
+    description: str | None = None
+    filename_pattern: str | None = None
+
+class IngestS3StorePublic(IngestS3StoreBase):
+    id: int
+    uuid: uuid_pkg.UUID
+    created_by_id: int
+    created_at: datetime
+
+class IngestS3Store(IngestS3StoreBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
+    created_by_id: int = Field(foreign_key="user.id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    username: str
+    password: str
+    bucket_name: str
