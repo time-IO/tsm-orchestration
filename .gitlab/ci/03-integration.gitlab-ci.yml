@@ -5,9 +5,12 @@ docker-service-test:
   needs:
     - "build-and-push-images"
   before_script:
+    - "cat .env | grep IMAGE"
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose pull"
+    - "docker compose create"
+    - "docker compose up -d"
     - "docker compose logs init"
     - "sleep 20"
   script:
