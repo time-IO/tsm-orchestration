@@ -7,6 +7,8 @@ docker-service-test:
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
+    - "docker system prune -af"
+    - "docker builder prune -af"
     - "docker compose up -d --quiet-pull"
     - "docker compose logs init"
     - "sleep 20"
