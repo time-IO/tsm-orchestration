@@ -7,6 +7,17 @@
 ### Changed
 ### Removed
 
+## 2025-01-20
+### Added
+- Option to add set file encoding for csv parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/552))
+### Fixed
+- Failing parser on user input errors ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/551))
+### Changed
+- Frost-Server configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/502))
+- T-Systems external api payload changes ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/550))
+- File parser are identified using UUIDs instead of database ids ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/541))
+### Removed
+
 ## 2025-12-17
 ### Added
 - Option to send Grafana warnings via email ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/543))
