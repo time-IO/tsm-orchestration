@@ -13,8 +13,6 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-# MR_DATETIME = datetime.datetime(2025, 10, 28, 0, 0, 0, tzinfo=datetime.timezone.utc)
-
 
 @click.command()
 @click.option("--bucket-name")
@@ -40,19 +38,16 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
     for v in minio.list_objects(
         bucket_name,
         recursive=True,
-        include_version=True,
     ):
         if v.is_delete_marker:
             continue
         if not fnmatch.fnmatch(v.object_name, filename_pattern):
             continue
         try:
-            tags = minio.get_object_tags(
-                bucket_name, v.object_name, version_id=v.version_id
-            )
+            tags = minio.get_object_tags(bucket_name, v.object_name)
         except S3Error as e:
             logging.warning(
-                f"Failed to get tags for {bucket_name}/{v.object_name} (version {v.version_id}): {e}"
+                f"Failed to get tags for {bucket_name}/{v.object_name}: {e}"
             )
             continue
 
@@ -70,17 +65,15 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
                 parser = thing.s3_store.file_parser
 
             tags["parser_id"] = str(parser.uuid)
-            minio.set_object_tags(
-                bucket_name, v.object_name, tags, version_id=v.version_id
-            )
+            minio.set_object_tags(bucket_name, v.object_name, tags)
 
             logging.info(
-                f"set 'parser_id' tag for {bucket_name}/{v.object_name} (version {v.version_id}) to {parser.uuid}"
+                f"set 'parser_id' tag for {bucket_name}/{v.object_name} to {parser.uuid}"
             )
 
         except Exception:
             logging.exception(
-                f"Failed to update tags for {bucket_name}/{v.object_name} (version {v.version_id})"
+                f"Failed to update tags for {bucket_name}/{v.object_name}"
             )
             continue
 
