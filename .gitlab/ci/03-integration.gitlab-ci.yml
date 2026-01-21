@@ -5,13 +5,24 @@ docker-service-test:
   needs:
     - "build-and-push-images"
   before_script:
-    - "cat .env | grep IMAGE"
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
-    - "docker compose build"
-    - "docker compose create"
+    - "docker compose pull -q database"
+    - "docker compose pull -q mqtt-broker"
+    - "docker compose pull -q flyway"
+    - "docker compose pull -q monitoring"
+    - "docker compose pull -q visualization"
+    - "docker compose pull -q mqtt-cat"
+    - "docker compose pull -q object-storage"
+    - "docker compose pull -q proxy"
+    - "docker compose pull -q keycloak"
+    - "docker compose pull -q thing-management-api"
+    - "docker compose pull -q thing-management-frontend"
+    - "docker compose pull -q timeio-db-api"
+    - "docker compose pull -q tsmdl"
+    - "docker compose pull -q frontend"
+    - "docker compose build -q"
     - "docker compose up -d"
-    - "docker compose logs init"
     - "sleep 20"
   script:
     - "docker ps"
