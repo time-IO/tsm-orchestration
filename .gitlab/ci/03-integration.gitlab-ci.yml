@@ -21,7 +21,11 @@ docker-service-test:
     - "docker compose pull -q timeio-db-api"
     - "docker compose pull -q tsmdl"
     - "docker compose pull -q frontend"
-    - "docker compose build -q"
+    - "docker compose pull -q worker-configdb-updater"
+    - "docker compose pull -q worker-db-setup"
+    - "docker compose pull -q frost"
+    - "docker compose pull -q cron-scheduler"
+    - "docker compose pull -q init"
     - "docker compose up -d"
     - "sleep 20"
   script:
