@@ -8,7 +8,7 @@ docker-service-test:
     - "cat .env | grep IMAGE"
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
-    - "docker compose pull"
+    - "docker compose build"
     - "docker compose create"
     - "docker compose up -d"
     - "docker compose logs init"
