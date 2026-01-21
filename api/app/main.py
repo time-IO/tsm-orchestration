@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from sqlmodel import Session, SQLModel, create_engine
 from .routers import projects, ingest_s3stores, ingest_mqtt, csv_parser, ingest_external_api_the_things_network, \
     ingest_external_sftp, ingest_external_api_tsystems, ingest_external_api_uba, ingest_external_api_dwd, \
-    ingest_external_api_neutron_monitor, ingest_external_api_bosch, quality_control_setting, neutron_monitor_stations, health
+    ingest_external_api_neutron_monitor, ingest_external_api_bosch, quality_control_setting, neutron_monitor_stations, \
+    health, mqtt_parser
 from fastapi.middleware.cors import CORSMiddleware
 
 sqlite_file_name = "database.db"
@@ -20,11 +21,11 @@ def get_session():
     with Session(engine) as session:
         yield session
 
+
 origins = [
     "http://localhost",
     "http://localhost:3000",
 ]
-
 
 app = FastAPI()
 
@@ -47,12 +48,13 @@ app.include_router(ingest_external_api_uba.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_s3stores.router)
+app.include_router(mqtt_parser.router)
 app.include_router(neutron_monitor_stations.router)
 app.include_router(projects.router)
 app.include_router(quality_control_setting.router)
 app.include_router(health.router)
 
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
-
