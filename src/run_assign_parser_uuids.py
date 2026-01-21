@@ -16,11 +16,11 @@ logging.basicConfig(
 
 @click.command()
 @click.option("--bucket-name")
-@click.option("--dsn", default="postgresql://postgres:postgres@localhost:5432/postgres")
-@click.option("--minio-host", default="localhost:9000")
+@click.option("--dsn", default="postgresql://rdm_tsm_adm:7KX[3ocaCoU2!h0NNwH]]Gc8K<3F>odG@postgres.intranet.ufz.de/rdm_tsm")
+@click.option("--minio-host", default="tsm.ufz.de:9000")
 @click.option("--minio-user", default="minioadmin")
-@click.option("--minio-password", default="minioadmin")
-@click.option("--minio-secure", default=False)
+@click.option("--minio-password", default="ff2oCVCQP6kxZPJU5GO7bxKndYKmkuWT22MmNOMN")
+@click.option("--minio-secure", default=True)
 def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure):
     minio = Minio(
         endpoint=minio_host,
@@ -60,6 +60,7 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
                 elif tags["parser_id"] == "None":
                     parser = thing.s3_store.file_parser
                 else:  # we already have a uuid
+                    logging.info("Tag 'parser_id' is already a UUID")
                     continue
             else:
                 parser = thing.s3_store.file_parser
