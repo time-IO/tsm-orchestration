@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlmodel import Session, SQLModel, create_engine
 from .routers import projects, ingest_s3stores, ingest_mqtt, csv_parser, ingest_external_api_the_things_network, \
     ingest_external_sftp, ingest_external_api_tsystems, ingest_external_api_uba, ingest_external_api_dwd, \
-    ingest_external_api_neutron_monitor, ingest_external_api_bosch, quality_control_setting
+    ingest_external_api_neutron_monitor, ingest_external_api_bosch, quality_control_setting, neutron_monitor_stations
 from .models.project import Project
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -48,6 +48,7 @@ app.include_router(ingest_external_api_uba.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_s3stores.router)
+app.include_router(neutron_monitor_stations.router)
 app.include_router(projects.router)
 app.include_router(quality_control_setting.router)
 
