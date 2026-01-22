@@ -156,7 +156,7 @@ fi
 
 # only run if USE_CHOWN is set to "true"
 if [ "${USE_CHOWN}" == "true" ]; then
-    echo "Setting ownership of volume directories to ${SYSTEM_USER}:${SYSTEM_USER}."
+    echo "Setting ownership of volume directories (except minio) to ${SYSTEM_USER}:${SYSTEM_USER}."
     chown -R ${SYSTEM_USER}:${SYSTEM_USER} \
         /tmp/volume/mqtt \
         /tmp/volume/cron \
@@ -168,7 +168,7 @@ else
 fi
 
 if [ "${USE_CHOWN_OBJECT_STORAGE}" == "true" ]; then
-    echo "Setting ownership of volume directories to ${OBJECT_STORAGE_USER}:${OBJECT_STORAGE_USER}."
+    echo "Setting ownership of minio volume directory to ${OBJECT_STORAGE_USER}:${OBJECT_STORAGE_USER}."
     chown -R ${OBJECT_STORAGE_USER}:${OBJECT_STORAGE_USER} \
         /tmp/volume/minio
 else
