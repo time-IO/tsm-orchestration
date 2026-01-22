@@ -1,7 +1,24 @@
-DROP VIEW IF EXISTS "FEATURES" CASCADE;
+    DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_name = 'FEATURES'
+        AND table_schema = '{tsm_schema}'
+        AND table_type = 'BASE TABLE')
+    THEN EXECUTE 'DROP TABLE "FEATURES" CASCADE';
+    ELSIF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_name = 'FEATURES'
+        AND table_schema = '{tsm_schema}'
+        AND table_type = 'VIEW'
+        )
+    THEN EXECUTE 'DROP VIEW "FEATURES" CASCADE';
+    END IF;
+END $$;
+
 CREATE VIEW "FEATURES" AS
-
-
 SELECT
     feature_id AS "ID",
  	CONCAT(label, '_', begin_date) AS "NAME",
