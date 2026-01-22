@@ -5,6 +5,7 @@ SELECT DISTINCT
     csl.label AS "NAME",
     csl.begin_description AS "DESCRIPTION",
     'application/geo+json'::text AS "ENCODING_TYPE",
+    public.ST_SetSRID(public.ST_MakePoint(csl.x, csl.y), 4326) AS "GEOM",
     public.ST_ASGeoJSON(
         public.ST_SetSRID(
             public.ST_MakePoint(csl.x, csl.y),
