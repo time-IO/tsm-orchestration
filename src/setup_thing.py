@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import argparse
 import logging
+import click
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
@@ -30,11 +30,10 @@ class SetupThingHandler(AbstractHandler):
         "crontab": CreateThingInCrontabHandler,
     }
 
-    def __init__(self, actions: list[str], fail_fast: bool = False):
+    def __init__(self, actions: list[str]):
         """
         Args:
             actions: List of action names to execute (in order)
-            fail_fast: If True, stop on first error; if False, continue with remaining actions
         """
         super().__init__(
             topic=get_envvar("TOPIC"),
@@ -45,105 +44,97 @@ class SetupThingHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.fail_fast = fail_fast
         self.handlers = self._initialize_handlers(actions)
-        
-    def _initialize_handlers(self, actions: list[str]) -> list[tuple[str, AbstractHandler]]:
+
+    def _initialize_handlers(
+        self, actions: list[str]
+    ) -> list[tuple[str, AbstractHandler]]:
         """Create handler instances for requested actions"""
         handlers = []
-        
+        invalid_actions = [a for a in actions if a not in self.HANDLERS]
+
+        if invalid_actions:
+            available = ", ".join(self.HANDLERS.keys())
+            raise ValueError(
+                f"Unknown action(s): {', '.join(invalid_actions)}. "
+                f"Available: {available}"
+            )
+
         for action in actions:
-            if action not in self.HANDLERS:
-                raise ValueError(
-                    f"Unknown action: {action}. "
-                    f"Available: {', '.join(self.HANDLERS.keys())}"
-                )
-            
-            handler_class = self.HANDLERS[action]
-            handler = handler_class()
+            handler = self.HANDLERS[action]()
             handlers.append((action, handler))
-            logger.info(f"Registered action: {action}")
+            logger.info(f"Registered: {action}")
+
         return handlers
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         """Process all configured actions in sequence"""
         thing_uuid = content.get("thing")
-        logger.info(f"Processing thing {thing_uuid} with {len(self.handlers)} actions")
-
-        results = {"success": [], "failed": []}
-
-        for action_name, handler in self.handlers:
-            logger.info(f"Executing action: {action_name}")
-            
-            try:
-                handler.act(content, message)
-                logger.info(f"✓ Completed: {action_name}")
-                results["success"].append(action_name)
-            
-            except Exception as e:
-                logger.error(f"✗ Failed: {action_name} - {e}", exc_info=True)
-                results["failed"].append(action_name)
-
-                if self.fail_fast:
-                    logger.error("Stopping due to error(fail_fast=True)")
-                    raise
-
-        # Summary
+        total = len(self.handlers)
         logger.info(
-            f"Thing {thing_uuid} setup complete: "
-            f"{len(results['success'])} succeeded, {len(results['failed'])} failed"
+            f"Processing thing {thing_uuid} ({total} action{'s' if total > 1 else ''})"
         )
 
+        success, failed = [], []
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Combined thing setup handler - orchestrates thing setup actions",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=f"""
-Available actions:
-  database   - PostgreSQL user/schema/tables
-  minio      - MinIO user/bucket/policy
-  mqtt       - MQTT user credentials
-  grafana    - Grafana dashboard and organization
-  frost      - FROST-Server instance
-  crontab    - Crontab entry for scheduled jobs
+        for action_name, handler in self.handlers:
+            try:
+                handler.act(content, message)
+                logger.info(f"✓ {action_name}")
+                success.append(action_name)
 
-Examples:
-  python setup_thing.py                    # Run all actions
-  python setup_thing.py all                # Run all actions
-  python setup_thing.py database minio     # Only database and storage
-  python setup_thing.py --fail-fast all    # Stop on first error
-""",
-    )
+            except Exception as e:
+                logger.error(f"✗ {action_name}: {e}", exc_info=True)
+                failed.append(action_name)
 
-    parser.add_argument(
-        "actions",
-        nargs="*",
-        choices=list(SetupThingHandler.HANDLERS.keys()) + ["all"],
-        help="Setup actions to perform (in order, default: all)",
-    )
+        # Summary
+        if failed:
+            logger.warning(
+                f"Thing {thing_uuid}: {len(success)}/{total} succeeded, "
+                f"{len(failed)} failed: {', '.join(failed)}"
+            )
+        else:
+            logger.info(
+                f"Thing {thing_uuid}: All {total} actions completed successfully"
+            )
 
-    parser.add_argument(
-        "--fail-fast",
-        action="store_true",
-        help="Stop immediately on first error (default: continue with remaining actions)",
-    )
 
-    args = parser.parse_args()
+@click.command()
+@click.argument(
+    "actions",
+    nargs=-1,
+    type=click.Choice(
+        list(SetupThingHandler.HANDLERS.keys()) + ["all"], case_sensitive=False
+    ),
+)
+def main(actions: tuple[str, ...]):
+    """Setup handler for IoT things - orchestrates infrastructure provisioning.
 
-    # Resolve "all" to actual action list
-    actions = (
-        list(SetupThingHandler.HANDLERS.keys())
-        if not args.actions or args.actions == ["all"]
-        else args.actions
-    )
+    \b
+    Available actions:
+      database  - PostgreSQL user/schema/tables
+      minio     - MinIO bucket/policy
+      mqtt      - MQTT user credentials
+      grafana   - Grafana dashboard and organization
+      frost     - FROST-Server instance
+      crontab   - Scheduled job entry
 
-    setup_logging(get_envvar("LOG_LEVEL", "INFO"))
-    logger.info(f"Starting combined thing setup handler with actions: {', '.join(actions)}")
+    \b
+    Examples:
+      setup_thing.py                      # Run all actions
+      setup_thing.py all                  # Run all actions
+      setup_thing.py database minio       # Specific actions only
+    """
+    # Resolve "all" or empty to full list
+    if not actions or "all" in actions:
+        actions = list(SetupThingHandler.HANDLERS.keys())
 
-    handler = SetupThingHandler(actions, fail_fast=args.fail_fast)
+    logger.info(f"Starting with actions: {', '.join(actions)}")
+
+    handler = SetupThingHandler(list(actions))
     handler.run_loop()
 
 
 if __name__ == "__main__":
+    setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     main()
