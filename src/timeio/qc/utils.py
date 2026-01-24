@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 from __future__ import annotations
 
+import logging
 import typing
 from timeio.qc.qctest import QcTest, StreamInfo, Param
 
@@ -14,8 +14,6 @@ __all__ = [
     "collect_params",
     "collect_tests",
 ]
-
-import logging
 
 logger = logging.getLogger("run-quality-control")
 
@@ -102,6 +100,4 @@ def collect_tests(conf: feta.QAQC, thing: feta.Thing) -> list[QcTest]:
     all_funcs = collect_all_funcs(conf.get_tests())
     thing_funcs = filter_thing_funcs(all_funcs, thing.id)
     funcs_to_process = collect_tests_to_execute(all_funcs, thing_funcs)
-    breakpoint()
-
     return funcs_to_process

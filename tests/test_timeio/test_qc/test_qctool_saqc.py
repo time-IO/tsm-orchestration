@@ -14,7 +14,21 @@ def feta_project():
         yield feta.Project.from_uuid("00000000-0000-0000-0000-000000000001", dsn=conn)
 
 
-def test_collect_tests(feta_project):
-    tests = collect_tests(feta_project.get_default_qaqc())
-    for t in tests:
-        print(t)
+def select_thing_by_name(things, thing_name):
+    return [t for t in things  if t.name == thing_name][0]
+
+
+@pytest.mark.parametrize(
+    "thing_name, expected",
+    [
+        ("StaticThing", ("Static-T1", "Static-T2", "Static-P1", "Dynamic-P1")),
+        ("DynamicThing", ("Dynamic-T1", "Dynamic-T2")),
+    ],
+)
+def test_collect_tests(feta_project, thing_name, expected):
+
+    thing = select_thing_by_name(feta_project.get_things(), thing_name)
+    tests = collect_tests(feta_project.get_default_qaqc(), thing)
+
+    assert set(set([t.name for t in tests])) == set(expected)
+
