@@ -5,7 +5,6 @@ from psycopg import sql
 
 from unittest.mock import patch
 
-
 # fmt: off
 class ConnOrCursorMock:
     def __init__(self, *args, **kwargs): pass

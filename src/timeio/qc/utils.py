@@ -10,10 +10,7 @@ from timeio.qc.qctest import QcTest, StreamInfo, Param
 if typing.TYPE_CHECKING:
     from timeio import feta
 
-__all__ = [
-    "get_qc_functions_to_execute",
-    "get_qc_functions"
-]
+__all__ = ["get_qc_functions_to_execute", "get_qc_functions"]
 
 logger = logging.getLogger("run-quality-control")
 

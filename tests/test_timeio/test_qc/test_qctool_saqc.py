@@ -7,7 +7,13 @@ import pandas as pd
 
 from timeio.qc import get_qc_functions_to_execute
 from timeio.qc.qctest import QcTest, StreamInfo, Param
-from timeio.qc.datastream import AbstractDatastream, AbstractDatastreamFactory, ProductStream, LocalStream, STADatastream
+from timeio.qc.datastream import (
+    AbstractDatastream,
+    AbstractDatastreamFactory,
+    ProductStream,
+    LocalStream,
+    STADatastream,
+)
 from timeio.qc.typeshints import TimestampT, WindowT
 
 # NEXT:
@@ -130,4 +136,3 @@ def qc_functions():
 def test_collect_tests(qc_functions, thing_id, expected):
     tests = get_qc_functions_to_execute(qc_functions, thing_id)
     assert set(set([t.name for t in tests])) == set(expected)
-
