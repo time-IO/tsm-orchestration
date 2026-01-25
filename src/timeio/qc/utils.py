@@ -11,14 +11,14 @@ if typing.TYPE_CHECKING:
     from timeio import feta
 
 __all__ = [
-    "collect_params",
-    "collect_tests",
+    "get_qc_functions_to_execute",
+    "get_qc_functions"
 ]
 
 logger = logging.getLogger("run-quality-control")
 
 
-def collect_params(test: feta.QAQCTest):
+def get_func_arguments(test: feta.QAQCTest):
     params = []
     for stream in test.streams or []:
         params.append(
@@ -34,25 +34,53 @@ def collect_params(test: feta.QAQCTest):
     return params
 
 
+def get_qc_functions(conf: feta.QAQC) -> list[QcTest]:
+    """
+    Convert between the database/feta layer and business logic objects
+    """
+    out = []
+    context_window = conf.context_window
+    for i, func in enumerate(conf.get_tests(), start=1):
+        try:
+            params = get_func_arguments(func)
+            qctest = QcTest(
+                name=func.name,
+                func_name=func.function,
+                params=params,
+                context_window=context_window,
+                qctool="saqc",
+            )
+        except Exception as e:
+            e.add_note(f"Qc test {i} ({func})")
+            e.add_note(f"Config {conf}")
+            raise e
+        out.append(qctest)
+
+    return out
+
+
 def filter_thing_funcs(funcs: list[QcTest], thing_id: int) -> list[QcTest]:
     out = []
     for func in funcs:
-        if int(thing_id) in (int(f.thing_id) for f in func.fields):
+        thing_ids = set(int(s.thing_id) for s in func.get_streams_by_key("field"))
+        if thing_id in thing_ids:
             out.append(func)
     return out
 
 
-def collect_tests_to_execute(all_funcs, selected_funcs):
+def filter_funcs_to_execute(all_funcs, selected_funcs):
 
     to_check = []
     for func in selected_funcs:
-        for target in func.targets:
+        targets = set(s.value for s in func.get_streams_by_key("target"))
+        for target in targets:
             to_check.append(target)
 
     # build up the function look up table
     lut = {}
     for func in all_funcs:
-        for field in func.fields:
+        fields = set(s.value for s in func.get_streams_by_key("field"))
+        for field in fields:
             lut[field] = func
 
     seen = set(selected_funcs)
@@ -73,31 +101,8 @@ def collect_tests_to_execute(all_funcs, selected_funcs):
     return selected_funcs
 
 
-def collect_tests(conf: feta.QAQC, thing: feta.Thing) -> list[QcTest]:
-    context_window = conf.context_window
+def get_qc_functions_to_execute(funcs: list[QcTest], thing_id) -> list[QcTest]:
 
-    logging.info(f"THING: {thing}")
-
-    def collect_all_funcs(funcs):
-        out = []
-        for i, func in enumerate(funcs, start=1):
-            try:
-                params = collect_params(func)
-                qctest = QcTest(
-                    name=func.name,
-                    func_name=func.function,
-                    params=params,
-                    context_window=context_window,
-                    qctool="saqc",
-                )
-            except Exception as e:
-                e.add_note(f"Qc test {i} ({func})")
-                e.add_note(f"Config {conf}")
-                raise e
-            out.append(qctest)
-        return out
-
-    all_funcs = collect_all_funcs(conf.get_tests())
-    thing_funcs = filter_thing_funcs(all_funcs, thing.id)
-    funcs_to_process = collect_tests_to_execute(all_funcs, thing_funcs)
+    thing_funcs = filter_thing_funcs(funcs, thing_id)
+    funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
     return funcs_to_process
