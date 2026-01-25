@@ -46,7 +46,9 @@ services:
       - "./keycloak:/tmp/conf/keycloak"
     environment:
       SYSTEM_USER: "${UID}"
+      OBJECT_STORAGE_USER: "${OBJECT_STORAGE_UID}"
       USE_CHOWN: "${INIT_USE_CHOWN}"
+      USE_CHOWN_OBJECT_STORAGE: "${INIT_USE_CHOWN_OBJECT_STORAGE}"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -146,7 +148,7 @@ services:
       MINIO_SERVER_URL: "${OBJECT_STORAGE_SERVER_URL}"
     volumes:
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/minio"
-    user: "${UID}:${GID}"
+    user: "${OBJECT_STORAGE_UID}:${OBJECT_STORAGE_UID}"
     command: >
       server
       --console-address :9001
@@ -253,6 +255,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
       GF_SECURITY_ADMIN_PASSWORD: "${VISUALIZATION_PASSWORD}"
+      GF_SECURITY_ALLOW_EMBEDDING: true
       GF_SERVER_ROOT_URL: "${VISUALIZATION_PROXY_URL}"
       GF_SERVER_SERVE_FROM_SUB_PATH: true
       GF_AUTH_GENERIC_OAUTH_ENABLED: true
