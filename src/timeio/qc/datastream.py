@@ -4,8 +4,9 @@ from __future__ import annotations
 import json
 import logging
 import typing
+from abc import ABC, abstractmethod
 from typing import Any
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pandas as pd
 import psycopg
@@ -21,7 +22,7 @@ if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
 
 __all__ = [
-    "Datastream",
+    "STADatastream",
     "ProductStream",
     "LocalStream",
 ]
@@ -58,7 +59,33 @@ def get_result_type(data: pd.Series):
         raise ValueError(f"Data of type {data.dtype} is not supported.")
 
 
-class DatastreamSTA:
+class AbstractDatastream(ABC):
+
+    @abstractmethod
+    def get_unprocessed_range(
+        self,
+    ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
+        pass
+
+    @abstractmethod
+    def get_data(
+        self,
+        date_start: TimestampT | None,
+        date_end: TimestampT | None,
+        context_window: WindowT,
+    ) -> pd.DataFrame:
+        pass
+
+    @abstractmethod
+    def update_quality_labels(self, labels: pd.Series | pd.DataFrame) -> None:
+        pass
+
+    @abstractmethod
+    def upload(self, api_base_url: str):
+        pass
+
+
+class STADatastream(AbstractDatastream):
     """
     A Datastream for immutable existing data.
 
@@ -132,8 +159,7 @@ class DatastreamSTA:
         #
         # See also ProductStream._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
+        query = sql.SQL("""
             select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
                 "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id
             from "OBSERVATIONS" o
@@ -143,8 +169,7 @@ class DatastreamSTA:
               and o."RESULT_TIME" <= %s
             order by o."RESULT_TIME" desc
             limit %s
-            """
-        )
+            """)
 
         if date_end in [None, pd.NaT]:
             date_end = "Infinity"
@@ -349,10 +374,7 @@ class DatastreamSTA:
         r.raise_for_status()
 
 
-Datastream = DatastreamSTA
-
-
-class ProductStream(Datastream):
+class ProductStream(STADatastream):
     """
     A Datastream for mutable data a.k.a. Dataproducts.
     Most often the data is calculated by user defined algorithms
@@ -422,8 +444,7 @@ class ProductStream(Datastream):
         #
         # See also DatastreamSTA._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
+        query = sql.SQL("""
             select o.result_time, o.result_type, o.result_number, o.result_string,
                    o.result_json, o.result_boolean, o.result_quality, o.datastream_id
             from observation o
@@ -435,8 +456,7 @@ class ProductStream(Datastream):
               and o.result_time <= %s
             order by o.result_time desc
             limit %s
-            """
-        )
+            """)
 
         we_are = f"{self.__class__.__name__}{self.name}"
         logger.debug(
@@ -505,7 +525,7 @@ class ProductStream(Datastream):
         r.raise_for_status()
 
 
-class LocalStream(Datastream):
+class LocalStream(STADatastream):
     """
     A Datastream for temporary local data.
 

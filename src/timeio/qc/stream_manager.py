@@ -9,7 +9,7 @@ from requests import HTTPError
 
 from timeio import feta
 from timeio.errors import UploadError
-from timeio.qc.datastream import Datastream, ProductStream, LocalStream
+from timeio.qc.datastream import STADatastream, ProductStream, LocalStream
 
 if typing.TYPE_CHECKING:
     from timeio.qc.qctest import StreamInfo, QcResult
@@ -29,10 +29,10 @@ class StreamManager:
     """
 
     def __init__(self, db_conn: psycopg.Connection):
-        self._streams: dict[str, Datastream] = {}
+        self._streams: dict[str, STADatastream] = {}
         self._conn = db_conn
 
-    def get_schema(self, sta_thing_id):
+    def _get_schema(self, sta_thing_id):
         if sta_thing_id is None:
             return None
 
@@ -52,14 +52,14 @@ class StreamManager:
         sid = stream_info.stream_id
         name = stream_info.value
         logger.debug(f"Get schema for {stream_info}")
-        schema = self.get_schema(tid)
+        schema = self._get_schema(tid)
 
         if stream_info.is_dataproduct:
             new = ProductStream(tid, sid, name, self._conn, schema)
         elif stream_info.is_temporary:
             new = LocalStream(tid, sid, name, self._conn, schema)
         else:
-            new = Datastream(tid, sid, name, self._conn, schema)
+            new = STADatastream(tid, sid, name, self._conn, schema)
 
         logger.debug(f"Added new {new}")
         self._streams[name] = new

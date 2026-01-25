@@ -7,11 +7,25 @@ import pandas as pd
 
 from timeio.qc import get_qc_functions_to_execute
 from timeio.qc.qctest import QcTest, StreamInfo, Param
+from timeio.qc.datastream import AbstractDatastream
+from timeio.qc.typeshints import TimestampT, WindowT
 
 
+class MockDatastream(AbstractDatastream):
+    def get_unprocessed_range(
+        self,
+    ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
+        return (datetime(2020, 1, 1, 12, 0, 0), datetime(2020, 1, 2, 12, 0, 0))
 
-def select_thing_by_name(things, thing_name):
-    return [t for t in things  if t.name == thing_name][0]
+    def get_data(
+        self,
+        date_start: TimestampT | None,
+        date_end: TimestampT | None,
+        context_window: WindowT,
+    ) -> pd.DataFrame:
+
+        return pd.DataFrame()
+
 
 @pytest.fixture()
 def qc_functions():
