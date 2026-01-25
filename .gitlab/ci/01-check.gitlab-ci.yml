@@ -50,7 +50,7 @@ black:
 
 pytest:
   stage: check
-  image: python:3.11-slim
+  image: python:3.11
   before_script:
     - pip install -r src/requirements.txt
     - pip install pytest
@@ -63,8 +63,6 @@ pytest:
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: always
-  variables:
-    MPLBACKEND: Agg
 
 check-release-env-file:
   stage: check
