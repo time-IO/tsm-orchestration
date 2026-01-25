@@ -2,14 +2,18 @@
 from __future__ import annotations
 import typing
 
-import psycopg
 import logging
 
 from requests import HTTPError
 
 from timeio import feta
 from timeio.errors import UploadError
-from timeio.qc.datastream import STADatastream, ProductStream, LocalStream
+from timeio.qc.datastream import (
+    AbstractDatastream,
+    AbstractDatastreamFactory,
+    ProductStream,
+    LocalStream,
+)
 
 if typing.TYPE_CHECKING:
     from timeio.qc.qctest import StreamInfo, QcResult
@@ -28,41 +32,12 @@ class StreamManager:
     later synced back to the database (output/upload).
     """
 
-    def __init__(self, db_conn: psycopg.Connection):
-        self._streams: dict[str, STADatastream] = {}
-        self._conn = db_conn
-
-    def _get_schema(self, sta_thing_id):
-        if sta_thing_id is None:
-            return None
-
-        query = (
-            "select thing_id as thing_uuid from public.sms_datastream_link l "
-            "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
-            "where a.configuration_id = %s"
-        )
-        with self._conn.cursor() as cur:
-            row = cur.execute(query, [sta_thing_id]).fetchone()
-        if not row:
-            raise RuntimeError(f"Thing with STA ID {sta_thing_id} has no SMS linking")
-        return feta.Thing.from_uuid(row[0], self._conn).database.schema
+    def __init__(self, stream_factory: AbstractDatastreamFactory):
+        self._streams: dict[str, AbstractDatastream] = {}
+        self._factory = stream_factory
 
     def add_stream(self, stream_info: StreamInfo):
-        tid = stream_info.thing_id
-        sid = stream_info.stream_id
-        name = stream_info.value
-        logger.debug(f"Get schema for {stream_info}")
-        schema = self._get_schema(tid)
-
-        if stream_info.is_dataproduct:
-            new = ProductStream(tid, sid, name, self._conn, schema)
-        elif stream_info.is_temporary:
-            new = LocalStream(tid, sid, name, self._conn, schema)
-        else:
-            new = STADatastream(tid, sid, name, self._conn, schema)
-
-        logger.debug(f"Added new {new}")
-        self._streams[name] = new
+        self._streams[stream_info.value] = self._factory.create(stream_info)
 
     def get_stream(self, stream_info: StreamInfo):
         name = stream_info.value

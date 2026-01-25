@@ -21,6 +21,7 @@ from timeio.mqtt import AbstractHandler
 from timeio.qc import (
     QcTest,
     StreamManager,
+    DatastreamFactory,
     get_qc_functions,
     get_qc_functions_to_execute,
 )
@@ -117,7 +118,7 @@ class QcHandler(AbstractHandler):
 
             logger.info(f"Got config %s", config)
 
-            sm = StreamManager(conn)
+            sm = StreamManager(DatastreamFactory(db_conn=conn))
             try:
                 tests = get_qc_functions_to_execute(get_qc_functions(config), thing.id)
                 logger.info(f"COLLECTED TESTS: {tests}")

@@ -17,6 +17,7 @@ from timeio import feta
 from timeio.common import ObservationResultType, get_result_field_name
 from timeio.cast import rm_tz
 from timeio.errors import DataNotFoundError
+from timeio.qc.qctest import StreamInfo
 
 if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
@@ -57,6 +58,43 @@ def get_result_type(data: pd.Series):
         return ObservationResultType.Json
     else:
         raise ValueError(f"Data of type {data.dtype} is not supported.")
+
+
+class AbstractDatastreamFactory(ABC):
+    @abstractmethod
+    def create(self, stream_info: StreamInfo) -> AbstractDatastream:
+        pass
+
+
+class DatastreamFactory(AbstractDatastreamFactory):
+    def __init__(self, db_conn: psycopg.Connection):
+        self._conn = db_conn
+
+    def _get_schema(self, sta_thing_id) -> str:
+
+        query = (
+            "select thing_id as thing_uuid from public.sms_datastream_link l "
+            "join public.sms_device_mount_action a on l.device_mount_action_id = a.id "
+            "where a.configuration_id = %s"
+        )
+        with self._conn.cursor() as cur:
+            row = cur.execute(query, [sta_thing_id]).fetchone()
+        if not row:
+            raise RuntimeError(f"Thing with STA ID {sta_thing_id} has no SMS linking")
+        return feta.Thing.from_uuid(row[0], self._conn).database.schema
+
+    def create(self, stream_info: StreamInfo) -> AbstractDatastream:
+        tid = stream_info.thing_id
+        sid = stream_info.stream_id
+        name = stream_info.value
+        logger.debug(f"Get schema for {stream_info}")
+        schema = self._get_schema(tid)
+
+        if stream_info.is_dataproduct:
+            return ProductStream(tid, sid, name, self._conn, schema)
+        if stream_info.is_temporary:
+            return LocalStream(tid, sid, name, self._conn, schema)
+        return STADatastream(tid, sid, name, self._conn, schema)
 
 
 class AbstractDatastream(ABC):

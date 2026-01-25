@@ -7,8 +7,11 @@ import pandas as pd
 
 from timeio.qc import get_qc_functions_to_execute
 from timeio.qc.qctest import QcTest, StreamInfo, Param
-from timeio.qc.datastream import AbstractDatastream
+from timeio.qc.datastream import AbstractDatastream, AbstractDatastreamFactory, ProductStream, LocalStream, STADatastream
 from timeio.qc.typeshints import TimestampT, WindowT
+
+# NEXT:
+# - abstract the direct database connections out of STADatastream, ProductStream et al
 
 
 class MockDatastream(AbstractDatastream):
@@ -25,6 +28,20 @@ class MockDatastream(AbstractDatastream):
     ) -> pd.DataFrame:
 
         return pd.DataFrame()
+
+
+class MockDatastreamFactory(AbstractDatastreamFactory):
+    def create(self, stream_info):
+        tid = stream_info.thing_id
+        sid = stream_info.stream_id
+        name = stream_info.value
+        schema = "ttt"
+
+        if stream_info.is_dataproduct:
+            return ProductStream(tid, sid, name, self._conn, schema)
+        if stream_info.is_temporary:
+            return LocalStream(tid, sid, name, self._conn, schema)
+        return STADatastream(tid, sid, name, self._conn, schema)
 
 
 @pytest.fixture()
