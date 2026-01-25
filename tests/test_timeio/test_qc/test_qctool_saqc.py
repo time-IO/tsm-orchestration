@@ -9,9 +9,9 @@ from timeio.qc import get_qc_functions_to_execute
 from timeio.qc.qctest import QcTest, StreamInfo, Param
 
 
-
 def select_thing_by_name(things, thing_name):
-    return [t for t in things  if t.name == thing_name][0]
+    return [t for t in things if t.name == thing_name][0]
+
 
 @pytest.fixture()
 def qc_functions():
@@ -99,4 +99,3 @@ def qc_functions():
 def test_collect_tests(qc_functions, thing_id, expected):
     tests = get_qc_functions_to_execute(qc_functions, thing_id)
     assert set(set([t.name for t in tests])) == set(expected)
-
