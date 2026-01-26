@@ -11,6 +11,7 @@ import requests
 from urllib.parse import urljoin
 from crontab import CronTab
 from minio.credentials import StaticProvider
+from minio.deleteobjects import DeleteObject
 
 # Configure logging to output to console
 logging.basicConfig(
@@ -40,10 +41,13 @@ def delete_bucket(minio_host, minio_user, minio_password, minio_bucket):
     # 1. Clear the bucket
     objects = client.list_objects(minio_bucket, recursive=True, include_version=True)
 
-    for obj in objects:
-        client.remove_object(minio_bucket, obj.object_name, version_id=obj.version_id)
+    to_delete = [DeleteObject(o.object_name, o.version_id) for o in objects]
+    errors = client.remove_objects(minio_bucket, to_delete)
+    for error in errors:
+        logging.warning(f"Failed to delete {error.object_name}: {error}")
 
     # 2. Remove the bucket
+    logging.info(f"Delete bucket {minio_bucket}")
     client.remove_bucket(minio_bucket)
 
     # 3. Remove user
@@ -67,14 +71,16 @@ def delete_mqtt_user(cursor, thing_uuid):
 
 
 def delete_s3store_entry(cursor, id):
+    logging.info("Delete s3 store entry")
     cursor.execute(
         """
         DELETE FROM config_db.s3_store where id = %s
         RETURNING bucket
         """,
-        [id],
+        (id,),
     )
-    return cursor.fetchall()[0][0]
+    row = cursor.fetchone()
+    return row[0]
 
 
 def delete_mqtt_entry(cursor, id):
@@ -105,10 +111,10 @@ def delete_legacy_qc(cursor, id):
 def delete_qc(cursor, sta_datastream_ids):
     query = """
     DELETE FROM config_db.qaqc_test
-    WHERE jsonb_path_exists(streams, '$[*] ? (@.sta_stream_id in %s)')
+    WHERE jsonb_path_exists(streams,'$[*] ? (@.sta_stream_id == ANY ($1))')
     RETURNING qaqc_id
     """
-    cursor.execute(query, sta_datastream_ids)
+    cursor.execute(query, (sta_datastream_ids,))
     ids = cursor.fetchall()
     for id in ids:
         query = f"""
@@ -227,7 +233,6 @@ def get_ids(cursor, thing_uuid):
         """,
         [thing_uuid],
     )
-
     return cursor.fetchone() + ids
 
 
@@ -298,8 +303,8 @@ def main(
                     minio_password=minio_password,
                     minio_bucket=minio_bucket,
                 )
-            except minio.error.S3Error:
-                logger.warning(f"Unable to delete minio bucket: '{minio_bucket}")
+            except minio.error.S3Error as e:
+                logger.warning(f"Unable to delete minio bucket: '{minio_bucket} {e}")
 
         if mqtt_id:
             delete_mqtt_entry(cur, mqtt_id)
