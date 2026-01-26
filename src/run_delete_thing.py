@@ -304,7 +304,7 @@ def main(
                     minio_bucket=minio_bucket,
                 )
             except minio.error.S3Error as e:
-                logger.warning(f"Unable to delete minio bucket: '{minio_bucket} {e}")
+                logger.warning(f"Unable to delete minio bucket '{minio_bucket}: {e}")
 
         if mqtt_id:
             delete_mqtt_entry(cur, mqtt_id)
