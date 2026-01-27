@@ -63,8 +63,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
             # only create team in Main org
             team_name = self.api.t.team.create(p_name, org_id)
 
-        if (folder := self.api.t.fldr.get_by_uid(p_uuid)) is None:
-            folder = self.api.t.fldr.create(p_name, p_uuid)
+        folder = self.api.t.fldr.get_by_uid(p_uuid) or self.api.t.fldr.create(p_name, p_uuid)
 
         self.api.t.fldr.set_permissions(folder, team_name, role)
 
