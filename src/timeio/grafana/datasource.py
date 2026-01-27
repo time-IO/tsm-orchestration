@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from timeio.grafana.typehints import DatasourceT
 from timeio.grafana.utils import get_dict_by_key_value, _exists
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.crypto import decrypt, get_crypt_key
 from urllib.parse import urlparse
 from timeio.grafana.utils import logger

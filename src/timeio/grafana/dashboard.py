@@ -4,7 +4,7 @@ from timeio.grafana.typehints import DatasourceT, FolderT
 from typing import TYPE_CHECKING
 
 from timeio.grafana.utils import _exists
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.grafana.utils import logger
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ class GrafanaDashboard:
             "overwrite": True,
         }
 
-    def _datastream_templating(self, thing, datasource) -> dict:
+    def _datastream_templating(self, thing: Thing, datasource) -> dict:
         return {
             "datasource": datasource,
             "hide": 0,
@@ -115,7 +115,7 @@ class GrafanaDashboard:
         }
 
     @classmethod
-    def _observation_query_target(cls, thing: ThingT, datasource: DatasourceT) -> dict:
+    def _observation_query_target(cls, thing: Thing, datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
             "editorMode": "code",
@@ -126,7 +126,7 @@ class GrafanaDashboard:
         }
 
     @classmethod
-    def _qaqc_query_target(cls, thing: ThingT, datasource: DatasourceT) -> dict:
+    def _qaqc_query_target(cls, thing: Thing, datasource: DatasourceT) -> dict:
         return {
             "datasource": datasource,
             "editorMode": "code",

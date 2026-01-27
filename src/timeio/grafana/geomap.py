@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid5, UUID
 
 from timeio.grafana.utils import _exists
-from timeio.thing import Thing
+from timeio.feta import Thing
 from timeio.grafana.utils import logger
 
 if TYPE_CHECKING:
