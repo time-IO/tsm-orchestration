@@ -22,7 +22,7 @@ from timeio.qc import (
     QcTest,
     StreamManager,
     get_qc_functions,
-    get_qc_functions_to_execute,
+    get_functions_to_execute,
 )
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
@@ -119,7 +119,7 @@ class QcHandler(AbstractHandler):
 
             sm = StreamManager(conn)
             try:
-                tests = get_qc_functions_to_execute(get_qc_functions(config), thing.id)
+                tests = get_functions_to_execute(get_qc_functions(config), thing.id)
                 logger.info(f"COLLECTED TESTS: {tests}")
 
                 if start_date := content.get("start_date", None):

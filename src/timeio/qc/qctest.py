@@ -64,9 +64,17 @@ class StreamInfo(Param):
         self.thing_id = thing_id
         self.stream_id = stream_id
 
-        self.is_immutable = thing_id is not None and stream_id is not None
-        self.is_dataproduct = thing_id is not None and stream_id is None
-        self.is_temporary = thing_id is None  # and stream_id is dont-care
+        # self.is_immutable = thing_id is not None and stream_id is not None
+        # self.is_dataproduct = thing_id is not None and stream_id is None
+        # self.is_temporary = thing_id is None  # and stream_id is dont-care
+
+    def __eq__(self, other):
+        if not isinstance(other, StreamInfo):
+            return NotImplemented
+        return self.thing_id == other.thing_id and self.stream_id == other.stream_id
+
+    def __hash__(self):
+        return hash((self.thing_id, self.stream_id))
 
     def __repr__(self):
         klass = self.__class__.__name__
@@ -87,70 +95,56 @@ class QcTest:
         self,
         name,
         func_name,
-        params: list[Param],
+        fields: list[StreamInfo],
+        targets: list[StreamInfo],
+        params: dict[str, Any],
         context_window: str | int,
-        qctool: str | QcTool,
     ):
-        self.name = name or "Unnamed QcTest"
-        if isinstance(qctool, str):
-            qctool = get_qctool(qctool)
-        self._qctool: QcTool = qctool()
-        self._qctool.check_func_name(func_name)
+        self.name = name
         self.func_name: str = func_name
         self.context_window: WindowT = parse_context_window(context_window)
-        self.streams = [p for p in params if isinstance(p, StreamInfo)]
-
-        self.params = {}
-        for p in params:
-            try:
-                self.params[p.key] = p.parse()
-            except Exception as e:
-                raise ParsingError(f"Parameter: {p}") from e
-
-        # filled by run
-        self.result: QcResult | None = None
+        self.fields = fields
+        self.targets = targets
+        self.params = params
 
     def __repr__(self):
         return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
 
-    def get_streams_by_key(self, key: str) -> list[StreamInfo]:
-        return [s for s in self.streams if s.key == key]
+    # def load_data(
+    #     self,
+    #     sm: StreamManager,
+    #     start_date: TimestampT | None = None,
+    #     end_date: TimestampT | None = None,
+    # ):
+    #     data = {}
+    #     qual = {}
+    #     for stream_info in self.streams:
+    #         name = stream_info.value
+    #         if name in data:
+    #             continue
 
-    def load_data(
-        self,
-        sm: StreamManager,
-        start_date: TimestampT | None = None,
-        end_date: TimestampT | None = None,
-    ):
-        data = {}
-        qual = {}
-        for stream_info in self.streams:
-            name = stream_info.value
-            if name in data:
-                continue
+    #         stream = sm.get_stream(stream_info)
 
-            stream = sm.get_stream(stream_info)
+    #         if start_date is None:
+    #             start_date, end_date = stream.get_unprocessed_range()
 
-            if start_date is None:
-                start_date, end_date = stream.get_unprocessed_range()
+    #         df = stream.get_data(start_date, end_date, self.context_window)
+    #         data[name] = df["data"]
+    #         qual[name] = df["quality"]
 
-            df = stream.get_data(start_date, end_date, self.context_window)
-            data[name] = df["data"]
-            qual[name] = df["quality"]
+    #     self._qctool.add_data(data, qual)
 
-        self._qctool.add_data(data, qual)
+    # def run(self) -> None:
+    #     logging.debug(
+    #         "executing tool: %s, func: %s,  kwargs: %s",
+    #         self._qctool.name,
+    #         self.func_name,
+    #         self.params,
+    #     )
+    #     self._qctool.execute(self.func_name, **self.params)
 
-    def run(self) -> None:
-        logging.debug(
-            "executing tool: %s, func: %s,  kwargs: %s",
-            self._qctool.name,
-            self.func_name,
-            self.params,
-        )
-        self._qctool.execute(self.func_name, **self.params)
-
-        self.result = QcResult()
-        self.result.data = self._qctool.get_data()
-        self.result.quality = self._qctool.get_quality()
-        self.result.columns = pd.Index(self.result.quality.keys())
-        self.result.origin = repr(self)
+    #     self.result = QcResult()
+    #     self.result.data = self._qctool.get_data()
+    #     self.result.quality = self._qctool.get_quality()
+    #     self.result.columns = pd.Index(self.result.quality.keys())
+    #     self.result.origin = repr(self)
