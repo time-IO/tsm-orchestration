@@ -21,8 +21,8 @@ git pull origin main
 rm remove-all-data.sh
 COMPOSE_FILES="-f docker-compose.yml -f docker-compose.override.prod.yml"
 ENV_FILES="--env-file .env"
-docker compose $COMPOSE_FILES $ENV_FILES create --build
-docker compose $COMPOSE_FILES $ENV_FILES up -d
-docker compose $COMPOSE_FILES $ENV_FILES ps
+sudo docker compose $COMPOSE_FILES $ENV_FILES create --build
+sudo docker compose $COMPOSE_FILES $ENV_FILES up -d
+sudo docker compose $COMPOSE_FILES $ENV_FILES ps
 # remove dangling docker images
 docker rmi $(docker images -f dangling=true -q)
