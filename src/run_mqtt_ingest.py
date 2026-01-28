@@ -33,7 +33,10 @@ class ParseMqttDataHandler(AbstractHandler):
         )
 
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"),
+            ("timeio-db-api", get_envvar("DB_API_AUTH_PASSWORD")),
+        )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
 
     def act(self, content: typing.Any, message: MQTTMessage):

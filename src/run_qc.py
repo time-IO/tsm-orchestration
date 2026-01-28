@@ -40,7 +40,10 @@ class QcHandler(AbstractHandler):
         self.publish_topic = get_envvar("TOPIC_QC_DONE")
         self.publish_qos = get_envvar("TOPIC_QC_DONE_QOS", cast_to=int)
         self.db = Database(get_envvar("DATABASE_DSN"))
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"),
+            ("timeio-db-api", get_envvar("DB_API_AUTH_PASSWORD")),
+        )
 
     def _check_data(self, content, keys: list[str]):
         for key in keys:
@@ -143,7 +146,7 @@ class QcHandler(AbstractHandler):
                         journal.error(f"{msg}, because of {e}", thing.uuid)
                     raise ProcessingError(msg) from e
 
-            sm.upload(self.dbapi.base_url)
+            sm.upload(self.dbapi.base_url, self.dbapi.auth)
 
         if thing:
             journal.info(

@@ -39,6 +39,7 @@ class SyncExtApiManager(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.api_base_url = get_envvar("DB_API_BASE_URL")
+        self.api_auth = ("timeio-db-api", get_envvar("DB_API_AUTH_PASSWORD"))
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.sync_handlers = {
             "tsystems": TsystemsApiSyncer(),
@@ -89,6 +90,7 @@ class SyncExtApiManager(AbstractHandler):
         resp = requests.post(
             f"{self.api_base_url}/observations/upsert/{thing.uuid}",
             json=parsed_observations,
+            auth=self.api_auth,
             headers={"Content-Type": "application/json"},
         )
         resp.raise_for_status()

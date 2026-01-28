@@ -40,8 +40,9 @@ class Database:
 
 class DBapi:
 
-    def __init__(self, base_url):
+    def __init__(self, base_url, auth):
         self.base_url = base_url
+        self.auth = auth
         self.ping_dbapi()
 
     def ping_dbapi(self):
@@ -58,7 +59,9 @@ class DBapi:
 
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
         url = f"{self.base_url}/observations/upsert/{thing_uuid}"
-        response = requests.post(url, json={"observations": observations})
+        response = requests.post(
+            url, json={"observations": observations}, auth=self.auth
+        )
         if response.status_code not in (200, 201):
             raise RuntimeError(
                 f"upload to {thing_uuid} failed with "
