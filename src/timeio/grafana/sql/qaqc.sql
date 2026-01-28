@@ -1,16 +1,15 @@
 -- Using "result_quality -> -1 ->>" because result_quality is an array of quality objects
 -- we use "-1" to always select the last one
--- Update: Support both array [{...}] and JSON {...} formats for result_quality
+-- Update: Support both array [{{...}}] and JSON {{...}} formats for result_quality
 SELECT o.result_time AS "time",
 1 AS "quality_flag",
 jsonb_build_object(
-    'annotation', CAST (
+    'annotation', 
         CASE
             WHEN jsonb_typeof(result_quality) = 'array'
-            THEN result_quality -> -1 ->> 'annotation'
-            ELSE result_quality ->> 'annotation'
-        END AS DECIMAL
-    ),
+            THEN CAST(result_quality -> -1 ->> 'annotation' AS DECIMAL)
+            ELSE CAST(result_quality ->> 'annotation' AS DECIMAL)
+        END,
     'measure',
         CASE
             WHEN jsonb_typeof(result_quality) = 'array'
