@@ -33,16 +33,16 @@ xyzDatastream AS MATERIALIZED (
         dsl_x.datastream_id AS x_datastream_id,
         dsl_y.datastream_id AS y_datastream_id,
         dsl_z.datastream_id AS z_datastream_id
-FROM sms_configuration_dynamic_location_begin_action dla
-    JOIN sms_device_mount_action dma
+FROM public.sms_configuration_dynamic_location_begin_action dla
+    JOIN public.sms_device_mount_action dma
         ON dma.configuration_id = dla.configuration_id
-    JOIN sms_datastream_link dsl_x
+    JOIN public.sms_datastream_link dsl_x
         ON dsl_x.device_mount_action_id = dma.id
         AND dsl_x.device_property_id = dla.x_property_id
-    JOIN sms_datastream_link dsl_y
+    JOIN public.sms_datastream_link dsl_y
         ON dsl_y.device_mount_action_id = dma.id
         AND dsl_y.device_property_id = dla.y_property_id
-    LEFT JOIN sms_datastream_link dsl_z
+    LEFT JOIN public.sms_datastream_link dsl_z
         ON dsl_z.device_mount_action_id = dma.id
         AND dsl_z.device_property_id = dla.z_property_id
 ),
