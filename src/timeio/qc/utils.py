@@ -84,8 +84,7 @@ def load_data(
             "RESULT_STRING",
             "RESULT_JSON",
             "RESULT_BOOLEAN",
-            "RESULT_QUALITY",
-            l.datastream_id
+            "RESULT_QUALITY"
         FROM {schema}."OBSERVATIONS" o
           JOIN public.sms_datastream_link l ON o."DATASTREAM_ID" = l.device_property_id
         WHERE o."DATASTREAM_ID" = %s
@@ -95,7 +94,11 @@ def load_data(
             LIMIT %s
         """
         cur.execute(sql.SQL(query), (datastream_id, start_date, end_date, limit))
-        return to_frame(cur)
+        df = to_frame(cur)
+        df.attrs["datastream_id"] = datastream_id
+        # TODO: fill to take care of the context window
+        df.attrs["start_pos"] = None
+        return df
 
     if start_date in [None, pd.NaT]:
         start_date = "-Infinity"

@@ -20,11 +20,9 @@ from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
 from timeio.qc import (
     QcTest,
-    StreamManager,
-    get_functions_to_execute,
 )
-from timeio.qc.utils import load_data, get_functions
-from timeio.qc.saqc import init_saqc
+from timeio.qc.utils import load_data
+from timeio.qc.saqc import init_saqc, execute_qc_function
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -120,10 +118,10 @@ class QcHandler(AbstractHandler):
 
             # sm = StreamManager(conn)
             try:
-                tests = get_qc_functions(config)
+                funcs = get_qc_functions(config)
                 if thing is not None:
-                    get_qc_functions_to_execute(tests, thing.id)
-                logger.info(f"COLLECTED TESTS: {tests}")
+                    get_qc_functions_to_execute(funcs, thing.id)
+                logger.info(f"COLLECTED TESTS: {funcs}")
 
                 if start_date := content.get("start_date", None):
                     start_date = pd.Timestamp(start_date)
@@ -135,19 +133,20 @@ class QcHandler(AbstractHandler):
                     journal.error(f"{msg}, because of {e}", thing.uuid)
                 raise ParsingError(msg) from e
 
-            N = len(tests)
-            streams = sum((t.fields for t in tests), [])
+            N = len(funcs)
+            streams = sum((t.fields for t in funcs), [])
             data = load_data(conn, streams, start_date, end_date)
             qc = init_saqc(data)
-            for i, test in enumerate(tests, start=1):  # type: QcTest
-                logger.info("Test %s of %s: %s", i, N, test)
+            for i, func in enumerate(funcs, start=1):  # type: QcTest
+                logger.info("Test %s of %s: %s", i, N, func)
                 try:
+                    qc = execute_qc_function(qc, func)
                     # test.run()
                     # stage = "Storing result of"
                     # sm.update(test.result)
                 except Exception as e:
                     # TODO: better error message needed
-                    msg = f"Executing SaQC function '{test}' failed"
+                    msg = f"Executing SaQC function '{func}' failed"
                     if thing:
                         journal.error(f"{msg}, because of {e}", thing.uuid)
                     raise ProcessingError(msg) from e

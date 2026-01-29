@@ -9,7 +9,7 @@ from timeio.databases import Database
 from timeio.qc import get_functions_to_execute
 from timeio.qc.qctest import QcTest, StreamInfo
 from timeio.qc.utils import load_data
-from timeio.qc.saqc import init_saqc, execute_test
+from timeio.qc.saqc import init_saqc, execute_qc_function
 
 
 def select_thing_by_name(things, thing_name):
@@ -106,4 +106,4 @@ def test_function_execution(qc_functions):
     qc = init_saqc(data)
     for func in qc_functions:
         print(func)
-        qc = execute_test(qc, func)
+        qc = execute_qc_function(qc, func)
