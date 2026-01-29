@@ -23,6 +23,11 @@ docker compose up -d
 
 ## Development
 
+### Auth
+- Keycloak
+  - accessible at http://localhost:8080/keycloak 
+  - well known: http://localhost:8080/keycloak/realms/local-dev/.well-known/openid-configuration
+
 ### Dummy Data
 ```sql
 INSERT INTO project(name, uuid) VALUES ('Project 1', '1798503646814cc694c384e24cb01b51');
