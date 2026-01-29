@@ -53,7 +53,12 @@ export default defineConfig((ctx) => {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: {
+        authorityUrl:'http://localhost:8080/keycloak/realms/local-dev',
+        clientId:'dev-client',
+        redirectUri:'openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access',
+        clientScope:'http://localhost:3000/login-callback'
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
