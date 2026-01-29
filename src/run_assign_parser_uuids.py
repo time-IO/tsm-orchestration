@@ -20,7 +20,7 @@ logging.basicConfig(
 @click.option("--minio-host", default="localhost:9000")
 @click.option("--minio-user", default="minioadmin")
 @click.option("--minio-password", default="minioadmin")
-@click.option("--minio-secure", default=False)
+@click.option("--minio-secure", default=True)
 def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure):
     minio = Minio(
         endpoint=minio_host,
@@ -41,7 +41,7 @@ def main(bucket_name, dsn, minio_host, minio_user, minio_password, minio_secure)
         recursive=True,
     ):
         if v.is_delete_marker:
-	    n += 1
+            n += 1
             continue
         if not fnmatch.fnmatch(v.object_name, filename_pattern):
             n += 1
