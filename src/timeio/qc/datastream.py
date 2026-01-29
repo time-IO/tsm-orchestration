@@ -290,7 +290,7 @@ class DatastreamSTA:
             return chunk
 
         context_start = self._fetch_context(date_start, context_window)
-        return self._data.loc[context_start:date_end, self._columns].astype(float)
+        return self._data.loc[context_start:date_end, self._columns]
 
     def __repr__(self):
         klass = self.__class__.__name__
