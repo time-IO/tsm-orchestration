@@ -63,10 +63,7 @@ class StreamInfo(Param):
         super().__init__(key, value)
         self.thing_id = thing_id
         self.stream_id = stream_id
-
-        # self.is_immutable = thing_id is not None and stream_id is not None
-        # self.is_dataproduct = thing_id is not None and stream_id is None
-        # self.is_temporary = thing_id is None  # and stream_id is dont-care
+        self.is_immutable = thing_id is not None and stream_id is not None
 
     def __eq__(self, other):
         if not isinstance(other, StreamInfo):
@@ -91,6 +88,9 @@ class QcResult:
 
 
 class QcTest:
+    # TODO:
+    # - rename to QcFunction
+    # - make targets optional
     def __init__(
         self,
         name,
@@ -109,6 +109,14 @@ class QcTest:
 
     def __repr__(self):
         return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
+
+    @property
+    def field_names(self) -> list[str]:
+        return [f.value for f in self.fields]
+
+    @property
+    def target_names(self) -> list[str]:
+        return [f.value for f in self.targets]
 
     # def load_data(
     #     self,

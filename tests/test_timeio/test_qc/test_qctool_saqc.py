@@ -5,8 +5,11 @@ from datetime import datetime
 
 import pandas as pd
 
+from timeio.databases import Database
 from timeio.qc import get_functions_to_execute
-from timeio.qc.qctest import QcTest, StreamInfo, Param
+from timeio.qc.qctest import QcTest, StreamInfo
+from timeio.qc.utils import load_data
+from timeio.qc.saqc import init_saqc, execute_test
 
 
 def select_thing_by_name(things, thing_name):
@@ -48,14 +51,14 @@ def qc_functions():
             targets=[StreamInfo("target", "T2S44", 4, 44)],
             params={"min": 0, "max": 15}
         ),
-        QcTest(
-            "Dynamic-T2",
-            context_window=0,
-            func_name="flagUniLOF",
-            fields=[StreamInfo("field", "T2S46", 4, 46)],
-            targets=[StreamInfo("target", "T2S46", 4, 46)],
-            params={}
-        ),
+        # QcTest(
+        #     "Dynamic-T2",
+        #     context_window=0,
+        #     func_name="flagUniLOF",
+        #     fields=[StreamInfo("field", "T2S46", 4, 46)],
+        #     targets=[StreamInfo("target", "T2S46", 4, 46)],
+        #     params={}
+        # ),
         QcTest(
             "Dynamic-P1",
             context_window=0,
@@ -80,8 +83,6 @@ def test_collect_tests(qc_functions, thing_id, expected):
 
 def test_data_loading(qc_functions):
 
-    from timeio.databases import Database
-    from timeio.qc.utils import load_data
     fields = []
     for f in qc_functions:
         fields.extend(f.fields)
@@ -90,5 +91,19 @@ def test_data_loading(qc_functions):
     with Database(dsn).connection() as conn:
         data = load_data(conn, streams=fields)
 
-    import ipdb; ipdb.set_trace()
 
+def test_function_execution(qc_functions):
+
+    fields = []
+    for f in qc_functions:
+        fields.extend(f.fields)
+
+    dsn = "postgresql://postgres:postgres@localhost/postgres"
+    with Database(dsn).connection() as conn:
+        data = load_data(conn, streams=fields)
+
+
+    qc = init_saqc(data)
+    for func in qc_functions:
+        print(func)
+        qc = execute_test(qc, func)

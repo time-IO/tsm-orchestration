@@ -21,9 +21,10 @@ from timeio.mqtt import AbstractHandler
 from timeio.qc import (
     QcTest,
     StreamManager,
-    get_qc_functions,
     get_functions_to_execute,
 )
+from timeio.qc.utils import load_data, get_functions
+from timeio.qc.saqc import init_saqc
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -117,9 +118,9 @@ class QcHandler(AbstractHandler):
 
             logger.info(f"Got config %s", config)
 
-            sm = StreamManager(conn)
+            # sm = StreamManager(conn)
             try:
-                tests = get_functions_to_execute(get_qc_functions(config), thing.id)
+                tests = get_functions_to_execute(get_functions(config), thing.id)
                 logger.info(f"COLLECTED TESTS: {tests}")
 
                 if start_date := content.get("start_date", None):
@@ -133,17 +134,18 @@ class QcHandler(AbstractHandler):
                 raise ParsingError(msg) from e
 
             N = len(tests)
+            streams = sum((t.fields for t in tests), [])
+            data = load_data(conn, streams, start_date, end_date)
+            qc = init_saqc(data)
             for i, test in enumerate(tests, start=1):  # type: QcTest
                 logger.info("Test %s of %s: %s", i, N, test)
                 try:
-                    stage = "Loading data for"
-                    test.load_data(sm, start_date, end_date)
-                    stage = "Running QC function of"
-                    test.run()
-                    stage = "Storing result of"
-                    sm.update(test.result)
+                    # test.run()
+                    # stage = "Storing result of"
+                    # sm.update(test.result)
                 except Exception as e:
-                    msg = f"{stage} QC-Test {i} of {N} ({test}) failed"
+                    # TODO: better error message needed
+                    msg = f"Executing SaQC function '{test}' failed"
                     if thing:
                         journal.error(f"{msg}, because of {e}", thing.uuid)
                     raise ProcessingError(msg) from e

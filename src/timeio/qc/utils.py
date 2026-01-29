@@ -10,6 +10,7 @@ import pandas as pd
 
 import psycopg
 from psycopg import sql
+from saqc import SaQC
 
 from timeio.cast import rm_tz
 from timeio.qc.qctest import QcTest, StreamInfo
@@ -107,6 +108,9 @@ def load_data(
     with db_conn.cursor() as cur:
         # for stream in set(streams):
         for stream in streams:
+            if stream.is_immutable:
+                # TODO: shrink data range
+                pass
             schema, datastream_id = query_datastream_id(cur, stream.stream_id)
             out[stream.value] = query_datastream(
                 cur, schema, datastream_id, start_date, end_date, limit
