@@ -135,7 +135,7 @@ class QcTest:
                 start_date, end_date = stream.get_unprocessed_range()
 
             df = stream.get_data(start_date, end_date, self.context_window)
-            data[name] = df["data"]
+            data[name] = df["data"].astype(float)
             qual[name] = df["quality"]
 
         self._qctool.add_data(data, qual)

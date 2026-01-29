@@ -119,7 +119,9 @@ class QcHandler(AbstractHandler):
 
             sm = StreamManager(conn)
             try:
-                tests = get_qc_functions_to_execute(get_qc_functions(config), thing.id)
+                tests = get_qc_functions(config)
+                if thing is not None:
+                    get_qc_functions_to_execute(tests, thing.id)
                 logger.info(f"COLLECTED TESTS: {tests}")
 
                 if start_date := content.get("start_date", None):
