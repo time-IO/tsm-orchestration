@@ -476,7 +476,7 @@ class ExtAPI(Base):
     api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
     sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
-    settings: JsonT | None = _prop(lambda self: self._attrs["settings"])
+    settings: JsonObjectT | None = _prop(lambda self: self._attrs["settings"])
     api_type: ExtAPIType = _create(
         ExtAPIType, f"SELECT * FROM {_schema}.ext_api_type WHERE id = %s", "api_type_id"
     )
@@ -519,7 +519,7 @@ class FileParser(Base, FromUUIDMixin):
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
     name: str = _prop(lambda self: self._attrs["name"])
     uuid = _prop(lambda self: self._attrs["uuid"])
-    params: JsonT | None = _prop(lambda self: self._attrs["params"])
+    params: JsonObjectT | None = _prop(lambda self: self._attrs["params"])
     file_parser_type: FileParserType = _create(
         FileParserType,
         f"SELECT * FROM {_schema}.file_parser_type WHERE id = %s",
