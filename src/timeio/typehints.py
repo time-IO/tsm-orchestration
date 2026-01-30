@@ -5,6 +5,8 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
+import pandas as pd
+
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
 JsonObjectT = dict[str, "JsonT"]
@@ -12,6 +14,8 @@ JsonT = _t.Union[JsonScalarT, JsonArrayT, JsonObjectT]
 
 DbScalarT = _t.Union[str, bool, int, float, JsonT, datetime.datetime.timestamp]
 DbRowT = tuple[DbScalarT, ...]
+
+TimestampT = datetime.datetime | pd.Timestamp
 
 v1 = 1
 v2 = 2

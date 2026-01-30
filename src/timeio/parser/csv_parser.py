@@ -20,6 +20,7 @@ journal = Journal("CsvParser", errors="warn")
 
 
 class CsvParser(PandasParser):
+
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
 
@@ -225,6 +226,9 @@ class CsvParser(PandasParser):
             )
 
         self.logger.debug(f"data.shape={df.shape}")
+
+        self._start_date = df.index[0]
+        self._end_date = df.index[-1]
         return df
 
 
