@@ -52,7 +52,7 @@ class Journal:
         self.enabled = get_envvar_as_bool("JOURNALING")
         self.base_url = get_envvar("DB_API_BASE_URL", None)
         self.api_auth = f"timeio-db-api:{get_envvar('DB_API_AUTH_PASSWORD', None)}"
-        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
+        self.api_token = get_envvar("DB_API_AUTH_TOKEN", None)
 
         if not self.enabled:
             warnings.warn(
