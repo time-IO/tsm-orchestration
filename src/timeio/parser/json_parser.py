@@ -79,4 +79,6 @@ class JsonParser(PandasParser):
             df = self._set_index(df, timestamp_keys)
         except KeyError as e:
             raise ParsingError(f"Timestamp path error: {e}")
+        self._start_date = df.index[0]
+        self._end_date = df.index[-1]
         return df
