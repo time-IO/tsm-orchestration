@@ -40,9 +40,9 @@ class Database:
 
 class DBapi:
 
-    def __init__(self, base_url, auth):
+    def __init__(self, base_url, auth_token):
         self.base_url = base_url
-        self.auth = auth
+        self.auth_token = auth_token
         self.ping_dbapi()
 
     def ping_dbapi(self):
@@ -60,7 +60,12 @@ class DBapi:
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
         url = f"{self.base_url}/observations/upsert/{thing_uuid}"
         response = requests.post(
-            url, json={"observations": observations}, auth=self.auth
+            url,
+            json={"observations": observations},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.auth_token}",
+            },
         )
         if response.status_code not in (200, 201):
             raise RuntimeError(

@@ -52,6 +52,7 @@ class Journal:
         self.enabled = get_envvar_as_bool("JOURNALING")
         self.base_url = get_envvar("DB_API_BASE_URL", None)
         self.api_auth = f"timeio-db-api:{get_envvar('DB_API_AUTH_PASSWORD', None)}"
+        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
 
         if not self.enabled:
             warnings.warn(
@@ -96,14 +97,12 @@ class Journal:
         }
         logger.info("Message to journal:\n>> %s[%s]: %s", self.name, level, message)
 
-        auth_bytes = self.api_auth.encode("utf-8")
-        auth_b64 = base64.b64encode(auth_bytes).decode("utf-8")
         req = request.Request(
             url=f"{self.base_url}/journal/{thing_uuid}",
             data=json.dumps(data).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Basic {auth_b64}",
+                "Authorization": f"Bearer {self.api_token}",
             },
             method="POST",
         )

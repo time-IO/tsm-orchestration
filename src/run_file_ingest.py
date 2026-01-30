@@ -45,7 +45,7 @@ class ParserJobHandler(AbstractHandler):
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
         self.api_base_url = get_envvar("DB_API_BASE_URL")
-        self.api_auth = ("timeio-db-api", get_envvar("DB_API_AUTH_PASSWORD"))
+        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
@@ -114,8 +114,10 @@ class ParserJobHandler(AbstractHandler):
             resp = requests.post(
                 f"{self.api_base_url}/observations/upsert/{thing_uuid}",
                 json={"observations": obs},
-                auth=self.api_auth,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_token}",
+                },
             )
             resp.raise_for_status()
         except Exception as e:
