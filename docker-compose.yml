@@ -330,7 +330,7 @@ services:
   # ===========
   # TODO
   timeio-db-api:
-    image: "api:local"
+    image: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api:${DB_API_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     entrypoint: "sh /app/start.sh"
     environment:
