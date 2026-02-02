@@ -20,11 +20,20 @@ import IngestOverviewPage from "pages/IngestOverviewPage.vue";
 import ParserOverviewPage from "pages/ParserOverviewPage.vue";
 import QualityControlOverviewPage from "pages/QualityControlOverviewPage.vue";
 import QualityControlNewPage from "pages/QualityControlNewPage.vue";
+import AuthLoginCallback from "pages/AuthLoginCallback.vue";
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component:IndexPage,
+  },
+  {
+    path: '/login-callback',
+    component:AuthLoginCallback,
+  },
+  {
+    path: '/silent-renew',
+    component:AuthLoginCallback,
   },
   {
     path: '/ingest',

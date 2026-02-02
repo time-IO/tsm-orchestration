@@ -5,7 +5,15 @@
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>{{t('appname')}}</q-toolbar-title>
-
+        <q-btn
+        @click="handleLogin"
+        >Login</q-btn>
+        <q-btn
+          v-if="authStore.isAuthenticated"
+          @click="handleLogout"
+        >
+          Logout
+        </q-btn>
         <q-btn round flat>
           <q-avatar size="26px">
             <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
@@ -61,9 +69,21 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {useAuthStore} from "stores/authStore";
 
 const {t} = useI18n()
 const leftDrawerOpen = ref(false);
+
+
+const authStore = useAuthStore()
+
+const handleLogin = async () => {
+  await authStore.login()
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
+}
 
 const topNavigation = [
   {
