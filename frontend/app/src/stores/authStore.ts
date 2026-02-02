@@ -112,17 +112,6 @@ export const useAuthStore = defineStore('auth', {
         return null
       }
     },
-
-    // Navigation helper methods
-    // async navigateAfterLogin() {
-    //   const router = useRouter()
-    //   router.push('/')
-    // },
-    //
-    // async navigateAfterLogout() {
-    //   const router = useRouter()
-    //   router.push('/login')
-    // }
   }
 })
 
