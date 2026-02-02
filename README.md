@@ -23,6 +23,11 @@ docker compose up -d
 
 ## Development
 
+### Environment Variables Frontend
+- Environment Varaibles must be defined in `frontend/app/quasar.config.ts`>`build`>`env`
+  - afterwards they can be used with `process.env.<KEY>`
+  - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts` 
+
 ### Auth
 - Keycloak
   - accessible at http://localhost:8080/keycloak 
