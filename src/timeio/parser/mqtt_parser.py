@@ -37,6 +37,8 @@ class Observation:
 class MqttParser(AbcParser):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__qualname__)
+        self._start_date = None
+        self._end_date = None
 
     @abstractmethod
     def do_parse(self, rawdata: Any, origin: str) -> list[Observation]:

@@ -137,7 +137,12 @@ class ParserJobHandler(AbstractHandler):
 
         self.set_tags(bucket_name, filename, str(parser_uuid), "successful")
         payload = json.dumps(
-            {"thing_uuid": str(thing_uuid), "file": f"{bucket_name}/{filename}"}
+            {
+                "thing_uuid": str(thing_uuid),
+                "file": f"{bucket_name}/{filename}",
+                "start_date": parser.start_date,
+                "end_date": parser.end_date,
+            }
         )
         self.mqtt_client.publish(
             topic=self.pub_topic, payload=payload, qos=self.mqtt_qos
