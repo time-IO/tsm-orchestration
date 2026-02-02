@@ -88,7 +88,7 @@ class StreamManager:
             qlabels = result.quality[name]
             stream.update_quality_labels(qlabels)
 
-    def upload(self, api_base_url: str):
+    def upload(self, api_base_url: str, api_token: str):
         for stream in self._streams.values():
             # Data from a local stream (aka a temporary
             # variable) is not intended to be uploaded.
@@ -96,7 +96,7 @@ class StreamManager:
                 continue
 
             try:
-                stream.upload(api_base_url)
+                stream.upload(api_base_url, api_token)
             except HTTPError as e:
                 raise UploadError(f"Upload failed for stream {stream}") from e
             except Exception as e:

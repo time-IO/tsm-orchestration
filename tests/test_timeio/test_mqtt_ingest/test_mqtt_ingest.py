@@ -16,6 +16,7 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("MQTT_CLEAN_SESSION", "true")
     monkeypatch.setenv("CONFIGDB_DSN", "dsn")
     monkeypatch.setenv("DB_API_BASE_URL", "http://fake-db")
+    monkeypatch.setenv("DB_API_AUTH_TOKEN", "token")
     monkeypatch.setenv("TOPIC_DATA_PARSED", "topic/parsed")
 
 
