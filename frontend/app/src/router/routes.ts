@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type {RouteRecordRaw} from 'vue-router';
 import IngestNewPage from 'pages/IngestNewPage.vue';
 import IngestDetailPage from 'pages/IngestDetailPage.vue';
 import IngestEditPage from 'pages/IngestEditPage.vue';
@@ -25,95 +25,118 @@ import AuthLoginCallback from "pages/AuthLoginCallback.vue";
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component:IndexPage,
+    component: IndexPage,
+    meta: {requiresAuth: false}
   },
   {
     path: '/login-callback',
-    component:AuthLoginCallback,
+    component: AuthLoginCallback,
+    meta: {requiresAuth: false}
   },
   {
     path: '/silent-renew',
-    component:AuthLoginCallback,
+    component: AuthLoginCallback,
+    meta: {requiresAuth: false}
   },
   {
     path: '/ingest',
-    component: IngestOverviewPage
+    component: IngestOverviewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new',
-    component: IngestNewPage
+    component: IngestNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/sftp',
-    component: IngestSftpNewPage
+    component: IngestSftpNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/mqtt',
-    component: IngestMqttNewPage
+    component: IngestMqttNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-sftp',
-    component: IngestExternalSftpNewPage
+    component: IngestExternalSftpNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/bosch',
     component: IngestExternalApiBoschNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/dwd',
     component: IngestExternalApiDwdNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/nm',
     component: IngestExternalApiNmNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/tsystems',
     component: IngestExternalApiTsystemsNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/ttn',
     component: IngestExternalApiTtnNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/uba',
     component: IngestExternalApiUbaNewPage,
+    meta: {requiresAuth: true}
   },
   {
-    path:'/ingest/external-api-uba/:id',
-    component: IngestExternalApiUbaDetailPage
+    path: '/ingest/external-api-uba/:id',
+    component: IngestExternalApiUbaDetailPage,
+    meta: {requiresAuth: true}
   },
   {
-    path:'/ingest/external-api-uba/:id/edit',
-    component: IngestExternalApiUbaEditPage
+    path: '/ingest/external-api-uba/:id/edit',
+    component: IngestExternalApiUbaEditPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/:id',
-    component: IngestDetailPage
+    component: IngestDetailPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/ingest/:id/edit',
-    component: IngestEditPage
+    component: IngestEditPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/parser',
-    component: ParserOverviewPage
+    component: ParserOverviewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/parser/new',
-    component: ParserNewPage
+    component: ParserNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/parser/new/csv',
-    component: ParserCsvNewPage
+    component: ParserCsvNewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/quality-control',
-    component: QualityControlOverviewPage
+    component: QualityControlOverviewPage,
+    meta: {requiresAuth: true}
   },
   {
     path: '/quality-control/new',
-    component: QualityControlNewPage
+    component: QualityControlNewPage,
+    meta: {requiresAuth: true}
   },
 
   // Always leave this as last one,
