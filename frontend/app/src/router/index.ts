@@ -7,6 +7,8 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import {useAuthStore} from "stores/authStore";
+import {useQuasar} from 'quasar'
+
 
 /*
  * If not building with SSR mode, you can
@@ -17,7 +19,9 @@ import {useAuthStore} from "stores/authStore";
  * with the Router instance.
  */
 
+
 export default defineRouter(function (/* { store, ssrContext } */) {
+
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
@@ -34,13 +38,22 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+
   // Global navigation guard
   Router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore()
 
     // If route requires authentication and user is not authenticated
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-      // Redirect to login page
+
+      const $q = useQuasar()
+
+      $q.notify({
+        position: "top",
+        type: 'negative',
+        message: 'Authentication required'
+      })
+
       next('/')
     } else {
       next()
