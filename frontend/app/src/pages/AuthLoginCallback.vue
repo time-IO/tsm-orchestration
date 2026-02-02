@@ -17,8 +17,7 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
-    await authStore.handleCallback()
-    // await authStore.navigateAfterLogin()
+    await authStore.handleLoginCallback()
     await router.push('/')
   } catch (error) {
     console.error('Authentication failed:', error)

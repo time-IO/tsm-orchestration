@@ -12,7 +12,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['i18n', 'axios'],
+    boot: ['auth', 'i18n', 'axios'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -54,11 +54,12 @@ export default defineConfig((ctx) => {
       // publicPath: '/',
       // analyze: true,
       env: {
-        authorityUrl:'http://localhost:8080/keycloak/realms/local-dev',
-        clientId:'dev-client',
-        redirect_uri: 'http://localhost:3000/login-callback',
-        scope:'openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access',
-        clientScope:'http://localhost:3000/login-callback'
+        OIDC_IDP_URL:process.env.OIDC_IDP_URL,
+        OIDC_CLIENT_ID:process.env.OIDC_CLIENT_ID,
+        OIDC_REDIRECT_URI: process.env.OIDC_REDIRECT_URI,
+        OIDC_SCOPE: process.env.OIDC_SCOPE,
+        OIDC_SILENT_REDIRECT_URI: process.env.OIDC_SILENT_REDIRECT_URI,
+        OIDC_POST_LOGOUT_REDIRECT_URI: process.env.OIDC_POST_LOGOUT_REDIRECT_URI,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

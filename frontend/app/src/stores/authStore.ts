@@ -1,120 +1,113 @@
-import {acceptHMRUpdate, defineStore} from 'pinia'
-import {ref, computed} from 'vue'
-import {User, UserManager} from 'oidc-client-ts'
+import {defineStore} from "pinia";
+import {User} from "oidc-client-ts";
+import {userManager} from "src/auth/oidcConfig";
 
-export const useAuthStore = defineStore('auth', {
+
+/**
+ * Prevent multiple event registrations (HMR, multi-import)
+ */
+let eventsBound = false;
+
+export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,
-    isLoading: false,
-    error: null
+    user: null as User | null,
+    loading: false,
   }),
 
   getters: {
-    hasToken: (state) => !!state.user?.access_token,
+    isAuthenticated: (state) => !!state.user && !state.user.expired,
+    accessToken: (state) => state.user?.access_token ?? null,
     getUserInfo: (state) => state.user?.profile || null,
-    isAuthenticated: (state) => !!state.user
+    initials: (state) => {
+      if (state.isAuthenticated) {
+        const givenName = state.getUserInfo.given_name
+        const familyName = state.getUserInfo.family_name
+
+        if (
+          givenName != null && givenName.length > 0 &&
+          familyName != null && familyName.length > 0
+        ) {
+          return givenName[0] + familyName[0]
+        }
+
+        if (state.getUserInfo.name.length > 2) {
+          return state.getUserInfo.name[0] + state.getUserInfo.name[1]
+        }
+      }
+      return null
+    }
   },
 
   actions: {
-    async initialize() {
+    async init() {
+      this.loading = true;
       try {
-        this.isLoading = true
-
-        const config = {
-          authority: 'http://localhost:8080/keycloak/realms/local-dev',
-          client_id: 'dev-client',
-          redirect_uri: 'http://localhost:3000/login-callback',
-          response_type: 'code',
-          scope: 'openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access',
-          post_logout_redirect_uri: 'http://localhost:3000',
-          silent_redirect_uri: 'http://localhost:3000/silent-renew',
-          automaticSilentRenew: true,
-          includeIdTokenInSilentRenew: true
-        }
-
-        this.userManager = new UserManager(config)
-
-        const user = await this.userManager.getUser()
-        if (user) {
-          this.setUser(user)
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        this.error = error.message
+        this.user = await userManager.getUser();
       } finally {
-        this.isLoading = false
+        this.loading = false;
       }
+
+      this.bindOidcEvents();
     },
 
-    setUser(user) {
-      this.user = user
+    login() {
+      return userManager.signinRedirect();
     },
 
-    async login() {
-      try {
-        this.isLoading = true
-        await this.userManager.signinRedirect()
-      } catch (error) {
-        console.error('Login error:', error)
-        this.error = error.message
-      } finally {
-        this.isLoading = false
-      }
-    },
-
-    async handleCallback() {
-      try {
-        this.isLoading = true
-        const user = await this.userManager.signinCallback()
-        this.setUser(user)
-        return user
-      } catch (error) {
-        console.error('Callback error:', error)
-        this.error = error.message
-        throw error
-      } finally {
-        this.isLoading = false
-      }
+    async handleLoginCallback() {
+      this.user = await userManager.signinRedirectCallback();
     },
 
     async logout() {
-      try {
-        this.isLoading = true
-        await this.userManager.signoutRedirect()
-      } catch (error) {
-        console.error('Logout error:', error)
-        this.error = error.message
-      } finally {
-        this.isLoading = false
-      }
+      this.user = null;
+      return userManager.signoutRedirect();
     },
 
-    async handleSignoutCallback() {
-      try {
-        this.isLoading = true
-        await this.userManager.signoutCallback()
-        this.setUser(null)
-      } catch (error) {
-        console.error('Signout callback error:', error)
-        this.error = error.message
-      } finally {
-        this.isLoading = false
-      }
-    },
+    bindOidcEvents() {
+      if (eventsBound) return;
+      eventsBound = true;
 
-    async getAccessToken() {
-      if (!this.user) return null
+      /**
+       * Fired on:
+       * - initial login
+       * - silent renew
+       * - refresh token rotation
+       */
+      userManager.events.addUserLoaded((user) => {
+        console.info("OIDC: user loaded / updated");
+        console.log("NEW TOKEN", user.access_token);
+        this.user = user;
+      });
 
-      try {
-        return await this.userManager.getAccessToken()
-      } catch (error) {
-        console.error('Token retrieval error:', error)
-        return null
-      }
-    },
-  }
-})
+      /**
+       * ~60s before expiration
+       */
+      userManager.events.addAccessTokenExpiring(() => {
+        console.warn("OIDC: token expiring");
+      });
 
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useAuthStore, import.meta.hot))
-}
+      /**
+       * Token is no longer usable
+       */
+      userManager.events.addAccessTokenExpired(() => {
+        console.warn("OIDC: token expired");
+        this.user = null;
+      });
+
+      /**
+       * Silent renew failed (network, revoked refresh token, etc.)
+       */
+      userManager.events.addSilentRenewError((err) => {
+        console.error("OIDC: silent renew error", err);
+      });
+
+      /**
+       * User logged out at the IdP
+       */
+      userManager.events.addUserSignedOut(() => {
+        console.warn("OIDC: user signed out at IdP");
+        this.user = null;
+      });
+    }
+  },
+});

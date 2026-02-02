@@ -7,8 +7,7 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import {useAuthStore} from "stores/authStore";
-import {useQuasar} from 'quasar'
-
+import {Notify} from 'quasar'
 
 /*
  * If not building with SSR mode, you can
@@ -43,15 +42,17 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   Router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore()
 
+    if (!authStore.user) {
+      await authStore.init();
+    }
+
     // If route requires authentication and user is not authenticated
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
 
-      const $q = useQuasar()
-
-      $q.notify({
+      Notify.create({
         position: "top",
         type: 'negative',
-        message: 'Authentication required'
+        message: 'Authentication required! Please login.'
       })
 
       next('/')
