@@ -73,7 +73,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         logger.debug(f"grand grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
-    def create_user(self, thing: Thing):
+    def create_user(self, thing):
 
         with self.db.connection() as conn:
             with conn.cursor() as c:
@@ -90,7 +90,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_ro_user(self, thing: Thing, user_prefix: str = ""):
+    def create_ro_user(self, thing, user_prefix: str = ""):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 ro_username = user_prefix.lower() + thing.database.ro_username.lower()
@@ -149,7 +149,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_schema(self, thing: Thing):
+    def create_schema(self, thing):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(
@@ -158,7 +158,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=sql.Identifier(thing.database.username.lower()))
                 )
 
-    def deploy_ddl(self, thing: Thing):
+    def deploy_ddl(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
         with open(file) as fh:
             query = fh.read()
@@ -213,7 +213,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             with conn.cursor() as c:
                 c.execute(query)
 
-    def grant_sta_select(self, thing: Thing, user_prefix: str):
+    def grant_sta_select(self, thing, user_prefix: str):
         schema = sql.Identifier(thing.database.username.lower())
         sta_user = sql.Identifier(
             user_prefix.lower() + thing.database.ro_username.lower()
@@ -246,7 +246,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(sta_user=sta_user, schema=schema)
                 )
 
-    def grant_grafana_select(self, thing: Thing, user_prefix: str):
+    def grant_grafana_select(self, thing, user_prefix: str):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 schema = sql.Identifier(thing.database.username.lower())
@@ -278,7 +278,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
-    def create_frost_views(self, thing: Thing):
+    def create_frost_views(self, thing):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
             os.path.join(base_path, "schema_context.sql"),
@@ -317,7 +317,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                     c.execute(view)
 
-    def create_grafana_views(self, thing: Thing):
+    def create_grafana_views(self, thing):
         file = os.path.join(
             os.path.dirname(__file__),
             "sql",
@@ -332,7 +332,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(view)
 
-    def upsert_thing(self, thing: Thing) -> bool:
+    def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
         schema_name = thing.database.username.lower()
         query = (
