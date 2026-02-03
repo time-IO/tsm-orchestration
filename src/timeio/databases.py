@@ -6,6 +6,7 @@ import threading
 import urllib.request
 from functools import partial
 from typing import Any, Callable
+from datetime import datetime, timezone
 
 import psycopg
 import requests
@@ -74,7 +75,10 @@ class DBapi:
         url = f"{self.base_url}/mqtt_message/insert/{thing_uuid}"
         response = requests.post(
             url,
-            json={"message": message},
+            json={
+                "message": message,
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            },
             headers={
                 "Authorization": f"Bearer {self.auth_token}",
             },
