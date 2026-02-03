@@ -9,8 +9,16 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "8000:8000"
+    environment:
+      POSTGRES_SERVER: "${POSTGRES_SERVER:-api-db}"
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-db_dev}"
     volumes:
       - ./api/app:/app:rw,cached
+    depends_on:
+      - api-db
     command: "fastapi dev --host 0.0.0.0 --port 8000 main.py"
 
   frontend:
@@ -69,5 +77,17 @@ services:
     volumes:
       - "keycloak-data:/var/lib/postgresql/data/"
 
+  api-db:
+    image: "postgres:14-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "${API_DB_POSTGRES_DB:-db_dev}"
+      POSTGRES_USER: "${API_DB_POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${API_DB_POSTGRES_PASSWORD:-postgres}"
+    volumes:
+      - "api-data:/var/lib/postgresql/data/"
+
 volumes:
   keycloak-data:
+  api-data:
