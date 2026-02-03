@@ -34,11 +34,6 @@ const routes: RouteRecordRaw[] = [
     meta: {requiresAuth: false}
   },
   {
-    path: '/silent-renew',
-    component: AuthLoginCallback,
-    meta: {requiresAuth: false}
-  },
-  {
     path: '/ingest',
     component: IngestOverviewPage,
     meta: {requiresAuth: true}
