@@ -72,7 +72,6 @@ export const useAuthStore = defineStore("auth", {
        */
       userManager.events.addUserLoaded((user) => {
         console.info("OIDC: user loaded / updated");
-        console.log("NEW TOKEN", user.access_token);
         this.user = user;
       });
 
