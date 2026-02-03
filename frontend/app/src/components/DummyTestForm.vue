@@ -32,7 +32,7 @@ const emit = defineEmits(['submit']);
 const submitForm = () => {
   const processedData = Object.entries(formData.value).map(([key, value]) => {
     // Map value types to appropriate Vue type descriptors
-    let valueWithType = {name: key , value: value};
+    const valueWithType = {name: key , value: value, type: null};
     switch (key) {
       case 'min_length':
       {

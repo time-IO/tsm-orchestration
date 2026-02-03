@@ -137,6 +137,7 @@ import {onMounted, ref} from 'vue'
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {useRoute} from "vue-router";
 import {useQuasar} from 'quasar'
+import type {IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
 
 const $q = useQuasar()
 const route = useRoute()
@@ -150,7 +151,7 @@ onMounted(async () => {
   try {
     isLoading.value = true
     item.value = await store.dispatchGetOneIngestExternalApiDwd(route.params.id)
-  } catch (e) {
+  } catch {
     $q.notify({
         type: 'negative',
         message: 'Failed to load ingest data'
@@ -177,7 +178,7 @@ const deleteItem = async () => {
       message: 'Item deleted successfully'
     });
     router.push('/ingest');
-  } catch (error) {
+  } catch {
     $q.notify({
       type: 'negative',
       message: 'Failed to delete item'

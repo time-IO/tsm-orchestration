@@ -1,5 +1,5 @@
 import {defineStore, acceptHMRUpdate} from 'pinia';
-import {IngestExternalApiUbaCreate, IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
+import type {IngestExternalApiUbaCreate, IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
 import {API} from "src/services";
 
 export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaStore', {
@@ -30,7 +30,7 @@ export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaSto
       const response = await API.ingestExternalApiDwd.updateIngestExternalApiDwd(id, payload)
         return response.data
     },
-    async dispatchDeleteIngestExternalApiDwd(id: number): Promise<IngestExternalApiUbaPublic> {
+    async dispatchDeleteIngestExternalApiDwd(id: number): Promise<void> {
       await API.ingestExternalApiDwd.deleteIngestExternalApiDwd(id)
     },
   },

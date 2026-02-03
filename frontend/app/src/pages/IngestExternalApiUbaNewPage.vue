@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 import {ref} from 'vue'
-import {IngestExternalApiUbaCreate, IngestExternalApiUbaUpdate} from "src/services/ingest_external_api_uba/types";
+import type {IngestExternalApiUbaCreate} from "src/services/ingest_external_api_uba/types";
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {useQuasar} from 'quasar'
 import {useRouter} from "vue-router";
@@ -117,7 +117,7 @@ const store = useIngestExternalApiUbaStore()
 const $q = useQuasar()
 const router = useRouter()
 
-const formData = ref<IngestExternalApiUbaUpdate>({
+const formData = ref<IngestExternalApiUbaCreate>({
   name: '',
   project_id: null,
   description: '',
@@ -141,7 +141,7 @@ const projectOptions = [
 ]
 
 async function save() {
-  let data: IngestExternalApiUbaCreate = {
+  const data: IngestExternalApiUbaCreate = {
     name: formData.value.name,
     description: formData.value.description,
     project_id: formData.value.project_id,
@@ -160,7 +160,7 @@ async function save() {
     // Navigate back to list
     await router.push(`/ingest/external-api-uba/${result.id}`)
 
-  } catch (error) {
+  } catch {
     $q.notify({
       position: "top",
       type: 'negative',

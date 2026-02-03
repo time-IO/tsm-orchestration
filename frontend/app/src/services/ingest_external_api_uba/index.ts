@@ -1,6 +1,6 @@
 import { axiosInstance } from 'src/boot/axios';
-import {IngestExternalApiUbaPublic, IngestExternalApiUbaCreate, IngestExternalApiUbaUpdate} from "src/services/ingest_external_api_uba/types";
-import {AxiosResponse} from "axios";
+import type {IngestExternalApiUbaPublic, IngestExternalApiUbaCreate, IngestExternalApiUbaUpdate} from "src/services/ingest_external_api_uba/types";
+import type {AxiosResponse} from "axios";
 
 async function getListIngestExternalApiDwd(){
   return await axiosInstance.get<AxiosResponse<IngestExternalApiUbaPublic[]>>("ingest/external-api/uba/")

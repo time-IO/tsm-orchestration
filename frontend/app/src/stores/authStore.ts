@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {User} from "oidc-client-ts";
+import type {User} from "oidc-client-ts";
 import {userManager} from "src/auth/oidcConfig";
 
 

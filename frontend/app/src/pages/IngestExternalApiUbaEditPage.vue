@@ -107,7 +107,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { IngestExternalApiUbaUpdate } from "src/services/ingest_external_api_uba/types"
+import type { IngestExternalApiUbaUpdate } from "src/services/ingest_external_api_uba/types"
 import { useIngestExternalApiUbaStore } from "stores/ingestExternalApiUbaStore"
 
 // Composition API
@@ -148,12 +148,12 @@ onMounted(async () => {
         station_id: data.station_id || null,
         sync_enabled: data.sync_enabled || false
       }
-    } catch (error) {
+    } catch {
       $q.notify({
         type: 'negative',
         message: 'Failed to load ingest data'
       })
-      router.push('/ingest')
+      await router.push('/ingest')
     }
   }
 })
@@ -182,9 +182,9 @@ async function save() {
       message: 'Updated successfully'
     })
 
-    // Navigate back to list
+    // Navigate back to detail
     await router.push(`/ingest/external-api-uba/${id}`)
-  } catch (error) {
+  } catch {
     $q.notify({
       position: "top",
       type: 'negative',
@@ -195,14 +195,7 @@ async function save() {
   }
 }
 
-// Cancel and navigate back
-function cancel() {
-  router.push('/ingest')
-}
 </script>
 
 <style scoped>
-.q-card {
-  box-shadow: 0 1px 5px rgba(0,0,0,0.12), 0 2px 2px rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.2);
-}
 </style>

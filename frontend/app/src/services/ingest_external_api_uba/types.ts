@@ -1,4 +1,4 @@
-import {Project} from "src/services/project/types";
+import type {Project} from "src/services/project/types";
 
 export type IngestExternalApiUbaPublic = {
   id: number

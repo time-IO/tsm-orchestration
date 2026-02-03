@@ -43,8 +43,8 @@ const { t } = useI18n()
 
 const storeIngestExternalApiUba = useIngestExternalApiUbaStore()
 
-onMounted(()=>{
-  storeIngestExternalApiUba.dispatchGetListIngestExternalApiDwd()
+onMounted(async ()=>{
+  await storeIngestExternalApiUba.dispatchGetListIngestExternalApiDwd()
 })
 
 const columns = [
