@@ -18,20 +18,17 @@ export const useAuthStore = defineStore("auth", {
     isAuthenticated: (state) => !!state.user && !state.user.expired,
     accessToken: (state) => state.user?.access_token ?? null,
     getUserInfo: (state) => state.user?.profile || null,
-    initials: (state) => {
-      if (state.isAuthenticated) {
-        const givenName = state.getUserInfo.given_name
-        const familyName = state.getUserInfo.family_name
+    initials(): string | null {
+      if (this.isAuthenticated && this.getUserInfo) {
+        const givenName = this.getUserInfo.given_name
+        const familyName = this.getUserInfo.family_name
 
-        if (
-          givenName != null && givenName.length > 0 &&
-          familyName != null && familyName.length > 0
-        ) {
-          return givenName[0] + familyName[0]
+        if (givenName && familyName) {
+          return givenName.charAt(0) + familyName.charAt(0)
         }
 
-        if (state.getUserInfo.name.length > 2) {
-          return state.getUserInfo.name[0] + state.getUserInfo.name[1]
+        if (this.getUserInfo.name && this.getUserInfo.name.length >= 2) {
+          return this.getUserInfo.name.charAt(0) + this.getUserInfo.name.charAt(1)
         }
       }
       return null
