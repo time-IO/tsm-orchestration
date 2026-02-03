@@ -75,7 +75,7 @@ const addItemToTimestampColumns = ()=>{
   timestampColumns.value.push({column:columnNumber,format:''})
 }
 
-const removeItemFromTimestampColumns = (index) => {
+const removeItemFromTimestampColumns = (index:number) => {
   timestampColumns.value.splice(index,1)
 }
 
