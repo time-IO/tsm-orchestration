@@ -340,7 +340,7 @@ class DatastreamSTA:
         labels = df.to_json(orient="records", date_format="iso")
 
         r = requests.post(
-            f"{api_base_url}/observations/qaqc/{self._thing.uuid}",
+            f"{api_base_url}/things/{self._thing.uuid}/observations/qaqc",
             data=f'{{"qaqc_labels":{labels}}}',
             headers={
                 "Content-type": "application/json",
@@ -497,7 +497,7 @@ class ProductStream(Datastream):
         labels = df.to_json(orient="records", date_format="iso")
 
         r = requests.post(
-            f"{api_base_url}/observations/upsert/{self.thing_id}",
+            f"{api_base_url}/things/{self.thing_id}/observations/upsert",
             json={"observations": labels},
             headers={
                 "Content-type": "application/json",

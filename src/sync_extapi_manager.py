@@ -88,7 +88,7 @@ class SyncExtApiManager(AbstractHandler):
 
     def write_observations(self, thing: Thing, parsed_observations: dict):
         resp = requests.post(
-            f"{self.api_base_url}/observations/upsert/{thing.uuid}",
+            f"{self.api_base_url}/things/{thing.uuid}/observations/upsert",
             json=parsed_observations,
             headers={
                 "Content-Type": "application/json",

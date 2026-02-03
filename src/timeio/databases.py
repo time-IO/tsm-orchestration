@@ -58,7 +58,7 @@ class DBapi:
                 )
 
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
-        url = f"{self.base_url}/observations/upsert/{thing_uuid}"
+        url = f"{self.base_url}/things/{thing_uuid}/observations/upsert"
         response = requests.post(
             url,
             json={"observations": observations},

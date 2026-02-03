@@ -112,7 +112,7 @@ class ParserJobHandler(AbstractHandler):
         logger.debug("storing observations to database ...")
         try:
             resp = requests.post(
-                f"{self.api_base_url}/observations/upsert/{thing_uuid}",
+                f"{self.api_base_url}/things/{thing_uuid}/observations/upsert",
                 json={"observations": obs},
                 headers={
                     "Content-Type": "application/json",
