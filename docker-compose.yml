@@ -35,7 +35,6 @@ services:
       OIDC_IDP_URL: "${OIDC_IDP_URL:-http://localhost:8080/keycloak/realms/local-dev}" #url to idp without .well-known
       OIDC_REDIRECT_URI: "${OIDC_REDIRECT_URI:-http://localhost:3000/login-callback}"
       OIDC_SCOPE: "${OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
-      OIDC_SILENT_REDIRECT_URI: "${OIDC_SILENT_REDIRECT_URI:-http://localhost:3000/silent-renew}"
       OIDC_POST_LOGOUT_REDIRECT_URI: "${OIDC_POST_LOGOUT_REDIRECT_URI:-http://localhost:3000}"
     volumes:
       - ./frontend/app:/home/node/app:rw,cached
