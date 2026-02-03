@@ -123,9 +123,10 @@ COMMENT ON COLUMN related_datastream.target_id IS 'Codomain, target  or set of d
 
 CREATE TABLE mqtt_message
 (
-    "id"          bigserial    NOT NULL PRIMARY KEY,
-    "message"     text         NOT NULL,
-    "thing_id"    bigint       NOT NULL,
+    "id"          bigserial                NOT NULL PRIMARY KEY,
+    "timestamp"   timestamp with time zone NOT NULL,
+    "message"     text                     NOT NULL,
+    "thing_id"    bigint                   NOT NULL,
 
     CONSTRAINT "mqtt_message_thing_id_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
 );
