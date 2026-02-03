@@ -9,7 +9,7 @@ import pandas as pd
 from timeio.errors import ParsingError
 from timeio.qc.qctools import QcTool, get_qctool
 
-__all__ = ["Param", "StreamInfo", "QcTest", "QcResult"]
+__all__ = ["StreamInfo", "QcTest", "QcResult"]
 
 if typing.TYPE_CHECKING:
     from timeio.qc.stream_manager import StreamManager
@@ -40,27 +40,14 @@ def parse_context_window(window: int | str | None) -> WindowT:
     return window
 
 
-class Param:
-    """Dataclass that stores a parameter for a quality test function"""
-
-    def __init__(self, key, value: Any, *args):
-        self.key = key
-        self.value = value
-
-    def parse(self):
-        """Parse values that are not automatically parsed by json serialization.
-        Overwrite this method in child classes."""
-        return self.value
-
-    def __repr__(self):
-        return f"Param(key={self.key}, value={self.value})"
-
-
-class StreamInfo(Param):
+class StreamInfo:
     """Dataclass that stores a stream parameter for a quality test function"""
 
-    def __init__(self, key, value: Any, thing_id, stream_id):
-        super().__init__(key, value)
+    # TODO: Remove dependency on Param (and Param, if possible)
+
+    def __init__(self, key: str, name: str, thing_id: int, stream_id: int):
+        self.key = key
+        self.name = name
         self.thing_id = thing_id
         self.stream_id = stream_id
         self.is_immutable = thing_id is not None and stream_id is not None
@@ -112,11 +99,11 @@ class QcTest:
 
     @property
     def field_names(self) -> list[str]:
-        return [f.value for f in self.fields]
+        return [f.name for f in self.fields]
 
     @property
     def target_names(self) -> list[str]:
-        return [f.value for f in self.targets]
+        return [f.name for f in self.targets]
 
     # def load_data(
     #     self,

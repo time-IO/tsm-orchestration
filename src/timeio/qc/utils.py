@@ -37,7 +37,7 @@ def load_data(
         index = pd.DatetimeIndex([])
         if cur.rowcount > 0:
             timestamps, data = zip(
-                *map(lambda row: (row[0], (row[row[1] + 2], row[6], row[7])), cur)
+                *map(lambda row: (row[0], (row[row[1] + 2], row[6])), cur)
             )
             index = pd.to_datetime(timestamps, utc=True)
             # To avoid errors from mixing TZ aware and TZ unaware objects.
@@ -47,11 +47,10 @@ def load_data(
         out = pd.DataFrame(
             data,
             index=index,
-            columns=["data", "quality", "stream_id"],
+            columns=["data", "quality"],
         )
         out["data"] = out["data"].astype(float)
         out["quality"] = out["quality"].astype(object)
-        out["stream_id"] = out["stream_id"].astype(int)
         return out
 
     def query_datastream_id(cur: psycopg.Cursor, sta_id: int) -> tuple[str, int]:
@@ -115,7 +114,7 @@ def load_data(
                 # TODO: shrink data range
                 pass
             schema, datastream_id = query_datastream_id(cur, stream.stream_id)
-            out[stream.value] = query_datastream(
+            out[stream.name] = query_datastream(
                 cur, schema, datastream_id, start_date, end_date, limit
             )
 
@@ -188,14 +187,14 @@ def filter_funcs_to_execute(all_funcs: list[QcTest], selected_funcs: list[QcTest
 
     to_check = []
     for func in selected_funcs:
-        targets = set(t.value for t in func.targets)
+        targets = set(t.name for t in func.targets)
         for target in targets:
             to_check.append(target)
 
     # build up the function look up table
     lut = {}
     for func in all_funcs:
-        fields = set(f.value for f in func.fields)
+        fields = set(f.name for f in func.fields)
         for field in fields:
             lut[field] = func
 
