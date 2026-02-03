@@ -27,7 +27,7 @@ class Database:
     def connection(self) -> Callable[[], psycopg.Connection]:
         return partial(psycopg.connect, self.__dsn)
 
-    def ping(self, conn: Connection | None = None):
+    def ping(self, conn: Connection | None = None) -> None:
         try:
             if conn is not None:
                 conn.execute("")
@@ -45,7 +45,7 @@ class DBapi:
         self.auth_token = auth_token
         self.ping_dbapi()
 
-    def ping_dbapi(self):
+    def ping_dbapi(self) -> None:
         """
         Test the health endpoint of the given url.
 
@@ -57,18 +57,26 @@ class DBapi:
                     f"Failed to ping. HTTP status code: {resp.status}"
                 )
 
-    def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
+    def upsert_observations(
+        self, thing_uuid: str, observations: list[dict[str, Any]]
+    ) -> None:
         url = f"{self.base_url}/observations/upsert/{thing_uuid}"
         response = requests.post(
             url,
             json={"observations": observations},
             headers={
-                "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.auth_token}",
             },
         )
-        if response.status_code not in (200, 201):
-            raise RuntimeError(
-                f"upload to {thing_uuid} failed with "
-                f"{response.reason} and {response.text}"
-            )
+        response.raise_for_status()
+
+    def insert_mqtt_message(self, thing_uuid: str, message: str) -> None:
+        url = f"{self.base_url}/mqtt_message/insert/{thing_uuid}"
+        response = requests.post(
+            url,
+            json={"message": message},
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        response.raise_for_status()
