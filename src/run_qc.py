@@ -18,9 +18,8 @@ from timeio.errors import (
 )
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
-from timeio.qc import (
-    QcFunction,
-)
+from timeio.qc.qcfunction QcFunction
+
 from timeio.qc.utils import load_data
 from timeio.qc.saqc import init_saqc, execute_qc_function
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg

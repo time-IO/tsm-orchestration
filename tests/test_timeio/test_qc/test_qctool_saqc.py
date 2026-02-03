@@ -7,7 +7,7 @@ import pandas as pd
 
 from timeio.databases import Database
 from timeio.qc import get_functions_to_execute
-from timeio.qc.qctest import QcFunction, StreamInfo
+from timeio.qc.qcfunction import QcFunction, StreamInfo
 from timeio.qc.utils import load_data
 from timeio.qc.saqc import init_saqc, execute_qc_function
 

@@ -10,10 +10,9 @@ import pandas as pd
 
 import psycopg
 from psycopg import sql
-from saqc import SaQC
 
 from timeio.cast import rm_tz
-from timeio.qc.qctest import QcFunction, StreamInfo
+from timeio.qc.qcfunction import QcFunction, StreamInfo
 
 if typing.TYPE_CHECKING:
     from timeio import feta
