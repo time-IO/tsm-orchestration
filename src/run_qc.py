@@ -21,6 +21,7 @@ from timeio.mqtt import AbstractHandler
 
 from timeio.qc.utils import load_data
 from timeio.qc.saqc import init_saqc, execute_qc_function
+from timeio.qc.qcfunction import get_functions, get_functions_to_execute
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -116,9 +117,9 @@ class QcHandler(AbstractHandler):
 
             # sm = StreamManager(conn)
             try:
-                funcs = get_qc_functions(config)
+                funcs = get_functions(config)
                 if thing is not None:
-                    get_qc_functions_to_execute(funcs, thing.id)
+                    funcs = get_functions_to_execute(funcs, thing.id)
                 logger.info(f"COLLECTED TESTS: {funcs}")
 
                 if start_date := content.get("start_date", None):
@@ -149,7 +150,8 @@ class QcHandler(AbstractHandler):
                         journal.error(f"{msg}, because of {e}", thing.uuid)
                     raise ProcessingError(msg) from e
 
-            sm.upload(self.dbapi.base_url)
+            # TODO: implement upload
+            # sm.upload(self.dbapi.base_url)
 
         if thing:
             journal.info(

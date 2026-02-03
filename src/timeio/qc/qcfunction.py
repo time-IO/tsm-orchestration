@@ -79,7 +79,7 @@ class QcFunction:
         self.targets = targets or fields
 
     def __repr__(self):
-        return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
+        return f"QcFunction({self.name}, func={self.func_name}, params={self.params})"
 
     @property
     def field_names(self) -> list[str]:
