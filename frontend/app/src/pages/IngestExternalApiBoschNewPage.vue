@@ -56,7 +56,7 @@ const name = ref('')
 const project= ref(null)
 const description = ref('')
 const period = ref(15)
-const periodUnit = ref(null)
+const periodUnit = ref('minutes')
 const username = ref('')
 const password = ref('')
 const isPwd= ref(true)
@@ -66,7 +66,6 @@ const enableFileServerSync = ref(false)
 const unit = ref(null)
 const syncInterval = ref(null)
 
-periodUnit.value = 'minutes'
 
 const projectOptions = [
   'Project 1','Project 2','Project 3'

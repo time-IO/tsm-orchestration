@@ -168,9 +168,9 @@ async function save() {
     const id = Number(route.params.id)
     const data: IngestExternalApiUbaUpdate = {
       name: formData.value.name || '',
-      project_id: formData.value.project_id || undefined,
+      project_id: formData.value.project_id || null,
       description: formData.value.description || '',
-      station_id: formData.value.station_id || undefined,
+      station_id: formData.value.station_id || null,
       sync_enabled: formData.value.sync_enabled || false
     }
 

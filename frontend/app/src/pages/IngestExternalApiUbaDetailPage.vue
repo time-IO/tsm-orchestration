@@ -135,12 +135,13 @@
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
-import {useRoute} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import {useQuasar} from 'quasar'
 import type {IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
 
 const $q = useQuasar()
 const route = useRoute()
+const router = useRouter()
 const store = useIngestExternalApiUbaStore()
 
 const item = ref<IngestExternalApiUbaPublic | null>(null);
@@ -150,7 +151,11 @@ const isLoading = ref(false)
 onMounted(async () => {
   try {
     isLoading.value = true
-    item.value = await store.dispatchGetOneIngestExternalApiDwd(route.params.id)
+    const id = Number(route.params.id)
+
+    if (!isNaN(id)) {
+      item.value = await store.dispatchGetOneIngestExternalApiDwd(id)
+    }
   } catch {
     $q.notify({
         type: 'negative',
@@ -171,13 +176,19 @@ const openDeleteDialog = () => {
 
 
 const deleteItem = async () => {
+
+  if(!item.value)
+  {
+    return
+  }
+
   try {
     await store.dispatchDeleteIngestExternalApiDwd(item.value.id);
     $q.notify({
       type: 'positive',
       message: 'Item deleted successfully'
     });
-    router.push('/ingest');
+    await router.push('/ingest');
   } catch {
     $q.notify({
       type: 'negative',

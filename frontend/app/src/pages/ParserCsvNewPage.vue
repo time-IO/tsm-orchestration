@@ -28,7 +28,7 @@
           </div>
           <div class="col col-1">
             <q-btn
-              @click="removeItemFromTimestampColumns"
+              @click="removeItemFromTimestampColumns(index)"
               :disable="timestampColumns.length<2" outline flat class="q-mb-md" color="red" icon="delete"/>
           </div>
         </div>
