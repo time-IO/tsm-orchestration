@@ -6,7 +6,6 @@ from typing import Any
 import pandas as pd
 
 from timeio.errors import ParsingError
-from timeio.qc.qctools import QcTool, get_qctool
 
 if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import WindowT
