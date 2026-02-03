@@ -26,6 +26,8 @@ __all__ = [
     "LocalStream",
 ]
 
+# TODO: remove entire module
+
 """
 This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.

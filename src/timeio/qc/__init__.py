@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
 
 from .typehints import *
-from .qcfunction import QcFunction
-from .utils import get_functions_to_execute, get_functions
+from .qcfunction import QcFunction, get_functions_to_execute, get_functions

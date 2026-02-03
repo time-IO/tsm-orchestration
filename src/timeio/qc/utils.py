@@ -12,13 +12,11 @@ import psycopg
 from psycopg import sql
 
 from timeio.cast import rm_tz
-from timeio.qc.qcfunction import QcFunction, StreamInfo
+from timeio.qc.qcfunction import StreamInfo
 
 if typing.TYPE_CHECKING:
-    from timeio import feta
-    from timeio.qc.typeshints import TimestampT
+    from timeio.qc.typehints import TimestampT
 
-__all__ = ["get_functions_to_execute", "get_functions"]
 
 logger = logging.getLogger("run-quality-control")
 
@@ -72,7 +70,7 @@ def load_data(
         datastream_id: int,
         start_date: TimestampT | str,
         end_date: TimestampT | str,
-        limit: int | None = None
+        limit: int | None = None,
     ) -> pd.DataFrame:
         query = f"""
         SELECT
@@ -118,105 +116,3 @@ def load_data(
             )
 
     return out
-
-
-def get_functions(conf: feta.QAQC) -> list[QcFunction]:
-    """
-    Convert between the database/feta layer and business logic objects
-    """
-
-    def get_func_fields(test: feta.QAQCTest):
-        out = []
-        for stream in test.streams or []:
-            if stream["arg_name"] == "field":
-                out.append(
-                    StreamInfo(
-                        stream["arg_name"],
-                        stream["alias"],
-                        stream["sta_thing_id"],
-                        stream["sta_stream_id"],
-                    )
-                )
-        return out
-
-    def get_func_targets(test: feta.QAQCTest):
-        out = []
-        for stream in test.streams or []:
-            if stream["arg_name"] == "target":
-                out.append(
-                    StreamInfo(
-                        stream["arg_name"],
-                        stream["alias"],
-                        stream["sta_thing_id"],
-                        stream["sta_stream_id"],
-                    )
-                )
-        return out
-
-    out = []
-    for i, func in enumerate(conf.get_tests(), start=1):
-        try:
-            qctest = QcFunction(
-                name=func.name,
-                func_name=func.function,
-                fields=get_func_fields(func),
-                targets=get_func_targets(func),
-                params=func.args,
-                context_window=conf.context_window,
-            )
-        except Exception as e:
-            e.add_note(f"Qc test {i} ({func})")
-            e.add_note(f"Config {conf}")
-            raise e
-        out.append(qctest)
-
-    return out
-
-
-def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
-    out = []
-    for func in funcs:
-        thing_ids = set(int(f.thing_id) for f in func.fields)
-        if thing_id in thing_ids:
-            out.append(func)
-    return out
-
-
-def filter_funcs_to_execute(all_funcs: list[QcFunction], selected_funcs: list[QcFunction]):
-
-    to_check = []
-    for func in selected_funcs:
-        targets = set(t.name for t in func.targets)
-        for target in targets:
-            to_check.append(target)
-
-    # build up the function look up table
-    lut = {}
-    for func in all_funcs:
-        fields = set(f.name for f in func.fields)
-        for field in fields:
-            lut[field] = func
-
-    seen = set(selected_funcs)
-
-    # NOTE:
-    # we explicitly allow cyclic dependencies, they are resolved in definition order
-    # in a setting like
-    # func1(field=x, target=y)
-    # func2(field=y, target=x)
-    # we allow func1 to write y and func2 to overwrite x
-    for target in to_check:
-        if target in lut:
-            func = lut[target]
-            to_check.append(func)
-            if func not in seen:
-                selected_funcs.append(func)
-
-    return selected_funcs
-
-
-def get_functions_to_execute(funcs: list[QcFunction], thing_id) -> list[QcFunction]:
-
-    thing_funcs = filter_thing_funcs(funcs, thing_id)
-    funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
-    return funcs_to_process
