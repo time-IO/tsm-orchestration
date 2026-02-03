@@ -78,9 +78,7 @@ class DBapi:
             url,
             json={
                 "message": (
-                    json.dumps(message)
-                    if isinstance(message, dict)
-                    else str(message)
+                    json.dumps(message) if isinstance(message, dict) else str(message)
                 ),
                 "timestamp": datetime.now(tz=timezone.utc).isoformat(),
             },
