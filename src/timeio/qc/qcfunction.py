@@ -62,23 +62,21 @@ class StreamInfo:
 
 
 class QcFunction:
-    # TODO:
-    # - make targets optional
     def __init__(
         self,
         name,
         func_name,
         fields: list[StreamInfo],
-        targets: list[StreamInfo],
         params: dict[str, Any],
-        context_window: str | int,
+        targets: list[StreamInfo] | None,
+        context_window: str | int = 0,
     ):
         self.name = name
         self.func_name: str = func_name
         self.context_window: WindowT = parse_context_window(context_window)
         self.fields = fields
-        self.targets = targets
         self.params = params
+        self.targets = targets or fields
 
     def __repr__(self):
         return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
