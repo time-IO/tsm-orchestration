@@ -58,7 +58,6 @@ export default defineConfig((ctx) => {
         OIDC_CLIENT_ID:process.env.OIDC_CLIENT_ID,
         OIDC_REDIRECT_URI: process.env.OIDC_REDIRECT_URI,
         OIDC_SCOPE: process.env.OIDC_SCOPE,
-        OIDC_SILENT_REDIRECT_URI: process.env.OIDC_SILENT_REDIRECT_URI,
         OIDC_POST_LOGOUT_REDIRECT_URI: process.env.OIDC_POST_LOGOUT_REDIRECT_URI,
       },
       // rawDefine: {}

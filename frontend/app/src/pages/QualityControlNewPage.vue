@@ -97,7 +97,7 @@
         </q-card-section>
         <q-separator inset />
         <div class="q-pa-md row items-start q-gutter-md">
-          <q-card v-for="item in functionOptions" @click="selectFunction(item)">
+          <q-card v-for="(item, i) in functionOptions" @click="selectFunction(item)" :key="`function-option-${i}`">
             <q-card-section>
               <div class="text-h6">{{item.label}}</div>
             </q-card-section>

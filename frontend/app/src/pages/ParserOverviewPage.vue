@@ -32,26 +32,29 @@
 
 <script setup lang="ts">
 
-import { useI18n } from 'vue-i18n';
+import type {QTableColumn} from "quasar";
 
-const { t } = useI18n()
-
-const columns = [
+const columns: QTableColumn[] = [
   {
     name: 'id',
     required: true,
     label: 'ID',
     align: 'left',
-    field: row => row.id,
-    format: val => `${val}`,
+    field: 'id',
     sortable: true
   },
   { name: 'project',label: 'Project', field: 'project', sortable: true , align: 'center'},
   { name: 'name', label: 'Name', field: 'name', sortable: true , align: 'center'},
-  {name: 'action', label: 'Actions', align: 'center'}
+  {name: 'action', label: 'Actions', align: 'center', field: ()=> ''}
 ]
 
-const rows = [
+interface ParserRow {
+  id: number;
+  project: string;
+  name: string;
+}
+
+const rows: ParserRow[] = [
   {
     id: 1,
     project: 'Project 1',

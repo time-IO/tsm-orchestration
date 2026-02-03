@@ -43,11 +43,8 @@ const projectOptions = [
   'Project 1','Project 2','Project 3'
 ]
 const enableFileServerSync = ref(false)
-const unit = ref(null)
-const syncInterval = ref(null)
-
-syncInterval.value = 1
-unit.value = 'days'
+const unit = ref('minutes')
+const syncInterval = ref(1440)
 
 const unitOptions = [
   'seconds', 'minutes','hours', 'days'

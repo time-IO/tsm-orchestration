@@ -1,4 +1,4 @@
-import {Project} from "src/services/project/types";
+import type {Project} from "src/services/project/types";
 
 export type IngestExternalApiUbaPublic = {
   id: number
@@ -15,17 +15,17 @@ export type IngestExternalApiUbaPublic = {
 }
 
 export type IngestExternalApiUbaCreate = {
-  project_id: number;
+  project_id: number | null;
   name: string;
-  station_id: number;
+  station_id: number | null;
   description: string;
   sync_enabled: boolean;
 }
 
 export type IngestExternalApiUbaUpdate = {
-  project_id?: number;
+  project_id?: number | null;
   name?: string;
-  station_id?: number;
+  station_id?: number | null;
   description?: string;
   sync_enabled?: boolean;
 }

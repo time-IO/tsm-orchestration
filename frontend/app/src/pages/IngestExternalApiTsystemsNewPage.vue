@@ -63,14 +63,11 @@ const stationId= ref(null)
 const group = ref(null)
 
 const enableFileServerSync = ref(false)
-const unit = ref(null)
-const syncInterval = ref(null)
+const unit = ref('minutes')
+const syncInterval = ref(60)
 
 const username = ref('')
 const password = ref('')
-
-syncInterval.value = 1
-unit.value = 'hours'
 
 const unitOptions = [
   'seconds', 'minutes','hours', 'days'
