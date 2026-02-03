@@ -13,13 +13,13 @@ from psycopg import sql
 from saqc import SaQC
 
 from timeio.cast import rm_tz
-from timeio.qc.qctest import QcTest, StreamInfo
+from timeio.qc.qctest import QcFunction, StreamInfo
 
 if typing.TYPE_CHECKING:
     from timeio import feta
     from timeio.qc.typeshints import TimestampT
 
-__all__ = ["get_functions_to_execute", "get_qc_functions"]
+__all__ = ["get_functions_to_execute", "get_functions"]
 
 logger = logging.getLogger("run-quality-control")
 
@@ -121,7 +121,7 @@ def load_data(
     return out
 
 
-def get_functions(conf: feta.QAQC) -> list[QcTest]:
+def get_functions(conf: feta.QAQC) -> list[QcFunction]:
     """
     Convert between the database/feta layer and business logic objects
     """
@@ -157,7 +157,7 @@ def get_functions(conf: feta.QAQC) -> list[QcTest]:
     out = []
     for i, func in enumerate(conf.get_tests(), start=1):
         try:
-            qctest = QcTest(
+            qctest = QcFunction(
                 name=func.name,
                 func_name=func.function,
                 fields=get_func_fields(func),
@@ -174,7 +174,7 @@ def get_functions(conf: feta.QAQC) -> list[QcTest]:
     return out
 
 
-def filter_thing_funcs(funcs: list[QcTest], thing_id: int) -> list[QcTest]:
+def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
     out = []
     for func in funcs:
         thing_ids = set(int(f.thing_id) for f in func.fields)
@@ -183,7 +183,7 @@ def filter_thing_funcs(funcs: list[QcTest], thing_id: int) -> list[QcTest]:
     return out
 
 
-def filter_funcs_to_execute(all_funcs: list[QcTest], selected_funcs: list[QcTest]):
+def filter_funcs_to_execute(all_funcs: list[QcFunction], selected_funcs: list[QcFunction]):
 
     to_check = []
     for func in selected_funcs:
@@ -216,7 +216,7 @@ def filter_funcs_to_execute(all_funcs: list[QcTest], selected_funcs: list[QcTest
     return selected_funcs
 
 
-def get_functions_to_execute(funcs: list[QcTest], thing_id) -> list[QcTest]:
+def get_functions_to_execute(funcs: list[QcFunction], thing_id) -> list[QcFunction]:
 
     thing_funcs = filter_thing_funcs(funcs, thing_id)
     funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)

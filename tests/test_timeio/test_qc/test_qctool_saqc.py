@@ -7,7 +7,7 @@ import pandas as pd
 
 from timeio.databases import Database
 from timeio.qc import get_functions_to_execute
-from timeio.qc.qctest import QcTest, StreamInfo
+from timeio.qc.qctest import QcFunction, StreamInfo
 from timeio.qc.utils import load_data
 from timeio.qc.saqc import init_saqc, execute_qc_function
 
@@ -41,7 +41,7 @@ def test_data():
 @pytest.fixture()
 def qc_functions():
     return [
-        QcTest(
+        QcFunction(
             "Static-T1",
             context_window=0,
             func_name="flagRange",
@@ -49,7 +49,7 @@ def qc_functions():
             targets=[StreamInfo(key="target", name="T1S33", thing_id=1, stream_id=33)],
             params={"min": 900, "max": 1200},
         ),
-        QcTest(
+        QcFunction(
             "Static-T2",
             context_window=0,
             func_name="flagRange",
@@ -57,7 +57,7 @@ def qc_functions():
             targets=[StreamInfo("target", "T1S36", 1, 36)],
             params={"min": 900, "max": 1200},
         ),
-        QcTest(
+        QcFunction(
             "Static-P1",
             context_window=0,
             func_name="processGeneric",
@@ -68,7 +68,7 @@ def qc_functions():
             targets=[StreamInfo("target", "T1S99", None, None)],
             params={"func": "lambda x, y: (x + y)/2"},
         ),
-        QcTest(
+        QcFunction(
             "Dynamic-T1",
             context_window=0,
             func_name="flagRange",
@@ -76,7 +76,7 @@ def qc_functions():
             targets=[StreamInfo("target", "T2S44", 4, 44)],
             params={"min": 0, "max": 15},
         ),
-        QcTest(
+        QcFunction(
             "Dynamic-T2",
             context_window=0,
             func_name="flagUniLOF",
@@ -84,7 +84,7 @@ def qc_functions():
             targets=[StreamInfo("target", "T2S46", 4, 46)],
             params={},
         ),
-        QcTest(
+        QcFunction(
             "Dynamic-P1",
             context_window=0,
             func_name="copyField",

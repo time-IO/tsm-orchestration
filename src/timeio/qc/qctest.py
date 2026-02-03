@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import logging
 import typing
 from typing import Any
 import pandas as pd
@@ -9,11 +8,11 @@ import pandas as pd
 from timeio.errors import ParsingError
 from timeio.qc.qctools import QcTool, get_qctool
 
-__all__ = ["StreamInfo", "QcTest", "QcResult"]
-
 if typing.TYPE_CHECKING:
-    from timeio.qc.stream_manager import StreamManager
-    from timeio.qc.typeshints import WindowT, TimestampT
+    from timeio.qc.typeshints import WindowT
+
+__all__ = ["StreamInfo", "QcFunction", "QcResult"]
+
 
 
 def parse_context_window(window: int | str | None) -> WindowT:
@@ -74,7 +73,7 @@ class QcResult:
     origin: str
 
 
-class QcTest:
+class QcFunction:
     # TODO:
     # - rename to QcFunction
     # - make targets optional
@@ -104,42 +103,3 @@ class QcTest:
     @property
     def target_names(self) -> list[str]:
         return [f.name for f in self.targets]
-
-    # def load_data(
-    #     self,
-    #     sm: StreamManager,
-    #     start_date: TimestampT | None = None,
-    #     end_date: TimestampT | None = None,
-    # ):
-    #     data = {}
-    #     qual = {}
-    #     for stream_info in self.streams:
-    #         name = stream_info.value
-    #         if name in data:
-    #             continue
-
-    #         stream = sm.get_stream(stream_info)
-
-    #         if start_date is None:
-    #             start_date, end_date = stream.get_unprocessed_range()
-
-    #         df = stream.get_data(start_date, end_date, self.context_window)
-    #         data[name] = df["data"]
-    #         qual[name] = df["quality"]
-
-    #     self._qctool.add_data(data, qual)
-
-    # def run(self) -> None:
-    #     logging.debug(
-    #         "executing tool: %s, func: %s,  kwargs: %s",
-    #         self._qctool.name,
-    #         self.func_name,
-    #         self.params,
-    #     )
-    #     self._qctool.execute(self.func_name, **self.params)
-
-    #     self.result = QcResult()
-    #     self.result.data = self._qctool.get_data()
-    #     self.result.quality = self._qctool.get_quality()
-    #     self.result.columns = pd.Index(self.result.quality.keys())
-    #     self.result.origin = repr(self)
