@@ -39,6 +39,7 @@
 import { useI18n } from 'vue-i18n';
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {onMounted} from "vue";
+import type {QTableColumn} from "quasar";
 const { t } = useI18n()
 
 const storeIngestExternalApiUba = useIngestExternalApiUbaStore()
@@ -47,7 +48,7 @@ onMounted(async ()=>{
   await storeIngestExternalApiUba.dispatchGetListIngestExternalApiDwd()
 })
 
-const columns = [
+const columns: QTableColumn[] = [
   {
     name: 'id',
     required: true,
@@ -59,7 +60,7 @@ const columns = [
   },
   { name: 'project',label: 'Project', field: row => row.project.name, sortable: true , align: 'center'},
   { name: 'name', label: 'Name', field: 'name', sortable: true , align: 'center'},
-  {name: 'action', label: 'Actions', align: 'center'}
+  {name: 'action', label: 'Actions', align: 'center', field: ()=> ''}
 ]
 
 </script>
