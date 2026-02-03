@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import json
 import threading
 import urllib.request
 from functools import partial
@@ -71,12 +72,16 @@ class DBapi:
         )
         response.raise_for_status()
 
-    def insert_mqtt_message(self, thing_uuid: str, message: str) -> None:
-        url = f"{self.base_url}/mqtt_message/insert/{thing_uuid}"
+    def insert_mqtt_message(self, thing_uuid: str, message: Any) -> None:
+        url = f"{self.base_url}/things/{thing_uuid}/mqtt_message/insert"
         response = requests.post(
             url,
             json={
-                "message": message,
+                "message": (
+                    json.dumps(message)
+                    if isinstance(message, dict)
+                    else str(message)
+                ),
                 "timestamp": datetime.now(tz=timezone.utc).isoformat(),
             },
             headers={
