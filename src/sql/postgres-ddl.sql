@@ -119,3 +119,13 @@ CREATE TABLE related_datastream
 COMMENT ON COLUMN related_datastream.datastream_id IS 'Domain, source or set of departure of the relation.';
 COMMENT ON COLUMN related_datastream.role_id IS 'The type of the relation.';
 COMMENT ON COLUMN related_datastream.target_id IS 'Codomain, target  or set of destination of the relation.';
+
+
+CREATE TABLE mqtt_message
+(
+    "id"          bigserial    NOT NULL PIMARY KEY,
+    "message"     text         NOT NULL,
+    "thing_id"    bigint       NOT NULL,
+
+    CONSTRAINT "mqtt_message_thing_id_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
+);
