@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from sqlmodel import Session, SQLModel, create_engine
 from .routers import projects, ingest_s3stores, ingest_mqtt, csv_parser, ingest_external_api_the_things_network, \
@@ -15,7 +17,8 @@ origins = [
     "http://localhost:3000",
 ]
 
-app = FastAPI()
+API_ROOT_PATH = os.environ.get('API_ROOT_PATH','/api')
+app = FastAPI(root_path=API_ROOT_PATH)
 
 app.add_middleware(
     CORSMiddleware,

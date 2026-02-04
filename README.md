@@ -15,11 +15,11 @@ docker compose run --rm -u $UID frontend npm ci
 docker compose up -d
 ```
 ### Frontend
-- visit: http://localhost:3000
+- visit: http://localhost
 
 ### Api
-- available under http://localhost:8000
-- Documentation: http://localhost:8000/docs 
+- available under http://localhost/api
+- Documentation: http://localhost/api/docs 
 
 ## Development
 
