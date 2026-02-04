@@ -54,6 +54,7 @@ export default defineConfig((ctx) => {
       // publicPath: '/',
       // analyze: true,
       env: {
+        API_BASE_URL: process.env.API_BASE_URL,
         OIDC_IDP_URL:process.env.OIDC_IDP_URL,
         OIDC_CLIENT_ID:process.env.OIDC_CLIENT_ID,
         OIDC_REDIRECT_URI: process.env.OIDC_REDIRECT_URI,
