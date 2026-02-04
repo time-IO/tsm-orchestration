@@ -30,8 +30,8 @@ docker compose up -d
 
 ### Auth
 - Keycloak
-  - accessible at http://localhost:8080/keycloak 
-  - well known: http://localhost:8080/keycloak/realms/local-dev/.well-known/openid-configuration
+  - accessible at http://localhost/keycloak 
+  - well known: http://localhost/keycloak/realms/local-dev/.well-known/openid-configuration
 
 ### Dummy Data
 ```sql
