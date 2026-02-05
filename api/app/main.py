@@ -13,8 +13,7 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
+    "http://localhost"
 ]
 
 API_ROOT_PATH = os.environ.get('API_ROOT_PATH','/api')
