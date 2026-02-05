@@ -7,8 +7,6 @@ services:
       dockerfile: docker/Dockerfile-Dev
     working_dir: /app
     user: "${UID:-1000}:${GID:-1000}"
-    ports:
-      - "8000:8000"
     environment:
       API_ROOT_PATH: "${API_ROOT_PATH:-/api}"
       POSTGRES_SERVER: "${POSTGRES_SERVER:-api-db}"
@@ -29,8 +27,6 @@ services:
       dockerfile: docker/Dockerfile-Dev
     user: "node"
     working_dir: /home/node/app
-    ports:
-      - "9000:9000"
     environment:
       API_BASE_URL: "${API_BASE_URL:-http://localhost/api}"
       OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-dev-client}"
