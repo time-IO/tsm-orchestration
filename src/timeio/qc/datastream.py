@@ -13,9 +13,10 @@ import requests
 from psycopg import sql
 
 from timeio import feta
-from timeio.common import ObservationResultType, get_result_field_name
+from timeio.common import ObservationResultType, get_result_field_name, get_envvar
 from timeio.cast import rm_tz
 from timeio.errors import DataNotFoundError
+from timeio.databases import DBapi
 
 if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
@@ -389,6 +390,9 @@ class ProductStream(Datastream):
         # The name of the stream is in the form `T{STA_THING_ID}S{UserGivenName}`
         # e.g. T42Ssomefoo.
         self.position = self.name.split("S", maxsplit=1)[1]
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
+        )
         assert stream_id is None
 
     def _fetch_thing_uuid(self):
@@ -496,15 +500,7 @@ class ProductStream(Datastream):
         assert len(df.columns) == 5
         labels = df.to_json(orient="records", date_format="iso")
 
-        r = requests.post(
-            f"{api_base_url}/things/{self.thing_id}/observations/upsert",
-            json={"observations": labels},
-            headers={
-                "Content-type": "application/json",
-                "Authorization": f"Bearer {api_token}",
-            },
-        )
-        r.raise_for_status()
+        self.dbapi.upsert_observations_and_datastreams(self.thing_id, labels)
 
 
 class LocalStream(Datastream):

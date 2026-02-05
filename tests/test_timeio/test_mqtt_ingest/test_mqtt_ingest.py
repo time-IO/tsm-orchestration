@@ -43,7 +43,7 @@ def test_act_parses_and_publishes(mock_get_parser, mock_Thing, mock_DBapi, mock_
 
     handler.act({}, msg)
 
-    handler.dbapi.upsert_observations.assert_called_once_with(
+    handler.dbapi.upsert_observations_and_datastreams.assert_called_once_with(
         "UUID", [{"result_number": 1}]
     )
     handler.mqtt_client.publish.assert_called_once()

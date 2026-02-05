@@ -59,7 +59,7 @@ class DBapi:
 
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
         url = f"{self.base_url}/things/{thing_uuid}/observations/upsert"
-        response = requests.post(
+        resp = requests.post(
             url,
             json={"observations": observations},
             headers={
@@ -67,8 +67,24 @@ class DBapi:
                 "Authorization": f"Bearer {self.auth_token}",
             },
         )
-        if response.status_code not in (200, 201):
-            raise RuntimeError(
-                f"upload to {thing_uuid} failed with "
-                f"{response.reason} and {response.text}"
-            )
+        resp.raise_for_status()
+
+    def insert_datastreams(self, thing_uuid: str, observations: list[dict[str, Any]]):
+        unique_pos = list(set([obs["datastream_pos"] for obs in observations]))
+        datastreams = [{"position": pos, "mutable": False} for pos in unique_pos]
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams"
+        resp = requests.post(
+            url,
+            json={"datastreams": datastreams},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+
+    def upsert_observations_and_datastreams(
+        self, thing_uuid: str, observations: list[dict[str, Any]]
+    ):
+        self.insert_datastreams(thing_uuid, observations)
+        self.upsert_observations(thing_uuid, observations)

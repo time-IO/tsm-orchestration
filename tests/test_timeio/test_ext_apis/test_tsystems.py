@@ -89,8 +89,8 @@ def test_tsytsems_do_parse():
         },
     ]
     parsed = ext_api.TsystemsApiSyncer().do_parse(api_response)
-    obs = parsed["observations"][0]
-    assert len(parsed["observations"]) == 4
+    obs = parsed[0]
+    assert len(parsed) == 4
     assert obs["result_number"] == 1
     assert (
         obs["parameters"]
