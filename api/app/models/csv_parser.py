@@ -33,7 +33,7 @@ class CsvParserTimestampColumn(CsvParserTimestampColumnBase, table=True):
 # ------------------- CsvParser
 
 class CsvParserBase(SQLModel):
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     description: str | None = None
     delimiter: str

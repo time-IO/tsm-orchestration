@@ -8,7 +8,7 @@
     </div>
     <q-form>
       <q-input  outlined class="q-mb-md" v-model="name" label="Name" />
-      <q-select outlined class="q-mb-md" v-model="project" :options="projectOptions" label="Project" />
+      <q-select outlined class="q-mb-md" v-model="project" :options="projectOptions" label="Permission Group *" />
       <q-input outlined class="q-mb-md" v-model="description" label="Description" />
       <q-separator class="q-my-lg"/>
       <q-list bordered class="q-mb-md">

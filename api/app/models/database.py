@@ -4,7 +4,7 @@ class Database(SQLModel, table=True):
     __tablename__ = "database"
 
     id: int | None = Field(default=None, primary_key=True)
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     schema: str
     username: str
     password: str

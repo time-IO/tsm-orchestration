@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from .neutron_monitor_stations import NeutronMonitorStations
 
 class IngestExternalApiNeutronMonitorBase(SQLModel):
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     description: str | None = None
     sync_interval_in_minutes: int

@@ -14,7 +14,7 @@
             v-model="project"
             :options="projectOptions"
             class="q-mb-md"
-            label="Project"
+            label="Permission Group *"
             outlined
           />
           <q-input v-model="description" class="q-mb-md" label="Description" outlined />

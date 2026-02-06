@@ -56,7 +56,7 @@ class QualityControlFunction(QualityControlFunctionBase, table=True):
 
 
 class QualityControlSettingBase(SQLModel):
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     description: str | None = None
     is_active: bool = Field(default=False, nullable=True)

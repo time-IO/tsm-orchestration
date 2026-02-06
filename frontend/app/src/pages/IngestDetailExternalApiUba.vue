@@ -42,8 +42,8 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Project</q-item-label>
-                    <q-item-label caption>{{ item.project?.name || 'N/A' }}</q-item-label>
+                    <q-item-label>Permission Group</q-item-label>
+                    <q-item-label caption>{{ item.permission_group?.name || 'N/A' }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
