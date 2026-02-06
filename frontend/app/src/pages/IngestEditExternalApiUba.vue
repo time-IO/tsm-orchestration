@@ -26,12 +26,11 @@
             :rules="[val => !!val || 'Name is required']"
           />
 
-          <!-- Project Selection -->
           <q-select
             filled
-            v-model="formData.project_id"
-            :options="projectStore.projects"
-            label="Project *"
+            v-model="formData.permission_group_id"
+            :options="permissionGroupStore.permissionGroups"
+            label="Permission Group *"
             option-value="id"
             option-label="name"
             emit-value
@@ -109,21 +108,22 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import type { IngestExternalApiUbaUpdate } from "src/services/ingest_external_api_uba/types"
 import { useIngestExternalApiUbaStore } from "stores/ingestExternalApiUbaStore"
-import {useProjectStore} from "stores/projectStore";
+import {usePermissionGroupStore} from "stores/permissionGroupStore";
+
 
 // Composition API
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const ubaStore = useIngestExternalApiUbaStore()
-const projectStore = useProjectStore()
+const permissionGroupStore = usePermissionGroupStore()
 
 
 // Reactive data
 const isLoading = ref(false)
 const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
   name: '',
-  project_id: null,
+  permission_group_id: null,
   description: '',
   station_id: null,
   sync_enabled: false
@@ -135,14 +135,14 @@ onMounted(async () => {
   if (route.params.id) {
     try {
 
-      await projectStore.dispatchGetList()
+      await permissionGroupStore.dispatchGetList()
 
       const id = Number(route.params.id)
       const data = await ubaStore.dispatchGetOne(id)
 
       formData.value = {
         name: data.name || '',
-        project_id: data.project_id || null,
+        permission_group_id: data.permission_group_id || null,
         description: data.description || '',
         station_id: data.station_id || null,
         sync_enabled: data.sync_enabled || false
@@ -167,7 +167,7 @@ async function save() {
     const id = Number(route.params.id)
     const data: IngestExternalApiUbaUpdate = {
       name: formData.value.name || '',
-      project_id: formData.value.project_id || null,
+      permission_group_id: formData.value.permission_group_id || null,
       description: formData.value.description || '',
       station_id: formData.value.station_id || null,
       sync_enabled: formData.value.sync_enabled || false

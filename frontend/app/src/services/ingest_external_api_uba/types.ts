@@ -1,9 +1,9 @@
-import type {Project} from "src/services/project/types";
+import type {PermissionGroup} from "src/services/permission_group/types";
 
 export type IngestExternalApiUbaPublic = {
   id: number
   uuid: string;
-  project_id: number;
+  permission_group_id: number;
   name: string;
   station_id: number;
   description: string;
@@ -11,11 +11,11 @@ export type IngestExternalApiUbaPublic = {
   sync_interval_in_minutes: number;
   created_by_id: number;
   created_at: string;
-  project: Project
+  permission_group: PermissionGroup
 }
 
 export type IngestExternalApiUbaCreate = {
-  project_id: number | null;
+  permission_group_id: number | null;
   name: string;
   station_id: number | null;
   description: string;
@@ -23,7 +23,7 @@ export type IngestExternalApiUbaCreate = {
 }
 
 export type IngestExternalApiUbaUpdate = {
-  project_id?: number | null;
+  permission_group_id?: number | null;
   name?: string;
   station_id?: number | null;
   description?: string;

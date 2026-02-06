@@ -58,7 +58,7 @@ const columns: QTableColumn[] = [
     format: val => `${val}`,
     sortable: true
   },
-  { name: 'project',label: 'Project', field: row => row.project.name, sortable: true , align: 'center'},
+  { name: 'permission-group',label: 'Permission Group', field: row => row.permission_group.name, sortable: true , align: 'center'},
   { name: 'name', label: 'Name', field: 'name', sortable: true , align: 'center'},
   {name: 'action', label: 'Actions', align: 'center', field: ()=> ''}
 ]

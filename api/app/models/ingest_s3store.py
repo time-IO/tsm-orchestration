@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 # from .user import User # needs to be imported for relationship reasons otherwise an error is thrown during delete todo check this
 
 class IngestS3StoreBase(SQLModel):
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     description: str | None = None
     filename_pattern: str

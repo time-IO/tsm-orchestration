@@ -26,12 +26,11 @@
             :rules="[val => !!val || 'Name is required']"
           />
 
-          <!-- Project Selection -->
           <q-select
             filled
-            v-model="formData.project_id"
-            :options="projectStore.projects"
-            label="Project *"
+            v-model="formData.permission_group_id"
+            :options="permissionGroupStore.permissionGroups"
+            label="Permission Group *"
             option-value="id"
             option-label="name"
             emit-value
@@ -111,17 +110,17 @@ import type {IngestExternalApiUbaCreate} from "src/services/ingest_external_api_
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {useQuasar} from 'quasar'
 import {useRouter} from "vue-router";
-import {useProjectStore} from "stores/projectStore";
+import {usePermissionGroupStore} from "stores/permissionGroupStore";
 
 
 const ubaStore = useIngestExternalApiUbaStore()
-const projectStore = useProjectStore()
+const permissionGroupStore = usePermissionGroupStore()
 const $q = useQuasar()
 const router = useRouter()
 
 const formData = ref<IngestExternalApiUbaCreate>({
   name: '',
-  project_id: null,
+  permission_group_id: null,
   description: '',
   station_id: null,
   sync_enabled: false
@@ -131,7 +130,7 @@ const isLoading = ref(false)
 
 onMounted(async ()=>{
   try {
-    await projectStore.dispatchGetList()
+    await permissionGroupStore.dispatchGetList()
   } catch {
     $q.notify({
       position: "top",
@@ -146,7 +145,7 @@ async function save() {
   const data: IngestExternalApiUbaCreate = {
     name: formData.value.name,
     description: formData.value.description,
-    project_id: formData.value.project_id,
+    permission_group_id: formData.value.permission_group_id,
     station_id: formData.value.station_id,
     sync_enabled: formData.value.sync_enabled
   }
@@ -169,7 +168,7 @@ async function save() {
       message: 'Failed to create ingest'
     })
   } finally {
-    isLoading.value = true
+    isLoading.value = false
   }
 }
 

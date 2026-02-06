@@ -35,8 +35,12 @@ docker compose up -d
 
 ### Dummy Data
 ```sql
-INSERT INTO project(name, uuid) VALUES ('Project 1', '1798503646814cc694c384e24cb01b51');
+INSERT INTO permission_group(name, uuid) VALUES ('Permission Group 1', '1798503646814cc694c384e24cb01b51');
 
-INSERT INTO user(id, username, email, given_name, family_name, active, is_superuser)
+INSERT INTO permission_group(name, uuid) VALUES ('Permission Group 2', '1798503646814cc694c384e24cb01b52');
+INSERT INTO permission_group(name, uuid) VALUES ('Permission Group 3', '1798503646814cc694c384e24cb01b53');
+INSERT INTO permission_group(name, uuid) VALUES ('Permission Group 4', '1798503646814cc694c384e24cb01b54');
+
+INSERT INTO "user"(id, username, email, given_name, family_name, active, is_superuser)
 VALUES (42,'joedoe','john.doe@foo.bar','john', 'doe',true,false);
 ```

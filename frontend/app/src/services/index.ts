@@ -1,7 +1,7 @@
 import ingestExternalApiDwdController from "src/services/ingest_external_api_uba"
-import projectController from "src/services/project"
+import permissionGroupController from "src/services/permission_group"
 
 export const API = {
   ingestExternalApiDwd: ingestExternalApiDwdController,
-  project: projectController
+  permissionGroup: permissionGroupController
 }

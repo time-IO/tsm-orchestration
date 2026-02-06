@@ -13,7 +13,7 @@
     </p>
     <q-form>
       <q-input  outlined class="q-mb-md" v-model="name" label="Name" />
-      <q-select outlined class="q-mb-md" v-model="project" :options="projectOptions" label="Project" />
+      <q-select outlined class="q-mb-md" v-model="project" :options="projectOptions" label="Permission Group *" />
       <q-input outlined class="q-mb-md" v-model="description" label="Description" />
       <q-separator class="q-my-lg"/>
       <q-input  outlined class="q-mb-md" v-model="stationId" label="Station Id" hint="ID of the DWD weather station (usually 5 numeric characters)"/>

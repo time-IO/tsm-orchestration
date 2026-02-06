@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 
 class IngestExternalApiUbaBase(SQLModel):
-    project_id: int = Field(foreign_key="project.id")
+    permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     station_id: str
     description: str | None = None
@@ -16,7 +16,7 @@ class IngestExternalApiUbaCreate(IngestExternalApiUbaBase):
 
 
 class IngestExternalApiUbaUpdate(SQLModel):
-    project_id: int | None
+    permission_group_id: int | None
     name: str | None
     station_id: str | None
     description: str | None
@@ -29,7 +29,7 @@ class IngestExternalApiUbaPublic(IngestExternalApiUbaBase):
     sync_interval_in_minutes: int
     created_by_id: int
     created_at: datetime
-    project: "Project"
+    permission_group: "PermissionGroup"
 
 
 class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
@@ -41,8 +41,8 @@ class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
-    project: "Project" = Relationship(back_populates="ingest_external_api_uba")
+    permission_group: "PermissionGroup" = Relationship(back_populates="ingest_external_api_uba")
 
 # fix to avoid circular imports
-from .project import Project
+from .permission_group import PermissionGroup
 IngestExternalApiUba.model_rebuild()
