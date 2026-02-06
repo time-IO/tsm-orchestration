@@ -8,7 +8,7 @@ class IngestMqttBase(SQLModel):
     name: str
     description: str | None = None
     topic: str
-    mqtt_parser_id: int = Field(foreign_key="mqttparser.id")
+    mqtt_parser_id: int = Field(foreign_key="mqtt_parser.id")
 
 class IngestMqttCreate(IngestMqttBase):
     pass
@@ -27,6 +27,8 @@ class IngestMqttPublic(IngestMqttBase):
     created_at: datetime
 
 class IngestMqtt(IngestMqttBase, table=True):
+    __tablename__ = "ingest_mqtt"
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")

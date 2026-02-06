@@ -25,6 +25,8 @@ class IngestS3StorePublic(IngestS3StoreBase):
     created_at: datetime
 
 class IngestS3Store(IngestS3StoreBase, table=True):
+    __tablename__ = "ingest_s3store"
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")

@@ -9,7 +9,7 @@ class IngestExternalApiNeutronMonitorBase(SQLModel):
     description: str | None = None
     sync_interval_in_minutes: int
     sync_enabled: bool = False
-    station_id: int = Field(foreign_key="neutronmonitorstations.id")
+    station_id: int = Field(foreign_key="neutron_monitor_stations.id")
 
 
 class IngestExternalApiNeutronMonitorCreate(IngestExternalApiNeutronMonitorBase):
@@ -33,6 +33,8 @@ class IngestExternalApiNeutronMonitorPublic(IngestExternalApiNeutronMonitorBase)
 
 
 class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table=True):
+    __tablename__ = "ingest_external_api_neutron_monitor"
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
