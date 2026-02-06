@@ -32,6 +32,8 @@ class IngestExternalApiDwdPublic(IngestExternalApiDwdBase):
 
 
 class IngestExternalApiDwd(IngestExternalApiDwdBase, table=True):
+    __tablename__ = "ingest_external_api_dwd"
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     sync_interval_in_minutes: int = 1440

@@ -7,7 +7,7 @@ from .user import User # needs to be imported for relationship reasons otherwise
 # ------------------- CsvParserTimestamp
 
 class CsvParserTimestampColumnBase(SQLModel):
-    csv_parser_id: int = Field(foreign_key="csvparser.id", ondelete="CASCADE")
+    csv_parser_id: int = Field(foreign_key="parser_csv.id", ondelete="CASCADE")
     column: int
     timestamp_format: str
 
@@ -25,6 +25,8 @@ class CsvParserTimestampColumnPublic(SQLModel):
     timestamp_format: str
 
 class CsvParserTimestampColumn(CsvParserTimestampColumnBase, table=True):
+    __tablename__ = "parser_csv_timestamp_column"
+
     id: int | None = Field(default=None, primary_key=True)
     csv_parser: "CsvParser" = Relationship(back_populates="timestamp_columns")
 
@@ -61,6 +63,8 @@ class CsvParserPublic(CsvParserBase):
     timestamp_columns: list[CsvParserTimestampColumnPublic] = []
 
 class CsvParser(CsvParserBase, table=True):
+    __tablename__ = "parser_csv"
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
