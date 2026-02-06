@@ -12,12 +12,12 @@ export const useProjectStore = defineStore('projectStore', {
   getters:{},
 
   actions: {
-    async dispatchGetListProject(){
-      const response = await API.project.getListProject()
+    async dispatchGetList(){
+      const response = await API.project.getList()
       this.projects = response.data
     },
-    async dispatchGetOneProject(id:number):Promise<Project> {
-      const response = await API.project.getOneProject(id)
+    async dispatchGetOne(id:number):Promise<Project> {
+      const response = await API.project.getOne(id)
       return response.data
     }
   }

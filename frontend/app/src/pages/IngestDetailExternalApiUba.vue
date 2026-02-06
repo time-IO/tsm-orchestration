@@ -154,7 +154,7 @@ onMounted(async () => {
     const id = Number(route.params.id)
 
     if (!isNaN(id)) {
-      item.value = await store.dispatchGetOneIngestExternalApiDwd(id)
+      item.value = await store.dispatchGetOne(id)
     }
   } catch {
     $q.notify({
@@ -183,7 +183,7 @@ const deleteItem = async () => {
   }
 
   try {
-    await store.dispatchDeleteIngestExternalApiDwd(item.value.id);
+    await store.dispatchDelete(item.value.id);
     $q.notify({
       type: 'positive',
       message: 'Item deleted successfully'

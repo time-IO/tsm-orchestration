@@ -12,26 +12,25 @@ export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaSto
   getters: {},
 
   actions: {
-    async dispatchGetListIngestExternalApiDwd() {
-      const response = await API.ingestExternalApiDwd.getListIngestExternalApiDwd()
+    async dispatchGetList() {
+      const response = await API.ingestExternalApiDwd.getList()
       this.ingestExternalApiUbaList = response.data
     },
-    async dispatchGetOneIngestExternalApiDwd(id: number): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.getOneIngestExternalApiDwd(id)
+    async dispatchGetOne(id: number): Promise<IngestExternalApiUbaPublic> {
+      const response = await API.ingestExternalApiDwd.getOne(id)
       return response.data
 
     },
-    async dispatchCreateIngestExternalApiDwd(payload: IngestExternalApiUbaCreate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.createIngestExternalApiDwd(payload)
+    async dispatchCreate(payload: IngestExternalApiUbaCreate): Promise<IngestExternalApiUbaPublic> {
+      const response = await API.ingestExternalApiDwd.create(payload)
       return response.data
-
     },
-    async dispatchUpdateIngestExternalApiDwd(id: number, payload: IngestExternalApiUbaUpdate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.updateIngestExternalApiDwd(id, payload)
+    async dispatchUpdate(id: number, payload: IngestExternalApiUbaUpdate): Promise<IngestExternalApiUbaPublic> {
+      const response = await API.ingestExternalApiDwd.update(id, payload)
         return response.data
     },
-    async dispatchDeleteIngestExternalApiDwd(id: number): Promise<void> {
-      await API.ingestExternalApiDwd.deleteIngestExternalApiDwd(id)
+    async dispatchDelete(id: number): Promise<void> {
+      await API.ingestExternalApiDwd.deleteOne(id)
     },
   },
 });

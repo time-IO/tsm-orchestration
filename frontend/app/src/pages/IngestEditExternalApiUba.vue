@@ -135,10 +135,10 @@ onMounted(async () => {
   if (route.params.id) {
     try {
 
-      await projectStore.dispatchGetListProject()
+      await projectStore.dispatchGetList()
 
       const id = Number(route.params.id)
-      const data = await ubaStore.dispatchGetOneIngestExternalApiDwd(id)
+      const data = await ubaStore.dispatchGetOne(id)
 
       formData.value = {
         name: data.name || '',
@@ -173,7 +173,7 @@ async function save() {
       sync_enabled: formData.value.sync_enabled || false
     }
 
-    await ubaStore.dispatchUpdateIngestExternalApiDwd(id, data)
+    await ubaStore.dispatchUpdate(id, data)
 
     $q.notify({
       position: "top",
