@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import requests
 import json
 
 from requests.exceptions import HTTPError
@@ -63,7 +62,9 @@ class SyncExtApiManager(AbstractHandler):
             return
         try:
             obs = syncer.do_parse(data)
-            self.dbapi.upsert_observations_and_datastreams(thing.uuid, obs)
+            self.dbapi.upsert_observations_and_datastreams(
+                thing.uuid, obs, mutable=False
+            )
         except HTTPError as e:
             journal.error(
                 f"Insert/upsert into timeioDB for thing '{thing.name} failed",
@@ -81,7 +82,7 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(obs['observations'])} "
+            f"Successfully inserted {len(obs)} "
             f"observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,

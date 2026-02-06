@@ -58,7 +58,9 @@ class ParseMqttDataHandler(AbstractHandler):
 
         logger.info(f"store observations")
         try:
-            self.dbapi.upsert_observations_and_datastreams(thing_uuid, observations)
+            self.dbapi.upsert_observations_and_datastreams(
+                thing_uuid, observations, mutable=False
+            )
         except Exception as e:
             logger.exception(f"Failed to store data: {e}")
         journal.info(f"parsed mqtt data from {origin}", thing_uuid)

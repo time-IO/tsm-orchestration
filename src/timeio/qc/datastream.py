@@ -500,7 +500,9 @@ class ProductStream(Datastream):
         assert len(df.columns) == 5
         labels = df.to_json(orient="records", date_format="iso")
 
-        self.dbapi.upsert_observations_and_datastreams(self.thing_id, labels)
+        self.dbapi.upsert_observations_and_datastreams(
+            self.thing_id, labels, mutable=True
+        )
 
 
 class LocalStream(Datastream):

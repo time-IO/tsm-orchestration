@@ -58,7 +58,7 @@ class DBapi:
                 )
 
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
-        url = f"{self.base_url}/things/{thing_uuid}/observations/upsert"
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/observations/upsert"
         resp = requests.post(
             url,
             json={"observations": observations},
@@ -69,9 +69,11 @@ class DBapi:
         )
         resp.raise_for_status()
 
-    def insert_datastreams(self, thing_uuid: str, observations: list[dict[str, Any]]):
+    def insert_datastreams(
+        self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool
+    ):
         unique_pos = list(set([obs["datastream_pos"] for obs in observations]))
-        datastreams = [{"position": pos, "mutable": False} for pos in unique_pos]
+        datastreams = [{"position": pos, "mutable": mutable} for pos in unique_pos]
         url = f"{self.base_url}/things/{thing_uuid}/datastreams"
         resp = requests.post(
             url,
@@ -84,7 +86,7 @@ class DBapi:
         resp.raise_for_status()
 
     def upsert_observations_and_datastreams(
-        self, thing_uuid: str, observations: list[dict[str, Any]]
+        self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool
     ):
-        self.insert_datastreams(thing_uuid, observations)
+        self.insert_datastreams(thing_uuid, observations, mutable)
         self.upsert_observations(thing_uuid, observations)

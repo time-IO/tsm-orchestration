@@ -7,8 +7,6 @@ import codecs
 from datetime import datetime, timezone
 import warnings
 
-import requests
-
 from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
@@ -113,7 +111,9 @@ class ParserJobHandler(AbstractHandler):
 
         logger.debug("storing observations to database ...")
         try:
-            self.dbapi.upsert_observations_and_datastreams(thing_uuid, obs)
+            self.dbapi.upsert_observations_and_datastreams(
+                thing_uuid, obs, mutable=False
+            )
         except Exception as e:
             # Tell the user that his parsing was successful
             journal.error(
