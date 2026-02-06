@@ -30,10 +30,10 @@
           <q-select
             filled
             v-model="formData.project_id"
-            :options="projectOptions"
+            :options="projectStore.projects"
             label="Project *"
             option-value="id"
-            option-label="label"
+            option-label="name"
             emit-value
             map-options
             hint="Select the project this ingest belongs to"
@@ -109,12 +109,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import type { IngestExternalApiUbaUpdate } from "src/services/ingest_external_api_uba/types"
 import { useIngestExternalApiUbaStore } from "stores/ingestExternalApiUbaStore"
+import {useProjectStore} from "stores/projectStore";
 
 // Composition API
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
-const store = useIngestExternalApiUbaStore()
+const ubaStore = useIngestExternalApiUbaStore()
+const projectStore = useProjectStore()
+
 
 // Reactive data
 const isLoading = ref(false)
@@ -127,19 +130,15 @@ const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
 })
 const syncInterval = ref(60)
 
-// Project options
-const projectOptions = [
-  { label: 'Project 1', id: 1 },
-  { label: 'Project 2', id: 2 },
-  { label: 'Project 3', id: 3 }
-]
-
 // Load existing data when component mounts
 onMounted(async () => {
   if (route.params.id) {
     try {
+
+      await projectStore.dispatchGetListProject()
+
       const id = Number(route.params.id)
-      const data = await store.dispatchGetOneIngestExternalApiDwd(id)
+      const data = await ubaStore.dispatchGetOneIngestExternalApiDwd(id)
 
       formData.value = {
         name: data.name || '',
@@ -174,7 +173,7 @@ async function save() {
       sync_enabled: formData.value.sync_enabled || false
     }
 
-    await store.dispatchUpdateIngestExternalApiDwd(id, data)
+    await ubaStore.dispatchUpdateIngestExternalApiDwd(id, data)
 
     $q.notify({
       position: "top",
