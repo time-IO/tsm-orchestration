@@ -30,10 +30,10 @@
           <q-select
             filled
             v-model="formData.project_id"
-            :options="projectOptions"
+            :options="projectStore.projects"
             label="Project *"
             option-value="id"
-            option-label="label"
+            option-label="name"
             emit-value
             map-options
             hint="Select the project this ingest belongs to"
@@ -106,14 +106,16 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import type {IngestExternalApiUbaCreate} from "src/services/ingest_external_api_uba/types";
 import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {useQuasar} from 'quasar'
 import {useRouter} from "vue-router";
+import {useProjectStore} from "stores/projectStore";
 
 
-const store = useIngestExternalApiUbaStore()
+const ubaStore = useIngestExternalApiUbaStore()
+const projectStore = useProjectStore()
 const $q = useQuasar()
 const router = useRouter()
 
@@ -127,18 +129,18 @@ const formData = ref<IngestExternalApiUbaCreate>({
 const syncInterval = ref(60)
 const isLoading = ref(false)
 
-const projectOptions = [
-  {
-    label: 'Project 1',
-    id: 1
-  }, {
-    label: 'Project 2',
-    id: 2
-  }, {
-    label: 'Project 3',
-    id: 3
+onMounted(async ()=>{
+  try {
+    await projectStore.dispatchGetListProject()
+  } catch {
+    $q.notify({
+      position: "top",
+      type: 'negative',
+      message: 'Failed to fetch projects'
+    })
   }
-]
+})
+
 
 async function save() {
   const data: IngestExternalApiUbaCreate = {
@@ -150,7 +152,7 @@ async function save() {
   }
   try {
     isLoading.value = true
-    const result = await store.dispatchCreateIngestExternalApiDwd(data)
+    const result = await ubaStore.dispatchCreateIngestExternalApiDwd(data)
     $q.notify({
       position: "top",
       type: 'positive',
