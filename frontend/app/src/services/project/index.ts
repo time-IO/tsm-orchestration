@@ -6,7 +6,7 @@ async function getListProject(){
   return await axiosInstance.get<Project[]>("projects/")
 }
 async function getOneProject(id: number){
-  return await axiosInstance.get<Project[]>(`projects/${id}`)
+  return await axiosInstance.get<Project>(`projects/${id}`)
 }
 
 export default {
