@@ -131,7 +131,7 @@ const isLoading = ref(false)
 
 onMounted(async ()=>{
   try {
-    await projectStore.dispatchGetListProject()
+    await projectStore.dispatchGetList()
   } catch {
     $q.notify({
       position: "top",
@@ -152,7 +152,7 @@ async function save() {
   }
   try {
     isLoading.value = true
-    const result = await ubaStore.dispatchCreateIngestExternalApiDwd(data)
+    const result = await ubaStore.dispatchCreate(data)
     $q.notify({
       position: "top",
       type: 'positive',

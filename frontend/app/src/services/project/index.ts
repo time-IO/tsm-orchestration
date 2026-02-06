@@ -2,14 +2,16 @@ import {axiosInstance} from "boot/axios";
 
 import type {Project} from "src/services/project/types";
 
-async function getListProject(){
-  return await axiosInstance.get<Project[]>("projects/")
+const apiPath = "ingest/external-api/uba/"
+
+async function getList(){
+  return await axiosInstance.get<Project[]>(apiPath)
 }
-async function getOneProject(id: number){
-  return await axiosInstance.get<Project>(`projects/${id}`)
+async function getOne(id: number){
+  return await axiosInstance.get<Project>(`${apiPath}${id}`)
 }
 
 export default {
-  getListProject,
-  getOneProject
+  getList,
+  getOne
 }

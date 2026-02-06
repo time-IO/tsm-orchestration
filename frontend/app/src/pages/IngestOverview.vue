@@ -45,7 +45,7 @@ const { t } = useI18n()
 const storeIngestExternalApiUba = useIngestExternalApiUbaStore()
 
 onMounted(async ()=>{
-  await storeIngestExternalApiUba.dispatchGetListIngestExternalApiDwd()
+  await storeIngestExternalApiUba.dispatchGetList()
 })
 
 const columns: QTableColumn[] = [
