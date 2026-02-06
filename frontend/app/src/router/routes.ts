@@ -1,31 +1,29 @@
 import type {RouteRecordRaw} from 'vue-router';
-import IngestNewPage from 'pages/IngestNewPage.vue';
-import IngestDetailPage from 'pages/IngestDetailPage.vue';
-import IngestEditPage from 'pages/IngestEditPage.vue';
-import IngestSftpNewPage from "pages/IngestSftpNewPage.vue";
-import IndexPage from 'pages/IndexPage.vue';
-import IngestMqttNewPage from 'pages/IngestMqttNewPage.vue';
-import IngestExternalSftpNewPage from 'pages/IngestExternalSftpNewPage.vue';
-import IngestExternalApiBoschNewPage from "pages/IngestExternalApiBoschNewPage.vue";
-import IngestExternalApiDwdNewPage from 'pages/IngestExternalApiDwdNewPage.vue';
-import IngestExternalApiNmNewPage from 'pages/IngestExternalApiNmNewPage.vue';
-import IngestExternalApiTsystemsNewPage from 'pages/IngestExternalApiTsystemsNewPage.vue';
-import IngestExternalApiTtnNewPage from 'pages/IngestExternalApiTtnNewPage.vue';
-import IngestExternalApiUbaNewPage from 'pages/IngestExternalApiUbaNewPage.vue';
-import IngestExternalApiUbaDetailPage from "pages/IngestExternalApiUbaDetailPage.vue";
-import IngestExternalApiUbaEditPage from "pages/IngestExternalApiUbaEditPage.vue";
-import ParserCsvNewPage from "pages/ParserCsvNewPage.vue";
-import ParserNewPage from "pages/ParserNewPage.vue";
-import IngestOverviewPage from "pages/IngestOverviewPage.vue";
-import ParserOverviewPage from "pages/ParserOverviewPage.vue";
-import QualityControlOverviewPage from "pages/QualityControlOverviewPage.vue";
-import QualityControlNewPage from "pages/QualityControlNewPage.vue";
 import AuthLoginCallback from "pages/AuthLoginCallback.vue";
+import Index from "pages/Index.vue";
+import IngestOverview from "pages/IngestOverview.vue";
+import IngestNew from "pages/IngestNew.vue";
+import IngestNewSftp from "pages/IngestNewSftp.vue";
+import IngestNewMqtt from "pages/IngestNewMqtt.vue";
+import IngestNewExternalSftp from "pages/IngestNewExternalSftp.vue";
+import IngestNewExternalApiBosch from "pages/IngestNewExternalApiBosch.vue";
+import IngestNewExternalApiDwd from "pages/IngestNewExternalApiDwd.vue";
+import IngestNewExternalApiNm from "pages/IngestNewExternalApiNm.vue";
+import IngestNewExternalApiTsystems from "pages/IngestNewExternalApiTsystems.vue";
+import IngestNewExternalApiTtn from "pages/IngestNewExternalApiTtn.vue";
+import IngestNewExternalApiUba from "pages/IngestNewExternalApiUba.vue";
+import IngestDetailExternalApiUba from "pages/IngestDetailExternalApiUba.vue";
+import IngestEditExternalApiUba from "pages/IngestEditExternalApiUba.vue";
+import ParserOverview from "pages/ParserOverview.vue";
+import ParserNew from "pages/ParserNew.vue";
+import ParserNewCsv from "pages/ParserNewCsv.vue";
+import QualityControlOverview from "pages/QualityControlOverview.vue";
+import QualityControlNew from "pages/QualityControlNew.vue";
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: IndexPage,
+    component: Index,
     meta: {requiresAuth: false}
   },
   {
@@ -35,102 +33,92 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/ingest',
-    component: IngestOverviewPage,
+    component: IngestOverview,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new',
-    component: IngestNewPage,
+    component: IngestNew,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/sftp',
-    component: IngestSftpNewPage,
+    component: IngestNewSftp,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/mqtt',
-    component: IngestMqttNewPage,
+    component: IngestNewMqtt,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-sftp',
-    component: IngestExternalSftpNewPage,
+    component: IngestNewExternalSftp,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/bosch',
-    component: IngestExternalApiBoschNewPage,
+    component: IngestNewExternalApiBosch,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/dwd',
-    component: IngestExternalApiDwdNewPage,
+    component: IngestNewExternalApiDwd,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/nm',
-    component: IngestExternalApiNmNewPage,
+    component: IngestNewExternalApiNm,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/tsystems',
-    component: IngestExternalApiTsystemsNewPage,
+    component: IngestNewExternalApiTsystems,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/ttn',
-    component: IngestExternalApiTtnNewPage,
+    component: IngestNewExternalApiTtn,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/new/ext-api/uba',
-    component: IngestExternalApiUbaNewPage,
+    component: IngestNewExternalApiUba,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/external-api-uba/:id',
-    component: IngestExternalApiUbaDetailPage,
+    component: IngestDetailExternalApiUba,
     meta: {requiresAuth: true}
   },
   {
     path: '/ingest/external-api-uba/:id/edit',
-    component: IngestExternalApiUbaEditPage,
-    meta: {requiresAuth: true}
-  },
-  {
-    path: '/ingest/:id',
-    component: IngestDetailPage,
-    meta: {requiresAuth: true}
-  },
-  {
-    path: '/ingest/:id/edit',
-    component: IngestEditPage,
+    component: IngestEditExternalApiUba,
     meta: {requiresAuth: true}
   },
   {
     path: '/parser',
-    component: ParserOverviewPage,
+    component: ParserOverview,
     meta: {requiresAuth: true}
   },
   {
     path: '/parser/new',
-    component: ParserNewPage,
+    component: ParserNew,
     meta: {requiresAuth: true}
   },
   {
     path: '/parser/new/csv',
-    component: ParserCsvNewPage,
+    component: ParserNewCsv,
     meta: {requiresAuth: true}
   },
   {
     path: '/quality-control',
-    component: QualityControlOverviewPage,
+    component: QualityControlOverview,
     meta: {requiresAuth: true}
   },
   {
     path: '/quality-control/new',
-    component: QualityControlNewPage,
+    component: QualityControlNew,
     meta: {requiresAuth: true}
   },
 
