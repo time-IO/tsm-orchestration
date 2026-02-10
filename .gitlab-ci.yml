@@ -1,0 +1,18 @@
+black:
+  stage: test
+  needs: []
+  image: python:3.15
+  before_script:
+    - pip install black
+  script:
+    - black --check api/app/
+
+build:
+  stage: build
+  needs:
+    - black
+    - freeze-tag
+  image: docker
+  script:
+    - docker compose build
+    - docker images
