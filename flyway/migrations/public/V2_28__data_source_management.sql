@@ -1,0 +1,10 @@
+CREATE ROLE ${dsm_db_user} WITH LOGIN PASSWORD '${dsm_db_password}';
+GRANT ${dsm_db_user} TO ${flyway:user};
+CREATE SCHEMA IF NOT EXISTS dsm_db AUTHORIZATION ${dsm_db_user};
+SET search_path TO dsm_db;
+GRANT CONNECT ON DATABASE ${flyway:database} TO ${dsm_db_user};
+ALTER ROLE ${dsm_db_user} SET search_path to dsm_db;
+GRANT USAGE ON SCHEMA dsm_db TO ${dsm_db_user};
+GRANT ALL ON SCHEMA dsm_db TO ${dsm_db_user};
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA dsm_db TO ${dsm_db_user};
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA dsm_db TO ${dsm_db_user};
