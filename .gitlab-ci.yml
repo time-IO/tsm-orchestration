@@ -2,6 +2,8 @@ stages:
   - freeze
   - test
   - build
+  - release
+
 
 freeze:
   stage: freeze
@@ -14,6 +16,7 @@ freeze:
   script:
     - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
 
+
 black:
   stage: test
   needs: []
@@ -22,6 +25,7 @@ black:
     - pip install black
   script:
     - black --check api/app/
+
 
 npm-lint:
   stage: test
@@ -32,6 +36,7 @@ npm-lint:
     - npm ci
   script:
     - npm run lint
+
 
 npm-test:
   stage: test
@@ -44,8 +49,9 @@ npm-test:
     # no tests defined yet, but we can already include that here
     - npm run test
 
+
 npm-build:
-  stage: build
+  stage: test
   needs:
     - npm-lint
     - npm-test
@@ -70,22 +76,38 @@ docker-build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - apk add --no-cache jq
-    - export DSM_API_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.api.image | split(":")[0]')
-    - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.frontend.image | split(":")[0]')
-    - export DSM_API_IMAGE_URL="${CI_REGISTRY_IMAGE}/${DSM_API_IMAGE_NAME}"
-    - export DSM_FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/${DSM_FRONTEND_IMAGE_NAME}"
+    - export API_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.api.image | split(":")[0]')
+    - export FRONTEND_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.frontend.image | split(":")[0]')
+    - export API_IMAGE_URL="${CI_REGISTRY_IMAGE}/${API_IMAGE_NAME}"
+    - export FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/${FRONTEND_IMAGE_NAME}"
   script:
     - docker compose build
-    - export DSM_API_IMAGE_ID=$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
-    - export DSM_FRONTEND_IMAGE_ID=$(docker images -f reference=${DSM_FRONTEND_IMAGE_NAME} -q)
-    - docker tag ${DSM_API_IMAGE_ID} ${DSM_API_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${DSM_FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${DSM_API_IMAGE_ID} ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - export API_IMAGE_ID=$(docker images -f reference=${API_IMAGE_NAME} -q)
+    - export FRONTEND_IMAGE_ID=$(docker images -f reference=${FRONTEND_IMAGE_NAME} -q)
+    - docker tag ${API_IMAGE_ID} ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${FRONTEND_IMAGE_ID} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${API_IMAGE_ID} ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker tag ${FRONTEND_IMAGE_ID} ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
     - docker images
-    - docker push ${DSM_API_IMAGE_URL}:${BUILD_DATE}
-    - docker push ${DSM_FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker push ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker push ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker push ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
   tags:
     - "dind"
+
+add-latest-tags:
+  stage: release
+  needs: 
+    - docker-build
+  rules:
+    - if: '$CI_COMMIT_REF_SLUG == "main"'
+      when: on_success
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker pull ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${API_IMAGE_URL}:${BUILD_DATE} ${API_IMAGE_URL}:latest
+    - docker tag ${FRONTEND_IMAGE_URL}:${BUILD_DATE} ${FRONTEND_IMAGE_URL}:latest
+    - docker push ${API_IMAGE_URL}:latest
