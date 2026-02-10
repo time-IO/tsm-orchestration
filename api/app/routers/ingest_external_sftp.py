@@ -1,29 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from ..dependencies import get_session, get_current_user
-from ..models.ingest_external_sftp import IngestExternalSftpCreate, IngestExternalSftp, IngestExternalSftpUpdate, \
-    IngestExternalSftpPublic
+from ..models.ingest_external_sftp import (
+    IngestExternalSftpCreate,
+    IngestExternalSftp,
+    IngestExternalSftpUpdate,
+    IngestExternalSftpPublic,
+)
 
 router = APIRouter(
     prefix="/ingest/external-sftp",
     tags=["ingest/external-sftp"],
     responses={404: {"description": "Not found"}},
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 entity_name = "ingest external sftp"
 
 
-@router.get("/", response_model=list[IngestExternalSftpPublic], summary=f"Get a list of {entity_name}")
-def read_list(
-        *,
-        session: Session = Depends(get_session)
-):
+@router.get(
+    "/",
+    response_model=list[IngestExternalSftpPublic],
+    summary=f"Get a list of {entity_name}",
+)
+def read_list(*, session: Session = Depends(get_session)):
     entities = session.exec(select(IngestExternalSftp)).all()
     return entities
 
 
-@router.get("/{id}", response_model=IngestExternalSftpPublic, summary=f"Get one {entity_name}")
+@router.get(
+    "/{id}", response_model=IngestExternalSftpPublic, summary=f"Get one {entity_name}"
+)
 def read_one(*, session: Session = Depends(get_session), id: int):
     entity = session.get(IngestExternalSftp, id)
     if not entity:
@@ -31,8 +38,15 @@ def read_one(*, session: Session = Depends(get_session), id: int):
     return entity
 
 
-@router.post("/", response_model=IngestExternalSftpPublic, summary=f"Create one {entity_name}")
-def create(*, session: Session = Depends(get_session), payload: IngestExternalSftpCreate, user=Depends(get_current_user)):
+@router.post(
+    "/", response_model=IngestExternalSftpPublic, summary=f"Create one {entity_name}"
+)
+def create(
+    *,
+    session: Session = Depends(get_session),
+    payload: IngestExternalSftpCreate,
+    user=Depends(get_current_user),
+):
 
     extra_data = {"created_by_id": user.id}
     entity = IngestExternalSftp.model_validate(payload, update=extra_data)
@@ -42,9 +56,16 @@ def create(*, session: Session = Depends(get_session), payload: IngestExternalSf
     return entity
 
 
-@router.patch("/{id}", response_model=IngestExternalSftpPublic, summary=f"Update one {entity_name}")
+@router.patch(
+    "/{id}",
+    response_model=IngestExternalSftpPublic,
+    summary=f"Update one {entity_name}",
+)
 def update(
-        *, session: Session = Depends(get_session), id: int, payload: IngestExternalSftpUpdate
+    *,
+    session: Session = Depends(get_session),
+    id: int,
+    payload: IngestExternalSftpUpdate,
 ):
     entity = session.get(IngestExternalSftp, id)
     if not entity:

@@ -5,7 +5,9 @@ from sqlalchemy import JSON
 
 
 class QualityControlFunctionArgumentBase(SQLModel):
-    quality_control_function_id: int = Field(foreign_key="quality_control_function.id", ondelete="CASCADE")
+    quality_control_function_id: int = Field(
+        foreign_key="quality_control_function.id", ondelete="CASCADE"
+    )
     name: str
     type: str
     input: dict = Field(sa_column=Column(JSON), default_factory=dict)
@@ -28,11 +30,15 @@ class QualityControlFunctionArgument(QualityControlFunctionArgumentBase, table=T
     __tablename__ = "quality_control_function_argument"
 
     id: int | None = Field(default=None, primary_key=True)
-    quality_control_function: "QualityControlFunction" = Relationship(back_populates="quality_control_function_arguments")
+    quality_control_function: "QualityControlFunction" = Relationship(
+        back_populates="quality_control_function_arguments"
+    )
 
 
 class QualityControlFunctionBase(SQLModel):
-    quality_control_setting_id: int = Field(foreign_key="quality_control_setting.id", ondelete="CASCADE")
+    quality_control_setting_id: int = Field(
+        foreign_key="quality_control_setting.id", ondelete="CASCADE"
+    )
     name: str
 
 
@@ -51,8 +57,12 @@ class QualityControlFunction(QualityControlFunctionBase, table=True):
     __tablename__ = "quality_control_function"
 
     id: int | None = Field(default=None, primary_key=True)
-    quality_control_setting: "QualityControlSetting" = Relationship(back_populates="quality_control_functions")
-    quality_control_function_arguments: list[QualityControlFunctionArgument] = Relationship(back_populates="quality_control_function", cascade_delete=True)
+    quality_control_setting: "QualityControlSetting" = Relationship(
+        back_populates="quality_control_functions"
+    )
+    quality_control_function_arguments: list[QualityControlFunctionArgument] = (
+        Relationship(back_populates="quality_control_function", cascade_delete=True)
+    )
 
 
 class QualityControlSettingBase(SQLModel):
@@ -81,4 +91,6 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    quality_control_functions: list[QualityControlFunction] = Relationship(back_populates="quality_control_setting", cascade_delete=True)
+    quality_control_functions: list[QualityControlFunction] = Relationship(
+        back_populates="quality_control_setting", cascade_delete=True
+    )

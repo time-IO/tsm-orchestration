@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from pydantic import (PostgresDsn, computed_field)
+from pydantic import PostgresDsn, computed_field
+
 
 class Settings(BaseSettings):
     POSTGRES_SERVER: str
@@ -22,5 +23,6 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         )
+
 
 settings = Settings()  # type: ignore

@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel
 
+
 class NeutronMonitorStations(SQLModel, table=True):
     __tablename__ = "neutron_monitor_stations"
 

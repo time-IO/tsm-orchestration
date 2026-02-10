@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel
 
+
 class Database(SQLModel, table=True):
     __tablename__ = "database"
 

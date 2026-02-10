@@ -7,17 +7,16 @@ router = APIRouter(
     prefix="/permission-group",
     tags=["permission-groups"],
     responses={404: {"description": "Not found"}},
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 entity_name = "permission group"
 
 
-@router.get("/", response_model=list[PermissionGroup], summary=f"Get a list of {entity_name}")
-def read_list(
-        *,
-        session: Session = Depends(get_session)
-):
+@router.get(
+    "/", response_model=list[PermissionGroup], summary=f"Get a list of {entity_name}"
+)
+def read_list(*, session: Session = Depends(get_session)):
     entities = session.exec(select(PermissionGroup)).all()
     return entities
 

@@ -3,7 +3,7 @@ from typing import Any
 import json
 import time
 import requests
-from jwcrypto import jwk,jwt
+from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
 from .config import settings
 from fastapi import HTTPException
@@ -12,15 +12,17 @@ from fastapi import HTTPException
 class OIDCError(Exception):
     pass
 
+
 class OIDCService:
-    def __init__(self,
-                 *,
-                 issuer: str,
-                 audience: str,
-                 cache_ttl: int = 600,
-                 clock_skew: int = 30,
-                 request_timeout: float = 5.0
-                 ):
+    def __init__(
+        self,
+        *,
+        issuer: str,
+        audience: str,
+        cache_ttl: int = 600,
+        clock_skew: int = 30,
+        request_timeout: float = 5.0,
+    ):
         self.issuer = issuer
         self.audience = audience
 
@@ -127,8 +129,8 @@ class OIDCService:
 
         return claims
 
+
 oidc = OIDCService(
     issuer=settings.OIDC_ISSUER,
     audience=settings.OIDC_AUDIENCE,
 )
-

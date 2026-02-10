@@ -40,9 +40,13 @@ class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
     sync_interval_in_minutes: int = 60
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    
-    permission_group: "PermissionGroup" = Relationship(back_populates="ingest_external_api_uba")
+
+    permission_group: "PermissionGroup" = Relationship(
+        back_populates="ingest_external_api_uba"
+    )
+
 
 # fix to avoid circular imports
 from .permission_group import PermissionGroup
+
 IngestExternalApiUba.model_rebuild()
