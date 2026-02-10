@@ -68,11 +68,16 @@ docker-build:
   before_script: 
     - apk add jq
     - export DSM_API_IMAGE_NAME=$(docker compose config api --format json | jq -r .name)
+    - echo "${DSM_API_IMAGE_NAME}"
     - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config frontend --format json | jq -r .name)
+    - echo "${DSM_FRONTEND_IMAGE_NAME}"
   script:
     - docker compose build
     - export DSM_API_IMAGE_ID=$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
     - export DSM_FRONTEND_IMAGE_ID=$(docker images -f reference=${DSM_FRONTEND_IMAGE_NAME} -q)
+    - docker images
+    - echo "${DSM_API_IMAGE_ID}"
+    - echo "${DSM_FRONTEND_IMAGE_ID}"
     - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
     - docker tag ${DSM_FRONTEND_IMAGE_ID} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
     - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
