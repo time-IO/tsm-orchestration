@@ -34,7 +34,9 @@ class IngestExternalApiTheThingsNetworkPublic(IngestExternalApiTheThingsNetworkB
     created_at: datetime
 
 
-class IngestExternalApiTheThingsNetwork(IngestExternalApiTheThingsNetworkBase, table=True):
+class IngestExternalApiTheThingsNetwork(
+    IngestExternalApiTheThingsNetworkBase, table=True
+):
     __tablename__ = "ingest_external_api_the_things_network"
 
     id: int | None = Field(default=None, primary_key=True)

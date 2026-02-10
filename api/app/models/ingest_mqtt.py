@@ -3,6 +3,7 @@ import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .mqtt_parser import MqttParser
 
+
 class IngestMqttBase(SQLModel):
     permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
@@ -10,8 +11,10 @@ class IngestMqttBase(SQLModel):
     topic: str
     mqtt_parser_id: int = Field(foreign_key="mqtt_parser.id")
 
+
 class IngestMqttCreate(IngestMqttBase):
     pass
+
 
 class IngestMqttUpdate(SQLModel):
     project_id: int | None = None
@@ -20,11 +23,13 @@ class IngestMqttUpdate(SQLModel):
     topic: str | None = None
     mqtt_parser_id: int | None = None
 
+
 class IngestMqttPublic(IngestMqttBase):
     id: int
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
+
 
 class IngestMqtt(IngestMqttBase, table=True):
     __tablename__ = "ingest_mqtt"

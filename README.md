@@ -118,6 +118,12 @@ With this setup, you could access the sms under `<my-fancy-domain>/data-source-m
 
 ## Development
 
+### Formatting
+
+```
+docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .   
+```
+
 ### Environment Variables Frontend
 - Environment Variables must be defined in `frontend/app/quasar.config.ts`>`build`>`env`
   - afterward they can be used with `process.env.<KEY>`

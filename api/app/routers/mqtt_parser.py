@@ -6,7 +6,7 @@ router = APIRouter(
     prefix="/mqtt-parser",
     tags=["mqtt-parser"],
     responses={404: {"description": "Not found"}},
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 entity_name = "mqtt-parser"
@@ -18,11 +18,13 @@ list_of_mqtt_parser = {
     4: {"id": 4, "name": "brightsky_dwd_api"},
     5: {"id": 5, "name": "ydoc_ml417"},
     6: {"id": 6, "name": "sine_dummy"},
-    7: {"id": 7, "name": "Gude"}
+    7: {"id": 7, "name": "Gude"},
 }
 
 
-@router.get("/", response_model=list[MqttParser], summary=f"Get a list of {entity_name}")
+@router.get(
+    "/", response_model=list[MqttParser], summary=f"Get a list of {entity_name}"
+)
 def read_list():
     return list_of_mqtt_parser.values()
 

@@ -3,6 +3,7 @@ import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .neutron_monitor_stations import NeutronMonitorStations
 
+
 class IngestExternalApiNeutronMonitorBase(SQLModel):
     permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str

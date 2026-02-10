@@ -5,10 +5,10 @@ from .auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from .models.user import User
 
-
 bearer_scheme = HTTPBearer(auto_error=False)
 
 engine = create_engine(str(settings.DATABASE_URI))
+
 
 def get_session():
     with Session(engine) as session:
@@ -17,7 +17,7 @@ def get_session():
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    session = Depends(get_session),
+    session=Depends(get_session),
 ):
     if not credentials:
         raise HTTPException(status_code=401, detail="Missing Authorization header")
@@ -33,18 +33,13 @@ def get_current_user(
         access_token=credentials.credentials,
     )
 
-
     if not user.is_active:
         raise HTTPException(status_code=403, detail="User disabled")
 
     return user
 
-def get_or_create_user(
-    *,
-    session,
-    claims: dict,
-    access_token: str
-):
+
+def get_or_create_user(*, session, claims: dict, access_token: str):
     external_id = claims["sub"]
 
     stmt = select(User).where(User.sub == external_id)
@@ -65,7 +60,7 @@ def get_or_create_user(
         family_name=userinfo.get("family_name"),
         username=userinfo.get("eduperson_principal_name"),
         is_active=True,
-        is_superuser=False
+        is_superuser=False,
     )
 
     session.add(user)
