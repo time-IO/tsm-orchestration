@@ -18,7 +18,7 @@ npm-lint:
   image: node:25
   before_script:
     - cd frontend/app
-    - npm ci frontend/app
+    - npm ci
   script:
     - npm run lint
 
@@ -39,14 +39,16 @@ build:
     - freeze
     # when black and npm lint are no longer failing, we have to include them here
   image: docker
+  services:
+    - docker:dind
   before_script: 
     - apk add jq
     - export DSM_API_IMAGE_NAME=$(docker compose config api --format json | jq -r .name)
     - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config frontend --format json | jq -r .name)
-    - export DSM_API_IMAGE_ID=d$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
-    - export DSM_FRONTEND_IMAGE_ID=d$(docker images -f reference=${DSM_FRONTEND_IMAGE_NAME} -q)
   script:
     - docker compose build
+    - export DSM_API_IMAGE_ID=$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
+    - export DSM_FRONTEND_IMAGE_ID=$(docker images -f reference=${DSM_FRONTEND_IMAGE_NAME} -q)
     - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
     - docker tag ${DSM_FRONTEND_IMAGE_ID} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
     - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
