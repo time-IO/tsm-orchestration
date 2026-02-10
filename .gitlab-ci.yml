@@ -70,21 +70,20 @@ docker-build:
     - apk add --no-cache jq
     - export DSM_API_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.api.image | split(":")[0]')
     - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.frontend.image | split(":")[0]')
+    - export DSM_API_IMAGE_URL="${CI_REGISTRY_IMAGE}/${DSM_API_IMAGE_NAME}"
+    - export DSM_FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/${DSM_FRONTEND_IMAGE_NAME}"
   script:
     - docker compose build
     - export DSM_API_IMAGE_ID=$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
     - export DSM_FRONTEND_IMAGE_ID=$(docker images -f reference=${DSM_FRONTEND_IMAGE_NAME} -q)
+    - docker tag ${DSM_API_IMAGE_ID} ${DSM_API_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${DSM_FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${DSM_API_IMAGE_ID} ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
     - docker images
-    - echo "${DSM_API_IMAGE_ID}"
-    - echo "${DSM_FRONTEND_IMAGE_ID}"
-    - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
-    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
-    - docker tag ${DSM_API_IMAGE_ID} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
-    - docker tag ${DSM_FRONTEND_IMAGE_ID} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
-    - docker images
-    - docker push ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
-    - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
-    - docker push ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
-    - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
+    - docker push ${DSM_API_IMAGE_URL}:${BUILD_DATE}
+    - docker push ${DSM_FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker push ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
   tags:
     - "dind"
