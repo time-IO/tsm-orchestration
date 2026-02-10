@@ -22,6 +22,17 @@ npm-lint:
   script:
     - npm run lint
 
+npm-test:
+  stage: test
+  needs: []
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci
+  script:
+    # no tests defined yet, but we can already include that here
+    - npm run test
+
 freeze:
   stage: freeze
   needs: []
@@ -33,7 +44,20 @@ freeze:
   script:
     - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
 
-build:
+npm-build:
+  stage: build
+  needs:
+    - npm-lint
+    - npm-test
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci
+  script:
+    - npm run build
+
+
+docker-build:
   stage: build
   needs:
     - freeze
