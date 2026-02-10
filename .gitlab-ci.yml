@@ -65,12 +65,11 @@ docker-build:
   image: docker
   services:
     - docker:dind
-  before_script: 
-    - apk add jq
-    - export DSM_API_IMAGE_NAME=$(docker compose config api --format json | jq -r .name)
-    - echo "${DSM_API_IMAGE_NAME}"
-    - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config frontend --format json | jq -r .name)
-    - echo "${DSM_FRONTEND_IMAGE_NAME}"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - apk add --no-cache jq
+    - export DSM_API_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.api.image | split(":")[0]')
+    - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.frontend.image | split(":")[0]')
   script:
     - docker compose build
     - export DSM_API_IMAGE_ID=$(docker images -f reference=${DSM_API_IMAGE_NAME} -q)
