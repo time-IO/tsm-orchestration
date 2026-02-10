@@ -46,6 +46,9 @@ class ParseMqttDataHandler(AbstractHandler):
         thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
 
+        logger.info("persisting rawdata")
+        self.dbapi.insert_mqtt_message(thing_uuid, content)
+
         logger.info(f"get parser")
         parser: MqttParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
 
