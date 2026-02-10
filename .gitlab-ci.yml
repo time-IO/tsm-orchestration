@@ -1,3 +1,8 @@
+stages:
+  - test
+  - freeze
+  - build
+
 black:
   stage: test
   needs: []
@@ -7,11 +12,23 @@ black:
   script:
     - black --check api/app/
 
+freeze:
+  stage: freeze
+  needs: []
+  image: alpine
+  artifacts:
+    expire_in: 6 weeks
+    reports:
+      dotenv:
+        - ci-job-date.env
+  script:
+    - echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" > ci-job-date.env
+
 build:
   stage: build
   needs:
     - black
-    - freeze-tag
+    - freeze
   image: docker
   script:
     - docker compose build
