@@ -1,7 +1,18 @@
 stages:
-  - test
   - freeze
+  - test
   - build
+
+freeze:
+  stage: freeze
+  needs: []
+  image: alpine
+  artifacts:
+    expire_in: 6 weeks
+    reports:
+      dotenv: date.env
+  script:
+    - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
 
 black:
   stage: test
@@ -33,17 +44,6 @@ npm-test:
     # no tests defined yet, but we can already include that here
     - npm run test
 
-freeze:
-  stage: freeze
-  needs: []
-  image: alpine
-  artifacts:
-    expire_in: 6 weeks
-    reports:
-      dotenv: date.env
-  script:
-    - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
-
 npm-build:
   stage: build
   needs:
@@ -61,7 +61,9 @@ docker-build:
   stage: build
   needs:
     - freeze
-    # when black and npm lint are no longer failing, we have to include them here
+    - black
+    - npm-lint
+    - npm-test
   image: docker
   services:
     - docker:dind
