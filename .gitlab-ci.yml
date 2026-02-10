@@ -1,6 +1,6 @@
 stages:
   - freeze
-  - test
+  - check
   - build
   - release
 
@@ -52,6 +52,7 @@ npm-test:
 
 npm-build:
   stage: check
+  needs: []
   image: node:25
   before_script:
     - cd frontend/app
@@ -67,6 +68,7 @@ docker-build:
     - black
     - npm-lint
     - npm-test
+    - npm-build
   image: docker
   services:
     - docker:dind
