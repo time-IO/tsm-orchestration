@@ -86,3 +86,5 @@ docker-build:
     - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
     - docker push ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
     - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
+  tags:
+    - "dind"
