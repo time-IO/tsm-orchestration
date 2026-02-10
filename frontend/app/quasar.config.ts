@@ -4,6 +4,15 @@
 import { defineConfig } from '#q-app/wrappers';
 import { fileURLToPath } from 'node:url';
 
+
+const ENV_API_BASE_URL = process.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER'
+const ENV_OIDC_IDP_URL = process.env.OIDC_IDP_URL || 'ENV_OIDC_IDP_URL_PLACEHOLDER'
+const ENV_OIDC_CLIENT_ID = process.env.OIDC_CLIENT_ID || 'ENV_OIDC_CLIENT_ID_PLACEHOLDER'
+const ENV_OIDC_REDIRECT_URI = process.env.OIDC_REDIRECT_URI || 'ENV_OIDC_REDIRECT_URI_PLACEHOLDER'
+const ENV_OIDC_SCOPE = process.env.OIDC_SCOPE || 'ENV_OIDC_SCOPE_PLACEHOLDER'
+const ENV_OIDC_POST_LOGOUT_REDIRECT_URI = process.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER'
+const ENV_BASE_URL = process.env.BASE_URL || 'BASE_URL_ENV_PLACEHOLDER'
+
 export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -51,15 +60,15 @@ export default defineConfig((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: ENV_BASE_URL,
       // analyze: true,
       env: {
-        API_BASE_URL: process.env.API_BASE_URL,
-        OIDC_IDP_URL:process.env.OIDC_IDP_URL,
-        OIDC_CLIENT_ID:process.env.OIDC_CLIENT_ID,
-        OIDC_REDIRECT_URI: process.env.OIDC_REDIRECT_URI,
-        OIDC_SCOPE: process.env.OIDC_SCOPE,
-        OIDC_POST_LOGOUT_REDIRECT_URI: process.env.OIDC_POST_LOGOUT_REDIRECT_URI,
+        API_BASE_URL: ENV_API_BASE_URL,
+        OIDC_IDP_URL:ENV_OIDC_IDP_URL,
+        OIDC_CLIENT_ID:ENV_OIDC_CLIENT_ID,
+        OIDC_REDIRECT_URI: ENV_OIDC_REDIRECT_URI,
+        OIDC_SCOPE: ENV_OIDC_SCOPE,
+        OIDC_POST_LOGOUT_REDIRECT_URI: ENV_OIDC_POST_LOGOUT_REDIRECT_URI,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

@@ -37,6 +37,7 @@ services:
       OIDC_REDIRECT_URI: "${OIDC_REDIRECT_URI:-http://localhost/login-callback}"
       OIDC_SCOPE: "${OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
       OIDC_POST_LOGOUT_REDIRECT_URI: "${OIDC_POST_LOGOUT_REDIRECT_URI:-http://localhost}"
+      BASE_URL: "${BASE_URL-/}"
     volumes:
       - ./frontend/app:/home/node/app:rw,cached
     command: "quasar dev"
