@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from ..dependencies import get_session
+from ..dependencies import get_session, get_current_user
 from ..models.csv_parser import CsvParserCreate, CsvParser, CsvParserPublic, CsvParserTimestampColumn, CsvParserUpdate, \
     CsvParserTimestampColumnUpdate, CsvParserTimestampColumnPublic
 
@@ -8,9 +8,11 @@ router = APIRouter(
     prefix="/parser/csv",
     tags=["parser/csv"],
     responses={404: {"description": "Not found"}},
+    dependencies=[Depends(get_current_user)]
 )
 
 entity_name = "csv parser"
+
 
 @router.get("/", response_model=list[CsvParserPublic], summary=f"Get a list of {entity_name}")
 def read_list(
@@ -30,9 +32,9 @@ def read_one(*, session: Session = Depends(get_session), csvparser_id: int):
 
 
 @router.post("/", response_model=CsvParserPublic, summary=f"Create one {entity_name}")
-def create(*, session: Session = Depends(get_session), payload: CsvParserCreate):
-    user_id = 42  # todo use real id after adding aut, this is just here to not forget how it was done
-    extra_data = {"created_by_id": user_id}
+def create(*, session: Session = Depends(get_session), payload: CsvParserCreate, user=Depends(get_current_user)):
+
+    extra_data = {"created_by_id": user.id}
 
     # Validate manually before saving
     if not payload.timestamp_columns:
@@ -71,6 +73,7 @@ def update(
     session.refresh(entity)
     return entity
 
+
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
 def delete(*, session: Session = Depends(get_session), id: int):
     entity = session.get(CsvParser, id)
@@ -80,7 +83,9 @@ def delete(*, session: Session = Depends(get_session), id: int):
     session.commit()
     return {"ok": True}
 
-@router.patch("/timestampcolumn/{timestampcolumn_id}", response_model=CsvParserTimestampColumnPublic, summary="Update one timestamp column of a csv parser")
+
+@router.patch("/timestampcolumn/{timestampcolumn_id}", response_model=CsvParserTimestampColumnPublic,
+              summary="Update one timestamp column of a csv parser")
 def update_timestampcolumn(
         *, session: Session = Depends(get_session), timestampcolumn_id: int,
         payload: CsvParserTimestampColumnUpdate
@@ -94,6 +99,7 @@ def update_timestampcolumn(
     session.commit()
     session.refresh(entity)
     return entity
+
 
 @router.delete("/timestampcolumn/{timestampcolumn_id}", summary="Delete one timestamp column of a csv parser")
 def delete_timestampcolumn(*, session: Session = Depends(get_session), timestampcolumn_id: int):

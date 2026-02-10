@@ -247,6 +247,7 @@
         "containerId" : "a3aa9869-f551-4950-9c2f-f8fa027cd304",
         "attributes" : { }
       } ],
+      "dev-client" : [ ],
       "security-admin-console" : [ ],
       "admin-cli" : [ ],
       "account-console" : [ ],
@@ -259,7 +260,6 @@
         "containerId" : "f402678b-5b48-47d4-b389-27410c604f15",
         "attributes" : { }
       } ],
-      "dev-client" : [ ],
       "account" : [ {
         "id" : "bab6b586-c6ee-4428-964e-99b25be4b67f",
         "name" : "manage-account-links",
@@ -631,6 +631,50 @@
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   }, {
+    "id" : "245e92cc-a59b-48f6-b795-77ed045c2f57",
+    "clientId" : "dev-client",
+    "name" : "dev Client",
+    "description" : "A demo client",
+    "rootUrl" : "http://localhost",
+    "adminUrl" : "http://localhost",
+    "baseUrl" : "http://localhost",
+    "surrogateAuthRequired" : false,
+    "enabled" : true,
+    "alwaysDisplayInConsole" : false,
+    "clientAuthenticatorType" : "client-secret",
+    "redirectUris" : [ "http://localhost/login-callback", "http://localhost/backend/api/v1/login-callback", "http://localhost/*" ],
+    "webOrigins" : [ "http://localhost" ],
+    "notBefore" : 0,
+    "bearerOnly" : false,
+    "consentRequired" : false,
+    "standardFlowEnabled" : true,
+    "implicitFlowEnabled" : false,
+    "directAccessGrantsEnabled" : true,
+    "serviceAccountsEnabled" : false,
+    "publicClient" : true,
+    "frontchannelLogout" : true,
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "post.logout.redirect.uris" : "http://localhost",
+      "oauth2.device.authorization.grant.enabled" : "false",
+      "backchannel.logout.revoke.offline.tokens" : "false",
+      "use.refresh.tokens" : "true",
+      "oidc.ciba.grant.enabled" : "false",
+      "client.use.lightweight.access.token.enabled" : "true",
+      "backchannel.logout.session.required" : "true",
+      "client_credentials.use_refresh_token" : "false",
+      "acr.loa.map" : "{}",
+      "require.pushed.authorization.requests" : "false",
+      "tls.client.certificate.bound.access.tokens" : "false",
+      "display.on.consent.screen" : "false",
+      "token.response.type.bearer.lower-case" : "false"
+    },
+    "authenticationFlowBindingOverrides" : { },
+    "fullScopeAllowed" : true,
+    "nodeReRegistrationTimeout" : -1,
+    "defaultClientScopes" : [ "web-origins", "acr", "openid", "profile", "roles", "dev-client-audience", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "email" ],
+    "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
+  }, {
     "id" : "a3aa9869-f551-4950-9c2f-f8fa027cd304",
     "clientId" : "realm-management",
     "name" : "${client_realm-management}",
@@ -705,43 +749,6 @@
     } ],
     "defaultClientScopes" : [ "web-origins", "acr", "profile", "roles", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
-  }, {
-    "id" : "245e92cc-a59b-48f6-b795-77ed045c2f57",
-    "clientId" : "dev-client",
-    "name" : "dev Client",
-    "description" : "A demo client",
-    "rootUrl" : "http://localhost",
-    "adminUrl" : "http://localhost",
-    "baseUrl" : "http://localhost",
-    "surrogateAuthRequired" : false,
-    "enabled" : true,
-    "alwaysDisplayInConsole" : false,
-    "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://localhost/login-callback", "http://localhost/backend/api/v1/login-callback", "http://localhost/*" ],
-    "webOrigins" : [ "http://localhost" ],
-    "notBefore" : 0,
-    "bearerOnly" : false,
-    "consentRequired" : false,
-    "standardFlowEnabled" : true,
-    "implicitFlowEnabled" : false,
-    "directAccessGrantsEnabled" : true,
-    "serviceAccountsEnabled" : false,
-    "publicClient" : true,
-    "frontchannelLogout" : true,
-    "protocol" : "openid-connect",
-    "attributes" : {
-      "oidc.ciba.grant.enabled" : "false",
-      "backchannel.logout.session.required" : "true",
-      "post.logout.redirect.uris" : "http://localhost",
-      "display.on.consent.screen" : "false",
-      "oauth2.device.authorization.grant.enabled" : "false",
-      "backchannel.logout.revoke.offline.tokens" : "false"
-    },
-    "authenticationFlowBindingOverrides" : { },
-    "fullScopeAllowed" : true,
-    "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "web-origins", "acr", "openid", "profile", "roles", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "email" ],
-    "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   } ],
   "clientScopes" : [ {
     "id" : "772397a7-e630-497e-aa1f-b0367f87e504",
@@ -774,8 +781,9 @@
         "multivalued" : "true",
         "userinfo.token.claim" : "true",
         "user.attribute" : "foo",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "groups",
         "jsonType.label" : "String"
       }
@@ -786,11 +794,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "username",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "upn",
         "jsonType.label" : "String"
       }
@@ -816,9 +827,10 @@
         "full.path" : "false",
         "introspection.token.claim" : "true",
         "userinfo.token.claim" : "true",
-        "id.token.claim" : "true",
+        "multivalued" : "true",
+        "id.token.claim" : "false",
         "lightweight.claim" : "false",
-        "access.token.claim" : "true",
+        "access.token.claim" : "false",
         "claim.name" : "eduperson_entitlement"
       }
     } ]
@@ -849,8 +861,9 @@
     "description" : "OpenID Connect built-in scope: profile",
     "protocol" : "openid-connect",
     "attributes" : {
-      "include.in.token.scope" : "true",
+      "include.in.token.scope" : "false",
       "display.on.consent.screen" : "true",
+      "gui.order" : "",
       "consent.screen.text" : "${profileScopeConsentText}"
     },
     "protocolMappers" : [ {
@@ -860,11 +873,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "firstName",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "given_name",
         "jsonType.label" : "String"
       }
@@ -875,11 +891,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "gender",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "gender",
         "jsonType.label" : "String"
       }
@@ -890,11 +909,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "birthdate",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "birthdate",
         "jsonType.label" : "String"
       }
@@ -905,11 +927,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "locale",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "locale",
         "jsonType.label" : "String"
       }
@@ -920,11 +945,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "picture",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "picture",
         "jsonType.label" : "String"
       }
@@ -935,11 +963,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "profile",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "profile",
         "jsonType.label" : "String"
       }
@@ -950,11 +981,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "website",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "website",
         "jsonType.label" : "String"
       }
@@ -965,11 +999,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "username",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "preferred_username",
         "jsonType.label" : "String"
       }
@@ -980,11 +1017,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "updatedAt",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "updated_at",
         "jsonType.label" : "long"
       }
@@ -995,11 +1035,14 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "nickname",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "nickname",
         "jsonType.label" : "String"
       }
@@ -1126,9 +1169,10 @@
       "protocolMapper" : "oidc-acr-mapper",
       "consentRequired" : false,
       "config" : {
-        "id.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
         "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
+        "access.token.claim" : "false",
         "userinfo.token.claim" : "true"
       }
     } ]
@@ -1153,9 +1197,9 @@
         "introspection.token.claim" : "true",
         "userinfo.token.claim" : "true",
         "user.attribute" : "id",
-        "id.token.claim" : "true",
+        "id.token.claim" : "false",
         "lightweight.claim" : "false",
-        "access.token.claim" : "true",
+        "access.token.claim" : "false",
         "claim.name" : "eduperson_unique_id",
         "jsonType.label" : "String"
       }
@@ -1180,8 +1224,9 @@
         "introspection.token.claim" : "true",
         "userinfo.token.claim" : "true",
         "user.attribute" : "emailVerified",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "email_verified",
         "jsonType.label" : "boolean"
       }
@@ -1192,13 +1237,42 @@
       "protocolMapper" : "oidc-usermodel-attribute-mapper",
       "consentRequired" : false,
       "config" : {
+        "aggregate.attrs" : "false",
         "introspection.token.claim" : "true",
+        "multivalued" : "false",
         "userinfo.token.claim" : "true",
         "user.attribute" : "email",
-        "id.token.claim" : "true",
-        "access.token.claim" : "true",
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "claim.name" : "email",
         "jsonType.label" : "String"
+      }
+    } ]
+  }, {
+    "id" : "80ab7a53-ddc8-46f1-980f-5753c0977a59",
+    "name" : "dev-client-audience",
+    "description" : "Correct map the client_id to the aud claim",
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "include.in.token.scope" : "true",
+      "display.on.consent.screen" : "false",
+      "gui.order" : "",
+      "consent.screen.text" : ""
+    },
+    "protocolMappers" : [ {
+      "id" : "cb2f7768-c390-47c3-b223-fae950d20e9e",
+      "name" : "dev-client-audience mapper",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-audience-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "included.client.audience" : "dev-client",
+        "introspection.token.claim" : "true",
+        "userinfo.token.claim" : "false",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "true",
+        "access.token.claim" : "true"
       }
     } ]
   }, {
@@ -1263,9 +1337,9 @@
         "introspection.token.claim" : "true",
         "userinfo.token.claim" : "true",
         "user.attribute" : "username",
-        "id.token.claim" : "true",
+        "id.token.claim" : "false",
         "lightweight.claim" : "false",
-        "access.token.claim" : "true",
+        "access.token.claim" : "false",
         "claim.name" : "eduperson_principal_name",
         "jsonType.label" : "String"
       }
@@ -1302,9 +1376,10 @@
         "user.attribute.postal_code" : "postal_code",
         "userinfo.token.claim" : "true",
         "user.attribute.street" : "street",
-        "id.token.claim" : "true",
+        "id.token.claim" : "false",
         "user.attribute.region" : "region",
-        "access.token.claim" : "true",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "false",
         "user.attribute.locality" : "locality"
       }
     } ]
@@ -1330,8 +1405,8 @@
       }
     } ]
   } ],
-  "defaultDefaultClientScopes" : [ "role_list", "profile", "email", "roles", "web-origins", "acr", "openid", "eduperson_principal_name", "eduperson_entitlement", "eduperson_unique_id" ],
-  "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt" ],
+  "defaultDefaultClientScopes" : [ "role_list", "email", "roles", "web-origins", "acr", "openid", "eduperson_principal_name", "eduperson_entitlement", "eduperson_unique_id", "profile" ],
+  "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt", "dev-client-audience" ],
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
     "xContentTypeOptions" : "nosniff",
@@ -1358,7 +1433,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-address-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper", "saml-user-property-mapper" ]
       }
     }, {
       "id" : "11176d92-0641-4d3b-ad83-a3e0f53308ee",
@@ -1383,7 +1458,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-user-property-mapper", "saml-user-attribute-mapper", "oidc-address-mapper", "oidc-full-name-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "oidc-usermodel-attribute-mapper", "saml-role-list-mapper", "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "oidc-address-mapper" ]
       }
     }, {
       "id" : "1f45018c-0e09-4453-b9f8-11c5c7d50341",

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_session
+from ..dependencies import get_session, get_current_user
 from sqlmodel import Session, select
 
 from ..models.quality_control_setting import QualityControlSettingCreate, QualityControlSetting, QualityControlFunction, \
@@ -9,9 +9,11 @@ router = APIRouter(
     prefix="/quality-control-setting",
     tags=["quality-control-setting"],
     responses={404: {"description": "Not found"}},
+    dependencies=[Depends(get_current_user)]
 )
 
 entity_name = "quality control setting"
+
 
 @router.get("/", response_model=list[QualityControlSettingPublic], summary=f"Get a list of {entity_name}")
 def read_list(
@@ -21,10 +23,11 @@ def read_list(
     entities = session.exec(select(QualityControlSetting)).all()
     return entities
 
+
 @router.post("/", response_model=QualityControlSettingPublic, summary=f"Create one {entity_name}")
-def create(*, session: Session = Depends(get_session), payload: QualityControlSettingCreate):
-    user_id = 42  # todo use real id after adding aut, this is just here to not forget how it was done
-    extra_data = {"created_by_id": user_id}
+def create(*, session: Session = Depends(get_session), payload: QualityControlSettingCreate, user=Depends(get_current_user)):
+
+    extra_data = {"created_by_id": user.id}
 
     data = payload.model_dump(exclude={"quality_control_functions"})
     entity = QualityControlSetting.model_validate(data, update=extra_data)

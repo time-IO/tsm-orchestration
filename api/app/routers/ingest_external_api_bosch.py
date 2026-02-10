@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from ..dependencies import get_session
+from ..dependencies import get_session, get_current_user
 from ..models.ingest_external_api_bosch import IngestExternalApiBoschCreate,IngestExternalApiBosch,IngestExternalApiBoschUpdate,IngestExternalApiBoschPublic
 
 router = APIRouter(
     prefix="/ingest/external-api/bosch",
     tags= ["ingest/external-api/bosch"],
     responses={404: {"description": "Not found"}},
+    dependencies=[Depends(get_current_user)]
 )
 
 entity_name = "ingest external api bosch"
@@ -27,9 +28,8 @@ def read_one(*, session: Session = Depends(get_session), id: int):
     return entity
 
 @router.post("/",response_model=IngestExternalApiBoschPublic, summary=f"Create one {entity_name}")
-def create(*, session: Session = Depends(get_session), payload: IngestExternalApiBoschCreate):
-    user_id=42 # todo use real id after adding aut, this is just here to not forget how it was done
-    extra_data = {"created_by_id": user_id}
+def create(*, session: Session = Depends(get_session), payload: IngestExternalApiBoschCreate, user=Depends(get_current_user)):
+    extra_data = {"created_by_id": user.id}
     entity = IngestExternalApiBosch.model_validate(payload, update=extra_data)
     session.add(entity)
     session.commit()

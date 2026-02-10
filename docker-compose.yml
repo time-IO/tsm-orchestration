@@ -14,6 +14,9 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
       POSTGRES_DB: "${POSTGRES_DB:-db_dev}"
+      OIDC_WELL_KNOWN: "${OIDC_WELL_KNOWN:-http://nginx/keycloak/realms/local-dev/.well-known/openid-configuration}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-http://localhost/keycloak/realms/local-dev}"
+      OIDC_AUDIENCE: "${OIDC_AUDIENCE:-dev-client}"
     volumes:
       - ./api/app:/app:rw,cached
     depends_on:
