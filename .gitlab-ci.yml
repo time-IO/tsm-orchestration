@@ -18,7 +18,7 @@ freeze:
 
 
 black:
-  stage: test
+  stage: check
   needs: []
   image: python:3-slim
   before_script:
@@ -28,7 +28,7 @@ black:
 
 
 npm-lint:
-  stage: test
+  stage: check
   needs: []
   image: node:25
   before_script:
@@ -39,7 +39,7 @@ npm-lint:
 
 
 npm-test:
-  stage: test
+  stage: check
   needs: []
   image: node:25
   before_script:
@@ -51,10 +51,7 @@ npm-test:
 
 
 npm-build:
-  stage: test
-  needs:
-    - npm-lint
-    - npm-test
+  stage: check
   image: node:25
   before_script:
     - cd frontend/app
