@@ -1,3 +1,7 @@
+variables:
+  API_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-api"
+  FRONTEND_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
+
 stages:
   - freeze
   - check
@@ -74,16 +78,11 @@ docker-build:
     - docker:dind
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - export API_IMAGE_URL="${CI_REGISTRY_IMAGE}/timeio-dsm-api"
-    - export FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
   script:
     - docker build -t ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./api/docker/Dockerfile-Dev ./api # needs a context path
     - docker build -t ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./frontend/docker/generic-image/Dockerfile .
-    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker images
-    - docker push ${API_IMAGE_URL} -a
-    - docker push ${FRONTEND_IMAGE_URL} -a
+    - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
   tags:
     - "dind"
 
@@ -99,6 +98,9 @@ add-latest-tags:
   script:
     - docker pull ${API_IMAGE_URL}:${BUILD_DATE}
     - docker pull ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${API_IMAGE_URL}:${BUILD_DATE} ${API_IMAGE_URL}:latest
-    - docker tag ${FRONTEND_IMAGE_URL}:${BUILD_DATE} ${FRONTEND_IMAGE_URL}:latest
-    - docker push ${API_IMAGE_URL}:latest
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
+    - docker push ${API_IMAGE_URL} -a
+    - docker push ${FRONTEND_IMAGE_URL} -a
