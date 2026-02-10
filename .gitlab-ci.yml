@@ -46,7 +46,7 @@ npm-test:
     - cd frontend/app
     - npm ci
   script:
-    # no tests defined yet, but we can already include that here
+    # no tests defined yet, but we can already include this job
     - npm run test
 
 
@@ -75,30 +75,22 @@ docker-build:
     - docker:dind
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - apk add --no-cache jq
-    - export API_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.api.image | split(":")[0]')
-    - export FRONTEND_IMAGE_NAME=$(docker compose config --format json | jq -r '.services.frontend.image | split(":")[0]')
-    - export API_IMAGE_URL="${CI_REGISTRY_IMAGE}/${API_IMAGE_NAME}"
-    - export FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/${FRONTEND_IMAGE_NAME}"
+    - export API_IMAGE_URL="${CI_REGISTRY_IMAGE}/timeio-dsm-api"
+    - export FRONTEND_IMAGE_URL="${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
   script:
-    - docker compose build
-    - export API_IMAGE_ID=$(docker images -f reference=${API_IMAGE_NAME} -q)
-    - export FRONTEND_IMAGE_ID=$(docker images -f reference=${FRONTEND_IMAGE_NAME} -q)
-    - docker tag ${API_IMAGE_ID} ${API_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${FRONTEND_IMAGE_ID} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker tag ${API_IMAGE_ID} ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker tag ${FRONTEND_IMAGE_ID} ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker build -t ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./api/docker/Dockerfile-Dev ./api # needs a context path
+    - docker build -t ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./frontend/docker/generic-image/Dockerfile .
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
     - docker images
-    - docker push ${API_IMAGE_URL}:${BUILD_DATE}
-    - docker push ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
-    - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${API_IMAGE_URL} -a
+    - docker push ${FRONTEND_IMAGE_URL} -a
   tags:
     - "dind"
 
 add-latest-tags:
   stage: release
-  needs: 
+  needs:
     - docker-build
   rules:
     - if: '$CI_COMMIT_REF_SLUG == "main"'
