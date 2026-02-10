@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from ..dependencies import get_session
+from ..dependencies import get_session, get_current_user
 from ..models.permission_group import PermissionGroup
 
 router = APIRouter(
     prefix="/permission-group",
-    tags= ["permission-groups"],
+    tags=["permission-groups"],
     responses={404: {"description": "Not found"}},
+    dependencies=[Depends(get_current_user)]
 )
 
 entity_name = "permission group"
+
 
 @router.get("/", response_model=list[PermissionGroup], summary=f"Get a list of {entity_name}")
 def read_list(
@@ -18,6 +20,7 @@ def read_list(
 ):
     entities = session.exec(select(PermissionGroup)).all()
     return entities
+
 
 @router.get("/{id}", response_model=PermissionGroup, summary=f"Get one {entity_name}")
 def read_one(*, session: Session = Depends(get_session), id: int):

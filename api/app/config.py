@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
+    OIDC_WELL_KNOWN: str
+    OIDC_ISSUER: str
+    OIDC_AUDIENCE: str
 
     @computed_field  # type: ignore[prop-decorator]
     @property

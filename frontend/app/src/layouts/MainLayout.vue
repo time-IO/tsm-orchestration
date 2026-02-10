@@ -88,8 +88,14 @@ const handleLogin = async () => {
 }
 
 const handleLogout = async () => {
-  await authStore.logout()
-  await router.push('/')
+  try {
+    await authStore.logout()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    await router.push('/')
+  }
+
 }
 
 const topNavigation = [

@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from ..dependencies import get_session
-from ..models.ingest_external_api_dwd import  IngestExternalApiDwdCreate,IngestExternalApiDwd,IngestExternalApiDwdUpdate,IngestExternalApiDwdPublic
+from ..dependencies import get_session, get_current_user
+from ..models.ingest_external_api_dwd import IngestExternalApiDwdCreate, IngestExternalApiDwd, \
+    IngestExternalApiDwdUpdate, IngestExternalApiDwdPublic
 
 router = APIRouter(
     prefix="/ingest/external-api/dwd",
-    tags= ["ingest/external-api/dwd"],
+    tags=["ingest/external-api/dwd"],
     responses={404: {"description": "Not found"}},
+    dependencies=[Depends(get_current_user)]
 )
 
 entity_name = "ingest external api dwd"
+
 
 @router.get("/", response_model=list[IngestExternalApiDwdPublic], summary=f"Get a list of {entity_name}")
 def read_list(
@@ -19,6 +22,7 @@ def read_list(
     entities = session.exec(select(IngestExternalApiDwd)).all()
     return entities
 
+
 @router.get("/{id}", response_model=IngestExternalApiDwdPublic, summary=f"Get one {entity_name}")
 def read_one(*, session: Session = Depends(get_session), id: int):
     entity = session.get(IngestExternalApiDwd, id)
@@ -26,15 +30,16 @@ def read_one(*, session: Session = Depends(get_session), id: int):
         raise HTTPException(status_code=404, detail=f"{entity_name} not found")
     return entity
 
-@router.post("/",response_model=IngestExternalApiDwdPublic, summary=f"Create one {entity_name}")
-def create(*, session: Session = Depends(get_session), payload: IngestExternalApiDwdCreate):
-    user_id=42 # todo use real id after adding aut, this is just here to not forget how it was done
-    extra_data = {"created_by_id": user_id}
+
+@router.post("/", response_model=IngestExternalApiDwdPublic, summary=f"Create one {entity_name}")
+def create(*, session: Session = Depends(get_session), payload: IngestExternalApiDwdCreate, user=Depends(get_current_user)):
+    extra_data = {"created_by_id": user.id}
     entity = IngestExternalApiDwd.model_validate(payload, update=extra_data)
     session.add(entity)
     session.commit()
     session.refresh(entity)
     return entity
+
 
 @router.patch("/{id}", response_model=IngestExternalApiDwdPublic, summary=f"Update one {entity_name}")
 def update(
@@ -49,6 +54,7 @@ def update(
     session.commit()
     session.refresh(entity)
     return entity
+
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
 def delete(*, session: Session = Depends(get_session), id: int):

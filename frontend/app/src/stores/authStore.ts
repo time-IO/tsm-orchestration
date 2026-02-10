@@ -1,7 +1,8 @@
 import {defineStore} from "pinia";
 import type {User} from "oidc-client-ts";
 import {userManager} from "src/auth/oidcConfig";
-
+import {API} from "src/services";
+import type {UserPublic} from "src/services/user/types";
 
 /**
  * Prevent multiple event registrations (HMR, multi-import)
@@ -11,6 +12,7 @@ let eventsBound = false;
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null as User | null,
+    userInfo: null as UserPublic | null,
     loading: false,
   }),
 
@@ -19,17 +21,14 @@ export const useAuthStore = defineStore("auth", {
     accessToken: (state) => state.user?.access_token ?? null,
     getUserInfo: (state) => state.user?.profile || null,
     initials(): string | null {
-      if (this.isAuthenticated && this.getUserInfo) {
-        const givenName = this.getUserInfo.given_name
-        const familyName = this.getUserInfo.family_name
+      if (this.isAuthenticated && this.userInfo) {
+        const givenName = this.userInfo.given_name
+        const familyName = this.userInfo.family_name
 
         if (givenName && familyName) {
           return givenName.charAt(0) + familyName.charAt(0)
         }
 
-        if (this.getUserInfo.name && this.getUserInfo.name.length >= 2) {
-          return this.getUserInfo.name.charAt(0) + this.getUserInfo.name.charAt(1)
-        }
       }
       return null
     }
@@ -47,6 +46,15 @@ export const useAuthStore = defineStore("auth", {
       this.bindOidcEvents();
     },
 
+    async fetchUserInfo(){
+      try{
+        const response = await API.user.getMe();
+        this.userInfo = response.data
+      }catch (error){
+        console.error("failed to fethc user information:",error);
+      }
+    },
+
     login() {
       return userManager.signinRedirect();
     },
@@ -55,8 +63,13 @@ export const useAuthStore = defineStore("auth", {
       this.user = await userManager.signinRedirectCallback();
     },
 
-    async logout() {
+    clearStoredUserAndInfo(){
       this.user = null;
+      this.userInfo = null;
+    },
+
+    async logout() {
+      this.clearStoredUserAndInfo()
       return userManager.signoutRedirect();
     },
 
@@ -70,9 +83,14 @@ export const useAuthStore = defineStore("auth", {
        * - silent renew
        * - refresh token rotation
        */
-      userManager.events.addUserLoaded((user) => {
+      userManager.events.addUserLoaded(async (user) => {
         console.info("OIDC: user loaded / updated");
         this.user = user;
+        // Only fetch additional user info if authenticated
+        if (this.isAuthenticated) {
+          await this.fetchUserInfo();
+        }
+
       });
 
       /**
@@ -87,7 +105,7 @@ export const useAuthStore = defineStore("auth", {
        */
       userManager.events.addAccessTokenExpired(() => {
         console.warn("OIDC: token expired");
-        this.user = null;
+        this.clearStoredUserAndInfo()
       });
 
       /**
@@ -102,7 +120,7 @@ export const useAuthStore = defineStore("auth", {
        */
       userManager.events.addUserSignedOut(() => {
         console.warn("OIDC: user signed out at IdP");
-        this.user = null;
+        this.clearStoredUserAndInfo()
       });
     }
   },
