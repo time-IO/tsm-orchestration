@@ -29,17 +29,30 @@ freeze:
   artifacts:
     expire_in: 6 weeks
     reports:
-      dotenv:
-        - ci-job-date.env
+      dotenv: date.env
   script:
-    - echo "CI_JOB_DATE=$(date +%Y-%m-%d-%H%M%S)" > ci-job-date.env
+    - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
 
 build:
   stage: build
   needs:
-    - black
     - freeze
+    # when black and npm lint are no longer failing, we have to include them here
   image: docker
+  before_script: 
+    - apk add jq
+    - export DSM_API_IMAGE_NAME=$(docker compose config api --format json | jq -r .name)
+    - export DSM_FRONTEND_IMAGE_NAME=$(docker compose config frontend --format json | jq -r .name)
+    - DSM_API_PUSH_URL
+    - DSM_FRONTEND_PUSH_URL
   script:
     - docker compose build
+    - docker tag ${DSM_API_IMAGE_NAME} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
+    - docker tag ${DSM_FRONTEND_IMAGE_NAME} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
+    - docker tag ${DSM_API_IMAGE_NAME} ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
+    - docker tag ${DSM_FRONTEND_IMAGE_NAME} ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
     - docker images
+    - docker push ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${BUILD_DATE}
+    - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${BUILD_DATE}
+    - docker push ${CI_REGISTRY}/${DSM_API_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
+    - docker push ${CI_REGISTRY}/${DSM_FRONTEND_IMAGE_NAME}:${CI_COMMIT_REF_NAME}
