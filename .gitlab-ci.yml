@@ -12,6 +12,16 @@ black:
   script:
     - black --check api/app/
 
+npm-lint:
+  stage: test
+  needs: []
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci frontend/app
+  script:
+    - npm run lint
+
 freeze:
   stage: freeze
   needs: []
