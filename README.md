@@ -62,17 +62,11 @@ You must provide your own nginx configuration files and mount them to the right 
 __Important__ is the correct definition of the location of the frontend: 
 ```
 ...
-location /path-to-access-the-frontend{
+  location /data-source-management {
     alias /usr/share/nginx/html/;
-    try_files $uri $uri/ /index.html;
-}
-...
-```
-Your location must always use:
-```
-...
-    alias /usr/share/nginx/html/;
-    try_files $uri $uri/ /index.html;
+    try_files $uri $uri/ /data-source-management/index.html;
+  }
+
 ...
 ```
 
@@ -90,7 +84,7 @@ server {
 
   location /data-source-management {
     alias /usr/share/nginx/html/;
-    try_files $uri $uri/ /index.html;
+    try_files $uri $uri/ /data-source-management/index.html;
   }
 }
 
@@ -101,33 +95,26 @@ server {
 
 ```yaml
 services:
-  sms:
-    image: path-to-correct-frontend-image-registry:1.0.0
+  frontend:
+    image: registry.hzdr.de/<path to correct registry repo>/data-source-management-generic-frontend-image:1.0.0
     ports:
-      - 80:80
+      - "80:80"
     volumes:
       - "./nginx-example/default.conf:/etc/nginx/conf.d/default.conf"
     environment:
-      - "NUXT_ENV_OIDC_REFRESH_TOKEN_ENV_PLACEHOLDER=refresh_token"
-      - "NUXT_ENV_OIDC_REFRESH_EXPIRE_ENV_PLACEHOLDER=2592000"
-      - "NUXT_ENV_OIDC_RESPONSE_TYPE_ENV_PLACEHOLDER=code"
-      - "NUXT_ENV_OIDC_GRANT_TYPE_ENV_PLACEHOLDER=authorization_code"
-      - "NUXT_ENV_CLIENT_ID_ENV_PLACEHOLDER=sms-client"
-      - "NUXT_ENV_SCOPE_ENV_PLACEHOLDER=openid profile eduperson_principal_name email offline_access"
-      - "NUXT_ENV_OIDC_CHALLANGE_ENV_PLACEHOLDER=S256"
-      - "SMS_BACKEND_URL_ENV_PLACEHOLDER=/backend/api/v1"
-      - "CV_BACKEND_URL_ENV_PLACEHOLDER=/cv/api/v1"
-      - "IDL_SYNC_URL_ENV_PLACEHOLDER=http://localhost/idl/api/hifis/sync-groups/"
-      - "INSTITUTE_ENV_PLACEHOLDER=ufz"
-      - "NUXT_ENV_PID_BASE_URL_ENV_PLACEHOLDER=https://hdl.handle.net"
-      - "NUXT_ENV_OIDC_WELL_KNOWN_ENV_PLACEHOLDER=http://keycloak:8082/keycloak/realms/local-dev/.well-known/openid-configuration"
-      - "NUXT_ENV_OIDC_REFRESH_INTERVAL_TIME_ENV_PLACEHOLDER=900000"
-      - "BASE_URL_ENV_PLACEHOLDER=/sms"
+       ENV_API_BASE_URL_PLACEHOLDER: "http://localhost/api"
+       ENV_OIDC_IDP_URL_PLACEHOLDER: "https://login-dev.helmholtz.de/oauth2"
+       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "timeio-thing-management"
+       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management/login-callback"
+       ENV_OIDC_SCOPE_PLACEHOLDER: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
+       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management"
+       BASE_URL_ENV_PLACEHOLDER: "data-source-management"
+
       
       
 ```
 
-With this setup, you could access the sms under `<my-fancy-domain>/sms`
+With this setup, you could access the sms under `<my-fancy-domain>/data-source-management`
 
 ## Development
 
