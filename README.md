@@ -22,7 +22,7 @@ docker compose up -d
 - Documentation: http://localhost/api/docs 
 
 
-### Authentication
+## Authentication
 - The frontend application (single page application) authenticates against the Identity Provider (IDP) using authorization code flow with proof key for code exchange (pkce)
 - The frontend application receives an id token, access token and a refresh token  
   - The refresh token is used to get new tokens by the idp
@@ -40,6 +40,94 @@ docker compose up -d
 Potential Improvements:  
 - The current implementation of the auth flow of the api is implemented synchronously
 - It could be improved using an asynchronous method
+
+## Generic Frontend Image
+### Description
+To provide the possibility to set the environment variables for the frontend during runtime we provide a `generic frontend image`. 
+### How it works
+The key to the solution is how the environment variables in frontend are declared, e.g. `const ENV_API_BASE_URL = process.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER'`.
+With `process.env.API_BASE_URL` environment variables can be directly passed. This is useful for development.
+
+During build time no environment variables are passed, therefore all variables will have the `<..._PLACEHOLDER>` string as values, e.g. `const ENV_API_BASE_URL = 'ENV_API_BASE_URL_PLACEHOLDER'`.
+
+The new Dockerfile has an entrypoint script, that searches for these placeholder strings and replaces them with the actual values passed to the container during runtime.
+
+Another challenge is that the several institutes have different configurations for the nginx. The solution is to provide these configuration files as volume mounts in the several deployments. The new image comes with a minimal `default.conf` for the nginx, which can be replaced by volume mounts.
+
+The new image will be added to the container registry and build in the pipeline for every new version.
+
+### How to use it
+#### Important
+You must provide your own nginx configuration files and mount them to the right places during runtime.
+__Important__ is the correct definition of the location of the frontend: 
+```
+...
+location /path-to-access-the-frontend{
+    alias /usr/share/nginx/html/;
+    try_files $uri $uri/ /index.html;
+}
+...
+```
+Your location must always use:
+```
+...
+    alias /usr/share/nginx/html/;
+    try_files $uri $uri/ /index.html;
+...
+```
+
+#### Example
+Here is an example, how to use it with a minimal nginx configuration file and a docker-compose.yml.
+The goal of this example is to make the frontend available under the path `/data-source-management`. 
+
+##### nginx config
+`default.conf`:
+```
+server {
+  listen       80;
+  listen  [::]:80;
+  server_name  localhost;
+
+  location /data-source-management {
+    alias /usr/share/nginx/html/;
+    try_files $uri $uri/ /index.html;
+  }
+}
+
+```
+
+##### docker-compose.yml
+`docker-compose.yml`
+
+```yaml
+services:
+  sms:
+    image: path-to-correct-frontend-image-registry:1.0.0
+    ports:
+      - 80:80
+    volumes:
+      - "./nginx-example/default.conf:/etc/nginx/conf.d/default.conf"
+    environment:
+      - "NUXT_ENV_OIDC_REFRESH_TOKEN_ENV_PLACEHOLDER=refresh_token"
+      - "NUXT_ENV_OIDC_REFRESH_EXPIRE_ENV_PLACEHOLDER=2592000"
+      - "NUXT_ENV_OIDC_RESPONSE_TYPE_ENV_PLACEHOLDER=code"
+      - "NUXT_ENV_OIDC_GRANT_TYPE_ENV_PLACEHOLDER=authorization_code"
+      - "NUXT_ENV_CLIENT_ID_ENV_PLACEHOLDER=sms-client"
+      - "NUXT_ENV_SCOPE_ENV_PLACEHOLDER=openid profile eduperson_principal_name email offline_access"
+      - "NUXT_ENV_OIDC_CHALLANGE_ENV_PLACEHOLDER=S256"
+      - "SMS_BACKEND_URL_ENV_PLACEHOLDER=/backend/api/v1"
+      - "CV_BACKEND_URL_ENV_PLACEHOLDER=/cv/api/v1"
+      - "IDL_SYNC_URL_ENV_PLACEHOLDER=http://localhost/idl/api/hifis/sync-groups/"
+      - "INSTITUTE_ENV_PLACEHOLDER=ufz"
+      - "NUXT_ENV_PID_BASE_URL_ENV_PLACEHOLDER=https://hdl.handle.net"
+      - "NUXT_ENV_OIDC_WELL_KNOWN_ENV_PLACEHOLDER=http://keycloak:8082/keycloak/realms/local-dev/.well-known/openid-configuration"
+      - "NUXT_ENV_OIDC_REFRESH_INTERVAL_TIME_ENV_PLACEHOLDER=900000"
+      - "BASE_URL_ENV_PLACEHOLDER=/sms"
+      
+      
+```
+
+With this setup, you could access the sms under `<my-fancy-domain>/sms`
 
 ## Development
 

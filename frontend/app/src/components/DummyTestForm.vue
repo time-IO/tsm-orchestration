@@ -22,6 +22,13 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
+// Define a type for the processed data entries
+interface FormEntry {
+  name: string;
+  value: number | string | null;
+  type: string | null;
+}
+
 const formData = ref({
   min_length: null,
   input2: null,
@@ -30,27 +37,25 @@ const formData = ref({
 const emit = defineEmits(['submit']);
 
 const submitForm = () => {
-  const processedData = Object.entries(formData.value).map(([key, value]) => {
-    // Map value types to appropriate Vue type descriptors
-    const valueWithType = {name: key , value: value, type: null};
+  const processedData: FormEntry[] = Object.entries(formData.value).map(([key, value]) => {
+    let type: FormEntry['type'] = null;
+
     switch (key) {
       case 'min_length':
-      {
-        valueWithType.type = 'int';
-      }
+        type = 'int';
         break;
-      case 'input2':{
-        valueWithType.type = 'datastream';
-      }
+      case 'input2':
+        type = 'datastream';
         break;
       default:
         break;
     }
-    return valueWithType;
-  })
+
+    return { name: key, value, type };
+  });
 
   emit('submit', processedData);
-  formData.value = { input1: '', input2: null }; // Reset form
+  formData.value = { min_length: null, input2: null };
 };
 </script>
 

@@ -1,6 +1,6 @@
 import type {RouteRecordRaw} from 'vue-router';
 import AuthLoginCallback from "pages/AuthLoginCallback.vue";
-import Index from "pages/Index.vue";
+import IndexPage from "pages/IndexPage.vue";
 import IngestOverview from "pages/IngestOverview.vue";
 import IngestNew from "pages/IngestNew.vue";
 import IngestNewSftp from "pages/IngestNewSftp.vue";
@@ -23,7 +23,7 @@ import QualityControlNew from "pages/QualityControlNew.vue";
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: Index,
+    component: IndexPage,
     meta: {requiresAuth: false}
   },
   {
