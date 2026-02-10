@@ -79,7 +79,7 @@ docker-build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./api/docker/prod/Dockerfile .
+    - docker build -t ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./api/docker/prod/Dockerfile ./api
     - docker build -t ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./frontend/docker/generic-image/Dockerfile .
     - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
     - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
