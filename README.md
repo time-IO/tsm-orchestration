@@ -135,10 +135,14 @@ With this setup, you could access the sms under `<my-fancy-domain>/data-source-m
 ## Development
 
 ### Formatting
-
+- To format the python files of the api using the black formatter, you can use the following docker command:
 ```
 docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .   
 ```
+
+### Environment Variables API
+- Environment Variables must be defined in `api/app/config.py` > `Settings` class
+- Environment Variables must be used, using the `settings` instance (instantiated at the end of `api/app/config.py`)
 
 ### Environment Variables Frontend
 - Environment Variables must be defined in `frontend/app/quasar.config.ts`>`build`>`env`
