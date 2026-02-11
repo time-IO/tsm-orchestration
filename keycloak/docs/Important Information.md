@@ -1,13 +1,3 @@
-<!--
-SPDX-FileCopyrightText: 2020 - 2023
-- Nils Brinckmann <nils.brinckmann@gfz-potsdam.de>
-- Tobias Kuhnert <tobias.kuhnert@ufz.de>
-- Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences (GFZ, https://www.gfz-potsdam.de)
-- Helmholtz Centre for Environmental Research GmbH - UFZ (UFZ, https://www.ufz.de)
-
-SPDX-License-Identifier: EUPL-1.2
--->
-
 # Important Information
 
 With important information we mean theses kind of information you'll need to connect you application with the client to keycloak.

@@ -1,6 +1,7 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
 from datetime import datetime, timezone
+from .permission_group import PermissionGroup
 
 
 class IngestExternalApiTSystemsBase(SQLModel):
@@ -35,6 +36,7 @@ class IngestExternalApiTSystemsPublic(IngestExternalApiTSystemsBase):
     sync_interval_in_minutes: int
     created_by_id: int
     created_at: datetime
+    permission_group: "PermissionGroup"
 
 
 class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
@@ -45,3 +47,7 @@ class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
     sync_interval_in_minutes: int = 60
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    permission_group: "PermissionGroup" = Relationship(
+        back_populates="ingest_external_api_tsystems"
+    )
