@@ -41,34 +41,41 @@ def get_current_user(
 
 
 def get_or_create_user(*, session, claims: dict, access_token: str):
-    external_id = claims["sub"]
+    try:
+        external_id = claims["sub"]
 
-    stmt = select(User).where(User.sub == external_id)
-    user = session.exec(stmt).first()
+        stmt = select(User).where(User.sub == external_id)
+        user = session.exec(stmt).first()
 
-    if user:
+        if user:
+            return user
+
+        userinfo = oidc.fetch_userinfo(access_token)
+
+        if userinfo.get("sub") != external_id:
+            raise OIDCError("Userinfo subject mismatch")
+
+        user = User(
+            sub=external_id,
+            email=userinfo.get("email"),
+            given_name=userinfo.get("given_name"),
+            family_name=userinfo.get("family_name"),
+            username=userinfo.get("eduperson_principal_name"),
+            is_active=True,
+            is_superuser=False,
+        )
+
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
         return user
-
-    userinfo = oidc.fetch_userinfo(access_token)
-
-    if userinfo.get("sub") != external_id:
-        raise OIDCError("Userinfo subject mismatch")
-
-    user = User(
-        sub=external_id,
-        email=userinfo.get("email"),
-        given_name=userinfo.get("given_name"),
-        family_name=userinfo.get("family_name"),
-        username=userinfo.get("eduperson_principal_name"),
-        is_active=True,
-        is_superuser=False,
-    )
-
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-
-    return user
+    except:
+        session.rollback()
+        # Optionally log or re-raise, depending on your error handling strategy
+        raise HTTPException(
+            status_code=500, detail="Failed to get or create user"
+        )
 
 
 def sync_permission_groups(
