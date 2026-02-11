@@ -37,7 +37,9 @@ class IngestExternalApiDwd(IngestExternalApiDwdBase, table=True):
     __tablename__ = "ingest_external_api_dwd"
 
     __table_args__ = (
-        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="dwd_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)

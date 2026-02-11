@@ -78,7 +78,9 @@ class CsvParser(CsvParserBase, table=True):
     __tablename__ = "parser_csv"
 
     __table_args__ = (
-        UniqueConstraint('name','permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="csv_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)
@@ -90,6 +92,3 @@ class CsvParser(CsvParserBase, table=True):
     )
 
     permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")
-
-
-

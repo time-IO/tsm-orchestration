@@ -36,7 +36,9 @@ class IngestS3Store(IngestS3StoreBase, table=True):
     __tablename__ = "ingest_s3store"
 
     __table_args__ = (
-        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="s3store_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)

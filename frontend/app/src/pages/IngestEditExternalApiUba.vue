@@ -183,11 +183,20 @@ async function save() {
 
     // Navigate back to detail
     await router.push(`/ingest/external-api-uba/${id}`)
-  } catch {
+  } catch (error) {
+
+    let errorCaption = ''
+
+    if (error.response.data.detail) {
+      errorCaption = error.response.data.detail;
+    }
+
     $q.notify({
       position: "top",
       type: 'negative',
-      message: 'Failed to update ingest configuration'
+      message: 'Failed to update ingest configuration',
+      progress: true,
+      caption: errorCaption
     })
   } finally {
     isLoading.value = false

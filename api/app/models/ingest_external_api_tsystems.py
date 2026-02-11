@@ -43,7 +43,9 @@ class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
     __tablename__ = "ingest_external_api_tsystems"
 
     __table_args__ = (
-        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="tsystems_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)

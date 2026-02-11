@@ -39,7 +39,9 @@ class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table
     __tablename__ = "ingest_external_api_neutron_monitor"
 
     __table_args__ = (
-        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="nm_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)

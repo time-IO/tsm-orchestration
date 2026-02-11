@@ -90,7 +90,9 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     __tablename__ = "quality_control_setting"
 
     __table_args__ = (
-        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+        UniqueConstraint(
+            "name", "permission_group_id", name="qcs_unique_name_permission_group"
+        ),
     )
 
     id: int | None = Field(default=None, primary_key=True)
