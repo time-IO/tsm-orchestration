@@ -1,4 +1,5 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
+from .permission_group import PermissionGroup
 
 
 class Database(SQLModel, table=True):
@@ -6,8 +7,10 @@ class Database(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     permission_group_id: int = Field(foreign_key="permission_group.id")
-    schema: str
+    schema_name: str
     username: str
     password: str
     ro_user: str
     ro_password: str
+
+    permission_group: "PermissionGroup" = Relationship(back_populates="database")

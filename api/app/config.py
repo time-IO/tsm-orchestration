@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     OIDC_WELL_KNOWN: str
     OIDC_ISSUER: str
     OIDC_AUDIENCE: str
+    ALLOWED_VOS: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -23,6 +24,13 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         )
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def ALLOWED_VOS_LIST(self) -> list[str]:
+        if not self.ALLOWED_VOS:
+            return []
+        return [vo.strip() for vo in self.ALLOWED_VOS.split(",") if vo.strip()]
 
 
 settings = Settings()  # type: ignore

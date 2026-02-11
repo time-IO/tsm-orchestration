@@ -4,6 +4,7 @@ from .config import settings
 from .auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from .models.user import User
+from .models.permission_group import PermissionGroup
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -68,3 +69,54 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
     session.refresh(user)
 
     return user
+
+
+def sync_permission_groups(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    session=Depends(get_session),
+    user=Depends(get_current_user),
+):
+    try:
+        userinfo = oidc.fetch_userinfo(access_token=credentials.credentials)
+
+        allowed_vos = settings.ALLOWED_VOS_LIST
+        set_of_entitlements = set(userinfo.get("eduperson_entitlement", []))
+
+        filtered_entitlements = {
+            entitlement
+            for entitlement in set_of_entitlements
+            if PermissionGroup.get_entitlement_vo(entitlement) in allowed_vos
+        }
+
+        existing_permission_groups = user.permission_groups
+
+        # Remove groups the user no longer belongs to
+        for current_permission_group in existing_permission_groups:
+            entitlement = current_permission_group.entitlement
+            if entitlement and entitlement not in filtered_entitlements:
+                user.permission_groups.remove(current_permission_group)
+                session.add(current_permission_group)
+
+        # Add new/missing groups
+        for entitlement in filtered_entitlements:
+            permission_group = (
+                session.query(PermissionGroup)
+                .filter_by(entitlement=entitlement)
+                .first()
+            )
+            if not permission_group:
+                name = PermissionGroup.convert_entitlement_to_name(entitlement)
+                permission_group = PermissionGroup(entitlement=entitlement, name=name)
+                session.add(permission_group)
+            if permission_group not in user.permission_groups:
+                user.permission_groups.append(permission_group)
+
+        # Commit once at the end
+        session.commit()
+
+    except Exception as e:
+        session.rollback()
+        # Optionally log or re-raise, depending on your error handling strategy
+        raise HTTPException(
+            status_code=500, detail=f"Failed to sync permission groups: {str(e)}"
+        )

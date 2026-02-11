@@ -41,6 +41,22 @@ Potential Improvements:
 - The current implementation of the auth flow of the api is implemented synchronously
 - It could be improved using an asynchronous method
 
+## Permission Groups
+- Every entity a user can create with the api, needs to be associated with a permission group
+- A user can be member of several permission groups
+- The identity provider must provide the information to which permission groups a user belongs via the `eduperson_entitlement` claim
+- The name of a permission group in the `eduperson_entitlement` claim must match the pattern `a:a:a:group:<VO Name>:<Group Name>#`
+  - `VO Name`: Virtual Organisation Name, a user can belong to several permission groups in several VOs 
+  - `Group Name`: Name of the Group, must be unique within the VO
+  - example:
+  ```
+    "eduperson_entitlement": [
+      "a:a:a:group:VO:Group1#",
+      "a:a:a:group:VO:Group2#"
+  ]
+   ```
+- Permission Groups of VOs, that should be allowed to be used with the api, must be listed in `ALLOWED_VOS` environment variable 
+
 ## Generic Frontend Image
 ### Description
 To provide the possibility to set the environment variables for the frontend during runtime we provide a `generic frontend image`. 

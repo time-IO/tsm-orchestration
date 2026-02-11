@@ -1,6 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
 from datetime import datetime, timezone
+from .permission_group import PermissionGroup
 
 
 class IngestExternalApiUbaBase(SQLModel):
@@ -44,9 +45,3 @@ class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_uba"
     )
-
-
-# fix to avoid circular imports
-from .permission_group import PermissionGroup
-
-IngestExternalApiUba.model_rebuild()

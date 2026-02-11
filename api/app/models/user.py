@@ -1,5 +1,7 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime, timezone
+
+from .permission_group import PermissionGroup, PermissionGroupUserLink
 
 
 class UserPublic(SQLModel):
@@ -32,4 +34,8 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
+    )
+
+    permission_groups: list["PermissionGroup"] = Relationship(
+        back_populates="users", link_model=PermissionGroupUserLink
     )

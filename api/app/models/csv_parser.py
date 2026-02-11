@@ -2,9 +2,7 @@ from sqlmodel import Field, SQLModel, Column, Relationship
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
-from .user import (
-    User,
-)  # needs to be imported for relationship reasons otherwise an error is thrown during delete todo check this
+from .permission_group import PermissionGroup
 
 # ------------------- CsvParserTimestamp
 
@@ -73,6 +71,7 @@ class CsvParserPublic(CsvParserBase):
     created_by_id: int
     created_at: datetime
     timestamp_columns: list[CsvParserTimestampColumnPublic] = []
+    permission_group: "PermissionGroup"
 
 
 class CsvParser(CsvParserBase, table=True):
@@ -85,3 +84,5 @@ class CsvParser(CsvParserBase, table=True):
     timestamp_columns: list[CsvParserTimestampColumn] = Relationship(
         back_populates="csv_parser", cascade_delete=True
     )
+
+    permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")

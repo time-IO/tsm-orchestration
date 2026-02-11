@@ -1,7 +1,8 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .mqtt_parser import MqttParser
+from .permission_group import PermissionGroup
 
 
 class IngestMqttBase(SQLModel):
@@ -29,6 +30,7 @@ class IngestMqttPublic(IngestMqttBase):
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
+    permission_group: "PermissionGroup"
 
 
 class IngestMqtt(IngestMqttBase, table=True):
@@ -42,3 +44,5 @@ class IngestMqtt(IngestMqttBase, table=True):
     password: str
     password_hashed: str
     uri: str
+
+    permission_group: "PermissionGroup" = Relationship(back_populates="ingest_mqtt")
