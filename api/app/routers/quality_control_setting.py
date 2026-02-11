@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from ..dependencies import get_session, get_current_user
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 
 from ..models.quality_control_setting import (
     QualityControlSettingCreate,
@@ -40,41 +41,51 @@ def create(
     user=Depends(get_current_user),
 ):
 
-    extra_data = {"created_by_id": user.id}
+    try:
+        extra_data = {"created_by_id": user.id}
 
-    data = payload.model_dump(exclude={"quality_control_functions"})
-    entity = QualityControlSetting.model_validate(data, update=extra_data)
+        data = payload.model_dump(exclude={"quality_control_functions"})
+        entity = QualityControlSetting.model_validate(data, update=extra_data)
 
-    session.add(entity)
-    session.flush()
-
-    quality_control_setting_id_data = {"quality_control_setting_id": entity.id}
-
-    for function_payload in payload.quality_control_functions:
-
-        function_data = function_payload.model_dump(
-            exclude={"quality_control_function_arguments"}
-        )
-        db_function = QualityControlFunction.model_validate(
-            function_data, update=quality_control_setting_id_data
-        )
-
-        session.add(db_function)
+        session.add(entity)
         session.flush()
 
-        quality_control_function_id_data = {
-            "quality_control_function_id": db_function.id
-        }
+        quality_control_setting_id_data = {"quality_control_setting_id": entity.id}
 
-        for (
-            function_argument_payload
-        ) in function_payload.quality_control_function_arguments:
-            db_argument = QualityControlFunctionArgument.model_validate(
-                function_argument_payload, update=quality_control_function_id_data
+        for function_payload in payload.quality_control_functions:
+
+            function_data = function_payload.model_dump(
+                exclude={"quality_control_function_arguments"}
             )
-            session.add(db_argument)
+            db_function = QualityControlFunction.model_validate(
+                function_data, update=quality_control_setting_id_data
+            )
 
-    session.commit()
-    session.refresh(entity)
+            session.add(db_function)
+            session.flush()
 
-    return entity
+            quality_control_function_id_data = {
+                "quality_control_function_id": db_function.id
+            }
+
+            for (
+                function_argument_payload
+            ) in function_payload.quality_control_function_arguments:
+                db_argument = QualityControlFunctionArgument.model_validate(
+                    function_argument_payload, update=quality_control_function_id_data
+                )
+                session.add(db_argument)
+
+        session.commit()
+        session.refresh(entity)
+
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")

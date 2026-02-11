@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from ..dependencies import get_session, get_current_user
 from ..models.ingest_s3store import (
     IngestS3Store,
@@ -47,15 +48,25 @@ def create(
     payload: IngestS3StoreCreate,
     user=Depends(get_current_user),
 ):
-    extra_data = {"created_by_id": user.id}
+    try:
+        extra_data = {"created_by_id": user.id}
 
-    # todo create username, password (+ encrypt), bucket_name
+        # todo create username, password (+ encrypt), bucket_name
 
-    entity = IngestS3Store.model_validate(payload, update=extra_data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+        entity = IngestS3Store.model_validate(payload, update=extra_data)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
 
 
 @router.patch(
@@ -64,15 +75,25 @@ def create(
 def update_ingests3store(
     *, session: Session = Depends(get_session), id: int, payload: IngestS3StoreUpdate
 ):
-    entity = session.get(IngestS3Store, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    ingests3store_data = payload.model_dump(exclude_unset=True)
-    entity.sqlmodel_update(ingests3store_data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+    try:
+        entity = session.get(IngestS3Store, id)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"{entity_name} not found")
+        ingests3store_data = payload.model_dump(exclude_unset=True)
+        entity.sqlmodel_update(ingests3store_data)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update {entity_name}")
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

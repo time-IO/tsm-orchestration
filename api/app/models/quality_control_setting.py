@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Column, Relationship
+from sqlmodel import SQLModel, Field, Column, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
@@ -88,6 +88,12 @@ class QualityControlSettingPublic(QualityControlSettingBase):
 
 class QualityControlSetting(QualityControlSettingBase, table=True):
     __tablename__ = "quality_control_setting"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "name", "permission_group_id", name="qcs_unique_name_permission_group"
+        ),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
