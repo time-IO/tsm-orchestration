@@ -18,6 +18,7 @@ services:
       OIDC_ISSUER: "${OIDC_ISSUER:-http://localhost/keycloak/realms/local-dev}"
       OIDC_AUDIENCE: "${OIDC_AUDIENCE:-dev-client}"
       ALLOWED_VOS: "${ALLOWED_VOS:-UFZ-TSM,VO}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost}"
     volumes:
       - ./api/app:/app:rw,cached
     depends_on:

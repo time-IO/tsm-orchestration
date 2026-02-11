@@ -22,20 +22,19 @@ from .routers import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from .dependencies import engine
+from .config import settings
 
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-origins = ["http://localhost"]
-
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
 app = FastAPI(root_path=API_ROOT_PATH)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.ALLOWED_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
