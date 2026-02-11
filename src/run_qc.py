@@ -117,10 +117,10 @@ class QcHandler(AbstractHandler):
 
             # sm = StreamManager(conn)
             try:
-                funcs = get_functions(config)
+                func_setup = get_functions(config)
                 if thing is not None:
-                    funcs = get_functions_to_execute(funcs, thing.id)
-                logger.info(f"COLLECTED TESTS: {funcs}")
+                    func_setup = get_functions_to_execute(func_setup, thing.id)
+                logger.info(f"COLLECTED TESTS: {func_setup}")
 
                 if start_date := content.get("start_date", None):
                     start_date = pd.Timestamp(start_date)
@@ -132,11 +132,11 @@ class QcHandler(AbstractHandler):
                     journal.error(f"{msg}, because of {e}", thing.uuid)
                 raise ParsingError(msg) from e
 
-            N = len(funcs)
-            streams = sum((t.fields for t in funcs), [])
+            N = len(func_setup)
+            streams = func_setup.get_streams()
             data = load_data(conn, streams, start_date, end_date)
             qc = init_saqc(data)
-            for i, func in enumerate(funcs, start=1):  # type: QcTest
+            for i, func in enumerate(func_setup, start=1):
                 logger.info("Test %s of %s: %s", i, N, func)
                 try:
                     qc = execute_qc_function(qc, func)

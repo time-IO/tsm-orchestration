@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import typing
-from typing import Any
+from typing import TYPE_CHECKING, Literal, Any
+
 import pandas as pd
 
 from timeio.errors import ParsingError
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from timeio import feta
     from timeio.qc.typehints import WindowT
 
@@ -39,14 +39,30 @@ def parse_context_window(window: int | str | None) -> WindowT:
 
 
 class StreamInfo:
-    """Dataclass that stores a stream parameter for a quality test function"""
+    """Dataclass that stores a stream parameter for a quality test function
+    stream_id and thing_id are definied as SMS entities with
+    - stream_id -> device_propert_id
+    - thing_id  -> configuration_id
+    """
 
-    def __init__(self, key: str, name: str, thing_id: int, stream_id: int):
+    def __init__(
+        self,
+        key: Literal["field", "target"],
+        name: str,
+        thing_id: int | None = None,
+        stream_id: int | None = None,
+    ):
         self.key = key
         self.name = name
         self.thing_id = thing_id
         self.stream_id = stream_id
+        self.datastream_name = name.split("S", maxsplit=1)[-1]
         self.is_immutable = thing_id is not None and stream_id is not None
+
+    def add_locals(self, schema: str, datastream_name: str, datastream_id: int):
+        self.schema = schema
+        self.datastream_id = datastream_id
+        self.datastream_name = datastream_name
 
     def __eq__(self, other):
         if not isinstance(other, StreamInfo):
@@ -54,11 +70,11 @@ class StreamInfo:
         return self.thing_id == other.thing_id and self.stream_id == other.stream_id
 
     def __hash__(self):
-        return hash((self.thing_id, self.stream_id))
+        return hash((self.key, self.name, self.thing_id, self.stream_id))
 
     def __repr__(self):
         klass = self.__class__.__name__
-        return f"{klass}({self.value}, {self.thing_id}, {self.stream_id})"
+        return f"{klass}({self.key}, {self.name})"
 
 
 class QcFunction:
@@ -68,7 +84,7 @@ class QcFunction:
         func_name,
         fields: list[StreamInfo],
         params: dict[str, Any],
-        targets: list[StreamInfo] | None,
+        targets: list[StreamInfo] | None = None,
         context_window: str | int = 0,
     ):
         self.name = name
@@ -90,7 +106,30 @@ class QcFunction:
         return [f.name for f in self.targets]
 
 
-def get_functions(conf: feta.QAQC) -> list[QcFunction]:
+class QcFunctionSetup:
+    # TODO:
+    # Remove in favor of list["QcFunction"] if
+    # the class brings nothing to the table
+    def __init__(self, funcs: list[QcFunction]):
+        self._funcs = funcs
+
+    def get_streams(self):
+        fields = sum((t.fields for t in self._funcs), [])
+        # targets = sum((t.targets for t in self._funcs), [])
+        # return fields + targets
+        return fields
+
+    def __len__(self):
+        return len(self._funcs)
+
+    def __getitem__(self, idx):
+        return self._funcs[idx]
+
+    def __iter__(self):
+        return iter(self._funcs)
+
+
+def get_functions(conf: feta.QAQC) -> QcFunctionSetup:
     """
     Convert between the database/feta layer and business logic objects
     """

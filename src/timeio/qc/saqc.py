@@ -2,12 +2,14 @@
 
 import warnings
 
+import ast
 import numpy as np
 import pandas as pd
 
 import saqc
+from saqc.parsing.visitor import ConfigFunctionParser
 
-from timeio.qc.qcfunction import QcFunction
+from timeio.qc.qcfunction import QcFunction, StreamInfo
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -106,50 +108,55 @@ class STAMPLATEScheme(saqc.FloatScheme):
         return out
 
 
-def init_saqc(data: dict[str, pd.DataFrame]) -> saqc.SaQC:
-    values = {}
-    flags = {}
+class SaQCWrapper:
+    def __init__(self, data: dict[StreamInfo, pd.DataFrame]):
+        values = {}
+        flags = {}
 
-    for k, df in data.items():
-        values[k] = df["data"]
-        flags[k] = df.get("quality", pd.Series(None, index=df["data"].index))
+        for k, df in data.items():
+            values[k.name] = df["data"]
+            flags[k.name] = df.get("quality", pd.Series(None, index=df["data"].index))
 
-    return saqc.SaQC(
-        data=saqc.DictOfSeries(values),
-        flags=saqc.DictOfSeries(flags),
-        scheme=STAMPLATEScheme(),
-    )
+        self._qc = saqc.SaQC(
+            data=saqc.DictOfSeries(values),
+            flags=saqc.DictOfSeries(flags),
+            scheme=STAMPLATEScheme(),
+        )
+        # we keep the original data to check for modifications later
+        self._data = data
+        self._streams = {s.name: s for s in data.keys()}
 
+    @property
+    def data(self) -> dict[StreamInfo, pd.DataFrame]:
+        out = {}
+        for col in self._qc.columns:
+            out[self._streams[col]] = pd.DataFrame(
+                {"data": self._qc.data[col], "quality": self._qc.flags.get(col, None)}
+            )
 
-import ast
-from saqc.parsing.visitor import ConfigFunctionParser
+        return out
 
+    def execute(self, func: QcFunction):
+        saqc_func = getattr(self._qc, func.func_name)
+        if func.func_name == "flagRange":
+            # NOTE: needed to work around a SaQC-Bug,
+            #       that will be fixed in the next release
+            # TODO: remove entire block after the bug is fixed
+            for f in func.field_names:
+                saqc_func = getattr(self._qc, func.func_name)
+                self._qc = saqc_func(field=f, target=func.target_names, **func.params)
+        if func.func_name.endswith("Generic"):
+            # NOTE:
+            # The generic function parser is not as well exposed in
+            # SaQC as is could be, that's why we need to go the extra
+            # mile and built a valid saqc config-file function
+            func_string = f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
+            tree = ast.parse(func_string, mode="eval").body
+            _, kwargs = ConfigFunctionParser().parse(tree)
+            func.params["func"] = kwargs["func"]
+        self._qc = saqc_func(
+            field=func.field_names, target=func.target_names, **func.params
+        )
 
-def parse_generic_function(func: QcFunction):
-
-    # NOTE:
-    # The generic function parser is not as well exposed in
-    # SaQC as is could be, that's why we need to go the extra
-    # mile and built a valid saqc config-file function
-    func_string = (
-        f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
-    )
-    tree = ast.parse(func_string, mode="eval").body
-    _, kwargs = ConfigFunctionParser().parse(tree)
-    return kwargs["func"]
-
-
-def execute_qc_function(qc: saqc.SaQC, func: QcFunction) -> saqc.SaQC:
-    saqc_func = getattr(qc, func.func_name)
-    if func.func_name == "flagRange":
-        # NOTE: needed to work around a SaQC-Bug,
-        #       that will be fixed in the next release
-        # TODO: remove entire block after the bug is fixed
-        for f in func.field_names:
-            saqc_func = getattr(qc, func.func_name)
-            qc = saqc_func(field=f, target=func.target_names, **func.params)
-        return qc
-    if func.func_name.endswith("Generic"):
-        # NOTE: we need to parse the user given processing input in a save manner
-        func.params["func"] = parse_generic_function(func)
-    return saqc_func(field=func.field_names, target=func.target_names, **func.params)
+    def data_is_modified(self, stream: StreamInfo) -> bool:
+        return not self._qc._data[stream.name].equals(self._data[stream]["data"])

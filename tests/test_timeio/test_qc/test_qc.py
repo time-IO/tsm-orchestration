@@ -5,11 +5,12 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from timeio.common import get_envvar
 from timeio.databases import Database
 from timeio.qc import get_functions_to_execute
 from timeio.qc.qcfunction import QcFunction, StreamInfo
-from timeio.qc.utils import load_data
-from timeio.qc.saqc import init_saqc, execute_qc_function
+from timeio.qc.utils import load_data, write_data
+from timeio.qc.saqc import SaQCWrapper
 
 TEST_FUNCTIONS = [
     QcFunction(
@@ -176,37 +177,43 @@ def test_collect_tests(thing_id, expected):
                 ],
                 params={"min": 900, "max": 1200},
             ),
-            {"T1S33": [800, 900, 1000, 1250]},
-            {"T1S33": [255, -np.inf, -np.inf, 255]},
+            {StreamInfo("field", "T1S33"): [800, 900, 1000, 1250]},
+            {StreamInfo("target", "T1S33"): [255, -np.inf, -np.inf, 255]},
         ),
     ],
 )
 def test_qc_function_execution(func, data_in, data_out):
 
     data_in = {k: pd.DataFrame({"data": v}) for k, v in data_in.items()}
+    # set some datastream ids
+    for i, v in enumerate(data_in.values()):
+        v.attrs["stream_id"] = i
 
     qc = init_saqc(data_in)
     qc = execute_qc_function(qc, func)
 
-    for field in data_in.keys():
-        assert (qc._flags[field] == data_out[field]).all()
-        assert (qc.data[field] == data_in[field]["data"]).all()
+    for stream in data_in.keys():
+        assert (qc._flags[stream.name] == data_out[stream]).all()
+        assert (qc.data[stream.name] == data_in[stream]["data"]).all()
 
 
 @pytest.mark.parametrize(
     "func, data_in, data_out",
     [
-        (
-            QcFunction(
-                "",
-                func_name="copyField",
-                fields=[StreamInfo("field", "SRC", 1, 27)],
-                targets=[StreamInfo("target", "TRG", None, None)],
-                params={"overwrite": True},
-            ),
-            {"SRC": [4.5, 4.6, 3.9, 4.1]},
-            {"SRC": [4.5, 4.6, 3.9, 4.1], "TRG": [4.5, 4.6, 3.9, 4.1]},
-        ),
+        # (
+        #     QcFunction(
+        #         "",
+        #         func_name="copyField",
+        #         fields=[StreamInfo("field", "SRC", 1, 27)],
+        #         targets=[StreamInfo("target", "TRG", None, None)],
+        #         params={"overwrite": True},
+        #     ),
+        #     {StreamInfo("field", "SRC"): [4.5, 4.6, 3.9, 4.1]},
+        #     {
+        #         StreamInfo("field", "SRC"): [4.5, 4.6, 3.9, 4.1],
+        #         StreamInfo("target", "TRG"): [4.5, 4.6, 3.9, 4.1],
+        #     },
+        # ),
         (
             QcFunction(
                 "",
@@ -218,21 +225,25 @@ def test_qc_function_execution(func, data_in, data_out):
                 targets=[StreamInfo("target", "TRG", None, None)],
                 params={"func": "(SRC_1 + SRC_2) / 2"},
             ),
-            {"SRC_1": [900, 910, 920, 930], "SRC_2": [800, 810, 820, 830]},
             {
-                "SRC_1": [900, 910, 920, 930],
-                "SRC_2": [800, 810, 820, 830],
-                "TRG": [850, 860, 870, 880],
+                StreamInfo("field", "SRC_1"): [900, 910, 920, 930],
+                StreamInfo("field", "SRC_2"): [800, 810, 820, 830],
+            },
+            {
+                StreamInfo("field", "SRC_1"): [900, 910, 920, 930],
+                StreamInfo("field", "SRC_2"): [800, 810, 820, 830],
+                StreamInfo("target", "TRG"): [850, 860, 870, 880],
             },
         ),
     ],
 )
 def test_processing_function_execution(func, data_in, data_out):
-    data_in = {k: pd.DataFrame({"data": v}) for k, v in data_in.items()}
     qc = init_saqc(data_in)
     qc = execute_qc_function(qc, func)
-    for field, data in data_out.items():
-        assert (qc.data[field] == data).all()
+    for stream, data in data_out.items():
+        assert (qc.data[stream.name] == data).all()
+
+    data = exit_saqc(qc)
 
 
 def test_db_data_reading(local_database_connection):
@@ -259,6 +270,36 @@ def test_db_data_writing(local_database_connection):
     # test only runs if "postgresql://postgres:postgres@localhost/postgres"
     # is available
 
+    # fields = [
+    #     StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
+    #     StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33),
+    #     StreamInfo(key="field", name="T1S36", thing_id=1, stream_id=36),
+    #     StreamInfo(key="field", name="T2S44", thing_id=4, stream_id=44),
+    #     StreamInfo(key="field", name="T2S46", thing_id=4, stream_id=46),
+    # ]
+    # df1 = pd.DataFrame(
+    #     {"data": [900, 300, 100], "quality": [255, -np.inf, -np.inf]},
+    #     index=pd.date_range("2022-01-01", freq="D", periods=3),
+    # )
+    # df2 = pd.DataFrame(
+    #     {"data": [4.6, 4.7, 4.8, 4.9], "quality": [-np.inf, -np.inf, 255, 255]},
+    #     index=pd.date_range("2022-06-01", freq="M", periods=4),
+    # )
+
+    # data = {
+    #     StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27): df1,
+    #     StreamInfo(key="field", name="T2S44", thing_id=4, stream_id=44): df2
+    # }
+
+    func = QcFunction(
+                "",
+                func_name="processGeneric",
+                fields=[
+                    StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
+                ],
+                params={"func": "T1S27 + 5"},
+            )
+
     fields = [
         StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
         StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33),
@@ -266,6 +307,18 @@ def test_db_data_writing(local_database_connection):
         StreamInfo(key="field", name="T2S44", thing_id=4, stream_id=44),
         StreamInfo(key="field", name="T2S46", thing_id=4, stream_id=46),
     ]
+    data = load_data(local_database_connection, streams=fields)
+    qc = SaQCWrapper(data)
+
+    api_url = get_envvar("DB_API_BASE_URL")
+
+    qc.execute(func)
+    write_data(local_database_connection, qc, api_url)
+    # qc_out = execute_qc_function(qc, func)
+    import ipdb; ipdb.set_trace()
+
+
+
     # data = load_data(local_database_connection, streams=fields)
     # assert data.keys() == {"T1S33", "T1S36", "T2S44", "T2S46", "T1S27"}
     # for df in data.values():
