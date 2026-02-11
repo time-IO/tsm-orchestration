@@ -1,5 +1,5 @@
 import uuid as uuid_pkg
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
 
@@ -34,6 +34,10 @@ class IngestS3StorePublic(IngestS3StoreBase):
 
 class IngestS3Store(IngestS3StoreBase, table=True):
     __tablename__ = "ingest_s3store"
+
+    __table_args__ = (
+        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)

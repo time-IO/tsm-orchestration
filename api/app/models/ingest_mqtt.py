@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .mqtt_parser import MqttParser
@@ -35,6 +35,10 @@ class IngestMqttPublic(IngestMqttBase):
 
 class IngestMqtt(IngestMqttBase, table=True):
     __tablename__ = "ingest_mqtt"
+
+    __table_args__ = (
+        UniqueConstraint('name', 'permission_group_id', name='unique_name_permission_group_id'),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)

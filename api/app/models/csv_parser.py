@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Column, Relationship
+from sqlmodel import Field, SQLModel, Column, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
@@ -77,6 +77,10 @@ class CsvParserPublic(CsvParserBase):
 class CsvParser(CsvParserBase, table=True):
     __tablename__ = "parser_csv"
 
+    __table_args__ = (
+        UniqueConstraint('name','permission_group_id', name='unique_name_permission_group_id'),
+    )
+
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
@@ -86,3 +90,6 @@ class CsvParser(CsvParserBase, table=True):
     )
 
     permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")
+
+
+
