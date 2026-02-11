@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .neutron_monitor_stations import NeutronMonitorStations
@@ -37,6 +37,12 @@ class IngestExternalApiNeutronMonitorPublic(IngestExternalApiNeutronMonitorBase)
 
 class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table=True):
     __tablename__ = "ingest_external_api_neutron_monitor"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "name", "permission_group_id", name="nm_unique_name_permission_group"
+        ),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)

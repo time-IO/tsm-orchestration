@@ -20,9 +20,9 @@ class PermissionGroup(SQLModel, table=True):
     __tablename__ = "permission_group"
 
     id: int | None = Field(default=None, primary_key=True)
-    name: str
+    name: str = Field(unique=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    entitlement: str = ""
+    entitlement: str = Field(unique=True)
 
     users: list["User"] = Relationship(
         back_populates="permission_groups", link_model=PermissionGroupUserLink

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from ..dependencies import get_session, get_current_user
 from ..models.ingest_mqtt import (
     IngestMqttCreate,
@@ -42,18 +43,28 @@ def create(
     user=Depends(get_current_user),
 ):
 
-    extra_data = {"created_by_id": user.id}
+    try:
+        extra_data = {"created_by_id": user.id}
 
-    # todo username
-    # todo password (encrypted)
-    # todo password_hashed (encrypted)
-    # todo uri
+        # todo username
+        # todo password (encrypted)
+        # todo password_hashed (encrypted)
+        # todo uri
 
-    entity = IngestMqtt.model_validate(payload, update=extra_data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+        entity = IngestMqtt.model_validate(payload, update=extra_data)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
 
 
 @router.patch(
@@ -62,15 +73,25 @@ def create(
 def update(
     *, session: Session = Depends(get_session), id: int, payload: IngestMqttUpdate
 ):
-    entity = session.get(IngestMqtt, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    data = payload.model_dump(exclude_unset=True)
-    entity.sqlmodel_update(data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+    try:
+        entity = session.get(IngestMqtt, id)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"{entity_name} not found")
+        data = payload.model_dump(exclude_unset=True)
+        entity.sqlmodel_update(data)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update {entity_name}")
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

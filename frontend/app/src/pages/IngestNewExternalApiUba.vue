@@ -128,7 +128,7 @@ const formData = ref<IngestExternalApiUbaCreate>({
 const syncInterval = ref(60)
 const isLoading = ref(false)
 
-onMounted(async ()=>{
+onMounted(async () => {
   try {
     await permissionGroupStore.dispatchGetList()
   } catch {
@@ -161,11 +161,20 @@ async function save() {
     // Navigate back to list
     await router.push(`/ingest/external-api-uba/${result.id}`)
 
-  } catch {
+  } catch (error) {
+
+    let errorCaption = ''
+
+    if (error.response.data.detail) {
+      errorCaption = error.response.data.detail;
+    }
+
     $q.notify({
       position: "top",
       type: 'negative',
-      message: 'Failed to create ingest'
+      progress: true,
+      message: 'Failed to create ingest',
+      caption: errorCaption
     })
   } finally {
     isLoading.value = false

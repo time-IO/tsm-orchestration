@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from ..dependencies import get_session, get_current_user
 from ..models.csv_parser import (
     CsvParserCreate,
@@ -47,45 +48,65 @@ def create(
     user=Depends(get_current_user),
 ):
 
-    extra_data = {"created_by_id": user.id}
+    try:
+        extra_data = {"created_by_id": user.id}
 
-    # Validate manually before saving
-    if not payload.timestamp_columns:
+        # Validate manually before saving
+        if not payload.timestamp_columns:
+            raise HTTPException(
+                status_code=400, detail="At least one timestamp column must be set"
+            )
+
+        data = payload.model_dump(exclude={"timestamp_columns"})
+
+        entity = CsvParser.model_validate(data, update=extra_data)
+        session.add(entity)
+        session.flush()
+
+        parser_id_data = {"csv_parser_id": entity.id}
+
+        for timestamp in payload.timestamp_columns:
+            db_timestamp = CsvParserTimestampColumn.model_validate(
+                timestamp, update=parser_id_data
+            )
+            session.add(db_timestamp)
+
+        session.commit()
+        return entity
+    except IntegrityError:
+        session.rollback()
         raise HTTPException(
-            status_code=400, detail="At least one timestamp column must be set"
+            status_code=409,
+            detail=f"{entity_name} with the same name and permission group already exists.",
         )
-
-    data = payload.model_dump(exclude={"timestamp_columns"})
-
-    entity = CsvParser.model_validate(data, update=extra_data)
-    session.add(entity)
-    session.flush()
-
-    parser_id_data = {"csv_parser_id": entity.id}
-
-    for timestamp in payload.timestamp_columns:
-        db_timestamp = CsvParserTimestampColumn.model_validate(
-            timestamp, update=parser_id_data
-        )
-        session.add(db_timestamp)
-
-    session.commit()
-    return entity
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
 
 
 @router.patch("/{id}", summary=f"Update one {entity_name}")
 def update(
     *, session: Session = Depends(get_session), id: int, payload: CsvParserUpdate
 ):
-    entity = session.get(CsvParser, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    csvparser_data = payload.model_dump(exclude_unset=True)
-    entity.sqlmodel_update(csvparser_data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+    try:
+        entity = session.get(CsvParser, id)
+        if not entity:
+            raise HTTPException(status_code=404, detail=f"{entity_name} not found")
+        csvparser_data = payload.model_dump(exclude_unset=True)
+        entity.sqlmodel_update(csvparser_data)
+        session.add(entity)
+        session.commit()
+        session.refresh(entity)
+        return entity
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail=f"{entity_name} with the same name and permission group already exists.",
+        )
+    except:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update {entity_name}")
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
