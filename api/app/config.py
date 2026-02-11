@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     OIDC_ISSUER: str
     OIDC_AUDIENCE: str
     ALLOWED_VOS: str = ""
+    ALLOWED_ORIGINS: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -31,6 +32,13 @@ class Settings(BaseSettings):
         if not self.ALLOWED_VOS:
             return []
         return [vo.strip() for vo in self.ALLOWED_VOS.split(",") if vo.strip()]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def ALLOWED_ORIGINS_LIST(self) -> list[str]:
+        if not self.ALLOWED_ORIGINS:
+            return []
+        return [vo.strip() for vo in self.ALLOWED_ORIGINS.split(",") if vo.strip()]
 
 
 settings = Settings()  # type: ignore
