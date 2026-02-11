@@ -185,11 +185,8 @@ async function save() {
     await router.push(`/ingest/external-api-uba/${id}`)
   } catch (error) {
 
-    let errorCaption = ''
-
-    if (error.response.data.detail) {
-      errorCaption = error.response.data.detail;
-    }
+    // @ts-expect-error to avoid complicated checks just for type safety, we ignore
+    const errorCaption = error?.response?.data?.detail || '';
 
     $q.notify({
       position: "top",
