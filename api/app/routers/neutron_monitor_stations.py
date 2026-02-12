@@ -12,6 +12,7 @@ router = APIRouter(
 
 entity_name = "neutron monitor station"
 
+
 @router.get(
     "/",
     response_model=list[NeutronMonitorStations],
@@ -20,6 +21,7 @@ entity_name = "neutron monitor station"
 def read_list(*, session: Session = Depends(get_session)):
     entities = session.exec(select(NeutronMonitorStations)).all()
     return entities
+
 
 @router.get(
     "/{id}", response_model=NeutronMonitorStations, summary=f"Get one {entity_name}"

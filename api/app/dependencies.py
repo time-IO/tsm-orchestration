@@ -73,9 +73,7 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
     except:
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
-        raise HTTPException(
-            status_code=500, detail="Failed to get or create user"
-        )
+        raise HTTPException(status_code=500, detail="Failed to get or create user")
 
 
 def sync_permission_groups(

@@ -12,6 +12,7 @@ router = APIRouter(
 
 entity_name = "mqtt-parser"
 
+
 @router.get(
     "/", response_model=list[MqttParser], summary=f"Get a list of {entity_name}"
 )
