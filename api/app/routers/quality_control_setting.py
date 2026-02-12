@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..dependencies import (
+from dependencies import (
     get_session,
     get_current_user,
     get_repo_quality_control_setting,
@@ -7,7 +7,7 @@ from ..dependencies import (
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from ..models.quality_control_setting import (
+from models.quality_control_setting import (
     QualityControlSettingCreate,
     QualityControlSetting,
     QualityControlFunction,

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..models.neutron_monitor_stations import NeutronMonitorStations
-from ..dependencies import get_current_user, get_repo_neutron_monitor_stations
+from models.neutron_monitor_stations import NeutronMonitorStations
+from dependencies import get_current_user, get_repo_neutron_monitor_stations
 
 router = APIRouter(
     prefix="/neutron-monitor-stations",

@@ -5,7 +5,7 @@ import time
 import requests
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
-from .config import settings
+from config import settings
 from fastapi import HTTPException
 
 

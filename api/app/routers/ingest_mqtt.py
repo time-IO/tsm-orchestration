@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_mqtt
-from ..models.ingest_mqtt import (
+from dependencies import get_current_user, get_repo_ingest_mqtt
+from models.ingest_mqtt import (
     IngestMqttCreate,
     IngestMqttPublic,
     IngestMqttUpdate,

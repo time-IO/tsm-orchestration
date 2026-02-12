@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import (
+from dependencies import (
     get_current_user,
     get_repo_ingest_external_api_neutron_monitor,
 )
-from ..models.ingest_external_api_neutron_monitor import (
+from models.ingest_external_api_neutron_monitor import (
     IngestExternalApiNeutronMonitorCreate,
     IngestExternalApiNeutronMonitorUpdate,
     IngestExternalApiNeutronMonitorPublic,

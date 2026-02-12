@@ -1,31 +1,31 @@
 from fastapi import Depends, HTTPException
 from sqlmodel import Session, create_engine, select
-from .config import settings
-from .auth import oidc, OIDCError
+from config import settings
+from auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .models.permission_group import PermissionGroup
+from models.permission_group import PermissionGroup
 
-from .models.ingest_external_api_bosch import IngestExternalApiBosch
-from .models.ingest_external_api_dwd import IngestExternalApiDwd
-from .models.ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
-from .models.ingest_external_api_the_things_network import (
+from models.ingest_external_api_bosch import IngestExternalApiBosch
+from models.ingest_external_api_dwd import IngestExternalApiDwd
+from models.ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
+from models.ingest_external_api_the_things_network import (
     IngestExternalApiTheThingsNetwork,
 )
-from .models.ingest_external_api_tsystems import IngestExternalApiTSystems
-from .models.ingest_external_api_uba import IngestExternalApiUba
-from .models.ingest_external_sftp import IngestExternalSftp
-from .models.ingest_mqtt import IngestMqtt
-from .models.ingest_s3store import IngestS3Store
-from .models.mqtt_parser import MqttParser
-from .models.neutron_monitor_stations import NeutronMonitorStations
+from models.ingest_external_api_tsystems import IngestExternalApiTSystems
+from models.ingest_external_api_uba import IngestExternalApiUba
+from models.ingest_external_sftp import IngestExternalSftp
+from models.ingest_mqtt import IngestMqtt
+from models.ingest_s3store import IngestS3Store
+from models.mqtt_parser import MqttParser
+from models.neutron_monitor_stations import NeutronMonitorStations
 
-from .models.csv_parser import CsvParser
-from .models.quality_control_setting import QualityControlSetting
+from models.csv_parser import CsvParser
+from models.quality_control_setting import QualityControlSetting
 
-from .models.user import User
+from models.user import User
 
-from .models.base_repository import BaseRepository
+from models.base_repository import BaseRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

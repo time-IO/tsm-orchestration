@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, sync_permission_groups
-from ..models.user import UserPublic
+from dependencies import get_current_user, sync_permission_groups
+from models.user import UserPublic
 
 router = APIRouter(
     prefix="/me",

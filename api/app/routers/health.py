@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..models.health import Health
+from models.health import Health
 
 router = APIRouter(
     prefix="/health",

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_external_api_bosch
-from ..models.ingest_external_api_bosch import (
+from dependencies import get_current_user, get_repo_ingest_external_api_bosch
+from models.ingest_external_api_bosch import (
     IngestExternalApiBoschCreate,
     IngestExternalApiBoschUpdate,
     IngestExternalApiBoschPublic,

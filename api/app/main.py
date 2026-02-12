@@ -2,7 +2,7 @@ import os
 
 from fastapi import FastAPI
 from sqlmodel import SQLModel
-from .routers import (
+from routers import (
     permission_group,
     ingest_s3store,
     ingest_mqtt,
@@ -21,13 +21,8 @@ from .routers import (
     user,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from .dependencies import engine
-from .config import settings
-
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
+from dependencies import engine
+from config import settings
 
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
 app = FastAPI(root_path=API_ROOT_PATH)
@@ -57,8 +52,3 @@ app.include_router(permission_group.router)
 app.include_router(quality_control_setting.router)
 app.include_router(health.router)
 app.include_router(user.router)
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()

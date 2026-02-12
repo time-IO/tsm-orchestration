@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_external_api_tsystems
-from ..models.ingest_external_api_tsystems import (
+from dependencies import get_current_user, get_repo_ingest_external_api_tsystems
+from models.ingest_external_api_tsystems import (
     IngestExternalApiTSystemsCreate,
     IngestExternalApiTSystemsUpdate,
     IngestExternalApiTSystemsPublic,
