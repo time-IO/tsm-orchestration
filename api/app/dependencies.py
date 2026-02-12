@@ -3,8 +3,29 @@ from sqlmodel import Session, create_engine, select
 from .config import settings
 from .auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from .models.user import User
+
 from .models.permission_group import PermissionGroup
+
+from .models.ingest_external_api_bosch import IngestExternalApiBosch
+from .models.ingest_external_api_dwd import IngestExternalApiDwd
+from .models.ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
+from .models.ingest_external_api_the_things_network import (
+    IngestExternalApiTheThingsNetwork,
+)
+from .models.ingest_external_api_tsystems import IngestExternalApiTSystems
+from .models.ingest_external_api_uba import IngestExternalApiUba
+from .models.ingest_external_sftp import IngestExternalSftp
+from .models.ingest_mqtt import IngestMqtt
+from .models.ingest_s3store import IngestS3Store
+from .models.mqtt_parser import MqttParser
+from .models.neutron_monitor_stations import NeutronMonitorStations
+
+from .models.csv_parser import CsvParser
+from .models.quality_control_setting import QualityControlSetting
+
+from .models.user import User
+
+from .models.base_repository import BaseRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -73,9 +94,7 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
     except:
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
-        raise HTTPException(
-            status_code=500, detail="Failed to get or create user"
-        )
+        raise HTTPException(status_code=500, detail="Failed to get or create user")
 
 
 def sync_permission_groups(
@@ -127,3 +146,59 @@ def sync_permission_groups(
         raise HTTPException(
             status_code=500, detail=f"Failed to sync permission groups: {str(e)}"
         )
+
+
+def get_repo_ingest_external_api_uba(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiUba, session)
+
+
+def get_repo_ingest_external_api_bosch(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiBosch, session)
+
+
+def get_repo_ingest_external_api_dwd(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiDwd, session)
+
+
+def get_repo_ingest_external_api_neutron_monitor(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiNeutronMonitor, session)
+
+
+def get_repo_ingest_external_api_the_things_network(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiTheThingsNetwork, session)
+
+
+def get_repo_ingest_external_api_tsystems(session=Depends(get_session)):
+    return BaseRepository(IngestExternalApiTSystems, session)
+
+
+def get_repo_ingest_external_sftp(session=Depends(get_session)):
+    return BaseRepository(IngestExternalSftp, session)
+
+
+def get_repo_ingest_mqtt(session=Depends(get_session)):
+    return BaseRepository(IngestMqtt, session)
+
+
+def get_repo_ingest_s3stores(session=Depends(get_session)):
+    return BaseRepository(IngestS3Store, session)
+
+
+def get_repo_ingest_csv_parser(session=Depends(get_session)):
+    return BaseRepository(CsvParser, session)
+
+
+def get_repo_mqtt_parser(session=Depends(get_session)):
+    return BaseRepository(MqttParser, session)
+
+
+def get_repo_neutron_monitor_stations(session=Depends(get_session)):
+    return BaseRepository(NeutronMonitorStations, session)
+
+
+def get_repo_quality_control_setting(session=Depends(get_session)):
+    return BaseRepository(QualityControlSetting, session)
+
+
+def get_repo_ingest_csv_parser_timestamp_column(session=Depends(get_session)):
+    return BaseRepository(CsvParser, session)

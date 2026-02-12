@@ -39,3 +39,7 @@ class User(SQLModel, table=True):
     permission_groups: list["PermissionGroup"] = Relationship(
         back_populates="users", link_model=PermissionGroupUserLink
     )
+
+    @property
+    def permission_group_ids(self) -> list[int]:
+        return [pg.id for pg in self.permission_groups]

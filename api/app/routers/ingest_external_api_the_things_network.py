@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
-from sqlalchemy.exc import IntegrityError
-from ..dependencies import get_session, get_current_user
+from fastapi import APIRouter, Depends
+from ..dependencies import (
+    get_current_user,
+    get_repo_ingest_external_api_the_things_network,
+)
 from ..models.ingest_external_api_the_things_network import (
     IngestExternalApiTheThingsNetworkCreate,
-    IngestExternalApiTheThingsNetwork,
     IngestExternalApiTheThingsNetworkUpdate,
     IngestExternalApiTheThingsNetworkPublic,
 )
@@ -24,9 +24,12 @@ entity_name = "ingest external api the things network"
     response_model=list[IngestExternalApiTheThingsNetworkPublic],
     summary=f"Get a list of {entity_name}",
 )
-def read_list(*, session: Session = Depends(get_session)):
-    entities = session.exec(select(IngestExternalApiTheThingsNetwork)).all()
-    return entities
+def read_list(
+    *,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_external_api_the_things_network),
+):
+    return repo.find_allowed_all(current_user.permission_group_ids)
 
 
 @router.get(
@@ -34,11 +37,13 @@ def read_list(*, session: Session = Depends(get_session)):
     response_model=IngestExternalApiTheThingsNetworkPublic,
     summary=f"Get one {entity_name}",
 )
-def read_one(*, session: Session = Depends(get_session), id: int):
-    entity = session.get(IngestExternalApiTheThingsNetwork, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    return entity
+def read_one(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_external_api_the_things_network),
+):
+    return repo.find_allowed_one(id, current_user.permission_group_ids)
 
 
 @router.post(
@@ -48,29 +53,12 @@ def read_one(*, session: Session = Depends(get_session), id: int):
 )
 def create(
     *,
-    session: Session = Depends(get_session),
     payload: IngestExternalApiTheThingsNetworkCreate,
-    user=Depends(get_current_user),
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_external_api_the_things_network),
 ):
-
-    try:
-        extra_data = {"created_by_id": user.id}
-        entity = IngestExternalApiTheThingsNetwork.model_validate(
-            payload, update=extra_data
-        )
-        session.add(entity)
-        session.commit()
-        session.refresh(entity)
-        return entity
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail=f"{entity_name} with the same name and permission group already exists.",
-        )
-    except:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
+    extra_data = {"created_by_id": current_user.id}
+    return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
 
 
 @router.patch(
@@ -80,36 +68,19 @@ def create(
 )
 def update(
     *,
-    session: Session = Depends(get_session),
     id: int,
     payload: IngestExternalApiTheThingsNetworkUpdate,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_external_api_the_things_network),
 ):
-    try:
-        entity = session.get(IngestExternalApiTheThingsNetwork, id)
-        if not entity:
-            raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-        data = payload.model_dump(exclude_unset=True)
-        entity.sqlmodel_update(data)
-        session.add(entity)
-        session.commit()
-        session.refresh(entity)
-        return entity
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(
-            status_code=400,
-            detail=f"{entity_name} with the same name and permission group already exists.",
-        )
-    except:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to update {entity_name}")
+    return repo.update_allowed(id, payload, current_user.permission_group_ids)
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
-def delete(*, session: Session = Depends(get_session), id: int):
-    entity = session.get(IngestExternalApiTheThingsNetwork, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    session.delete(entity)
-    session.commit()
-    return {"ok": True}
+def delete(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_external_api_the_things_network),
+):
+    return repo.delete_allowed(id, current_user.permission_group_ids)
