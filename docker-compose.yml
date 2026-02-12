@@ -379,34 +379,6 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # deprecated
-  # to-be-removed
-  flyway-thing-management:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-    user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-    volumes:
-      - ./flyway/migrations/thing-management:/flyway/sql
-      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-    environment:
-      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-    depends_on:
-      database:
-        condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
   # Summary
   # =======
   # brief:
@@ -419,7 +391,7 @@ services:
   flyway:
     image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate repair migrate
     volumes:
       - ./flyway/migrations/public:/flyway/sql
       - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
@@ -464,78 +436,8 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-
-  # deprecated
-  # to-be-removed
-  thing-management-frontend:
-    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
-    restart: "${SERVICE_RESTART_POLICY}"
-    environment:
-      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
-      APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
-      VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-      OIDC_URL: "${THING_MANAGEMENT_FRONTEND_OIDC_URL}"
-      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
-      OIDC_REDIRECT_URL: "${THING_MANAGEMENT_FRONTEND_REDIRECT_URL}"
-      OIDC_POST_LOGOUT_URL: "${THING_MANAGEMENT_FRONTEND_POST_LOGOUT_URL}"
-      OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
-    depends_on:
-      thing-management-api:
-        condition: service_started
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-  # deprecated
-  # to-be-removed
-  thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
-    restart: "${SERVICE_RESTART_POLICY}"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      ENVIRONMENT: "${THING_MANAGEMENT_API_ENVIRONMENT}"
-      DB_URL: "${THING_MANAGEMENT_API_DSN}"
-      DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-      DB_HOST: "${DATABASE_ADMIN_HOST}"
-      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
-      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
-      MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
-      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
-      MQTT_QOS: "${MQTT_QOS}"
-      MQTT_CLIENT_ID: thing_management
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
-      PROXY_URL: "${PROXY_URL}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_API_ALLOWED_VOS}"
-      OIDC_CONF_URL: "${THING_MANAGEMENT_API_OIDC_URL}/.well-known/openid-configuration"
-      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
-      OIDC_CLIENT_SECRET: ""
-      OIDC_ADMIN_USERNAME: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      OIDC_ADMIN_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      OIDC_ALLOWED_ISSUERS: "${THING_MANAGEMENT_API_ALLOWED_ISSUERS}"
-      OIDC_ALLOWED_AUDIENCES: "${THING_MANAGEMENT_API_ALLOWED_AUDIENCES}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-      flyway-thing-management:
-        condition: service_completed_successfully
-      keycloak:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
   dsm-api:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:861-915-prepare-build-pipelines
+    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     working_dir: /app
     user: "${UID:-1000}:${GID:-1000}"
@@ -543,31 +445,30 @@ services:
       flyway:
         condition: service_completed_successfully
     environment:
-      API_ROOT_PATH: "/dsm/api"
-      POSTGRES_SERVER: "database"
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: "dsm_db_user"
-      POSTGRES_PASSWORD: "dsm_db_password"
-      POSTGRES_DB: "postgres"
-      OIDC_WELL_KNOWN: "http://keycloak:8001/realms/timeio/.well-known/openid-configuration"
-      OIDC_ISSUER: "http://localhost/keycloak/realms/timeio"
-      OIDC_AUDIENCE: "timeio-thing-management"
-    command: "fastapi dev --host 0.0.0.0 --port 8000 main.py"
+      API_ROOT_PATH: "${DSM_API_RELATIVE_PATH}"
+      POSTGRES_SERVER: "${DSM_API_DATABASE_HOST}"
+      POSTGRES_USER: "${DSM_API_DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DSM_API_DATABASE_PASS}"
+      POSTGRES_DB: "${DSM_API_DATABASE_DB}"
+      OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
+      OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
+      OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
+    command: "fastapi run --host 0.0.0.0 --port 8000 main.py"
 
   dsm-frontend:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:861-915-prepare-build-pipelines
+    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       dsm-api:
         condition: service_started
     environment:
-       ENV_API_BASE_URL_PLACEHOLDER: "http://localhost/dsm/api"
-       ENV_OIDC_IDP_URL_PLACEHOLDER: "http://localhost/keycloak/realms/timeio"
-       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "timeIO-client"
-       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "http://localhost/dsm/login-callback"
-       ENV_OIDC_SCOPE_PLACEHOLDER: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
-       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "http://localhost/dsm"
-       ENV_BASE_URL_PLACEHOLDER: "dsm"
+       ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+       ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+       ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
     working_dir: /home/node/app
 
 
@@ -685,8 +586,6 @@ services:
       tsmdl:
         condition: service_started
       frost:
-        condition: service_started
-      thing-management-frontend:
         condition: service_started
       keycloak:
         condition: service_healthy
@@ -1246,12 +1145,12 @@ services:
       KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
       KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
       # Keycloak client config (used in configuration template)
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: "[\"${THING_MANAGEMENT_FRONTEND_APP_URL}/login/callback\"]"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "${THING_MANAGEMENT_FRONTEND_APP_URL}/login"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_APP_URL}/login-callback\"]"
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
       KEYCLOAK_GRAFANA_CLIENT_SECRET: "${VISUALIZATION_KEYCLOAK_CLIENT_SECRET}"
       KEYCLOAK_GRAFANA_CLIENT_ID: "${VISUALIZATION_KEYCLOAK_CLIENT_ID}"
       KEYCLOAK_GRAFANA_CLIENT_REDIRECT_URIS: "[\"${VISUALIZATION_PROXY_URL}login/generic_oauth\"]"
