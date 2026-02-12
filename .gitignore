@@ -3,3 +3,4 @@ venv
 .venv
 # Currently using sqlite database
 api/app/database.db
+**/__pycache__

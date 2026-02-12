@@ -1,0 +1,94 @@
+variables:
+  API_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-api"
+  FRONTEND_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
+
+stages:
+  - freeze
+  - check
+  - build
+  - release
+
+
+freeze:
+  stage: freeze
+  needs: []
+  image: alpine
+  artifacts:
+    expire_in: 6 weeks
+    reports:
+      dotenv: date.env
+  script:
+    - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
+
+
+black:
+  stage: check
+  needs: []
+  image: python:3-slim
+  before_script:
+    - pip install black
+  script:
+    - black --check api/app/
+
+
+npm-lint:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci
+  script:
+    - npm run lint
+
+
+npm-test:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci
+  script:
+    # no tests defined yet, but we can already include this job
+    - npm run test
+
+
+docker-build:
+  stage: build
+  needs:
+    - freeze
+    - black
+    - npm-lint
+    - npm-test
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./api/docker/prod/Dockerfile ./api
+    - docker build -t ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./frontend/docker/generic-image/Dockerfile ./frontend
+    - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+  tags:
+    - "dind"
+
+add-latest-tags:
+  stage: release
+  needs:
+    - docker-build
+  rules:
+    - if: '$CI_COMMIT_REF_SLUG == "main"'
+      when: on_success
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker pull ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
+    - docker push ${API_IMAGE_URL} -a
+    - docker push ${FRONTEND_IMAGE_URL} -a

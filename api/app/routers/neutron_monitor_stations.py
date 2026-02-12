@@ -24,6 +24,7 @@ def read_list(
     return repo.find_all()
 
 
+
 @router.get(
     "/{id}", response_model=NeutronMonitorStations, summary=f"Get one {entity_name}"
 )
