@@ -97,10 +97,12 @@ server {
   listen       80;
   listen  [::]:80;
   server_name  localhost;
+  root /usr/share/nginx/html/;
 
   location /data-source-management {
-    alias /usr/share/nginx/html/;
-    try_files $uri $uri/ /data-source-management/index.html;
+      alias /usr/share/nginx/html;
+      index index.html;
+      try_files $uri $uri/ /index.html;
   }
 }
 
