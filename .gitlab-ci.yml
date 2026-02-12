@@ -54,17 +54,6 @@ npm-test:
     - npm run test
 
 
-npm-build:
-  stage: check
-  needs: []
-  image: node:25
-  before_script:
-    - cd frontend/app
-    - npm ci
-  script:
-    - npm run build
-
-
 docker-build:
   stage: build
   needs:
