@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
 from typing import TYPE_CHECKING
 import re
 
-if TYPE_CHECKING:
-    from .user import User
+from . import *
 
 
 class PermissionGroupUserLink(SQLModel, table=True):
@@ -76,20 +77,3 @@ class PermissionGroup(SQLModel, table=True):
                 vo, rest = rest_content.split(":", 1)
                 return vo
         return ""
-
-
-# fix to avoid circular imports
-from .csv_parser import CsvParser
-from .database import Database
-from .ingest_external_api_bosch import IngestExternalApiBosch
-from .ingest_external_api_dwd import IngestExternalApiDwd
-from .ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
-from .ingest_external_api_the_things_network import IngestExternalApiTheThingsNetwork
-from .ingest_external_api_tsystems import IngestExternalApiTSystems
-from .ingest_external_api_uba import IngestExternalApiUba
-from .ingest_external_sftp import IngestExternalSftp
-from .ingest_mqtt import IngestMqtt
-from .ingest_s3store import IngestS3Store
-from .quality_control_setting import QualityControlSetting
-
-PermissionGroup.model_rebuild()
