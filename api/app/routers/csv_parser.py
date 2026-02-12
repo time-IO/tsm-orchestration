@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from ..dependencies import get_session, get_current_user
+from ..dependencies import (
+    get_session,
+    get_current_user,
+    get_repo_ingest_csv_parser,
+    get_repo_ingest_csv_parser_timestamp_column,
+)
 from ..models.csv_parser import (
     CsvParserCreate,
     CsvParser,
@@ -25,19 +30,24 @@ entity_name = "csv parser"
 @router.get(
     "/", response_model=list[CsvParserPublic], summary=f"Get a list of {entity_name}"
 )
-def read_list(*, session: Session = Depends(get_session)):
-    entities = session.exec(select(CsvParser)).all()
-    return entities
+def read_list(
+    *,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_csv_parser),
+):
+    return repo.find_allowed_all(current_user.permission_group_ids)
 
 
 @router.get(
     "/{csvparser_id}", response_model=CsvParserPublic, summary=f"Get one {entity_name}"
 )
-def read_one(*, session: Session = Depends(get_session), csvparser_id: int):
-    entity = session.get(CsvParser, csvparser_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    return entity
+def read_one(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_csv_parser),
+):
+    return repo.find_allowed_one(id, current_user.permission_group_ids)
 
 
 @router.post("/", response_model=CsvParserPublic, summary=f"Create one {entity_name}")
@@ -47,7 +57,6 @@ def create(
     payload: CsvParserCreate,
     user=Depends(get_current_user),
 ):
-
     try:
         extra_data = {"created_by_id": user.id}
 
@@ -86,37 +95,23 @@ def create(
 
 @router.patch("/{id}", summary=f"Update one {entity_name}")
 def update(
-    *, session: Session = Depends(get_session), id: int, payload: CsvParserUpdate
+    *,
+    id: int,
+    payload: CsvParserUpdate,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_csv_parser),
 ):
-    try:
-        entity = session.get(CsvParser, id)
-        if not entity:
-            raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-        csvparser_data = payload.model_dump(exclude_unset=True)
-        entity.sqlmodel_update(csvparser_data)
-        session.add(entity)
-        session.commit()
-        session.refresh(entity)
-        return entity
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(
-            status_code=409,
-            detail=f"{entity_name} with the same name and permission group already exists.",
-        )
-    except:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to update {entity_name}")
+    return repo.update_allowed(id, payload, current_user.permission_group_ids)
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
-def delete(*, session: Session = Depends(get_session), id: int):
-    entity = session.get(CsvParser, id)
-    if not entity:
-        raise HTTPException(status_code=404, detail=f"{entity_name} not found")
-    session.delete(entity)
-    session.commit()
-    return {"ok": True}
+def delete(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_csv_parser),
+):
+    return repo.delete_allowed(id, current_user.permission_group_ids)
 
 
 @router.patch(
@@ -126,19 +121,14 @@ def delete(*, session: Session = Depends(get_session), id: int):
 )
 def update_timestampcolumn(
     *,
-    session: Session = Depends(get_session),
     timestampcolumn_id: int,
     payload: CsvParserTimestampColumnUpdate,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_ingest_csv_parser_timestamp_column),
 ):
-    entity = session.get(CsvParserTimestampColumn, timestampcolumn_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="timestamp column not found")
-    csvparsertimestamp_data = payload.model_dump(exclude_unset=True)
-    entity.sqlmodel_update(csvparsertimestamp_data)
-    session.add(entity)
-    session.commit()
-    session.refresh(entity)
-    return entity
+    return repo.update_allowed(
+        timestampcolumn_id, payload, current_user.permission_group_ids
+    )
 
 
 @router.delete(
@@ -150,6 +140,9 @@ def delete_timestampcolumn(
 ):
     # Check if the timestamp column exists
     entity = session.get(CsvParserTimestampColumn, timestampcolumn_id)
+
+    # todo check, that the current_user belongs to the permission group of the associated csvparser
+
     if not entity:
         raise HTTPException(status_code=404, detail="timestamp column not found")
 

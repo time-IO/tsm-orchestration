@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..dependencies import get_session, get_current_user
-from sqlmodel import Session, select
+from ..dependencies import (
+    get_session,
+    get_current_user,
+    get_repo_quality_control_setting,
+)
+from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
 from ..models.quality_control_setting import (
@@ -26,9 +30,26 @@ entity_name = "quality control setting"
     response_model=list[QualityControlSettingPublic],
     summary=f"Get a list of {entity_name}",
 )
-def read_list(*, session: Session = Depends(get_session)):
-    entities = session.exec(select(QualityControlSetting)).all()
-    return entities
+def read_list(
+    *,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_quality_control_setting),
+):
+    return repo.find_allowed_all(current_user.permission_group_ids)
+
+
+@router.get(
+    "/{id}",
+    response_model=QualityControlSettingPublic,
+    summary=f"Get one {entity_name}",
+)
+def read_one(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_quality_control_setting),
+):
+    return repo.find_allowed_one(id, current_user.permission_group_ids)
 
 
 @router.post(
@@ -40,7 +61,6 @@ def create(
     payload: QualityControlSettingCreate,
     user=Depends(get_current_user),
 ):
-
     try:
         extra_data = {"created_by_id": user.id}
 
