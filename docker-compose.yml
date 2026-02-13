@@ -426,8 +426,8 @@ services:
       FLYWAY_PLACEHOLDERS_CV_DB_PORT: "${CV_DB_PORT}"
       FLYWAY_PLACEHOLDERS_CV_DB_DB: "${CV_DB_DB}"
       FLYWAY_PLACEHOLDERS_CV_DB_HOST: "${CV_DB_HOST}"
-      FLYWAY_PLACEHOLDERS_DSM_DB_USER: "${DSM_DB_USER:-dsm_db_user}"
-      FLYWAY_PLACEHOLDERS_DSM_DB_PASSWORD: "${DSM_DB_PASSWORD:-dsm_db_password}"
+      FLYWAY_PLACEHOLDERS_DSM_DB_USER: "${DSM_API_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_DSM_DB_PASSWORD: "${DSM_API_DATABASE_PASS}"
     depends_on:
       database:
         condition: service_healthy
@@ -444,6 +444,8 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+    volumes:
+      - "./data-source-management/start.sh:/app/start.sh"
     environment:
       API_ROOT_PATH: "${DSM_API_RELATIVE_PATH}"
       POSTGRES_SERVER: "${DSM_API_DATABASE_HOST}"
@@ -453,7 +455,8 @@ services:
       OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
       OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
       OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
-    command: "fastapi run --host 0.0.0.0 --port 8000 main.py"
+    command: "/app/start.sh"
+
 
   dsm-frontend:
     image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
