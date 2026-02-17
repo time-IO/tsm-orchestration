@@ -1,7 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .neutron_monitor_stations import NeutronMonitorStations
+from .neutron_monitor_station import NeutronMonitorStation
 from .permission_group import PermissionGroup
 
 
@@ -11,7 +11,7 @@ class IngestExternalApiNeutronMonitorBase(SQLModel):
     description: str | None = None
     sync_interval_in_minutes: int
     sync_enabled: bool = False
-    station_id: int = Field(foreign_key="neutron_monitor_stations.id")
+    station_id: int = Field(foreign_key="neutron_monitor_station.id")
 
 
 class IngestExternalApiNeutronMonitorCreate(IngestExternalApiNeutronMonitorBase):

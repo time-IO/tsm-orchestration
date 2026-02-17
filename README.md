@@ -163,7 +163,7 @@ Should be inserted through migration if necessary.
 #### Neutron Monitor Stations
 ```sql
 
-INSERT INTO neutron_monitor_stations (station_id,description) VALUES
+INSERT INTO neutron_monitor_station (station_id,description) VALUES
 	 ('AATA','Alma-Ata A (R=5.90, Alt=897 m)'),
 	 ('AATB','Alma-Ata B (R=5.90, Alt=3340 m)'),
 	 ('AHMD','Ahmedabad (R=15.94, Alt=50 m)'),
