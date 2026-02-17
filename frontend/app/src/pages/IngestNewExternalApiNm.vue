@@ -242,7 +242,13 @@ async function save() {
   } catch (error) {
 
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
-    const errorCaption = error?.response?.data?.detail || '';
+    let errorCaption = error?.response?.data?.detail || '';
+
+    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
+    if (typeof errorCaption === 'object')
+    {
+      errorCaption = errorCaption[0].msg
+    }
 
     $q.notify({
       position: "top",
