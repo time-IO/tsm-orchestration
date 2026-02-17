@@ -76,8 +76,8 @@ docker-build:
 add-latest-tags:
   stage: release
   needs:
-    - docker-build
     - freeze
+    - docker-build
   #rules:
   #  - if: '$CI_COMMIT_REF_SLUG == "main"'
   #    when: on_success
@@ -87,11 +87,13 @@ add-latest-tags:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - echo $BUILD_DATE
-    #- docker pull ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    #- docker pull ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    #- docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
-    #- docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
+    - docker pull ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker pull ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
+    - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker images
     #- docker push ${API_IMAGE_URL} -a
     #- docker push ${FRONTEND_IMAGE_URL} -a
   tags:
