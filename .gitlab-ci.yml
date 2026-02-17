@@ -81,6 +81,7 @@ add-latest-tags:
   rules:
     - if: '$CI_COMMIT_REF_SLUG == "main"'
       when: on_success
+  image: docker
   services:
     - docker:dind
   before_script:
