@@ -87,8 +87,8 @@ add-latest-tags:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull ${API_IMAGE_URL}:${BUILD_DATE}
-    - docker pull ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
+    - docker pull ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker pull ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
     - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
     - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:${BUILD_DATE}
     - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
