@@ -15,7 +15,7 @@ from .routers import (
     ingest_external_api_neutron_monitor,
     ingest_external_api_bosch,
     quality_control_setting,
-    neutron_monitor_stations,
+    neutron_monitor_station,
     health,
     mqtt_parser,
     user,
@@ -52,7 +52,7 @@ app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_s3store.router)
 app.include_router(mqtt_parser.router)
-app.include_router(neutron_monitor_stations.router)
+app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)
 app.include_router(quality_control_setting.router)
 app.include_router(health.router)
