@@ -95,3 +95,5 @@ add-latest-tags:
     - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
     - docker push ${API_IMAGE_URL} -a
     - docker push ${FRONTEND_IMAGE_URL} -a
+  tags:
+    - "dind"
