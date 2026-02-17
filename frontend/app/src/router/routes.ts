@@ -19,6 +19,7 @@ import ParserNew from "pages/ParserNew.vue";
 import ParserNewCsv from "pages/ParserNewCsv.vue";
 import QualityControlOverview from "pages/QualityControlOverview.vue";
 import QualityControlNew from "pages/QualityControlNew.vue";
+import IngestDetailExternalApiNm from "pages/IngestDetailExternalApiNm.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -89,6 +90,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api-uba/:id',
     component: IngestDetailExternalApiUba,
+    meta: {requiresAuth: true}
+  },
+  {
+    path: '/ingest/external-api-nm/:id',
+    component: IngestDetailExternalApiNm,
     meta: {requiresAuth: true}
   },
   {

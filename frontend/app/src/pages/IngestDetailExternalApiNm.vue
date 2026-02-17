@@ -49,8 +49,8 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Station ID</q-item-label>
-                    <q-item-label caption>{{ item.station_id }}</q-item-label>
+                    <q-item-label>Station</q-item-label>
+                    <q-item-label caption>{{ item.station.station_id }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
@@ -134,17 +134,17 @@
 
 <script lang="ts" setup>
 import {onMounted, ref} from 'vue'
-import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 import {useRoute, useRouter} from "vue-router";
 import {useQuasar} from 'quasar'
-import type {IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
+import type {IngestExternalApiNeutronMonitorPublic} from "src/services/ingest_external_api_neutron_monitor/types";
+import {useIngestExternalApiNeutronMonitorStore} from "stores/ingestExternalApiNeutronMonitorStore";
 
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
-const store = useIngestExternalApiUbaStore()
+const store = useIngestExternalApiNeutronMonitorStore()
 
-const item = ref<IngestExternalApiUbaPublic | null>(null);
+const item = ref<IngestExternalApiNeutronMonitorPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false)
 
