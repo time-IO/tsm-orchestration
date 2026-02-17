@@ -1,7 +1,6 @@
 import {API} from "src/services";
 import {acceptHMRUpdate, defineStore} from "pinia";
 import type {PermissionGroup} from "src/services/permission_group/types";
-import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
 
 export const usePermissionGroupStore = defineStore('permissionGroupStore', {
 
@@ -24,5 +23,5 @@ export const usePermissionGroupStore = defineStore('permissionGroupStore', {
 });
 
 if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useIngestExternalApiUbaStore, import.meta.hot));
+  import.meta.hot.accept(acceptHMRUpdate(usePermissionGroupStore, import.meta.hot));
 }
