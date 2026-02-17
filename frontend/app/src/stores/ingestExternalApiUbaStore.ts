@@ -6,7 +6,6 @@ export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaSto
 
   state: () => ({
     ingestExternalApiUbaList: [] as IngestExternalApiUbaPublic[],
-    ingestExternalApiUba: null as IngestExternalApiUbaPublic | null, // todo not 100% sure if I'll go with this
   }),
 
   getters: {},
