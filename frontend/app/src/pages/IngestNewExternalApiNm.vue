@@ -177,7 +177,7 @@ onMounted(async () => {
     $q.notify({
       position: "top",
       type: 'negative',
-      message: 'Failed to fetch projects'
+      message: 'Failed to fetch permission groups'
     })
   }
 })
