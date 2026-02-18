@@ -32,7 +32,7 @@ export type IngestExternalApiNeutronMonitorUpdate = {
   permission_group_id?: number | null;
   sync_enabled?: boolean;
   sync_interval_in_minutes?: number | null;
-  station_id?: number;
+  station_id?: number | null;
   time_resolution_in_minutes?: number | null;
 }
 

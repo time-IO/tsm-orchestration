@@ -17,7 +17,7 @@ class IngestExternalApiDwdCreate(IngestExternalApiDwdBase):
 
 
 class IngestExternalApiDwdUpdate(SQLModel):
-    project_id: int | None = None
+    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     sync_enabled: bool | None = None

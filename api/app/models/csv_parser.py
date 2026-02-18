@@ -54,7 +54,7 @@ class CsvParserCreate(CsvParserBase):
 
 
 class CsvParserUpdate(SQLModel):
-    # it should not __currently__ be possible to update the project_id
+    # it should not __currently__ be possible to update the permission_group_id
     # it should not __currently__ be possible to send timestamp_columns (too complicated) instead use the routes to add and delete them to an existing csv_parser
     ## todo maybe i will test that with a special route + model
     name: str | None = None
