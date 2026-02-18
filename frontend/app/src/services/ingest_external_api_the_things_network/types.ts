@@ -27,9 +27,9 @@ export type IngestExternalApiTheThingsNetworkCreate = {
 
 export type IngestExternalApiTheThingsNetworkUpdate = {
   permission_group_id?: number | null;
-  name?: string;
+  name?: string | null;
   description?: string | null;
-  sync_enabled?: boolean;
+  sync_enabled?: boolean | null;
   sync_interval_in_minutes?: number | null;
   api_key?: string | null;
   endpoint_uri?: string | null;

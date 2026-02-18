@@ -28,6 +28,13 @@
     />
 
     <ingest-overview-table
+      title="Ingest - External Api - The Things network"
+      ingest-path="ingest/external-api-ttn"
+      :columns="columns"
+      :rows="ingestExternalApiTheThingsNetworkStore.ingestExternalApiTheThingsNetworkList"
+    />
+
+    <ingest-overview-table
       title="Ingest - External Api - Umweltbundesamt (UBA) Air Data"
       ingest-path="ingest/external-api-uba"
       :columns="columns"
@@ -45,18 +52,21 @@ import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalAp
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import IngestOverviewTable from 'components/IngestOverviewTable.vue';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
+import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const ingestExternalApiDwdStore = useIngestExternalApiDwdStore();
 const ingestExternalApiBoschStore = useIngestExternalApiBoschStore();
+const ingestExternalApiTheThingsNetworkStore = useIngestExternalApiTheThingsNetworkStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
   await ingestExternalApiNeutronMonitorStore.dispatchGetList();
   await ingestExternalApiDwdStore.dispatchGetList();
   await ingestExternalApiBoschStore.dispatchGetList();
+  await ingestExternalApiTheThingsNetworkStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [
