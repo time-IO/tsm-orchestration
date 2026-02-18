@@ -6,90 +6,48 @@
       <q-btn color="green" :label="t('newIngest')" to="/ingest/new" />
     </div>
 
-    <div class="text-h5 q-mt-lg">Ingest - External Api - Neutron Monitor</div>
-    <q-table
-      :rows="ingestExternalApiNeutronMonitorStore.ingestExternalApiNeutronMonitorList"
+    <ingest-overview-table
+      title="Ingest - External Api - Deutscher Wetterdienst"
+      ingest-path="ingest/external-api-dwd"
       :columns="columns"
-      row-key="name"
-      flat
-      bordered
-    >
-      <template v-slot:body-cell-action="props">
-        <q-td :props="props">
-          <div>
-            <q-btn
-              :to="`ingest/external-api-nm/${props.row.id}`"
-              flat
-              outline
-              color="primary"
-              icon="visibility"
-            >
-              <q-tooltip>View details</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`ingest/external-api-nm/${props.row.id}/edit`"
-              flat
-              outline
-              color="secondary"
-              icon="edit"
-            >
-              <q-tooltip>Edit thing</q-tooltip>
-            </q-btn>
-          </div>
-        </q-td>
-      </template>
-    </q-table>
+      :rows="ingestExternalApiDwdStore.ingestExternalApiDwdList"
+    />
 
-    <div class="text-h5">Ingest - External Api - Umweltbundesamt (UBA) Air Data</div>
-    <q-table
-      :rows="ingestExternalApiUbaStore.ingestExternalApiUbaList"
+    <ingest-overview-table
+      title="Ingest - External Api - Neutron Monitor"
+      ingest-path="ingest/external-api-nm"
       :columns="columns"
-      row-key="name"
-      flat
-      bordered
-    >
-      <template v-slot:body-cell-action="props">
-        <q-td :props="props">
-          <div>
-            <q-btn
-              :to="`ingest/external-api-uba/${props.row.id}`"
-              flat
-              outline
-              color="primary"
-              icon="visibility"
-            >
-              <q-tooltip>View details</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`ingest/external-api-uba/${props.row.id}/edit`"
-              flat
-              outline
-              color="secondary"
-              icon="edit"
-            >
-              <q-tooltip>Edit thing</q-tooltip>
-            </q-btn>
-          </div>
-        </q-td>
-      </template>
-    </q-table>
+      :rows="ingestExternalApiNeutronMonitorStore.ingestExternalApiNeutronMonitorList"
+    />
+
+    <ingest-overview-table
+      title="Ingest - External Api - Umweltbundesamt (UBA) Air Data"
+      ingest-path="ingest/external-api-uba"
+      :columns="columns"
+      :rows="ingestExternalApiUbaStore.ingestExternalApiUbaList"
+    />
+
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { onMounted } from 'vue';
 import type { QTableColumn } from 'quasar';
+import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
+import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
+import IngestOverviewTable from 'components/IngestOverviewTable.vue';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
+const ingestExternalApiDwdStore = useIngestExternalApiDwdStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
   await ingestExternalApiNeutronMonitorStore.dispatchGetList();
+  await ingestExternalApiDwdStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [

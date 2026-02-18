@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">External Api Ingest</h5>
-    <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
+    <h6 class="q-mt-none">Deutscher Wetterdienst</h6>
     <div class="row">
       <div class="col">
         <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
@@ -91,7 +91,9 @@
         <q-separator />
 
         <q-card-actions>
-          <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
+          <q-btn :to="editRoute" color="primary" flat>
+            Edit
+          </q-btn>
           <q-space />
           <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
         </q-card-actions>
@@ -118,17 +120,17 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalApiUbaPublic } from 'src/services/ingest_external_api_uba/types';
+import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
+import type { IngestExternalApiDwdPublic } from 'src/services/ingest_external_api_dwd/types';
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
-const store = useIngestExternalApiUbaStore();
+const store = useIngestExternalApiDwdStore();
 
-const item = ref<IngestExternalApiUbaPublic | null>(null);
+const item = ref<IngestExternalApiDwdPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 
@@ -152,7 +154,7 @@ onMounted(async () => {
 
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/ingest/external-api-uba/${item.value.id}/edit`;
+    return `/ingest/external-api-dwd/${item.value.id}/edit`;
   }
   return '';
 });
