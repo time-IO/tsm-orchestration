@@ -25,6 +25,8 @@ import IngestDetailExternalApiDwd from 'pages/IngestDetailExternalApiDwd.vue';
 import IngestEditExternalApiDwd from 'pages/IngestEditExternalApiDwd.vue';
 import IngestDetailExternalApiBosch from 'pages/IngestDetailExternalApiBosch.vue';
 import IngestEditExternalApiBosch from 'pages/IngestEditExternalApiBosch.vue';
+import IngestDetailExternalApiTtn from 'pages/IngestDetailExternalApiTtn.vue';
+import IngestEditExternalApiTtn from 'pages/IngestEditExternalApiTtn.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -108,6 +110,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/external-api-ttn/:id',
+    component: IngestDetailExternalApiTtn,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/ingest/external-api-dwd/:id',
     component: IngestDetailExternalApiDwd,
     meta: { requiresAuth: true },
@@ -130,6 +137,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api-nm/:id/edit',
     component: IngestEditExternalApiNm,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api-ttn/:id/edit',
+    component: IngestEditExternalApiTtn,
     meta: { requiresAuth: true },
   },
   {
