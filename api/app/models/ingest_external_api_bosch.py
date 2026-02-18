@@ -22,7 +22,7 @@ class IngestExternalApiBoschCreate(IngestExternalApiBoschBase):
 
 
 class IngestExternalApiBoschUpdate(SQLModel):
-    project_id: int | None = None
+    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     sync_interval_in_minutes: int | None = None

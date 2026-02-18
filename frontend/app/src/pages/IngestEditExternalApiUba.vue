@@ -1,16 +1,18 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">New External Api Ingest</h5>
+    <h5 class="q-mb-none">Edit External Api Ingest</h5>
     <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest"/>
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest" />
       </div>
     </div>
 
     <div class="text-caption text-grey">
       For more information on UBA Air Data API properties, visit the
-      <a href="https://luftqualitaet.api.bund.dev/" target="_blank" class="text-primary">API documentation</a>.
+      <a href="https://luftqualitaet.api.bund.dev/" target="_blank" class="text-primary"
+        >API documentation</a
+      >.
     </div>
 
     <q-card class="q-mb-lg" flat>
@@ -23,7 +25,7 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this ingest"
-            :rules="[val => !!val || 'Name is required']"
+            :rules="[(val) => !!val || 'Name is required']"
           />
 
           <q-select
@@ -36,7 +38,7 @@
             emit-value
             map-options
             hint="Select the project this ingest belongs to"
-            :rules="[val => !!val || 'Project is required']"
+            :rules="[(val) => !!val || 'Project is required']"
           />
 
           <!-- Description -->
@@ -55,7 +57,7 @@
             v-model="formData.station_id"
             label="Station ID *"
             hint="Unique identifier for the monitoring station"
-            :rules="[val => !!val || 'Valid station ID is required']"
+            :rules="[(val) => !!val || 'Valid station ID is required']"
           />
 
           <!-- Sync Settings -->
@@ -83,7 +85,7 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
-            <q-space/>
+            <q-space />
             <div class="col-6">
               <q-btn
                 unelevated
@@ -94,7 +96,7 @@
                 class="full-width"
               />
             </div>
-            <q-space/>
+            <q-space />
           </div>
         </q-form>
       </q-card-section>
@@ -103,104 +105,98 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
-import type { IngestExternalApiUbaUpdate } from "src/services/ingest_external_api_uba/types"
-import { useIngestExternalApiUbaStore } from "stores/ingestExternalApiUbaStore"
-import {usePermissionGroupStore} from "stores/permissionGroupStore";
-
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
+import type { IngestExternalApiUbaUpdate } from 'src/services/ingest_external_api_uba/types';
+import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 
 // Composition API
-const $q = useQuasar()
-const route = useRoute()
-const router = useRouter()
-const ubaStore = useIngestExternalApiUbaStore()
-const permissionGroupStore = usePermissionGroupStore()
-
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const ubaStore = useIngestExternalApiUbaStore();
+const permissionGroupStore = usePermissionGroupStore();
 
 // Reactive data
-const isLoading = ref(false)
+const isLoading = ref(false);
 const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
   name: '',
   permission_group_id: null,
   description: '',
   station_id: null,
-  sync_enabled: false
-})
-const syncInterval = ref(60)
+  sync_enabled: false,
+});
+const syncInterval = ref(60);
 
 // Load existing data when component mounts
 onMounted(async () => {
   if (route.params.id) {
     try {
+      await permissionGroupStore.dispatchGetList();
 
-      await permissionGroupStore.dispatchGetList()
-
-      const id = Number(route.params.id)
-      const data = await ubaStore.dispatchGetOne(id)
+      const id = Number(route.params.id);
+      const data = await ubaStore.dispatchGetOne(id);
 
       formData.value = {
         name: data.name || '',
         permission_group_id: data.permission_group_id || null,
         description: data.description || '',
         station_id: data.station_id || null,
-        sync_enabled: data.sync_enabled || false
-      }
+        sync_enabled: data.sync_enabled || false,
+      };
     } catch {
       $q.notify({
         type: 'negative',
-        message: 'Failed to load ingest data'
-      })
-      await router.push('/ingest')
+        message: 'Failed to load ingest data',
+      });
+      await router.push('/ingest');
     }
   }
-})
+});
 
 // Save changes
 async function save() {
-  if (!route.params.id) return
-
-  isLoading.value = true
+  if (!route.params.id) return;
 
   try {
-    const id = Number(route.params.id)
+    const id = Number(route.params.id);
     const data: IngestExternalApiUbaUpdate = {
       name: formData.value.name || '',
       permission_group_id: formData.value.permission_group_id || null,
       description: formData.value.description || '',
       station_id: formData.value.station_id || null,
-      sync_enabled: formData.value.sync_enabled || false
-    }
+      sync_enabled: formData.value.sync_enabled || false,
+    };
 
-    await ubaStore.dispatchUpdate(id, data)
+    isLoading.value = true;
+
+    await ubaStore.dispatchUpdate(id, data);
 
     $q.notify({
-      position: "top",
+      position: 'top',
       type: 'positive',
-      message: 'Updated successfully'
-    })
+      message: 'Updated successfully',
+    });
 
     // Navigate back to detail
-    await router.push(`/ingest/external-api-uba/${id}`)
+    await router.push(`/ingest/external-api-uba/${id}`);
   } catch (error) {
-
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     const errorCaption = error?.response?.data?.detail || '';
 
     $q.notify({
-      position: "top",
+      position: 'top',
       type: 'negative',
       message: 'Failed to update ingest configuration',
       progress: true,
-      caption: errorCaption
-    })
+      caption: errorCaption,
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
-
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
