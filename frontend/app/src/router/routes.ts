@@ -21,6 +21,8 @@ import QualityControlOverview from "pages/QualityControlOverview.vue";
 import QualityControlNew from "pages/QualityControlNew.vue";
 import IngestDetailExternalApiNm from "pages/IngestDetailExternalApiNm.vue";
 import IngestEditExternalApiNm from 'pages/IngestEditExternalApiNm.vue';
+import IngestDetailExternalApiDwd from 'pages/IngestDetailExternalApiDwd.vue';
+import IngestEditExternalApiDwd from 'pages/IngestEditExternalApiDwd.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -96,6 +98,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api-nm/:id',
     component: IngestDetailExternalApiNm,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api-dwd/:id',
+    component: IngestDetailExternalApiDwd,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api-dwd/:id/edit',
+    component: IngestEditExternalApiDwd,
     meta: { requiresAuth: true },
   },
   {
