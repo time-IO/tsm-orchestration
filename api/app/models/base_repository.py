@@ -44,7 +44,8 @@ class BaseRepository(Generic[T]):
             self.session.commit()
             self.session.refresh(entity)
             return entity
-        except:
+        except Exception as e:
+            print(str(e))
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to create.")
 
