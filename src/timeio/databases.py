@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import logging
+import json
 import threading
 import urllib.request
 from functools import partial
 from typing import Any, Callable
+from datetime import datetime, timezone
 
 import psycopg
 import requests
@@ -27,7 +29,7 @@ class Database:
     def connection(self) -> Callable[[], psycopg.Connection]:
         return partial(psycopg.connect, self.__dsn)
 
-    def ping(self, conn: Connection | None = None):
+    def ping(self, conn: Connection | None = None) -> None:
         try:
             if conn is not None:
                 conn.execute("")
@@ -45,7 +47,7 @@ class DBapi:
         self.auth_token = auth_token
         self.ping_dbapi()
 
-    def ping_dbapi(self):
+    def ping_dbapi(self) -> None:
         """
         Test the health endpoint of the given url.
 
@@ -63,7 +65,6 @@ class DBapi:
             url,
             json={"observations": observations},
             headers={
-                "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.auth_token}",
             },
         )
@@ -90,3 +91,20 @@ class DBapi:
     ):
         self.insert_datastreams(thing_uuid, observations, mutable)
         self.upsert_observations(thing_uuid, observations)
+
+    def insert_mqtt_message(self, thing_uuid: str, message: Any) -> None:
+        url = f"{self.base_url}/things/{thing_uuid}/mqtt_message/insert"
+        resp = requests.post(
+            url,
+            json={
+                "message": (
+                    json.dumps(message) if isinstance(message, dict) else str(message)
+                ),
+                "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+            },
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+
