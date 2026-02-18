@@ -1,3 +1,4 @@
+import ingestExternalApiBoschController from "src/services/ingest_external_api_bosch"
 import ingestExternalApiDwdController from "src/services/ingest_external_api_dwd"
 import ingestExternalApiNeutronMonitorController from "src/services/ingest_external_api_neutron_monitor"
 import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
@@ -8,6 +9,7 @@ import neutronMonitorStationController from "src/services/neutron_monitor_statio
 import mqttParserController from "src/services/mqtt_parser"
 
 export const API = {
+  ingestExternalApiBosch:ingestExternalApiBoschController,
   ingestExternalApiDwd:ingestExternalApiDwdController,
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiNeutronMonitor: ingestExternalApiNeutronMonitorController,

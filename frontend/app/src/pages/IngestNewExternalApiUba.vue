@@ -4,14 +4,15 @@
     <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new"/>
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
       </div>
     </div>
     <div class="text-caption text-grey">
       For more information on UBA Air Data API properties, visit the
-      <a href="https://luftqualitaet.api.bund.dev/" target="_blank" class="text-primary">API documentation</a>.
+      <a href="https://luftqualitaet.api.bund.dev/" target="_blank" class="text-primary"
+        >API documentation</a
+      >.
     </div>
-
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
@@ -23,7 +24,7 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this ingest"
-            :rules="[val => !!val || 'Name is required']"
+            :rules="[(val) => !!val || 'Name is required']"
           />
 
           <q-select
@@ -36,7 +37,7 @@
             emit-value
             map-options
             hint="Select the project this ingest belongs to"
-            :rules="[val => !!val || 'Project is required']"
+            :rules="[(val) => !!val || 'Project is required']"
           />
 
           <!-- Description -->
@@ -55,7 +56,7 @@
             v-model="formData.station_id"
             label="Station ID *"
             hint="Unique identifier for the monitoring station"
-            :rules="[val => !!val || 'Valid station ID is required']"
+            :rules="[(val) => !!val || 'Valid station ID is required']"
           />
 
           <!-- Sync Settings -->
@@ -83,7 +84,7 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
-            <q-space/>
+            <q-space />
             <div class="col-6">
               <q-btn
                 unelevated
@@ -94,52 +95,48 @@
                 class="full-width"
               />
             </div>
-            <q-space/>
+            <q-space />
           </div>
         </q-form>
       </q-card-section>
     </q-card>
-
-
   </q-page>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
-import type {IngestExternalApiUbaCreate} from "src/services/ingest_external_api_uba/types";
-import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
-import {useQuasar} from 'quasar'
-import {useRouter} from "vue-router";
-import {usePermissionGroupStore} from "stores/permissionGroupStore";
+import { onMounted, ref } from 'vue';
+import type { IngestExternalApiUbaCreate } from 'src/services/ingest_external_api_uba/types';
+import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 
-
-const ubaStore = useIngestExternalApiUbaStore()
-const permissionGroupStore = usePermissionGroupStore()
-const $q = useQuasar()
-const router = useRouter()
+const ubaStore = useIngestExternalApiUbaStore();
+const permissionGroupStore = usePermissionGroupStore();
+const $q = useQuasar();
+const router = useRouter();
 
 const formData = ref<IngestExternalApiUbaCreate>({
   name: '',
   permission_group_id: null,
   description: '',
   station_id: null,
-  sync_enabled: false
-})
-const syncInterval = ref(60)
-const isLoading = ref(false)
+  sync_enabled: false,
+});
+const syncInterval = ref(60);
+const isLoading = ref(false);
 
 onMounted(async () => {
   try {
-    await permissionGroupStore.dispatchGetList()
+    await permissionGroupStore.dispatchGetList();
   } catch {
     $q.notify({
-      position: "top",
+      position: 'top',
       type: 'negative',
-      message: 'Failed to fetch permission groups'
-    })
+      message: 'Failed to fetch permission groups',
+    });
   }
-})
-
+});
 
 async function save() {
   const data: IngestExternalApiUbaCreate = {
@@ -147,39 +144,39 @@ async function save() {
     description: formData.value.description,
     permission_group_id: formData.value.permission_group_id,
     station_id: formData.value.station_id,
-    sync_enabled: formData.value.sync_enabled
-  }
+    sync_enabled: formData.value.sync_enabled,
+  };
   try {
-    isLoading.value = true
-    const result = await ubaStore.dispatchCreate(data)
+    isLoading.value = true;
+    const result = await ubaStore.dispatchCreate(data);
     $q.notify({
-      position: "top",
+      position: 'top',
       type: 'positive',
-      message: 'Saved successfully'
-    })
+      message: 'Saved successfully',
+    });
 
     // Navigate back to list
-    await router.push(`/ingest/external-api-uba/${result.id}`)
-
+    await router.push(`/ingest/external-api-uba/${result.id}`);
   } catch (error) {
-
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
-    const errorCaption = error?.response?.data?.detail || '';
+    let errorCaption = error?.response?.data?.detail || '';
+
+    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
+    if (typeof errorCaption === 'object') {
+      errorCaption = errorCaption[0].msg;
+    }
 
     $q.notify({
-      position: "top",
+      position: 'top',
       type: 'negative',
       progress: true,
       message: 'Failed to create ingest',
-      caption: errorCaption
-    })
+      caption: errorCaption,
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
-
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

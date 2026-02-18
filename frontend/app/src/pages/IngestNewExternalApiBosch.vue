@@ -4,79 +4,237 @@
     <h6 class="q-mt-none">Bosch IoT</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new"/>
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
       </div>
     </div>
-    <q-form>
-      <q-input  outlined class="q-mb-md" v-model="name" label="Name" />
-      <q-select outlined class="q-mb-md" v-model="project" :options="projectOptions" label="Permission Group *" />
-      <q-input outlined class="q-mb-md" v-model="description" label="Description" />
-      <q-separator class="q-my-lg"/>
-      <q-input  outlined class="q-mb-md" v-model="endpoint" label="End Point" />
-      <q-input  outlined class="q-mb-md" v-model="sensorId" label="Sensor ID" />
-
-      <q-input outlined class="q-mb-md" v-model="username" label="Username" />
-      <q-input outlined class="q-mb-md" v-model="password" :type="isPwd ? 'password' : 'text'" label="Password">
-        <template v-slot:append>
-          <q-icon
-            :name="isPwd ? 'visibility_off' : 'visibility'"
-            class="cursor-pointer"
-            @click="isPwd = !isPwd"
+    <q-card class="q-mb-lg" flat>
+      <q-card-section>
+        <q-form @submit.prevent="save" class="q-gutter-md">
+          <!-- Name Field -->
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.name"
+            label="Name *"
+            hint="Enter a descriptive name for this ingest"
+            :rules="[(val) => !!val || 'Name is required']"
           />
-        </template>
-      </q-input>
-      <div class="row">
-        <div class="col col-2 q-mr-sm" >
-          <q-input outlined class="q-mb-md" v-model="period" label="Period" />
-        </div>
-        <div class="col col-2">
-          <q-select   outlined class="q-mb-md" v-model="periodUnit" :options="unitOptions" label="Unit" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col col-1">
-          <q-checkbox v-model="enableFileServerSync" label="Enable File Server Sync" />
-        </div>
-        <div class="col col-2 q-mr-sm">
-          <q-input  :disable="!enableFileServerSync" outlined class="q-mb-md" v-model="syncInterval" label="Sync interval" />
-        </div>
-        <div class="col col-2">
-          <q-select :disable="!enableFileServerSync"  outlined class="q-mb-md" v-model="unit" :options="unitOptions" label="Unit" />
-        </div>
-      </div>
 
-      <q-btn class="full-width " label="Submit" color="green"/>
-    </q-form>
+          <q-select
+            filled
+            v-model="formData.permission_group_id"
+            :options="permissionGroupStore.permissionGroups"
+            label="Permission Group *"
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            hint="Select the project this ingest belongs to"
+            :rules="[(val) => !!val || 'Project is required']"
+          />
+
+          <!-- Description -->
+          <q-input
+            filled
+            v-model="formData.description"
+            label="Description"
+            type="textarea"
+            rows="3"
+            hint="Provide additional details about this ingest configuration"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.endpoint"
+            label="Endpoint *"
+            :rules="[(val) => !!val || 'Endpoint is required']"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.sensor_id"
+            label="Sensor-ID *"
+            :rules="[(val) => !!val || 'Sensor-ID is required']"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.bosch_username"
+            label="Username *"
+            :rules="[(val) => !!val || 'Username is required']"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.bosch_password"
+            label="Password *"
+            :type="isPwd ? 'password' : 'text'"
+            :rules="[(val) => !!val || 'Password is required']"
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.period_in_minutes"
+            label="Period (in minutes) *"
+            :rules="[
+              (val) => !!val || 'Period is required',
+              (val) =>
+                (val !== null && val !== '' && val > 0) ||
+                'Interval must be a positive number when sync is enabled',
+            ]"
+          />
+
+          <!-- Sync Settings -->
+          <q-card-section class="q-pa-none">
+            <div class="text-h6 q-mb-md">Synchronization Settings</div>
+
+            <q-toggle
+              v-model="formData.sync_enabled"
+              label="Enable File Server Sync"
+              color="primary"
+              size="md"
+            />
+
+            <div class="q-mt-md">
+              <q-input
+                filled
+                :disable="!formData.sync_enabled"
+                v-model.number="formData.sync_interval_in_minutes"
+                :label="
+                  formData.sync_enabled
+                    ? 'Sync Interval (in minutes) *'
+                    : 'Sync Interval (in minutes)'
+                "
+                type="number"
+                :rules="[
+                  (val) =>
+                    !formData.sync_enabled ||
+                    (val !== null && val !== '' && val > 0) ||
+                    'Interval must be a positive number when sync is enabled',
+                ]"
+              />
+            </div>
+          </q-card-section>
+
+          <!-- Action Buttons -->
+          <div class="row q-mt-lg">
+            <q-space />
+            <div class="col-6">
+              <q-btn
+                unelevated
+                color="green"
+                type="submit"
+                :loading="isLoading"
+                label="Save"
+                class="full-width"
+              />
+            </div>
+            <q-space />
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-const name = ref('')
-const project= ref(null)
-const description = ref('')
-const period = ref(15)
-const periodUnit = ref('minutes')
-const username = ref('')
-const password = ref('')
-const isPwd= ref(true)
-const endpoint = ref('')
-const sensorId = ref('')
-const enableFileServerSync = ref(false)
-const unit = ref(null)
-const syncInterval = ref(null)
+import { onMounted, ref } from 'vue';
+import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { usePermissionGroupStore } from 'stores/permissionGroupStore';
+import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
+import type { IngestExternalApiBoschCreate } from 'src/services/ingest_external_api_bosch/types';
 
+const boschStore = useIngestExternalApiBoschStore();
+const permissionGroupStore = usePermissionGroupStore();
+const $q = useQuasar();
+const router = useRouter();
 
-const projectOptions = [
-  'Project 1','Project 2','Project 3'
-]
+const formData = ref<IngestExternalApiBoschCreate>({
+  name: '',
+  permission_group_id: null,
+  description: null,
+  sync_enabled: false,
+  sync_interval_in_minutes: null,
+  endpoint: null,
+  sensor_id: null,
+  bosch_username: null,
+  bosch_password: null,
+  period_in_minutes: null,
+});
 
-const unitOptions = [
-  'seconds', 'minutes','hours', 'days'
-]
+const isLoading = ref(false);
+const isPwd = ref(true);
 
+onMounted(async () => {
+  try {
+    await permissionGroupStore.dispatchGetList();
+  } catch {
+    $q.notify({
+      position: 'top',
+      type: 'negative',
+      message: 'Failed to fetch permission groups',
+    });
+  }
+});
+
+async function save() {
+  const data: IngestExternalApiBoschCreate = {
+    name: formData.value.name,
+    permission_group_id: formData.value.permission_group_id,
+    description: formData.value.description,
+    sync_enabled: formData.value.sync_enabled,
+    sync_interval_in_minutes: formData.value.sync_interval_in_minutes,
+    endpoint: formData.value.endpoint,
+    sensor_id: formData.value.sensor_id,
+    bosch_username: formData.value.bosch_username,
+    bosch_password: formData.value.bosch_password,
+    period_in_minutes: formData.value.period_in_minutes,
+  };
+  try {
+    isLoading.value = true;
+    const result = await boschStore.dispatchCreate(data);
+    $q.notify({
+      position: 'top',
+      type: 'positive',
+      message: 'Saved successfully',
+    });
+
+    // Navigate back to list
+    await router.push(`/ingest/external-api-bosch/${result.id}`);
+  } catch (error) {
+    // @ts-expect-error to avoid complicated checks just for type safety, we ignore
+    let errorCaption = error?.response?.data?.detail || '';
+
+    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
+    if (typeof errorCaption === 'object') {
+      errorCaption = errorCaption[0].msg;
+    }
+
+    $q.notify({
+      position: 'top',
+      type: 'negative',
+      progress: true,
+      message: 'Failed to create ingest',
+      caption: errorCaption,
+    });
+  } finally {
+    isLoading.value = false;
+  }
+}
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
