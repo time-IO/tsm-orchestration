@@ -455,7 +455,6 @@ services:
       OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
       OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
       OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
-    command: "/app/start.sh"
 
 
   dsm-frontend:
