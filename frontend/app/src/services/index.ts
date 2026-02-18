@@ -2,6 +2,7 @@ import ingestExternalApiBoschController from "src/services/ingest_external_api_b
 import ingestExternalApiDwdController from "src/services/ingest_external_api_dwd"
 import ingestExternalApiNeutronMonitorController from "src/services/ingest_external_api_neutron_monitor"
 import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
+import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
 
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
@@ -11,8 +12,9 @@ import mqttParserController from "src/services/mqtt_parser"
 export const API = {
   ingestExternalApiBosch:ingestExternalApiBoschController,
   ingestExternalApiDwd:ingestExternalApiDwdController,
-  ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiNeutronMonitor: ingestExternalApiNeutronMonitorController,
+  ingestExternalApiTheThingsNetwork:ingestExternalApiTheThingsNetworkController,
+  ingestExternalApiUba: ingestExternalApiUbaController,
   permissionGroup: permissionGroupController,
   user: userController,
   neutronMonitorStation: neutronMonitorStationController,
