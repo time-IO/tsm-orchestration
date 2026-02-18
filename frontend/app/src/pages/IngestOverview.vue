@@ -7,6 +7,13 @@
     </div>
 
     <ingest-overview-table
+      title="Ingest - External Api - Bosch IoT"
+      ingest-path="ingest/external-api-bosch"
+      :columns="columns"
+      :rows="ingestExternalApiBoschStore.ingestExternalApiBoschList"
+    />
+
+    <ingest-overview-table
       title="Ingest - External Api - Deutscher Wetterdienst"
       ingest-path="ingest/external-api-dwd"
       :columns="columns"
@@ -26,7 +33,6 @@
       :columns="columns"
       :rows="ingestExternalApiUbaStore.ingestExternalApiUbaList"
     />
-
   </q-page>
 </template>
 
@@ -38,16 +44,19 @@ import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import IngestOverviewTable from 'components/IngestOverviewTable.vue';
+import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const ingestExternalApiDwdStore = useIngestExternalApiDwdStore();
+const ingestExternalApiBoschStore = useIngestExternalApiBoschStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
   await ingestExternalApiNeutronMonitorStore.dispatchGetList();
   await ingestExternalApiDwdStore.dispatchGetList();
+  await ingestExternalApiBoschStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [
