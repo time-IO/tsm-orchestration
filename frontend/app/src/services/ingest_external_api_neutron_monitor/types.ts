@@ -5,7 +5,7 @@ export type IngestExternalApiNeutronMonitorPublic = {
   id: number
   uuid: string;
   name: string;
-  description: string;
+  description: string | null;
   permission_group_id: number;
   permission_group: PermissionGroup
   created_by_id: number;
@@ -14,7 +14,7 @@ export type IngestExternalApiNeutronMonitorPublic = {
   sync_interval_in_minutes: number;
   station_id: number;
   time_resolution_in_minutes: number;
-  station: NeutronMonitorStation
+  station: NeutronMonitorStation;
 }
 export type IngestExternalApiNeutronMonitorCreate = {
   name: string;

@@ -1,6 +1,6 @@
 import type {PermissionGroup} from "src/services/permission_group/types";
 
-export type IngestExternalApiUbaPublic = {
+export type IngestExternalApiDwdPublic = {
   id: number;
   uuid: string;
   permission_group_id: number;
@@ -14,18 +14,18 @@ export type IngestExternalApiUbaPublic = {
   permission_group: PermissionGroup;
 };
 
-export type IngestExternalApiUbaCreate = {
+export type IngestExternalApiDwdCreate = {
   permission_group_id: number | null;
   name: string;
-  station_id: string | null;
+  station_id: number | null;
   description: string | null;
   sync_enabled: boolean;
 };
 
-export type IngestExternalApiUbaUpdate = {
+export type IngestExternalApiDwdUpdate = {
   permission_group_id?: number | null;
   name?: string;
-  station_id?: string | null;
+  station_id?: number | null;
   description?: string | null;
   sync_enabled?: boolean;
-};
+}
