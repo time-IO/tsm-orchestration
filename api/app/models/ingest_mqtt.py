@@ -1,7 +1,6 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .mqtt_parser import MqttParser
 from .permission_group import PermissionGroup
 
 
@@ -10,6 +9,7 @@ class IngestMqttBase(SQLModel):
     name: str
     description: str | None = None
     topic: str
+    uri: str
     mqtt_parser_id: int = Field(foreign_key="mqtt_parser.id")
 
 
@@ -22,6 +22,7 @@ class IngestMqttUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     topic: str | None = None
+    uri: str | None = None
     mqtt_parser_id: int | None = None
 
 
@@ -31,6 +32,9 @@ class IngestMqttPublic(IngestMqttBase):
     created_by_id: int
     created_at: datetime
     permission_group: "PermissionGroup"
+    username: str
+    password: str
+    mqtt_parser: "MqttParser"
 
 
 class IngestMqtt(IngestMqttBase, table=True):
@@ -43,12 +47,21 @@ class IngestMqtt(IngestMqttBase, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
+    uuid: uuid_pkg.UUID
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     username: str
     password: str
     password_hashed: str
-    uri: str
 
     permission_group: "PermissionGroup" = Relationship(back_populates="ingest_mqtt")
+    mqtt_parser: "MqttParser" = Relationship(back_populates="ingest_mqtt")
+
+    # Override model_post_init to ensure username is set correctly
+    def model_post_init(self, __context) -> None:
+        print("POST INIT")
+        if not self.username:
+            self.username = f"ingest-mqtt-{self.uuid}"
+
+
+from .mqtt_parser import MqttParser
