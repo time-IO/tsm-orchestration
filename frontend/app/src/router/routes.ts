@@ -9,7 +9,7 @@ import IngestNewExternalSftp from "pages/IngestNewExternalSftp.vue";
 import IngestNewExternalApiBosch from "pages/IngestNewExternalApiBosch.vue";
 import IngestNewExternalApiDwd from "pages/IngestNewExternalApiDwd.vue";
 import IngestNewExternalApiNm from "pages/IngestNewExternalApiNm.vue";
-import IngestNewExternalApiTsystems from "pages/IngestNewExternalApiTsystems.vue";
+import IngestNewExternalApiTSystems from "pages/IngestNewExternalApiTSystems.vue";
 import IngestNewExternalApiTtn from "pages/IngestNewExternalApiTtn.vue";
 import IngestNewExternalApiUba from "pages/IngestNewExternalApiUba.vue";
 import IngestDetailExternalApiUba from "pages/IngestDetailExternalApiUba.vue";
@@ -81,7 +81,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/ingest/new/ext-api/tsystems',
-    component: IngestNewExternalApiTsystems,
+    component: IngestNewExternalApiTSystems,
     meta: { requiresAuth: true },
   },
   {
