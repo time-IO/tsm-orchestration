@@ -32,7 +32,7 @@ export type IngestExternalApiTSystemsUpdate = {
   permission_group_id?: number | null;
   name?: string | null;
   description?: string | null;
-  sync_enabled?: boolean | null;
+  sync_enabled?: boolean;
   api_key?: string | null;
   endpoint_uri?: string | null;
   group?: string | null;
