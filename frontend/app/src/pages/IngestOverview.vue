@@ -35,6 +35,13 @@
     />
 
     <ingest-overview-table
+      title="Ingest - External Api - TSystems"
+      ingest-path="ingest/external-api-tsystems"
+      :columns="columns"
+      :rows="ingestExternalApiTSystemsStore.ingestExternalApiTSystemsList"
+    />
+
+    <ingest-overview-table
       title="Ingest - External Api - Umweltbundesamt (UBA) Air Data"
       ingest-path="ingest/external-api-uba"
       :columns="columns"
@@ -47,12 +54,13 @@
 import { useI18n } from 'vue-i18n';
 import { onMounted } from 'vue';
 import type { QTableColumn } from 'quasar';
+import IngestOverviewTable from 'components/IngestOverviewTable.vue';
 import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import IngestOverviewTable from 'components/IngestOverviewTable.vue';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
+import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
@@ -60,6 +68,7 @@ const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorS
 const ingestExternalApiDwdStore = useIngestExternalApiDwdStore();
 const ingestExternalApiBoschStore = useIngestExternalApiBoschStore();
 const ingestExternalApiTheThingsNetworkStore = useIngestExternalApiTheThingsNetworkStore();
+const ingestExternalApiTSystemsStore = useIngestExternalApiTSystemsStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
@@ -67,6 +76,7 @@ onMounted(async () => {
   await ingestExternalApiDwdStore.dispatchGetList();
   await ingestExternalApiBoschStore.dispatchGetList();
   await ingestExternalApiTheThingsNetworkStore.dispatchGetList();
+  await ingestExternalApiTSystemsStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [
