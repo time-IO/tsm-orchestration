@@ -107,4 +107,3 @@ class DBapi:
             },
         )
         resp.raise_for_status()
-
