@@ -7,6 +7,12 @@
     </div>
 
     <ingest-overview-table
+      title="Ingest - Mqtt"
+      ingest-path="ingest/mqtt"
+      :columns="columns"
+      :rows="ingestMqttStore.ingestMqttList"
+    />
+    <ingest-overview-table
       title="Ingest - External Api - Bosch IoT"
       ingest-path="ingest/external-api-bosch"
       :columns="columns"
@@ -61,6 +67,7 @@ import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
+import { useIngestMqttStore } from 'stores/ingestMqttStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
@@ -69,6 +76,7 @@ const ingestExternalApiDwdStore = useIngestExternalApiDwdStore();
 const ingestExternalApiBoschStore = useIngestExternalApiBoschStore();
 const ingestExternalApiTheThingsNetworkStore = useIngestExternalApiTheThingsNetworkStore();
 const ingestExternalApiTSystemsStore = useIngestExternalApiTSystemsStore();
+const ingestMqttStore = useIngestMqttStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
@@ -77,6 +85,7 @@ onMounted(async () => {
   await ingestExternalApiBoschStore.dispatchGetList();
   await ingestExternalApiTheThingsNetworkStore.dispatchGetList();
   await ingestExternalApiTSystemsStore.dispatchGetList();
+  await ingestMqttStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [

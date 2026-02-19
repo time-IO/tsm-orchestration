@@ -14,6 +14,7 @@ export type IngestMqttPublic = {
   uri: string;
   username: string;
   password: string;
+  mqtt_parser_id: number;
   mqtt_parser: MqttParser;
 };
 
