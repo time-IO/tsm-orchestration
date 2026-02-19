@@ -29,6 +29,8 @@ import IngestDetailExternalApiTtn from 'pages/IngestDetailExternalApiTtn.vue';
 import IngestEditExternalApiTtn from 'pages/IngestEditExternalApiTtn.vue';
 import IngestDetailExternalApiTSystems from 'pages/IngestDetailExternalApiTSystems.vue';
 import IngestEditExternalApiTSystems from 'pages/IngestEditExternalApiTSystems.vue';
+import IngestDetailMqtt from "pages/IngestDetailMqtt.vue";
+import IngestEditMqtt from 'pages/IngestEditMqtt.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -127,6 +129,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/mqtt/:id',
+    component: IngestDetailMqtt,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/ingest/external-api-bosch/:id/edit',
     component: IngestEditExternalApiBosch,
     meta: { requiresAuth: true },
@@ -154,6 +161,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api-uba/:id/edit',
     component: IngestEditExternalApiUba,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/mqtt/:id/edit',
+    component: IngestEditMqtt,
     meta: { requiresAuth: true },
   },
   {
