@@ -4,6 +4,7 @@ import ingestExternalApiNeutronMonitorController from "src/services/ingest_exter
 import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
 import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
 import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
+import ingestMqttController from 'src/services/ingest_mqtt';
 
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
@@ -17,6 +18,7 @@ export const API = {
   ingestExternalApiTSystems:ingestExternalApiTSystemsController,
   ingestExternalApiTheThingsNetwork:ingestExternalApiTheThingsNetworkController,
   ingestExternalApiUba: ingestExternalApiUbaController,
+  ingestMqtt:ingestMqttController,
   permissionGroup: permissionGroupController,
   user: userController,
   neutronMonitorStation: neutronMonitorStationController,

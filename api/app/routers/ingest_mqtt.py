@@ -11,6 +11,7 @@ import base64
 import string
 import secrets
 import uuid
+import re
 
 router = APIRouter(
     prefix="/ingest/mqtt",
@@ -90,7 +91,7 @@ def create(
 
     password = generate_password(40)
     password_hashed = hash_password(password)
-    username = f"ingest-mqtt-{_uuid}"
+    username = re.sub("[^a-z0-9-]+", "", f"ingest-mqtt-{_uuid}")
 
     extra_data = {
         "created_by_id": current_user.id,
