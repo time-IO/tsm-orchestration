@@ -3,6 +3,7 @@ import ingestExternalApiDwdController from "src/services/ingest_external_api_dwd
 import ingestExternalApiNeutronMonitorController from "src/services/ingest_external_api_neutron_monitor"
 import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
 import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
+import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
 
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
@@ -13,6 +14,7 @@ export const API = {
   ingestExternalApiBosch:ingestExternalApiBoschController,
   ingestExternalApiDwd:ingestExternalApiDwdController,
   ingestExternalApiNeutronMonitor: ingestExternalApiNeutronMonitorController,
+  ingestExternalApiTSystems:ingestExternalApiTSystemsController,
   ingestExternalApiTheThingsNetwork:ingestExternalApiTheThingsNetworkController,
   ingestExternalApiUba: ingestExternalApiUbaController,
   permissionGroup: permissionGroupController,
