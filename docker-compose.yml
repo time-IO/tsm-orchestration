@@ -444,8 +444,6 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
-    volumes:
-      - "./data-source-management/start.sh:/app/start.sh"
     environment:
       API_ROOT_PATH: "${DSM_API_RELATIVE_PATH}"
       POSTGRES_SERVER: "${DSM_API_DATABASE_HOST}"
@@ -455,6 +453,8 @@ services:
       OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
       OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
       OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
+      ALLOWED_VOS: "${DSM_ALLOWED_VOS}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS}"
 
 
   dsm-frontend:
