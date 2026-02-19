@@ -439,7 +439,6 @@ services:
   dsm-api:
     image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
-    working_dir: /app
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       flyway:
@@ -453,8 +452,8 @@ services:
       OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
       OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
       OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
-      ALLOWED_VOS: "${DSM_ALLOWED_VOS}"
-      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS}"
+      ALLOWED_VOS: "${DSM_API_ALLOWED_VOS}"
+      ALLOWED_ORIGINS: "${DSM_API_ALLOWED_ORIGINS}"
 
 
   dsm-frontend:
@@ -471,7 +470,6 @@ services:
        ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
        ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
        ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
-    working_dir: /home/node/app
 
 
   # Summary
