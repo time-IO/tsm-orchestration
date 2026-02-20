@@ -18,7 +18,7 @@ from models.ingest_external_sftp import IngestExternalSftp
 from models.ingest_mqtt import IngestMqtt
 from models.ingest_s3store import IngestS3Store
 from models.mqtt_parser import MqttParser
-from models.neutron_monitor_stations import NeutronMonitorStations
+from models.neutron_monitor_station import NeutronMonitorStation
 
 from models.csv_parser import CsvParser
 from models.quality_control_setting import QualityControlSetting
