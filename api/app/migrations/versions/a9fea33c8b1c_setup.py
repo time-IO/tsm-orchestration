@@ -1,7 +1,7 @@
 """setup
 
 Revision ID: a9fea33c8b1c
-Revises: 
+Revises:
 Create Date: 2026-02-13 12:56:02.955664
 
 """
