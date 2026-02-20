@@ -64,4 +64,4 @@ class IngestMqtt(IngestMqttBase, table=True):
             self.username = f"ingest-mqtt-{self.uuid}"
 
 
-from .mqtt_parser import MqttParser
+from .parser_mqtt import MqttParser

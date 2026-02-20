@@ -10,17 +10,19 @@ import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
 import neutronMonitorStationController from "src/services/neutron_monitor_stations"
 import mqttParserController from "src/services/mqtt_parser"
+import csvParserController from "src/services/parser_csv"
 
 export const API = {
-  ingestExternalApiBosch:ingestExternalApiBoschController,
-  ingestExternalApiDwd:ingestExternalApiDwdController,
+  ingestExternalApiBosch: ingestExternalApiBoschController,
+  ingestExternalApiDwd: ingestExternalApiDwdController,
   ingestExternalApiNeutronMonitor: ingestExternalApiNeutronMonitorController,
-  ingestExternalApiTSystems:ingestExternalApiTSystemsController,
-  ingestExternalApiTheThingsNetwork:ingestExternalApiTheThingsNetworkController,
+  ingestExternalApiTSystems: ingestExternalApiTSystemsController,
+  ingestExternalApiTheThingsNetwork: ingestExternalApiTheThingsNetworkController,
   ingestExternalApiUba: ingestExternalApiUbaController,
-  ingestMqtt:ingestMqttController,
+  ingestMqtt: ingestMqttController,
   permissionGroup: permissionGroupController,
   user: userController,
   neutronMonitorStation: neutronMonitorStationController,
   mqttParser: mqttParserController,
+  csvParser: csvParserController,
 };
