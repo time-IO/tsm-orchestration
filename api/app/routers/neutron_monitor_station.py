@@ -16,8 +16,8 @@ entity_name = "neutron monitor station"
 
 @router.get(
     "/",
-    response_model = list[NeutronMonitorStation],
-    summary = f"Get a list of {entity_name}",
+    response_model=list[NeutronMonitorStation],
+    summary=f"Get a list of {entity_name}",
 )
 def read_list(
     *,

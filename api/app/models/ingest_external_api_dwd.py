@@ -1,7 +1,8 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+
+from models import PermissionGroup
 
 
 class IngestExternalApiDwdBase(SQLModel):
@@ -30,7 +31,7 @@ class IngestExternalApiDwdPublic(IngestExternalApiDwdBase):
     sync_interval_in_minutes: int
     created_by_id: int
     created_at: datetime
-    permission_group: "PermissionGroup"
+    permission_group: PermissionGroup
 
 
 class IngestExternalApiDwd(IngestExternalApiDwdBase, table=True):
@@ -47,6 +48,6 @@ class IngestExternalApiDwd(IngestExternalApiDwdBase, table=True):
     sync_interval_in_minutes: int = 1440
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    permission_group: "PermissionGroup" = Relationship(
+    permission_group: PermissionGroup = Relationship(
         back_populates="ingest_external_api_dwd"
     )

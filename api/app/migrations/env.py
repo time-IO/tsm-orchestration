@@ -1,15 +1,16 @@
 from logging.config import fileConfig
 
 from alembic import context
+from alembic.config import Config
+from alembic.operations.ops import MigrationScript
 from sqlmodel import SQLModel
 
 from config import settings
 from dependencies import engine
-from models import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-config = context.config
+config: Config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -29,13 +30,13 @@ target_metadata = SQLModel.metadata
 
 
 # NEU: Diese Funktion fügt automatisch "import sqlmodel" zu Migrations hinzu
-def process_revision_directives(context, revision, directives):
+def process_revision_directives(context, revision, directives: list[MigrationScript]):
     """Add required imports to generated migrations."""
     if config.cmd_opts and config.cmd_opts.autogenerate:
         script = directives[0]
         if script.upgrade_ops.ops:
             # Füge sqlmodel import hinzu
-            script.imports.add('import sqlmodel')
+            script.imports.add("import sqlmodel")
 
 
 def run_migrations_offline() -> None:
@@ -74,8 +75,8 @@ def run_migrations_online() -> None:
 
     with engine.connect() as connection:
         context.configure(
-            connection=connection, 
-            target_metadata=target_metadata, 
+            connection=connection,
+            target_metadata=target_metadata,
             compare_type=True,
             process_revision_directives=process_revision_directives,
         )

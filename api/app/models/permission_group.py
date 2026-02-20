@@ -1,11 +1,24 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
-from typing import TYPE_CHECKING
 import re
 
-from . import *
+from models import (
+    User,
+    CsvParser,
+    Database,
+    IngestExternalApiBosch,
+    IngestExternalApiDwd,
+    IngestExternalApiNeutronMonitor,
+    IngestExternalApiTheThingsNetwork,
+    IngestExternalApiTSystems,
+    IngestExternalApiUba,
+    IngestExternalSftp,
+    IngestMqtt,
+    IngestS3Store,
+    QualityControlSetting,
+)
 
 
 class PermissionGroupUserLink(SQLModel, table=True):
@@ -25,38 +38,38 @@ class PermissionGroup(SQLModel, table=True):
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     entitlement: str = Field(unique=True)
 
-    users: list["User"] = Relationship(
+    users: list[User] = Relationship(
         back_populates="permission_groups", link_model=PermissionGroupUserLink
     )
 
-    csv_parser: list["CsvParser"] = Relationship(back_populates="permission_group")
-    database: list["Database"] = Relationship(back_populates="permission_group")
-    ingest_external_api_bosch: list["IngestExternalApiBosch"] = Relationship(
+    csv_parser: list[CsvParser] = Relationship(back_populates="permission_group")
+    database: list[Database] = Relationship(back_populates="permission_group")
+    ingest_external_api_bosch: list[IngestExternalApiBosch] = Relationship(
         back_populates="permission_group"
     )
-    ingest_external_api_dwd: list["IngestExternalApiDwd"] = Relationship(
+    ingest_external_api_dwd: list[IngestExternalApiDwd] = Relationship(
         back_populates="permission_group"
     )
-    ingest_external_api_neutron_monitor: list["IngestExternalApiNeutronMonitor"] = (
+    ingest_external_api_neutron_monitor: list[IngestExternalApiNeutronMonitor] = (
         Relationship(back_populates="permission_group")
     )
-    ingest_external_api_the_things_network: list[
-        "IngestExternalApiTheThingsNetwork"
-    ] = Relationship(back_populates="permission_group")
-    ingest_external_api_tsystems: list["IngestExternalApiTSystems"] = Relationship(
+    ingest_external_api_the_things_network: list[IngestExternalApiTheThingsNetwork] = (
+        Relationship(back_populates="permission_group")
+    )
+    ingest_external_api_tsystems: list[IngestExternalApiTSystems] = Relationship(
         back_populates="permission_group"
     )
-    ingest_external_api_uba: list["IngestExternalApiUba"] = Relationship(
+    ingest_external_api_uba: list[IngestExternalApiUba] = Relationship(
         back_populates="permission_group"
     )
-    ingest_external_sftp: list["IngestExternalSftp"] = Relationship(
+    ingest_external_sftp: list[IngestExternalSftp] = Relationship(
         back_populates="permission_group"
     )
-    ingest_mqtt: list["IngestMqtt"] = Relationship(back_populates="permission_group")
-    ingest_s3store: list["IngestS3Store"] = Relationship(
+    ingest_mqtt: list[IngestMqtt] = Relationship(back_populates="permission_group")
+    ingest_s3store: list[IngestS3Store] = Relationship(
         back_populates="permission_group"
     )
-    quality_control_setting: list["QualityControlSetting"] = Relationship(
+    quality_control_setting: list[QualityControlSetting] = Relationship(
         back_populates="permission_group"
     )
 

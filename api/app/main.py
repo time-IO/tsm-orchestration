@@ -1,7 +1,6 @@
 import os
 
 from fastapi import FastAPI
-from sqlmodel import SQLModel
 from routers import (
     permission_group,
     ingest_s3store,
@@ -21,7 +20,6 @@ from routers import (
     user,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from dependencies import engine
 from config import settings
 
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")

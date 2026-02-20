@@ -1,7 +1,8 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+
+from models import PermissionGroup
 
 
 class IngestExternalSftpBase(SQLModel):
@@ -39,7 +40,7 @@ class IngestExternalSftpPublic(IngestExternalSftpBase):
     created_at: datetime
     ssh_private_key: str
     ssh_public_key: str
-    permission_group: "PermissionGroup"
+    permission_group: PermissionGroup
 
 
 class IngestExternalSftp(IngestExternalSftpBase, table=True):
@@ -58,6 +59,6 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
     ssh_private_key: str
     ssh_public_key: str
 
-    permission_group: "PermissionGroup" = Relationship(
+    permission_group: PermissionGroup = Relationship(
         back_populates="ingest_external_sftp"
     )

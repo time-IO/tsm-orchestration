@@ -1,7 +1,8 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+
+from models import PermissionGroup
 
 
 class IngestExternalApiTheThingsNetworkBase(SQLModel):
@@ -33,7 +34,7 @@ class IngestExternalApiTheThingsNetworkPublic(IngestExternalApiTheThingsNetworkB
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
-    permission_group: "PermissionGroup"
+    permission_group: PermissionGroup
 
 
 class IngestExternalApiTheThingsNetwork(
@@ -52,6 +53,6 @@ class IngestExternalApiTheThingsNetwork(
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    permission_group: "PermissionGroup" = Relationship(
+    permission_group: PermissionGroup = Relationship(
         back_populates="ingest_external_api_the_things_network"
     )

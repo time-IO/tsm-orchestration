@@ -1,7 +1,8 @@
 import uuid as uuid_pkg
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+
+from models import PermissionGroup
 
 # from .user import User # needs to be imported for relationship reasons otherwise an error is thrown during delete todo check this
 
@@ -29,7 +30,7 @@ class IngestS3StorePublic(IngestS3StoreBase):
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
-    permission_group: "PermissionGroup"
+    permission_group: PermissionGroup
 
 
 class IngestS3Store(IngestS3StoreBase, table=True):
@@ -49,4 +50,4 @@ class IngestS3Store(IngestS3StoreBase, table=True):
     password: str
     bucket_name: str
 
-    permission_group: "PermissionGroup" = Relationship(back_populates="ingest_s3store")
+    permission_group: PermissionGroup = Relationship(back_populates="ingest_s3store")
