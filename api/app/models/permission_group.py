@@ -79,7 +79,7 @@ class PermissionGroup(SQLModel, table=True):
 
 
 # fix to avoid circular imports
-from .csv_parser import CsvParser
+from .parser_csv import CsvParser
 from .database import Database
 from .ingest_external_api_bosch import IngestExternalApiBosch
 from .ingest_external_api_dwd import IngestExternalApiDwd

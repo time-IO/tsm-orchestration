@@ -7,7 +7,7 @@ from ..dependencies import (
     get_repo_ingest_csv_parser,
     get_repo_ingest_csv_parser_timestamp_column,
 )
-from ..models.csv_parser import (
+from ..models.parser_csv import (
     CsvParserCreate,
     CsvParser,
     CsvParserPublic,
@@ -88,7 +88,8 @@ def create(
             status_code=409,
             detail=f"{entity_name} with the same name and permission group already exists.",
         )
-    except:
+    except Exception as e:
+        print(str(e))
         session.rollback()
         raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
 
@@ -111,6 +112,7 @@ def delete(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_csv_parser),
 ):
+    # todo: it should not be possible toi delete a parser that is connected to a s3store
     return repo.delete_allowed(id, current_user.permission_group_ids)
 
 

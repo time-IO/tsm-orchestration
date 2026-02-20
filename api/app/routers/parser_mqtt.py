@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from ..dependencies import get_current_user, get_repo_mqtt_parser
-from ..models.mqtt_parser import MqttParser
+from ..models.parser_mqtt import MqttParser
 
 router = APIRouter(
     prefix="/mqtt-parser",

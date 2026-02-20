@@ -17,10 +17,10 @@ from .models.ingest_external_api_uba import IngestExternalApiUba
 from .models.ingest_external_sftp import IngestExternalSftp
 from .models.ingest_mqtt import IngestMqtt
 from .models.ingest_s3store import IngestS3Store
-from .models.mqtt_parser import MqttParser
+from .models.parser_mqtt import MqttParser
 from .models.neutron_monitor_station import NeutronMonitorStation
 
-from .models.csv_parser import CsvParser
+from .models.parser_csv import CsvParser
 from .models.quality_control_setting import QualityControlSetting
 
 from .models.user import User
