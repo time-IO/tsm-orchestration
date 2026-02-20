@@ -4,28 +4,24 @@ from config import settings
 from auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from models.permission_group import PermissionGroup
-
-from models.ingest_external_api_bosch import IngestExternalApiBosch
-from models.ingest_external_api_dwd import IngestExternalApiDwd
-from models.ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
-from models.ingest_external_api_the_things_network import (
+from models import (
+    PermissionGroup,
+    IngestExternalApiBosch,
+    IngestExternalApiDwd,
+    IngestExternalApiNeutronMonitor,
     IngestExternalApiTheThingsNetwork,
+    IngestExternalApiTSystems,
+    IngestExternalApiUba,
+    IngestExternalSftp,
+    IngestMqtt,
+    IngestS3Store,
+    MqttParser,
+    NeutronMonitorStation,
+    CsvParser,
+    QualityControlSetting,
+    User,
+    BaseRepository,
 )
-from models.ingest_external_api_tsystems import IngestExternalApiTSystems
-from models.ingest_external_api_uba import IngestExternalApiUba
-from models.ingest_external_sftp import IngestExternalSftp
-from models.ingest_mqtt import IngestMqtt
-from models.ingest_s3store import IngestS3Store
-from models.parser_mqtt import MqttParser
-from models.neutron_monitor_station import NeutronMonitorStation
-
-from models.parser_csv import CsvParser
-from models.quality_control_setting import QualityControlSetting
-
-from models.user import User
-
-from models.base_repository import BaseRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

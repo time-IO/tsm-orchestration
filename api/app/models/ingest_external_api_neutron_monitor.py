@@ -1,9 +1,8 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
+from .permission_group import PermissionGroup
 from pydantic import field_validator
-
-from models import NeutronMonitorStation, PermissionGroup
 
 
 class IngestExternalApiNeutronMonitorBase(SQLModel):
@@ -55,8 +54,8 @@ class IngestExternalApiNeutronMonitorPublic(IngestExternalApiNeutronMonitorBase)
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
-    permission_group: PermissionGroup
-    station: NeutronMonitorStation
+    permission_group: "PermissionGroup"
+    station: "NeutronMonitorStation"
 
 
 class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table=True):
@@ -72,9 +71,12 @@ class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    permission_group: PermissionGroup = Relationship(
+    permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_neutron_monitor"
     )
-    station: NeutronMonitorStation = Relationship(
+    station: "NeutronMonitorStation" = Relationship(
         back_populates="ingest_external_api_neutron_monitor"
     )
+
+
+from .neutron_monitor_station import NeutronMonitorStation

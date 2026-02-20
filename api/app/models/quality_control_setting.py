@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field, Column, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
-from permission_group import PermissionGroup
+from .permission_group import PermissionGroup
 
 
 class QualityControlFunctionArgumentBase(SQLModel):
@@ -83,7 +83,7 @@ class QualityControlSettingPublic(QualityControlSettingBase):
     created_by_id: int
     created_at: datetime
     quality_control_functions: list[QualityControlFunctionPublic]
-    permission_group: PermissionGroup
+    permission_group: "PermissionGroup"
 
 
 class QualityControlSetting(QualityControlSettingBase, table=True):
@@ -102,6 +102,6 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     quality_control_functions: list[QualityControlFunction] = Relationship(
         back_populates="quality_control_setting", cascade_delete=True
     )
-    permission_group: PermissionGroup = Relationship(
+    permission_group: "PermissionGroup" = Relationship(
         back_populates="quality_control_setting"
     )

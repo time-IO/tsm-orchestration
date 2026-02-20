@@ -2,8 +2,7 @@ from sqlmodel import Field, SQLModel, Column, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
-
-from models import PermissionGroup
+from .permission_group import PermissionGroup
 
 # ------------------- CsvParserTimestamp
 
@@ -72,7 +71,7 @@ class CsvParserPublic(CsvParserBase):
     created_by_id: int
     created_at: datetime
     timestamp_columns: list[CsvParserTimestampColumnPublic] = []
-    permission_group: PermissionGroup
+    permission_group: "PermissionGroup"
 
 
 class CsvParser(CsvParserBase, table=True):
@@ -92,4 +91,4 @@ class CsvParser(CsvParserBase, table=True):
         back_populates="csv_parser", cascade_delete=True
     )
 
-    permission_group: PermissionGroup = Relationship(back_populates="csv_parser")
+    permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")

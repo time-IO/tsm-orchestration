@@ -1,6 +1,5 @@
 from sqlmodel import Field, SQLModel, Relationship
-
-from models import PermissionGroup
+from .permission_group import PermissionGroup
 
 
 class Database(SQLModel, table=True):
@@ -14,4 +13,4 @@ class Database(SQLModel, table=True):
     ro_user: str
     ro_password: str
 
-    permission_group: PermissionGroup = Relationship(back_populates="database")
+    permission_group: "PermissionGroup" = Relationship(back_populates="database")

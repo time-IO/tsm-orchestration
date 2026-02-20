@@ -56,7 +56,7 @@ class BaseRepository(Generic[T]):
         if payload.permission_group_id not in permission_group_ids:
             raise HTTPException(
                 status_code=403,
-                detail="Permission denied: user does not belong to that permission group.",
+                detail=f"Permission denied: user does not belong to that permission group.",
             )
         try:
             entity = self.find_allowed_one(id, permission_group_ids)
@@ -88,5 +88,5 @@ class BaseRepository(Generic[T]):
         if payload.permission_group_id not in permission_group_ids:
             raise HTTPException(
                 status_code=403,
-                detail="Permission denied: user does not belong to that permission group.",
+                detail=f"Permission denied: user does not belong to that permission group.",
             )
