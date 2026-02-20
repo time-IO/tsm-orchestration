@@ -6,7 +6,7 @@ from routers import (
     permission_group,
     ingest_s3store,
     ingest_mqtt,
-    csv_parser,
+    parser_csv,
     ingest_external_api_the_things_network,
     ingest_external_sftp,
     ingest_external_api_tsystems,
@@ -17,7 +17,7 @@ from routers import (
     quality_control_setting,
     neutron_monitor_station,
     health,
-    mqtt_parser,
+    parser_mqtt,
     user,
 )
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,7 +36,7 @@ app.add_middleware(
 )
 
 # the order of the router defines the order of the openapi doc
-app.include_router(csv_parser.router)
+app.include_router(parser_csv.router)
 app.include_router(ingest_external_api_bosch.router)
 app.include_router(ingest_external_api_dwd.router)
 app.include_router(ingest_external_api_neutron_monitor.router)
@@ -46,7 +46,7 @@ app.include_router(ingest_external_api_uba.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_s3store.router)
-app.include_router(mqtt_parser.router)
+app.include_router(parser_mqtt.router)
 app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)
 app.include_router(quality_control_setting.router)
