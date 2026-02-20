@@ -49,4 +49,5 @@ export type CsvParserUpdate = {
   headlines_to_exclude?: number | null;
   footlines_to_exclude?: number | null;
   pandas_read_csv?: string | null;
+  timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
 };

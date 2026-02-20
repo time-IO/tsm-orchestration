@@ -31,6 +31,8 @@ import IngestDetailExternalApiTSystems from 'pages/IngestDetailExternalApiTSyste
 import IngestEditExternalApiTSystems from 'pages/IngestEditExternalApiTSystems.vue';
 import IngestDetailMqtt from "pages/IngestDetailMqtt.vue";
 import IngestEditMqtt from 'pages/IngestEditMqtt.vue';
+import ParserEditCsv from 'pages/ParserEditCsv.vue';
+import ParserDetailCsv from 'pages/ParserDetailCsv.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -181,6 +183,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/parser/new/csv',
     component: ParserNewCsv,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/parser/csv/:id/edit',
+    component: ParserEditCsv,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/parser/csv/:id',
+    component: ParserDetailCsv,
     meta: { requiresAuth: true },
   },
   {

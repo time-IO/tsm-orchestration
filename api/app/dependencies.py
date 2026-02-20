@@ -201,5 +201,5 @@ def get_repo_quality_control_setting(session=Depends(get_session)):
     return BaseRepository(QualityControlSetting, session)
 
 
-def get_repo_ingest_csv_parser_timestamp_column(session=Depends(get_session)):
+def get_repo_csv_parser_timestamp_column(session=Depends(get_session)):
     return BaseRepository(CsvParser, session)

@@ -20,7 +20,7 @@
             color="secondary"
             icon="edit"
           >
-            <q-tooltip>Edit thing</q-tooltip>
+            <q-tooltip>Edit Ingest</q-tooltip>
           </q-btn>
         </div>
       </q-td>
