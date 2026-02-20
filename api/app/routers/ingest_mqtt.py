@@ -8,10 +8,9 @@ from ..models.ingest_mqtt import (
 import os
 import hashlib
 import base64
-import string
-import secrets
 import uuid
 import re
+from ..utils import generate_password
 
 router = APIRouter(
     prefix="/ingest/mqtt",
@@ -51,11 +50,6 @@ def hash_password(
     hash_b64 = base64.b64encode(hash_bytes).rstrip(b"=").decode("ascii")
 
     return f"pbkdf2_sha256${iterations}${salt_b64}${hash_b64}"
-
-
-def generate_password(length: int):
-    chars = string.ascii_letters + string.digits
-    return "".join(secrets.choice(chars) for _ in range(length))
 
 
 @router.get(

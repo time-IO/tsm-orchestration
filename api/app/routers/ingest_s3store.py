@@ -5,6 +5,10 @@ from ..models.ingest_s3store import (
     IngestS3StorePublic,
     IngestS3StoreUpdate,
 )
+from ..utils import generate_password
+from ..config import settings
+import uuid
+import re
 
 router = APIRouter(
     prefix="/ingest/s3store",
@@ -50,8 +54,20 @@ def create(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_s3stores),
 ):
-    extra_data = {"created_by_id": current_user.id}
-    # todo create username, password (+ encrypt), bucket_name
+    _uuid = uuid.uuid4()
+    username = re.sub("[^a-z0-9-]+", "", f"ingest-sftp-{_uuid}")
+    bucket_name = username
+    password = generate_password(40)
+    fileserver_uri = settings.SFTP_URI
+
+    extra_data = {
+        "created_by_id": current_user.id,
+        "uuid": _uuid,
+        "username": username,
+        "password": password,
+        "bucket_name": bucket_name,
+        "fileserver_uri": fileserver_uri,
+    }
     return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
 
 

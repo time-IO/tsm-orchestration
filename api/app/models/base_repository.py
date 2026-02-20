@@ -50,8 +50,6 @@ class BaseRepository(Generic[T]):
             raise HTTPException(status_code=400, detail="Failed to create.")
 
     def update_allowed(self, id: int, payload, permission_group_ids):
-        print("payload")
-        print(payload)
         self.__check_payload_permission_group(payload, permission_group_ids)
 
         if payload.permission_group_id not in permission_group_ids:
@@ -104,9 +102,6 @@ class BaseRepository(Generic[T]):
 
     @staticmethod
     def __check_payload_permission_group(payload, permission_group_ids):
-        print("__check_payload_permission_group::payload")
-        print(payload)
-        print(f"payload.permission_group_id: {payload.permission_group_id}")
         if payload.permission_group_id not in permission_group_ids:
             raise HTTPException(
                 status_code=403,

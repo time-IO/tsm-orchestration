@@ -19,6 +19,8 @@ services:
       OIDC_AUDIENCE: "${OIDC_AUDIENCE:-dev-client}"
       ALLOWED_VOS: "${ALLOWED_VOS:-UFZ-TSM,VO}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost}"
+      MINIO_SFTP_PORT: "${MINIO_SFTP_PORT:-127.0.0.1:40022}"
+      PROXY_URL: "${PROXY_URL:-http://localhost:80}"
     volumes:
       - ./api/app:/app:rw,cached
     depends_on:

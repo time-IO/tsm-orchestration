@@ -91,3 +91,7 @@ class CsvParser(CsvParserBase, table=True):
     )
 
     permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")
+    ingest_s3store: list["IngestS3Store"] = Relationship(back_populates="csv_parser")
+
+
+from .ingest_s3store import IngestS3Store
