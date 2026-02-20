@@ -3,8 +3,6 @@ import type {
   CsvParserPublic,
   CsvParserCreate,
   CsvParserUpdate,
-  CsvParserTimestampColumnUpdate,
-  CsvParserTimestampColumnPublic,
 } from 'src/services/parser_csv/types';
 
 const apiPath = 'parser/csv/';
@@ -29,17 +27,6 @@ async function deleteOne(id: number){
   return await axiosInstance.delete(`${apiPath}${id}`)
 }
 
-const timestampColumnPath = `${apiPath}timestampcolumn/`;
-async function updateTimestampColumn(id: number, input: CsvParserTimestampColumnUpdate)
-{
-  return await axiosInstance.put<CsvParserTimestampColumnPublic>(
-    `${timestampColumnPath}${id}`,
-    input,
-  );
-}
-async function deleteTimestampColumn(id: number) {
-  return await axiosInstance.delete(`${timestampColumnPath}${id}`);
-}
 
 
 export default {
@@ -48,6 +35,4 @@ export default {
   create,
   update,
   deleteOne,
-  updateTimestampColumn,
-  deleteTimestampColumn
 };
