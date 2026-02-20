@@ -17,6 +17,7 @@ from .parser_mqtt import MqttParser
 from .neutron_monitor_station import NeutronMonitorStation
 from .parser_csv import CsvParser
 from .quality_control_setting import QualityControlSetting
+from .health import Health
 
 __all__ = [
     "Database",
@@ -37,4 +38,5 @@ __all__ = [
     "NeutronMonitorStation",
     "CsvParser",
     "QualityControlSetting",
+    "Health",
 ]
