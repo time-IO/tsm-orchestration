@@ -111,24 +111,29 @@ def update(
             raise HTTPException(
                 status_code=400, detail="At least one timestamp column must be set"
             )
-
-        # Delete all existing timestamp columns
-        statement = select(CsvParserTimestampColumn).where(
-            CsvParserTimestampColumn.csv_parser_id == id
-        )
-        existing_timestamp_columns = session.exec(statement).all()
-
-        for tc in existing_timestamp_columns:
-            session.delete(tc)
-
-        # Create new timestamp columns
-        parser_id_data = {"csv_parser_id": id}
-        for timestamp in payload.timestamp_columns:
-            db_timestamp = CsvParserTimestampColumn.model_validate(
-                timestamp, update=parser_id_data
+        try:
+            # Delete all existing timestamp columns
+            statement = select(CsvParserTimestampColumn).where(
+                CsvParserTimestampColumn.csv_parser_id == id
             )
-            session.add(db_timestamp)
-        session.commit()
+            existing_timestamp_columns = session.exec(statement).all()
+
+            for tc in existing_timestamp_columns:
+                session.delete(tc)
+
+            # Create new timestamp columns
+            parser_id_data = {"csv_parser_id": id}
+            for timestamp in payload.timestamp_columns:
+                db_timestamp = CsvParserTimestampColumn.model_validate(
+                    timestamp, update=parser_id_data
+                )
+                session.add(db_timestamp)
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update timestamp columns: {str(e)}"
+            )
 
     # Remove timestamp_columns from payload before calling repo.update_allowed
     update_payload = payload.model_dump(
@@ -148,58 +153,3 @@ def delete(
 ):
     # todo: it should not be possible toi delete a parser that is connected to a s3store
     return repo.delete_allowed(id, current_user.permission_group_ids)
-
-
-# @router.patch(
-#     "/timestampcolumn/{timestampcolumn_id}",
-#     response_model=CsvParserTimestampColumnPublic,
-#     summary="Update one timestamp column of a csv parser",
-# )
-# def update_timestampcolumn(
-#     *,
-#     timestampcolumn_id: int,
-#     payload: CsvParserTimestampColumnUpdate,
-#     current_user=Depends(get_current_user),
-#     repo=Depends(get_repo_ingest_csv_parser_timestamp_column),
-# ):
-#     return repo.update_allowed(
-#         timestampcolumn_id, payload, current_user.permission_group_ids
-#     )
-#
-#
-# @router.delete(
-#     "/timestampcolumn/{timestampcolumn_id}",
-#     summary="Delete one timestamp column of a csv parser",
-# )
-# def delete_timestampcolumn(
-#     *, session: Session = Depends(get_session), timestampcolumn_id: int
-# ):
-#     # Check if the timestamp column exists
-#     entity = session.get(CsvParserTimestampColumn, timestampcolumn_id)
-#
-#     # todo check, that the current_user belongs to the permission group of the associated csvparser
-#
-#     if not entity:
-#         raise HTTPException(status_code=404, detail="timestamp column not found")
-#
-#     # Get the associated csv parser id
-#     csv_parser_id = entity.csv_parser_id
-#
-#     # Check if there is more than one timestamp column for this parser
-#     remaining_timestamps = session.exec(
-#         select(CsvParserTimestampColumn)
-#         .where(CsvParserTimestampColumn.csv_parser_id == csv_parser_id)
-#         .where(CsvParserTimestampColumn.id != timestampcolumn_id)
-#     ).all()
-#
-#     # If no remaining timestamp columns are found, raise an error
-#     if not remaining_timestamps:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="Can't delete the last timestamp column for this csv parser. At least one timestamp column must be set",
-#         )
-#
-#     # Delete the timestamp column
-#     session.delete(entity)
-#     session.commit()
-#     return {"ok": True}
