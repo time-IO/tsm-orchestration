@@ -11,9 +11,9 @@ from .ingest_external_api_uba import IngestExternalApiUba
 from .ingest_external_sftp import IngestExternalSftp
 from .ingest_mqtt import IngestMqtt
 from .ingest_s3store import IngestS3Store
-from .mqtt_parser import MqttParser
-from .neutron_monitor_stations import NeutronMonitorStations
-from .csv_parser import CsvParser
+from .parser_mqtt import MqttParser
+from .neutron_monitor_station import NeutronMonitorStation
+from .parser_csv import CsvParser
 from .quality_control_setting import QualityControlSetting
 
 __all__ = [
@@ -30,7 +30,7 @@ __all__ = [
     "IngestMqtt",
     "IngestS3Store",
     "MqttParser",
-    "NeutronMonitorStations",
+    "NeutronMonitorStation",
     "CsvParser",
     "QualityControlSetting",
 ]
