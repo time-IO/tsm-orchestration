@@ -1,7 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">External Api Ingest</h5>
-    <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
+    <h5>CSV Parser</h5>
     <div class="row">
       <div class="col">
         <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/parser" />
@@ -196,14 +195,24 @@ const deleteItem = async () => {
   try {
     await store.dispatchDelete(item.value.id);
     $q.notify({
+      position: 'top',
       type: 'positive',
       message: 'Item deleted successfully',
     });
     await router.push('/parser');
-  } catch {
+  } catch (error) {
+    // @ts-expect-error to avoid complicated checks just for type safety, we ignore
+    let errorCaption = error?.response?.data?.detail || '';
+
+    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
+    if (typeof errorCaption === 'object') {
+      errorCaption = errorCaption[0].msg;
+    }
     $q.notify({
+      position: 'top',
       type: 'negative',
       message: 'Failed to delete item',
+      caption: errorCaption,
     });
   } finally {
     deleteDialog.value = false;

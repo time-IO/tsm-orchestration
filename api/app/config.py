@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     OIDC_AUDIENCE: str
     ALLOWED_VOS: str = ""
     ALLOWED_ORIGINS: str = ""
+    MINIO_SFTP_PORT: str
+    PROXY_URL: str
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -39,6 +41,16 @@ class Settings(BaseSettings):
         if not self.ALLOWED_ORIGINS:
             return []
         return [vo.strip() for vo in self.ALLOWED_ORIGINS.split(",") if vo.strip()]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def SFTP_URI(self) -> str:
+        if not self.MINIO_SFTP_PORT or not self.PROXY_URL:
+            return ""
+        sftp_port = self.MINIO_SFTP_PORT.split(":")[-1]
+        proxy = self.PROXY_URL.split("://")[-1].split(":")[0]
+
+        return f"sftp://{proxy}:{sftp_port}"
 
 
 settings = Settings()  # type: ignore
