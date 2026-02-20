@@ -5,6 +5,13 @@ from models.ingest_mqtt import (
     IngestMqttPublic,
     IngestMqttUpdate,
 )
+import os
+import hashlib
+import base64
+import string
+import secrets
+import uuid
+import re
 
 router = APIRouter(
     prefix="/ingest/mqtt",
@@ -14,6 +21,41 @@ router = APIRouter(
 )
 
 entity_name = "ingest mqtt"
+
+
+def hash_password(
+    password: str,
+    hasher: str = "pbkdf2_sha256",
+    iterations: int = 260000,
+    salt: bytes = None,
+) -> str:
+    """
+    Hash a password using PBKDF2 (equivalent to Django's make_password with PBKDF2 hasher).
+
+    Returns a string in Django-compatible format: 'algorithm$iterations$salt$hash'
+    """
+    if hasher != "pbkdf2_sha256":
+        raise ValueError("Only 'pbkdf2_sha256' is supported in this implementation")
+
+    if salt is None:
+        salt = os.urandom(16)  # Django uses 16-byte random salt
+
+    # Ensure password is bytes
+    password_bytes = password.encode("utf-8")
+
+    # PBKDF2-HMAC-SHA256
+    hash_bytes = hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
+
+    # Encode salt and hash in base64 (Django uses base64 without padding)
+    salt_b64 = base64.b64encode(salt).rstrip(b"=").decode("ascii")
+    hash_b64 = base64.b64encode(hash_bytes).rstrip(b"=").decode("ascii")
+
+    return f"pbkdf2_sha256${iterations}${salt_b64}${hash_b64}"
+
+
+def generate_password(length: int):
+    chars = string.ascii_letters + string.digits
+    return "".join(secrets.choice(chars) for _ in range(length))
 
 
 @router.get(
@@ -44,11 +86,21 @@ def create(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_mqtt),
 ):
-    extra_data = {"created_by_id": current_user.id}
-    # todo username
-    # todo password (encrypted)
-    # todo password_hashed (encrypted)
-    # todo uri
+
+    _uuid = uuid.uuid4()
+
+    password = generate_password(40)
+    password_hashed = hash_password(password)
+    username = re.sub("[^a-z0-9-]+", "", f"ingest-mqtt-{_uuid}")
+
+    extra_data = {
+        "created_by_id": current_user.id,
+        "password": password,
+        "password_hashed": password_hashed,
+        "username": username,
+        "uuid": _uuid,
+    }
+
     return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
 
 

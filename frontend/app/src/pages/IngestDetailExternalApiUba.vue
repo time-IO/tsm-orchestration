@@ -4,13 +4,12 @@
     <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest"/>
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
       </div>
     </div>
 
-
     <div v-if="isLoading" class="q-pa-md">
-      <q-spinner color="primary" size="3em"/>
+      <q-spinner color="primary" size="3em" />
     </div>
 
     <div v-else-if="item">
@@ -20,7 +19,7 @@
           <div class="text-subtitle1">{{ item.description }}</div>
         </q-card-section>
 
-        <q-separator/>
+        <q-separator />
 
         <q-card-section>
           <div class="row q-col-gutter-md">
@@ -56,7 +55,7 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Created At</q-item-label>
+                    <q-item-label>Created At (UTC)</q-item-label>
                     <q-item-label caption>{{ formatDate(item.created_at) }}</q-item-label>
                   </q-item-section>
                 </q-item>
@@ -76,7 +75,7 @@
                   </q-item-section>
                 </q-item>
 
-                <q-item>
+                <q-item v-if="item.sync_enabled">
                   <q-item-section>
                     <q-item-label>Sync Interval</q-item-label>
                     <q-item-label caption>
@@ -89,24 +88,12 @@
           </div>
         </q-card-section>
 
-        <q-separator/>
+        <q-separator />
 
         <q-card-actions>
-          <q-btn
-            :to="`/ingest/external-api-uba/${item.id}/edit`"
-            color="primary"
-            flat
-          >
-            Edit
-          </q-btn>
-          <q-space/>
-          <q-btn
-            color="negative"
-            flat
-            @click="openDeleteDialog"
-          >
-            Delete
-          </q-btn>
+          <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
+          <q-space />
+          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
         </q-card-actions>
       </q-card>
     </div>
@@ -117,54 +104,58 @@
           <h6 class="q-mt-none">Confirm Delete</h6>
         </q-card-section>
 
-        <q-card-section>
-          Are you sure you want to delete this item?
-        </q-card-section>
+        <q-card-section> Are you sure you want to delete this item? </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn v-close-popup color="primary" flat label="Cancel"/>
-          <q-space/>
-          <q-btn color="negative" flat label="Delete" @click="deleteItem"/>
+          <q-btn v-close-popup color="primary" flat label="Cancel" />
+          <q-space />
+          <q-btn color="negative" flat label="Delete" @click="deleteItem" />
         </q-card-actions>
       </q-card>
     </q-dialog>
-
   </q-page>
 </template>
 
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue'
-import {useIngestExternalApiUbaStore} from "stores/ingestExternalApiUbaStore";
-import {useRoute, useRouter} from "vue-router";
-import {useQuasar} from 'quasar'
-import type {IngestExternalApiUbaPublic} from "src/services/ingest_external_api_uba/types";
+import { computed, onMounted, ref } from 'vue';
+import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import { useRoute, useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
+import type { IngestExternalApiUbaPublic } from 'src/services/ingest_external_api_uba/types';
 
-const $q = useQuasar()
-const route = useRoute()
-const router = useRouter()
-const store = useIngestExternalApiUbaStore()
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const store = useIngestExternalApiUbaStore();
 
 const item = ref<IngestExternalApiUbaPublic | null>(null);
 const deleteDialog = ref(false);
-const isLoading = ref(false)
+const isLoading = ref(false);
 
 onMounted(async () => {
   try {
-    isLoading.value = true
-    const id = Number(route.params.id)
+    isLoading.value = true;
+    const id = Number(route.params.id);
 
     if (!isNaN(id)) {
-      item.value = await store.dispatchGetOne(id)
+      item.value = await store.dispatchGetOne(id);
     }
   } catch {
     $q.notify({
-        type: 'negative',
-        message: 'Failed to load ingest data'
-      })
+      type: 'negative',
+      message: 'Failed to load ingest data',
+    });
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-})
+});
+
+const editRoute = computed(() => {
+  if (item.value?.id) {
+    return `/ingest/external-api-uba/${item.value.id}/edit`;
+  }
+  return '';
+});
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();
@@ -174,34 +165,27 @@ const openDeleteDialog = () => {
   deleteDialog.value = true;
 };
 
-
 const deleteItem = async () => {
-
-  if(!item.value)
-  {
-    return
+  if (!item.value) {
+    return;
   }
 
   try {
     await store.dispatchDelete(item.value.id);
     $q.notify({
       type: 'positive',
-      message: 'Item deleted successfully'
+      message: 'Item deleted successfully',
     });
     await router.push('/ingest');
   } catch {
     $q.notify({
       type: 'negative',
-      message: 'Failed to delete item'
+      message: 'Failed to delete item',
     });
   } finally {
     deleteDialog.value = false;
   }
 };
-
-
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

@@ -6,31 +6,30 @@ export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaSto
 
   state: () => ({
     ingestExternalApiUbaList: [] as IngestExternalApiUbaPublic[],
-    ingestExternalApiUba: null as IngestExternalApiUbaPublic | null, // todo not 100% sure if I'll go with this
   }),
 
   getters: {},
 
   actions: {
     async dispatchGetList() {
-      const response = await API.ingestExternalApiDwd.getList()
+      const response = await API.ingestExternalApiUba.getList()
       this.ingestExternalApiUbaList = response.data
     },
     async dispatchGetOne(id: number): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.getOne(id)
+      const response = await API.ingestExternalApiUba.getOne(id)
       return response.data
 
     },
     async dispatchCreate(payload: IngestExternalApiUbaCreate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.create(payload)
+      const response = await API.ingestExternalApiUba.create(payload)
       return response.data
     },
     async dispatchUpdate(id: number, payload: IngestExternalApiUbaUpdate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiDwd.update(id, payload)
+      const response = await API.ingestExternalApiUba.update(id, payload)
         return response.data
     },
     async dispatchDelete(id: number): Promise<void> {
-      await API.ingestExternalApiDwd.deleteOne(id)
+      await API.ingestExternalApiUba.deleteOne(id)
     },
   },
 });

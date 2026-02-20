@@ -1,17 +1,28 @@
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from .neutron_monitor_stations import NeutronMonitorStations
 from .permission_group import PermissionGroup
+from pydantic import field_validator
 
 
 class IngestExternalApiNeutronMonitorBase(SQLModel):
     permission_group_id: int = Field(foreign_key="permission_group.id")
     name: str
     description: str | None = None
-    sync_interval_in_minutes: int
+    sync_interval_in_minutes: int | None = Field(nullable=True)
     sync_enabled: bool = False
-    station_id: int = Field(foreign_key="neutron_monitor_stations.id")
+    station_id: int = Field(foreign_key="neutron_monitor_station.id")
+    time_resolution_in_minutes: int | None = Field(nullable=True, default=60)
+
+    @field_validator("time_resolution_in_minutes")
+    @classmethod
+    def validate_time_resolution(cls, v: int | None) -> int:
+        allowed = [None, 0, 2, 5, 10, 30, 60, 120, 360, 720, 1440, 39276, 525969]
+        if v not in allowed:
+            raise ValueError(
+                f"time_resolution_in_minutes must be one of {allowed}, got {v}"
+            )
+        return v
 
 
 class IngestExternalApiNeutronMonitorCreate(IngestExternalApiNeutronMonitorBase):
@@ -19,12 +30,23 @@ class IngestExternalApiNeutronMonitorCreate(IngestExternalApiNeutronMonitorBase)
 
 
 class IngestExternalApiNeutronMonitorUpdate(SQLModel):
-    project_id: int | None = None
+    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     sync_interval_in_minutes: int | None = None
     sync_enabled: bool | None = None
     station_id: int | None = None
+    time_resolution_in_minutes: int | None = None
+
+    @field_validator("time_resolution_in_minutes")
+    @classmethod
+    def validate_time_resolution(cls, v: int | None) -> int:
+        allowed = [None, 0, 2, 5, 10, 30, 60, 120, 360, 720, 1440, 39276, 525969]
+        if v not in allowed:
+            raise ValueError(
+                f"time_resolution_in_minutes must be one of {allowed}, got {v}"
+            )
+        return v
 
 
 class IngestExternalApiNeutronMonitorPublic(IngestExternalApiNeutronMonitorBase):
@@ -33,6 +55,7 @@ class IngestExternalApiNeutronMonitorPublic(IngestExternalApiNeutronMonitorBase)
     created_by_id: int
     created_at: datetime
     permission_group: "PermissionGroup"
+    station: "NeutronMonitorStation"
 
 
 class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table=True):
@@ -51,3 +74,9 @@ class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_neutron_monitor"
     )
+    station: "NeutronMonitorStation" = Relationship(
+        back_populates="ingest_external_api_neutron_monitor"
+    )
+
+
+from .neutron_monitor_station import NeutronMonitorStation

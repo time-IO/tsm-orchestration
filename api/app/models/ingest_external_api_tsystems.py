@@ -11,8 +11,8 @@ class IngestExternalApiTSystemsBase(SQLModel):
     sync_enabled: bool = False
     group: str
     station_id: str
-    username: str
-    password: str
+    tsystems_username: str
+    tsystems_password: str
 
 
 class IngestExternalApiTSystemsCreate(IngestExternalApiTSystemsBase):
@@ -20,7 +20,7 @@ class IngestExternalApiTSystemsCreate(IngestExternalApiTSystemsBase):
 
 
 class IngestExternalApiTSystemsUpdate(SQLModel):
-    project_id: int | None = None
+    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     sync_enabled: bool | None = None

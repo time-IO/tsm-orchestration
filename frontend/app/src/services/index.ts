@@ -1,9 +1,26 @@
-import ingestExternalApiDwdController from "src/services/ingest_external_api_uba"
+import ingestExternalApiBoschController from "src/services/ingest_external_api_bosch"
+import ingestExternalApiDwdController from "src/services/ingest_external_api_dwd"
+import ingestExternalApiNeutronMonitorController from "src/services/ingest_external_api_neutron_monitor"
+import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
+import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
+import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
+import ingestMqttController from 'src/services/ingest_mqtt';
+
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
+import neutronMonitorStationController from "src/services/neutron_monitor_stations"
+import mqttParserController from "src/services/mqtt_parser"
 
 export const API = {
-  ingestExternalApiDwd: ingestExternalApiDwdController,
+  ingestExternalApiBosch:ingestExternalApiBoschController,
+  ingestExternalApiDwd:ingestExternalApiDwdController,
+  ingestExternalApiNeutronMonitor: ingestExternalApiNeutronMonitorController,
+  ingestExternalApiTSystems:ingestExternalApiTSystemsController,
+  ingestExternalApiTheThingsNetwork:ingestExternalApiTheThingsNetworkController,
+  ingestExternalApiUba: ingestExternalApiUbaController,
+  ingestMqtt:ingestMqttController,
   permissionGroup: permissionGroupController,
-  user: userController
-}
+  user: userController,
+  neutronMonitorStation: neutronMonitorStationController,
+  mqttParser: mqttParserController,
+};

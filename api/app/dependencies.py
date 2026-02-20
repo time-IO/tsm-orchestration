@@ -91,7 +91,8 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
         session.refresh(user)
 
         return user
-    except:
+    except Exception as e:
+        print(str(e))
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
         raise HTTPException(status_code=500, detail="Failed to get or create user")
@@ -192,8 +193,8 @@ def get_repo_mqtt_parser(session=Depends(get_session)):
     return BaseRepository(MqttParser, session)
 
 
-def get_repo_neutron_monitor_stations(session=Depends(get_session)):
-    return BaseRepository(NeutronMonitorStations, session)
+def get_repo_neutron_monitor_station(session=Depends(get_session)):
+    return BaseRepository(NeutronMonitorStation, session)
 
 
 def get_repo_quality_control_setting(session=Depends(get_session)):
