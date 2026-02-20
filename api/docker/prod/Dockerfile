@@ -26,7 +26,6 @@ ARG UID=1000
 RUN adduser --uid ${UID} --disabled-password appuser
 
 COPY --chown=${UID}:${UID} ./app /app
-COPY --chown=${UID}:${UID} ./docker/prod/start.sh /app/start.sh
 
 WORKDIR /app
 USER appuser
