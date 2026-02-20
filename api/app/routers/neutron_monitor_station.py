@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
 from models.neutron_monitor_station import NeutronMonitorStation
-from models.user import User
-from models.base_repository import BaseRepository
 from dependencies import get_current_user, get_repo_neutron_monitor_station
 
 router = APIRouter(
@@ -21,7 +19,7 @@ entity_name = "neutron monitor station"
 )
 def read_list(
     *,
-    repo: BaseRepository = Depends(get_repo_neutron_monitor_station),
+    repo=Depends(get_repo_neutron_monitor_station),
 ):
     return repo.find_all()
 
@@ -32,7 +30,7 @@ def read_list(
 def read_one(
     *,
     id: int,
-    current_user: User = Depends(get_current_user),
-    repo: BaseRepository = Depends(get_repo_neutron_monitor_station),
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_neutron_monitor_station),
 ):
     return repo.find_one(id, current_user.permission_group_ids)

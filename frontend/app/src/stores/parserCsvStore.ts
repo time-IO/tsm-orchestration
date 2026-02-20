@@ -2,8 +2,6 @@ import {defineStore, acceptHMRUpdate} from 'pinia';
 import type {
   CsvParserCreate,
   CsvParserPublic,
-  CsvParserTimestampColumnPublic,
-  CsvParserTimestampColumnUpdate,
   CsvParserUpdate,
 } from 'src/services/parser_csv/types';
 import {API} from "src/services";
@@ -34,16 +32,6 @@ export const useCsvParserStore = defineStore('csvParserStore', {
     },
     async dispatchDelete(id: number): Promise<void> {
       await API.csvParser.deleteOne(id);
-    },
-    async dispatchUpdateTimestampColumn(
-      id: number,
-      payload: CsvParserTimestampColumnUpdate,
-    ): Promise<CsvParserTimestampColumnPublic> {
-      const response = await API.csvParser.updateTimestampColumn(id, payload);
-      return response.data;
-    },
-    async dispatchDeleteTimestampColumn(id: number): Promise<void> {
-      await API.csvParser.deleteTimestampColumn(id);
     },
   },
 });

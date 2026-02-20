@@ -2,26 +2,31 @@
   <q-page class="q-pa-lg">
     <h5>Overview of Parsers</h5>
     <div class="row q-mb-lg">
-      <q-space/>
-      <q-btn color="green" label="Add Parser" to="/parser/new"/>
+      <q-space />
+      <q-btn color="green" label="Add Parser" to="/parser/new" />
     </div>
-    <q-table
-      :rows="rows"
-      :columns="columns"
-      row-key="name"
-    >
+    <div class="text-h5 q-mt-lg q-mb-sm">Parser - CSV</div>
+    <q-table :rows="csvParserStore.csvParserList" :columns="columns" row-key="name">
       <template v-slot:body-cell-action="props">
         <q-td :props="props">
           <div>
             <q-btn
-              :to="`ingest/${props.row.id}`"
-              flat outline color="primary" icon="visibility">
+              :to="`parser/csv/${props.row.id}`"
+              flat
+              outline
+              color="primary"
+              icon="visibility"
+            >
               <q-tooltip>View details</q-tooltip>
             </q-btn>
             <q-btn
-              :to="`ingest/${props.row.id}/edit`"
-              flat outline color="secondary" icon="edit">
-              <q-tooltip>Edit thing</q-tooltip>
+              :to="`parser/csv/${props.row.id}/edit`"
+              flat
+              outline
+              color="secondary"
+              icon="edit"
+            >
+              <q-tooltip>Edit parser</q-tooltip>
             </q-btn>
           </div>
         </q-td>
@@ -31,8 +36,15 @@
 </template>
 
 <script setup lang="ts">
+import type { QTableColumn } from 'quasar';
+import { useCsvParserStore } from 'stores/parserCsvStore';
+import { onMounted } from 'vue';
 
-import type {QTableColumn} from "quasar";
+const csvParserStore = useCsvParserStore();
+
+onMounted(async () => {
+  await csvParserStore.dispatchGetList();
+});
 
 const columns: QTableColumn[] = [
   {
@@ -40,75 +52,20 @@ const columns: QTableColumn[] = [
     required: true,
     label: 'ID',
     align: 'left',
-    field: 'id',
-    sortable: true
-  },
-  { name: 'project',label: 'Project', field: 'project', sortable: true , align: 'center'},
-  { name: 'name', label: 'Name', field: 'name', sortable: true , align: 'center'},
-  {name: 'action', label: 'Actions', align: 'center', field: ()=> ''}
-]
-
-interface ParserRow {
-  id: number;
-  project: string;
-  name: string;
-}
-
-const rows: ParserRow[] = [
-  {
-    id: 1,
-    project: 'Project 1',
-    name: 'Parser 1',
+    field: (row) => row.id,
+    format: (val) => `${val}`,
+    sortable: true,
   },
   {
-    id: 2,
-    project: 'Project 1',
-    name: 'Parser 2',
+    name: 'permission-group',
+    label: 'Permission Group',
+    field: (row) => row.permission_group.name,
+    sortable: true,
+    align: 'center',
   },
-  {
-    id: 3,
-    project: 'Project 1',
-    name: 'Parser 3',
-  },
-  {
-    id: 4,
-    project: 'Project 1',
-    name: 'Parser 4',
-  },
-  {
-    id: 5,
-    project: 'Project 1',
-    name: 'Parser 5',
-  },
-  {
-    id: 6,
-    project: 'Project 1',
-    name: 'Parser 6',
-  },
-  {
-    id: 7,
-    project: 'Project 1',
-    name: 'Parser 7',
-  },
-  {
-    id: 8,
-    project: 'Project 1',
-    name: 'Parser 8',
-  },
-  {
-    id: 9,
-    project: 'Project 1',
-    name: 'Parser 9',
-  },
-  {
-    id: 10,
-    project: 'Project 1',
-    name: 'Parser 10',
-  }
-]
-
+  { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
+  { name: 'action', label: 'Actions', align: 'center', field: () => '' },
+];
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

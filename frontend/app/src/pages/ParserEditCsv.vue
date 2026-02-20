@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">New CSV Parser</h5>
+    <h5 class="q-mb-none">Edit CSV Parser</h5>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/parser/new" />
@@ -18,19 +18,6 @@
             label="Name *"
             hint="Enter a descriptive name for this ingest"
             :rules="[(val) => !!val || 'Name is required']"
-          />
-
-          <q-select
-            filled
-            v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the project this ingest belongs to"
-            :rules="[(val) => !!val || 'Project is required']"
           />
 
           <!-- Description -->
@@ -130,7 +117,10 @@
             </q-list>
 
             <!-- Validation message for timestamp columns -->
-            <div v-if="formData.timestamp_columns.length === 0" class="text-negative q-mt-xs">
+            <div
+              v-if="formData.timestamp_columns && formData.timestamp_columns.length === 0"
+              class="text-negative q-mt-xs"
+            >
               At least one timestamp column is required
             </div>
           </div>
@@ -144,6 +134,7 @@
                 color="green"
                 type="submit"
                 :loading="isLoading"
+                :disable="formData.timestamp_columns && formData.timestamp_columns.length === 0"
                 label="Save"
                 class="full-width"
               />
@@ -160,17 +151,17 @@
 import { onMounted, ref } from 'vue';
 import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
-import type { CsvParserCreate } from 'src/services/parser_csv/types';
+import { useRoute, useRouter } from 'vue-router';
+import type { CsvParserUpdate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 
 const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
-const formData = ref<CsvParserCreate>({
-  permission_group_id: null,
+const formData = ref<CsvParserUpdate>({
   name: null,
   description: null,
   delimiter: null,
@@ -183,6 +174,29 @@ const formData = ref<CsvParserCreate>({
 const isLoading = ref(false);
 
 onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await csvParserStore.dispatchGetOne(id);
+
+      formData.value = {
+        name: data.name || null,
+        description: data.description || null,
+        delimiter: data.delimiter || null,
+        headlines_to_exclude: data.headlines_to_exclude || 0,
+        footlines_to_exclude: data.footlines_to_exclude || 0,
+        pandas_read_csv: data.pandas_read_csv || null,
+        timestamp_columns: data.timestamp_columns || [],
+      };
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load parser data',
+      });
+      await router.push('/parser');
+    }
+  }
+
   try {
     await permissionGroupStore.dispatchGetList();
   } catch {
@@ -195,13 +209,16 @@ onMounted(async () => {
 });
 
 async function save() {
+  if (!route.params.id) return;
+
   try {
-    const data: CsvParserCreate = {
-      permission_group_id: formData.value.permission_group_id,
-      name: formData.value.name,
-      description: formData.value.description,
-      delimiter: formData.value.delimiter,
-     headlines_to_exclude:
+    const id = Number(route.params.id);
+
+    const data: CsvParserUpdate = {
+      name: formData.value.name || null,
+      description: formData.value.description || null,
+      delimiter: formData.value.delimiter || null,
+      headlines_to_exclude:
         formData.value.headlines_to_exclude !== null &&
         formData.value.headlines_to_exclude !== undefined
           ? formData.value.headlines_to_exclude
@@ -211,14 +228,14 @@ async function save() {
         formData.value.footlines_to_exclude !== undefined
           ? formData.value.footlines_to_exclude
           : null,
-      pandas_read_csv: formData.value.pandas_read_csv,
-      timestamp_columns: formData.value.timestamp_columns,
+      pandas_read_csv: formData.value.pandas_read_csv || null,
+      timestamp_columns: formData.value.timestamp_columns || [],
     };
 
     isLoading.value = true;
-    const result = await csvParserStore.dispatchCreate(data);
+    await csvParserStore.dispatchUpdate(id, data);
 
-    await router.push(`/parser/csv/${result.id}`);
+    await router.push(`/parser/csv/${id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
@@ -232,7 +249,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to create parser',
+      message: 'Failed to update parser',
       caption: errorCaption,
     });
   } finally {
@@ -241,14 +258,18 @@ async function save() {
 }
 
 function addTimestampColumn() {
-  formData.value.timestamp_columns.push({
-    column: null,
-    timestamp_format: null,
-  });
+  if (formData.value.timestamp_columns) {
+    formData.value.timestamp_columns.push({
+      column: null,
+      timestamp_format: null,
+    });
+  }
 }
 
 function removeTimestampColumn(index: number) {
-  formData.value.timestamp_columns.splice(index, 1);
+  if (formData.value.timestamp_columns) {
+    formData.value.timestamp_columns.splice(index, 1);
+  }
 }
 </script>
 
