@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5>CSV Parser</h5>
+    <h5 class="q-mb-none">SFTP Ingest</h5>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/parser" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
       </div>
     </div>
 
@@ -47,29 +47,80 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Column delimiter</q-item-label>
-                    <q-item-label caption>{{ item.delimiter }}</q-item-label>
+                    <q-item-label>Filename Pattern</q-item-label>
+                    <q-item-label caption>{{ item.filename_pattern }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Number of headlines to exclude (0-based)</q-item-label>
-                    <q-item-label caption>{{ item.headlines_to_exclude }}</q-item-label>
+                    <q-item-label>Fileserver URI</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.fileserver_uri }}</q-item-label>
+                      <q-btn
+                        flat
+                        round
+                        icon="content_copy"
+                        size="sm"
+                        @click="copyClipboard(item.fileserver_uri)"
+                        title="Copy username"
+                      />
+                    </div>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Number of footlines to exclude (0-based)</q-item-label>
-                    <q-item-label caption>{{ item.footlines_to_exclude }}</q-item-label>
+                    <q-item-label>Bucket Name</q-item-label>
+                    <q-item-label caption>{{ item.bucket_name }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Pandas read csv</q-item-label>
-                    <q-item-label caption>{{ item.pandas_read_csv || 'N/A' }}</q-item-label>
+                    <q-item-label>Username</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.username }}</q-item-label>
+                      <q-btn
+                        flat
+                        round
+                        icon="content_copy"
+                        size="sm"
+                        @click="copyClipboard(item.username)"
+                        title="Copy username"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Password</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>
+                        <q-input
+                          borderless
+                          v-model="item.password"
+                          :type="isPwd ? 'password' : 'text'"
+                        >
+                          <template v-slot:prepend>
+                            <q-icon
+                              :name="isPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isPwd = !isPwd"
+                            />
+                          </template>
+                        </q-input>
+                      </q-item-label>
+                      <q-btn
+                        flat
+                        round
+                        icon="content_copy"
+                        size="sm"
+                        @click="copyClipboard(item.password)"
+                        title="Copy password"
+                      />
+                    </div>
                   </q-item-section>
                 </q-item>
 
@@ -86,22 +137,12 @@
               <q-list>
                 <q-item>
                   <q-item-section>
-                    <q-item-label class="text-center">Timestamp Columns</q-item-label>
+                    <q-item-label>Parser</q-item-label>
                     <q-item-label caption>
-                      <q-markup-table flat bordered>
-                        <thead>
-                          <tr>
-                            <th>Column index</th>
-                            <th>Timestamp format</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(column, index) in item.timestamp_columns" :key="index">
-                            <td class="text-center">{{ column.column }}</td>
-                            <td class="text-center">{{ column.timestamp_format }}</td>
-                          </tr>
-                        </tbody>
-                      </q-markup-table>
+                      {{ item.csv_parser.name }}
+                      <q-icon name="launch" class="cursor-pointer" @click="openParser">
+                        <q-tooltip> Open in new window </q-tooltip>
+                      </q-icon>
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -141,18 +182,19 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
-import { useCsvParserStore } from 'stores/parserCsvStore';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import { copyToClipboard, useQuasar } from 'quasar';
+import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
+import { useIngestSftpStore } from 'stores/ingestSftpStore';
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
-const store = useCsvParserStore();
+const store = useIngestSftpStore();
 
-const item = ref<CsvParserPublic | null>(null);
+const item = ref<IngestSftpPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
+const isPwd = ref(true);
 
 onMounted(async () => {
   try {
@@ -174,7 +216,7 @@ onMounted(async () => {
 
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/parser/csv/${item.value.id}/edit`;
+    return `/ingest/sftp/${item.value.id}/edit`;
   }
   return '';
 });
@@ -195,28 +237,46 @@ const deleteItem = async () => {
   try {
     await store.dispatchDelete(item.value.id);
     $q.notify({
-      position: 'top',
       type: 'positive',
       message: 'Item deleted successfully',
     });
-    await router.push('/parser');
-  } catch (error) {
-    // @ts-expect-error to avoid complicated checks just for type safety, we ignore
-    let errorCaption = error?.response?.data?.detail || '';
-
-    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
-    if (typeof errorCaption === 'object') {
-      errorCaption = errorCaption[0].msg;
-    }
+    await router.push('/ingest');
+  } catch {
     $q.notify({
-      position: 'top',
       type: 'negative',
       message: 'Failed to delete item',
-      caption: errorCaption,
     });
   } finally {
     deleteDialog.value = false;
   }
+};
+
+const openParser = () => {
+  if (item.value && item.value.csv_parser) {
+    const route = router.resolve({
+      path: `/parser/csv/${item.value.csv_parser.id}`,
+    });
+
+    window.open(route.href, '_blank');
+  }
+};
+
+const copyClipboard = (text: string) => {
+  copyToClipboard(text)
+    .then(() => {
+      $q.notify({
+        message: 'Copied to clipboard',
+        color: 'positive',
+        icon: 'check',
+      });
+    })
+    .catch(() => {
+      $q.notify({
+        message: 'Failed to copy',
+        color: 'negative',
+        icon: 'error',
+      });
+    });
 };
 </script>
 

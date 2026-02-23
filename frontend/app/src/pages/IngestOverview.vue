@@ -7,6 +7,13 @@
     </div>
 
     <ingest-overview-table
+      title="Ingest - SFTP"
+      ingest-path="ingest/sftp"
+      :columns="columns"
+      :rows="ingestSftpStore.ingestSftpList"
+    />
+
+    <ingest-overview-table
       title="Ingest - Mqtt"
       ingest-path="ingest/mqtt"
       :columns="columns"
@@ -68,6 +75,7 @@ import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschSto
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
+import { useIngestSftpStore } from 'stores/ingestSftpStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
@@ -77,6 +85,7 @@ const ingestExternalApiBoschStore = useIngestExternalApiBoschStore();
 const ingestExternalApiTheThingsNetworkStore = useIngestExternalApiTheThingsNetworkStore();
 const ingestExternalApiTSystemsStore = useIngestExternalApiTSystemsStore();
 const ingestMqttStore = useIngestMqttStore();
+const ingestSftpStore = useIngestSftpStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
@@ -86,6 +95,7 @@ onMounted(async () => {
   await ingestExternalApiTheThingsNetworkStore.dispatchGetList();
   await ingestExternalApiTSystemsStore.dispatchGetList();
   await ingestMqttStore.dispatchGetList();
+  await ingestSftpStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [

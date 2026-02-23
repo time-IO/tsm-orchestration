@@ -18,6 +18,10 @@ export const useCsvParserStore = defineStore('csvParserStore', {
       const response = await API.csvParser.getList();
       this.csvParserList = response.data;
     },
+    async dispatchGetListbyPermissionGroup(permission_group_id: number) {
+      const response = await API.csvParser.getListbyPermissionGroup(permission_group_id);
+      this.csvParserList = response.data;
+    },
     async dispatchGetOne(id: number): Promise<CsvParserPublic> {
       const response = await API.csvParser.getOne(id);
       return response.data;

@@ -50,14 +50,7 @@ class BaseRepository(Generic[T]):
             raise HTTPException(status_code=400, detail="Failed to create.")
 
     def update_allowed(self, id: int, payload, permission_group_ids):
-
         self.__check_payload_permission_group(payload, permission_group_ids)
-
-        if payload.permission_group_id not in permission_group_ids:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Permission denied: user does not belong to that permission group.",
-            )
         try:
             entity = self.find_allowed_one(id, permission_group_ids)
 
@@ -65,6 +58,45 @@ class BaseRepository(Generic[T]):
                 raise HTTPException(status_code=404, detail="Not found")
 
             data = payload.model_dump(exclude_unset=True)
+            entity.sqlmodel_update(data)
+            self.session.add(entity)
+            self.session.commit()
+            self.session.refresh(entity)
+            return entity
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to update.")
+
+    def update_ingest_sftp(self, id: int, payload, permission_group_ids):
+
+        # it is currently not allowed to update the permission group of an ingest sftp (s3store)
+        # therefore the payload does not contain a permission_group_id , so we use an extra method
+        try:
+            entity = self.find_allowed_one(id, permission_group_ids)
+
+            if not entity:
+                raise HTTPException(status_code=404, detail="Not found")
+
+            data = payload.model_dump(exclude_unset=True)
+            entity.sqlmodel_update(data)
+            self.session.add(entity)
+            self.session.commit()
+            self.session.refresh(entity)
+            return entity
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to update.")
+
+    def update_parser(self, id: int, data, permission_group_ids):
+
+        try:
+            entity = self.find_allowed_one(id, permission_group_ids)
+
+            if not entity:
+                raise HTTPException(status_code=404, detail="Not found")
+
             entity.sqlmodel_update(data)
             self.session.add(entity)
             self.session.commit()
