@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import (
+from dependencies import (
     get_current_user,
     get_repo_ingest_external_api_the_things_network,
 )
-from ..models.ingest_external_api_the_things_network import (
+from models.ingest_external_api_the_things_network import (
     IngestExternalApiTheThingsNetworkCreate,
     IngestExternalApiTheThingsNetworkUpdate,
     IngestExternalApiTheThingsNetworkPublic,

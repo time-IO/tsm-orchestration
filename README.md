@@ -156,6 +156,17 @@ docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest
   - accessible at http://localhost/keycloak 
   - well known: http://localhost/keycloak/realms/local-dev/.well-known/openid-configuration
 
+### Alembic API-DB Migrations
+
+We manage the API-DB (local, stage and prod) using alembic migrations (`api/app/alembic/versions`).
+If you applied changes to models that should be propagated to the database, you need to create an alembic migration.
+- We use a small script for the creation of the migrations:
+  - `./api/create_alembic_migration.sh <slug>`
+- The script runs the `api` service with the entrypoint:
+  - `alembic revision --autogenerate -m <slug>`
+- Every migration created by alembic will have a name in the form of:
+  - `YYYYmmdd_HHMMSS_<slug>.py`
+
 ### Data
 
 Should be inserted through migration if necessary.

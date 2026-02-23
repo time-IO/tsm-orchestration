@@ -27,4 +27,7 @@ RUN adduser --uid ${UID} --disabled-password appuser
 
 COPY --chown=${UID}:${UID} ./app /app
 
+WORKDIR /app
 USER appuser
+
+ENTRYPOINT ["/app/start.sh"]

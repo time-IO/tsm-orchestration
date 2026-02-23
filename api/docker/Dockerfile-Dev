@@ -26,5 +26,7 @@ ARG UID=1000
 RUN adduser --uid ${UID} --disabled-password appuser
 
 RUN chown -R appuser /app
+WORKDIR /app
 USER appuser
 
+ENTRYPOINT ["/app/start.sh"]

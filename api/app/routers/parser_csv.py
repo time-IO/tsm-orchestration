@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
-from ..dependencies import (
+from dependencies import (
     get_session,
     get_current_user,
     get_repo_ingest_csv_parser,
     get_repo_csv_parser_timestamp_column,
 )
-from ..models.parser_csv import (
+from models.parser_csv import (
     CsvParserCreate,
     CsvParser,
     CsvParserPublic,

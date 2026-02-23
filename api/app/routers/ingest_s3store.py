@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_s3stores
-from ..models.ingest_s3store import (
+from dependencies import get_current_user, get_repo_ingest_s3stores
+from models.ingest_s3store import (
     IngestS3StoreCreate,
     IngestS3StorePublic,
     IngestS3StoreUpdate,
 )
-from ..utils import generate_password
-from ..config import settings
+from utils import generate_password
+from config import settings
 import uuid
 import re
 

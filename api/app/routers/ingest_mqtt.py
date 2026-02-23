@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_mqtt
-from ..models.ingest_mqtt import (
+from dependencies import get_current_user, get_repo_ingest_mqtt
+from models.ingest_mqtt import (
     IngestMqttCreate,
     IngestMqttPublic,
     IngestMqttUpdate,
@@ -10,7 +10,7 @@ import hashlib
 import base64
 import uuid
 import re
-from ..utils import generate_password
+from utils import generate_password
 
 router = APIRouter(
     prefix="/ingest/mqtt",

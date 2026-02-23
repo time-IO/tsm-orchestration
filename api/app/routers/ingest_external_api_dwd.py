@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..dependencies import get_current_user, get_repo_ingest_external_api_dwd
-from ..models.ingest_external_api_dwd import (
+from dependencies import get_current_user, get_repo_ingest_external_api_dwd
+from models.ingest_external_api_dwd import (
     IngestExternalApiDwdCreate,
     IngestExternalApiDwdUpdate,
     IngestExternalApiDwdPublic,

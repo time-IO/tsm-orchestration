@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from ..dependencies import get_session, get_current_user
-from ..models.permission_group import PermissionGroup
+from dependencies import get_session, get_current_user
+from models.permission_group import PermissionGroup
 
 router = APIRouter(
     prefix="/permission-group",
