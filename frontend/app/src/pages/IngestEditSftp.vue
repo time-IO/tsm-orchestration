@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">New SFTP Ingest</h5>
+    <h5 class="q-mb-none">Edit SFTP Ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
@@ -18,19 +18,6 @@
             label="Name *"
             hint="Enter a descriptive name for this ingest"
             :rules="[(val) => !!val || 'Name is required']"
-          />
-
-          <q-select
-            filled
-            v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the project this ingest belongs to"
-            :rules="[(val) => !!val || 'Project is required']"
           />
 
           <!-- Description -->
@@ -54,7 +41,6 @@
           <q-select
             outlined
             class="q-mb-md"
-            :disable="!formData.permission_group_id"
             v-model="formData.parser_csv_id"
             use-input
             emit-value
@@ -96,11 +82,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { usePermissionGroupStore } from 'stores/permissionGroupStore';
-import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
+import type { IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 
@@ -109,9 +95,9 @@ const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
-const formData = ref<IngestSftpCreate>({
-  permission_group_id: null,
+const formData = ref<IngestSftpUpdate>({
   name: null,
   description: null,
   parser_csv_id: null,
@@ -121,8 +107,31 @@ const formData = ref<IngestSftpCreate>({
 const isLoading = ref(false);
 
 const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
+let permissionGroupId: number | null = null;
 
 onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await sftpStore.dispatchGetOne(id);
+
+      formData.value = {
+        name: data.name || null,
+        description: data.description || null,
+        filename_pattern: data.filename_pattern || null,
+        parser_csv_id: data.parser_csv_id || null,
+      };
+
+      permissionGroupId = data.permission_group_id || null;
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load ingest data',
+      });
+      await router.push('/ingest');
+    }
+  }
+
   try {
     await permissionGroupStore.dispatchGetList();
   } catch {
@@ -132,28 +141,45 @@ onMounted(async () => {
       message: 'Failed to fetch permission groups',
     });
   }
+
+  if (permissionGroupId !== null) {
+    try {
+      await csvParserStore.dispatchGetListbyPermissionGroup(permissionGroupId);
+      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
+    } catch {
+      $q.notify({
+        position: 'top',
+        type: 'negative',
+        message: 'Failed to fetch parser options',
+      });
+    }
+  }
 });
 
-watch(
-  () => formData.value.permission_group_id,
-  async (newId) => {
-    if (newId) {
-      await csvParserStore.dispatchGetListbyPermissionGroup(newId);
-    }
-  },
-);
+// watch(
+//   () => formData.value.permission_group_id,
+//   async (newId) => {
+//     if (newId) {
+//       await csvParserStore.dispatchGetListbyPermissionGroup(newId);
+//     }
+//   },
+// );
 
 async function save() {
-  const data: IngestSftpCreate = {
-    permission_group_id: formData.value.permission_group_id,
-    name: formData.value.name,
-    description: formData.value.description,
-    parser_csv_id: formData.value.parser_csv_id,
-    filename_pattern: formData.value.filename_pattern,
-  };
+  if (!route.params.id) return;
+
   try {
+    const id = Number(route.params.id);
+
+    const data: IngestSftpUpdate = {
+      name: formData.value.name || null,
+      description: formData.value.description || null,
+      parser_csv_id: formData.value.parser_csv_id || null,
+      filename_pattern: formData.value.filename_pattern || null,
+    };
+
     isLoading.value = true;
-    const result = await sftpStore.dispatchCreate(data);
+    const result = await sftpStore.dispatchUpdate(id, data);
     $q.notify({
       position: 'top',
       type: 'positive',

@@ -21,10 +21,10 @@ class IngestS3StoreCreate(IngestS3StoreBase):
 
 
 class IngestS3StoreUpdate(SQLModel):
-    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     filename_pattern: str | None = None
+    parser_csv_id: int
 
 
 class IngestS3StorePublic(IngestS3StoreBase):
@@ -37,11 +37,12 @@ class IngestS3StorePublic(IngestS3StoreBase):
     password: str
     bucket_name: str
     fileserver_uri: str
+    parser_csv_id: int
     csv_parser: "CsvParser"
 
 
 class IngestS3Store(IngestS3StoreBase, table=True):
-    __tablename__ = "ingest_s3store"
+    __tablename__ = "ingest_sftp"
 
     __table_args__ = (
         UniqueConstraint(

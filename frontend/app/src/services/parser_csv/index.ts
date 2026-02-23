@@ -10,6 +10,9 @@ const apiPath = 'parser/csv/';
 async function getList(){
   return await axiosInstance.get<CsvParserPublic[]>(apiPath)
 }
+async function getListbyPermissionGroup(permission_group_id: number){
+  return await axiosInstance.get<CsvParserPublic[]>(`${apiPath}?permission_group_id=${permission_group_id}`)
+}
 
 async function getOne(id: number){
   return await axiosInstance.get<CsvParserPublic>(`${apiPath}${id}`)
@@ -35,4 +38,5 @@ export default {
   create,
   update,
   deleteOne,
+  getListbyPermissionGroup,
 };
