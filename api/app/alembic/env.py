@@ -1,13 +1,9 @@
-import sys
-from pathlib import Path
 from logging.config import fileConfig
 
 from alembic import context
 from alembic.config import Config
 from alembic.operations.ops import MigrationScript
 from sqlmodel import SQLModel
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # adds /app to path
 
 from config import settings
 from dependencies import engine
