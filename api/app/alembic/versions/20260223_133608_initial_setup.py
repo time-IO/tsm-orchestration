@@ -1,8 +1,8 @@
-"""initial-migration
+"""initial-setup
 
-Revision ID: d704fa975783
+Revision ID: 5640935e5253
 Revises:
-Create Date: 2026-02-23 11:50:10.842751
+Create Date: 2026-02-23 13:36:08.885414
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 import sqlmodel
 
 # revision identifiers, used by Alembic.
-revision: str = "d704fa975783"
+revision: str = "5640935e5253"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,12 +31,8 @@ def upgrade() -> None:
     op.create_table(
         "neutron_monitor_station",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column(
-            "station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -44,9 +40,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column(
-            "entitlement", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("entitlement", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("entitlement"),
         sa.UniqueConstraint("name"),
@@ -55,16 +49,10 @@ def upgrade() -> None:
         "user",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("sub", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "given_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "family_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("given_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("family_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("is_superuser", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -75,21 +63,11 @@ def upgrade() -> None:
         "database",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "schema_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "ro_user", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "ro_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("schema_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("ro_user", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("ro_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["permission_group_id"],
             ["permission_group.id"],
@@ -100,27 +78,13 @@ def upgrade() -> None:
         "ingest_external_api_bosch",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
-        sa.Column(
-            "endpoint", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "sensor_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "bosch_username",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
-        ),
-        sa.Column(
-            "bosch_password",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
-        ),
+        sa.Column("endpoint", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("sensor_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("bosch_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("bosch_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("period_in_minutes", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
@@ -136,22 +100,16 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="bosch_unique_name_permission_group",
+            "name", "permission_group_id", name="bosch_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_api_dwd",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
-        sa.Column(
-            "station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=False),
@@ -167,18 +125,14 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="dwd_unique_name_permission_group",
+            "name", "permission_group_id", name="dwd_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_api_neutron_monitor",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("station_id", sa.Integer(), nullable=False),
@@ -201,26 +155,18 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="nm_unique_name_permission_group",
+            "name", "permission_group_id", name="nm_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_api_the_things_network",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
-        sa.Column(
-            "api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "endpoint_uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("endpoint_uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
@@ -235,32 +181,22 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="ttn_unique_name_permission_group",
+            "name", "permission_group_id", name="ttn_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_api_tsystems",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("group", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+            "tsystems_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column(
-            "tsystems_username",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
-        ),
-        sa.Column(
-            "tsystems_password",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
+            "tsystems_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
@@ -277,21 +213,15 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="tsystems_unique_name_permission_group",
+            "name", "permission_group_id", name="tsystems_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_api_uba",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("station_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
@@ -308,26 +238,18 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="uba_unique_name_permission_group",
+            "name", "permission_group_id", name="uba_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_external_sftp",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=False),
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -335,15 +257,9 @@ def upgrade() -> None:
         sa.Column("created_by_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column(
-            "ssh_private_key",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
+            "ssh_private_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
-        sa.Column(
-            "ssh_public_key",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
-        ),
+        sa.Column("ssh_public_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
             ["user.id"],
@@ -354,18 +270,14 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="ext_sftp_unique_name_permission_group",
+            "name", "permission_group_id", name="ext_sftp_unique_name_permission_group"
         ),
     )
     op.create_table(
         "ingest_mqtt",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("topic", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("mqtt_parser_id", sa.Integer(), nullable=False),
@@ -373,16 +285,10 @@ def upgrade() -> None:
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "password_hashed",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
+            "password_hashed", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -398,21 +304,15 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="mqtt_unique_name_permission_group",
+            "name", "permission_group_id", name="mqtt_unique_name_permission_group"
         ),
     )
     op.create_table(
         "parser_csv",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "delimiter", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("delimiter", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("headlines_to_exclude", sa.Integer(), nullable=True),
         sa.Column("footlines_to_exclude", sa.Integer(), nullable=True),
         sa.Column("pandas_read_csv", sa.JSON(), nullable=True),
@@ -430,9 +330,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="csv_unique_name_permission_group",
+            "name", "permission_group_id", name="csv_unique_name_permission_group"
         ),
     )
     op.create_table(
@@ -453,9 +351,7 @@ def upgrade() -> None:
         "quality_control_setting",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
@@ -471,9 +367,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="qcs_unique_name_permission_group",
+            "name", "permission_group_id", name="qcs_unique_name_permission_group"
         ),
     )
     op.create_table(
@@ -481,32 +375,18 @@ def upgrade() -> None:
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("parser_csv_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column(
-            "description", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
-        sa.Column(
-            "filename_pattern",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
+            "filename_pattern", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column(
-            "username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "bucket_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "fileserver_uri",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
-        ),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("bucket_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("fileserver_uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
             ["user.id"],
@@ -521,9 +401,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
-            "permission_group_id",
-            name="s3store_unique_name_permission_group",
+            "name", "permission_group_id", name="s3store_unique_name_permission_group"
         ),
     )
     op.create_table(
@@ -531,9 +409,7 @@ def upgrade() -> None:
         sa.Column("csv_parser_id", sa.Integer(), nullable=False),
         sa.Column("column", sa.Integer(), nullable=False),
         sa.Column(
-            "timestamp_format",
-            sqlmodel.sql.sqltypes.AutoString(),
-            nullable=False,
+            "timestamp_format", sqlmodel.sql.sqltypes.AutoString(), nullable=False
         ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
