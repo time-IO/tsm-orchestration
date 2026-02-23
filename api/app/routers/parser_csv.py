@@ -34,10 +34,23 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_csv_parser),
+    permission_group_id: int | None = None,
 ):
+    if permission_group_id:
+        if permission_group_id not in current_user.permission_group_ids:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Permission denied: user does not belong to that permission group.",
+            )
+        # only return those parser for that one specific permission group
+        return repo.find_allowed_all([permission_group_id])
+
     return repo.find_allowed_all(current_user.permission_group_ids)
 
 
+@router.get(
+    "/", response_model=list[CsvParserPublic], summary=f"Get a list of {entity_name}"
+)
 @router.get("/{id}", response_model=CsvParserPublic, summary=f"Get one {entity_name}")
 def read_one(
     *,
@@ -151,5 +164,10 @@ def delete(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_csv_parser),
 ):
-    # todo: it should not be possible toi delete a parser that is connected to a s3store
+    parser = repo.find_allowed_one(id, current_user.permission_group_ids)
+    if parser and parser.ingest_s3store:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete parser that is connected to an sftp ingest",
+        )
     return repo.delete_allowed(id, current_user.permission_group_ids)
