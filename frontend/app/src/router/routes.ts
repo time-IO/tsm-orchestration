@@ -33,6 +33,8 @@ import IngestDetailMqtt from "pages/IngestDetailMqtt.vue";
 import IngestEditMqtt from 'pages/IngestEditMqtt.vue';
 import ParserEditCsv from 'pages/ParserEditCsv.vue';
 import ParserDetailCsv from 'pages/ParserDetailCsv.vue';
+import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
+import IngestEditSftp from 'pages/IngestEditSftp.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -136,6 +138,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/sftp/:id',
+    component: IngestDetailSftp,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/ingest/external-api-bosch/:id/edit',
     component: IngestEditExternalApiBosch,
     meta: { requiresAuth: true },
@@ -168,6 +175,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/mqtt/:id/edit',
     component: IngestEditMqtt,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/sftp/:id/edit',
+    component: IngestEditSftp,
     meta: { requiresAuth: true },
   },
   {

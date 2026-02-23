@@ -81,7 +81,8 @@ def update(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_s3stores),
 ):
-    return repo.update_allowed(id, payload, current_user.permission_group_ids)
+
+    return repo.update_ingest_sftp(id, payload, current_user.permission_group_ids)
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
