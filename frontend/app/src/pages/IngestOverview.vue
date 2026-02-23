@@ -7,7 +7,7 @@
     </div>
 
     <ingest-overview-table
-      title="Ingest - Mqtt"
+      title="Ingest - SFTP"
       ingest-path="ingest/sftp"
       :columns="columns"
       :rows="ingestSftpStore.ingestSftpList"
