@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">TSystems</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
       </div>
     </div>
 
@@ -139,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import {computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { usePermissionGroupStore } from 'stores/permissionGroupStore';
@@ -204,6 +204,15 @@ onMounted(async () => {
   }
 });
 
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-api-tsystems/${id}`;
+  }
+  return '';
+});
+
+
 async function save() {
   if (!route.params.id) return;
 
@@ -230,7 +239,7 @@ async function save() {
     });
 
     // Navigate back to list
-    await router.push(`/ingest/external-api-tsystems/${id}`);
+    await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';

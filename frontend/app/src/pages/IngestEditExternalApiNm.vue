@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Neutron Monitor</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
       </div>
     </div>
     <p>
@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import {computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
@@ -217,6 +217,14 @@ onMounted(async () => {
   }
 });
 
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-api-nm/${id}`;
+  }
+  return '';
+});
+
 const timeResolutionOptions = [
   { value: -1, label: 'none' },
   { value: 0, label: '0' },
@@ -252,6 +260,7 @@ function filterNeutronMonitorStation(val: string, update: (callback: () => void)
   });
 }
 
+
 async function save() {
   if (!route.params.id) return;
 
@@ -286,7 +295,7 @@ async function save() {
     });
 
     // Navigate back to detail
-    await router.push(`/ingest/external-api-nm/${id}`);
+    await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';

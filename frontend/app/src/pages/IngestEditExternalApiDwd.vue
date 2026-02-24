@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Deutscher Wetterdienst</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
       </div>
     </div>
 
@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiDwdUpdate } from 'src/services/ingest_external_api_dwd/types';
@@ -154,6 +154,14 @@ onMounted(async () => {
   }
 });
 
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-api-dwd/${id}`;
+  }
+  return '';
+});
+
 // Save changes
 async function save() {
   if (!route.params.id) return;
@@ -179,7 +187,7 @@ async function save() {
     });
 
     // Navigate back to detail
-    await router.push(`/ingest/external-api-dwd/${id}`);
+    await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     const errorCaption = error?.response?.data?.detail || '';
