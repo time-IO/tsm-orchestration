@@ -1,4 +1,10 @@
 services:
+  dozzle:
+    image: amir20/dozzle:latest
+    environment:
+      DOZZLE_BASE: /dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   dozzle:
     image: amir20/dozzle:latest
@@ -35,6 +41,7 @@ services:
 
   frontend:
     image: time-io-datasource-management-frontend:dev
+    container_name: datasource-management-frontend-dev
     build:
       context: ./frontend
       dockerfile: docker/Dockerfile-Dev

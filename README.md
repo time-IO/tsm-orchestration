@@ -167,6 +167,11 @@ If you applied changes to models that should be propagated to the database, you 
 - Every migration created by alembic will have a name in the form of:
   - `YYYYmmdd_HHMMSS_<slug>.py`
 
+### Browser View for Logs
+- We've added [dozzle](https://dozzle.dev/)
+- To view the container+logs, go to:
+  - http://localhost/dozzle
+
 ### Data
 
 Should be inserted through migration if necessary.
