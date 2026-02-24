@@ -26,8 +26,8 @@ __all__ = [
     "LocalStream",
 ]
 
-""" 
-This module provides a convenient abstraction for retrieving and 
+"""
+This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.
 """
 
@@ -134,14 +134,14 @@ class DatastreamSTA:
         # the same query on different tables.
         query = sql.SQL("""
             select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
-                "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id 
-            from "OBSERVATIONS" o 
-            join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id 
-            where o."DATASTREAM_ID" = %s 
-              and o."RESULT_TIME" >= %s 
-              and o."RESULT_TIME" <= %s 
-            order by o."RESULT_TIME" desc 
-            limit %s 
+                "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id
+            from "OBSERVATIONS" o
+            join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id
+            where o."DATASTREAM_ID" = %s
+              and o."RESULT_TIME" >= %s
+              and o."RESULT_TIME" <= %s
+            order by o."RESULT_TIME" desc
+            limit %s
             """)
 
         if date_end in [None, pd.NaT]:
@@ -222,11 +222,11 @@ class DatastreamSTA:
         self,
     ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
         """Returns (earliest, latest) timestamp of data that was never seen by QC."""
-        query = """ 
+        query = """
            select o."RESULT_TIME" from "OBSERVATIONS" o
-           where o."DATASTREAM_ID" = %s 
+           where o."DATASTREAM_ID" = %s
              and (o."RESULT_QUALITY" is null or o."RESULT_QUALITY" = 'null'::jsonb)
-           order by "RESULT_TIME" {order} 
+           order by "RESULT_TIME" {order}
            limit 1
         """
 
@@ -421,7 +421,7 @@ class ProductStream(Datastream):
         # See also DatastreamSTA._fetch which basically do
         # the same query on different tables.
         query = sql.SQL("""
-            select o.result_time, o.result_type, o.result_number, o.result_string, 
+            select o.result_time, o.result_type, o.result_number, o.result_string,
                    o.result_json, o.result_boolean, o.result_quality, o.datastream_id
             from observation o
             join datastream d on o.datastream_id = d.id
