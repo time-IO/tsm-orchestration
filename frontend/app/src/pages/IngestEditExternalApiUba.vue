@@ -197,7 +197,7 @@ async function save() {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to update ingest configuration',
+      message: 'Failed to update ingest',
       progress: true,
       caption: errorCaption,
     });
