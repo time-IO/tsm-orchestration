@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">SFTP Ingest</h5>
+    <h5 class="q-mb-none">External SFTP Ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
@@ -56,23 +56,16 @@
                   <q-item-section>
                     <q-item-label>Fileserver URI</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ item.fileserver_uri }}</q-item-label>
+                      <q-item-label caption>{{ item.uri }}</q-item-label>
                       <q-btn
                         flat
                         round
                         icon="content_copy"
                         size="sm"
-                        @click="copyClipboard(item.fileserver_uri)"
+                        @click="copyClipboard(item.uri)"
                         title="Copy fileserver uri"
                       />
                     </div>
-                  </q-item-section>
-                </q-item>
-
-                <q-item>
-                  <q-item-section>
-                    <q-item-label>Bucket Name</q-item-label>
-                    <q-item-label caption>{{ item.bucket_name }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
@@ -97,7 +90,7 @@
                   <q-item-section>
                     <q-item-label>Password</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>
+                      <q-item-label caption class="col-2">
                         <q-input
                           borderless
                           v-model="item.password"
@@ -126,6 +119,23 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Public Key</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ shortenText(item.ssh_public_key) }}</q-item-label>
+                      <q-btn
+                        flat
+                        round
+                        icon="content_copy"
+                        size="sm"
+                        @click="copyClipboard(item.ssh_public_key)"
+                        title="Copy public key"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Created At (UTC)</q-item-label>
                     <q-item-label caption>{{ formatDate(item.created_at) }}</q-item-label>
                   </q-item-section>
@@ -143,6 +153,25 @@
                       <q-icon name="launch" class="cursor-pointer" @click="openParser">
                         <q-tooltip> Open in new window </q-tooltip>
                       </q-icon>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Sync Enabled</q-item-label>
+                    <q-item-label caption>
+                      <q-badge :color="item.sync_enabled ? 'positive' : 'negative'">
+                        {{ item.sync_enabled ? 'Yes' : 'No' }}
+                      </q-badge>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item v-if="item.sync_enabled">
+                  <q-item-section>
+                    <q-item-label>Sync Interval</q-item-label>
+                    <q-item-label caption>
+                      {{ item.sync_interval_in_minutes }} minutes
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -183,15 +212,15 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { copyToClipboard, useQuasar } from 'quasar';
-import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
-import { useIngestSftpStore } from 'stores/ingestSftpStore';
+import type { IngestExternalSftpPublic } from 'src/services/ingest_external_sftp/types';
+import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
-const store = useIngestSftpStore();
+const store = useIngestExternalSftpStore();
 
-const item = ref<IngestSftpPublic | null>(null);
+const item = ref<IngestExternalSftpPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
@@ -216,7 +245,7 @@ onMounted(async () => {
 
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/ingest/sftp/${item.value.id}/edit`;
+    return `/ingest/external-sftp/${item.value.id}/edit`;
   }
   return '';
 });
@@ -261,7 +290,11 @@ const openParser = () => {
   }
 };
 
-const copyClipboard = (text: string) => {
+const copyClipboard = (text: string | null) => {
+  if (!text) {
+    return;
+  }
+
   copyToClipboard(text)
     .then(() => {
       $q.notify({
@@ -277,6 +310,13 @@ const copyClipboard = (text: string) => {
         icon: 'error',
       });
     });
+};
+
+const shortenText = (key: string) => {
+  if (!key) return '';
+  // Show first 10 chars, last 10 chars, and middle dots
+  if (key.length <= 25) return key;
+  return `${key.substring(0, 10)}...${key.substring(key.length - 10)}`;
 };
 </script>
 

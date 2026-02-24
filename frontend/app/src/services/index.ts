@@ -6,6 +6,7 @@ import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_ext
 import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
 import ingestMqttController from 'src/services/ingest_mqtt';
 import ingestSftpController from 'src/services/ingest_sftp';
+import ingestExternalSftpController from 'src/services/ingest_external_sftp';
 
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
@@ -22,6 +23,7 @@ export const API = {
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestMqtt: ingestMqttController,
   ingestSftp: ingestSftpController,
+  ingestExternalSftp: ingestExternalSftpController,
   permissionGroup: permissionGroupController,
   user: userController,
   neutronMonitorStation: neutronMonitorStationController,

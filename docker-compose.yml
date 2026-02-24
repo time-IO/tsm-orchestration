@@ -1,5 +1,12 @@
 services:
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8081:8080"
+
   api:
     image: time-io-datasource-management-api:dev
     build:

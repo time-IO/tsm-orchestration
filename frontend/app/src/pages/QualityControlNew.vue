@@ -11,8 +11,8 @@
         <q-form>
           <q-input v-model="name" class="q-mb-md" label="Name" outlined/>
           <q-select
-            v-model="project"
-            :options="projectOptions"
+            v-model="permissionGroup"
+            :options="permissionGroupOptions"
             class="q-mb-md"
             label="Permission Group *"
             outlined
@@ -127,11 +127,11 @@ const step = ref(2);
 
 const name = ref('');
 const description = ref('');
-const project = ref(null);
+const permissionGroup = ref(null);
 
 const functionDialog = ref(false);
 
-const projectOptions = ['Project 1', 'Project 2', 'Project 3'];
+const permissionGroupOptions = ['Permission group 1', 'Permission group 2', 'Permission group 3'];
 
 // Explicitly type selectedFunction and addedFunctions
 const selectedFunction = ref<string | null>(null);

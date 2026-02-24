@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">New External SFTP Ingest</h5>
+    <h5 class="q-mb-none">Edit External SFTP Ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest/new" />
@@ -133,7 +133,6 @@
           <!-- Sync Settings -->
           <q-card-section class="q-pa-none">
             <div class="text-h6 q-mb-md">Synchronization Settings</div>
-
             <q-toggle
               v-model="formData.sync_enabled"
               label="Enable File Server Sync"
@@ -186,9 +185,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { usePermissionGroupStore } from 'stores/permissionGroupStore';
-import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
+import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 
@@ -197,8 +196,9 @@ const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
-const formData = ref<IngestExternalSftpCreate>({
+const formData = ref<IngestExternalSftpUpdate>({
   permission_group_id: null,
   name: null,
   description: null,
@@ -217,7 +217,51 @@ const isPwd = ref(true);
 
 const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
 
+let permissionGroupId: number | null = null;
+
 onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await ingestExternalSftpStore.dispatchGetOne(id);
+
+      formData.value = {
+        permission_group_id: data.permission_group_id || null,
+        name: data.name || null,
+        description: data.description || null,
+        parser_csv_id: data.parser_csv_id || null,
+        filename_pattern: data.filename_pattern || null,
+        uri: data.uri || null,
+        path: data.path || null,
+        password: data.password || null,
+        username: data.username || null,
+        sync_enabled: data.sync_enabled || false,
+        sync_interval_in_minutes: data.sync_interval_in_minutes || null,
+      };
+
+      permissionGroupId = data.permission_group_id || null;
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load ingest data',
+      });
+      await router.push('/ingest');
+    }
+
+    if (permissionGroupId !== null) {
+      try {
+        await csvParserStore.dispatchGetListbyPermissionGroup(permissionGroupId);
+        filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
+      } catch {
+        $q.notify({
+          position: 'top',
+          type: 'negative',
+          message: 'Failed to fetch parser options',
+        });
+      }
+    }
+  }
+
   try {
     await permissionGroupStore.dispatchGetList();
   } catch {
@@ -231,30 +275,45 @@ onMounted(async () => {
 
 watch(
   () => formData.value.permission_group_id,
-  async (newId) => {
+  async (newId, oldId) => {
+
+    if(oldId !== null && oldId !== newId)
+    {
+      // set parser to null, if an other permission group is selected
+      formData.value.parser_csv_id = null;
+    }
+
     if (newId) {
+      // formData.value.parser_csv_id = null ;
       await csvParserStore.dispatchGetListbyPermissionGroup(newId);
     }
   },
 );
 
 async function save() {
-  const data: IngestExternalSftpCreate = {
-    permission_group_id: formData.value.permission_group_id,
-    name: formData.value.name,
-    description: formData.value.description,
-    parser_csv_id: formData.value.parser_csv_id,
-    filename_pattern: formData.value.filename_pattern,
-    uri: formData.value.uri,
-    path: formData.value.path,
-    password: formData.value.password,
-    username: formData.value.username,
-    sync_enabled: formData.value.sync_enabled,
-    sync_interval_in_minutes: formData.value.sync_interval_in_minutes,
-  };
+  if (!route.params.id) return;
+
   try {
+    const id = Number(route.params.id);
+
+    const data: IngestExternalSftpUpdate = {
+      permission_group_id: formData.value.permission_group_id || null,
+      name: formData.value.name || null,
+      description: formData.value.description || null,
+      parser_csv_id: formData.value.parser_csv_id || null,
+      filename_pattern: formData.value.filename_pattern || null,
+      uri: formData.value.uri || null,
+      path: formData.value.path || null,
+      password: formData.value.password || null,
+      username: formData.value.username || null,
+      sync_enabled: formData.value.sync_enabled || false,
+      sync_interval_in_minutes: formData.value.sync_interval_in_minutes || null,
+    };
+
     isLoading.value = true;
-    const result = await ingestExternalSftpStore.dispatchCreate(data);
+
+    await ingestExternalSftpStore.dispatchUpdate(id, data);
+
     $q.notify({
       position: 'top',
       type: 'positive',
@@ -262,7 +321,7 @@ async function save() {
     });
 
     // Navigate to detail
-    await router.push(`/ingest/external-sftp/${result.id}`);
+    await router.push(`/ingest/external-sftp/${id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';

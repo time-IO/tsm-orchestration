@@ -29,8 +29,8 @@
             option-label="name"
             emit-value
             map-options
-            hint="Select the project this ingest belongs to"
-            :rules="[(val) => !!val || 'Project is required']"
+            hint="Select the permission group this ingest belongs to"
+            :rules="[(val) => !!val || 'Permission group is required']"
           />
 
           <!-- Description -->
@@ -201,7 +201,7 @@ async function save() {
       name: formData.value.name,
       description: formData.value.description,
       delimiter: formData.value.delimiter,
-     headlines_to_exclude:
+      headlines_to_exclude:
         formData.value.headlines_to_exclude !== null &&
         formData.value.headlines_to_exclude !== undefined
           ? formData.value.headlines_to_exclude

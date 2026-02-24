@@ -242,38 +242,6 @@ def upgrade() -> None:
         ),
     )
     op.create_table(
-        "ingest_external_sftp",
-        sa.Column("permission_group_id", sa.Integer(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
-        sa.Column("sync_enabled", sa.Boolean(), nullable=False),
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column(
-            "ssh_private_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("ssh_public_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["created_by_id"],
-            ["user.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["permission_group_id"],
-            ["permission_group.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="ext_sftp_unique_name_permission_group"
-        ),
-    )
-    op.create_table(
         "ingest_mqtt",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -416,6 +384,46 @@ def upgrade() -> None:
             ["csv_parser_id"], ["parser_csv.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "ingest_external_sftp",
+        sa.Column("permission_group_id", sa.Integer(), nullable=False),
+        sa.Column("parser_csv_id", sa.Integer(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column(
+            "filename_pattern", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
+        sa.Column("sync_enabled", sa.Boolean(), nullable=False),
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("uuid", sa.Uuid(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column(
+            "ssh_private_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("ssh_public_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["created_by_id"],
+            ["user.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["parser_csv_id"],
+            ["parser_csv.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["permission_group_id"],
+            ["permission_group.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "name", "permission_group_id", name="ext_sftp_unique_name_permission_group"
+        ),
     )
     op.create_table(
         "quality_control_function",

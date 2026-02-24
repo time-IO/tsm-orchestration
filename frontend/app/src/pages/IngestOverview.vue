@@ -60,6 +60,13 @@
       :columns="columns"
       :rows="ingestExternalApiUbaStore.ingestExternalApiUbaList"
     />
+
+    <ingest-overview-table
+      title="Ingest - External SFTP"
+      ingest-path="ingest/external-sftp"
+      :columns="columns"
+      :rows="ingestExternalSftpStore.ingestExternalSftpList"
+    />
   </q-page>
 </template>
 
@@ -76,6 +83,7 @@ import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternal
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
+import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 const { t } = useI18n();
 
 const ingestExternalApiUbaStore = useIngestExternalApiUbaStore();
@@ -86,6 +94,7 @@ const ingestExternalApiTheThingsNetworkStore = useIngestExternalApiTheThingsNetw
 const ingestExternalApiTSystemsStore = useIngestExternalApiTSystemsStore();
 const ingestMqttStore = useIngestMqttStore();
 const ingestSftpStore = useIngestSftpStore();
+const ingestExternalSftpStore = useIngestExternalSftpStore();
 
 onMounted(async () => {
   await ingestExternalApiUbaStore.dispatchGetList();
@@ -96,6 +105,7 @@ onMounted(async () => {
   await ingestExternalApiTSystemsStore.dispatchGetList();
   await ingestMqttStore.dispatchGetList();
   await ingestSftpStore.dispatchGetList();
+  await ingestExternalSftpStore.dispatchGetList();
 });
 
 const columns: QTableColumn[] = [

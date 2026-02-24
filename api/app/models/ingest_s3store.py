@@ -24,7 +24,7 @@ class IngestS3StoreUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     filename_pattern: str | None = None
-    parser_csv_id: int
+    parser_csv_id: int | None = None
 
 
 class IngestS3StorePublic(IngestS3StoreBase):

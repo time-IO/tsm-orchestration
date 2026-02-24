@@ -2,6 +2,8 @@ from sqlmodel import Field, SQLModel, Column, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from sqlalchemy import JSON
+
+
 from .permission_group import PermissionGroup
 
 # ------------------- CsvParserTimestamp
@@ -92,6 +94,10 @@ class CsvParser(CsvParserBase, table=True):
 
     permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")
     ingest_s3store: list["IngestS3Store"] = Relationship(back_populates="csv_parser")
+    ingest_external_sftp: list["IngestExternalSftp"] = Relationship(
+        back_populates="csv_parser"
+    )
 
 
 from .ingest_s3store import IngestS3Store
+from .ingest_external_sftp import IngestExternalSftp
