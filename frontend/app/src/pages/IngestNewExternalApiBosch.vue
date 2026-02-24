@@ -29,8 +29,8 @@
             option-label="name"
             emit-value
             map-options
-            hint="Select the project this ingest belongs to"
-            :rules="[(val) => !!val || 'Project is required']"
+            hint="Select the permission group this ingest belongs to"
+            :rules="[(val) => !!val || 'Permission group is required']"
           />
 
           <!-- Description -->

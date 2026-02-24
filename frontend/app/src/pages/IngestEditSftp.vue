@@ -156,15 +156,6 @@ onMounted(async () => {
   }
 });
 
-// watch(
-//   () => formData.value.permission_group_id,
-//   async (newId) => {
-//     if (newId) {
-//       await csvParserStore.dispatchGetListbyPermissionGroup(newId);
-//     }
-//   },
-// );
-
 async function save() {
   if (!route.params.id) return;
 

@@ -6,6 +6,7 @@ from .permission_group import PermissionGroup
 
 class IngestExternalSftpBase(SQLModel):
     permission_group_id: int = Field(foreign_key="permission_group.id")
+    parser_csv_id: int = Field(foreign_key="parser_csv.id")
     name: str
     description: str | None = None
     uri: str
@@ -14,6 +15,7 @@ class IngestExternalSftpBase(SQLModel):
     password: str | None = None
     sync_interval_in_minutes: int | None = Field(ge=10, nullable=True)
     sync_enabled: bool = False
+    filename_pattern: str
 
 
 class IngestExternalSftpCreate(IngestExternalSftpBase):
@@ -30,6 +32,8 @@ class IngestExternalSftpUpdate(SQLModel):
     password: str | None = None
     sync_interval_in_minutes: int | None = Field(ge=10, default=None)
     sync_enabled: bool | None = None
+    parser_csv_id: int | None = None
+    filename_pattern: str | None = None
 
 
 class IngestExternalSftpPublic(IngestExternalSftpBase):
@@ -39,6 +43,8 @@ class IngestExternalSftpPublic(IngestExternalSftpBase):
     created_at: datetime
     ssh_public_key: str
     permission_group: "PermissionGroup"
+    parser_csv_id: int
+    csv_parser: "CsvParser"
 
 
 class IngestExternalSftp(IngestExternalSftpBase, table=True):
@@ -60,3 +66,7 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_sftp"
     )
+    csv_parser: "CsvParser" = Relationship(back_populates="ingest_external_sftp")
+
+
+from .parser_csv import CsvParser

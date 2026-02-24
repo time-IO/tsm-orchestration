@@ -35,6 +35,8 @@ import ParserEditCsv from 'pages/ParserEditCsv.vue';
 import ParserDetailCsv from 'pages/ParserDetailCsv.vue';
 import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
 import IngestEditSftp from 'pages/IngestEditSftp.vue';
+import IngestDetailExternalSftp from 'pages/IngestDetailExternalSftp.vue';
+import IngestEditExternalSftp from 'pages/IngestEditExternalSftp.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -133,6 +135,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/external-sftp/:id',
+    component: IngestDetailExternalSftp,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/ingest/mqtt/:id',
     component: IngestDetailMqtt,
     meta: { requiresAuth: true },
@@ -180,6 +187,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/sftp/:id/edit',
     component: IngestEditSftp,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-sftp/:id/edit',
+    component: IngestEditExternalSftp,
     meta: { requiresAuth: true },
   },
   {
