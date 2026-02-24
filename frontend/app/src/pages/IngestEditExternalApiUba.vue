@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
       </div>
     </div>
 
@@ -89,7 +89,7 @@
             <div class="col-6">
               <q-btn
                 unelevated
-                color="primary"
+                color="green"
                 type="submit"
                 :loading="isLoading"
                 label="Save Changes"
@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiUbaUpdate } from 'src/services/ingest_external_api_uba/types';
@@ -156,6 +156,14 @@ onMounted(async () => {
   }
 });
 
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-api-uba/${id}`;
+  }
+  return '';
+});
+
 // Save changes
 async function save() {
   if (!route.params.id) return;
@@ -181,7 +189,7 @@ async function save() {
     });
 
     // Navigate back to detail
-    await router.push(`/ingest/external-api-uba/${id}`);
+    await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     const errorCaption = error?.response?.data?.detail || '';
