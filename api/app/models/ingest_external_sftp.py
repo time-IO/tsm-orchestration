@@ -10,10 +10,10 @@ class IngestExternalSftpBase(SQLModel):
     description: str | None = None
     uri: str
     path: str
-    username: str
-    password: str
-    sync_interval_in_minutes: int
-    sync_enabled: bool
+    username: str | None = None
+    password: str | None = None
+    sync_interval_in_minutes: int | None = Field(ge=10, nullable=True)
+    sync_enabled: bool = False
 
 
 class IngestExternalSftpCreate(IngestExternalSftpBase):
@@ -26,9 +26,9 @@ class IngestExternalSftpUpdate(SQLModel):
     description: str | None = None
     uri: str | None = None
     path: str | None = None
-    ext_sftp_user: str | None = None
-    ext_sftp_password: str | None = None
-    sync_interval_in_minutes: int | None = None
+    username: str | None = None
+    password: str | None = None
+    sync_interval_in_minutes: int | None = Field(ge=10, default=None)
     sync_enabled: bool | None = None
 
 
@@ -37,7 +37,6 @@ class IngestExternalSftpPublic(IngestExternalSftpBase):
     uuid: uuid_pkg.UUID
     created_by_id: int
     created_at: datetime
-    ssh_private_key: str
     ssh_public_key: str
     permission_group: "PermissionGroup"
 

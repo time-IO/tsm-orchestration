@@ -5,6 +5,7 @@ from models.ingest_external_sftp import (
     IngestExternalSftpUpdate,
     IngestExternalSftpPublic,
 )
+from utils import generate_keypair
 
 router = APIRouter(
     prefix="/ingest/external-sftp",
@@ -50,7 +51,14 @@ def create(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_sftp),
 ):
-    extra_data = {"created_by_id": current_user.id}
+    private_key, public_key = generate_keypair()
+
+    extra_data = {
+        "created_by_id": current_user.id,
+        "ssh_private_key": private_key,
+        "ssh_public_key": public_key,
+    }
+
     return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
 
 
