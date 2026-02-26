@@ -23,16 +23,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -147,11 +139,10 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import type { IngestExternalApiNeutronMonitorCreate } from 'src/services/ingest_external_api_neutron_monitor/types';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 const neutronMonitorStationStore = useNeutronMonitorStationStore();
-const permissionGroupStore = usePermissionGroupStore();
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();
 const router = useRouter();
@@ -179,16 +170,6 @@ onMounted(async () => {
       position: 'top',
       type: 'negative',
       message: 'Failed to fetch neutron monitor stations',
-    });
-  }
-
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
     });
   }
 });

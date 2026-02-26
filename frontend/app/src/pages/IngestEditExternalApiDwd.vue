@@ -26,16 +26,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -103,19 +95,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed} from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiDwdUpdate } from 'src/services/ingest_external_api_dwd/types';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 // Composition API
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const dwdStore = useIngestExternalApiDwdStore();
-const permissionGroupStore = usePermissionGroupStore();
 
 // Reactive data
 const isLoading = ref(false);
@@ -132,7 +123,6 @@ const syncInterval = ref(1440);
 onMounted(async () => {
   if (route.params.id) {
     try {
-      await permissionGroupStore.dispatchGetList();
 
       const id = Number(route.params.id);
       const data = await dwdStore.dispatchGetOne(id);

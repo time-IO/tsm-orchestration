@@ -20,16 +20,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -183,16 +175,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
-const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
@@ -261,24 +252,12 @@ onMounted(async () => {
       }
     }
   }
-
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
 });
 
 watch(
   () => formData.value.permission_group_id,
   async (newId, oldId) => {
-
-    if(oldId !== null && oldId !== newId)
-    {
+    if (oldId !== null && oldId !== newId) {
       // set parser to null, if an other permission group is selected
       formData.value.parser_csv_id = null;
     }

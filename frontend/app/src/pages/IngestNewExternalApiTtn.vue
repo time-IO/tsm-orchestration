@@ -26,19 +26,10 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
-
           <!-- Description -->
           <q-input
             filled
@@ -128,15 +119,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import type { IngestExternalApiTheThingsNetworkCreate } from 'src/services/ingest_external_api_the_things_network/types';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
-const permissionGroupStore = usePermissionGroupStore();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -152,18 +142,6 @@ const formData = ref<IngestExternalApiTheThingsNetworkCreate>({
 
 const isLoading = ref(false);
 const isPwd = ref(true);
-
-onMounted(async () => {
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
-});
 
 async function save() {
   const data: IngestExternalApiTheThingsNetworkCreate = {
