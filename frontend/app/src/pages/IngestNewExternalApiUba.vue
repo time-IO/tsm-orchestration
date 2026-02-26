@@ -27,16 +27,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -104,15 +96,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import type { IngestExternalApiUbaCreate } from 'src/services/ingest_external_api_uba/types';
 import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 const ubaStore = useIngestExternalApiUbaStore();
-const permissionGroupStore = usePermissionGroupStore();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -126,17 +117,6 @@ const formData = ref<IngestExternalApiUbaCreate>({
 const syncInterval = ref(60);
 const isLoading = ref(false);
 
-onMounted(async () => {
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
-});
 
 async function save() {
   const data: IngestExternalApiUbaCreate = {

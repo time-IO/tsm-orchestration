@@ -20,16 +20,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -105,13 +97,12 @@
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import { useMqttParserStore } from 'stores/mqttParserStore';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
 const mqttStore = useIngestMqttStore();
-const permissionGroupStore = usePermissionGroupStore();
 const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
 const router = useRouter();
@@ -130,15 +121,6 @@ const isLoading = ref(false);
 const filteredMqttParserOptions = ref([...mqttParserStore.mqttParsers]);
 
 onMounted(async () => {
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
 
   try {
     await mqttParserStore.dispatchGetList();

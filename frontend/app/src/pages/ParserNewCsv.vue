@@ -20,16 +20,8 @@
             :rules="[(val) => !!val || 'Name is required']"
           />
 
-          <q-select
-            filled
+          <permission-group-select
             v-model="formData.permission_group_id"
-            :options="permissionGroupStore.permissionGroups"
-            label="Permission Group *"
-            option-value="id"
-            option-label="name"
-            emit-value
-            map-options
-            hint="Select the permission group this ingest belongs to"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -157,14 +149,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 
-const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
@@ -181,18 +172,6 @@ const formData = ref<CsvParserCreate>({
 });
 
 const isLoading = ref(false);
-
-onMounted(async () => {
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
-});
 
 async function save() {
   try {
