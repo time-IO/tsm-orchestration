@@ -657,7 +657,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "sub", "preferred_username", "email" ],
+    "defaultClientScopes" : [ "web-origins", "acr", "openid", "roles", "client-audience", "profile", "eduperson_unique_id", "eduperson_entitlement", "eduperson_principal_name", "sub", "preferred_username", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "0a6dff56-c637-4a49-8686-dc1602e45558",
@@ -1251,6 +1251,32 @@
       }
     } ]
   }, {
+    "id" : "80ab7a53-ddc8-46f1-980f-5753c0977a59",
+    "name" : "client-audience",
+    "description" : "Correct map the client_id to the aud claim",
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "include.in.token.scope" : "true",
+      "display.on.consent.screen" : "false",
+      "gui.order" : "",
+      "consent.screen.text" : ""
+    },
+    "protocolMappers" : [ {
+      "id" : "cb2f7768-c390-47c3-b223-fae950d20e9e",
+      "name" : "client-audience mapper",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-audience-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "included.client.audience" : "timeIO-client",
+        "introspection.token.claim" : "true",
+        "userinfo.token.claim" : "false",
+        "id.token.claim" : "true",
+        "lightweight.claim" : "true",
+        "access.token.claim" : "true"
+      }
+    } ]
+  }, {
     "id" : "4dbfa693-93d9-4fe9-a5ef-12df7c465f09",
     "name" : "sub",
     "description" : "",
@@ -1423,7 +1449,7 @@
     } ]
   } ],
   "defaultDefaultClientScopes" : [ "role_list", "profile", "email", "roles", "web-origins", "acr", "openid", "eduperson_principal_name", "eduperson_unique_id", "eduperson_entitlement" ],
-  "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt" ],
+  "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt", "client-audience" ],
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
     "xContentTypeOptions" : "nosniff",
