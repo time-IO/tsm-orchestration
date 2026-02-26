@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends
-from dependencies import get_current_user, get_repo_ingest_external_api_bosch
+from dependencies import (
+    get_current_user,
+    get_repo_ingest_external_api_bosch,
+    create_database_if_not_exists,
+)
 from models.ingest_external_api_bosch import (
     IngestExternalApiBoschCreate,
     IngestExternalApiBoschUpdate,
@@ -47,6 +51,7 @@ def read_one(
     "/",
     response_model=IngestExternalApiBoschPublic,
     summary=f"Create one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
 )
 def create(
     *,
@@ -62,6 +67,7 @@ def create(
     "/{id}",
     response_model=IngestExternalApiBoschPublic,
     summary=f"Update one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
 )
 def update(
     *,

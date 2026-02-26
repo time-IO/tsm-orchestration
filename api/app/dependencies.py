@@ -1,9 +1,8 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from sqlmodel import Session, create_engine, select
 from config import settings
 from auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
 from models import (
     PermissionGroup,
     IngestExternalApiBosch,
@@ -21,6 +20,8 @@ from models import (
     QualityControlSetting,
     User,
     BaseRepository,
+    PermissionGroupRepository,
+    DatabaseRepository,
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -199,3 +200,36 @@ def get_repo_quality_control_setting(session=Depends(get_session)):
 
 def get_repo_csv_parser_timestamp_column(session=Depends(get_session)):
     return BaseRepository(CsvParser, session)
+
+
+def get_repo_database(session=Depends(get_session)):
+    return DatabaseRepository(session)
+
+
+def get_repo_permission_group(session=Depends(get_session)):
+    return PermissionGroupRepository(session)
+
+
+async def create_database_if_not_exists(
+    request: Request,
+    database_repo=Depends(get_repo_database),
+    permission_group_repo=Depends(get_repo_permission_group),
+    current_user=Depends(get_current_user),
+):
+    body = await request.json()
+    permission_group_id = body.get("permission_group_id")
+
+    if not permission_group_id:
+        # this method will also be called for update routes
+        # we currently use http.patch so the body may not include permisison_group_id so we skip here
+        return
+
+    database = database_repo.find_one_permission_group_id(permission_group_id)
+    permission_group = permission_group_repo.find_one(permission_group_id)
+
+    if not permission_group:
+        print("Cannot create database entity: permission group does not exist")
+        return
+
+    if not database:
+        database_repo.create(permission_group, current_user.permission_group_ids)
