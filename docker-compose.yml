@@ -436,6 +436,7 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
+
   dsm-api:
     image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
@@ -444,6 +445,7 @@ services:
       flyway:
         condition: service_completed_successfully
     environment:
+      LOG_LEVEL: "debug"
       API_ROOT_PATH: "${DSM_API_RELATIVE_PATH}"
       POSTGRES_SERVER: "${DSM_API_DATABASE_HOST}"
       POSTGRES_USER: "${DSM_API_DATABASE_USER}"
@@ -454,6 +456,10 @@ services:
       OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
       ALLOWED_VOS: "${DSM_API_ALLOWED_VOS}"
       ALLOWED_ORIGINS: "${DSM_API_ALLOWED_ORIGINS}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
+      PROXY_URL: "${PROXY_URL}"
+    volumes:
+      - "../data-source-management/api/app:/app:rw"
 
 
   dsm-frontend:
