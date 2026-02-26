@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from .permission_group import PermissionGroup, PermissionGroupUserLink
 from .database import Database
-from .base_repository import BaseRepository
+from .base_repository import (
+    BaseRepository,
+    PermissionGroupRepository,
+    DatabaseRepository,
+)
 from .user import User
 from .ingest_external_api_bosch import IngestExternalApiBosch
 from .ingest_external_api_dwd import IngestExternalApiDwd
@@ -22,6 +26,8 @@ from .health import Health
 __all__ = [
     "Database",
     "BaseRepository",
+    "PermissionGroupRepository",
+    "DatabaseRepository",
     "PermissionGroup",
     "PermissionGroupUserLink",
     "User",

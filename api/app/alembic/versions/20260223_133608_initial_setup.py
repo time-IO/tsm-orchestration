@@ -63,16 +63,22 @@ def upgrade() -> None:
         "database",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
-        sa.Column("schema_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("ro_user", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("ro_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "read_only_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "read_only_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["permission_group_id"],
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("permission_group_id", name="permission_group_unique"),
     )
     op.create_table(
         "ingest_external_api_bosch",

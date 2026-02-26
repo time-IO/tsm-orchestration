@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends
-from dependencies import get_current_user, get_repo_ingest_s3stores
+from dependencies import (
+    get_current_user,
+    get_repo_ingest_s3stores,
+    create_database_if_not_exists,
+)
 from models.ingest_s3store import (
     IngestS3StoreCreate,
     IngestS3StorePublic,
@@ -46,7 +50,10 @@ def read_one(
 
 
 @router.post(
-    "/", response_model=IngestS3StorePublic, summary=f"Create one {entity_name}"
+    "/",
+    response_model=IngestS3StorePublic,
+    summary=f"Create one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
 )
 def create(
     *,
@@ -72,7 +79,10 @@ def create(
 
 
 @router.patch(
-    "/{id}", response_model=IngestS3StorePublic, summary=f"Update one {entity_name}"
+    "/{id}",
+    response_model=IngestS3StorePublic,
+    summary=f"Update one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
 )
 def update(
     *,

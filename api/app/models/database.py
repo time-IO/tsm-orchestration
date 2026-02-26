@@ -6,11 +6,12 @@ class Database(SQLModel, table=True):
     __tablename__ = "database"
 
     id: int | None = Field(default=None, primary_key=True)
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    schema_name: str
+    permission_group_id: int = Field(foreign_key="permission_group.id", unique=True)
+    name: str
     username: str
     password: str
-    ro_user: str
-    ro_password: str
+    read_only_username: str
+    read_only_password: str
+    url: str
 
     permission_group: "PermissionGroup" = Relationship(back_populates="database")

@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends
-from dependencies import get_current_user, get_repo_ingest_mqtt
+from dependencies import (
+    get_current_user,
+    get_repo_ingest_mqtt,
+    create_database_if_not_exists,
+)
 from models.ingest_mqtt import (
     IngestMqttCreate,
     IngestMqttPublic,
@@ -73,14 +77,18 @@ def read_one(
     return repo.find_allowed_one(id, current_user.permission_group_ids)
 
 
-@router.post("/", response_model=IngestMqttPublic, summary=f"Create one {entity_name}")
+@router.post(
+    "/",
+    response_model=IngestMqttPublic,
+    summary=f"Create one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
+)
 def create(
     *,
     payload: IngestMqttCreate,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_mqtt),
 ):
-
     _uuid = uuid.uuid4()
 
     password = generate_password(40)
@@ -99,7 +107,10 @@ def create(
 
 
 @router.patch(
-    "/{id}", response_model=IngestMqttPublic, summary=f"Update one {entity_name}"
+    "/{id}",
+    response_model=IngestMqttPublic,
+    summary=f"Update one {entity_name}",
+    dependencies=[Depends(create_database_if_not_exists)],
 )
 def update(
     *,
