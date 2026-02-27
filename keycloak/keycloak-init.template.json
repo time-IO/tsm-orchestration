@@ -645,7 +645,7 @@
       "backchannel.logout.revoke.offline.tokens" : "false",
       "use.refresh.tokens" : "true",
       "oidc.ciba.grant.enabled" : "false",
-      "client.use.lightweight.access.token.enabled" : "false",
+      "client.use.lightweight.access.token.enabled" : "true",
       "backchannel.logout.session.required" : "true",
       "client_credentials.use_refresh_token" : "false",
       "acr.loa.map" : "{}",
