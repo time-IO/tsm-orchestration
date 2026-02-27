@@ -114,8 +114,8 @@ class SaQCWrapper:
         flags = {}
 
         for k, df in data.items():
-            values[k.name] = df["data"]
-            flags[k.name] = df.get("quality", pd.Series(None, index=df["data"].index))
+            values[k.alias] = df["data"]
+            flags[k.alias] = df.get("quality", pd.Series(None, index=df["data"].index))
 
         self._qc = saqc.SaQC(
             data=saqc.DictOfSeries(values),
@@ -124,7 +124,7 @@ class SaQCWrapper:
         )
         # we keep the original data to check for modifications later
         self._data = data
-        self._streams = {s.name: s for s in data.keys()}
+        self._streams = {s.alias: s for s in data.keys()}
 
     @property
     def data(self) -> dict[StreamInfo, pd.DataFrame]:
@@ -133,10 +133,13 @@ class SaQCWrapper:
             out[self._streams[col]] = pd.DataFrame(
                 {"data": self._qc.data[col], "quality": self._qc.flags.get(col, None)}
             )
-
         return out
 
     def execute(self, func: QcFunction):
+        # add targets
+        for stream in func.targets:
+            self._streams[stream.alias] = stream
+
         saqc_func = getattr(self._qc, func.func_name)
         if func.func_name == "flagRange":
             # NOTE: needed to work around a SaQC-Bug,
@@ -159,4 +162,4 @@ class SaQCWrapper:
         )
 
     def data_is_modified(self, stream: StreamInfo) -> bool:
-        return not self._qc._data[stream.name].equals(self._data[stream]["data"])
+        return not self._qc._data[stream.alias].equals(self._data[stream]["data"])

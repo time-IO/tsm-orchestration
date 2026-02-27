@@ -61,9 +61,12 @@ def query_datastream_info(
         raise ValueError(f"STA Datastream ID '{sta_id}' does not exist")
     schema, thing_id, datastream_id = result
 
-    cur.execute(sql.SQL(f"""
+    cur.execute(
+        sql.SQL(f"""
     SELECT position FROM {schema}.datastream where id = %s
-    """), (datastream_id, ))
+    """),
+        (datastream_id,),
+    )
     result = cur.fetchone()
     if result is None:
         raise ValueError(f"Datastream ID '{datastream_id}' does not exist")
@@ -74,7 +77,7 @@ def write_data(conn: psycopg.Connection, qc: SaQCWrapper, dbapi_url: str):
 
     # TODO: take care of the context window
 
-    def get_thing_uuid(cur: psycopg.Cursor, configuration_id):
+    def get_thing_uuid(cur: psycopg.Cursor, configuration_id: int) -> str:
         query = """
         SELECT DISTINCT
             thing_id
@@ -82,17 +85,18 @@ def write_data(conn: psycopg.Connection, qc: SaQCWrapper, dbapi_url: str):
           sms_device_mount_action m
           JOIN sms_configuration c on c.id = m.configuration_id
           JOIN sms_datastream_link l on l.device_mount_action_id = m.id
-        WHERE configuration_id = ?
+        WHERE configuration_id = %s
         """
         cur.execute(sql.SQL(query), (configuration_id,))
+
         result = cur.fetchone()
         assert len(result) == 1
-        return result
+        return str(result[0])
 
     def convert_df(stream: StreamInfo, df: pd.DataFrame):
         df["result_time"] = df.index
         df["result_type"] = rt = get_result_type(df["data"])
-        df["datastream_id"] = stream.datastream_id
+        df["datastream_id"] = stream.db_stream_id
         df["datastream_pos"] = stream.datastream_name
         columns_map = {
             "quality": "result_quality",
@@ -103,26 +107,36 @@ def write_data(conn: psycopg.Connection, qc: SaQCWrapper, dbapi_url: str):
         return df
 
     def upload_product_streams(dbapi_url: str, streams: dict[str, list]):
+
         for thing_uuid, dfs in streams.items():
-            out = pd.concat(dfs).to_json(orient="records", date_format="iso")
+            # upload data
+            df = pd.concat(dfs)
+            data = df.drop(columns="result_quality").to_json(orient="records", date_format="iso")
+
+            # r = requests.post(
+            #     f"{dbapi_url}/qaqc/upsert/{thing_uuid}",
+            #     data=f'{{"qaqc_labels":{out}}}',
+            #     headers={"Content-type": "application/json"},
+            # )
             r = requests.post(
-                f"{dbapi_url}/observations/qaqc/{thing_uuid}",
-                data=f'{{"qaqc_labels":{out}}}',
+                f"{dbapi_url}/observations/upsert/{thing_uuid}",
+                data=f'{{"observations":{data}}}',
                 headers={"Content-type": "application/json"},
             )
             r.raise_for_status()
-
-
+            # TODO: upload qaqc
 
     product_streams = defaultdict(list)
     qc_streams = defaultdict(list)
     with conn.cursor() as cur:
         for stream, df in qc.data.items():
             converted = convert_df(stream, df)
-            if stream.stream_id is None:
+            if stream.sta_stream_id is None:
                 # we have a newly created datastream -> simply upload
-                thing_uuid = get_thing_uuid(cur, stream.thing_id)
-                product_streams[thing_uuid].append(converted.drop(columns=["datastream_id"]))
+                thing_uuid = get_thing_uuid(cur, stream.sta_thing_id)
+                product_streams[thing_uuid].append(
+                    converted.drop(columns=["datastream_id"])
+                )
             else:
                 # we have a pre-existing datastream
                 # check whether the data was modified
@@ -131,9 +145,15 @@ def write_data(conn: psycopg.Connection, qc: SaQCWrapper, dbapi_url: str):
                     # - check, if datastream is mutable
                     # - delete datastream data from the database if necessary
                     pass
-                qc_streams[stream.schema].append(converted.drop(columns=["data"]))
+                # NOTE:
+                # unsure, if we might see othe data types as well
+                # I guess not, as SaQC is expecting numerical data
+                qc_streams[stream.db_schema].append(
+                    converted.drop(columns=["result_number"])
+                )
 
     upload_product_streams(dbapi_url, product_streams)
+
 
 def load_data(
     db_conn: psycopg.Connection,
@@ -205,19 +225,17 @@ def load_data(
         # for stream in set(streams):
         for stream in streams:
             if stream.is_immutable:
-                # TODO: shrink data range
+                # TODO: extend data range to take context window into account
                 pass
             schema, _, datastream_id, datastream_pos = query_datastream_info(
-                cur, stream.stream_id
+                cur, stream.sta_stream_id
             )
             df = query_datastream(
                 cur, schema, datastream_id, start_date, end_date, limit
             )
+            stream.db_schema = schema
+            stream.db_stream_id = datastream_id
+            stream.datastream_name = datastream_pos
             out[stream] = df
-            stream.add_locals(
-                schema=schema,
-                datastream_id=datastream_id,
-                datastream_name=datastream_pos,
-            )
 
     return out

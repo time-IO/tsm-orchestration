@@ -48,33 +48,30 @@ class StreamInfo:
     def __init__(
         self,
         key: Literal["field", "target"],
-        name: str,
-        thing_id: int | None = None,
-        stream_id: int | None = None,
+        alias: str,
+        sta_thing_id: int | None = None,
+        sta_stream_id: int | None = None,
     ):
         self.key = key
-        self.name = name
-        self.thing_id = thing_id
-        self.stream_id = stream_id
-        self.datastream_name = name.split("S", maxsplit=1)[-1]
-        self.is_immutable = thing_id is not None and stream_id is not None
-
-    def add_locals(self, schema: str, datastream_name: str, datastream_id: int):
-        self.schema = schema
-        self.datastream_id = datastream_id
-        self.datastream_name = datastream_name
+        self.alias = alias
+        self.sta_thing_id = sta_thing_id
+        self.sta_stream_id = sta_stream_id
+        self.datastream_name = alias.split("S", maxsplit=1)[-1]
+        self.is_immutable = sta_thing_id is not None and sta_stream_id is not None
+        self.db_schema = None
+        self.db_stream_id = None
 
     def __eq__(self, other):
         if not isinstance(other, StreamInfo):
             return NotImplemented
-        return self.thing_id == other.thing_id and self.stream_id == other.stream_id
+        return self.sta_thing_id == other.sta_thing_id and self.sta_stream_id == other.sta_stream_id
 
     def __hash__(self):
-        return hash((self.key, self.name, self.thing_id, self.stream_id))
+        return hash((self.key, self.alias, self.sta_thing_id, self.sta_stream_id))
 
     def __repr__(self):
         klass = self.__class__.__name__
-        return f"{klass}({self.key}, {self.name})"
+        return f"{klass}({self.key}, {self.alias})"
 
 
 class QcFunction:
@@ -99,11 +96,11 @@ class QcFunction:
 
     @property
     def field_names(self) -> list[str]:
-        return [f.name for f in self.fields]
+        return [f.alias for f in self.fields]
 
     @property
     def target_names(self) -> list[str]:
-        return [f.name for f in self.targets]
+        return [f.alias for f in self.targets]
 
 
 class QcFunctionSetup:
@@ -185,7 +182,7 @@ def get_functions(conf: feta.QAQC) -> QcFunctionSetup:
 def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
     out = []
     for func in funcs:
-        thing_ids = set(int(f.thing_id) for f in func.fields)
+        thing_ids = set(int(f.sta_thing_id) for f in func.fields)
         if thing_id in thing_ids:
             out.append(func)
     return out
@@ -197,14 +194,14 @@ def filter_funcs_to_execute(
 
     to_check = []
     for func in selected_funcs:
-        targets = set(t.name for t in func.targets)
+        targets = set(t.alias for t in func.targets)
         for target in targets:
             to_check.append(target)
 
     # build up the function look up table
     lut = {}
     for func in all_funcs:
-        fields = set(f.name for f in func.fields)
+        fields = set(f.alias for f in func.fields)
         for field in fields:
             lut[field] = func
 

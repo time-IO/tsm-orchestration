@@ -17,8 +17,8 @@ TEST_FUNCTIONS = [
         "Static-T1",
         context_window=0,
         func_name="flagRange",
-        fields=[StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33)],
-        targets=[StreamInfo(key="target", name="T1S33", thing_id=1, stream_id=33)],
+        fields=[StreamInfo(key="field", alias="T1S33", sta_thing_id=1, sta_stream_id=33)],
+        targets=[StreamInfo(key="target", alias="T1S33", sta_thing_id=1, sta_stream_id=33)],
         params={"min": 900, "max": 1200},
     ),
     QcFunction(
@@ -109,8 +109,8 @@ def test_collect_tests(thing_id, expected):
             "Static-T1",
             context_window=0,
             func_name="flagRange",
-            fields=[StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33)],
-            targets=[StreamInfo(key="target", name="T1S33", thing_id=1, stream_id=33)],
+            fields=[StreamInfo(key="field", alias="T1S33", sta_thing_id=1, sta_stream_id=33)],
+            targets=[StreamInfo(key="target", alias="T1S33", sta_thing_id=1, sta_stream_id=33)],
             params={"min": 900, "max": 1200},
         ),
         QcFunction(
@@ -170,10 +170,10 @@ def test_collect_tests(thing_id, expected):
                 "",
                 func_name="flagRange",
                 fields=[
-                    StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33)
+                    StreamInfo(key="field", alias="T1S33", sta_thing_id=1, sta_stream_id=33)
                 ],
                 targets=[
-                    StreamInfo(key="target", name="T1S33", thing_id=1, stream_id=33)
+                    StreamInfo(key="target", alias="T1S33", sta_thing_id=1, sta_stream_id=33)
                 ],
                 params={"min": 900, "max": 1200},
             ),
@@ -251,11 +251,11 @@ def test_db_data_reading(local_database_connection):
     # test only runs if "postgresql://postgres:postgres@localhost/postgres"
     # is available
     fields = [
-        StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
-        StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33),
-        StreamInfo(key="field", name="T1S36", thing_id=1, stream_id=36),
-        StreamInfo(key="field", name="T2S44", thing_id=4, stream_id=44),
-        StreamInfo(key="field", name="T2S46", thing_id=4, stream_id=46),
+        StreamInfo(key="field", alias="T1S27", sta_thing_id=1, sta_stream_id=27),
+        StreamInfo(key="field", alias="T1S33", sta_thing_id=1, sta_stream_id=33),
+        StreamInfo(key="field", alias="T1S36", sta_thing_id=1, sta_stream_id=36),
+        StreamInfo(key="field", alias="T2S44", sta_thing_id=4, sta_stream_id=44),
+        StreamInfo(key="field", alias="T2S46", sta_thing_id=4, sta_stream_id=46),
     ]
     data = load_data(local_database_connection, streams=fields)
     assert data.keys() == {"T1S33", "T1S36", "T2S44", "T2S46", "T1S27"}
@@ -295,27 +295,32 @@ def test_db_data_writing(local_database_connection):
                 "",
                 func_name="processGeneric",
                 fields=[
-                    StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
+                    StreamInfo(key="field", alias="T1S27", sta_thing_id=1, sta_stream_id=27),
+                ],
+                targets=[
+                    StreamInfo(key="field", alias="NEW", sta_thing_id=1, sta_stream_id=None),
                 ],
                 params={"func": "T1S27 + 5"},
             )
 
     fields = [
-        StreamInfo(key="field", name="T1S27", thing_id=1, stream_id=27),
-        StreamInfo(key="field", name="T1S33", thing_id=1, stream_id=33),
-        StreamInfo(key="field", name="T1S36", thing_id=1, stream_id=36),
-        StreamInfo(key="field", name="T2S44", thing_id=4, stream_id=44),
-        StreamInfo(key="field", name="T2S46", thing_id=4, stream_id=46),
+        StreamInfo(key="field", alias="T1S27", sta_thing_id=1, sta_stream_id=27),
+        StreamInfo(key="field", alias="T1S33", sta_thing_id=1, sta_stream_id=33),
+        StreamInfo(key="field", alias="T1S36", sta_thing_id=1, sta_stream_id=36),
+        StreamInfo(key="field", alias="T2S44", sta_thing_id=4, sta_stream_id=44),
+        StreamInfo(key="field", alias="T2S46", sta_thing_id=4, sta_stream_id=46),
     ]
     data = load_data(local_database_connection, streams=fields)
     qc = SaQCWrapper(data)
 
-    api_url = get_envvar("DB_API_BASE_URL")
+    api_url = "http://localhost:8001"
 
     qc.execute(func)
+    # import ipdb; ipdb.set_trace()
+
     write_data(local_database_connection, qc, api_url)
     # qc_out = execute_qc_function(qc, func)
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
 
 
