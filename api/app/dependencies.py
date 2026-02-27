@@ -23,10 +23,13 @@ from models import (
     PermissionGroupRepository,
     DatabaseRepository,
 )
+import logging
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
 engine = create_engine(str(settings.DATABASE_URI))
+
+logger = logging.getLogger("app.dependencies")
 
 
 def get_session():
@@ -89,7 +92,7 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
 
         return user
     except Exception as e:
-        print(str(e))
+        logger.error(f"Failed to get or create user: {str(e)}")
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
         raise HTTPException(status_code=500, detail="Failed to get or create user")
@@ -139,6 +142,7 @@ def sync_permission_groups(
         session.commit()
 
     except Exception as e:
+        logger.error(f"Failed to sync permission groups: {str(e)}")
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
         raise HTTPException(
@@ -228,7 +232,7 @@ async def create_database_if_not_exists(
     permission_group = permission_group_repo.find_one(permission_group_id)
 
     if not permission_group:
-        print("Cannot create database entity: permission group does not exist")
+        logger.error("Cannot create database entity: permission group does not exist")
         return
 
     if not database:
