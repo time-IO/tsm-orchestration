@@ -326,7 +326,7 @@ class DatastreamSTA:
 
         self._data.loc[index, "quality"] = labels.loc[index]
 
-    def upload(self, api_base_url):
+    def upload(self, api_base_url, api_token):
         """Update locally stored quality labels to the DB"""
         df: pd.DataFrame = self._data.loc[self._upload_ptr :].copy()
         if df.empty:
@@ -344,7 +344,10 @@ class DatastreamSTA:
         r = requests.post(
             f"{api_base_url}/observations/qaqc/{self._thing.uuid}",
             data=f'{{"qaqc_labels":{labels}}}',
-            headers={"Content-type": "application/json"},
+            headers={
+                "Content-type": "application/json",
+                "Authorization": f"Bearer {api_token}",
+            },
         )
         r.raise_for_status()
 
@@ -479,7 +482,7 @@ class ProductStream(Datastream):
         _data.index = rm_tz(index)
         self._data = _data
 
-    def upload(self, api_base_url):
+    def upload(self, api_base_url, api_token):
         """Update locally stored data and quality labels to the DB"""
         df: pd.DataFrame = self._data.loc[self._upload_ptr :]
         df["result_type"] = rt = get_result_type(df["data"])
@@ -498,7 +501,10 @@ class ProductStream(Datastream):
         r = requests.post(
             f"{api_base_url}/observations/upsert/{self.thing_id}",
             json={"observations": labels},
-            headers={"Content-type": "application/json"},
+            headers={
+                "Content-type": "application/json",
+                "Authorization": f"Bearer {api_token}",
+            },
         )
         r.raise_for_status()
 

@@ -42,7 +42,10 @@ class QcHandler(AbstractHandler):
         self.publish_topic = get_envvar("TOPIC_QC_DONE")
         self.publish_qos = get_envvar("TOPIC_QC_DONE_QOS", cast_to=int)
         self.db = Database(get_envvar("DATABASE_DSN"))
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"),
+            get_envvar("DB_API_AUTH_TOKEN"),
+        )
 
     def _check_data(self, content, keys: list[str]):
         for key in keys:
@@ -121,7 +124,6 @@ class QcHandler(AbstractHandler):
                 if thing is not None:
                     func_setup = get_functions_to_execute(func_setup, thing.id)
                 logger.info(f"COLLECTED TESTS: {func_setup}")
-
                 if start_date := content.get("start_date", None):
                     start_date = pd.Timestamp(start_date)
                 if end_date := content.get("end_date", None):

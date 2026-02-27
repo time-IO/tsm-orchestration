@@ -39,6 +39,7 @@ class SyncExtApiManager(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.api_base_url = get_envvar("DB_API_BASE_URL")
+        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.sync_handlers = {
             "tsystems": TsystemsApiSyncer(),
@@ -89,7 +90,10 @@ class SyncExtApiManager(AbstractHandler):
         resp = requests.post(
             f"{self.api_base_url}/observations/upsert/{thing.uuid}",
             json=parsed_observations,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_token}",
+            },
         )
         resp.raise_for_status()
 
