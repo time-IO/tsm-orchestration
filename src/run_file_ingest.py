@@ -4,8 +4,9 @@ import fnmatch
 import json
 import logging
 import codecs
-from datetime import datetime, timezone
 import warnings
+import base64
+from datetime import datetime, timezone
 
 import requests
 
@@ -207,17 +208,20 @@ class ParserJobHandler(AbstractHandler):
         if stat.size > _FILE_MAX_SIZE:
             raise IOError("Maximum filesize of 256M exceeded")
         self.is_valid_encoding(encoding)
-        rawdata = (
-            self.minio.get_object(bucket_name, object_name)
-            .read()
-            .decode(encoding)
+        rawdata = self.minio.get_object(bucket_name, object_name).read()
+        if encoding == "binary":
+            return base64.b64encode(rawdata).decode("utf-8")
+
+        return (
+            rawdata.decode(encoding)
             # remove the ASCII control character ETX (end-of-text)
             .rstrip("\x03")
         )
-        return rawdata
 
     @staticmethod
     def is_valid_encoding(encoding: str):
+        if encoding == "binary":
+            return
         try:
             codecs.lookup(encoding)
         except LookupError:

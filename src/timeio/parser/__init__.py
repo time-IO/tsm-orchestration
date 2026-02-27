@@ -7,6 +7,7 @@ from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
 from timeio.parser.json_parser import JsonParser
 from timeio.parser.mqtt_parser import MqttParser
+from timeio.parser.ecotech_parser import EcotechParser
 from timeio.parser.mqtt_devices.brightsky_dwd import BrightskyDwdApiParser
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
@@ -14,6 +15,7 @@ from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
 from timeio.parser.mqtt_devices.sine_dummy import SineDummyParser
 
 _parser_map = {
+    "ecotechparser": EcotechParser,
     "csvparser": CsvParser,
     "jsonparser": JsonParser,
     "campbell_cr6": CampbellCr6Parser,
@@ -60,7 +62,6 @@ def get_parser(
         settings = {**default_settings, **settings}
         norm_kws = settings.pop("pandas_json_normalize", {})
         instance = klass(settings, norm_kws)
-
     else:
         instance = klass()
 
