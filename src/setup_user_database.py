@@ -161,7 +161,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 schema = sql.Identifier(thing.database.username.lower())
                 user = sql.Identifier(thing.database.username.lower())
                 c.execute(
-                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}").format(
+                    sql.SQL(
+                        "CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}"
+                    ).format(
                         schema=schema,
                         user=user,
                     )
@@ -178,16 +180,18 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
                 c.execute(
-                    sql.SQL("ALTER ROLE {user} SET search_path to {user}, public").format(
-                        user=user
-                    )
+                    sql.SQL(
+                        "ALTER ROLE {user} SET search_path to {user}, public"
+                    ).format(user=user)
                 )
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
                         user=user
                     )
                 )
-                c.execute(sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user))
+                c.execute(
+                    sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
+                )
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"

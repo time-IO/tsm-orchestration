@@ -7,7 +7,6 @@ from alembic import command
 from alembic.config import Config
 import sqlalchemy as sa
 
-
 LEGACY_BASELINE_REVISION = "20260227_0001"
 
 
@@ -26,17 +25,17 @@ def _alembic_config(database_url: str, schema_name: str) -> Config:
     return cfg
 
 
-def _schema_has_table(connection: sa.Connection, schema_name: str, table_name: str) -> bool:
-    query = sa.text(
-        """
+def _schema_has_table(
+    connection: sa.Connection, schema_name: str, table_name: str
+) -> bool:
+    query = sa.text("""
         SELECT EXISTS (
             SELECT 1
             FROM information_schema.tables
             WHERE table_schema = :schema_name
               AND table_name = :table_name
         )
-        """
-    )
+        """)
     return bool(
         connection.execute(
             query,
@@ -52,7 +51,9 @@ def upgrade_schema(database_url: str, schema_name: str) -> None:
         with engine.connect() as connection:
             cfg.attributes["connection"] = connection
             has_thing_table = _schema_has_table(connection, schema_name, "thing")
-            has_alembic_table = _schema_has_table(connection, schema_name, "alembic_version")
+            has_alembic_table = _schema_has_table(
+                connection, schema_name, "alembic_version"
+            )
             if has_thing_table and not has_alembic_table:
                 command.stamp(cfg, LEGACY_BASELINE_REVISION)
             command.upgrade(cfg, "head")

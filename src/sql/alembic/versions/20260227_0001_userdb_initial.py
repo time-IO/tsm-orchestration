@@ -63,7 +63,9 @@ def upgrade() -> None:
             name="datastream_thing_id_fk_thing_id",
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("thing_id", "position", name="datastream_thing_id_position_uniq"),
+        sa.UniqueConstraint(
+            "thing_id", "position", name="datastream_thing_id_position_uniq"
+        ),
     )
     op.create_index("datastream_thing_id", "datastream", ["thing_id"], unique=False)
 
@@ -74,14 +76,26 @@ def upgrade() -> None:
         sa.Column("phenomenon_time_end", sa.DateTime(timezone=True), nullable=True),
         sa.Column("result_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column("result_type", sa.SmallInteger(), nullable=False),
-        sa.Column("result_number", postgresql.DOUBLE_PRECISION(precision=53), nullable=True),
+        sa.Column(
+            "result_number", postgresql.DOUBLE_PRECISION(precision=53), nullable=True
+        ),
         sa.Column("result_string", sa.String(length=200), nullable=True),
-        sa.Column("result_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "result_json", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("result_boolean", sa.Boolean(), nullable=True),
-        sa.Column("result_latitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True),
-        sa.Column("result_longitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True),
-        sa.Column("result_altitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True),
-        sa.Column("result_quality", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "result_latitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True
+        ),
+        sa.Column(
+            "result_longitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True
+        ),
+        sa.Column(
+            "result_altitude", postgresql.DOUBLE_PRECISION(precision=53), nullable=True
+        ),
+        sa.Column(
+            "result_quality", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("valid_time_start", sa.DateTime(timezone=True), nullable=True),
         sa.Column("valid_time_end", sa.DateTime(timezone=True), nullable=True),
         sa.Column("parameters", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
@@ -100,7 +114,9 @@ def upgrade() -> None:
             name="observation_datastream_id_result_time_uniq",
         ),
     )
-    op.create_index("idx_observation_result_time", "observation", ["result_time"], unique=False)
+    op.create_index(
+        "idx_observation_result_time", "observation", ["result_time"], unique=False
+    )
 
     op.create_table(
         "relation_role",
@@ -168,9 +184,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
 
-    op.execute(
-        sa.text(
-            """
+    op.execute(sa.text("""
             INSERT INTO relation_role
                 (id, name, definition, inverse_name, inverse_definition, description, properties)
             VALUES
@@ -182,9 +196,7 @@ def upgrade() -> None:
                 inverse_definition = excluded.inverse_definition,
                 description = excluded.description,
                 properties = excluded.properties
-            """
-        )
-    )
+            """))
 
 
 def downgrade() -> None:

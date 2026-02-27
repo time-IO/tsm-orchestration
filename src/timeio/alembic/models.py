@@ -46,7 +46,9 @@ class Journal(Base):
 class Datastream(Base):
     __tablename__ = "datastream"
     __table_args__ = (
-        UniqueConstraint("thing_id", "position", name="datastream_thing_id_position_uniq"),
+        UniqueConstraint(
+            "thing_id", "position", name="datastream_thing_id_position_uniq"
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -70,9 +72,15 @@ class Observation(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    phenomenon_time_start: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
-    phenomenon_time_end: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
-    result_time: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False)
+    phenomenon_time_start: Mapped[DateTime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    phenomenon_time_end: Mapped[DateTime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    result_time: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     result_type: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     result_number: Mapped[float | None] = mapped_column(DOUBLE_PRECISION)
     result_string: Mapped[str | None] = mapped_column(VARCHAR(200))
@@ -86,7 +94,8 @@ class Observation(Base):
     valid_time_end: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
     parameters: Mapped[dict | None] = mapped_column(JSONB)
     datastream_id: Mapped[int] = mapped_column(
-        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"), nullable=False
+        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
 
 
@@ -115,13 +124,16 @@ class RelatedDatastream(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     datastream_id: Mapped[int] = mapped_column(
-        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"), nullable=False
+        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
     role_id: Mapped[int] = mapped_column(
-        ForeignKey("relation_role.id", deferrable=True, initially="DEFERRED"), nullable=False
+        ForeignKey("relation_role.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
     target_id: Mapped[int] = mapped_column(
-        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"), nullable=False
+        ForeignKey("datastream.id", deferrable=True, initially="DEFERRED"),
+        nullable=False,
     )
 
 
