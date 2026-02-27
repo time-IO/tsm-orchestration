@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import FastAPI
 from routers import (
@@ -24,6 +25,11 @@ from config import settings
 
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
 app = FastAPI(root_path=API_ROOT_PATH)
+
+log_level = os.environ.get("LOG_LEVEL", "info").upper()
+if log_level == "TRACE":
+    log_level = "DEBUG"
+logging.getLogger("app").setLevel(log_level)
 
 app.add_middleware(
     CORSMiddleware,

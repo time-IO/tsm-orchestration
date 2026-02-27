@@ -7,6 +7,9 @@ from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
 from config import settings
 from fastapi import HTTPException
+import logging
+
+logger = logging.getLogger("app.auth")
 
 
 class OIDCError(Exception):
@@ -33,6 +36,7 @@ class OIDCService:
         self._jwks_cache = TTLCache(maxsize=1, ttl=cache_ttl)
 
     def _get_oidc_config(self) -> dict[str, Any]:
+        logger.debug(f"Fetching OIDC configuration from {settings.OIDC_WELL_KNOWN}")
         try:
             return self._config_cache["config"]
         except KeyError:
@@ -55,6 +59,8 @@ class OIDCService:
         except KeyError:
             config = self._get_oidc_config()
             jwks_uri = config["jwks_uri"]
+
+            logger.debug(f"Fetching JWKS from {jwks_uri}")
 
             resp = requests.get(jwks_uri, timeout=self.request_timeout)
             resp.raise_for_status()
@@ -83,22 +89,26 @@ class OIDCService:
 
             claims = json.loads(jwt_token.claims)
         except:
+            logger.exception("Failed to verify JWT")
             raise HTTPException(status_code=401, detail="Invalid Token")
         self._validate_claims(claims)
         return claims
 
     def _validate_claims(self, claims: dict[str, Any]) -> None:
         if claims.get("iss") != self.issuer:
+            logger.error(f"Invalid issuer: {claims.get('iss')}")
             raise OIDCError("Invalid issuer")
 
         aud = claims.get("aud")
         aud = [aud] if isinstance(aud, str) else aud or []
         if self.audience not in aud:
+            logger.error(f"Invalid audience: {aud}")
             raise OIDCError("Invalid audience")
 
         now = int(time.time())
         exp = claims.get("exp")
         if exp is None or exp < now - self.clock_skew:
+            logger.error(f"Token expired")
             raise OIDCError("Token expired")
 
     def fetch_userinfo(self, access_token: str) -> dict[str, Any]:
@@ -108,6 +118,7 @@ class OIDCService:
         if not userinfo_endpoint:
             raise OIDCError("Userinfo endpoint not available")
 
+        logger.debug(f"Fetching userinfo from {userinfo_endpoint}")
         resp = requests.get(
             userinfo_endpoint,
             headers={
@@ -117,6 +128,7 @@ class OIDCService:
         )
 
         if resp.status_code != 200:
+            logger.error(f"Failed to fetch userinfo: {resp.status_code} {resp.text}")
             raise OIDCError("Failed to fetch userinfo")
 
         return resp.json()
