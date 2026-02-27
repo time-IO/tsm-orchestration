@@ -158,15 +158,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
     def create_schema(self, thing):
         with self.db.connection() as conn:
             with conn.cursor() as c:
-                schema = sql.Identifier(thing.database.username.lower())
-                user = sql.Identifier(thing.database.username.lower())
                 c.execute(
                     sql.SQL(
-                        "CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}"
-                    ).format(
-                        schema=schema,
-                        user=user,
-                    )
+                        "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
+                    ).format(user=sql.Identifier(thing.database.username.lower()))
                 )
 
     def ensure_owner_privileges(self, thing):
@@ -179,24 +174,29 @@ class CreateThingInPostgresHandler(AbstractHandler):
                         db_name=sql.Identifier(conn.info.dbname),
                     )
                 )
+                # Set default schema when connecting as user
                 c.execute(
                     sql.SQL(
                         "ALTER ROLE {user} SET search_path to {user}, public"
                     ).format(user=user)
                 )
+                # Grant schema to new user
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
                         user=user
                     )
                 )
+                # Equip new user with all grants
                 c.execute(
                     sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
                 )
+
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"
                     ).format(user=user)
                 )
+
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {user} TO {user}"
