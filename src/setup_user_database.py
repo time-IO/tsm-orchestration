@@ -13,6 +13,7 @@ from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.journaling import Journal
 from timeio.crypto import decrypt, get_crypt_key
+from timeio.alembic.runner import upgrade_schema
 
 logger = logging.getLogger("db-setup")
 journal = Journal("System", errors="ignore")
@@ -38,6 +39,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
+        schema_name = thing.database.username.lower()
         ro_user = thing.database.ro_username.lower()
         user = thing.database.username.lower()
 
@@ -47,10 +49,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
             self.create_user(thing)
             logger.debug("create schema")
             self.create_schema(thing)
-            logger.debug("deploy dll")
-            self.deploy_ddl(thing)
-            logger.debug("deploy dml")
-            self.deploy_dml()
+
+        logger.debug("ensure schema exists")
+        self.create_schema(thing)
+
+        logger.debug("run schema migrations")
+        upgrade_schema(get_envvar("DATABASE_URL"), schema_name)
+        logger.debug("ensure owner privileges")
+        self.ensure_owner_privileges(thing)
 
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
@@ -152,66 +158,46 @@ class CreateThingInPostgresHandler(AbstractHandler):
     def create_schema(self, thing):
         with self.db.connection() as conn:
             with conn.cursor() as c:
+                schema = sql.Identifier(thing.database.username.lower())
+                user = sql.Identifier(thing.database.username.lower())
                 c.execute(
-                    sql.SQL(
-                        "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
-                    ).format(user=sql.Identifier(thing.database.username.lower()))
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}").format(
+                        schema=schema,
+                        user=user,
+                    )
                 )
 
-    def deploy_ddl(self, thing):
-        file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
-        with open(file) as fh:
-            query = fh.read()
-
+    def ensure_owner_privileges(self, thing):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 user = sql.Identifier(thing.database.username.lower())
-                # Set search path for current session
-                c.execute(sql.SQL("SET search_path TO {0}").format(user))
-                # Allow tcp connections to database with new user
                 c.execute(
                     sql.SQL("GRANT CONNECT ON DATABASE {db_name} TO {user}").format(
-                        user=user, db_name=sql.Identifier(conn.info.dbname)
+                        user=user,
+                        db_name=sql.Identifier(conn.info.dbname),
                     )
                 )
-                # Set default schema when connecting as user
                 c.execute(
-                    sql.SQL(
-                        "ALTER ROLE {user} SET search_path to {user}, public"
-                    ).format(user=user)
+                    sql.SQL("ALTER ROLE {user} SET search_path to {user}, public").format(
+                        user=user
+                    )
                 )
-                # Grant schema to new user
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {user}, public TO {user}").format(
                         user=user
                     )
                 )
-                # Equip new user with all grants
-                c.execute(
-                    sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user)
-                )
-                # deploy the tables and indices and so on
-                c.execute(query)
-
+                c.execute(sql.SQL("GRANT ALL ON SCHEMA {user} TO {user}").format(user=user))
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {user} TO {user}"
                     ).format(user=user)
                 )
-
                 c.execute(
                     sql.SQL(
                         "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {user} TO {user}"
                     ).format(user=user)
                 )
-
-    def deploy_dml(self):
-        file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
-        with open(file) as fh:
-            query = fh.read()
-        with self.db.connection() as conn:
-            with conn.cursor() as c:
-                c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):
         schema = sql.Identifier(thing.database.username.lower())

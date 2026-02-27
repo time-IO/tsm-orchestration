@@ -23,3 +23,5 @@ minio==7.2.18
 tsm_user_code>=0.0.1
 pytest-subtests>=0.14.2
 python-dotenv~=1.1.1
+alembic~=1.16.5
+SQLAlchemy~=2.0.43
