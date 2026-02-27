@@ -458,8 +458,6 @@ services:
       ALLOWED_ORIGINS: "${DSM_API_ALLOWED_ORIGINS}"
       MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
       PROXY_URL: "${PROXY_URL}"
-    volumes:
-      - "../data-source-management/api/app:/app:rw"
 
 
   dsm-frontend:
