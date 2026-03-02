@@ -9,6 +9,14 @@ Install node modules
 ```
 docker compose run --rm -u $UID frontend npm ci
 ```
+### Update /etc/hosts 
+
+Edit your `/etc/hosts` file and add the following entry:
+
+```
+127.0.0.1       proxy
+```
+
 
 ## Run
 ```
