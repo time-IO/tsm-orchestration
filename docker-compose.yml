@@ -20,8 +20,8 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-postgres}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
       POSTGRES_DB: "${POSTGRES_DB:-db_dev}"
-      OIDC_WELL_KNOWN: "${OIDC_WELL_KNOWN:-http://nginx/keycloak/realms/local-dev/.well-known/openid-configuration}"
-      OIDC_ISSUER: "${OIDC_ISSUER:-http://localhost/keycloak/realms/local-dev}"
+      OIDC_WELL_KNOWN: "${OIDC_WELL_KNOWN:-http://proxy/keycloak/realms/local-dev/.well-known/openid-configuration}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-http://proxy/keycloak/realms/local-dev}"
       OIDC_AUDIENCE: "${OIDC_AUDIENCE:-dev-client}"
       ALLOWED_VOS: "${ALLOWED_VOS:-UFZ-TSM,VO}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost}"
@@ -54,7 +54,7 @@ services:
     command: "quasar dev"
 
   keycloak:
-    image: "quay.io/keycloak/keycloak:24.0.3"
+    image: "quay.io/keycloak/keycloak:latest"
     ports:
       - "${KEYCLOAK_PORT:-8080}:${KEYCLOAK_PORT:-8080}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
@@ -70,7 +70,7 @@ services:
       KC_HTTP_RELATIVE_PATH: ${KC_HTTP_RELATIVE_PATH:-/keycloak}
       KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
       KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
-      KC_HOSTNAME_URL: ${KC_HOSTNAME_URL:-http://localhost/keycloak}
+      KC_HOSTNAME: ${KC_HOSTNAME:-proxy}
     volumes:
       - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
     command:
@@ -100,7 +100,7 @@ services:
     volumes:
       - "api-data:/var/lib/postgresql/data/"
 
-  nginx:
+  proxy:
     image: nginx:1.20-alpine
     ports:
       - "80:80"
