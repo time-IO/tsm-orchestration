@@ -172,6 +172,32 @@ This change fixes this.
 
 ![1019](./../media/1019.png)
 
+### Lightweight Access token
+- go to clients
+- select `dev-client`
+- go to `Advanced` tab
+- scroll to section `Advanced settings`
+- check `Always use lightweight access token`
+
+### Audition fix
+Keycloak does not out-of-the-box add the `client_id` to the `aud` claim, so you need to add it by yourself
+- Select realm `local-dev`
+- Go to `Client scopes`
+- click `Create client scope` button
+  - name: `dev-client-audience`
+  - description: `Correct map the client_id to the aud claim`
+  - Type: `Optional`
+  - make sure that `Include in token scope` is checked on
+- `Add mapper` > `By configuration`
+  - Select `Audience` 
+  - name: `dev-client-audience mapper`
+  - make sure that `Add to lightweight access token` is checked on
+
+It should be set to type `Default` in the `dev-client`:
+
+- Go to `clients` > `dev-clients` > `Client scopes`
+- search for `dev-client-audience` and change the `Assigned type` to `Default`
+
 ### Export the settings to an file
   - this file can be used to start the keycloak server and fill it with some initial data    
     - prerequisite - docker compose work:
