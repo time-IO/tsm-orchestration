@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = ""
     MINIO_SFTP_PORT: str
     PROXY_URL: str
+    FERNET_ENCRYPTION_SECRET: str
 
     @computed_field  # type: ignore[prop-decorator]
     @property

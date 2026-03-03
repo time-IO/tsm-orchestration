@@ -1,7 +1,9 @@
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 
 class IngestExternalApiBoschBase(SQLModel):
@@ -55,6 +57,10 @@ class IngestExternalApiBosch(IngestExternalApiBoschBase, table=True):
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    bosch_password: str = Field(
+        sa_column=Column("bosch_password", EncryptedType, nullable=False)
+    )
 
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_bosch"
