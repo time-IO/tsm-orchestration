@@ -1398,7 +1398,7 @@
         "userinfo.token.claim" : "true",
         "user.attribute" : "sub",
         "id.token.claim" : "true",
-        "lightweight.claim" : "false",
+        "lightweight.claim" : "true",
         "access.token.claim" : "true",
         "claim.name" : "sub",
         "jsonType.label" : "String"
