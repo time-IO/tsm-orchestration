@@ -1,7 +1,9 @@
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 
 class IngestExternalSftpBase(SQLModel):
@@ -60,8 +62,11 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    ssh_private_key: str
+    ssh_private_key: str = Field(
+        sa_column=Column("ssh_private_key", EncryptedType, nullable=True)
+    )
     ssh_public_key: str
+    password: str = Field(sa_column=Column("password", EncryptedType, nullable=True))
 
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_sftp"

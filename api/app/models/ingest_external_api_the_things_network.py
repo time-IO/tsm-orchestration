@@ -1,7 +1,9 @@
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 
 class IngestExternalApiTheThingsNetworkBase(SQLModel):
@@ -51,6 +53,8 @@ class IngestExternalApiTheThingsNetwork(
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
 
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_the_things_network"

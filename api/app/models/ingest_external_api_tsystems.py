@@ -1,7 +1,9 @@
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 
 class IngestExternalApiTSystemsBase(SQLModel):
@@ -54,6 +56,9 @@ class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    tsystems_password: str = Field(
+        sa_column=Column("tsystems_password", EncryptedType, nullable=False)
+    )
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_tsystems"
     )

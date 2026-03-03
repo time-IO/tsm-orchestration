@@ -1,9 +1,11 @@
 import uuid as uuid_pkg
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 from datetime import datetime, timezone
 
 
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 # from .user import User # needs to be imported for relationship reasons otherwise an error is thrown during delete todo check this
 
@@ -55,7 +57,7 @@ class IngestS3Store(IngestS3StoreBase, table=True):
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     username: str
-    password: str
+    password: str = Field(sa_column=Column("password", EncryptedType, nullable=False))
     bucket_name: str
     fileserver_uri: str
 

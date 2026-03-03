@@ -1,7 +1,9 @@
+from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from encryption import EncryptedType
 
 
 class IngestMqttBase(SQLModel):
@@ -51,7 +53,7 @@ class IngestMqtt(IngestMqttBase, table=True):
     created_by_id: int = Field(foreign_key="user.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     username: str
-    password: str
+    password: str = Field(sa_column=Column("password", EncryptedType, nullable=False))
     password_hashed: str
 
     permission_group: "PermissionGroup" = Relationship(back_populates="ingest_mqtt")
