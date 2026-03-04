@@ -23,7 +23,10 @@ def generate_keypair():
 
 
 def create_db_username(permisison_group_name: str, readonly: bool = False):
-    name = permisison_group_name
+    # The permission group names consist of <name of virtual organization (vo)>:<name of group>
+    # To have a visual separator between vo and group we replace the : (colon) by _ (underscore)
+    vo, group = permisison_group_name.split(":")
+    name = f"{vo[:10]}_{group}"
     if readonly:
-        name = "ro_" + permisison_group_name
+        name = "ro_" + name
     return re.sub("[^a-z0-9_]+", "", f"{name[0:30].lower()}_{uuid.uuid4()}")
