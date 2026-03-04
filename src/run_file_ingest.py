@@ -7,8 +7,6 @@ import codecs
 from datetime import datetime, timezone
 import warnings
 
-import requests
-
 from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
@@ -18,6 +16,7 @@ from timeio.feta import Thing, FileParser
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
+from timeio.databases import DBapi
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
@@ -44,9 +43,10 @@ class ParserJobHandler(AbstractHandler):
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
-        self.api_base_url = get_envvar("DB_API_BASE_URL")
-        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
+        )
 
     def act(self, content: dict, message: MQTTMessage):
 
@@ -111,15 +111,9 @@ class ParserJobHandler(AbstractHandler):
 
         logger.debug("storing observations to database ...")
         try:
-            resp = requests.post(
-                f"{self.api_base_url}/observations/upsert/{thing_uuid}",
-                json={"observations": obs},
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.api_token}",
-                },
+            self.dbapi.upsert_observations_and_datastreams(
+                thing_uuid, obs, mutable=False
             )
-            resp.raise_for_status()
         except Exception as e:
             # Tell the user that his parsing was successful
             journal.error(

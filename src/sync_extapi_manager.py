@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import requests
 import json
 
 from requests.exceptions import HTTPError
@@ -11,6 +10,7 @@ from timeio.common import get_envvar, setup_logging
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
+from timeio.databases import DBapi
 from timeio.ext_api import (
     BoschApiSyncer,
     TsystemsApiSyncer,
@@ -38,8 +38,9 @@ class SyncExtApiManager(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.api_base_url = get_envvar("DB_API_BASE_URL")
-        self.api_token = get_envvar("DB_API_AUTH_TOKEN")
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
+        )
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.sync_handlers = {
             "tsystems": TsystemsApiSyncer(),
@@ -61,8 +62,9 @@ class SyncExtApiManager(AbstractHandler):
             return
         try:
             obs = syncer.do_parse(data)
-            self.write_observations(thing, obs)
-
+            self.dbapi.upsert_observations_and_datastreams(
+                thing.uuid, obs, mutable=False
+            )
         except HTTPError as e:
             journal.error(
                 f"Insert/upsert into timeioDB for thing '{thing.name} failed",
@@ -80,22 +82,11 @@ class SyncExtApiManager(AbstractHandler):
             payload=json.dumps({"thing_uuid": thing.uuid}),
         )
         journal.info(
-            f"Successfully inserted {len(obs['observations'])} "
+            f"Successfully inserted {len(obs)} "
             f"observations from API '{ext_api_name}' "
             f"for thing '{thing.name}' into timeIO DB",
             thing.uuid,
         )
-
-    def write_observations(self, thing: Thing, parsed_observations: dict):
-        resp = requests.post(
-            f"{self.api_base_url}/observations/upsert/{thing.uuid}",
-            json=parsed_observations,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_token}",
-            },
-        )
-        resp.raise_for_status()
 
 
 if __name__ == "__main__":

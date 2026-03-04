@@ -49,7 +49,7 @@ def test_dwd_do_parse():
     }
     syncer = ext_api.DwdApiSyncer()
     parsed = syncer.do_parse(api_response)
-    obs = parsed["observations"][1]
-    assert len(parsed["observations"]) == 3
+    obs = parsed[1]
+    assert len(parsed) == 3
     assert obs["result_string"] == "rain"
     assert "dwd_data" in obs["parameters"]

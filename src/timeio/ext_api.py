@@ -104,7 +104,7 @@ class BoschApiSyncer(ExtApiSyncer):
                         ),
                     }
                     bodies.append(body)
-        return {"observations": bodies}
+        return bodies
 
     @staticmethod
     def basic_auth(username, password):
@@ -163,7 +163,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
                         ),
                     }
                     bodies.append(body)
-        return {"observations": bodies}
+        return bodies
 
     @staticmethod
     def unix_ts_to_str(ts_unix: int) -> str:
@@ -226,7 +226,7 @@ class UbaApiSyncer(ExtApiSyncer):
         parsed_aqi_data = self.parse_aqi_data(
             api_response["aqi_data"], api_response["station_id"]
         )
-        return {"observations": parsed_measure_data + parsed_aqi_data}
+        return parsed_measure_data + parsed_aqi_data
 
     @staticmethod
     def parse_timeranges(dt_from_str, dt_to_str):
@@ -489,7 +489,7 @@ class DwdApiSyncer(ExtApiSyncer):
                         ),
                     }
                     bodies.append(body)
-        return {"observations": bodies}
+        return bodies
 
 
 class TtnApiSyncer(ExtApiSyncer):
@@ -544,7 +544,7 @@ class TtnApiSyncer(ExtApiSyncer):
                         ),
                     }
                     bodies.append(body)
-        return {"observations": bodies}
+        return bodies
 
     @staticmethod
     def cleanup_json(string: str) -> str:
@@ -613,4 +613,4 @@ class NmApiSyncer(ExtApiSyncer):
                         ),
                     }
                 )
-        return {"observations": bodies}
+        return bodies

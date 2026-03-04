@@ -40,6 +40,7 @@ CREATE TABLE "datastream"
     "properties"  jsonb        NULL,
     "position"    varchar(200) NOT NULL,
     "thing_id"    bigint       NOT NULL,
+    "mutable"     boolean      NOT NULL DEFAULT false,
 
     CONSTRAINT "datastream_thing_id_position_9f2cfe68_uniq" UNIQUE ("thing_id", "position"),
     CONSTRAINT "datastream_thing_id_f55522a4_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
