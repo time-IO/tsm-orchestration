@@ -7,6 +7,8 @@ from alembic import command
 from alembic.config import Config
 import sqlalchemy as sa
 
+from timeio.alembic.models import Base
+
 LEGACY_BASELINE_REVISION = "20260227_0001"
 
 
@@ -70,3 +72,24 @@ def upgrade_schema(database_url: str, schema_name: str) -> None:
             command.upgrade(cfg, "head")
     finally:
         engine.dispose()
+
+
+def create_migration(database_url: str, message: str, schema_name: str = "alembic") -> str:
+    """Create a new migration revision by comparing models to database.
+
+    Args:
+        database_url: Database connection URL
+        message: Revision message describing the change
+        schema_name: Schema to use for autogenerate comparison (default: "alembic")
+
+    Returns:
+        Path to the created migration file
+    """
+    cfg = _alembic_config(database_url, schema_name)
+    database_url = _convert_url_to_psycopg(database_url)
+    cfg.attributes["sqlalchemy.url"] = database_url
+    cfg.attributes["target_metadata"] = Base.metadata
+
+    # Create the revision with autogenerate enabled
+    rev = command.revision(cfg, message=message, autogenerate=True)
+    return str(rev.path) if hasattr(rev, "path") else "Migration created"
