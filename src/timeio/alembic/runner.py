@@ -16,8 +16,18 @@ def _validate_schema_name(schema_name: str) -> str:
     return schema_name
 
 
+def _convert_url_to_psycopg(database_url: str) -> str:
+    """Convert postgresql:// URLs to postgresql+psycopg:// to use psycopg v3."""
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    elif database_url.startswith("postgres://"):
+        return database_url.replace("postgres://", "postgresql+psycopg://", 1)
+    return database_url
+
+
 def _alembic_config(database_url: str, schema_name: str) -> Config:
     script_location = Path(__file__).resolve().parent.parent.parent / "sql" / "alembic"
+    database_url = _convert_url_to_psycopg(database_url)
     cfg = Config()
     cfg.set_main_option("script_location", str(script_location))
     cfg.set_main_option("sqlalchemy.url", database_url)
@@ -46,9 +56,10 @@ def _schema_has_table(
 
 def upgrade_schema(database_url: str, schema_name: str) -> None:
     cfg = _alembic_config(database_url, schema_name)
+    database_url = _convert_url_to_psycopg(database_url)
     engine = sa.create_engine(database_url)
     try:
-        with engine.connect() as connection:
+        with engine.begin() as connection:
             cfg.attributes["connection"] = connection
             has_thing_table = _schema_has_table(connection, schema_name, "thing")
             has_alembic_table = _schema_has_table(
