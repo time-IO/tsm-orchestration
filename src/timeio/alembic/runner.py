@@ -26,7 +26,7 @@ def _convert_url_to_psycopg(database_url: str) -> str:
 
 
 def _alembic_config(database_url: str, schema_name: str) -> Config:
-    script_location = Path(__file__).resolve().parent.parent.parent / "sql" / "alembic"
+    script_location = Path(__file__).resolve().parent
     database_url = _convert_url_to_psycopg(database_url)
     cfg = Config()
     cfg.set_main_option("script_location", str(script_location))
