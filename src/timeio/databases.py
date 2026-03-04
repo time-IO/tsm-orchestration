@@ -59,22 +59,42 @@ class DBapi:
                     f"Failed to ping. HTTP status code: {resp.status}"
                 )
 
-    def upsert_observations(
-        self, thing_uuid: str, observations: list[dict[str, Any]]
-    ) -> None:
-        url = f"{self.base_url}/observations/upsert/{thing_uuid}"
-        response = requests.post(
+    def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/observations/upsert"
+        resp = requests.post(
             url,
             json={"observations": observations},
             headers={
                 "Authorization": f"Bearer {self.auth_token}",
             },
         )
-        response.raise_for_status()
+        resp.raise_for_status()
+
+    def insert_datastreams(
+        self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool
+    ):
+        unique_pos = list(set([obs["datastream_pos"] for obs in observations]))
+        datastreams = [{"position": pos, "mutable": mutable} for pos in unique_pos]
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams"
+        resp = requests.post(
+            url,
+            json={"datastreams": datastreams},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+
+    def upsert_observations_and_datastreams(
+        self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool
+    ):
+        self.insert_datastreams(thing_uuid, observations, mutable)
+        self.upsert_observations(thing_uuid, observations)
 
     def insert_mqtt_message(self, thing_uuid: str, message: Any) -> None:
         url = f"{self.base_url}/things/{thing_uuid}/mqtt_message/insert"
-        response = requests.post(
+        resp = requests.post(
             url,
             json={
                 "message": (
@@ -86,4 +106,4 @@ class DBapi:
                 "Authorization": f"Bearer {self.auth_token}",
             },
         )
-        response.raise_for_status()
+        resp.raise_for_status()
