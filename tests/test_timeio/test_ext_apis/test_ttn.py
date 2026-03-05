@@ -99,8 +99,8 @@ def test_ttn_do_parse():
         "url": "https://api.ttn.test",
     }
     parsed = ext_api.TtnApiSyncer().do_parse(api_response)
-    assert len(parsed["observations"]) == 4
-    obs = parsed["observations"][0]
+    assert len(parsed) == 4
+    obs = parsed[0]
     assert json.loads(obs["parameters"])["origin"] == api_response["url"]
     assert "result_number" in obs
 
