@@ -316,7 +316,6 @@ def test_db_data_writing(local_database_connection):
     api_url = "http://localhost:8001"
 
     qc.execute(func)
-    # import ipdb; ipdb.set_trace()
 
     write_data(local_database_connection, qc, api_url)
     # qc_out = execute_qc_function(qc, func)

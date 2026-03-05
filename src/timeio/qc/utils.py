@@ -109,19 +109,19 @@ def write_data(conn: psycopg.Connection, qc: SaQCWrapper, dbapi_url: str):
     def upload_product_streams(dbapi_url: str, streams: dict[str, list]):
 
         for thing_uuid, dfs in streams.items():
+
             # upload data
             df = pd.concat(dfs)
             data = df.drop(columns="result_quality").to_json(orient="records", date_format="iso")
-
-            # r = requests.post(
-            #     f"{dbapi_url}/qaqc/upsert/{thing_uuid}",
-            #     data=f'{{"qaqc_labels":{out}}}',
-            #     headers={"Content-type": "application/json"},
-            # )
+           # )
+            # TOOO: get token from the outside
             r = requests.post(
                 f"{dbapi_url}/observations/upsert/{thing_uuid}",
                 data=f'{{"observations":{data}}}',
-                headers={"Content-type": "application/json"},
+                headers={
+                    "Content-type": "application/json",
+                    "Authorization": "Bearer local_bearer_token",
+                },
             )
             r.raise_for_status()
             # TODO: upload qaqc
