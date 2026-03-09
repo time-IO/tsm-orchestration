@@ -28,6 +28,8 @@ services:
       MINIO_SFTP_PORT: "${MINIO_SFTP_PORT:-127.0.0.1:40022}"
       PROXY_URL: "${PROXY_URL:-http://localhost:80}"
       LOG_LEVEL: "${LOG_LEVEL:-info}"
+      STA_ROOT_URL: "${STA_ROOT_URL:-https://tsm.ufz.de/sta/}"
+      STA_VERSION: "${STA_VERSION:-/v1.1/}"
       FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
     volumes:
       - ./api/app:/app:rw,cached
