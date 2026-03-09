@@ -60,7 +60,7 @@ services:
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
-      - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./conf/keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
   
   timeio-db-api:
     ports:
@@ -88,7 +88,7 @@ services:
 
   proxy:
     volumes:
-      - "./nginx/tsm.dev.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "./conf/nginx/tsm.dev.conf:/etc/nginx/conf.d/default.conf:ro"
 
 volumes:
   keycloak-data:
