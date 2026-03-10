@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     FERNET_ENCRYPTION_SECRET: str
     STA_ROOT_URL: str
     STA_VERSION: str
+    MQTT_BROKER_HOST: str
+    MQTT_PORT: int = 1883
+    MQTT_CLIENT_ID: str
+    MQTT_USER: str
+    MQTT_PASSWORD: str
+    MQTT_QOS: int = 2
 
     @computed_field  # type: ignore[prop-decorator]
     @property
