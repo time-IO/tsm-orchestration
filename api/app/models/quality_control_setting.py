@@ -1,7 +1,6 @@
-from sqlmodel import SQLModel, Field, Column, Relationship, UniqueConstraint
+from sqlmodel import SQLModel, Field, Relationship, Column, Index, func, JSON, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from sqlalchemy import JSON
 from .permission_group import PermissionGroup
 
 
@@ -90,8 +89,11 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     __tablename__ = "quality_control_setting"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="qcs_unique_name_permission_group"
+        Index(
+            "ix_qcs_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

@@ -1,6 +1,5 @@
 import uuid as uuid_pkg
-from sqlalchemy import Column
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
+from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 from datetime import datetime, timezone
 
 
@@ -47,8 +46,11 @@ class IngestS3Store(IngestS3StoreBase, table=True):
     __tablename__ = "ingest_sftp"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="s3store_unique_name_permission_group"
+        Index(
+            "ix_s3store_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

@@ -1,5 +1,4 @@
-from sqlalchemy import Column
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
+from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
@@ -44,8 +43,11 @@ class IngestExternalApiTheThingsNetwork(
     __tablename__ = "ingest_external_api_the_things_network"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="ttn_unique_name_permission_group"
+        Index(
+            "ix_ttn_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

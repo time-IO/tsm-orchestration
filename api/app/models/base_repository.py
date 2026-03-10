@@ -1,5 +1,5 @@
 from typing import Type, TypeVar, Generic, List
-from sqlmodel import Session, select, SQLModel
+from sqlmodel import Session, select, SQLModel, func
 from fastapi import HTTPException
 from .permission_group import PermissionGroup
 from .database import Database
@@ -40,10 +40,22 @@ class BaseRepository(Generic[T]):
         )
         return self.session.exec(statement).all()
 
+    def check_for_existing_name(self, name_to_check, permission_group_id):
+        existing_statement = select(self.model).where(
+            func.lower(self.model.name) == func.lower(str(name_to_check)),
+            self.model.permission_group_id == permission_group_id,
+        )
+        existing = self.session.exec(existing_statement).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
     def create_allowed(self, payload, extra_data, permission_group_ids):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
         )
+
+        self.check_for_existing_name(payload.name, payload.permission_group_id)
+
         try:
             entity = self.model.model_validate(payload, update=extra_data)
             self.session.add(entity)
@@ -59,6 +71,7 @@ class BaseRepository(Generic[T]):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
         )
+        self.check_for_existing_name(payload.name, payload.permission_group_id)
         try:
             entity = self.find_allowed_one(id, permission_group_ids)
 
@@ -86,18 +99,23 @@ class BaseRepository(Generic[T]):
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
 
+            self.check_for_existing_name(payload.name, entity.permission_group_id)
+
             data = payload.model_dump(exclude_unset=True)
             entity.sqlmodel_update(data)
             self.session.add(entity)
             self.session.commit()
             self.session.refresh(entity)
             return entity
+        except HTTPException as exception:
+            raise exception
         except Exception as e:
             print(str(e))
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
     def update_parser(self, id: int, data, permission_group_ids):
+        print(f"data: {str(data)}")
 
         try:
             entity = self.find_allowed_one(id, permission_group_ids)
@@ -105,11 +123,15 @@ class BaseRepository(Generic[T]):
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
 
+            self.check_for_existing_name(data["name"], entity.permission_group_id)
+
             entity.sqlmodel_update(data)
             self.session.add(entity)
             self.session.commit()
             self.session.refresh(entity)
             return entity
+        except HTTPException as exception:
+            raise exception
         except Exception as e:
             print(str(e))
             self.session.rollback()

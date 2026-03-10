@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError
 from dependencies import (
     get_session,
@@ -68,7 +68,16 @@ def create(
     payload: CsvParserCreate,
     user=Depends(get_current_user),
 ):
+
     try:
+        existing_statement = select(CsvParser).where(
+            func.lower(CsvParser.name) == func.lower(str(payload.name)),
+            CsvParser.permission_group_id == payload.permission_group_id,
+        )
+        existing = session.exec(existing_statement).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
         extra_data = {"created_by_id": user.id}
 
         # Validate manually before saving
@@ -93,6 +102,8 @@ def create(
 
         session.commit()
         return entity
+    except HTTPException as exc:
+        raise exc
     except IntegrityError:
         session.rollback()
         raise HTTPException(
@@ -116,7 +127,6 @@ def update(
     repo=Depends(get_repo_ingest_csv_parser),
     session=Depends(get_session),
 ):
-
     # If timestamp_columns are provided, process them
     if payload.timestamp_columns is not None:
         # Validate that at least one timestamp column exists if provided

@@ -105,9 +105,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="bosch_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_bosch_name_permission_group",
+        "ingest_external_api_bosch",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_external_api_dwd",
@@ -130,9 +133,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="dwd_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_dwd_name_permission_group",
+        "ingest_external_api_dwd",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_external_api_neutron_monitor",
@@ -160,9 +166,12 @@ def upgrade() -> None:
             ["neutron_monitor_station.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="nm_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_nm_name_permission_group",
+        "ingest_external_api_neutron_monitor",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_external_api_the_things_network",
@@ -186,9 +195,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="ttn_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_ttn_name_permission_group",
+        "ingest_external_api_the_things_network",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_external_api_tsystems",
@@ -218,9 +230,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="tsystems_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_tsystems_name_permission_group",
+        "ingest_external_api_tsystems",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_external_api_uba",
@@ -243,9 +258,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="uba_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_uba_name_permission_group",
+        "ingest_external_api_uba",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_mqtt",
@@ -277,9 +295,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="mqtt_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_mqtt_name_permission_group",
+        "ingest_mqtt",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "parser_csv",
@@ -303,9 +324,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="csv_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_parser_csv_name_permission_group",
+        "parser_csv",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "permission_group_user_link",
@@ -340,9 +364,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="qcs_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_qcs_name_permission_group",
+        "quality_control_setting",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "ingest_sftp",
@@ -374,9 +401,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="s3store_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_s3store_name_permission_group",
+        "ingest_sftp",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "parser_csv_timestamp_column",
@@ -427,9 +457,12 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "name", "permission_group_id", name="ext_sftp_unique_name_permission_group"
-        ),
+    )
+    op.create_index(
+        "ix_ext_sftp_name_permission_group",
+        "ingest_external_sftp",
+        [sa.func.lower(sa.column("name")), sa.column("permission_group_id")],
+        unique=True,
     )
     op.create_table(
         "quality_control_function",
