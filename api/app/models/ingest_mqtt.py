@@ -1,5 +1,4 @@
-from sqlalchemy import Column
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
+from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
@@ -43,8 +42,11 @@ class IngestMqtt(IngestMqttBase, table=True):
     __tablename__ = "ingest_mqtt"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="mqtt_unique_name_permission_group"
+        Index(
+            "ix_mqtt_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
+from sqlmodel import Field, SQLModel, Relationship, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
@@ -37,8 +37,11 @@ class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
     __tablename__ = "ingest_external_api_uba"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="uba_unique_name_permission_group"
+        Index(
+            "ix_uba_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

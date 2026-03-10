@@ -1,4 +1,4 @@
-from sqlmodel import Field, SQLModel, Relationship, UniqueConstraint
+from sqlmodel import Field, SQLModel, Relationship, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
@@ -62,8 +62,11 @@ class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table
     __tablename__ = "ingest_external_api_neutron_monitor"
 
     __table_args__ = (
-        UniqueConstraint(
-            "name", "permission_group_id", name="nm_unique_name_permission_group"
+        Index(
+            "ix_nm_name_permission_group",
+            func.lower(column("name")),
+            column("permission_group_id"),
+            unique=True,
         ),
     )
 

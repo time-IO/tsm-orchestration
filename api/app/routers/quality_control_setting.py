@@ -4,7 +4,7 @@ from dependencies import (
     get_current_user,
     get_repo_quality_control_setting,
 )
-from sqlmodel import Session
+from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError
 
 from models.quality_control_setting import (
@@ -61,7 +61,17 @@ def create(
     payload: QualityControlSettingCreate,
     user=Depends(get_current_user),
 ):
+
     try:
+
+        existing_statement = select(QualityControlSetting).where(
+            func.lower(QualityControlSetting.name) == func.lower(str(payload.name)),
+            QualityControlSetting.permission_group_id == payload.permission_group_id,
+        )
+        existing = session.exec(existing_statement).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
         extra_data = {"created_by_id": user.id}
 
         data = payload.model_dump(exclude={"quality_control_functions"})
@@ -100,6 +110,8 @@ def create(
         session.refresh(entity)
 
         return entity
+    except HTTPException as exc:
+        raise exc
     except IntegrityError:
         session.rollback()
         raise HTTPException(
