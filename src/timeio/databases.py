@@ -6,7 +6,7 @@ import json
 import threading
 import urllib.request
 from functools import partial
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from datetime import datetime, timezone
 
 import psycopg
@@ -59,8 +59,22 @@ class DBapi:
                     f"Failed to ping. HTTP status code: {resp.status}"
                 )
 
+    # TODO: add type hints
+    def delete_observations(self, thing_uuid: str, pos: str, start_date=None, end_date=None):
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/observations"
+
+        resp = requests.delete(
+            url,
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+
+
     def upsert_observations(self, thing_uuid: str, observations: list[dict[str, Any]]):
         url = f"{self.base_url}/things/{thing_uuid}/datastreams/observations/upsert"
+
         resp = requests.post(
             url,
             json={"observations": observations},
@@ -70,10 +84,22 @@ class DBapi:
         )
         resp.raise_for_status()
 
+    def upsert_qc_labels(self, thing_uuid: str, qc_labels: list[dict[str, Any]]):
+        url = f"{self.base_url}/things/{thing_uuid}/observations/qaqc"
+
+        resp = requests.post(
+            url,
+            json={"qaqc_labels": qc_labels},
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+
     def insert_datastreams(
-        self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool
-    ):
-        unique_pos = list(set([obs["datastream_pos"] for obs in observations]))
+        self, thing_uuid: str, datastreams: list[dict[str, Any]], mutable: bool
+    ) -> list[dict[Literal["position", "id", "status"], str]]:
+        unique_pos = list(set([obs["datastream_pos"] for obs in datastreams]))
         datastreams = [{"position": pos, "mutable": mutable} for pos in unique_pos]
         url = f"{self.base_url}/things/{thing_uuid}/datastreams"
         resp = requests.post(
@@ -85,6 +111,19 @@ class DBapi:
             },
         )
         resp.raise_for_status()
+        return resp.json()
+
+    def get_datastream(self, thing_uuid: str, pos: str):
+
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/{pos}"
+        resp = requests.get(
+            url,
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
 
     def upsert_observations_and_datastreams(
         self, thing_uuid: str, observations: list[dict[str, Any]], mutable: bool

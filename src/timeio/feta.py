@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import atexit
 import warnings
 from typing import Any, TypedDict
@@ -12,7 +13,8 @@ except ImportError:
 import psycopg
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
-import logging
+import pandas as pd
+
 from timeio.typehints import JsonObjectT
 
 logger = logging.getLogger("feta")
@@ -36,6 +38,7 @@ complete[1]) drop-in replacement for classes in thing.py.
 
 
 class QcStreamT(TypedDict):
+    # TODO: extend
     arg_name: str
     sta_thing_id: int | None
     sta_stream_id: int | None
@@ -575,6 +578,92 @@ class QAQCTest(Base):
     name: str | None = _prop(lambda self: self._attrs["name"])
     streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
     qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
+
+    @staticmethod
+    def _parse_context_window(window: str | None) -> pd.Timedelta:
+        if window is not None:
+            if isinstance(window, str):
+                window = pd.Timedelta(window)
+                if window.days < 0:
+                    raise ValueError("context window must not be negative.")
+                return window
+            # we used to support integer windows
+            raise ValueError("context window must be a timedelta string")
+        return pd.Timedelta(0)
+
+    def _get_existing_stream(self, stream):
+        tmp1 = self._fetchone(
+            self._conn,
+            """
+            SELECT
+                datasource_id as schema,
+                thing_id as thing_uuid,
+                datastream_id
+            FROM public.sms_datastream_link
+              WHERE device_property_id = %s
+            """,
+            stream["sta_stream_id"],
+        )
+
+        if tmp1 is None:
+            raise ValueError(
+                f"STA Datastream with id {stream['sta_stream_id']} does not exist"
+            )
+
+        tmp2 = self._fetchone(
+            self._conn,
+            f"""
+            SELECT position, mutable FROM {tmp1["schema"]}.datastream where id = %s
+            """,
+            tmp1["datastream_id"],
+        )
+        if tmp2 is None:
+            raise ValueError(
+                f"Failed to query STA datastream {stream['sta_stream_id']}"
+            )
+
+        return tmp1 | tmp2
+
+    def _get_new_stream(self, stream):
+        out = self._fetchone(
+            self._conn,
+            """
+            SELECT DISTINCT
+                l.datasource_id as schema,
+                thing_id as thing_uuid,
+            FROM
+              sms_device_mount_action m
+              JOIN sms_configuration c on c.id = m.configuration_id
+              JOIN sms_datastream_link l on l.device_mount_action_id = m.id
+            WHERE configuration_id = %s
+            """,
+            stream["sta_thing_id"],
+        )
+        if out is None:
+            raise ValueError(
+                f"STA Thing with id {stream['sta_thing_id']} does not exist"
+            )
+        return out | {"position": stream["alias"], "mutable": True}
+
+    def get_streams(self) -> list[QcStreamT]:
+        out = []
+        for stream in self._attrs["streams"]:
+            stream["sta_stream_id"] = int(stream["sta_stream_id"])
+            stream["sta_thing_id"] = int(stream["sta_thing_id"])
+            if stream["sta_stream_id"] is None:
+                meta = self._get_new_stream(stream)
+            else:
+                meta = self._get_existing_stream(stream)
+            out.append(
+                stream
+                | meta
+                | {
+                    "context_window": self._parse_context_window(
+                        self.qaqc.context_window
+                    )
+                }
+            )
+        return out
 
 
 class S3Store(Base):

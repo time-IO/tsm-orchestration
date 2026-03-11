@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from timeio.errors import ParsingError
+from timeio.qc.utils import StreamInfo
 
 if TYPE_CHECKING:
     from timeio import feta
@@ -38,42 +39,6 @@ def parse_context_window(window: int | str | None) -> WindowT:
     return window
 
 
-class StreamInfo:
-    """Dataclass that stores a stream parameter for a quality test function
-    stream_id and thing_id are definied as SMS entities with
-    - stream_id -> device_propert_id
-    - thing_id  -> configuration_id
-    """
-
-    def __init__(
-        self,
-        key: Literal["field", "target"],
-        alias: str,
-        sta_thing_id: int | None = None,
-        sta_stream_id: int | None = None,
-    ):
-        self.key = key
-        self.alias = alias
-        self.sta_thing_id = sta_thing_id
-        self.sta_stream_id = sta_stream_id
-        self.datastream_name = alias.split("S", maxsplit=1)[-1]
-        self.is_immutable = sta_thing_id is not None and sta_stream_id is not None
-        self.db_schema = None
-        self.db_stream_id = None
-
-    def __eq__(self, other):
-        if not isinstance(other, StreamInfo):
-            return NotImplemented
-        return self.sta_thing_id == other.sta_thing_id and self.sta_stream_id == other.sta_stream_id
-
-    def __hash__(self):
-        return hash((self.key, self.alias, self.sta_thing_id, self.sta_stream_id))
-
-    def __repr__(self):
-        klass = self.__class__.__name__
-        return f"{klass}({self.key}, {self.alias})"
-
-
 class QcFunction:
     def __init__(
         self,
@@ -95,6 +60,10 @@ class QcFunction:
         return f"QcFunction({self.name}, func={self.func_name}, params={self.params})"
 
     @property
+    def streams(self) -> list[StreamInfo]:
+        return list(set(self.fields + self.targets))
+
+    @property
     def field_names(self) -> list[str]:
         return [f.alias for f in self.fields]
 
@@ -103,77 +72,27 @@ class QcFunction:
         return [f.alias for f in self.targets]
 
 
-class QcFunctionSetup:
-    # TODO:
-    # Remove in favor of list["QcFunction"] if
-    # the class brings nothing to the table
-    def __init__(self, funcs: list[QcFunction]):
-        self._funcs = funcs
-
-    def get_streams(self):
-        fields = sum((t.fields for t in self._funcs), [])
-        # targets = sum((t.targets for t in self._funcs), [])
-        # return fields + targets
-        return fields
-
-    def __len__(self):
-        return len(self._funcs)
-
-    def __getitem__(self, idx):
-        return self._funcs[idx]
-
-    def __iter__(self):
-        return iter(self._funcs)
-
-
-def get_functions(conf: feta.QAQC) -> QcFunctionSetup:
+def get_functions(conf: feta.QAQC) -> list[QcFunction]:
     """
     Convert between the database/feta layer and business logic objects
     """
 
-    def get_func_fields(test: feta.QAQCTest):
-        out = []
-        for stream in test.streams or []:
-            if stream["arg_name"] == "field":
-                out.append(
-                    StreamInfo(
-                        stream["arg_name"],
-                        stream["alias"],
-                        stream["sta_thing_id"],
-                        stream["sta_stream_id"],
-                    )
-                )
-        return out
-
-    def get_func_targets(test: feta.QAQCTest):
-        out = []
-        for stream in test.streams or []:
-            if stream["arg_name"] == "target":
-                out.append(
-                    StreamInfo(
-                        stream["arg_name"],
-                        stream["alias"],
-                        stream["sta_thing_id"],
-                        stream["sta_stream_id"],
-                    )
-                )
-        return out
-
     out = []
-    for i, func in enumerate(conf.get_tests(), start=1):
-        try:
-            qctest = QcFunction(
-                name=func.name,
-                func_name=func.function,
-                fields=get_func_fields(func),
-                targets=get_func_targets(func),
-                params=func.args,
-                context_window=conf.context_window,
-            )
-        except Exception as e:
-            e.add_note(f"Qc test {i} ({func})")
-            e.add_note(f"Config {conf}")
-            raise e
+    rename_map = {"arg_name": "key"}
+    for func in conf.get_tests():
+        streams = [
+            StreamInfo(**{rename_map.get(k, k): v for k, v in row.items()})
+            for row in func.get_streams()
+        ]
+
+        qctest = QcFunction(
+            name=func.name,
+            func_name=func.function,
+            fields=[s for s in streams if s.key == "field"],
+            targets=[s for s in streams if s.key == "target"],
+            params=func.args,
+            context_window=conf.context_window,
+        )
         out.append(qctest)
 
     return out
@@ -182,7 +101,7 @@ def get_functions(conf: feta.QAQC) -> QcFunctionSetup:
 def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
     out = []
     for func in funcs:
-        thing_ids = set(int(f.sta_thing_id) for f in func.fields)
+        thing_ids = set(int(f.sms_configuration_id) for f in func.fields)
         if thing_id in thing_ids:
             out.append(func)
     return out
@@ -191,7 +110,6 @@ def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunctio
 def filter_funcs_to_execute(
     all_funcs: list[QcFunction], selected_funcs: list[QcFunction]
 ):
-
     to_check = []
     for func in selected_funcs:
         targets = set(t.alias for t in func.targets)
@@ -223,8 +141,7 @@ def filter_funcs_to_execute(
     return selected_funcs
 
 
-def get_functions_to_execute(funcs: list[QcFunction], thing_id) -> list[QcFunction]:
-
+def filter_functions(funcs: list[QcFunction], thing_id) -> list[QcFunction]:
     thing_funcs = filter_thing_funcs(funcs, thing_id)
     funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
     return funcs_to_process

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 
 import pandas as pd
 from paho.mqtt.client import MQTTMessage
@@ -19,9 +20,9 @@ from timeio.errors import (
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
 
-from timeio.qc.utils import load_data
-from timeio.qc.saqc import init_saqc, execute_qc_function
-from timeio.qc.qcfunction import get_functions, get_functions_to_execute
+from timeio.qc.utils import read_stream_data, write_qc_data
+from timeio.qc.saqc import SaQCWrapper
+from timeio.qc.qcfunction import get_functions, filter_functions
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -55,13 +56,7 @@ class QcHandler(AbstractHandler):
                 )
 
     @staticmethod
-    def get_config_from_project(
-        project: feta.Project, config_name: str | None = None
-    ) -> feta.QAQC | None:
-        pass
-
-    @staticmethod
-    def parse_version1(
+    def _parse_message_v1(
         conn, content: dict
     ) -> tuple[feta.Project, feta.QAQC | None, feta.Thing]:
         try:
@@ -78,7 +73,7 @@ class QcHandler(AbstractHandler):
         return project, config, thing
 
     @staticmethod
-    def parse_version2(
+    def _parse_message_v2(
         conn, content: dict
     ) -> tuple[feta.Project, feta.QAQC | None, None]:
         try:
@@ -94,75 +89,71 @@ class QcHandler(AbstractHandler):
             logger.info(f"No QC-Settings with name {config_name} found in {project}")
         return project, config, None
 
-    def act(self, content: dict, message: MQTTMessage):
-
-        if (version := content.setdefault("version", 1)) not in [1, 2]:
+    def _parse_message(self, conn, content):
+        if (version := content.setdefault("version", 1)) not in {1, 2}:
             raise NotImplementedError(
                 f"data_parsed payload version {version} is not supported yet."
             )
+        if version == 1:
+            logger.info(f"QC was triggered by data upload to thing. {content=}")
+            project, config, thing = self._parse_message_v1(conn, content)
+
+        else:
+            logger.info(f"QC was triggered by user (or scheduled). {content=}")
+            project, config, thing = self._parse_message_v2(conn, content)
+
+        return project, config, thing
+
+    def act(self, content: dict, message: MQTTMessage):
+
+        t0 = datetime.now()
 
         self.dbapi.ping_dbapi()
         with self.db.connection() as conn:
             logger.debug("successfully connected to configdb")
-
-            if version == 1:
-                logger.info(f"QC was triggered by data upload to thing. {content=}")
-                project, config, thing = self.parse_version1(conn, content)
-
-            else:
-                logger.info(f"QC was triggered by user (or scheduled). {content=}")
-                project, config, thing = self.parse_version2(conn, content)
-
+            project, config, thing = self._parse_message(conn, content)
             if config is None:
                 return
 
-            logger.info(f"Got config %s", config)
-
-            # sm = StreamManager(conn)
+            logger.info("Got config {config}")
             try:
-                func_setup = get_functions(config)
+                qc_funcs = get_functions(config)
                 if thing is not None:
-                    func_setup = get_functions_to_execute(func_setup, thing.id)
-                logger.info(f"COLLECTED TESTS: {func_setup}")
-                if start_date := content.get("start_date", None):
-                    start_date = pd.Timestamp(start_date)
-                if end_date := content.get("end_date", None):
-                    end_date = pd.Timestamp(end_date)
+                    qc_funcs = filter_functions(qc_funcs, thing.id)
+                logger.info(f"COLLECTED TESTS: {qc_funcs}")
+                start_date = pd.Timestamp(content["start_date"])
+                end_date = pd.Timestamp(content["end_date"])
             except (NotImplementedError, ValueError, TypeError, ParsingError) as e:
-                msg = f"Parsing QC tests or parsing start/end failed"
+                msg = "Reading QC tests failed"
                 if thing:
                     journal.error(f"{msg}, because of {e}", thing.uuid)
                 raise ParsingError(msg) from e
 
-            N = len(func_setup)
-            streams = func_setup.get_streams()
-            data = load_data(conn, streams, start_date, end_date)
-            qc = init_saqc(data)
-            for i, func in enumerate(func_setup, start=1):
+            N = len(qc_funcs)
+            streams = set(sum([f.streams for f in qc_funcs], []))
+            data = read_stream_data(conn, streams, start_date, end_date)
+            qc = SaQCWrapper(data)
+            for i, func in enumerate(qc_funcs, start=1):
                 logger.info("Test %s of %s: %s", i, N, func)
                 try:
-                    qc = execute_qc_function(qc, func)
-                    # test.run()
-                    # stage = "Storing result of"
-                    # sm.update(test.result)
+                    qc.execute(func)
                 except Exception as e:
-                    # TODO: better error message needed
                     msg = f"Executing SaQC function '{func}' failed"
                     if thing:
                         journal.error(f"{msg}, because of {e}", thing.uuid)
                     raise ProcessingError(msg) from e
 
-            # TODO: implement upload
-            # sm.upload(self.dbapi.base_url)
+            write_qc_data(self.dbapi, qc)
 
         if thing:
             journal.info(
                 f"Successfully executed QC Setup {config.name}, which was "
-                f"triggered by new data for thing {thing.name} ({thing.uuid})",
+                f"triggered by new data for thing {thing.name} ({thing.uuid})"
+                f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds",
                 thing.uuid,
             )
 
-        logger.debug(f"inform downstream services about success of qc.")
+        logger.debug("inform downstream services about success of qc.")
         payload = json.dumps(
             {
                 "version": 1,

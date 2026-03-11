@@ -9,7 +9,8 @@ import pandas as pd
 import saqc
 from saqc.parsing.visitor import ConfigFunctionParser
 
-from timeio.qc.qcfunction import QcFunction, StreamInfo
+from timeio.qc.utils import StreamInfo
+from timeio.qc.qcfunction import QcFunction
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -123,7 +124,7 @@ class SaQCWrapper:
             scheme=STAMPLATEScheme(),
         )
         # we keep the original data to check for modifications later
-        self._data = data
+        self._input_data = data
         self._streams = {s.alias: s for s in data.keys()}
 
     @property
@@ -146,9 +147,8 @@ class SaQCWrapper:
             #       that will be fixed in the next release
             # TODO: remove entire block after the bug is fixed
             for f in func.field_names:
-                saqc_func = getattr(self._qc, func.func_name)
                 self._qc = saqc_func(field=f, target=func.target_names, **func.params)
-        if func.func_name.endswith("Generic"):
+        elif func.func_name.endswith("Generic"):
             # NOTE:
             # The generic function parser is not as well exposed in
             # SaQC as is could be, that's why we need to go the extra
@@ -157,9 +157,17 @@ class SaQCWrapper:
             tree = ast.parse(func_string, mode="eval").body
             _, kwargs = ConfigFunctionParser().parse(tree)
             func.params["func"] = kwargs["func"]
-        self._qc = saqc_func(
-            field=func.field_names, target=func.target_names, **func.params
-        )
+        else:
+            self._qc = saqc_func(
+                field=func.field_names, target=func.target_names, **func.params
+            )
 
     def data_is_modified(self, stream: StreamInfo) -> bool:
-        return not self._qc._data[stream.alias].equals(self._data[stream]["data"])
+        # if stream.key == "target" and stream not in self._input_data:
+        #     return True
+        return not self._qc._data[stream.alias].equals(self._input_data[stream]["data"])
+
+    def index_is_modified(self, stream: StreamInfo) -> bool:
+        # if stream.key == "target" and stream not in self._input_data:
+        #     return True
+        return not self._qc._data[stream.alias].index.equals(self._input_data[stream]["data"].index)
