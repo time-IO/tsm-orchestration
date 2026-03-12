@@ -7,7 +7,7 @@ import pandas as pd
 
 from timeio.databases import Database, DBapi
 from timeio.qc import filter_functions
-from timeio.qc.qcfunction import QcFunction, StreamInfo, get_functions
+from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_functions
 from timeio.qc.io import read_stream_data, write_qc_data
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
@@ -41,7 +41,7 @@ def local_dbapi():
         pytest.skip("local dbapi connection not available")
 
 
-T1S27 = StreamInfo(
+T1S27 = QcFunctionStream(
     key="field",
     alias="T1S27",
     sta_thing_id=1,
@@ -53,7 +53,7 @@ T1S27 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="N1Cts",
 )
-T1S33 = StreamInfo(
+T1S33 = QcFunctionStream(
     key="field",
     alias="T1S33",
     sta_thing_id=1,
@@ -65,7 +65,7 @@ T1S33 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="P1_mb",
 )
-T1S36 = StreamInfo(
+T1S36 = QcFunctionStream(
     key="field",
     alias="T1S36",
     sta_thing_id=1,
@@ -77,7 +77,7 @@ T1S36 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="P3_mb",
 )
-T2S44 = StreamInfo(
+T2S44 = QcFunctionStream(
     key="field",
     alias="T2S44",
     sta_thing_id=2,
@@ -89,7 +89,7 @@ T2S44 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="TMet20",
 )
-T2S43 = StreamInfo(
+T2S43 = QcFunctionStream(
     key="field",
     alias="T2S43",
     sta_thing_id=2,
@@ -101,7 +101,7 @@ T2S43 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="RecordNum",
 )
-T2S46 = StreamInfo(
+T2S46 = QcFunctionStream(
     key="field",
     alias="T2S46",
     sta_thing_id=2,
@@ -113,7 +113,7 @@ T2S46 = StreamInfo(
     context_window=pd.Timedelta(0),
     position="N01C",
 )
-NEW = StreamInfo(
+NEW = QcFunctionStream(
     key="target",
     alias="NEW",
     sta_thing_id=2,

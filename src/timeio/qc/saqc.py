@@ -9,7 +9,7 @@ import pandas as pd
 import saqc
 from saqc.parsing.visitor import ConfigFunctionParser
 
-from timeio.qc.qcfunction import QcFunction, StreamInfo
+from timeio.qc.qcfunction import QcFunction, QcFunctionStream
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -109,7 +109,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
 
 
 class SaQCWrapper:
-    def __init__(self, data: dict[StreamInfo, pd.DataFrame]):
+    def __init__(self, data: dict[QcFunctionStream, pd.DataFrame]):
         values = {}
         flags = {}
 
@@ -127,7 +127,7 @@ class SaQCWrapper:
         self._streams = {s.alias: s for s in data.keys()}
 
     @property
-    def data(self) -> dict[StreamInfo, pd.DataFrame]:
+    def data(self) -> dict[QcFunctionStream, pd.DataFrame]:
         out = {}
         for col in self._qc.columns:
             out[self._streams[col]] = pd.DataFrame(
@@ -162,12 +162,12 @@ class SaQCWrapper:
             field=func.field_names, target=func.target_names, **func.params
         )
 
-    def data_is_modified(self, stream: StreamInfo) -> bool:
+    def data_is_modified(self, stream: QcFunctionStream) -> bool:
         # if stream.key == "target" and stream not in self._input_data:
         #     return True
         return not self._qc._data[stream.alias].equals(self._input_data[stream]["data"])
 
-    def index_is_modified(self, stream: StreamInfo) -> bool:
+    def index_is_modified(self, stream: QcFunctionStream) -> bool:
         # if stream.key == "target" and stream not in self._input_data:
         #     return True
         return not self._qc._data[stream.alias].index.equals(

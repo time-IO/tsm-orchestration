@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from timeio import feta
 
 
-class StreamInfo:
+class QcFunctionStream:
     """Dataclass that stores a stream parameter for a quality test function
     stream_id and thing_id are definied as SMS entities with
     - stream_id -> device_propert_id
@@ -49,7 +49,7 @@ class StreamInfo:
         return out
 
     def __eq__(self, other):
-        if not isinstance(other, StreamInfo):
+        if not isinstance(other, QcFunctionStream):
             return NotImplemented
         return (
             self.sms_configuration_id == other.sms_configuration_id
@@ -69,9 +69,9 @@ class QcFunction:
         self,
         name,
         func_name,
-        fields: list[StreamInfo],
+        fields: list[QcFunctionStream],
         params: dict[str, Any],
-        targets: list[StreamInfo] | None = None,
+        targets: list[QcFunctionStream] | None = None,
     ):
         self.name = name
         self.func_name: str = func_name
@@ -83,7 +83,7 @@ class QcFunction:
         return f"QcFunction({self.name}, func={self.func_name}, params={self.params})"
 
     @property
-    def streams(self) -> list[StreamInfo]:
+    def streams(self) -> list[QcFunctionStream]:
         return list(set(self.fields + self.targets))
 
     @property
@@ -105,7 +105,7 @@ def get_functions(conf: feta.QAQC) -> list[QcFunction]:
     for func in conf.get_tests():
 
         streams = [
-            StreamInfo(**{rename_map.get(k, k): v for k, v in stream.items()})
+            QcFunctionStream(**{rename_map.get(k, k): v for k, v in stream.items()})
             for stream in func.get_streams()
         ]
 
