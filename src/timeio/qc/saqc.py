@@ -171,4 +171,6 @@ class SaQCWrapper:
     def index_is_modified(self, stream: StreamInfo) -> bool:
         # if stream.key == "target" and stream not in self._input_data:
         #     return True
-        return not self._qc._data[stream.alias].index.equals(self._input_data[stream]["data"].index)
+        return not self._qc._data[stream.alias].index.equals(
+            self._input_data[stream]["data"].index
+        )

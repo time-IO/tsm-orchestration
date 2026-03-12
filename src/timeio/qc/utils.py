@@ -151,7 +151,7 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
 
     def convert_df(stream: StreamInfo, df: pd.DataFrame):
         # trim context window away
-        df = df.loc[df.index[0] + stream.context_window:]
+        df = df.loc[df.index[0] + stream.context_window :]
 
         df["result_time"] = df.index.strftime("%Y-%m-%dT%H:%M:%S")
         df["result_type"] = rt = get_result_type(df["data"])
