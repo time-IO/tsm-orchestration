@@ -1,12 +1,67 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+import copy
+from typing import TYPE_CHECKING, Any, Literal
 
-from timeio.qc.utils import StreamInfo
+import pandas as pd
 
 if TYPE_CHECKING:
     from timeio import feta
+
+
+class StreamInfo:
+    """Dataclass that stores a stream parameter for a quality test function
+    stream_id and thing_id are definied as SMS entities with
+    - stream_id -> device_propert_id
+    - thing_id  -> configuration_id
+    """
+
+    def __init__(
+        self,
+        key: Literal["field", "target"],
+        alias: str,
+        sta_thing_id: int,
+        sta_stream_id: int | None,
+        mutable: bool,
+        position: str,
+        schema: str,
+        datastream_id: int | None,
+        thing_uuid: str,
+        context_window: pd.Timedelta,
+    ):
+        # TODO: improve attribute names
+        self.key = key
+        self.alias: str = alias
+        self.sms_configuration_id = sta_thing_id
+        self.sta_stream_id = sta_stream_id
+        self.datastream_name: str = alias
+        self.db_schema = schema
+        self.db_stream_id = datastream_id
+        self.thing_uuid = thing_uuid
+        self.position = position
+        self.is_mutable = mutable
+        self.context_window = context_window
+
+    def to_target(self):
+        out = copy.deepcopy(self)
+        out.key = "target"
+        return out
+
+    def __eq__(self, other):
+        if not isinstance(other, StreamInfo):
+            return NotImplemented
+        return (
+            self.sms_configuration_id == other.sms_configuration_id
+            and self.sta_stream_id == other.sta_stream_id
+        )
+
+    def __hash__(self):
+        return hash((self.alias, self.sms_configuration_id, self.sta_stream_id))
+
+    def __repr__(self):
+        klass = self.__class__.__name__
+        return f"{klass}({self.key}, {self.alias})"
 
 
 class QcFunction:

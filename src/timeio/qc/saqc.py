@@ -9,8 +9,7 @@ import pandas as pd
 import saqc
 from saqc.parsing.visitor import ConfigFunctionParser
 
-from timeio.qc.utils import StreamInfo
-from timeio.qc.qcfunction import QcFunction
+from timeio.qc.qcfunction import QcFunction, StreamInfo
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
