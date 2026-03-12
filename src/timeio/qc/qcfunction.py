@@ -3,40 +3,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
-
-from timeio.errors import ParsingError
 from timeio.qc.utils import StreamInfo
 
 if TYPE_CHECKING:
     from timeio import feta
-    from timeio.qc.typehints import WindowT
-
-__all__ = ["StreamInfo", "QcFunction"]
-
-
-def parse_context_window(window: int | str | None) -> WindowT:
-    orig = window
-    if window is None:
-        window = 0
-
-    try:
-        if isinstance(window, int) or isinstance(window, str) and window.isnumeric():
-            window = int(window)
-            is_negative = window < 0
-        else:
-            window = pd.Timedelta(window)
-            is_negative = window.days < 0
-
-        if is_negative:
-            raise ValueError("window must not be negative.")
-
-    except Exception as e:
-        raise ParsingError(
-            f"Parsing context window failed. type={type(orig)}, value={orig}"
-        ) from e
-
-    return window
 
 
 class QcFunction:
@@ -47,14 +17,12 @@ class QcFunction:
         fields: list[StreamInfo],
         params: dict[str, Any],
         targets: list[StreamInfo] | None = None,
-        context_window: str | int = 0,
     ):
         self.name = name
         self.func_name: str = func_name
-        self.context_window: WindowT = parse_context_window(context_window)
         self.fields = fields
         self.params = params
-        self.targets = targets or fields
+        self.targets = targets or [f.to_target() for f in fields]
 
     def __repr__(self):
         return f"QcFunction({self.name}, func={self.func_name}, params={self.params})"
@@ -80,9 +48,10 @@ def get_functions(conf: feta.QAQC) -> list[QcFunction]:
     out = []
     rename_map = {"arg_name": "key"}
     for func in conf.get_tests():
+
         streams = [
-            StreamInfo(**{rename_map.get(k, k): v for k, v in row.items()})
-            for row in func.get_streams()
+            StreamInfo(**{rename_map.get(k, k): v for k, v in stream.items()})
+            for stream in func.get_streams()
         ]
 
         qctest = QcFunction(
@@ -91,7 +60,6 @@ def get_functions(conf: feta.QAQC) -> list[QcFunction]:
             fields=[s for s in streams if s.key == "field"],
             targets=[s for s in streams if s.key == "target"],
             params=func.args,
-            context_window=conf.context_window,
         )
         out.append(qctest)
 

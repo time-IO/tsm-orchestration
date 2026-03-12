@@ -148,7 +148,9 @@ class SaQCWrapper:
             # TODO: remove entire block after the bug is fixed
             for f in func.field_names:
                 self._qc = saqc_func(field=f, target=func.target_names, **func.params)
-        elif func.func_name.endswith("Generic"):
+            return
+
+        if func.func_name.endswith("Generic"):
             # NOTE:
             # The generic function parser is not as well exposed in
             # SaQC as is could be, that's why we need to go the extra
@@ -157,10 +159,9 @@ class SaQCWrapper:
             tree = ast.parse(func_string, mode="eval").body
             _, kwargs = ConfigFunctionParser().parse(tree)
             func.params["func"] = kwargs["func"]
-        else:
-            self._qc = saqc_func(
-                field=func.field_names, target=func.target_names, **func.params
-            )
+        self._qc = saqc_func(
+            field=func.field_names, target=func.target_names, **func.params
+        )
 
     def data_is_modified(self, stream: StreamInfo) -> bool:
         # if stream.key == "target" and stream not in self._input_data:
