@@ -8,7 +8,7 @@ import pandas as pd
 from timeio.databases import Database, DBapi
 from timeio.qc import filter_functions
 from timeio.qc.qcfunction import QcFunction, StreamInfo, get_functions
-from timeio.qc.utils import read_stream_data, write_qc_data
+from timeio.qc.io import read_stream_data, write_qc_data
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
 

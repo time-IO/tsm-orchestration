@@ -20,7 +20,7 @@ from timeio.errors import (
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
 
-from timeio.qc.utils import read_stream_data, write_qc_data
+from timeio.qc.io import read_stream_data, write_qc_data
 from timeio.qc.saqc import SaQCWrapper
 from timeio.qc.qcfunction import get_functions, filter_functions
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
