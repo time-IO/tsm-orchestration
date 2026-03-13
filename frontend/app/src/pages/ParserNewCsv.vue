@@ -7,6 +7,15 @@
       </div>
     </div>
 
+    <div class="text-caption text-grey">
+      For more information visit the time.IO Wiki
+      <a
+        href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/TimeIO-Frontend#csv-parser"
+        target="_blank"
+        >here</a
+      >.
+    </div>
+
     <q-card class="q-mb-lg" flat>
       <q-card-section>
         <q-form @submit.prevent="save" class="q-gutter-md">
@@ -39,7 +48,7 @@
             filled
             class="q-mb-md"
             v-model="formData.delimiter"
-            label="Column delimiter *"
+            label="Column delimiter * (e.g. , ; \t)"
             :rules="[(val) => !!val || 'Column delimiter is required']"
           />
 
@@ -47,14 +56,14 @@
             filled
             class="q-mb-md"
             v-model.number="formData.headlines_to_exclude"
-            label="Number of headlines to exclude (0-based)"
+            label="Number of headlines to exclude"
           />
 
           <q-input
             filled
             class="q-mb-md"
             v-model.number="formData.footlines_to_exclude"
-            label="Number of footlines to exclude (0-based)"
+            label="Number of footlines to exclude"
           />
 
           <q-input
@@ -68,16 +77,6 @@
 
           <!-- Timestamp Columns -->
           <div class="q-my-md">
-            <div class="row q-gutter-sm items-center q-mb-sm">
-              <q-btn
-                icon="add"
-                label="Add timestamp column"
-                flat
-                color="primary"
-                @click="addTimestampColumn"
-              />
-            </div>
-
             <q-list
               separator
               v-for="(col, idx) in formData.timestamp_columns"
@@ -104,7 +103,15 @@
                       v-model="col.timestamp_format"
                       label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
                       :rules="[(val) => !!val || 'Timestamp format is required']"
-                    />
+                    >
+                      <template v-slot:append>
+                        <q-btn round flat icon="help_outline" @click="showDocs">
+                          <q-tooltip>
+                            View Pandas Docs for information on available formatting strings
+                          </q-tooltip>
+                        </q-btn>
+                      </template>
+                    </q-input>
                   </div>
                 </q-item-section>
                 <q-item-section side>
@@ -124,6 +131,16 @@
             <!-- Validation message for timestamp columns -->
             <div v-if="formData.timestamp_columns.length === 0" class="text-negative q-mt-xs">
               At least one timestamp column is required
+            </div>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add timestamp column"
+                flat
+                color="primary"
+                @click="addTimestampColumn"
+              />
             </div>
           </div>
 
@@ -229,6 +246,10 @@ function addTimestampColumn() {
 function removeTimestampColumn(index: number) {
   formData.value.timestamp_columns.splice(index, 1);
 }
+
+const showDocs = () => {
+  window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
+};
 </script>
 
 <style scoped></style>
