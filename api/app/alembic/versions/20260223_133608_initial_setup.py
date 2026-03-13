@@ -349,6 +349,7 @@ def upgrade() -> None:
         "quality_control_setting",
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("context_window", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
