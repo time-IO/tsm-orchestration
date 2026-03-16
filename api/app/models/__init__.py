@@ -23,6 +23,7 @@ from .parser_csv import CsvParser
 from .quality_control_setting import QualityControlSetting
 from .health import Health
 from .trigger_quality_control import TriggerQualityControl
+from .trigger_ext_api import TriggerSyncExtApiBase, TriggerSyncExtApiResponse
 
 __all__ = [
     "Database",
@@ -46,5 +47,7 @@ __all__ = [
     "CsvParser",
     "QualityControlSetting",
     "Health",
+    "TriggerSyncExtApiBase",
+    "TriggerSyncExtApiResponse",
     "TriggerQualityControl",
 ]

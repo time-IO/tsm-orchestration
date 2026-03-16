@@ -9,6 +9,7 @@ from threading import get_native_id
 import paho.mqtt.client as mqtt
 
 from config import settings
+from .generate_mqtt_messages import create_sync_ext_api_msg, create_sync_quality_control
 
 logger = logging.getLogger("app.mqtt")
 
@@ -76,17 +77,22 @@ def publish_message(msg: dict, topic: str, success_log: str):
 
 
 def publish_trigger_quality_control(
-    database_uuid, qc_settings_name, start_date, end_date, topic="data_parsed"
+    permission_group_uuid, qc_settings_name, start_date, end_date, topic="data_parsed"
 ):
-    msg = {
-        "version": 2,
-        "project_uuid": database_uuid,
-        "qc_settings_name": qc_settings_name,
-        "start_date": start_date,
-        "end_date": end_date,
-    }
+    msg = create_sync_quality_control(
+        permission_group_uuid, qc_settings_name, start_date, end_date
+    )
     publish_message(
         msg,
         topic,
-        f"Quality control triggered for ingest '{database_uuid}' with QC settings '{qc_settings_name}' published on '{topic}'",
+        f"Quality control triggered for ingest '{permission_group_uuid}' with QC settings '{qc_settings_name}' published on '{topic}'",
+    )
+
+
+def publish_trigger_ext_api(ingest_uuid, date_from, date_to, topic="sync_ext_apis"):
+    msg = create_sync_ext_api_msg(ingest_uuid, date_from, date_to)
+    publish_message(
+        msg,
+        topic,
+        f"External API sync for ingest '{ingest_uuid}' published on '{topic}'",
     )

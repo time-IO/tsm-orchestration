@@ -24,7 +24,7 @@ def trigger_quality_control_service(
         except HTTPException:
             continue
         publish_trigger_quality_control(
-            database_uuid=str(qc_setting.permission_group.uuid),
+            permission_group_uuid=str(qc_setting.permission_group.uuid),
             qc_settings_name=qc_setting.name,
             start_date=payload.start_date,
             end_date=payload.end_date,
