@@ -20,6 +20,7 @@ from routers import (
     parser_mqtt,
     user,
     sta_proxy,
+    trigger_quality_control,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -58,3 +59,4 @@ app.include_router(quality_control_setting.router)
 app.include_router(health.router)
 app.include_router(user.router)
 app.include_router(sta_proxy.router)
+app.include_router(trigger_quality_control.router)

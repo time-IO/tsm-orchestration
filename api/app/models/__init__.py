@@ -22,6 +22,7 @@ from .neutron_monitor_station import NeutronMonitorStation
 from .parser_csv import CsvParser
 from .quality_control_setting import QualityControlSetting
 from .health import Health
+from .trigger_quality_control import TriggerQualityControl
 
 __all__ = [
     "Database",
@@ -45,4 +46,5 @@ __all__ = [
     "CsvParser",
     "QualityControlSetting",
     "Health",
+    "TriggerQualityControl",
 ]

@@ -73,3 +73,20 @@ def publish_message(msg: dict, topic: str, success_log: str):
     result = client.publish(topic, json.dumps(msg), qos=qos)
     result.wait_for_publish(5)
     logger.info(success_log)
+
+
+def publish_trigger_quality_control(
+    database_uuid, qc_settings_name, start_date, end_date, topic="data_parsed"
+):
+    msg = {
+        "version": 2,
+        "project_uuid": database_uuid,
+        "qc_settings_name": qc_settings_name,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    publish_message(
+        msg,
+        topic,
+        f"Quality control triggered for ingest '{database_uuid}' with QC settings '{qc_settings_name}' published on '{topic}'",
+    )
