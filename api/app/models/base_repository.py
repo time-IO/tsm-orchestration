@@ -49,6 +49,18 @@ class BaseRepository(Generic[T]):
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
 
+    def check_for_existing_name_update(
+        self, name_to_check, permission_group_id, entity_id
+    ):
+        existing_statement = select(self.model).where(
+            func.lower(self.model.name) == func.lower(str(name_to_check)),
+            self.model.permission_group_id == permission_group_id,
+            self.model.id != entity_id,
+        )
+        existing = self.session.exec(existing_statement).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
     def create_allowed(self, payload, extra_data, permission_group_ids):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
@@ -71,12 +83,15 @@ class BaseRepository(Generic[T]):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
         )
-        self.check_for_existing_name(payload.name, payload.permission_group_id)
         try:
             entity = self.find_allowed_one(id, permission_group_ids)
 
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
+
+            self.check_for_existing_name_update(
+                payload.name, entity.permission_group_id, entity.id
+            )
 
             data = payload.model_dump(exclude_unset=True)
             entity.sqlmodel_update(data)
@@ -84,6 +99,8 @@ class BaseRepository(Generic[T]):
             self.session.commit()
             self.session.refresh(entity)
             return entity
+        except HTTPException as exception:
+            raise exception
         except Exception as e:
             print(str(e))
             self.session.rollback()
@@ -99,7 +116,9 @@ class BaseRepository(Generic[T]):
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
 
-            self.check_for_existing_name(payload.name, entity.permission_group_id)
+            self.check_for_existing_name_update(
+                payload.name, entity.permission_group_id, entity.id
+            )
 
             data = payload.model_dump(exclude_unset=True)
             entity.sqlmodel_update(data)
@@ -123,7 +142,9 @@ class BaseRepository(Generic[T]):
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
 
-            self.check_for_existing_name(data["name"], entity.permission_group_id)
+            self.check_for_existing_name_update(
+                data["name"], entity.permission_group_id, entity.id
+            )
 
             entity.sqlmodel_update(data)
             self.session.add(entity)
