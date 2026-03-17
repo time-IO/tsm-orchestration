@@ -66,13 +66,13 @@
             label="Number of footlines to exclude"
           />
 
+          <!-- Header Field -->
           <q-input
             filled
-            v-model="formData.pandas_read_csv"
-            label="Pandas read csv"
-            type="textarea"
-            rows="3"
-            hint="additional JSON to configure pandas"
+            class="q-mb-md"
+            v-model.number="formData.header"
+            label="Header row index"
+            hint="Row index where header is located (0 for first row)"
           />
 
           <!-- Timestamp Columns -->
@@ -144,6 +144,52 @@
             </div>
           </div>
 
+          <!-- Comment Characters -->
+          <div class="q-my-md">
+            <q-list separator v-for="(char, idx) in formData.comment" :key="idx" class="q-mb-sm">
+              <q-item>
+                <q-item-section>
+                  <q-item-label>Comment Character {{ idx + 1 }}</q-item-label>
+                  <q-input
+                    filled
+                    v-model="formData.comment[idx]"
+                    label="Comment character (e.g. #)"
+                    type="text"
+                    class="col-8"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    dense
+                    flat
+                    icon="remove_circle"
+                    color="red"
+                    @click="removeCommentCharacter(idx)"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add comment character"
+                flat
+                color="primary"
+                @click="addCommentCharacter"
+              />
+            </div>
+          </div>
+
+          <q-input
+            filled
+            v-model="formData.pandas_read_csv"
+            label="Pandas read csv"
+            type="textarea"
+            rows="3"
+            hint="additional JSON to configure pandas"
+          />
+
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space />
@@ -186,6 +232,8 @@ const formData = ref<CsvParserCreate>({
   footlines_to_exclude: 0,
   pandas_read_csv: null,
   timestamp_columns: [],
+  comment: [],
+  header: null,
 });
 
 const isLoading = ref(false);
@@ -209,6 +257,8 @@ async function save() {
           : null,
       pandas_read_csv: formData.value.pandas_read_csv,
       timestamp_columns: formData.value.timestamp_columns,
+      comment: formData.value.comment,
+      header: formData.value.header,
     };
 
     isLoading.value = true;
@@ -245,6 +295,14 @@ function addTimestampColumn() {
 
 function removeTimestampColumn(index: number) {
   formData.value.timestamp_columns.splice(index, 1);
+}
+
+function addCommentCharacter() {
+  formData.value.comment.push('');
+}
+
+function removeCommentCharacter(index: number) {
+  formData.value.comment.splice(index, 1);
 }
 
 const showDocs = () => {

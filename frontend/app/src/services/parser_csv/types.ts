@@ -29,6 +29,8 @@ export type CsvParserPublic = {
   pandas_read_csv: string | null;
   timestamp_columns: Array<CsvParserTimestampColumnPublic>;
   permission_group: PermissionGroup;
+  comment: string[];
+  header: number | null
 };
 
 export type CsvParserCreate = {
@@ -40,6 +42,8 @@ export type CsvParserCreate = {
   footlines_to_exclude: number | null;
   pandas_read_csv: string | null;
   timestamp_columns: Array<CsvParserTimestampColumnCreate>;
+  comment: string[];
+  header: number | null;
 };
 
 export type CsvParserUpdate = {
@@ -50,4 +54,6 @@ export type CsvParserUpdate = {
   footlines_to_exclude?: number | null;
   pandas_read_csv?: string | null;
   timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
+  header?: number | null;
+  comment?: string[];
 };

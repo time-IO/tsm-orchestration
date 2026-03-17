@@ -49,6 +49,8 @@ class CsvParserBase(SQLModel):
     headlines_to_exclude: int | None = None
     footlines_to_exclude: int | None = None
     pandas_read_csv: dict | None = Field(sa_column=Column(JSON), default_factory=dict)
+    comment: list[str] = Field(sa_column=Column(JSON), default_factory=list)
+    header: int | None = None
 
 
 class CsvParserCreate(CsvParserBase):
