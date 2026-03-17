@@ -69,6 +69,11 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
     )
     ssh_public_key: str
     password: str = Field(sa_column=Column("password", EncryptedType, nullable=True))
+    bucket_name: str
+    bucket_username: str
+    bucket_password: str = Field(
+        sa_column=Column("bucket_password", EncryptedType, nullable=False)
+    )
 
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_sftp"

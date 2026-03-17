@@ -9,7 +9,10 @@ from models.ingest_external_sftp import (
     IngestExternalSftpUpdate,
     IngestExternalSftpPublic,
 )
-from utils import generate_keypair
+from utils import generate_keypair, generate_password
+
+import uuid
+import re
 
 router = APIRouter(
     prefix="/ingest/external-sftp",
@@ -60,10 +63,18 @@ def create(
 ):
     private_key, public_key = generate_keypair()
 
+    _uuid = uuid.uuid4()
+    bucket_username = re.sub("[^a-z0-9-]+", "", f"ingest-external-sftp-{_uuid}")
+    bucket_name = bucket_username
+    bucket_password = generate_password(40)
+
     extra_data = {
         "created_by_id": current_user.id,
         "ssh_private_key": private_key,
         "ssh_public_key": public_key,
+        "bucket_name": bucket_name,
+        "bucket_username": bucket_username,
+        "bucket_password": bucket_password,
     }
 
     return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)

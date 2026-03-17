@@ -433,6 +433,13 @@ def upgrade() -> None:
         ),
         sa.Column("uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("bucket_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "bucket_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column(
+            "bucket_password", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=True),
