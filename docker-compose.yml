@@ -152,6 +152,23 @@ services:
       - frontend
       - api
 
+  mqtt-cat:
+    image: "eclipse-mosquitto:latest"
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    logging:
+      options:
+        max-size: "100K"
+        max-file: "10"
+    command: >
+      mosquitto_sub --pretty -v
+      -h mqtt-broker
+      -t "#"
+      -u "${MQTT_USER:-dsm}"
+      -P "${MQTT_PASSWORD:-dsm}"
+      --id "mqtt-cat"
+
 volumes:
   keycloak-data:
   api-data:
