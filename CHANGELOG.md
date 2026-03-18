@@ -7,7 +7,22 @@
 ### Changed
 ### Removed
 
-## 2025-01-20
+## 2026-03-18
+### Added
+- allow Grafana dashboard embedding ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/554))
+- STA FeatureOfInterest ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/553))
+- authentication for internal database API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/565))
+- persistence of MQTT ingest messages ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/575))
+### Fixed
+- STA locations bug ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/560))
+- QC flags in automated dashboards ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/566))
+### Changed
+- consolidate thing setup workers into `worker-thing-setup` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/542))
+- tagging of MinIO objects after parsing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/558))
+- Grafana authentication to internal Keycloak ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/557))
+### Removed
+
+## 2026-01-20
 ### Added
 - Option to add set file encoding for csv parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/552))
 ### Fixed
