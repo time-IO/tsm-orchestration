@@ -1,13 +1,13 @@
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sla_begin_date
-ON sms_configuration_static_location_begin_action (begin_date);
+ON sms_configuration_static_location_begin_action (configuration_id, begin_date);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_dla_begin_date
-ON sms_configuration_dynamic_location_begin_action (begin_date);
+ON sms_configuration_dynamic_location_begin_action (configuration_id, begin_date);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sla_end_date
-ON sms_configuration_static_location_begin_action (end_date)
+ON sms_configuration_static_location_begin_action (configuration_id,    end_date)
 WHERE end_date IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_dla_end_date
-ON sms_configuration_dynamic_location_begin_action (end_date)
+ON sms_configuration_dynamic_location_begin_action (configuration_id, end_date)
 WHERE end_date IS NOT NULL
 ;
 

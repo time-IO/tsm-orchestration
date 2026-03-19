@@ -13,7 +13,7 @@ SELECT
     result_type AS "RESULT_TYPE",
     valid_time_end AS "VALID_TIME_END",
     result_time AS "PHENOMENON_TIME_END",
-    feature_id AS "FEATURE ID",
+    feature_id AS "FEATURE_ID",
     result_json AS "RESULT_JSON",
     result_time AS "RESULT_TIME",
     result_number AS "RESULT_NUMBER",
