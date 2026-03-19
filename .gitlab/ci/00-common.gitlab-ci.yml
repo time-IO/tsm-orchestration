@@ -25,7 +25,7 @@ variables:
   MONITORING_PORT: 8080
   DOCKER_IMAGE_TAG: 27-cli
   DOCKER_SERVICE_IMAGE_TAG: 27-dind
-  TRIVY_VERSION: 0.61.0
+  TRIVY_VERSION: 0.69.3
   BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater"
 
 services:
