@@ -1,11 +1,11 @@
 ---
 stages:
+  - "scan"
   - "check"
   - "build"
   - "integration"
   - "end-to-end"
   - "release"
-  - "scan"
   - "notify"
 
 
