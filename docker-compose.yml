@@ -428,7 +428,7 @@ services:
   flyway:
     image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
+    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate repair migrate
     volumes:
       - ./flyway/migrations/public:/flyway/sql
       - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
