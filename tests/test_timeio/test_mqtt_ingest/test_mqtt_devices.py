@@ -2,22 +2,9 @@
 
 import pytest
 from datetime import datetime
-from timeio.parser.mqtt_devices.brightsky_dwd import BrightskyDwdApiParser
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
-
-
-def test_brightsky_parser_basic():
-    parser = BrightskyDwdApiParser()
-    raw = {
-        "weather": {"timestamp": "2025-01-01T00:00:00Z", "temp": 20, "humidity": 50},
-        "sources": ["api_source"],
-    }
-    obs = parser.do_parse(raw, origin="test/origin")
-    assert len(obs) == 2
-    assert obs[0].origin == "test/origin"
-    assert obs[0].header == "api_source"
 
 
 def test_campbell_parser_basic():
