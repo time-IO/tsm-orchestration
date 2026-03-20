@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
 
 ARG BUILD_DATE
 ARG VCS_REF
-ARG SUPERCRONIC_VERSION=0.2.44
+ARG SUPERCRONIC_VERSION=0.2.33
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
