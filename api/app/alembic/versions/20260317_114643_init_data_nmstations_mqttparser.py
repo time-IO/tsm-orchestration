@@ -319,13 +319,9 @@ def upgrade() -> None:
     op.bulk_insert(
         mqtt_parser,
         [
-            {"id": 1, "name": "Campbell CR6"},
-            {"id": 2, "name": "Schlumberger"},
-            {"id": 3, "name": "campbell_cr6"},
-            {"id": 4, "name": "brightsky_dwd_api"},
-            {"id": 5, "name": "ydoc_ml417"},
-            {"id": 6, "name": "sine_dummy"},
-            {"id": 7, "name": "Gude"},
+            {"id": 1, "name": "campbell_cr6"},
+            {"id": 2, "name": "ydoc_ml417"},
+            {"id": 3, "name": "chirpstack_generic"},
         ],
     )
 
