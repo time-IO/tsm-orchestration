@@ -35,9 +35,6 @@ RUN apt-get -y update \
       curl \
       unzip
 
-# Install minio mc client
-RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc > /usr/local/bin/mc \
-    && chmod a+x /usr/local/bin/mc
 
 # add requirements
 COPY src/requirements.txt /tmp/requirements.txt
@@ -48,7 +45,6 @@ FROM base AS dist
 
 # copy the minio client and the python binaries (with baked-in requirement packages)
 # to the actual stage
-COPY --from=build /usr/local/bin/mc /usr/local/bin/mc
 COPY --from=build /opt/venv opt/venv
 # first serach in /opt/venv/bin for binaries (e.g. python3)
 ENV PATH="/opt/venv/bin:$PATH"
