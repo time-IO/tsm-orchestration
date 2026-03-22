@@ -1,4 +1,4 @@
-FROM node:25.2.1 AS js-builder
+FROM node:25.8-slim AS js-builder
 
 RUN mkdir /datasourcefrontend
 COPY ./app /datasourcefrontend
@@ -8,7 +8,10 @@ WORKDIR /datasourcefrontend
 RUN npm ci
 RUN npm run build
 
-FROM nginx:1.27.3-alpine AS webserver
+FROM nginx:1.29-alpine AS webserver
+
+# Pull latest security-fixed Alpine packages for runtime image.
+RUN apk upgrade --no-cache libexpat zlib
 
 COPY --from=js-builder /datasourcefrontend/dist/spa /usr/share/nginx/html
 COPY ./docker/generic-image/default.conf /etc/nginx/conf.d/default.conf
