@@ -1,5 +1,5 @@
 ARG BASE_IMAGE_REGISTRY=python
-ARG BASE_IMAGE_TAG=3.13-slim
+ARG BASE_IMAGE_TAG=3.14-slim
 
 # see https://hub.docker.com/_/python/
 # e.g. python:3.13-slim
