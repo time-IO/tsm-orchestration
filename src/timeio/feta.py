@@ -623,6 +623,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
     s3_store_id: int | None = _prop(lambda self: self._attrs["s3_store_id"])
     mqtt_id: int = _prop(lambda self: self._attrs["mqtt_id"])
+    ext_mqtt_id: int | None = _prop(lambda self: self._attrs["ext_mqtt_id"])
     ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
@@ -630,7 +631,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
     s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.s3_store where id = %s", "s3_store_id")  # fmt: skip
     mqtt: MQTT = _create(MQTT, f"select * from {_schema}.mqtt where id = %s", "mqtt_id")  # fmt: skip
-    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "mqtt_sub_id")
+    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "ext_mqtt_id")
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
     legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))

@@ -15,3 +15,11 @@ CREATE TABLE "ext_mqtt"
     "external_mqtt_client_key" TEXT          NULL,
     "external_mqtt_topic"   VARCHAR(255)     NOT NULL
 );
+
+INSERT INTO config_db.ingest_type (
+    name
+) VALUES (
+ 'extmqtt'
+);
+
+GRANT SELECT ON ALL TABLES IN SCHEMA config_db TO ${configdb_user};

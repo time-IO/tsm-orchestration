@@ -41,8 +41,6 @@ output:
   broker:
     pattern: fan_out
     outputs:
-    - stdout:
-        codec: lines
     - http_client:
         url: 'http://localhost:4195${! metadata("path_for_api") }'
         verb: POST
@@ -57,5 +55,5 @@ output:
           jitter: 0
           check: ""
     - file:
-        path: '${! metadata("http_server_request_path") }.yaml'
+        path: '${! metadata("http_server_request_path") }.json'
         codec: all-bytes

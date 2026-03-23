@@ -3,10 +3,10 @@ import logging
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
-from timeio.common import get_envvar
+from timeio.common import get_envvar, setup_logging
 from timeio.typehints import MqttPayload
 
-logger = logging.getLogger("")
+logger = logging.getLogger("bento-setup")
 
 
 class CreateBentoMQTTHandler(AbstractHandler):
@@ -22,9 +22,9 @@ class CreateBentoMQTTHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
+        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
         self.bento_api_url = get_envvar("BENTO_API_URL")
         self.bento_api_url_POST = get_envvar("BENTO_API_URL_POST")
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
@@ -33,33 +33,59 @@ class CreateBentoMQTTHandler(AbstractHandler):
         stream_config = self.prepare_stream_config(thing)
 
         # Create or update the Bento stream
-        self.create_or_update_stream(stream_config)
+        self.create_or_update_stream(stream_config, thing)
 
     def prepare_stream_config(self, thing: Thing):
 
         # Create Bento stream configuration
         stream_config = {
-            "name": f"thing-{thing.uuid}",
             "input": {
                 "mqtt": {
-                    "url": thing.ext_mqtt.external_mqtt_address,
-                    "username": thing.ext_mqtt.external_mqtt_username,
+                    "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
+                    "client_id": "",
+                    "dynamic_client_id_suffix": "",
+                    "connect_timeout": "30s",
+                    "will": {
+                        "enabled": False,
+                        "qos": 0,
+                        "retained": False,
+                        "topic": "",
+                        "payload": ""
+                    },
+                    "user": thing.ext_mqtt.external_mqtt_username,
                     "password": thing.ext_mqtt.external_mqtt_password,
-                    "topics": thing.ext_mqtt.external_mqtt_topic
+                    "keepalive": 30,
+                    "tls": {
+                        "enabled": False,
+                        "skip_cert_verify": False,
+                        "enable_renegotiation": False,
+                        "root_cas": thing.ext_mqtt.external_mqtt_ca_cert,
+                        "root_cas_file": "",
+                        "client_certs": [
+                            {
+                                "cert": thing.ext_mqtt.external_mqtt_client_cert,
+                                "key": thing.ext_mqtt.external_mqtt_client_key,
+                            }
+                        ]
+                    },
+                    "topics": [thing.ext_mqtt.external_mqtt_topic],
+                    "qos": 1,
+                    "clean_session": True,
+                    "auto_replay_nacks": True
                 }
             },
             "pipeline": {
                 "processors": [
                     {
-                        "bloblang": f'''root = content()'''
+                        "bloblang": "root = content()"
                     }
                 ]
             },
             "output": {
                 "mqtt": {
-                    "url": "mqtt-broker:1883",
-                    "username": thing.mqtt.user,
-                    "passwort": thing.mqtt.password,
+                    "urls": ["mqtt-broker:1883"],
+                    "user": thing.mqtt.user,
+                    "password": thing.mqtt.password,
                     "topic": f"mqtt_ingest/{thing.mqtt.user}"
                 }
             }
@@ -67,10 +93,9 @@ class CreateBentoMQTTHandler(AbstractHandler):
 
         return stream_config
 
-    def create_or_update_stream(self, stream_config):
+    def create_or_update_stream(self, stream_config, thing: Thing):
         """Create or update a Bento stream via JSON API"""
-        stream_name = stream_config["name"]
-        url = f"{self.bento_api_url_POST}/streams/{stream_name}"
+        url = f"{self.bento_api_url_POST}/streams/mqtt/{thing.uuid}"
 
         try:
             # First try to get existing stream
@@ -78,33 +103,25 @@ class CreateBentoMQTTHandler(AbstractHandler):
 
             if response.status_code == 200:
                 # Stream exists, update it
-                logger.info(f"Updating existing stream: {stream_name}")
+                logger.info(f"Updating existing stream: {thing.uuid}")
                 response = requests.put(url,
                                         json=stream_config,
                                         timeout=30)
             else:
                 # Stream doesn't exist, create it
-                logger.info(f"Creating new stream: {stream_name}")
+                logger.info(f"Creating new stream: {thing.uuid}")
                 response = requests.post(url,
                                          json=stream_config,
                                          timeout=30)
 
             if response.ok:
-                logger.info(f"Successfully configured stream: {stream_name}")
+                logger.info(f"Successfully configured stream: {thing.uuid}")
             else:
-                logger.error(f"Failed to configure stream {stream_name}: {response.status_code} - {response.text}")
+                logger.error(f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}")
 
         except Exception as e:
             logger.error(f"Error configuring Bento stream: {e}")
 
-    # def delete_stream(self, stream_name):
-    #     """Delete a Bento stream"""
-    #     url = f"{self.bento_api_url}/streams/{stream_name}"
-    #     try:
-    #         response = requests.delete(url, timeout=30)
-    #         if response.status_code == 200:
-    #             logger.info(f"Successfully deleted stream: {stream_name}")
-    #         else:
-    #             logger.error(f"Failed to delete stream {stream_name}: {response.status_code} - {response.text}")
-    #     except Exception as e:
-    #         logger.error(f"Error deleting Bento stream: {e}")
+if __name__ == "__main__":
+    setup_logging(get_envvar("LOG_LEVEL", "INFO"))
+    CreateBentoMQTTHandler().run_loop()
