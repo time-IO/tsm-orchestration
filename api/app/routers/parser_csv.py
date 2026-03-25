@@ -7,7 +7,6 @@ from dependencies import (
     get_session,
     get_current_user,
     get_repo_csv_parser,
-    get_repo_csv_parser_timestamp_column,
 )
 from models.parser_csv import (
     CsvParserCreate,
@@ -15,9 +14,8 @@ from models.parser_csv import (
     CsvParserPublic,
     CsvParserTimestampColumn,
     CsvParserUpdate,
-    CsvParserTimestampColumnUpdate,
-    CsvParserTimestampColumnPublic,
 )
+from models import BaseRepository, User
 
 router = APIRouter(
     prefix="/parser/csv",
@@ -34,9 +32,10 @@ entity_name = "csv parser"
 )
 def read_list(
     *,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_csv_parser),
     permission_group_id: int | None = None,
+    sort_by: str | None = None,
 ):
     if permission_group_id:
         if permission_group_id not in current_user.permission_group_ids:
@@ -45,17 +44,16 @@ def read_list(
                 detail=f"Permission denied: user does not belong to that permission group.",
             )
         # only return those parser for that one specific permission group
-        return paginate(repo.find_allowed_all([permission_group_id]))
-
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
+        return paginate(repo.find_allowed_all([permission_group_id], sort_by))
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
 
 
 @router.get("/{id}", response_model=CsvParserPublic, summary=f"Get one {entity_name}")
 def read_one(
     *,
     id: int,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_csv_parser),
+    current_user: User = Depends(get_current_user),
+    repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
 ):
     return repo.find_allowed_one(id, current_user.permission_group_ids)
 
@@ -65,7 +63,7 @@ def create(
     *,
     session: Session = Depends(get_session),
     payload: CsvParserCreate,
-    user=Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
 
     try:
@@ -122,9 +120,9 @@ def update(
     *,
     id: int,
     payload: CsvParserUpdate,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_csv_parser),
-    session=Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
+    session: Session = Depends(get_session),
 ):
     # If timestamp_columns are provided, process them
     if payload.timestamp_columns is not None:
@@ -170,8 +168,8 @@ def update(
 def delete(
     *,
     id: int,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_csv_parser),
+    current_user: User = Depends(get_current_user),
+    repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
 ):
     parser = repo.find_allowed_one(id, current_user.permission_group_ids)
     if parser and parser.ingest_s3store:

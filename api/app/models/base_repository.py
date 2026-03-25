@@ -1,10 +1,11 @@
-from typing import Type, TypeVar, Generic, List
+from typing import Type, TypeVar, Generic, List, Optional
 from sqlmodel import Session, select, SQLModel, func
 from fastapi import HTTPException
 
 from .permission_group import PermissionGroup
 from .database import Database
 from utils import create_db_username, generate_password
+from sorting import apply_sort_list
 from config import settings
 
 T = TypeVar("T", bound=SQLModel)
@@ -35,11 +36,14 @@ class BaseRepository(Generic[T]):
             raise HTTPException(status_code=404, detail="Not found")
         return entity
 
-    def find_allowed_all(self, permission_group_ids: list[int]) -> List[T]:
+    def find_allowed_all(
+        self, permission_group_ids: list[int], sort_by: Optional[str] = None
+    ) -> List[T]:
         statement = select(self.model).where(
             self.model.permission_group_id.in_(permission_group_ids)
         )
-        return self.session.exec(statement).all()
+        items = self.session.exec(statement).all()
+        return apply_sort_list(items, sort_by) if sort_by else items
 
     def check_for_existing_name(self, name_to_check, permission_group_id):
         existing_statement = select(self.model).where(
@@ -199,9 +203,12 @@ class PermissionGroupRepository(BaseRepository):
             raise HTTPException(status_code=404, detail="Not found")
         return entity
 
-    def find_allowed_all(self, permission_group_ids: list[int]) -> List[T]:
+    def find_allowed_all(
+        self, permission_group_ids: list[int], sort_by: Optional[str] = None
+    ) -> List[T]:
         statement = select(self.model).where(self.model.id.in_(permission_group_ids))
-        return self.session.exec(statement).all()
+        items = self.session.exec(statement).all()
+        return apply_sort_list(items, sort_by) if sort_by else items
 
 
 class DatabaseRepository(BaseRepository):
