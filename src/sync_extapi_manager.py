@@ -4,7 +4,6 @@ import logging
 import json
 
 from requests.exceptions import HTTPError
-from json.decoder import JSONDecodeError
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
@@ -13,6 +12,7 @@ from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
 from timeio.databases import DBapi
 from timeio.ext_api import (
+    ExtApiSyncer,
     BoschApiSyncer,
     TsystemsApiSyncer,
     UbaApiSyncer,
@@ -43,7 +43,7 @@ class SyncExtApiManager(AbstractHandler):
             get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
         )
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
-        self.sync_handlers = {
+        self.sync_handlers: dict[str, ExtApiSyncer] = {
             "tsystems": TsystemsApiSyncer(),
             "bosch": BoschApiSyncer(),
             "uba": UbaApiSyncer(),
@@ -58,12 +58,12 @@ class SyncExtApiManager(AbstractHandler):
         syncer = self.sync_handlers[ext_api_name]
         try:
             data = syncer.fetch_api_data(thing, content)
-        except (ExtApiRequestError, NoHttpsError, JSONDecodeError) as e:
+        except (ExtApiRequestError, NoHttpsError) as e:
             journal.error(e.msg, thing.uuid)
             return
         except Exception as e:
             journal.error(
-                f"Unknown error in fetching data for thing '{thing.name}'", thing.uuid
+                f"Unknown error in fetching data. Please check URL.", thing.uuid
             )
             logger.exception(e)
             return
@@ -74,13 +74,13 @@ class SyncExtApiManager(AbstractHandler):
             )
         except HTTPError as e:
             journal.error(
-                f"Insert/upsert into timeioDB for thing '{thing.name} failed",
+                f"Insert/upsert into timeioDB for thing '{thing.name}' failed",
                 thing.uuid,
             )
-            raise e
+            raise e 
         except Exception as e:
             journal.error(
-                f"Error in processing data for thing '{thing.name}", thing.uuid
+                f"Error in processing data for thing '{thing.name}'", thing.uuid
             )
             raise e
 
