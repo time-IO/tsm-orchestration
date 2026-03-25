@@ -186,7 +186,7 @@ def get_repo_ingest_s3stores(session=Depends(get_session)):
     return BaseRepository(IngestS3Store, session)
 
 
-def get_repo_ingest_csv_parser(session=Depends(get_session)):
+def get_repo_csv_parser(session=Depends(get_session)):
     return BaseRepository(CsvParser, session)
 
 

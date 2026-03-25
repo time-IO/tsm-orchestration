@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from dependencies import (
     get_current_user,
     get_repo_ingest_s3stores,
     create_database_if_not_exists,
+    get_repo_csv_parser,
 )
+from models import BaseRepository, CsvParser
 from models.ingest_s3store import (
     IngestS3StoreCreate,
     IngestS3StorePublic,
@@ -62,7 +64,14 @@ def create(
     payload: IngestS3StoreCreate,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_s3stores),
+    parser_repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
 ):
+    parser = parser_repo.find_allowed_one(
+        payload.parser_csv_id, current_user.permission_group_ids
+    )
+    if not parser or parser.permission_group_id != payload.permission_group_id:
+        raise HTTPException(status_code=401, detail="Not allowed to use parser")
+
     _uuid = uuid.uuid4()
     username = re.sub("[^a-z0-9-]+", "", f"ingest-sftp-{_uuid}")
     bucket_name = username
@@ -92,9 +101,16 @@ def update(
     payload: IngestS3StoreUpdate,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_s3stores),
+    parser_repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
 ):
-
-    return repo.update_ingest_sftp(id, payload, current_user.permission_group_ids)
+    parser = None
+    if payload.parser_csv_id:
+        parser = parser_repo.find_allowed_one(
+            payload.parser_csv_id, current_user.permission_group_ids
+        )
+    return repo.update_ingest_sftp(
+        id, payload, current_user.permission_group_ids, parser
+    )
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

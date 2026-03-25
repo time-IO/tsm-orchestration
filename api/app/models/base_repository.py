@@ -1,6 +1,7 @@
 from typing import Type, TypeVar, Generic, List
 from sqlmodel import Session, select, SQLModel, func
 from fastapi import HTTPException
+
 from .permission_group import PermissionGroup
 from .database import Database
 from utils import create_db_username, generate_password
@@ -106,7 +107,7 @@ class BaseRepository(Generic[T]):
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def update_ingest_sftp(self, id: int, payload, permission_group_ids):
+    def update_ingest_sftp(self, id: int, payload, permission_group_ids, parser=None):
 
         # it is currently not allowed to update the permission group of an ingest sftp (s3store)
         # therefore the payload does not contain a permission_group_id , so we use an extra method
@@ -119,6 +120,13 @@ class BaseRepository(Generic[T]):
             self.check_for_existing_name_update(
                 payload.name, entity.permission_group_id, entity.id
             )
+
+            # check that we are allowed to use the parser
+            if (
+                parser is not None
+                and parser.permission_group_id != entity.permission_group_id
+            ):
+                raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
             data = payload.model_dump(exclude_unset=True)
             entity.sqlmodel_update(data)
