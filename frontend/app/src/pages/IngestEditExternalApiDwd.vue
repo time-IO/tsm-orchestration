@@ -28,6 +28,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -101,6 +102,7 @@ import { useQuasar } from 'quasar';
 import type { IngestExternalApiDwdUpdate } from 'src/services/ingest_external_api_dwd/types';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 // Composition API
 const $q = useQuasar();
@@ -118,14 +120,15 @@ const formData = ref<Partial<IngestExternalApiDwdUpdate>>({
   sync_enabled: false,
 });
 const syncInterval = ref(1440);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 // Load existing data when component mounts
 onMounted(async () => {
   if (route.params.id) {
     try {
-
       const id = Number(route.params.id);
       const data = await dwdStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || '',

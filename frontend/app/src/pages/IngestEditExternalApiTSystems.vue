@@ -32,6 +32,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -137,6 +138,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalApiTSystemsUpdate } from 'src/services/ingest_external_api_tsystems/types';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
@@ -158,12 +160,14 @@ const formData = ref<Partial<IngestExternalApiTSystemsUpdate>>({
 
 const isLoading = ref(false);
 const isPwd = ref(true);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await tsystemsStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || null,

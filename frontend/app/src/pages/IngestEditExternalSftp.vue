@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -47,31 +48,13 @@
                 :rules="[(val) => !!val || 'Filename pattern is required']"
               />
 
-              <q-select
-                outlined
+              <csv-parser-select
                 class="q-mb-md"
-                :disable="!formData.permission_group_id"
+                :disable="!permissionGroupId"
                 v-model="formData.parser_csv_id"
-                use-input
-                emit-value
-                map-options
-                clearable
-                :options="filteredCsvParserOptions"
-                @filter="filterCsvParser"
-                option-value="id"
-                option-label="name"
-                label="Select the parser *"
-                :rules="[(val) => !!val || 'Parser is required']"
-              >
-                <template v-slot:hint v-if="!formData.permission_group_id">
-                  <span class="text-red">Select Permission Group first</span>
-                </template>
-                <template v-slot:no-option>
-                  <q-item>
-                    <q-item-section class="text-grey"> No results </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
+                :permission_group_id="permissionGroupId"
+                :preselectedItem="itemParser"
+              />
             </div>
           </q-card-section>
 
@@ -175,16 +158,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp/types';
-import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import CsvParserSelect from 'components/CsvParserSelect.vue';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
-const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
@@ -206,15 +190,19 @@ const formData = ref<IngestExternalSftpUpdate>({
 const isLoading = ref(false);
 const isPwd = ref(true);
 
-const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
-
-let permissionGroupId: number | null = null;
+const permissionGroupId = ref<number | null>(null);
+const itemParser = ref<CsvParserPublic | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await ingestExternalSftpStore.dispatchGetOne(id);
+
+      itemParser.value = data.csv_parser;
+      permissionGroupId.value = data.permission_group_id || null;
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         permission_group_id: data.permission_group_id || null,
@@ -229,8 +217,6 @@ onMounted(async () => {
         sync_enabled: data.sync_enabled || false,
         sync_interval_in_minutes: data.sync_interval_in_minutes || null,
       };
-
-      permissionGroupId = data.permission_group_id || null;
     } catch {
       $q.notify({
         type: 'negative',
@@ -238,36 +224,8 @@ onMounted(async () => {
       });
       await router.push('/ingest');
     }
-
-    if (permissionGroupId !== null) {
-      try {
-        await csvParserStore.dispatchGetListbyPermissionGroup(permissionGroupId);
-        filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-      } catch {
-        $q.notify({
-          position: 'top',
-          type: 'negative',
-          message: 'Failed to fetch parser options',
-        });
-      }
-    }
   }
 });
-
-watch(
-  () => formData.value.permission_group_id,
-  async (newId, oldId) => {
-    if (oldId !== null && oldId !== newId) {
-      // set parser to null, if an other permission group is selected
-      formData.value.parser_csv_id = null;
-    }
-
-    if (newId) {
-      // formData.value.parser_csv_id = null ;
-      await csvParserStore.dispatchGetListbyPermissionGroup(newId);
-    }
-  },
-);
 
 const detailRoute = computed(() => {
   if (route.params.id) {
@@ -328,22 +286,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function filterCsvParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredCsvParserOptions.value = csvParserStore.csvParserList.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
 }
 </script>
 

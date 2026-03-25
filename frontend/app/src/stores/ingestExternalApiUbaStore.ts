@@ -3,7 +3,6 @@ import type {IngestExternalApiUbaCreate, IngestExternalApiUbaPublic, IngestExter
 import {API} from "src/services";
 
 export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaStore', {
-
   state: () => ({
     ingestExternalApiUbaList: [] as IngestExternalApiUbaPublic[],
   }),
@@ -11,25 +10,28 @@ export const useIngestExternalApiUbaStore = defineStore('ingestExternalApiUbaSto
   getters: {},
 
   actions: {
-    async dispatchGetList() {
-      const response = await API.ingestExternalApiUba.getList()
-      this.ingestExternalApiUbaList = response.data
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.ingestExternalApiUba.getList(page, size);
+      this.ingestExternalApiUbaList = response.data.items;
+      return response.data;
     },
     async dispatchGetOne(id: number): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiUba.getOne(id)
-      return response.data
-
+      const response = await API.ingestExternalApiUba.getOne(id);
+      return response.data;
     },
     async dispatchCreate(payload: IngestExternalApiUbaCreate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiUba.create(payload)
-      return response.data
+      const response = await API.ingestExternalApiUba.create(payload);
+      return response.data;
     },
-    async dispatchUpdate(id: number, payload: IngestExternalApiUbaUpdate): Promise<IngestExternalApiUbaPublic> {
-      const response = await API.ingestExternalApiUba.update(id, payload)
-        return response.data
+    async dispatchUpdate(
+      id: number,
+      payload: IngestExternalApiUbaUpdate,
+    ): Promise<IngestExternalApiUbaPublic> {
+      const response = await API.ingestExternalApiUba.update(id, payload);
+      return response.data;
     },
     async dispatchDelete(id: number): Promise<void> {
-      await API.ingestExternalApiUba.deleteOne(id)
+      await API.ingestExternalApiUba.deleteOne(id);
     },
   },
 });

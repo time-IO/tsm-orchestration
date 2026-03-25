@@ -2,6 +2,8 @@ import os
 import logging
 
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
+from fastapi_pagination.utils import disable_installed_extensions_check
 from routers import (
     permission_group,
     ingest_s3store,
@@ -28,6 +30,8 @@ from config import settings
 
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
 app = FastAPI(root_path=API_ROOT_PATH)
+add_pagination(app)
+disable_installed_extensions_check()
 
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
 if log_level == "TRACE":

@@ -263,3 +263,53 @@ INSERT INTO mqtt_parser(name) values
 ('sine_dummy'),
 ('Gude');
 ```
+
+### Generate Dummy Data using SQL
+
+#### MQTT Parser
+```
+DO $$
+DECLARE
+    i INTEGER := 1;
+    max_items INTEGER := 1000;
+BEGIN
+    WHILE i <= max_items LOOP
+        INSERT INTO public.mqtt_parser (id, name)
+        VALUES (NEXTVAL('mqtt_parser_id_seq'), 'mqtt_parser' || i);
+        i := i + 1;
+    END LOOP;
+END $$;
+```
+__Note__
+
+An error may occur, because the sequence is not up to date:
+```SELECT setval('mqtt_parser_id_seq', (SELECT MAX(id) FROM mqtt_parser));```
+
+#### Permission Groups
+```
+DO $$
+DECLARE
+    i INTEGER := 3;
+    max_groups INTEGER := 1000;
+    group_uuid UUID;
+BEGIN
+    WHILE i <= max_groups LOOP
+        -- Generate a deterministic but unique UUID (for demo; use gen_random_uuid() in production)
+        group_uuid := gen_random_uuid();
+
+        INSERT INTO permission_group (id, name, uuid, entitlement)
+        VALUES (
+            NEXTVAL('permission_group_id_seq'),
+            'group_name_' || i,
+            group_uuid,
+            'a:a:a:group:VO:group_name_' || i ||'#'
+        );
+
+        -- Link this group to user_id = 1
+        INSERT INTO permission_group_user_link (permission_group_id, user_id)
+        VALUES (CURRVAL('permission_group_id_seq'), 1);
+
+        i := i + 1;
+    END LOOP;
+END $$;
+```

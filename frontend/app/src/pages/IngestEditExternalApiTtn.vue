@@ -28,6 +28,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -126,6 +127,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import type { IngestExternalApiTheThingsNetworkUpdate } from 'src/services/ingest_external_api_the_things_network/types';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
 const $q = useQuasar();
@@ -144,12 +146,14 @@ const formData = ref<Partial<IngestExternalApiTheThingsNetworkUpdate>>({
 
 const isLoading = ref(false);
 const isPwd = ref(true);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await ttnStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || null,

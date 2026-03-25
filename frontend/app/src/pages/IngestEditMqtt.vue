@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -51,26 +52,7 @@
             :rules="[(val) => !!val || 'Topic is required']"
           />
 
-          <q-select
-            outlined
-            class="q-mb-md"
-            v-model="formData.mqtt_parser_id"
-            use-input
-            emit-value
-            map-options
-            clearable
-            :options="filteredMqttParserOptions"
-            @filter="filterMqttParser"
-            option-value="id"
-            option-label="name"
-            label="Select the parser *"
-          >
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey"> No results </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+          <mqtt-parser-select v-model="formData.mqtt_parser_id" :preselectedItem="itemParser" />
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
@@ -99,11 +81,12 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import { useMqttParserStore } from 'stores/mqttParserStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import MqttParserSelect from 'components/MqttParserSelect.vue';
+import type { MqttParser } from 'src/services/mqtt_parser/type';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const mqttStore = useIngestMqttStore();
-const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
@@ -118,14 +101,17 @@ const formData = ref<IngestMqttUpdate>({
 });
 
 const isLoading = ref(false);
-
-const filteredMqttParserOptions = ref([...mqttParserStore.mqttParsers]);
+const itemParser = ref<MqttParser | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await mqttStore.dispatchGetOne(id);
+
+      itemParser.value = data.mqtt_parser;
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || null,
@@ -142,17 +128,6 @@ onMounted(async () => {
       });
       await router.push('/ingest');
     }
-  }
-
-  try {
-    await mqttParserStore.dispatchGetList();
-    filteredMqttParserOptions.value = [...mqttParserStore.mqttParsers];
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch parser options',
-    });
   }
 });
 
@@ -210,22 +185,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function filterMqttParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredMqttParserOptions.value = [...mqttParserStore.mqttParsers];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredMqttParserOptions.value = mqttParserStore.mqttParsers.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
 }
 </script>
 

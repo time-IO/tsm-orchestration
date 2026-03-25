@@ -30,6 +30,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -97,12 +98,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed} from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiUbaUpdate } from 'src/services/ingest_external_api_uba/types';
 import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 // Composition API
 const $q = useQuasar();
@@ -120,6 +122,7 @@ const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
   sync_enabled: false,
 });
 const syncInterval = ref(60);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 // Load existing data when component mounts
 onMounted(async () => {
@@ -127,6 +130,7 @@ onMounted(async () => {
     try {
       const id = Number(route.params.id);
       const data = await ubaStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || '',

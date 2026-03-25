@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -149,6 +150,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import type { IngestExternalApiBoschUpdate } from 'src/services/ingest_external_api_bosch/types';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const boschStore = useIngestExternalApiBoschStore();
 const $q = useQuasar();
@@ -170,12 +172,14 @@ const formData = ref<Partial<IngestExternalApiBoschUpdate>>({
 
 const isLoading = ref(false);
 const isPwd = ref(true);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await boschStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || '',

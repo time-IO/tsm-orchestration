@@ -25,6 +25,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -39,35 +40,10 @@
           />
 
           <q-separator class="q-my-lg" />
-          <q-select
-            outlined
-            class="q-mb-md"
+          <neutron-monitor-station-select
             v-model="formData.station_id"
-            use-input
-            emit-value
-            map-options
-            clearable
-            :options="filteredNeutronMonitorStationOptions"
-            @filter="filterNeutronMonitorStation"
-            option-value="id"
-            option-label="station_id"
-            label="Select a station *"
-            :rules="[(val) => !!val || 'Station is required']"
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps" clickable>
-                <q-item-section>
-                  <q-item-label>{{ scope.opt.station_id }}</q-item-label>
-                  <q-item-label caption>{{ scope.opt.description }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey"> No results </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+            :preselectedItem="itemStation"
+          />
           <q-select
             outlined
             class="q-mb-md"
@@ -137,20 +113,17 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import type { IngestExternalApiNeutronMonitorUpdate } from 'src/services/ingest_external_api_neutron_monitor/types';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import NeutronMonitorStationSelect from 'components/NeutronMonitorStationSelect.vue';
+import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/type';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
-const neutronMonitorStationStore = useNeutronMonitorStationStore();
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
-
-const filteredNeutronMonitorStationOptions = ref([
-  ...neutronMonitorStationStore.neutronMonitorStations,
-]);
 
 const isLoading = ref(false);
 const formData = ref<Partial<IngestExternalApiNeutronMonitorUpdate>>({
@@ -163,11 +136,17 @@ const formData = ref<Partial<IngestExternalApiNeutronMonitorUpdate>>({
   time_resolution_in_minutes: null,
 });
 
+const itemStation = ref<NeutronMonitorStation | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
+
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
       const data = await ingestExternalApiNeutronMonitorStore.dispatchGetOne(id);
+
+      itemStation.value = data.station;
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: data.name || '',
@@ -185,16 +164,6 @@ onMounted(async () => {
       });
       await router.push('/ingest');
     }
-  }
-
-  try {
-    await neutronMonitorStationStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch neutron monitor stations',
-    });
   }
 });
 
@@ -221,25 +190,6 @@ const timeResolutionOptions = [
   { value: 39276, label: '39276' },
   { value: 525969, label: '525969' },
 ];
-
-function filterNeutronMonitorStation(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredNeutronMonitorStationOptions.value = [
-        ...neutronMonitorStationStore.neutronMonitorStations,
-      ];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredNeutronMonitorStationOptions.value =
-      neutronMonitorStationStore.neutronMonitorStations.filter((v) =>
-        v.station_id.toLowerCase().includes(needle),
-      );
-  });
-}
 
 async function save() {
   if (!route.params.id) return;
