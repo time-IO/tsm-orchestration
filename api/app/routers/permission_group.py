@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
-from dependencies import get_session, get_current_user, get_repo_permission_group
+from fastapi import APIRouter, Depends
+from dependencies import get_current_user, get_repo_permission_group
 from models.permission_group import PermissionGroup
+from fastapi_pagination import Page
+from fastapi_pagination import paginate
 
 router = APIRouter(
     prefix="/permission-group",
@@ -14,12 +15,12 @@ entity_name = "permission group"
 
 
 @router.get(
-    "/", response_model=list[PermissionGroup], summary=f"Get a list of {entity_name}"
+    "/", response_model=Page[PermissionGroup], summary=f"Get a list of {entity_name}"
 )
 def read_list(
     *, current_user=Depends(get_current_user), repo=Depends(get_repo_permission_group)
 ):
-    return repo.find_allowed_all(current_user.permission_group_ids)
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
 
 
 @router.get("/{id}", response_model=PermissionGroup, summary=f"Get one {entity_name}")

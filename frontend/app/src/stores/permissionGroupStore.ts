@@ -3,23 +3,23 @@ import {acceptHMRUpdate, defineStore} from "pinia";
 import type {PermissionGroup} from "src/services/permission_group/types";
 
 export const usePermissionGroupStore = defineStore('permissionGroupStore', {
-
   state: () => ({
-    permissionGroups: [] as PermissionGroup[]
+    permissionGroups: [] as PermissionGroup[],
   }),
 
-  getters:{},
+  getters: {},
 
   actions: {
-    async dispatchGetList(){
-      const response = await API.permissionGroup.getList()
-      this.permissionGroups = response.data
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.permissionGroup.getList(page, size);
+      this.permissionGroups = response.data.items;
+      return response.data;
     },
-    async dispatchGetOne(id:number):Promise<PermissionGroup> {
-      const response = await API.permissionGroup.getOne(id)
-      return response.data
-    }
-  }
+    async dispatchGetOne(id: number): Promise<PermissionGroup> {
+      const response = await API.permissionGroup.getOne(id);
+      return response.data;
+    },
+  },
 });
 
 if (import.meta.hot) {

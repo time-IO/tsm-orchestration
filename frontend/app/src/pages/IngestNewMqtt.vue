@@ -50,28 +50,9 @@
             label="Topic *"
             :rules="[(val) => !!val || 'Topic is required']"
           />
-
-          <q-select
-            outlined
-            class="q-mb-md"
+          <mqtt-parser-select
             v-model="formData.mqtt_parser_id"
-            use-input
-            emit-value
-            map-options
-            clearable
-            :options="filteredMqttParserOptions"
-            @filter="filterMqttParser"
-            option-value="id"
-            option-label="name"
-            label="Select the parser *"
-          >
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey"> No results </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-
+          />
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space />
@@ -94,16 +75,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import { useMqttParserStore } from 'stores/mqttParserStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import MqttParserSelect from 'components/MqttParserSelect.vue';
 
 const mqttStore = useIngestMqttStore();
-const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -117,21 +97,6 @@ const formData = ref<IngestMqttCreate>({
 });
 
 const isLoading = ref(false);
-
-const filteredMqttParserOptions = ref([...mqttParserStore.mqttParsers]);
-
-onMounted(async () => {
-
-  try {
-    await mqttParserStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch parser options',
-    });
-  }
-});
 
 async function save() {
   const data: IngestMqttCreate = {
@@ -174,21 +139,6 @@ async function save() {
   }
 }
 
-function filterMqttParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredMqttParserOptions.value = [...mqttParserStore.mqttParsers];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredMqttParserOptions.value = mqttParserStore.mqttParsers.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
-}
 </script>
 
 <style scoped></style>

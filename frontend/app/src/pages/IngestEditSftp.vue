@@ -37,28 +37,13 @@
             label="Filename pattern *"
             :rules="[(val) => !!val || 'Filename pattern is required']"
           />
-
-          <q-select
-            outlined
+          <csv-parser-select
             class="q-mb-md"
+            :disable="!permissionGroupId"
             v-model="formData.parser_csv_id"
-            use-input
-            emit-value
-            map-options
-            clearable
-            :options="filteredCsvParserOptions"
-            @filter="filterCsvParser"
-            option-value="id"
-            option-label="name"
-            label="Select the parser *"
-            :rules="[(val) => !!val || 'Parser is required']"
-          >
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey"> No results </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+            :permission_group_id="permissionGroupId"
+            :preselectedItem="itemParser"
+          />
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
@@ -85,14 +70,12 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import type { IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import { useCsvParserStore } from 'stores/parserCsvStore';
+import CsvParserSelect from 'components/CsvParserSelect.vue';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
 
 const sftpStore = useIngestSftpStore();
-const permissionGroupStore = usePermissionGroupStore();
-const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
@@ -106,8 +89,8 @@ const formData = ref<IngestSftpUpdate>({
 
 const isLoading = ref(false);
 
-const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
-let permissionGroupId: number | null = null;
+const permissionGroupId = ref<number | null>(null);
+const itemParser = ref<CsvParserPublic | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -115,43 +98,21 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await sftpStore.dispatchGetOne(id);
 
+      itemParser.value = data.csv_parser;
+      permissionGroupId.value = data.permission_group_id || null;
+
       formData.value = {
         name: data.name || null,
         description: data.description || null,
         filename_pattern: data.filename_pattern || null,
         parser_csv_id: data.parser_csv_id || null,
       };
-
-      permissionGroupId = data.permission_group_id || null;
     } catch {
       $q.notify({
         type: 'negative',
         message: 'Failed to load ingest data',
       });
       await router.push('/ingest');
-    }
-  }
-
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
-  }
-
-  if (permissionGroupId !== null) {
-    try {
-      await csvParserStore.dispatchGetListbyPermissionGroup(permissionGroupId);
-      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-    } catch {
-      $q.notify({
-        position: 'top',
-        type: 'negative',
-        message: 'Failed to fetch parser options',
-      });
     }
   }
 });
@@ -206,22 +167,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function filterCsvParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredCsvParserOptions.value = csvParserStore.csvParserList.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
 }
 </script>
 

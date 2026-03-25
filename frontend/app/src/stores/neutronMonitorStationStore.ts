@@ -4,23 +4,21 @@ import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/
 
 
 export const useNeutronMonitorStationStore = defineStore('neutronMonitorStationStore', {
-
   state: () => ({
-    neutronMonitorStations: [] as NeutronMonitorStation[]
   }),
 
-  getters:{},
+  getters: {},
 
   actions: {
-    async dispatchGetList(){
-      const response = await API.neutronMonitorStation.getList()
-      this.neutronMonitorStations = response.data
-    },
-    async dispatchGetOne(id:number):Promise<NeutronMonitorStation> {
-      const response = await API.neutronMonitorStation.getOne(id)
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.neutronMonitorStation.getList(page,size);
       return response.data
-    }
-  }
+    },
+    async dispatchGetOne(id: number): Promise<NeutronMonitorStation> {
+      const response = await API.neutronMonitorStation.getOne(id);
+      return response.data;
+    },
+  },
 });
 
 if (import.meta.hot) {

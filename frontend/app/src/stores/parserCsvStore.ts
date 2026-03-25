@@ -14,13 +14,19 @@ export const useCsvParserStore = defineStore('csvParserStore', {
   getters: {},
 
   actions: {
-    async dispatchGetList() {
-      const response = await API.csvParser.getList();
-      this.csvParserList = response.data;
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.csvParser.getList(page, size);
+      this.csvParserList = response.data.items;
+      return response.data;
     },
-    async dispatchGetListbyPermissionGroup(permission_group_id: number) {
-      const response = await API.csvParser.getListbyPermissionGroup(permission_group_id);
-      this.csvParserList = response.data;
+    async dispatchGetListbyPermissionGroup(
+      permission_group_id: number,
+      page?: number,
+      size?: number,
+    ) {
+      const response = await API.csvParser.getListbyPermissionGroup(permission_group_id, page, size);
+      this.csvParserList = response.data.items;
+      return response.data;
     },
     async dispatchGetOne(id: number): Promise<CsvParserPublic> {
       const response = await API.csvParser.getOne(id);

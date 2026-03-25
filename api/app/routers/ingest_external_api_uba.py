@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends
+from fastapi_pagination import Page
+from fastapi_pagination import paginate
 from dependencies import (
     get_current_user,
     get_repo_ingest_external_api_uba,
@@ -22,7 +24,7 @@ entity_name = "ingest external api uba"
 
 @router.get(
     "/",
-    response_model=list[IngestExternalApiUbaPublic],
+    response_model=Page[IngestExternalApiUbaPublic],
     summary=f"Get a list of {entity_name}",
 )
 def read_list(
@@ -30,7 +32,7 @@ def read_list(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_api_uba),
 ):
-    return repo.find_allowed_all(current_user.permission_group_ids)
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
 
 
 @router.get(

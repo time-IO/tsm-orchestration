@@ -1,36 +1,44 @@
 <template>
   <q-select
-    filled
+    outlined
     v-model="model"
-    :options="filteredOptions"
-    @filter="filterOptions"
-    label="Permission Group *"
-    @virtual-scroll="onVirtualScroll"
-    option-value="id"
-    option-label="name"
+    v-bind="$attrs"
+    use-input
     emit-value
     map-options
     clearable
-    use-input
-    hint="Select the permission group"
-    :rules="rules"
-  />
+    :options="filteredOptions"
+    @filter="filterOptions"
+    @virtual-scroll="onVirtualScroll"
+    option-value="id"
+    option-label="name"
+    label="Select the parser *"
+    :rules="[(val) => !!val || 'Parser is required']"
+  >
+    <template v-slot:hint v-if="!permission_group_id">
+      <span class="text-red">Select Permission Group first</span>
+    </template>
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey"> No results </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
-import { QSelect, useQuasar } from 'quasar';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import { nextTick, ref, watch } from 'vue';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import { useQuasar } from 'quasar';
+import { useCsvParserStore } from 'stores/parserCsvStore';
 
-const permissionGroupStore = usePermissionGroupStore();
+const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 
 const model = defineModel();
-
-const { preselectedItem } = defineProps<{
-  rules?: Array<(val: unknown) => string | boolean>;
-  preselectedItem?: PermissionGroup | null;
+const { preselectedItem, permission_group_id } = defineProps<{
+  preselectedItem?: CsvParserPublic | null;
+  permission_group_id: number | null;
 }>();
 
 // Pagination state
@@ -40,18 +48,29 @@ const paginationTotal = ref(0);
 const paginationLoading = ref(false);
 const allPagesFetched = ref(false);
 
-const filteredOptions = ref<PermissionGroup[]>([]);
-const fetchedOptions = ref<PermissionGroup[]>([]);
-
-onMounted(async () => {
-  await fetchOptions();
-});
+const filteredOptions = ref<CsvParserPublic[]>([]);
+const fetchedOptions = ref<CsvParserPublic[]>([]);
 
 watch(
   () => preselectedItem,
   (newValue) => {
     if (newValue != null) {
       includeStationOfItemIfMissing();
+    }
+  },
+);
+
+watch(
+  () => permission_group_id,
+  async (newValue, oldValue) => {
+    if (oldValue !== null && oldValue !== newValue) {
+      // set parser to null, if an other permission group is selected
+      model.value = null;
+    }
+
+    if (newValue != null) {
+      allPagesFetched.value = false;
+      await fetchOptions();
     }
   },
 );
@@ -68,18 +87,23 @@ function includeStationOfItemIfMissing() {
 }
 
 async function fetchOptions(page = 1) {
-  if (paginationLoading.value || allPagesFetched.value) return;
+  if (paginationLoading.value || allPagesFetched.value || !permission_group_id) {
+    return;
+  }
 
   paginationLoading.value = true;
   try {
-    const response = await permissionGroupStore.dispatchGetList(page, pageSize.value);
+    const response = await csvParserStore.dispatchGetListbyPermissionGroup(
+      permission_group_id,
+      page,
+      pageSize.value,
+    );
     paginationTotal.value = response.total;
     const newItems = response.items;
 
     // Only add new items if not already included (avoid duplicates)
     const currentIds = new Set(fetchedOptions.value.map((i) => i.id));
     const uniqueNewItems = newItems.filter((item) => !currentIds.has(item.id));
-
     if (page === 1) {
       fetchedOptions.value = uniqueNewItems;
     } else {
@@ -96,7 +120,7 @@ async function fetchOptions(page = 1) {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to fetch permission groups',
+      message: 'Failed to fetch parser',
     });
   } finally {
     paginationLoading.value = false;
@@ -138,7 +162,6 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
     });
   }
 }
-
 </script>
 
 <style scoped></style>

@@ -4,23 +4,23 @@ import type {MqttParser} from "src/services/mqtt_parser/type";
 
 
 export const useMqttParserStore = defineStore('mqttParserStore', {
-
   state: () => ({
-    mqttParsers: [] as MqttParser[]
+    mqttParsers: [] as MqttParser[],
   }),
 
-  getters:{},
+  getters: {},
 
   actions: {
-    async dispatchGetList(){
-      const response = await API.mqttParser.getList()
-      this.mqttParsers = response.data
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.mqttParser.getList(page, size);
+      this.mqttParsers = response.data.items;
+      return response.data;
     },
-    async dispatchGetOne(id:number):Promise<MqttParser> {
-      const response = await API.mqttParser.getOne(id)
-      return response.data
-    }
-  }
+    async dispatchGetOne(id: number): Promise<MqttParser> {
+      const response = await API.mqttParser.getOne(id);
+      return response.data;
+    },
+  },
 });
 
 if (import.meta.hot) {

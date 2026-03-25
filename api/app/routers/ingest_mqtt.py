@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends
+from fastapi_pagination import Page
+from fastapi_pagination import paginate
 from dependencies import (
     get_current_user,
     get_repo_ingest_mqtt,
@@ -57,14 +59,14 @@ def hash_password(
 
 
 @router.get(
-    "/", response_model=list[IngestMqttPublic], summary=f"Get a list of {entity_name}"
+    "/", response_model=Page[IngestMqttPublic], summary=f"Get a list of {entity_name}"
 )
 def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_mqtt),
 ):
-    return repo.find_allowed_all(current_user.permission_group_ids)
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
 
 
 @router.get("/{id}", response_model=IngestMqttPublic, summary=f"Get one {entity_name}")

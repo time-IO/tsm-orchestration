@@ -1,47 +1,60 @@
 <template>
   <q-select
-    filled
+    outlined
+    class="q-mb-md"
     v-model="model"
-    :options="filteredOptions"
-    @filter="filterOptions"
-    label="Permission Group *"
-    @virtual-scroll="onVirtualScroll"
-    option-value="id"
-    option-label="name"
+    v-bind="$attrs"
+    use-input
     emit-value
     map-options
     clearable
-    use-input
-    hint="Select the permission group"
-    :rules="rules"
-  />
+    :options="filteredOptions"
+    @filter="filterOptions"
+    @virtual-scroll="onVirtualScroll"
+    option-value="id"
+    option-label="station_id"
+    label="Select a station *"
+    :rules="[(val) => !!val || 'Station is required']"
+  >
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps" clickable>
+        <q-item-section>
+          <q-item-label>{{ scope.opt.station_id }}</q-item-label>
+          <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey"> No results </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
-import { QSelect, useQuasar } from 'quasar';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/type';
+import { useQuasar } from 'quasar';
+import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
 
-const permissionGroupStore = usePermissionGroupStore();
-const $q = useQuasar();
+const neutronMonitorStationStore = useNeutronMonitorStationStore();
+
+const { preselectedItem } = defineProps<{
+  preselectedItem?: NeutronMonitorStation | null;
+}>();
 
 const model = defineModel();
 
-const { preselectedItem } = defineProps<{
-  rules?: Array<(val: unknown) => string | boolean>;
-  preselectedItem?: PermissionGroup | null;
-}>();
-
-// Pagination state
 const currentPage = ref(1);
 const pageSize = ref(50); // or your desired page size
 const paginationTotal = ref(0);
 const paginationLoading = ref(false);
 const allPagesFetched = ref(false);
+const filteredOptions = ref<NeutronMonitorStation[]>([]);
+const fetchedOptions = ref<NeutronMonitorStation[]>([]);
 
-const filteredOptions = ref<PermissionGroup[]>([]);
-const fetchedOptions = ref<PermissionGroup[]>([]);
+const $q = useQuasar();
 
 onMounted(async () => {
   await fetchOptions();
@@ -72,7 +85,7 @@ async function fetchOptions(page = 1) {
 
   paginationLoading.value = true;
   try {
-    const response = await permissionGroupStore.dispatchGetList(page, pageSize.value);
+    const response = await neutronMonitorStationStore.dispatchGetList(page, pageSize.value);
     paginationTotal.value = response.total;
     const newItems = response.items;
 
@@ -96,7 +109,7 @@ async function fetchOptions(page = 1) {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to fetch permission groups',
+      message: 'Failed to fetch stations',
     });
   } finally {
     paginationLoading.value = false;
@@ -117,7 +130,7 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
   update(() => {
     const needle = val.toLowerCase();
     filteredOptions.value = fetchedOptions.value.filter((v) =>
-      v.name.toLowerCase().includes(needle),
+      v.station_id.toLowerCase().includes(needle),
     );
   });
 }
@@ -138,7 +151,6 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
     });
   }
 }
-
 </script>
 
 <style scoped></style>

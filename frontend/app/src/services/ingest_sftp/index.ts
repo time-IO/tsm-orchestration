@@ -4,11 +4,19 @@ import type {
   IngestSftpCreate,
   IngestSftpUpdate,
 } from 'src/services/ingest_sftp/types';
+import type { PaginatedResponse } from 'src/services/types';
 
 const apiPath = 'ingest/s3store/';
 
-async function getList() {
-  return await axiosInstance.get<IngestSftpPublic[]>(apiPath);
+async function getList(page?: number, size?: number) {
+
+  const params: Record<string, number> = {};
+  if (page !== undefined) params.page = page;
+  if (size !== undefined) params.size = size;
+
+  return await axiosInstance.get<PaginatedResponse<IngestSftpPublic>>(apiPath, {
+    params,
+  });
 }
 
 async function getOne(id: number) {

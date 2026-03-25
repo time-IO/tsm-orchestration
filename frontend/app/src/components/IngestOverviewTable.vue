@@ -1,6 +1,15 @@
 <template>
   <div class="text-h5 q-mt-lg">{{ title }}</div>
-  <q-table :rows="rows" :columns="columns" row-key="name" flat bordered>
+  <q-table
+    ref="tableRef"
+    :rows="rows"
+    :columns="columns"
+    row-key="name"
+    flat
+    bordered
+    v-model:pagination="pagination"
+    @request="onRequest"
+  >
     <template v-slot:body-cell-action="props">
       <q-td :props="props">
         <div>
@@ -29,7 +38,9 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
+import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 
 defineProps({
   title: {
@@ -49,6 +60,19 @@ defineProps({
     required: true,
   },
 });
+
+const pagination = defineModel<QTableRequestPropPagination>('pagination');
+
+const emit = defineEmits(['onRequest']);
+const tableRef = ref();
+onMounted(() => {
+  // get initial data from server (1st page)
+  tableRef.value.requestServerInteraction();
+});
+
+function onRequest(props: QTableRequestProp) {
+  emit('onRequest', props);
+}
 </script>
 
 <style scoped></style>

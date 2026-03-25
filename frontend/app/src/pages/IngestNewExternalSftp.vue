@@ -47,31 +47,12 @@
                 :rules="[(val) => !!val || 'Filename pattern is required']"
               />
 
-              <q-select
-                outlined
+              <csv-parser-select
                 class="q-mb-md"
                 :disable="!formData.permission_group_id"
                 v-model="formData.parser_csv_id"
-                use-input
-                emit-value
-                map-options
-                clearable
-                :options="filteredCsvParserOptions"
-                @filter="filterCsvParser"
-                option-value="id"
-                option-label="name"
-                label="Select the parser *"
-                :rules="[(val) => !!val || 'Parser is required']"
-              >
-                <template v-slot:hint v-if="!formData.permission_group_id">
-                  <span class="text-red">Select Permission Group first</span>
-                </template>
-                <template v-slot:no-option>
-                  <q-item>
-                    <q-item-section class="text-grey"> No results </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
+                :permission_group_id="formData.permission_group_id"
+              />
             </div>
           </q-card-section>
 
@@ -176,16 +157,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
-import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import CsvParserSelect from 'components/CsvParserSelect.vue';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
-const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -205,17 +185,6 @@ const formData = ref<IngestExternalSftpCreate>({
 
 const isLoading = ref(false);
 const isPwd = ref(true);
-
-const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
-
-watch(
-  () => formData.value.permission_group_id,
-  async (newId) => {
-    if (newId) {
-      await csvParserStore.dispatchGetListbyPermissionGroup(newId);
-    }
-  },
-);
 
 async function save() {
   const data: IngestExternalSftpCreate = {
@@ -261,22 +230,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function filterCsvParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredCsvParserOptions.value = csvParserStore.csvParserList.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
 }
 </script>
 

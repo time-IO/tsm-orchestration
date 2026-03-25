@@ -43,28 +43,12 @@
             :rules="[(val) => !!val || 'Filename pattern is required']"
           />
 
-          <q-select
-            outlined
+          <csv-parser-select
             class="q-mb-md"
             :disable="!formData.permission_group_id"
             v-model="formData.parser_csv_id"
-            use-input
-            emit-value
-            map-options
-            clearable
-            :options="filteredCsvParserOptions"
-            @filter="filterCsvParser"
-            option-value="id"
-            option-label="name"
-            label="Select the parser *"
-            :rules="[(val) => !!val || 'Parser is required']"
-          >
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey"> No results </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+            :permission_group_id="formData.permission_group_id"
+          />
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
@@ -88,16 +72,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import { useCsvParserStore } from 'stores/parserCsvStore';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import CsvParserSelect from 'components/CsvParserSelect.vue';
 
 const sftpStore = useIngestSftpStore();
-const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -110,17 +93,6 @@ const formData = ref<IngestSftpCreate>({
 });
 
 const isLoading = ref(false);
-
-const filteredCsvParserOptions = ref([...csvParserStore.csvParserList]);
-
-watch(
-  () => formData.value.permission_group_id,
-  async (newId) => {
-    if (newId) {
-      await csvParserStore.dispatchGetListbyPermissionGroup(newId);
-    }
-  },
-);
 
 async function save() {
   const data: IngestSftpCreate = {
@@ -160,22 +132,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function filterCsvParser(val: string, update: (callback: () => void) => void) {
-  if (val === '') {
-    update(() => {
-      filteredCsvParserOptions.value = [...csvParserStore.csvParserList];
-    });
-    return;
-  }
-
-  update(() => {
-    const needle = val.toLowerCase();
-    filteredCsvParserOptions.value = csvParserStore.csvParserList.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
-  });
 }
 </script>
 

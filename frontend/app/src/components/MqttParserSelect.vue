@@ -1,36 +1,41 @@
 <template>
   <q-select
-    filled
+    outlined
+    class="q-mb-md"
     v-model="model"
-    :options="filteredOptions"
-    @filter="filterOptions"
-    label="Permission Group *"
-    @virtual-scroll="onVirtualScroll"
-    option-value="id"
-    option-label="name"
+    v-bind="$attrs"
+    use-input
     emit-value
     map-options
     clearable
-    use-input
-    hint="Select the permission group"
-    :rules="rules"
-  />
+    :options="filteredOptions"
+    @filter="filterOptions"
+    @virtual-scroll="onVirtualScroll"
+    option-value="id"
+    option-label="name"
+    label="Select the parser *"
+    :rules="[(val) => !!val || 'Parser is required']"
+  >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey"> No results </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
 </template>
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
-import { QSelect, useQuasar } from 'quasar';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { MqttParser } from 'src/services/mqtt_parser/type';
+import { useMqttParserStore } from 'stores/mqttParserStore';
+import { useQuasar } from 'quasar';
 
-const permissionGroupStore = usePermissionGroupStore();
+const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
 
 const model = defineModel();
-
 const { preselectedItem } = defineProps<{
-  rules?: Array<(val: unknown) => string | boolean>;
-  preselectedItem?: PermissionGroup | null;
+  preselectedItem?: MqttParser | null;
 }>();
 
 // Pagination state
@@ -40,8 +45,8 @@ const paginationTotal = ref(0);
 const paginationLoading = ref(false);
 const allPagesFetched = ref(false);
 
-const filteredOptions = ref<PermissionGroup[]>([]);
-const fetchedOptions = ref<PermissionGroup[]>([]);
+const filteredOptions = ref<MqttParser[]>([]);
+const fetchedOptions = ref<MqttParser[]>([]);
 
 onMounted(async () => {
   await fetchOptions();
@@ -72,7 +77,7 @@ async function fetchOptions(page = 1) {
 
   paginationLoading.value = true;
   try {
-    const response = await permissionGroupStore.dispatchGetList(page, pageSize.value);
+    const response = await mqttParserStore.dispatchGetList(page, pageSize.value);
     paginationTotal.value = response.total;
     const newItems = response.items;
 
@@ -96,7 +101,7 @@ async function fetchOptions(page = 1) {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to fetch permission groups',
+      message: 'Failed to fetch parser',
     });
   } finally {
     paginationLoading.value = false;
@@ -138,7 +143,6 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
     });
   }
 }
-
 </script>
 
 <style scoped></style>

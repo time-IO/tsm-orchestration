@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_pagination import Page
+from fastapi_pagination import paginate
 from dependencies import (
     get_session,
     get_current_user,
@@ -27,7 +29,7 @@ entity_name = "quality control setting"
 
 @router.get(
     "/",
-    response_model=list[QualityControlSettingPublic],
+    response_model=Page[QualityControlSettingPublic],
     summary=f"Get a list of {entity_name}",
 )
 def read_list(
@@ -35,7 +37,7 @@ def read_list(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_quality_control_setting),
 ):
-    return repo.find_allowed_all(current_user.permission_group_ids)
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
 
 
 @router.get(

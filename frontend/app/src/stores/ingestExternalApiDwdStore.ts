@@ -3,7 +3,6 @@ import type {IngestExternalApiDwdCreate, IngestExternalApiDwdPublic, IngestExter
 import {API} from "src/services";
 
 export const useIngestExternalApiDwdStore = defineStore('ingestExternalApiDwdStore', {
-
   state: () => ({
     ingestExternalApiDwdList: [] as IngestExternalApiDwdPublic[],
   }),
@@ -11,25 +10,28 @@ export const useIngestExternalApiDwdStore = defineStore('ingestExternalApiDwdSto
   getters: {},
 
   actions: {
-    async dispatchGetList() {
-      const response = await API.ingestExternalApiDwd.getList()
-      this.ingestExternalApiDwdList = response.data
+    async dispatchGetList(page?: number, size?: number) {
+      const response = await API.ingestExternalApiDwd.getList(page, size);
+      this.ingestExternalApiDwdList = response.data.items;
+      return response.data;
     },
     async dispatchGetOne(id: number): Promise<IngestExternalApiDwdPublic> {
-      const response = await API.ingestExternalApiDwd.getOne(id)
-      return response.data
-
+      const response = await API.ingestExternalApiDwd.getOne(id);
+      return response.data;
     },
     async dispatchCreate(payload: IngestExternalApiDwdCreate): Promise<IngestExternalApiDwdPublic> {
-      const response = await API.ingestExternalApiDwd.create(payload)
-      return response.data
+      const response = await API.ingestExternalApiDwd.create(payload);
+      return response.data;
     },
-    async dispatchUpdate(id: number, payload: IngestExternalApiDwdUpdate): Promise<IngestExternalApiDwdPublic> {
-      const response = await API.ingestExternalApiDwd.update(id, payload)
-        return response.data
+    async dispatchUpdate(
+      id: number,
+      payload: IngestExternalApiDwdUpdate,
+    ): Promise<IngestExternalApiDwdPublic> {
+      const response = await API.ingestExternalApiDwd.update(id, payload);
+      return response.data;
     },
     async dispatchDelete(id: number): Promise<void> {
-      await API.ingestExternalApiDwd.deleteOne(id)
+      await API.ingestExternalApiDwd.deleteOne(id);
     },
   },
 });
