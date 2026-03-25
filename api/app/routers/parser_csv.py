@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from dependencies import (
     get_session,
     get_current_user,
-    get_repo_ingest_csv_parser,
+    get_repo_csv_parser,
     get_repo_csv_parser_timestamp_column,
 )
 from models.parser_csv import (
@@ -35,7 +35,7 @@ entity_name = "csv parser"
 def read_list(
     *,
     current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_csv_parser),
+    repo=Depends(get_repo_csv_parser),
     permission_group_id: int | None = None,
 ):
     if permission_group_id:
@@ -55,7 +55,7 @@ def read_one(
     *,
     id: int,
     current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_csv_parser),
+    repo=Depends(get_repo_csv_parser),
 ):
     return repo.find_allowed_one(id, current_user.permission_group_ids)
 
@@ -123,7 +123,7 @@ def update(
     id: int,
     payload: CsvParserUpdate,
     current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_csv_parser),
+    repo=Depends(get_repo_csv_parser),
     session=Depends(get_session),
 ):
     # If timestamp_columns are provided, process them
@@ -171,7 +171,7 @@ def delete(
     *,
     id: int,
     current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_csv_parser),
+    repo=Depends(get_repo_csv_parser),
 ):
     parser = repo.find_allowed_one(id, current_user.permission_group_ids)
     if parser and parser.ingest_s3store:
