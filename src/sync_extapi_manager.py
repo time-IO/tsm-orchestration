@@ -4,6 +4,7 @@ import logging
 import json
 
 from requests.exceptions import HTTPError
+from json.decoder import JSONDecodeError
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
@@ -57,8 +58,14 @@ class SyncExtApiManager(AbstractHandler):
         syncer = self.sync_handlers[ext_api_name]
         try:
             data = syncer.fetch_api_data(thing, content)
-        except (ExtApiRequestError, NoHttpsError) as e:
+        except (ExtApiRequestError, NoHttpsError, JSONDecodeError) as e:
             journal.error(e.msg, thing.uuid)
+            return
+        except Exception as e:
+            journal.error(
+                f"Unknown error in fetching data for thing '{thing.name}'", thing.uuid
+            )
+            logger.exception(e)
             return
         try:
             obs = syncer.do_parse(data)
