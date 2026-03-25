@@ -77,7 +77,7 @@ class SyncExtApiManager(AbstractHandler):
                 f"Insert/upsert into timeioDB for thing '{thing.name}' failed",
                 thing.uuid,
             )
-            raise e 
+            raise e
         except Exception as e:
             journal.error(
                 f"Error in processing data for thing '{thing.name}'", thing.uuid
