@@ -18,9 +18,12 @@ entity_name = "permission group"
     "/", response_model=Page[PermissionGroup], summary=f"Get a list of {entity_name}"
 )
 def read_list(
-    *, current_user=Depends(get_current_user), repo=Depends(get_repo_permission_group)
+    *,
+    current_user=Depends(get_current_user),
+    repo=Depends(get_repo_permission_group),
+    sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
 
 
 @router.get("/{id}", response_model=PermissionGroup, summary=f"Get one {entity_name}")

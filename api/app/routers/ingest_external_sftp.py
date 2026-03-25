@@ -37,8 +37,9 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_sftp),
+    sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids))
+    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
 
 
 @router.get(
