@@ -152,7 +152,7 @@ onMounted(async () => {
 const detailRoute = computed(() => {
   if (route.params.id) {
     const id = Number(route.params.id);
-    return `/ingest/external-api-uba/${id}`;
+    return `/ingest/external-api/uba/${id}`;
   }
   return '';
 });

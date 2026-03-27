@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Bosch IoT</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/external-api/bosch" />
       </div>
     </div>
 
@@ -125,6 +125,22 @@
                     </q-item-label>
                   </q-item-section>
                 </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Trigger External api</q-item-label>
+                    <div>
+                      <q-btn
+                        class="q-mt-sm"
+                        rounded
+                        size="sm"
+                        label="Go!"
+                        @click="openTriggerDialog"
+                        text-color="primary"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
               </q-list>
             </div>
           </div>
@@ -155,6 +171,13 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <trigger-external-api-dialog
+      v-if="item !== null"
+      v-model="showTriggerDialog"
+      :provider="TRIGGER_EXTERNAL_API_PROVIDER.BOSCH"
+      :ids_to_trigger="[item.id]"
+    />
   </q-page>
 </template>
 
@@ -164,6 +187,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import type { IngestExternalApiBoschPublic } from 'src/services/ingest_external_api_bosch/types';
+import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
+import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -174,6 +199,8 @@ const item = ref<IngestExternalApiBoschPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
+
+const showTriggerDialog = ref(false);
 
 onMounted(async () => {
   try {
@@ -195,7 +222,7 @@ onMounted(async () => {
 
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/ingest/external-api-bosch/${item.value.id}/edit`;
+    return `/ingest/external-api/bosch/${item.value.id}/edit`;
   }
   return '';
 });
@@ -207,7 +234,9 @@ const formatDate = (dateString: string) => {
 const openDeleteDialog = () => {
   deleteDialog.value = true;
 };
-
+const openTriggerDialog = () => {
+  showTriggerDialog.value = true;
+};
 const deleteItem = async () => {
   if (!item.value) {
     return;

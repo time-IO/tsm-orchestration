@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Neutron Monitor</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/external-api/nm" />
       </div>
     </div>
 
@@ -70,9 +70,7 @@
                     <q-item-label caption v-if="item.time_resolution_in_minutes">
                       {{ item.time_resolution_in_minutes }} minutes
                     </q-item-label>
-                    <q-item-label caption v-else>
-                      No time resolution was set
-                    </q-item-label>
+                    <q-item-label caption v-else> No time resolution was set </q-item-label>
                   </q-item-section>
                 </q-item>
 
@@ -93,6 +91,21 @@
                     <q-item-label caption>
                       {{ item.sync_interval_in_minutes }} minutes
                     </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Trigger External api</q-item-label>
+                    <div>
+                      <q-btn
+                        class="q-mt-sm"
+                        rounded
+                        size="sm"
+                        label="Go!"
+                        @click="openTriggerDialog"
+                        text-color="primary"
+                      />
+                    </div>
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -125,6 +138,13 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <trigger-external-api-dialog
+      v-if="item !== null"
+      v-model="showTriggerDialog"
+      :provider="TRIGGER_EXTERNAL_API_PROVIDER.NM"
+      :ids_to_trigger="[item.id]"
+    />
   </q-page>
 </template>
 
@@ -134,6 +154,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiNeutronMonitorPublic } from 'src/services/ingest_external_api_neutron_monitor/types';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
+import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
+import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -143,6 +165,7 @@ const store = useIngestExternalApiNeutronMonitorStore();
 const item = ref<IngestExternalApiNeutronMonitorPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
+const showTriggerDialog = ref(false);
 
 onMounted(async () => {
   try {
@@ -164,7 +187,7 @@ onMounted(async () => {
 
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/ingest/external-api-nm/${item.value.id}/edit`;
+    return `/ingest/external-api/nm/${item.value.id}/edit`;
   }
   return '';
 });
@@ -176,7 +199,9 @@ const formatDate = (dateString: string) => {
 const openDeleteDialog = () => {
   deleteDialog.value = true;
 };
-
+const openTriggerDialog = () => {
+  showTriggerDialog.value = true;
+};
 const deleteItem = async () => {
   if (!item.value) {
     return;

@@ -7,6 +7,7 @@ import ingestExternalApiTSystemsController from 'src/services/ingest_external_ap
 import ingestMqttController from 'src/services/ingest_mqtt';
 import ingestSftpController from 'src/services/ingest_sftp';
 import ingestExternalSftpController from 'src/services/ingest_external_sftp';
+import triggerExternalApiGenController from 'src/services/trigger_external_api_generic';
 
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
@@ -29,4 +30,5 @@ export const API = {
   neutronMonitorStation: neutronMonitorStationController,
   mqttParser: mqttParserController,
   csvParser: csvParserController,
+  triggerExternalGenAPI:triggerExternalApiGenController
 };
