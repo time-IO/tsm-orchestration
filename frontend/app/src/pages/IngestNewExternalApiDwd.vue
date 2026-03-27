@@ -133,7 +133,7 @@ async function save() {
     });
 
     // Navigate back to list
-    await router.push(`/ingest/external-api-dwd/${result.id}`);
+    await router.push(`/ingest/external-api/dwd/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';

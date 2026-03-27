@@ -37,6 +37,17 @@ import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
 import IngestEditSftp from 'pages/IngestEditSftp.vue';
 import IngestDetailExternalSftp from 'pages/IngestDetailExternalSftp.vue';
 import IngestEditExternalSftp from 'pages/IngestEditExternalSftp.vue';
+import TriggerExternalApiTypesSelection from 'pages/TriggerExternalApiTypesSelection.vue'
+import IngestOverviewSftp from "pages/IngestOverviewSftp.vue";
+import IngestOverviewMqtt from 'pages/IngestOverviewMqtt.vue';
+import IngestOverviewExternalSftp from 'pages/IngestOverviewExternalSftp.vue';
+import IngestOverviewExternalApi from 'pages/IngestOverviewExternalApi.vue';
+import IngestOverviewExternalApiBosch from 'pages/IngestOverviewExternalApiBosch.vue';
+import IngestOverviewExternalApiDwd from 'pages/IngestOverviewExternalApiDwd.vue';
+import IngestOverviewExternalApiNm from 'pages/IngestOverviewExternalApiNm.vue';
+import IngestOverviewExternalApiTSystems from 'pages/IngestOverviewExternalApiTSystems.vue';
+import IngestOverviewExternalApiTtn from 'pages/IngestOverviewExternalApiTtn.vue';
+import IngestOverviewExternalApiUba from 'pages/IngestOverviewExternalApiUba.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -55,6 +66,56 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/sftp',
+    component: IngestOverviewSftp,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/mqtt',
+    component: IngestOverviewMqtt,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-sftp',
+    component: IngestOverviewExternalSftp,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api',
+    component: IngestOverviewExternalApi,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/bosch',
+    component: IngestOverviewExternalApiBosch,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/dwd',
+    component: IngestOverviewExternalApiDwd,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/nm',
+    component: IngestOverviewExternalApiNm,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/tsystems',
+    component: IngestOverviewExternalApiTSystems,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/ttn',
+    component: IngestOverviewExternalApiTtn,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/uba',
+    component: IngestOverviewExternalApiUba,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/ingest/new',
     component: IngestNew,
     meta: { requiresAuth: true },
@@ -70,67 +131,67 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-sftp',
+    path: '/ingest/new/external-sftp',
     component: IngestNewExternalSftp,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/bosch',
+    path: '/ingest/new/external-api/bosch',
     component: IngestNewExternalApiBosch,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/dwd',
+    path: '/ingest/new/external-api/dwd',
     component: IngestNewExternalApiDwd,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/nm',
+    path: '/ingest/new/external-api/nm',
     component: IngestNewExternalApiNm,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/tsystems',
+    path: '/ingest/new/external-api/tsystems',
     component: IngestNewExternalApiTSystems,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/ttn',
+    path: '/ingest/new/external-api/ttn',
     component: IngestNewExternalApiTtn,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/new/ext-api/uba',
+    path: '/ingest/new/external-api/uba',
     component: IngestNewExternalApiUba,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-bosch/:id',
+    path: '/ingest/external-api/bosch/:id',
     component: IngestDetailExternalApiBosch,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-uba/:id',
+    path: '/ingest/external-api/uba/:id',
     component: IngestDetailExternalApiUba,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-nm/:id',
+    path: '/ingest/external-api/nm/:id',
     component: IngestDetailExternalApiNm,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-ttn/:id',
+    path: '/ingest/external-api/ttn/:id',
     component: IngestDetailExternalApiTtn,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-tsystems/:id',
+    path: '/ingest/external-api/tsystems/:id',
     component: IngestDetailExternalApiTSystems,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-dwd/:id',
+    path: '/ingest/external-api/dwd/:id',
     component: IngestDetailExternalApiDwd,
     meta: { requiresAuth: true },
   },
@@ -150,32 +211,32 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-bosch/:id/edit',
+    path: '/ingest/external-api/bosch/:id/edit',
     component: IngestEditExternalApiBosch,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-dwd/:id/edit',
+    path: '/ingest/external-api/dwd/:id/edit',
     component: IngestEditExternalApiDwd,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-nm/:id/edit',
+    path: '/ingest/external-api/nm/:id/edit',
     component: IngestEditExternalApiNm,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-ttn/:id/edit',
+    path: '/ingest/external-api/ttn/:id/edit',
     component: IngestEditExternalApiTtn,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-tsystems/:id/edit',
+    path: '/ingest/external-api/tsystems/:id/edit',
     component: IngestEditExternalApiTSystems,
     meta: { requiresAuth: true },
   },
   {
-    path: '/ingest/external-api-uba/:id/edit',
+    path: '/ingest/external-api/uba/:id/edit',
     component: IngestEditExternalApiUba,
     meta: { requiresAuth: true },
   },
@@ -227,6 +288,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/quality-control/new',
     component: QualityControlNew,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trigger/external-api-types',
+    name: 'selectTypesTrigger',
+    component: TriggerExternalApiTypesSelection,
     meta: { requiresAuth: true },
   },
 

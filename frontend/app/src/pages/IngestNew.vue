@@ -93,12 +93,12 @@ const externalAPis = {
   label: 'External API',
   description: 'some description for sftp',
   options: [
-    { name: 'bosch', label: 'Bosch IoT', path: '/ingest/new/ext-api/bosch' },
-    { name: 'dwd', label: 'Deutscher Wetterdienst', path: '/ingest/new/ext-api/dwd' },
-    { name: 'nm', label: 'Neutron Monitor', path: '/ingest/new/ext-api/nm' },
-    { name: 'tsystems', label: 'TSystems', path: '/ingest/new/ext-api/tsystems' },
-    { name: 'ttn', label: 'The Things network', path: '/ingest/new/ext-api/ttn' },
-    { name: 'uba', label: 'Umweltbundesamt (UBA) Air Data', path: '/ingest/new/ext-api/uba' },
+    { name: 'bosch', label: 'Bosch IoT', path: '/ingest/new/external-api/bosch' },
+    { name: 'dwd', label: 'Deutscher Wetterdienst', path: '/ingest/new/external-api/dwd' },
+    { name: 'nm', label: 'Neutron Monitor', path: '/ingest/new/external-api/nm' },
+    { name: 'tsystems', label: 'TSystems', path: '/ingest/new/external-api/tsystems' },
+    { name: 'ttn', label: 'The Things network', path: '/ingest/new/external-api/ttn' },
+    { name: 'uba', label: 'Umweltbundesamt (UBA) Air Data', path: '/ingest/new/external-api/uba' },
   ],
 };
 </script>

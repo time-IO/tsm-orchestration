@@ -170,7 +170,7 @@ async function save() {
     });
 
     // Navigate back to detail
-    await router.push(`/ingest/external-api-nm/${result.id}`);
+    await router.push(`/ingest/external-api/nm/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
