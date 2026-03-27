@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">External Api Ingest</h5>
-    <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
+    <h6 class="q-mt-none">Neutron Monitor</h6>
     <div class="row">
       <div class="col">
         <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
