@@ -71,15 +71,34 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/authStore';
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 
 const { t } = useI18n();
 const leftDrawerOpen = ref(false);
 
 const authStore = useAuthStore();
 const router = useRouter();
+const $q = useQuasar();
 
 const handleLogin = async () => {
-  await authStore.login();
+  try {
+    await authStore.login();
+  } catch {
+    $q.notify({
+      type: 'negative',
+      position: 'top',
+      timeout: 0,
+      actions: [
+        {
+          icon: 'close',
+          color: 'white',
+          round: true,
+          handler: () => {},
+        },
+      ],
+      message: 'Authorization provider not reachable. Please contact an application admin.',
+    });
+  }
 };
 
 const handleLogout = async () => {
