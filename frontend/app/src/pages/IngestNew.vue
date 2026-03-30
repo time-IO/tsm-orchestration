@@ -8,8 +8,8 @@
     </div>
 
     <div class="row">
-      <div class="col" v-for="item in data" :key="item.name">
-        <q-card class="my-card">
+      <div class="col-3 q-pa-sm" v-for="item in data" :key="item.name">
+        <q-card>
           <q-item>
             <q-item-section avatar>
               <q-avatar :icon="item.icon" />
@@ -27,8 +27,8 @@
         </q-card>
       </div>
 
-      <div class="col">
-        <q-card class="my-card">
+      <div class="col-3 q-pa-sm">
+        <q-card>
           <q-item>
             <q-item-section avatar>
               <q-avatar :icon="externalAPis.icon" />
@@ -43,7 +43,7 @@
             <template v-for="item in externalAPis.options" :key="item.name">
               <q-item>
                 <q-item-section>
-                  <q-item-label>{{item.label}}</q-item-label>
+                  <q-item-label>{{ item.label }}</q-item-label>
                 </q-item-section>
                 <q-item-section avatar>
                   <q-btn :to="item.path" square color="green" icon="add" />
@@ -52,10 +52,6 @@
               <q-separator />
             </template>
           </q-list>
-<!--          <q-card-actions>-->
-<!--            <q-space />-->
-<!--            <q-btn :to="item.path" class="full-width" color="green">Create</q-btn>-->
-<!--          </q-card-actions>-->
         </q-card>
       </div>
     </div>
@@ -104,8 +100,4 @@ const externalAPis = {
 </script>
 
 <style scoped>
-.my-card {
-  width: 100%;
-  max-width: 250px;
-}
 </style>
