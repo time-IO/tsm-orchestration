@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">TSystems</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/mqtt" />
       </div>
     </div>
 

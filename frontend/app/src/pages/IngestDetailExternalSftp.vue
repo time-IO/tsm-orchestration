@@ -3,7 +3,7 @@
     <h5 class="q-mb-none">External SFTP Ingest</h5>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/external-sftp" />
       </div>
     </div>
 
