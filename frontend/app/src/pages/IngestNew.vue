@@ -72,7 +72,7 @@ const data = [
     icon: 'folder_special',
     label: 'External SFTP',
     description: 'some description for ext_sftp',
-    path: '/ingest/new/ext-sftp',
+    path: '/ingest/new/external-sftp',
   },
   {
     name: 'mqtt',
