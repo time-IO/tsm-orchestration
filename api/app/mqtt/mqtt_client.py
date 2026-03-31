@@ -9,7 +9,11 @@ from threading import get_native_id
 import paho.mqtt.client as mqtt
 
 from config import settings
-from .generate_mqtt_messages import create_sync_ext_api_msg, create_sync_quality_control
+from .generate_mqtt_messages import (
+    create_sync_ext_api_msg,
+    create_sync_quality_control,
+    create_frontend_thing_update,
+)
 
 logger = logging.getLogger("app.mqtt")
 
@@ -95,4 +99,13 @@ def publish_trigger_ext_api(ingest_uuid, date_from, date_to, topic="sync_ext_api
         msg,
         topic,
         f"External API sync for ingest '{ingest_uuid}' published on '{topic}'",
+    )
+
+
+def publish_frontend_thing_update(
+    ingest, ingest_type_info, topic="frontend_thing_update"
+):
+    msg = create_frontend_thing_update(ingest, ingest_type_info)
+    publish_message(
+        msg, topic, f"Ingest with UUID '{ingest.uuid}' published on '{topic}'"
     )

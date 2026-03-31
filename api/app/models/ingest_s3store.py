@@ -2,7 +2,6 @@ import uuid as uuid_pkg
 from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 from datetime import datetime, timezone
 
-
 from .permission_group import PermissionGroup
 from encryption import EncryptedType
 
@@ -65,6 +64,17 @@ class IngestS3Store(IngestS3StoreBase, table=True):
 
     permission_group: "PermissionGroup" = Relationship(back_populates="ingest_s3store")
     csv_parser: "CsvParser" = Relationship(back_populates="ingest_s3store")
+
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "bucket_name": self.bucket_name,
+            "username": self.username,
+            "password": encryption_service.encrypt(self.password),
+            "filename_pattern": self.filename_pattern,
+        }
 
 
 from .parser_csv import CsvParser

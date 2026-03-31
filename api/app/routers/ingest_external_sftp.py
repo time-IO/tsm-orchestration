@@ -26,6 +26,7 @@ router = APIRouter(
 )
 
 entity_name = "ingest external sftp"
+ingest_type_info = {"ingest_type": "extsftp"}
 
 
 @router.get(
@@ -89,7 +90,12 @@ def create(
         "bucket_password": bucket_password,
     }
 
-    return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    return repo.create_allowed(
+        payload,
+        extra_data,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.patch(
@@ -113,7 +119,12 @@ def update(
         if not parser or parser.permission_group_id != payload.permission_group_id:
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
-    return repo.update_allowed(id, payload, current_user.permission_group_ids)
+    return repo.update_allowed(
+        id,
+        payload,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

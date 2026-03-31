@@ -54,3 +54,15 @@ class IngestExternalApiUba(IngestExternalApiUbaBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_uba"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        return {
+            "type": "uba",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "station_id": self.station_id,
+            },
+        }

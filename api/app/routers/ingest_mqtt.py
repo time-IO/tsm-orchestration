@@ -26,6 +26,7 @@ router = APIRouter(
 )
 
 entity_name = "ingest mqtt"
+ingest_type_info = {"ingest_type": "mqtt"}
 
 
 def hash_password(
@@ -106,7 +107,12 @@ def create(
         "uuid": _uuid,
     }
 
-    return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    return repo.create_allowed(
+        payload,
+        extra_data,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.patch(
@@ -122,7 +128,12 @@ def update(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_mqtt),
 ):
-    return repo.update_allowed(id, payload, current_user.permission_group_ids)
+    return repo.update_allowed(
+        id,
+        payload,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

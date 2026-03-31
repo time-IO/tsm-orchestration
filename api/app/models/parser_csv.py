@@ -103,6 +103,33 @@ class CsvParser(CsvParserBase, table=True):
         back_populates="csv_parser"
     )
 
+    @property
+    def mqtt_information(self) -> dict:
+        return {
+            "default": 0,
+            "parsers": [
+                {
+                    "type": "csvparser",
+                    "name": self.name,
+                    "settings": {
+                        "delimiter": self.delimiter,
+                        "skipfooter": self.footlines_to_exclude,
+                        "skiprows": self.headlines_to_exclude,
+                        "header": self.header,
+                        "comment": self.comment,
+                        "pandas_read_csv": self.pandas_read_csv,
+                        "timestamp_columns": [
+                            {
+                                "column": tc.column,
+                                "timestamp_format": tc.timestamp_format,
+                            }
+                            for tc in self.timestamp_columns
+                        ],
+                    },
+                }
+            ],
+        }
+
 
 from .ingest_s3store import IngestS3Store
 from .ingest_external_sftp import IngestExternalSftp

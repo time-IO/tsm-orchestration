@@ -4,6 +4,8 @@ import paramiko
 import io
 import re
 import uuid
+from pathlib import Path
+from config import settings
 
 
 def generate_password(length: int):
@@ -30,3 +32,19 @@ def create_db_username(permisison_group_name: str, readonly: bool = False):
     if readonly:
         name = "ro_" + name
     return re.sub("[^a-z0-9_]+", "", f"{name[0:30].lower()}_{uuid.uuid4()}")
+
+
+def get_connection_string_secure(db, readonly: bool = False):
+    if db:
+        usr = db.read_only_username if readonly else db.username
+        return f"postgresql://{usr}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
+    return "-"
+
+
+def get_ssh_priv_key(filepath, priv_key):
+    if Path(filepath).is_file():
+        try:
+            return Path(filepath).read_text().strip()
+        except Exception as e:
+            raise ValueError(f"Invalid SSH key: {e}")
+    return priv_key

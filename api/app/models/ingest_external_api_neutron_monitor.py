@@ -81,5 +81,18 @@ class IngestExternalApiNeutronMonitor(IngestExternalApiNeutronMonitorBase, table
         back_populates="ingest_external_api_neutron_monitor"
     )
 
+    @property
+    def mqtt_information(self) -> dict:
+        return {
+            "type": "nm",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "station_id": self.station_id,
+                "time_resolution": self.time_resolution_in_minutes,
+            },
+        }
+
 
 from .neutron_monitor_station import NeutronMonitorStation

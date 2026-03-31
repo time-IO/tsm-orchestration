@@ -29,7 +29,7 @@ class PermissionGroup(SQLModel, table=True):
     )
 
     csv_parser: list["CsvParser"] = Relationship(back_populates="permission_group")
-    database: list["Database"] = Relationship(back_populates="permission_group")
+    database: "Database" = Relationship(back_populates="permission_group")
     ingest_external_api_bosch: list["IngestExternalApiBosch"] = Relationship(
         back_populates="permission_group"
     )
@@ -58,6 +58,13 @@ class PermissionGroup(SQLModel, table=True):
     quality_control_setting: list["QualityControlSetting"] = Relationship(
         back_populates="permission_group"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        return {
+            "name": self.name,
+            "uuid": str(self.uuid),
+        }
 
     @staticmethod
     def convert_entitlement_to_name(entitlement):

@@ -61,3 +61,18 @@ class IngestExternalApiTheThingsNetwork(
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_the_things_network"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "type": "ttn",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "api_key": encryption_service.encrypt(self.api_key),
+                "endpoint_uri": self.endpoint_uri,
+            },
+        }
