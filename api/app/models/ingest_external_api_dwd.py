@@ -53,3 +53,15 @@ class IngestExternalApiDwd(IngestExternalApiDwdBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_dwd"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        return {
+            "type": "dwd",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "station_id": self.station_id,
+            },
+        }

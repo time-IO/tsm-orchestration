@@ -64,3 +64,20 @@ class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_tsystems"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "type": "tsystems",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "group": self.group,
+                "username": self.tsystems_username,
+                "password": encryption_service.encrypt(self.tsystems_password),
+                "station_id": self.station_id,
+            },
+        }

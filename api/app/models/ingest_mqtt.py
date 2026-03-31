@@ -67,5 +67,18 @@ class IngestMqtt(IngestMqttBase, table=True):
         if not self.username:
             self.username = f"ingest-mqtt-{self.uuid}"
 
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "username": self.username,
+            "password_hash": self.password_hashed,
+            "password": encryption_service.encrypt(self.password),
+            "topic": self.topic,
+            "uri": self.uri,
+            "mqtt_device_type": self.mqtt_parser.name,
+        }
+
 
 from .parser_mqtt import MqttParser

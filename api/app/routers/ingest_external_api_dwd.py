@@ -20,6 +20,7 @@ router = APIRouter(
 )
 
 entity_name = "ingest external api dwd"
+ingest_type_info = {"ingest_type": "extapi"}
 
 
 @router.get(
@@ -61,7 +62,12 @@ def create(
     repo=Depends(get_repo_ingest_external_api_dwd),
 ):
     extra_data = {"created_by_id": current_user.id}
-    return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    return repo.create_allowed(
+        payload,
+        extra_data,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.patch(
@@ -77,7 +83,12 @@ def update(
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_api_dwd),
 ):
-    return repo.update_allowed(id, payload, current_user.permission_group_ids)
+    return repo.update_allowed(
+        id,
+        payload,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")

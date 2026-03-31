@@ -26,6 +26,7 @@ router = APIRouter(
 )
 
 entity_name = "ingest s3store"
+ingest_type_info = {"ingest_type": "sftp"}
 
 
 @router.get(
@@ -87,7 +88,12 @@ def create(
         "bucket_name": bucket_name,
         "fileserver_uri": fileserver_uri,
     }
-    return repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    return repo.create_allowed(
+        payload,
+        extra_data,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
+    )
 
 
 @router.patch(
@@ -110,7 +116,10 @@ def update(
             payload.parser_csv_id, current_user.permission_group_ids
         )
     return repo.update_ingest_sftp(
-        id, payload, current_user.permission_group_ids, parser
+        id,
+        payload,
+        current_user.permission_group_ids,
+        ingest_type_info=ingest_type_info,
     )
 
 

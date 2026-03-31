@@ -1,6 +1,6 @@
 .idea
 venv
 .venv
-# Currently using sqlite database
-api/app/database.db
 **/__pycache__
+!api/sftp-private-keys/.gitkeep
+api/sftp-private-keys/*

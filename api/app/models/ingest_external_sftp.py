@@ -1,6 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
+from utils import get_ssh_priv_key
 from .permission_group import PermissionGroup
 from encryption import EncryptedType
 
@@ -79,6 +80,36 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
         back_populates="ingest_external_sftp"
     )
     csv_parser: "CsvParser" = Relationship(back_populates="ingest_external_sftp")
+
+    @property
+    def mqtt_information(self):
+        from encryption import encryption_service
+
+        return {
+            "sync_enabled": self.sync_enabled,
+            "uri": self.uri,
+            "path": self.path,
+            "username": self.username,
+            "password": encryption_service.encrypt(self.password),
+            "sync_interval": self.sync_interval_in_minutes,
+            "public_key": self.ssh_public_key,
+            "private_key": encryption_service.encrypt(
+                get_ssh_priv_key(
+                    f"/app/sftp-private-keys/{self.uuid}", self.ssh_private_key
+                )
+            ),
+        }
+
+    @property
+    def mqtt_rawdatastorage(self):
+        from encryption import encryption_service
+
+        return {
+            "bucket_name": self.bucket_name,
+            "username": self.bucket_username,
+            "password": encryption_service.encrypt(self.bucket_password),
+            "filename_pattern": self.filename_pattern,
+        }
 
 
 from .parser_csv import CsvParser

@@ -2,6 +2,7 @@ from sqlalchemy import Column
 from sqlmodel import Field, SQLModel, Relationship
 from .permission_group import PermissionGroup
 from encryption import EncryptedType
+from utils import get_connection_string_secure
 
 
 class Database(SQLModel, table=True):
@@ -19,3 +20,17 @@ class Database(SQLModel, table=True):
     url: str
 
     permission_group: "PermissionGroup" = Relationship(back_populates="database")
+
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "username": self.username,
+            "password": encryption_service.encrypt(self.password),
+            "url": get_connection_string_secure(self),
+            "ro_username": self.read_only_username,
+            "ro_password": encryption_service.encrypt(self.read_only_password),
+            "ro_url": get_connection_string_secure(self, readonly=True),
+            "schema": self.username,
+        }

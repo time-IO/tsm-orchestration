@@ -7,6 +7,7 @@ from .database import Database
 from utils import create_db_username, generate_password
 from sorting import apply_sort_list
 from config import settings
+from mqtt import publish_frontend_thing_update
 
 T = TypeVar("T", bound=SQLModel)
 
@@ -66,7 +67,9 @@ class BaseRepository(Generic[T]):
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
 
-    def create_allowed(self, payload, extra_data, permission_group_ids):
+    def create_allowed(
+        self, payload, extra_data, permission_group_ids, ingest_type_info=None
+    ):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
         )
@@ -78,13 +81,17 @@ class BaseRepository(Generic[T]):
             self.session.add(entity)
             self.session.commit()
             self.session.refresh(entity)
+            if ingest_type_info:
+                publish_frontend_thing_update(entity, ingest_type_info)
             return entity
         except Exception as e:
             print(str(e))
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to create.")
 
-    def update_allowed(self, id: int, payload, permission_group_ids):
+    def update_allowed(
+        self, id: int, payload, permission_group_ids, ingest_type_info=None
+    ):
         self.check_payload_permission_group(
             payload.permission_group_id, permission_group_ids
         )
@@ -103,6 +110,8 @@ class BaseRepository(Generic[T]):
             self.session.add(entity)
             self.session.commit()
             self.session.refresh(entity)
+            if ingest_type_info:
+                publish_frontend_thing_update(entity, ingest_type_info)
             return entity
         except HTTPException as exception:
             raise exception
@@ -111,7 +120,9 @@ class BaseRepository(Generic[T]):
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def update_ingest_sftp(self, id: int, payload, permission_group_ids, parser=None):
+    def update_ingest_sftp(
+        self, id: int, payload, permission_group_ids, ingest_type_info, parser=None
+    ):
 
         # it is currently not allowed to update the permission group of an ingest sftp (s3store)
         # therefore the payload does not contain a permission_group_id , so we use an extra method
@@ -137,6 +148,7 @@ class BaseRepository(Generic[T]):
             self.session.add(entity)
             self.session.commit()
             self.session.refresh(entity)
+            publish_frontend_thing_update(entity, ingest_type_info)
             return entity
         except HTTPException as exception:
             raise exception

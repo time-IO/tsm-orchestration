@@ -67,3 +67,21 @@ class IngestExternalApiBosch(IngestExternalApiBoschBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="ingest_external_api_bosch"
     )
+
+    @property
+    def mqtt_information(self) -> dict:
+        from encryption import encryption_service
+
+        return {
+            "type": "bosch",
+            "version_id": 1,
+            "enabled": self.sync_enabled,
+            "sync_interval": self.sync_interval_in_minutes,
+            "settings": {
+                "period": self.period_in_minutes,
+                "endpoint": self.endpoint,
+                "username": self.bosch_username,
+                "password": encryption_service.encrypt(self.bosch_password),
+                "sensor_id": self.sensor_id,
+            },
+        }
