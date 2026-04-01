@@ -102,7 +102,7 @@ def main(
                 message["Key"] = f"{bucket}/{fname}"
                 logging.info(f"republishing file: {message['Key']}")
                 result = mqtt.publish(
-                    topic="object_storage_notification",
+                    topic="object_storage_notification_triggered",
                     payload=json.dumps(message),
                     qos=1,
                 )
