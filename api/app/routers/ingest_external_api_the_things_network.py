@@ -11,6 +11,7 @@ from models.ingest_external_api_the_things_network import (
     IngestExternalApiTheThingsNetworkUpdate,
     IngestExternalApiTheThingsNetworkPublic,
 )
+from models.filters import IngestExternalApiTheThingsNetworkFilter
 
 router = APIRouter(
     prefix="/ingest/external-api/the-things-network",
@@ -32,9 +33,12 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_api_the_things_network),
+    filters: IngestExternalApiTheThingsNetworkFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(current_user.permission_group_ids, sort_by, filters)
+    )
 
 
 @router.get(

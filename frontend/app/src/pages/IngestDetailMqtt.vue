@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">TSystems</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/mqtt" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl" />
       </div>
     </div>
 
@@ -175,6 +175,8 @@ const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
 
+const backUrl = '/ingest/mqtt';
+
 onMounted(async () => {
   try {
     isLoading.value = true;
@@ -219,7 +221,7 @@ const deleteItem = async () => {
       type: 'positive',
       message: 'Item deleted successfully',
     });
-    await router.push('/ingest');
+    await router.push(backUrl);
   } catch {
     $q.notify({
       type: 'negative',

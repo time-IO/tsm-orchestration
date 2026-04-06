@@ -12,6 +12,7 @@ from models.ingest_external_sftp import (
     IngestExternalSftpUpdate,
     IngestExternalSftpPublic,
 )
+from models.filters import IngestExternalSftpFilter
 from models import BaseRepository, CsvParser
 from utils import generate_keypair, generate_password
 
@@ -38,9 +39,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_sftp),
+    filters: IngestExternalSftpFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get(

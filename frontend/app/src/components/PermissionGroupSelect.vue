@@ -4,7 +4,7 @@
     v-model="model"
     :options="filteredOptions"
     @filter="filterOptions"
-    label="Permission Group *"
+    :label="label? label: 'Permission Group *'"
     @virtual-scroll="onVirtualScroll"
     option-value="id"
     option-label="name"
@@ -31,6 +31,7 @@ const model = defineModel();
 const { preselectedItem } = defineProps<{
   rules?: Array<(val: unknown) => string | boolean>;
   preselectedItem?: PermissionGroup | null;
+  label?: string;
 }>();
 
 // Pagination state
@@ -138,7 +139,6 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
     });
   }
 }
-
 </script>
 
 <style scoped></style>

@@ -9,7 +9,7 @@
       ref="tableRef"
       :rows="rows"
       :columns="columns"
-      row-key="name"
+      row-key="id"
       flat
       bordered
       v-model:pagination="pagination"

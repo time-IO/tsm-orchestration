@@ -11,6 +11,7 @@ from models.ingest_external_api_bosch import (
     IngestExternalApiBoschUpdate,
     IngestExternalApiBoschPublic,
 )
+from models.filters import IngestExternalApiBoschFilter
 
 router = APIRouter(
     prefix="/ingest/external-api/bosch",
@@ -32,9 +33,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_api_bosch),
+    filters: IngestExternalApiBoschFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get(

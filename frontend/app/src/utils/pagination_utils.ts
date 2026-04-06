@@ -3,11 +3,11 @@ import type { QTableRequestPropPagination } from 'src/services/types';
 import type { QTableColumn } from 'quasar';
 
 export const defaultPagination: QTableRequestPropPagination = {
-  sortBy: 'desc',
+  sortBy: 'name',
   descending: false,
   page: 1,
   rowsPerPage: 25,
-  rowsNumber: 10,
+  rowsNumber: 0,
 };
 
 export function updatePagination(

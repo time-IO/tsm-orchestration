@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch, computed } from 'vue';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
@@ -43,13 +43,14 @@ const { preselectedItem, permission_group_id } = defineProps<{
 
 // Pagination state
 const currentPage = ref(1);
-const pageSize = ref(50); // or your desired page size
-const paginationTotal = ref(0);
 const paginationLoading = ref(false);
 const allPagesFetched = ref(false);
 
+// Use store rows directly, but maintain local filtered options
 const filteredOptions = ref<CsvParserPublic[]>([]);
-const fetchedOptions = ref<CsvParserPublic[]>([]);
+
+// Computed reference to store rows for reactivity
+const storeRows = computed(() => csvParserStore.rows as CsvParserPublic[]);
 
 watch(
   () => preselectedItem,
@@ -77,11 +78,11 @@ watch(
 
 function includeStationOfItemIfMissing() {
   if (preselectedItem) {
-    const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
+    const isItemMissing = !storeRows.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {
-      fetchedOptions.value = [...fetchedOptions.value, preselectedItem];
-
-      filteredOptions.value = [...fetchedOptions.value];
+      // Add to store directly since we're using its rows
+      csvParserStore.rows = [...csvParserStore.rows, preselectedItem];
+      filteredOptions.value = [...csvParserStore.rows];
     }
   }
 }
@@ -93,28 +94,25 @@ async function fetchOptions(page = 1) {
 
   paginationLoading.value = true;
   try {
-    const response = await csvParserStore.dispatchGetListbyPermissionGroup(
-      permission_group_id,
-      page,
-      pageSize.value,
-    );
-    paginationTotal.value = response.total;
-    const newItems = response.items;
+    // Set filter and pagination in store state
+    csvParserStore.filters.permission_group_id = permission_group_id;
+    csvParserStore.pagination.page = page;
+    csvParserStore.pagination.rowsPerPage = 50;
 
-    // Only add new items if not already included (avoid duplicates)
-    const currentIds = new Set(fetchedOptions.value.map((i) => i.id));
-    const uniqueNewItems = newItems.filter((item) => !currentIds.has(item.id));
-    if (page === 1) {
-      fetchedOptions.value = uniqueNewItems;
-    } else {
-      fetchedOptions.value = [...fetchedOptions.value, ...uniqueNewItems];
-    }
-    filteredOptions.value = [...fetchedOptions.value];
+    // Use store's dispatchGetList which reads from this.pagination and this.filters
+    await csvParserStore.dispatchGetList();
 
-    // If loaded items < page size, we've reached the end
-    if (newItems.length < pageSize.value) {
+    const rows = csvParserStore.rows;
+
+    // Check if we've reached the end (fewer rows than requested)
+    if (
+      csvParserStore.pagination.rowsNumber &&
+      rows.length >= csvParserStore.pagination.rowsNumber
+    ) {
       allPagesFetched.value = true;
     }
+
+    filteredOptions.value = [...rows];
     currentPage.value = page + 1;
   } catch {
     $q.notify({
@@ -127,27 +125,22 @@ async function fetchOptions(page = 1) {
   }
 }
 
-// Initial load (page 1)
 function filterOptions(val: string, update: (cb: () => void) => void) {
   if (val === '') {
     update(() => {
-      filteredOptions.value = [...fetchedOptions.value];
+      filteredOptions.value = [...storeRows.value];
     });
     return;
   }
 
-  // For search, fetch fresh from API with search term if backend supports it,
-  // OR do client-side filtering (below), but reset pagination
   update(() => {
     const needle = val.toLowerCase();
-    filteredOptions.value = fetchedOptions.value.filter((v) =>
-      v.name.toLowerCase().includes(needle),
-    );
+    filteredOptions.value = storeRows.value.filter((v) => v.name.toLowerCase().includes(needle));
   });
 }
 
 async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () => void } }) {
-  const lastIndex = fetchedOptions.value.length - 1;
+  const lastIndex = filteredOptions.value.length - 1;
 
   if (
     !paginationLoading.value &&

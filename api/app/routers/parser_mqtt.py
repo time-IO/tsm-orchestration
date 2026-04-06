@@ -3,6 +3,7 @@ from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from dependencies import get_current_user, get_repo_mqtt_parser
 from models.parser_mqtt import MqttParser
+from models.filters import MqttParserFilter
 
 router = APIRouter(
     prefix="/mqtt-parser",
@@ -20,8 +21,9 @@ entity_name = "mqtt-parser"
 def read_list(
     *,
     repo=Depends(get_repo_mqtt_parser),
+    filters: MqttParserFilter = Depends(),
 ):
-    return paginate(repo.find_all())
+    return paginate(repo.find_all(filters=filters))
 
 
 @router.get("/{id}", response_model=MqttParser, summary=f"Get one {entity_name}")

@@ -11,6 +11,7 @@ from models.ingest_external_api_neutron_monitor import (
     IngestExternalApiNeutronMonitorUpdate,
     IngestExternalApiNeutronMonitorPublic,
 )
+from models.filters import IngestExternalApiNeutronMonitorFilter
 
 router = APIRouter(
     prefix="/ingest/external-api/neutron-monitor",
@@ -32,9 +33,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_external_api_neutron_monitor),
+    filters: IngestExternalApiNeutronMonitorFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get(
