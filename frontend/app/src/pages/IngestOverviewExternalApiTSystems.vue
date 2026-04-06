@@ -20,11 +20,19 @@
       </q-btn>
     </q-card-actions>
 
+    <overview-filter
+      class="q-mt-md"
+      v-model:name="store.filters.name"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
     <ingest-overview-table
       class="q-mt-sm"
       ingest-path="/ingest/external-api/tsystems"
       :columns="default_ingest_columns"
-      :rows="store.ingestExternalApiTSystemsList"
+      :rows="store.rows"
       @onRequest="loadIngest"
       selection="multiple"
       v-model:pagination="pagination"
@@ -42,21 +50,24 @@
 <script setup lang="ts">
 import IngestOverviewTable from 'components/IngestOverviewTable.vue';
 import { computed, ref } from 'vue';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
+import type { QTableRequestProp } from 'src/services/types';
 import {
   default_ingest_columns,
-  defaultPagination,
-  updatePagination,
 } from 'src/utils/pagination_utils';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import type { IngestExternalApiTSystemsPublic } from 'src/services/ingest_external_api_tsystems/types';
+import OverviewFilter from 'components/OverviewFilter.vue';
 
 const store = useIngestExternalApiTSystemsStore();
 
-const pagination = ref<QTableRequestPropPagination>(defaultPagination);
 const newIngestRoute = '/ingest/new/external-api/tsystems';
+
+const pagination = computed({
+  get: () => store.pagination,
+  set: (val) => store.setPagination(val),
+});
 
 const selection = ref<IngestExternalApiTSystemsPublic[]>([]);
 const selectedIds = computed(() => {
@@ -66,9 +77,7 @@ const selectedIds = computed(() => {
 const showTriggerDialog = ref(false);
 
 async function loadIngest(requestProp: QTableRequestProp) {
-  const { page, rowsPerPage } = requestProp.pagination;
-  const data = await store.dispatchGetList(page, rowsPerPage);
-  updatePagination(pagination, data);
+  await store.onRequest(requestProp);
 }
 
 const openTriggerDialog = () => {

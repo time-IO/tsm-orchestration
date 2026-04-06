@@ -6,11 +6,19 @@
       <q-space> </q-space>
       <q-btn color="green" label="Add Ingest" :to="newIngestRoute" />
     </q-card-actions>
+    <overview-filter
+      class="q-mt-md"
+      v-model:name="store.filters.name"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
     <ingest-overview-table
       class="q-mt-sm"
       ingest-path="/ingest/external-sftp"
       :columns="default_ingest_columns"
-      :rows="store.ingestExternalSftpList"
+      :rows="store.rows"
       @onRequest="loadIngest"
       v-model:pagination="pagination"
     />
@@ -19,24 +27,23 @@
 
 <script setup lang="ts">
 import IngestOverviewTable from 'components/IngestOverviewTable.vue';
-import { ref } from 'vue';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-import {
-  default_ingest_columns,
-  defaultPagination,
-  updatePagination,
-} from 'src/utils/pagination_utils';
+import { computed } from 'vue';
+import type { QTableRequestProp } from 'src/services/types';
+import { default_ingest_columns } from 'src/utils/pagination_utils';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
+import OverviewFilter from 'components/OverviewFilter.vue';
 
 const store = useIngestExternalSftpStore();
 
-const pagination = ref<QTableRequestPropPagination>(defaultPagination);
 const newIngestRoute = '/ingest/new/external-sftp';
 
+const pagination = computed({
+  get: () => store.pagination,
+  set: (val) => store.setPagination(val),
+});
+
 async function loadIngest(requestProp: QTableRequestProp) {
-  const { page, rowsPerPage } = requestProp.pagination;
-  const data = await store.dispatchGetList(page, rowsPerPage);
-  updatePagination(pagination, data);
+  await store.onRequest(requestProp);
 }
 </script>
 

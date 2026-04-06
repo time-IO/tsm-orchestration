@@ -1,41 +1,16 @@
-import { defineStore, acceptHMRUpdate } from 'pinia';
+import { acceptHMRUpdate } from 'pinia';
 import type {
   IngestSftpCreate,
   IngestSftpPublic,
   IngestSftpUpdate,
 } from 'src/services/ingest_sftp/types';
 import { API } from 'src/services';
+import { createIngestStore } from 'stores/factoryIngestStore';
 
-export const useIngestSftpStore = defineStore('ingestSftpStore', {
-  state: () => ({
-    ingestSftpList: [] as IngestSftpPublic[],
-  }),
-
-  getters: {},
-
-  actions: {
-    async dispatchGetList(page?: number, size?: number) {
-      const response = await API.ingestSftp.getList(page, size);
-      this.ingestSftpList = response.data.items;
-      return response.data;
-    },
-    async dispatchGetOne(id: number): Promise<IngestSftpPublic> {
-      const response = await API.ingestSftp.getOne(id);
-      return response.data;
-    },
-    async dispatchCreate(payload: IngestSftpCreate): Promise<IngestSftpPublic> {
-      const response = await API.ingestSftp.create(payload);
-      return response.data;
-    },
-    async dispatchUpdate(id: number, payload: IngestSftpUpdate): Promise<IngestSftpPublic> {
-      const response = await API.ingestSftp.update(id, payload);
-      return response.data;
-    },
-    async dispatchDelete(id: number): Promise<void> {
-      await API.ingestSftp.deleteOne(id);
-    },
-  },
-});
+export const useIngestSftpStore = createIngestStore<IngestSftpPublic, IngestSftpCreate, IngestSftpUpdate>(
+  'ingestSftpStore',
+  API.ingestSftp,
+);
 
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useIngestSftpStore, import.meta.hot));

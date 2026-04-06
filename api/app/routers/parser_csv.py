@@ -3,6 +3,7 @@ from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from sqlmodel import Session, select, func
 from sqlalchemy.exc import IntegrityError
+from models.filters import CsvParserFilter
 from dependencies import (
     get_session,
     get_current_user,
@@ -34,18 +35,14 @@ def read_list(
     *,
     current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_csv_parser),
-    permission_group_id: int | None = None,
+    filters: CsvParserFilter = Depends(),
     sort_by: str | None = None,
 ):
-    if permission_group_id:
-        if permission_group_id not in current_user.permission_group_ids:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Permission denied: user does not belong to that permission group.",
-            )
-        # only return those parser for that one specific permission group
-        return paginate(repo.find_allowed_all([permission_group_id], sort_by))
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get("/{id}", response_model=CsvParserPublic, summary=f"Get one {entity_name}")

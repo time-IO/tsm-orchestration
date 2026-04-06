@@ -16,6 +16,7 @@ from models.quality_control_setting import (
     QualityControlFunctionArgument,
     QualityControlSettingPublic,
 )
+from models.filters import QualityControlSettingFilter
 
 router = APIRouter(
     prefix="/quality-control-setting",
@@ -36,9 +37,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_quality_control_setting),
+    filters: QualityControlSettingFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        ),
+    )
 
 
 @router.get(

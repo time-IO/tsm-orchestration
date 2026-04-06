@@ -6,10 +6,20 @@
       <q-btn color="green" label="Add Parser" to="/parser/new" />
     </div>
     <div class="text-h5 q-mt-lg q-mb-sm">Parser - CSV</div>
+
+    <overview-filter
+      class="q-mt-md"
+      v-model:name="store.filters.name"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
+
     <q-table
       ref="tableRef"
-      :rows="csvParserStore.csvParserList"
-      :columns="columns"
+      :rows="store.rows"
+      :columns="default_ingest_columns"
       row-key="name"
       v-model:pagination="pagination"
       @request="onRequest"
@@ -43,20 +53,17 @@
 </template>
 
 <script setup lang="ts">
-import type { QTableColumn } from 'quasar';
+import { computed, onMounted, ref } from 'vue';
 import { useCsvParserStore } from 'stores/parserCsvStore';
-import { onMounted, ref } from 'vue';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-import { updatePagination } from 'src/utils/pagination_utils';
+import { default_ingest_columns } from 'src/utils/pagination_utils';
+import type { QTableRequestProp } from 'src/services/types';
+import OverviewFilter from 'components/OverviewFilter.vue';
 
-const csvParserStore = useCsvParserStore();
+const store = useCsvParserStore();
 
-const pagination = ref<QTableRequestPropPagination>({
-  sortBy: 'desc',
-  descending: false,
-  page: 1,
-  rowsPerPage: 25,
-  rowsNumber: 10,
+const pagination = computed({
+  get: () => store.pagination,
+  set: (val) => store.setPagination(val),
 });
 
 const tableRef = ref();
@@ -66,31 +73,8 @@ onMounted(() => {
   tableRef.value.requestServerInteraction();
 });
 
-const columns: QTableColumn[] = [
-  {
-    name: 'id',
-    required: true,
-    label: 'ID',
-    align: 'left',
-    field: (row) => row.id,
-    format: (val) => `${val}`,
-    sortable: true,
-  },
-  {
-    name: 'permission-group',
-    label: 'Permission Group',
-    field: (row) => row.permission_group.name,
-    sortable: true,
-    align: 'center',
-  },
-  { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
-  { name: 'action', label: 'Actions', align: 'center', field: () => '' },
-];
-
 async function onRequest(requestProp: QTableRequestProp) {
-  const { page, rowsPerPage } = requestProp.pagination;
-  const data = await csvParserStore.dispatchGetList(page, rowsPerPage);
-  updatePagination(pagination, data);
+  await store.onRequest(requestProp);
 }
 </script>
 

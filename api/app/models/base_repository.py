@@ -1,4 +1,6 @@
 from typing import Type, TypeVar, Generic, List, Optional
+from fastapi_filters import FilterSet
+from fastapi_filters.ext.sqlalchemy import apply_filters
 from sqlmodel import Session, select, SQLModel, func
 from fastapi import HTTPException
 
@@ -23,8 +25,12 @@ class BaseRepository(Generic[T]):
             raise HTTPException(status_code=404, detail="Not found")
         return entity
 
-    def find_all(self):
+    def find_all(self, filters: FilterSet | None = None):
         statement = select(self.model)
+
+        if filters:
+            statement = apply_filters(statement, filters)
+
         return self.session.exec(statement).all()
 
     def find_allowed_one(self, id: int, permission_group_ids: list[int]) -> T:
@@ -38,11 +44,16 @@ class BaseRepository(Generic[T]):
         return entity
 
     def find_allowed_all(
-        self, permission_group_ids: list[int], sort_by: Optional[str] = None
+        self,
+        permission_group_ids: list[int],
+        sort_by: Optional[str] = None,
+        filters: FilterSet | None = None,
     ) -> List[T]:
         statement = select(self.model).where(
             self.model.permission_group_id.in_(permission_group_ids)
         )
+        if filters:
+            statement = apply_filters(statement, filters)
         items = self.session.exec(statement).all()
         return apply_sort_list(items, sort_by) if sort_by else items
 

@@ -11,6 +11,7 @@ from models.ingest_mqtt import (
     IngestMqttPublic,
     IngestMqttUpdate,
 )
+from models.filters import IngestMqttFilter
 import os
 import hashlib
 import base64
@@ -66,9 +67,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_ingest_mqtt),
+    filters: IngestMqttFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get("/{id}", response_model=IngestMqttPublic, summary=f"Get one {entity_name}")

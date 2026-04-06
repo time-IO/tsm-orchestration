@@ -4,7 +4,7 @@
     <h6 class="q-mt-none">Umweltbundesamt (UBA) Air Data</h6>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" to="/ingest/external-api/uba" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl" />
       </div>
     </div>
 
@@ -158,6 +158,8 @@ const isLoading = ref(false);
 
 const showTriggerDialog = ref(false);
 
+const backUrl = '/ingest/external-api/uba';
+
 onMounted(async () => {
   try {
     isLoading.value = true;
@@ -206,7 +208,7 @@ const deleteItem = async () => {
       type: 'positive',
       message: 'Item deleted successfully',
     });
-    await router.push('/ingest');
+    await router.push(backUrl);
   } catch {
     $q.notify({
       type: 'negative',

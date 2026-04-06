@@ -3,6 +3,7 @@ from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from models.neutron_monitor_station import NeutronMonitorStation
 from dependencies import get_current_user, get_repo_neutron_monitor_station
+from models.filters import NeutronMonitorStationFilter
 
 router = APIRouter(
     prefix="/neutron-monitor-station",
@@ -22,8 +23,9 @@ entity_name = "neutron monitor station"
 def read_list(
     *,
     repo=Depends(get_repo_neutron_monitor_station),
+    filters: NeutronMonitorStationFilter = Depends(),
 ):
-    return paginate(repo.find_all())
+    return paginate(repo.find_all(filters=filters))
 
 
 @router.get(
