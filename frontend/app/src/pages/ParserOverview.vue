@@ -8,7 +8,7 @@
     <div class="text-h5 q-mt-lg q-mb-sm">Parser - CSV</div>
 
     <overview-filter
-      class="q-mt-md"
+      class="q-mt-md q-mb-md"
       v-model:name="store.filters.name"
       v-model:permission_group_id="store.filters.permission_group_id"
       v-model:date_from="store.filters.date_from"
