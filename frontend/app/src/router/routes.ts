@@ -37,7 +37,6 @@ import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
 import IngestEditSftp from 'pages/IngestEditSftp.vue';
 import IngestDetailExternalSftp from 'pages/IngestDetailExternalSftp.vue';
 import IngestEditExternalSftp from 'pages/IngestEditExternalSftp.vue';
-import TriggerExternalApiTypesSelection from 'pages/TriggerExternalApiTypesSelection.vue'
 import IngestOverviewSftp from "pages/IngestOverviewSftp.vue";
 import IngestOverviewMqtt from 'pages/IngestOverviewMqtt.vue';
 import IngestOverviewExternalSftp from 'pages/IngestOverviewExternalSftp.vue';
@@ -288,12 +287,6 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/quality-control/new',
     component: QualityControlNew,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/trigger/external-api-types',
-    name: 'selectTypesTrigger',
-    component: TriggerExternalApiTypesSelection,
     meta: { requiresAuth: true },
   },
 
