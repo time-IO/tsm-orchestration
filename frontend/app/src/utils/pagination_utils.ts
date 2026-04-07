@@ -37,5 +37,20 @@ export const default_ingest_columns: QTableColumn[] = [
     align: 'center',
   },
   { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
+  {
+    name: 'created_at',
+    label: 'Created at',
+    field: 'created_at',
+    sortable: true,
+    align: 'center',
+    format: (val) => {
+      if (!val) return '';
+      const date = new Date(val);
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const year = date.getUTCFullYear();
+      return `${day}.${month}.${year}`;
+    },
+  },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
