@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh lpR fFf">
+  <q-layout view="lHh lpR lff">
     <q-header elevated>
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
@@ -63,6 +63,7 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+    <the-footer />
   </q-layout>
 </template>
 
@@ -72,6 +73,7 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/authStore';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import TheFooter from 'components/TheFooter.vue';
 
 const { t } = useI18n();
 const leftDrawerOpen = ref(false);
