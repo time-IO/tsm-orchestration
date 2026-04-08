@@ -66,6 +66,8 @@ class CsvParserUpdate(SQLModel):
     footlines_to_exclude: int | None = None
     pandas_read_csv: dict | None = None
     timestamp_columns: list[CsvParserTimestampColumnUpdate] | None = None
+    header: int | None = None
+    comment: list[str] | None = None
 
 
 class CsvParserPublic(CsvParserBase):

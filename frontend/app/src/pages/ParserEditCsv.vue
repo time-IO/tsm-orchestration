@@ -52,6 +52,15 @@
             label="Number of footlines to exclude (0-based)"
           />
 
+          <!-- Header Field -->
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.header"
+            label="Header row index"
+            hint="Row index where header is located (0 for first row)"
+          />
+
           <!-- Timestamp Columns -->
           <div class="q-my-md">
             <div class="row q-gutter-sm items-center q-mb-sm">
