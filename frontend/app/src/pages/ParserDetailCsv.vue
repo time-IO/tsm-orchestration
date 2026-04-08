@@ -69,7 +69,11 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>Comment Characters</q-item-label>
-                    <q-item-label caption>{{ item.comment.length > 0 ? item.comment.join(' ') : 'No comment characters specified' }}</q-item-label>
+                    <q-item-label caption>{{
+                      item.comment.length > 0
+                        ? item.comment.join(' ')
+                        : 'No comment characters specified'
+                    }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
@@ -77,7 +81,7 @@
                   <q-item-section>
                     <q-item-label>Header</q-item-label>
                     <q-item-label caption>{{
-                      item.header ? item.header : 'No header specified'
+                      item.header != null ? item.header : 'No header specified'
                     }}</q-item-label>
                   </q-item-section>
                 </q-item>
