@@ -47,6 +47,8 @@ import IngestOverviewExternalApiNm from 'pages/IngestOverviewExternalApiNm.vue';
 import IngestOverviewExternalApiTSystems from 'pages/IngestOverviewExternalApiTSystems.vue';
 import IngestOverviewExternalApiTtn from 'pages/IngestOverviewExternalApiTtn.vue';
 import IngestOverviewExternalApiUba from 'pages/IngestOverviewExternalApiUba.vue';
+import LegalNotice from 'pages/info/LegalNoticeUfz.vue'
+import TermsOfUse from 'pages/info/TermsOfUseUfz.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -287,6 +289,18 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/quality-control/new',
     component: QualityControlNew,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/info/legal_notice',
+    name: 'legal_notice',
+    component: LegalNotice,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/info/terms_of_use',
+    name: 'terms_of_use',
+    component: TermsOfUse,
     meta: { requiresAuth: true },
   },
 
