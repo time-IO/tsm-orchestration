@@ -2,7 +2,7 @@
   "name": "thing-management",
   "version": "0.0.1",
   "description": "FE by me",
-  "productName": "Data Ingest Management",
+  "productName": "Data Source Management",
   "author": "kuhnert",
   "type": "module",
   "private": true,
