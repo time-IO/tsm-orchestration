@@ -1,0 +1,266 @@
+<template>
+  <q-page class="q-pa-lg">
+    <h5 class="q-mb-none">{{ title }}</h5>
+    <div class="row">
+      <div class="col">
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
+      </div>
+    </div>
+
+    <div class="text-caption text-grey">
+      For more information visit the time.IO Wiki
+      <a
+        href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/TimeIO-Frontend#csv-parser"
+        target="_blank"
+        >here</a
+      >.
+    </div>
+
+    <q-card class="q-mb-lg" flat>
+      <q-card-section>
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
+          <!-- Name Field -->
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.name"
+            label="Name *"
+            hint="Enter a descriptive name for this ingest"
+            :rules="[(val) => !!val || 'Name is required']"
+          />
+
+          <permission-group-select
+            v-model="formData.permission_group_id"
+            :rules="[(val) => !!val || 'Permission group is required']"
+          />
+
+          <!-- Description -->
+          <q-input
+            filled
+            v-model="formData.description"
+            label="Description"
+            type="textarea"
+            rows="3"
+            hint="Provide additional details about this ingest configuration"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.delimiter"
+            label="Column delimiter * (e.g. , ; \t)"
+            :rules="[(val) => !!val || 'Column delimiter is required']"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.headlines_to_exclude"
+            label="Number of headlines to exclude"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.footlines_to_exclude"
+            label="Number of footlines to exclude"
+          />
+
+          <!-- Header Field -->
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.header"
+            label="Header row index"
+            hint="Row index where header is located (0 for first row)"
+          />
+
+          <!-- Timestamp Columns -->
+          <div class="q-my-md">
+            <q-list
+              separator
+              v-for="(col, idx) in formData.timestamp_columns"
+              :key="idx"
+              class="q-mb-sm"
+            >
+              <q-item>
+                <q-item-section>
+                  <q-item-label>Timestamp Column {{ idx + 1 }}</q-item-label>
+                  <div class="row q-gutter-sm q-mt-xs">
+                    <q-input
+                      filled
+                      type="number"
+                      class="col"
+                      v-model.number="col.column"
+                      label="Column index (0-based)"
+                      :rules="[
+                        (val) => (val !== null && val !== undefined) || 'Column index is required',
+                      ]"
+                    />
+                    <q-input
+                      filled
+                      class="col"
+                      v-model="col.timestamp_format"
+                      label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
+                      :rules="[(val) => !!val || 'Timestamp format is required']"
+                    >
+                      <template v-slot:append>
+                        <q-btn round flat icon="help_outline" @click="showDocs">
+                          <q-tooltip>
+                            View Pandas Docs for information on available formatting strings
+                          </q-tooltip>
+                        </q-btn>
+                      </template>
+                    </q-input>
+                  </div>
+                </q-item-section>
+                <q-item-section side>
+                  <div class="flex items-center">
+                    <q-btn
+                      dense
+                      flat
+                      icon="remove_circle"
+                      color="red"
+                      @click="removeTimestampColumn(idx)"
+                    />
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <!-- Validation message for timestamp columns -->
+            <div v-if="formData.timestamp_columns.length === 0" class="text-negative q-mt-xs">
+              At least one timestamp column is required
+            </div>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add timestamp column"
+                flat
+                color="primary"
+                @click="addTimestampColumn"
+              />
+            </div>
+          </div>
+
+          <!-- Comment Characters -->
+          <div class="q-my-md">
+            <q-list separator v-for="(char, idx) in formData.comment" :key="idx" class="q-mb-sm">
+              <q-item>
+                <q-item-section>
+                  <q-item-label>Comment Character {{ idx + 1 }}</q-item-label>
+                  <q-input
+                    filled
+                    v-model="formData.comment[idx]"
+                    label="Comment character (e.g. #)"
+                    type="text"
+                    class="col-8"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    dense
+                    flat
+                    icon="remove_circle"
+                    color="red"
+                    @click="removeCommentCharacter(idx)"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add comment character"
+                flat
+                color="primary"
+                @click="addCommentCharacter"
+              />
+            </div>
+          </div>
+
+          <q-input
+            filled
+            v-model="formData.pandas_read_csv"
+            label="Pandas read csv"
+            type="textarea"
+            rows="3"
+            hint="additional JSON to configure pandas"
+          />
+
+          <!-- Action Buttons -->
+          <div class="row q-mt-lg">
+            <q-space />
+            <div class="col-6">
+              <q-btn
+                unelevated
+                color="green"
+                type="submit"
+                :loading="isLoading"
+                label="Save"
+                class="full-width"
+              />
+            </div>
+            <q-space />
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { CsvParserCreate } from 'src/services/parser_csv/types';
+defineProps<{
+  title: string;
+  isLoading: boolean;
+  backRoute: string;
+}>();
+
+defineEmits<{
+  save: [];
+}>();
+
+const formData = defineModel<CsvParserCreate>({
+  default: {
+    permission_group_id: null,
+    name: null,
+    description: null,
+    delimiter: null,
+    headlines_to_exclude: 0,
+    footlines_to_exclude: 0,
+    pandas_read_csv: null,
+    timestamp_columns: [],
+    comment: [],
+    header: null,
+  },
+});
+
+function addTimestampColumn() {
+  formData.value.timestamp_columns.push({
+    column: null,
+    timestamp_format: null,
+  });
+}
+
+function removeTimestampColumn(index: number) {
+  formData.value.timestamp_columns.splice(index, 1);
+}
+
+function addCommentCharacter() {
+  formData.value.comment.push('');
+}
+
+function removeCommentCharacter(index: number) {
+  formData.value.comment.splice(index, 1);
+}
+
+const showDocs = () => {
+  window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
+};
+</script>
+
+<style scoped></style>

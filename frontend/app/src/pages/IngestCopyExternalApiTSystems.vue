@@ -1,6 +1,6 @@
 <template>
-  <ingest-form-mqtt
-    title="Edit MQTT Ingest"
+  <ingest-form-external-api-t-systems
+    title="Copy External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
     v-model="formData"
@@ -12,46 +12,46 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
-import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import type { MqttParser } from 'src/services/mqtt_parser/type';
+import type { IngestExternalApiTSystemsCreate } from 'src/services/ingest_external_api_tsystems/types';
+import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
 
-const mqttStore = useIngestMqttStore();
+const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<IngestMqttUpdate>({
-  name: null,
+const formData = ref<IngestExternalApiTSystemsCreate>({
+  name: '',
   permission_group_id: null,
   description: null,
-  topic: null,
-  uri: null,
-  mqtt_parser_id: null,
+  sync_enabled: false,
+  group: null,
+  station_id: null,
+  tsystems_username: null,
+  tsystems_password: null,
 });
 
 const isLoading = ref(false);
-const itemParser = ref<MqttParser | null>(null);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
-      const data = await mqttStore.dispatchGetOne(id);
-
-      itemParser.value = data.mqtt_parser;
+      const data = await tsystemsStore.dispatchGetOne(id);
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
-        name: data.name || null,
-        permission_group_id: data.permission_group_id || null,
-        description: data.description || null,
-        topic: data.topic || null,
-        uri: data.uri || null,
-        mqtt_parser_id: data.mqtt_parser_id || null,
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        sync_enabled: data.sync_enabled,
+        group: data.group,
+        station_id: data.station_id,
+        tsystems_username: null,
+        tsystems_password: null,
       };
     } catch {
       $q.notify({
@@ -66,38 +66,33 @@ onMounted(async () => {
 const detailRoute = computed(() => {
   if (route.params.id) {
     const id = Number(route.params.id);
-    return `/ingest/mqtt/${id}`;
+    return `/ingest/external-api/tsystems/${id}`;
   }
   return '';
 });
 
 async function save() {
-  if (!route.params.id) return;
-
+  const data: IngestExternalApiTSystemsCreate = {
+    name: formData.value.name,
+    permission_group_id: formData.value.permission_group_id,
+    description: formData.value.description,
+    sync_enabled: formData.value.sync_enabled,
+    group: formData.value.group,
+    station_id: formData.value.station_id,
+    tsystems_username: formData.value.tsystems_username,
+    tsystems_password: formData.value.tsystems_password,
+  };
   try {
-    const id = Number(route.params.id);
-
-    const data: IngestMqttUpdate = {
-      name: formData.value.name || null,
-      permission_group_id: formData.value.permission_group_id || null,
-      description: formData.value.description || null,
-      topic: formData.value.topic || null,
-      uri: formData.value.uri || null,
-      mqtt_parser_id: formData.value.mqtt_parser_id || null,
-    };
-
     isLoading.value = true;
-
-    await mqttStore.dispatchUpdate(id, data);
-
+    const result = await tsystemsStore.dispatchCreate(data);
     $q.notify({
       position: 'top',
       type: 'positive',
       message: 'Saved successfully',
     });
 
-    // Navigate to detail
-    await router.push(detailRoute.value);
+    // Navigate back to list
+    await router.push(`/ingest/external-api/tsystems/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
@@ -111,7 +106,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to update ingest',
+      message: 'Failed to create ingest',
       caption: errorCaption,
     });
   } finally {

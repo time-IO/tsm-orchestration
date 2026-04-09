@@ -1,24 +1,27 @@
 <template>
   <ingest-form-external-sftp
-    title="New External SFTP Ingest"
+    title="Copy External SFTP Ingest"
     :is-loading="isLoading"
-    back-route="/ingest/new"
+    :back-route="detailRoute"
     v-model="formData"
     @save="save"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
 const formData = ref<IngestExternalSftpCreate>({
   permission_group_id: null,
@@ -35,6 +38,51 @@ const formData = ref<IngestExternalSftpCreate>({
 });
 
 const isLoading = ref(false);
+
+const permissionGroupId = ref<number | null>(null);
+const itemParser = ref<CsvParserPublic | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
+
+onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await ingestExternalSftpStore.dispatchGetOne(id);
+
+      itemParser.value = data.csv_parser;
+      permissionGroupId.value = data.permission_group_id || null;
+      itemPermissionGroup.value = data.permission_group;
+
+      formData.value = {
+        permission_group_id: data.permission_group_id,
+        name: `${data.name} - Copy`,
+        description: data.description,
+        parser_csv_id: data.parser_csv_id,
+        filename_pattern: data.filename_pattern,
+        uri: data.uri,
+        path: data.path,
+        password: null,
+        username: null,
+        sync_enabled: data.sync_enabled,
+        sync_interval_in_minutes: data.sync_interval_in_minutes,
+      };
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load ingest data',
+      });
+      await router.push('/ingest');
+    }
+  }
+});
+
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-sftp/${id}`;
+  }
+  return '';
+});
 
 async function save() {
   const data: IngestExternalSftpCreate = {

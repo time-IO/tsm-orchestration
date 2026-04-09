@@ -37,6 +37,15 @@
             >
               <q-tooltip>Edit Ingest</q-tooltip>
             </q-btn>
+            <q-btn
+              :to="`${ingestPath}/${props.row.id}/copy`"
+              flat
+              outline
+              color="black"
+              icon="content_copy"
+            >
+              <q-tooltip>Copy Ingest</q-tooltip>
+            </q-btn>
           </div>
         </q-td>
       </template>

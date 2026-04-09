@@ -1,6 +1,6 @@
 <template>
-  <ingest-form-mqtt
-    title="Edit MQTT Ingest"
+  <ingest-form-external-api-dwd
+    title="Copy External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
     v-model="formData"
@@ -9,49 +9,47 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useQuasar } from 'quasar';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
-import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import type { MqttParser } from 'src/services/mqtt_parser/type';
+import { useQuasar } from 'quasar';
+import type {
+  IngestExternalApiDwdCreate,
+} from 'src/services/ingest_external_api_dwd/types';
+import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
 
-const mqttStore = useIngestMqttStore();
+// Composition API
 const $q = useQuasar();
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
+const dwdStore = useIngestExternalApiDwdStore();
 
-const formData = ref<IngestMqttUpdate>({
-  name: null,
-  permission_group_id: null,
-  description: null,
-  topic: null,
-  uri: null,
-  mqtt_parser_id: null,
-});
-
+// Reactive data
 const isLoading = ref(false);
-const itemParser = ref<MqttParser | null>(null);
+const formData = ref<IngestExternalApiDwdCreate>({
+  name: '',
+  permission_group_id: null,
+  description: '',
+  station_id: null,
+  sync_enabled: false,
+});
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
+// Load existing data when component mounts
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
-      const data = await mqttStore.dispatchGetOne(id);
-
-      itemParser.value = data.mqtt_parser;
+      const data = await dwdStore.dispatchGetOne(id);
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
-        name: data.name || null,
-        permission_group_id: data.permission_group_id || null,
-        description: data.description || null,
-        topic: data.topic || null,
-        uri: data.uri || null,
-        mqtt_parser_id: data.mqtt_parser_id || null,
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        station_id: data.station_id,
+        sync_enabled: data.sync_enabled,
       };
     } catch {
       $q.notify({
@@ -66,38 +64,30 @@ onMounted(async () => {
 const detailRoute = computed(() => {
   if (route.params.id) {
     const id = Number(route.params.id);
-    return `/ingest/mqtt/${id}`;
+    return `/ingest/external-api/dwd/${id}`;
   }
   return '';
 });
 
 async function save() {
-  if (!route.params.id) return;
-
+  const data: IngestExternalApiDwdCreate = {
+    name: formData.value.name,
+    description: formData.value.description,
+    permission_group_id: formData.value.permission_group_id,
+    station_id: formData.value.station_id,
+    sync_enabled: formData.value.sync_enabled,
+  };
   try {
-    const id = Number(route.params.id);
-
-    const data: IngestMqttUpdate = {
-      name: formData.value.name || null,
-      permission_group_id: formData.value.permission_group_id || null,
-      description: formData.value.description || null,
-      topic: formData.value.topic || null,
-      uri: formData.value.uri || null,
-      mqtt_parser_id: formData.value.mqtt_parser_id || null,
-    };
-
     isLoading.value = true;
-
-    await mqttStore.dispatchUpdate(id, data);
-
+    const result = await dwdStore.dispatchCreate(data);
     $q.notify({
       position: 'top',
       type: 'positive',
       message: 'Saved successfully',
     });
 
-    // Navigate to detail
-    await router.push(detailRoute.value);
+    // Navigate back to list
+    await router.push(`/ingest/external-api/dwd/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
@@ -111,7 +101,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to update ingest',
+      message: 'Failed to create ingest',
       caption: errorCaption,
     });
   } finally {

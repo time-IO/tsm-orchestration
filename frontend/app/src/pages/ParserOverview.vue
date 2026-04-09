@@ -45,6 +45,15 @@
             >
               <q-tooltip>Edit parser</q-tooltip>
             </q-btn>
+            <q-btn
+              :to="`parser/csv/${props.row.id}/copy`"
+              flat
+              outline
+              color="black"
+              icon="content_copy"
+            >
+              <q-tooltip>Edit parser</q-tooltip>
+            </q-btn>
           </div>
         </q-td>
       </template>

@@ -1,6 +1,6 @@
 <template>
-  <ingest-form-mqtt
-    title="Edit MQTT Ingest"
+  <ingest-form-sftp
+    title="Copy SFTP Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
     v-model="formData"
@@ -12,46 +12,44 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
-import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import type { MqttParser } from 'src/services/mqtt_parser/type';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
+import { useIngestSftpStore } from 'stores/ingestSftpStore';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import IngestFormSftp from 'components/IngestFormSftp.vue';
 
-const mqttStore = useIngestMqttStore();
+const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<IngestMqttUpdate>({
-  name: null,
+const formData = ref<IngestSftpCreate>({
   permission_group_id: null,
+  name: null,
   description: null,
-  topic: null,
-  uri: null,
-  mqtt_parser_id: null,
+  parser_csv_id: null,
+  filename_pattern: null,
 });
 
 const isLoading = ref(false);
-const itemParser = ref<MqttParser | null>(null);
-const itemPermissionGroup = ref<PermissionGroup | null>(null);
+
+const permissionGroupId = ref<number | null>(null);
+const itemParser = ref<CsvParserPublic | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
     try {
       const id = Number(route.params.id);
-      const data = await mqttStore.dispatchGetOne(id);
+      const data = await sftpStore.dispatchGetOne(id);
 
-      itemParser.value = data.mqtt_parser;
-      itemPermissionGroup.value = data.permission_group;
+      itemParser.value = data.csv_parser;
+      permissionGroupId.value = data.permission_group_id || null;
 
       formData.value = {
-        name: data.name || null,
-        permission_group_id: data.permission_group_id || null,
-        description: data.description || null,
-        topic: data.topic || null,
-        uri: data.uri || null,
-        mqtt_parser_id: data.mqtt_parser_id || null,
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        filename_pattern: data.filename_pattern,
+        parser_csv_id: data.parser_csv_id,
       };
     } catch {
       $q.notify({
@@ -66,30 +64,22 @@ onMounted(async () => {
 const detailRoute = computed(() => {
   if (route.params.id) {
     const id = Number(route.params.id);
-    return `/ingest/mqtt/${id}`;
+    return `/ingest/sftp/${id}`;
   }
   return '';
 });
 
 async function save() {
-  if (!route.params.id) return;
-
+  const data: IngestSftpCreate = {
+    permission_group_id: formData.value.permission_group_id,
+    name: formData.value.name,
+    description: formData.value.description,
+    parser_csv_id: formData.value.parser_csv_id,
+    filename_pattern: formData.value.filename_pattern,
+  };
   try {
-    const id = Number(route.params.id);
-
-    const data: IngestMqttUpdate = {
-      name: formData.value.name || null,
-      permission_group_id: formData.value.permission_group_id || null,
-      description: formData.value.description || null,
-      topic: formData.value.topic || null,
-      uri: formData.value.uri || null,
-      mqtt_parser_id: formData.value.mqtt_parser_id || null,
-    };
-
     isLoading.value = true;
-
-    await mqttStore.dispatchUpdate(id, data);
-
+    const result = await sftpStore.dispatchCreate(data);
     $q.notify({
       position: 'top',
       type: 'positive',
@@ -97,7 +87,7 @@ async function save() {
     });
 
     // Navigate to detail
-    await router.push(detailRoute.value);
+    await router.push(`/ingest/sftp/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
@@ -111,7 +101,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to update ingest',
+      message: 'Failed to create ingest',
       caption: errorCaption,
     });
   } finally {

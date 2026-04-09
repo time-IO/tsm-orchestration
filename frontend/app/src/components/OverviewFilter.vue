@@ -1,5 +1,5 @@
 <template>
-  <q-list bordered>
+  <q-list bordered @keyup.enter="triggerEvent">
     <q-expansion-item label="Filter" default-opened>
       <q-card bordered class="q-pa-md">
         <div class="row">

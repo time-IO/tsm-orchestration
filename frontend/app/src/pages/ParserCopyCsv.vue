@@ -1,6 +1,6 @@
 <template>
   <parser-form-csv
-    title="New CSV Parser"
+    title="Copy CSV Parser"
     :is-loading="isLoading"
     back-route="/parser/new"
     v-model="formData"
@@ -9,9 +9,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import ParserFormCsv from 'components/ParserFormCsv.vue';
@@ -19,6 +19,7 @@ import ParserFormCsv from 'components/ParserFormCsv.vue';
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
 const formData = ref<CsvParserCreate>({
   permission_group_id: null,
@@ -34,6 +35,34 @@ const formData = ref<CsvParserCreate>({
 });
 
 const isLoading = ref(false);
+
+onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await csvParserStore.dispatchGetOne(id);
+
+      formData.value = {
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        delimiter: data.delimiter,
+        headlines_to_exclude: data.headlines_to_exclude,
+        footlines_to_exclude: data.footlines_to_exclude,
+        pandas_read_csv: data.pandas_read_csv,
+        timestamp_columns: data.timestamp_columns,
+        header: data.header,
+        comment: data.comment,
+      };
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load parser data',
+      });
+      await router.push('/parser');
+    }
+  }
+});
 
 async function save() {
   try {

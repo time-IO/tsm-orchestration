@@ -118,6 +118,8 @@
         <q-card-actions>
           <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
           <q-space />
+          <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
+          <q-space />
           <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
         </q-card-actions>
       </q-card>
@@ -187,9 +189,17 @@ onMounted(async () => {
   }
 });
 
+const basePath = '/ingest/external-api/nm/';
+
 const editRoute = computed(() => {
   if (item.value?.id) {
-    return `/ingest/external-api/nm/${item.value.id}/edit`;
+    return `${basePath}${item.value.id}/edit`;
+  }
+  return '';
+});
+const copyRoute = computed(() => {
+  if (item.value?.id) {
+    return `${basePath}${item.value.id}/copy`;
   }
   return '';
 });
