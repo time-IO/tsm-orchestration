@@ -47,7 +47,7 @@
 import DateTimePicker from 'components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerSyncExtApiBase } from 'src/services/trigger_external_api_generic/types';
-import { useTriggerExternalGenericApiStore } from 'stores/triggerExternalApiGenericStore';
+import { useTriggerExternalGenericApiStore } from 'stores/externalApiTriggerStore';
 import { useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });
