@@ -1,7 +1,6 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { API } from 'src/services'; // Axios API Wrapper
+import { API } from 'src/services';
 import type { TriggerSyncExtApiBase, TriggerSyncExtApiResponse } from 'src/services/trigger_external_api_generic/types';
-
 
 
 export const useTriggerExternalGenericApiStore = defineStore('triggerExternalApiStore', {
@@ -11,8 +10,6 @@ export const useTriggerExternalGenericApiStore = defineStore('triggerExternalApi
   getters: {},
 
   actions: {
-    
-    
     async dispatchTriggerApi(
       provider: string,
       input: TriggerSyncExtApiBase,
