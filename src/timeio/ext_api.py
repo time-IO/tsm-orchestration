@@ -485,7 +485,7 @@ class DwdApiSyncer(ExtApiSyncer):
                         "datastream_pos": parameter,
                         RESULT_TYPE_MAPPING[result_type]: value,
                         "parameters": json.dumps(
-                            {"origin": "sensoto_data", "column_header": source}
+                            {"origin": "dwd_data", "column_header": source}
                         ),
                     }
                     bodies.append(body)
