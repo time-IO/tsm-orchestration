@@ -34,7 +34,10 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>UUID</q-item-label>
-                    <q-item-label caption>{{ item.uuid }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.uuid }}</q-item-label>
+                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
@@ -57,14 +60,7 @@
                     <q-item-label>Fileserver URI</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.fileserver_uri }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.fileserver_uri)"
-                        title="Copy fileserver uri"
-                      />
+                      <copy-btn title="Copy fileserver uri" :text-to-copy="item.fileserver_uri" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -81,14 +77,7 @@
                     <q-item-label>Username</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.username }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.username)"
-                        title="Copy username"
-                      />
+                      <copy-btn title="Copy username" :text-to-copy="item.username" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -112,14 +101,7 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.password)"
-                        title="Copy password"
-                      />
+                      <copy-btn title="Copy username" :text-to-copy="item.password" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -184,9 +166,10 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { copyToClipboard, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
+import CopyBtn from 'components/CopyBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -271,24 +254,6 @@ const openParser = () => {
 
     window.open(route.href, '_blank');
   }
-};
-
-const copyClipboard = (text: string) => {
-  copyToClipboard(text)
-    .then(() => {
-      $q.notify({
-        message: 'Copied to clipboard',
-        color: 'positive',
-        icon: 'check',
-      });
-    })
-    .catch(() => {
-      $q.notify({
-        message: 'Failed to copy',
-        color: 'negative',
-        icon: 'error',
-      });
-    });
 };
 </script>
 

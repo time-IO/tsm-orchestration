@@ -35,7 +35,10 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>UUID</q-item-label>
-                    <q-item-label caption>{{ item.uuid }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.uuid }}</q-item-label>
+                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
@@ -51,14 +54,7 @@
                     <q-item-label>Username</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.username }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.username)"
-                        title="Copy username"
-                      />
+                      <copy-btn title="Copy username" :text-to-copy="item.username" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -82,14 +78,7 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.password)"
-                        title="Copy password"
-                      />
+                      <copy-btn title="Copy password" :text-to-copy="item.password" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -163,9 +152,10 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useQuasar, copyToClipboard } from 'quasar';
+import { useQuasar } from 'quasar';
 import type { IngestMqttPublic } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
+import CopyBtn from 'components/CopyBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -240,24 +230,6 @@ const deleteItem = async () => {
   } finally {
     deleteDialog.value = false;
   }
-};
-
-const copyClipboard = (text: string) => {
-  copyToClipboard(text)
-    .then(() => {
-      $q.notify({
-        message: 'Copied to clipboard',
-        color: 'positive',
-        icon: 'check',
-      });
-    })
-    .catch(() => {
-      $q.notify({
-        message: 'Failed to copy',
-        color: 'negative',
-        icon: 'error',
-      });
-    });
 };
 </script>
 

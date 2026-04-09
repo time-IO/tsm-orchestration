@@ -35,7 +35,10 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>UUID</q-item-label>
-                    <q-item-label caption>{{ item.uuid }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.uuid }}</q-item-label>
+                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
@@ -158,6 +161,7 @@ import type { IngestExternalApiNeutronMonitorPublic } from 'src/services/ingest_
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
+import CopyBtn from 'components/CopyBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
