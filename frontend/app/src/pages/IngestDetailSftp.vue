@@ -128,6 +128,15 @@
                     </q-item-label>
                   </q-item-section>
                 </q-item>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Object Storage Link</q-item-label>
+                    <q-item-label caption>
+                      <q-btn class="q-pa-none" flat size="sm" icon-right="launch" @click="openObjectStorage">
+                        Open Object Storage in new Tab</q-btn>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
               </q-list>
             </div>
           </div>
@@ -254,6 +263,10 @@ const openParser = () => {
 
     window.open(route.href, '_blank');
   }
+};
+
+const openObjectStorage = () => {
+  window.open(process.env.OBJECT_STORAGE_URL, '_blank');
 };
 </script>
 

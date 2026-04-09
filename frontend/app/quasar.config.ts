@@ -12,6 +12,7 @@ const ENV_OIDC_REDIRECT_URI = process.env.OIDC_REDIRECT_URI || 'ENV_OIDC_REDIREC
 const ENV_OIDC_SCOPE = process.env.OIDC_SCOPE || 'ENV_OIDC_SCOPE_PLACEHOLDER'
 const ENV_OIDC_POST_LOGOUT_REDIRECT_URI = process.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER'
 const ENV_BASE_URL = process.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER'
+const ENV_OBJECT_STORAGE_URL = process.env.OBJECT_STORAGE_URL || 'ENV_OBJECT_STORAGE_URL_PLACEHOLDER'
 
 export default defineConfig((ctx) => {
   return {
@@ -33,7 +34,7 @@ export default defineConfig((ctx) => {
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
-       'line-awesome',
+      'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
       'roboto-font', // optional, you are not bound to it
@@ -64,11 +65,12 @@ export default defineConfig((ctx) => {
       // analyze: true,
       env: {
         API_BASE_URL: ENV_API_BASE_URL,
-        OIDC_IDP_URL:ENV_OIDC_IDP_URL,
-        OIDC_CLIENT_ID:ENV_OIDC_CLIENT_ID,
+        OIDC_IDP_URL: ENV_OIDC_IDP_URL,
+        OIDC_CLIENT_ID: ENV_OIDC_CLIENT_ID,
         OIDC_REDIRECT_URI: ENV_OIDC_REDIRECT_URI,
         OIDC_SCOPE: ENV_OIDC_SCOPE,
         OIDC_POST_LOGOUT_REDIRECT_URI: ENV_OIDC_POST_LOGOUT_REDIRECT_URI,
+        OBJECT_STORAGE_URL: ENV_OBJECT_STORAGE_URL,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -123,14 +125,13 @@ export default defineConfig((ctx) => {
       hmr: {
         protocol: 'ws',
         host: 'localhost',
-        clientPort: 80
-      }
+        clientPort: 80,
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
-      config: {
-      },
+      config: {},
 
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
@@ -143,9 +144,7 @@ export default defineConfig((ctx) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [
-        'Notify'
-      ],
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations
