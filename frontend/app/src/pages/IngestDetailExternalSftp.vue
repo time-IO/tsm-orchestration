@@ -34,7 +34,10 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>UUID</q-item-label>
-                    <q-item-label caption>{{ item.uuid }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.uuid }}</q-item-label>
+                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
@@ -57,14 +60,7 @@
                     <q-item-label>Fileserver URI</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uri }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.uri)"
-                        title="Copy fileserver uri"
-                      />
+                      <copy-btn title="Copy fileserver uri" :text-to-copy="item.uri" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -74,14 +70,7 @@
                     <q-item-label>Username</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.username }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.username)"
-                        title="Copy username"
-                      />
+                      <copy-btn title="Copy username" :text-to-copy="item.username" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -105,14 +94,7 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.password)"
-                        title="Copy password"
-                      />
+                      <copy-btn title="Copy password" :text-to-copy="item.password" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -122,14 +104,7 @@
                     <q-item-label>Public Key</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ shortenText(item.ssh_public_key) }}</q-item-label>
-                      <q-btn
-                        flat
-                        round
-                        icon="content_copy"
-                        size="sm"
-                        @click="copyClipboard(item.ssh_public_key)"
-                        title="Copy public key"
-                      />
+                      <copy-btn title="Copy public key" :text-to-copy="item.ssh_public_key" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -213,9 +188,10 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { copyToClipboard, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import type { IngestExternalSftpPublic } from 'src/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
+import CopyBtn from 'components/CopyBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -300,28 +276,6 @@ const openParser = () => {
 
     window.open(route.href, '_blank');
   }
-};
-
-const copyClipboard = (text: string | null) => {
-  if (!text) {
-    return;
-  }
-
-  copyToClipboard(text)
-    .then(() => {
-      $q.notify({
-        message: 'Copied to clipboard',
-        color: 'positive',
-        icon: 'check',
-      });
-    })
-    .catch(() => {
-      $q.notify({
-        message: 'Failed to copy',
-        color: 'negative',
-        icon: 'error',
-      });
-    });
 };
 
 const shortenText = (key: string) => {
