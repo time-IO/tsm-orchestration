@@ -1,98 +1,11 @@
 <template>
-  <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">Edit External Api Ingest</h5>
-    <h6 class="q-mt-none">Deutscher Wetterdienst</h6>
-    <div class="row">
-      <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
-      </div>
-    </div>
-
-    <div class="text-caption text-grey">
-      For more information on Deutscher Wetterdienst API properties, visit the API documentation
-      <a href="https://brightsky.dev/docs/#/operations/getWeather" target="_blank">here</a>.
-    </div>
-
-    <q-card class="q-mb-lg" flat>
-      <q-card-section>
-        <q-form @submit.prevent="save" class="q-gutter-md">
-          <!-- Name Field -->
-          <q-input
-            filled
-            class="q-mb-md"
-            v-model="formData.name"
-            label="Name *"
-            hint="Enter a descriptive name for this ingest"
-            :rules="[(val) => !!val || 'Name is required']"
-          />
-
-          <permission-group-select
-            v-model="formData.permission_group_id"
-            :preselectedItem="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission group is required']"
-          />
-
-          <!-- Description -->
-          <q-input
-            filled
-            v-model="formData.description"
-            label="Description"
-            type="textarea"
-            rows="3"
-            hint="Provide additional details about this ingest configuration"
-          />
-
-          <!-- Station ID -->
-          <q-input
-            filled
-            v-model="formData.station_id"
-            label="Station ID *"
-            hint="DWD station ID, typically five alphanumeric characters."
-            :rules="[(val) => !!val || 'Valid station ID is required']"
-          />
-
-          <!-- Sync Settings -->
-          <q-card-section class="q-pa-none">
-            <div class="text-h6 q-mb-md">Synchronization Settings</div>
-
-            <q-toggle
-              v-model="formData.sync_enabled"
-              label="Enable File Server Sync"
-              color="primary"
-              size="md"
-            />
-
-            <div class="q-mt-md">
-              <q-input
-                filled
-                disable
-                v-model.number="syncInterval"
-                label="Sync Interval (minutes)"
-                type="number"
-                hint="Fixed interval for automatic synchronization"
-              />
-            </div>
-          </q-card-section>
-
-          <!-- Action Buttons -->
-          <div class="row q-mt-lg">
-            <q-space />
-            <div class="col-6">
-              <q-btn
-                unelevated
-                color="green"
-                type="submit"
-                :loading="isLoading"
-                label="Save"
-                class="full-width"
-              />
-            </div>
-            <q-space />
-          </div>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </q-page>
+  <ingest-form-external-api-dwd
+    title="Edit External Api Ingest"
+    :is-loading="isLoading"
+    :back-route="detailRoute"
+    v-model="formData"
+    @save="save"
+  />
 </template>
 
 <script setup lang="ts">
@@ -101,8 +14,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiDwdUpdate } from 'src/services/ingest_external_api_dwd/types';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
 
 // Composition API
 const $q = useQuasar();
@@ -119,7 +32,6 @@ const formData = ref<Partial<IngestExternalApiDwdUpdate>>({
   station_id: null,
   sync_enabled: false,
 });
-const syncInterval = ref(1440);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 // Load existing data when component mounts

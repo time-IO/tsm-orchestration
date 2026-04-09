@@ -1,18 +1,18 @@
 <template>
-    <ingest-form-external-api-uba
-      title="Edit External Api Ingest"
-      :is-loading="isLoading"
-      :backRoute="detailRoute"
-      v-model="formData"
-      @save="save"
-    />
+  <ingest-form-external-api-uba
+    title="Copy External Api Ingest"
+    :is-loading="isLoading"
+    :backRoute="detailRoute"
+    v-model="formData"
+    @save="save"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalApiUbaUpdate } from 'src/services/ingest_external_api_uba/types';
+import type { IngestExternalApiUbaCreate } from 'src/services/ingest_external_api_uba/types';
 import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiUba from 'components/IngestFormExternalApiUba.vue';
@@ -25,7 +25,7 @@ const ubaStore = useIngestExternalApiUbaStore();
 
 // Reactive data
 const isLoading = ref(false);
-const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
+const formData = ref<IngestExternalApiUbaCreate>({
   name: '',
   permission_group_id: null,
   description: '',
@@ -43,11 +43,11 @@ onMounted(async () => {
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
-        name: data.name || '',
-        permission_group_id: data.permission_group_id || null,
-        description: data.description || '',
-        station_id: data.station_id || null,
-        sync_enabled: data.sync_enabled || false,
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        station_id: data.station_id,
+        sync_enabled: data.sync_enabled,
       };
     } catch {
       $q.notify({
@@ -72,27 +72,26 @@ async function save() {
   if (!route.params.id) return;
 
   try {
-    const id = Number(route.params.id);
-    const data: IngestExternalApiUbaUpdate = {
-      name: formData.value.name || '',
-      permission_group_id: formData.value.permission_group_id || null,
-      description: formData.value.description || '',
-      station_id: formData.value.station_id || null,
-      sync_enabled: formData.value.sync_enabled || false,
+    const data: IngestExternalApiUbaCreate = {
+      name: formData.value.name,
+      description: formData.value.description,
+      permission_group_id: formData.value.permission_group_id,
+      station_id: formData.value.station_id,
+      sync_enabled: formData.value.sync_enabled,
     };
 
     isLoading.value = true;
 
-    await ubaStore.dispatchUpdate(id, data);
+    const result = await ubaStore.dispatchCreate(data);
 
     $q.notify({
       position: 'top',
       type: 'positive',
-      message: 'Updated successfully',
+      message: 'Saved successfully',
     });
 
     // Navigate back to detail
-    await router.push(detailRoute.value);
+    await router.push(`/ingest/external-api/uba/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     const errorCaption = error?.response?.data?.detail || '';
@@ -100,7 +99,7 @@ async function save() {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to update ingest',
+      message: 'Failed to create ingest',
       progress: true,
       caption: errorCaption,
     });

@@ -1,24 +1,28 @@
 <template>
   <ingest-form-external-api-bosch
-    title="New External Api Ingest"
+    title="Copy External Api Ingest"
     :is-loading="isLoading"
-    back-route="/ingest/new"
+    :back-route="detailRoute"
     v-model="formData"
     @save="save"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
-import type { IngestExternalApiBoschCreate } from 'src/services/ingest_external_api_bosch/types';
+import type {
+  IngestExternalApiBoschCreate,
+} from 'src/services/ingest_external_api_bosch/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiBosch from 'components/IngestFormExternalApiBosch.vue';
 
 const boschStore = useIngestExternalApiBoschStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
 const formData = ref<IngestExternalApiBoschCreate>({
   name: '',
@@ -34,6 +38,44 @@ const formData = ref<IngestExternalApiBoschCreate>({
 });
 
 const isLoading = ref(false);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
+
+onMounted(async () => {
+  if (route.params.id) {
+    try {
+      const id = Number(route.params.id);
+      const data = await boschStore.dispatchGetOne(id);
+      itemPermissionGroup.value = data.permission_group;
+
+      formData.value = {
+        name: `${data.name} - Copy`,
+        permission_group_id: data.permission_group_id,
+        description: data.description,
+        sync_enabled: data.sync_enabled,
+        sync_interval_in_minutes: data.sync_interval_in_minutes,
+        endpoint: data.endpoint,
+        sensor_id: data.sensor_id,
+        bosch_username: null,
+        bosch_password: null,
+        period_in_minutes: data.period_in_minutes,
+      };
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to load ingest data',
+      });
+      await router.push('/ingest');
+    }
+  }
+});
+
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/ingest/external-api/bosch/${id}`;
+  }
+  return '';
+});
 
 async function save() {
   const data: IngestExternalApiBoschCreate = {

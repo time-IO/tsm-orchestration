@@ -47,8 +47,18 @@ import IngestOverviewExternalApiNm from 'pages/IngestOverviewExternalApiNm.vue';
 import IngestOverviewExternalApiTSystems from 'pages/IngestOverviewExternalApiTSystems.vue';
 import IngestOverviewExternalApiTtn from 'pages/IngestOverviewExternalApiTtn.vue';
 import IngestOverviewExternalApiUba from 'pages/IngestOverviewExternalApiUba.vue';
+import IngestCopyExternalApiUba from 'pages/IngestCopyExternalApiUba.vue';
+import IngestCopyExternalApiBosch from 'pages/IngestCopyExternalApiBosch.vue';
+import IngestCopyExternalApiDwd from 'pages/IngestCopyExternalApiDwd.vue';
+import IngestCopyExternalApiNm from 'pages/IngestCopyExternalApiNm.vue';
+import IngestCopyExternalApiTtn from 'pages/IngestCopyExternalApiTtn.vue';
+import IngestCopyExternalApiTSystems from 'pages/IngestCopyExternalApiTSystems.vue';
+import IngestCopyMqtt from 'pages/IngestCopyMqtt.vue';
+import IngestCopySftp from 'pages/IngestCopySftp.vue';
+import IngestCopyExternalSftp from 'pages/IngestCopyExternalSftp.vue';
 import LegalNotice from 'pages/info/LegalNoticeUfz.vue'
 import TermsOfUse from 'pages/info/TermsOfUseUfz.vue'
+import ParserCopyCsv from 'pages/ParserCopyCsv.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -257,6 +267,51 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/ingest/external-api/bosch/:id/copy',
+    component: IngestCopyExternalApiBosch,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/dwd/:id/copy',
+    component: IngestCopyExternalApiDwd,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/nm/:id/copy',
+    component: IngestCopyExternalApiNm,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/ttn/:id/copy',
+    component: IngestCopyExternalApiTtn,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/tsystems/:id/copy',
+    component: IngestCopyExternalApiTSystems,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-api/uba/:id/copy',
+    component: IngestCopyExternalApiUba,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/mqtt/:id/copy',
+    component: IngestCopyMqtt,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/sftp/:id/copy',
+    component: IngestCopySftp,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/ingest/external-sftp/:id/copy',
+    component: IngestCopyExternalSftp,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/parser',
     component: ParserOverview,
     meta: { requiresAuth: true },
@@ -272,13 +327,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/parser/csv/:id',
+    component: ParserDetailCsv,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/parser/csv/:id/edit',
     component: ParserEditCsv,
     meta: { requiresAuth: true },
   },
   {
-    path: '/parser/csv/:id',
-    component: ParserDetailCsv,
+    path: '/parser/csv/:id/copy',
+    component: ParserCopyCsv,
     meta: { requiresAuth: true },
   },
   {

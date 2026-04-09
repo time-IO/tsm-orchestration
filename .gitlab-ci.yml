@@ -39,7 +39,7 @@ npm-lint:
     - cd frontend/app
     - npm ci
   script:
-    - npm run lint
+    - npm run lint:all
 
 
 npm-test:

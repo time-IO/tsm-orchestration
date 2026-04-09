@@ -17,7 +17,7 @@ export type IngestExternalApiDwdPublic = {
 export type IngestExternalApiDwdCreate = {
   permission_group_id: number | null;
   name: string;
-  station_id: number | null;
+  station_id: string | null;
   description: string | null;
   sync_enabled: boolean;
 };
