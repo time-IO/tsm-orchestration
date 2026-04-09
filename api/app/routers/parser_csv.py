@@ -169,9 +169,9 @@ def delete(
     repo: BaseRepository[CsvParser] = Depends(get_repo_csv_parser),
 ):
     parser = repo.find_allowed_one(id, current_user.permission_group_ids)
-    if parser and parser.ingest_s3store:
+    if parser and (parser.ingest_s3store or parser.ingest_external_sftp):
         raise HTTPException(
             status_code=400,
-            detail="Cannot delete parser that is connected to an sftp ingest",
+            detail="Cannot delete parser that is connected to an ingest",
         )
     return repo.delete_allowed(id, current_user.permission_group_ids)

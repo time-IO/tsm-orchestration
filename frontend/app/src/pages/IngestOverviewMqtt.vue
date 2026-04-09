@@ -20,6 +20,7 @@
       :columns="default_ingest_columns"
       :rows="store.rows"
       @onRequest="loadIngest"
+      @delete="deleteItem"
       v-model:pagination="pagination"
     />
   </q-page>
@@ -32,6 +33,9 @@ import type { QTableRequestProp } from 'src/services/types';
 import { default_ingest_columns } from 'src/utils/pagination_utils';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import OverviewFilter from 'components/OverviewFilter.vue';
+import { useQuasar } from 'quasar';
+
+const $q = useQuasar();
 
 const store = useIngestMqttStore();
 
@@ -45,6 +49,27 @@ const pagination = computed({
 async function loadIngest(requestProp: QTableRequestProp) {
   await store.onRequest(requestProp);
 }
+
+const deleteItem = async (itemId: number | null) => {
+  if (!itemId) {
+    return;
+  }
+
+  try {
+    await store.dispatchDelete(itemId);
+    $q.notify({
+      type: 'positive',
+      message: 'Item deleted successfully',
+    });
+
+    await store.dispatchGetList();
+  } catch {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to delete item',
+    });
+  }
+};
 </script>
 
 <style scoped></style>

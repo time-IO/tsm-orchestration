@@ -34,6 +34,7 @@
       :columns="default_ingest_columns"
       :rows="store.rows"
       @onRequest="loadIngest"
+      @delete="deleteItem"
       selection="multiple"
       v-model:pagination="pagination"
       v-model:selected="selection"
@@ -57,6 +58,9 @@ import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import type { IngestExternalApiBoschPublic } from 'src/services/ingest_external_api_bosch/types';
 import OverviewFilter from 'components/OverviewFilter.vue';
+import { useQuasar } from 'quasar';
+
+const $q = useQuasar();
 
 const store = useIngestExternalApiBoschStore();
 
@@ -80,6 +84,27 @@ async function loadIngest(requestProp: QTableRequestProp) {
 
 const openTriggerDialog = () => {
   showTriggerDialog.value = true;
+};
+
+const deleteItem = async (itemId: number | null) => {
+  if (!itemId) {
+    return;
+  }
+
+  try {
+    await store.dispatchDelete(itemId);
+    $q.notify({
+      type: 'positive',
+      message: 'Item deleted successfully',
+    });
+
+    await store.dispatchGetList();
+  } catch {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to delete item',
+    });
+  }
 };
 </script>
 
