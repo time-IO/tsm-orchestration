@@ -485,7 +485,7 @@ class DwdApiSyncer(ExtApiSyncer):
                         "datastream_pos": parameter,
                         RESULT_TYPE_MAPPING[result_type]: value,
                         "parameters": json.dumps(
-                            {"origin": "dwd_data", "column_header": source}
+                            {"origin": "sensoto_data", "column_header": source}
                         ),
                     }
                     bodies.append(body)
@@ -614,3 +614,68 @@ class NmApiSyncer(ExtApiSyncer):
                     }
                 )
         return bodies
+
+
+class SensotoApiSyncer(ExtApiSyncer):
+    base_url = "https://api.sensoto.io/v1/organizations/open/networks"
+
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+        settings = thing.ext_api.settings
+        network, device = (
+            settings["network"],
+            settings["device"],
+        )
+        sensor_data = self.get_sensor_data(network, device)
+        api_response = list()
+        params = {
+            "start": content["datetime_from"],
+            "end": content["datetime_to"],
+            "timeFormat": "interval",
+        }
+        for s in sensor_data:
+            res = request_with_handling(
+                "GET",
+                f"{self.base_url}/{network}/devices/{device}/sensors/{s["sensor"]}/measurements/raw",
+                params=params,
+            )
+            api_data = res.json()
+            for i in api_data:
+                i["sensor"] = s["sensor"]
+                i["network"] = network
+                i["device"] = device
+            api_response.extend(api_data)
+        return api_response
+
+    def do_parse(self, api_response):
+        bodies = []
+        for entry in api_response:
+            source = {
+                "sensoto_network": entry.pop("network"),
+                "sensoto_device": entry.pop("device"),
+            }
+            body = {
+                "result_time": entry["end"],
+                "result_type": 0,
+                "datastream_pos": entry["sensor"],
+                "result_number": entry["v"],
+                "parameters": json.dumps(
+                    {"origin": "sensoto_data", "column_header": source}
+                ),
+            }
+            bodies.append(body)
+
+        return bodies
+
+    def get_sensor_data(self, network, device):
+        sensor_data = list()
+        sensors_resp = request_with_handling(
+            "GET", f"{self.base_url}/{network}/devices/{device}/sensors"
+        )
+        sensors = [i["name"] for i in sensors_resp.json()["items"]]
+        for s in sensors:
+            agg_resp = request_with_handling(
+                "GET", f"{self.base_url}/{network}/devices/{device}/sensors/{s}"
+            )
+            agg = agg_resp.json()["phenomenon"]["aggregation"]
+            sensor_data.append({"sensor": s, "aggregation": agg})
+        return sensor_data
