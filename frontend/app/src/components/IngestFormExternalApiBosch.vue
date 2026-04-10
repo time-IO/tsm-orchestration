@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -149,11 +150,13 @@ import type {
   IngestExternalApiBoschUpdate,
 } from 'src/services/ingest_external_api_bosch/types';
 import { ref } from 'vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
 }>();
 
 defineEmits<{
@@ -175,7 +178,6 @@ const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBos
 });
 
 const isPwd = ref(true);
-
 </script>
 
 <style scoped></style>

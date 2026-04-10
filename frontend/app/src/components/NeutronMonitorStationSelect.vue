@@ -41,7 +41,7 @@ import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore
 const neutronMonitorStationStore = useNeutronMonitorStationStore();
 
 const { preselectedItem } = defineProps<{
-  preselectedItem?: NeutronMonitorStation | null;
+  preselectedItem?: NeutronMonitorStation | null | undefined;
 }>();
 
 const model = defineModel();
@@ -64,12 +64,12 @@ watch(
   () => preselectedItem,
   (newValue) => {
     if (newValue != null) {
-      includeStationOfItemIfMissing();
+      includeItemIfMissing();
     }
   },
 );
 
-function includeStationOfItemIfMissing() {
+function includeItemIfMissing() {
   if (preselectedItem) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {

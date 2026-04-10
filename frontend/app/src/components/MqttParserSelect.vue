@@ -35,7 +35,7 @@ const $q = useQuasar();
 
 const model = defineModel();
 const { preselectedItem } = defineProps<{
-  preselectedItem?: MqttParser | null;
+  preselectedItem?: MqttParser | null | undefined;
 }>();
 
 // Pagination state
@@ -56,12 +56,12 @@ watch(
   () => preselectedItem,
   (newValue) => {
     if (newValue != null) {
-      includeStationOfItemIfMissing();
+      includeItemIfMissing();
     }
   },
 );
 
-function includeStationOfItemIfMissing() {
+function includeItemIfMissing() {
   if (preselectedItem) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {

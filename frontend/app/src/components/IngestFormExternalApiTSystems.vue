@@ -32,6 +32,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -137,11 +138,13 @@ import type {
   IngestExternalApiTSystemsCreate,
   IngestExternalApiTSystemsUpdate,
 } from 'src/services/ingest_external_api_tsystems/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
 }>();
 
 defineEmits<{

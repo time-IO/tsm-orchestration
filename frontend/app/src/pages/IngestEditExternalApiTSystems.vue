@@ -3,6 +3,7 @@
     title="Edit External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
+    :item-permission-group="itemPermissionGroup"
     v-model="formData"
     @save="save"
   />
@@ -21,7 +22,6 @@ const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
-
 
 const formData = ref<Partial<IngestExternalApiTSystemsUpdate>>({
   name: '',

@@ -25,6 +25,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -39,7 +40,9 @@
           />
 
           <q-separator class="q-my-lg" />
-          <neutron-monitor-station-select v-model="formData.station_id" />
+          <neutron-monitor-station-select v-model="formData.station_id" 
+          :preselected-item="itemStation"
+          />
           <q-select
             outlined
             class="q-mb-md"
@@ -112,11 +115,15 @@ import type {
   IngestExternalApiNeutronMonitorCreate,
   IngestExternalApiNeutronMonitorUpdate,
 } from 'src/services/ingest_external_api_neutron_monitor/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/type';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
+  itemStation?: NeutronMonitorStation | null;
 }>();
 
 defineEmits<{

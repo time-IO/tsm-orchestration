@@ -1,11 +1,12 @@
 <template>
-    <ingest-form-external-api-uba
-      title="Edit External Api Ingest"
-      :is-loading="isLoading"
-      :backRoute="detailRoute"
-      v-model="formData"
-      @save="save"
-    />
+  <ingest-form-external-api-uba
+    title="Edit External Api Ingest"
+    :is-loading="isLoading"
+    :backRoute="detailRoute"
+    :item-permission-group="itemPermissionGroup"
+    v-model="formData"
+    @save="save"
+  />
 </template>
 
 <script setup lang="ts">

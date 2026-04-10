@@ -3,6 +3,7 @@
     title="Copy External Api Ingest"
     :is-loading="isLoading"
     :backRoute="detailRoute"
+    :item-permission-group="itemPermissionGroup"
     v-model="formData"
     @save="save"
   />

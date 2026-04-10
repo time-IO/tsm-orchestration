@@ -3,6 +3,8 @@
     title="Edit External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
+    :item-permission-group="itemPermissionGroup"
+    :item-station="itemStation"
     v-model="formData"
     @save="save"
   />

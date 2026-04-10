@@ -3,6 +3,7 @@
     title="Copy External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
+    :item-permission-group="itemPermissionGroup"
     v-model="formData"
     @save="save"
   />
@@ -13,9 +14,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
-import type {
-  IngestExternalApiBoschCreate,
-} from 'src/services/ingest_external_api_bosch/types';
+import type { IngestExternalApiBoschCreate } from 'src/services/ingest_external_api_bosch/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiBosch from 'components/IngestFormExternalApiBosch.vue';
 

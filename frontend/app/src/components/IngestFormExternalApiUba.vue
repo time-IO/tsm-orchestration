@@ -29,6 +29,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -102,11 +103,13 @@ import type {
   IngestExternalApiUbaUpdate,
 } from 'src/services/ingest_external_api_uba/types';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
 }>();
 
 defineEmits<{

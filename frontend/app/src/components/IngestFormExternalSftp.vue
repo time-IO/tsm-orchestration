@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -52,6 +53,7 @@
                 :disable="!formData.permission_group_id"
                 v-model="formData.parser_csv_id"
                 :permission_group_id="formData.permission_group_id!"
+                :preselected-item="itemParser"
               />
             </div>
           </q-card-section>
@@ -164,11 +166,15 @@ import type {
   IngestExternalSftpCreate,
   IngestExternalSftpUpdate,
 } from 'src/services/ingest_external_sftp/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
+  itemParser?: CsvParserPublic | null;
 }>();
 
 defineEmits<{
