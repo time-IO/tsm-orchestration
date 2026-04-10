@@ -45,6 +45,7 @@ const { preselectedItem, permission_group_id } = defineProps<{
 const currentPage = ref(1);
 const paginationLoading = ref(false);
 const allPagesFetched = ref(false);
+const accumulatedRows = ref<CsvParserPublic[]>([]);
 
 // Use store rows directly, but maintain local filtered options
 const filteredOptions = ref<CsvParserPublic[]>([]);
@@ -56,7 +57,7 @@ watch(
   () => preselectedItem,
   (newValue) => {
     if (newValue != null) {
-      includeStationOfItemIfMissing();
+      includeItemIfMissing();
     }
   },
 );
@@ -71,12 +72,14 @@ watch(
 
     if (newValue != null) {
       allPagesFetched.value = false;
+      currentPage.value = 1;
+      accumulatedRows.value = [];
       await fetchOptions();
     }
   },
 );
 
-function includeStationOfItemIfMissing() {
+function includeItemIfMissing() {
   if (preselectedItem) {
     const isItemMissing = !storeRows.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {
@@ -102,17 +105,25 @@ async function fetchOptions(page = 1) {
     // Use store's dispatchGetList which reads from this.pagination and this.filters
     await csvParserStore.dispatchGetList();
 
-    const rows = csvParserStore.rows;
+    const newRows = csvParserStore.rows;
+    const totalRows = csvParserStore.pagination.rowsNumber || 0;
 
-    // Check if we've reached the end (fewer rows than requested)
-    if (
-      csvParserStore.pagination.rowsNumber &&
-      rows.length >= csvParserStore.pagination.rowsNumber
-    ) {
+    // Append new rows to accumulated rows
+    if (page === 1) {
+      accumulatedRows.value = [...newRows];
+    } else {
+      // Filter out duplicates by id before appending
+      const existingIds = new Set(accumulatedRows.value.map((r) => r.id));
+      const uniqueNewRows = newRows.filter((r) => !existingIds.has(r.id));
+      accumulatedRows.value = [...accumulatedRows.value, ...uniqueNewRows];
+    }
+
+    // Check if we've reached the end by comparing accumulated count to total
+    if (accumulatedRows.value.length >= totalRows) {
       allPagesFetched.value = true;
     }
 
-    filteredOptions.value = [...rows];
+    filteredOptions.value = [...accumulatedRows.value];
     currentPage.value = page + 1;
   } catch {
     $q.notify({

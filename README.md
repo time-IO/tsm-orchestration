@@ -300,7 +300,7 @@ BEGIN
         INSERT INTO permission_group (id, name, uuid, entitlement)
         VALUES (
             NEXTVAL('permission_group_id_seq'),
-            'group_name_' || i,
+            'VO:group_name_' || i,
             group_uuid,
             'a:a:a:group:VO:group_name_' || i ||'#'
         );

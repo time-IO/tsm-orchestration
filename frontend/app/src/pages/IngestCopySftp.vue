@@ -5,6 +5,7 @@
     :back-route="detailRoute"
     v-model="formData"
     :item-parser="itemParser"
+    :item-permission-group="itemPermissionGroup"
     @save="save"
   />
 </template>
@@ -34,7 +35,7 @@ const formData = ref<IngestSftpCreate>({
 
 const isLoading = ref(false);
 
-const permissionGroup = ref<PermissionGroup | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
 const itemParser = ref<CsvParserPublic | null>(null);
 
 onMounted(async () => {
@@ -44,7 +45,7 @@ onMounted(async () => {
       const data = await sftpStore.dispatchGetOne(id);
 
       itemParser.value = data.csv_parser;
-      permissionGroup.value = data.permission_group;
+      itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: `${data.name} - Copy`,

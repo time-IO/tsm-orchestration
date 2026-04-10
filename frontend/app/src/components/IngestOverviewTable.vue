@@ -18,6 +18,9 @@
     >
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
+          <q-td v-if="showSelection" auto-width>
+            <q-checkbox v-model="props.selected" />
+          </q-td>
           <q-td v-for="col in props.cols" :key="col.name" :props="props">
             <template v-if="col.name === 'action'">
               <q-btn
@@ -83,9 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, useAttrs, computed } from 'vue';
 import type { QTableColumn } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
+
+const attrs = useAttrs();
+
+const showSelection = computed(() => attrs.selection === 'multiple');
 
 defineProps({
   title: {
@@ -130,7 +137,7 @@ const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
 
 const emitDelete = () => {
   emit('delete', idToDelete.value);
-  closeDeleteDialog()
+  closeDeleteDialog();
 };
 
 const closeDeleteDialog = () => {

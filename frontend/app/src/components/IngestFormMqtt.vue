@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselected-item="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -50,7 +51,7 @@
             label="Topic *"
             :rules="[(val) => !!val || 'Topic is required']"
           />
-          <mqtt-parser-select v-model="formData.mqtt_parser_id" />
+          <mqtt-parser-select v-model="formData.mqtt_parser_id" :preselected-item="itemParser" />
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space />
@@ -76,11 +77,15 @@
 import MqttParserSelect from 'components/MqttParserSelect.vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { IngestMqttCreate, IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { MqttParser } from 'src/services/mqtt_parser/type';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
+  itemPermissionGroup?: PermissionGroup | null;
+  itemParser?: MqttParser | null;
 }>();
 
 defineEmits<{

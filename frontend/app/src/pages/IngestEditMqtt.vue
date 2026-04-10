@@ -3,6 +3,8 @@
     title="Edit MQTT Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
+    :item-permission-group="itemPermissionGroup"
+    :item-parser="itemParser"
     v-model="formData"
     @save="save"
   />

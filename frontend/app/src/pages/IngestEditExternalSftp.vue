@@ -3,6 +3,8 @@
     title="Edit External SFTP Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
+    :item-permission-group="itemPermissionGroup"
+    :item-parser="itemParser"
     v-model="formData"
     @save="save"
   />
@@ -39,7 +41,6 @@ const formData = ref<IngestExternalSftpUpdate>({
 
 const isLoading = ref(false);
 
-const permissionGroupId = ref<number | null>(null);
 const itemParser = ref<CsvParserPublic | null>(null);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
@@ -50,7 +51,6 @@ onMounted(async () => {
       const data = await ingestExternalSftpStore.dispatchGetOne(id);
 
       itemParser.value = data.csv_parser;
-      permissionGroupId.value = data.permission_group_id || null;
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
