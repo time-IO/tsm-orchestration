@@ -16,6 +16,7 @@ from .ingest_mqtt import IngestMqttFilter
 from .parser_csv import CsvParserFilter
 from .parser_mqtt import MqttParserFilter
 from .quality_control_setting import QualityControlSettingFilter
+from .permission_group import PermissionGroupFilter
 
 __all__ = [
     "BaseFilter",
@@ -33,4 +34,5 @@ __all__ = [
     "CsvParserFilter",
     "MqttParserFilter",
     "QualityControlSettingFilter",
+    "PermissionGroupFilter",
 ]

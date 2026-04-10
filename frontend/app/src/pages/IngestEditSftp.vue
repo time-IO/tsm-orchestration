@@ -1,69 +1,11 @@
 <template>
-  <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">Edit SFTP Ingest</h5>
-    <div class="row">
-      <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
-      </div>
-    </div>
-
-    <q-card class="q-mb-lg" flat>
-      <q-card-section>
-        <q-form @submit.prevent="save" class="q-gutter-md">
-          <!-- Name Field -->
-          <q-input
-            filled
-            class="q-mb-md"
-            v-model="formData.name"
-            label="Name *"
-            hint="Enter a descriptive name for this ingest"
-            :rules="[(val) => !!val || 'Name is required']"
-          />
-
-          <!-- Description -->
-          <q-input
-            filled
-            v-model="formData.description"
-            label="Description"
-            type="textarea"
-            rows="3"
-            hint="Provide additional details about this ingest configuration"
-          />
-
-          <q-input
-            filled
-            class="q-mb-md"
-            v-model="formData.filename_pattern"
-            label="Filename pattern *"
-            :rules="[(val) => !!val || 'Filename pattern is required']"
-          />
-          <csv-parser-select
-            class="q-mb-md"
-            :disable="!permissionGroupId"
-            v-model="formData.parser_csv_id"
-            :permission_group_id="permissionGroupId"
-            :preselectedItem="itemParser"
-          />
-
-          <!-- Action Buttons -->
-          <div class="row q-mt-lg">
-            <q-space />
-            <div class="col-6">
-              <q-btn
-                unelevated
-                color="green"
-                type="submit"
-                :loading="isLoading"
-                label="Save"
-                class="full-width"
-              />
-            </div>
-            <q-space />
-          </div>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </q-page>
+  <ingest-form-sftp
+    title="Edit SFTP Ingest"
+    :is-loading="isLoading"
+    :back-route="detailRoute"
+    v-model="formData"
+    @save="save"
+  />
 </template>
 
 <script setup lang="ts">
@@ -72,8 +14,8 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import CsvParserSelect from 'components/CsvParserSelect.vue';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import IngestFormSftp from 'components/IngestFormSftp.vue';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
@@ -82,6 +24,7 @@ const route = useRoute();
 
 const formData = ref<IngestSftpUpdate>({
   name: null,
+  permission_group_id: null,
   description: null,
   parser_csv_id: null,
   filename_pattern: null,
@@ -103,6 +46,7 @@ onMounted(async () => {
 
       formData.value = {
         name: data.name || null,
+        permission_group_id: data.permission_group_id || null,
         description: data.description || null,
         filename_pattern: data.filename_pattern || null,
         parser_csv_id: data.parser_csv_id || null,
@@ -132,6 +76,7 @@ async function save() {
     const id = Number(route.params.id);
 
     const data: IngestSftpUpdate = {
+      permission_group_id: formData.value.permission_group_id || null,
       name: formData.value.name || null,
       description: formData.value.description || null,
       parser_csv_id: formData.value.parser_csv_id || null,

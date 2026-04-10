@@ -4,6 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     v-model="formData"
+    :item-parser="itemParser"
     @save="save"
   />
 </template>
@@ -16,6 +17,7 @@ import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import IngestFormSftp from 'components/IngestFormSftp.vue';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
@@ -32,7 +34,7 @@ const formData = ref<IngestSftpCreate>({
 
 const isLoading = ref(false);
 
-const permissionGroupId = ref<number | null>(null);
+const permissionGroup = ref<PermissionGroup | null>(null);
 const itemParser = ref<CsvParserPublic | null>(null);
 
 onMounted(async () => {
@@ -42,7 +44,7 @@ onMounted(async () => {
       const data = await sftpStore.dispatchGetOne(id);
 
       itemParser.value = data.csv_parser;
-      permissionGroupId.value = data.permission_group_id || null;
+      permissionGroup.value = data.permission_group;
 
       formData.value = {
         name: `${data.name} - Copy`,

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from dependencies import get_current_user, get_repo_permission_group
+from models.filters import PermissionGroupFilter
 from models.permission_group import PermissionGroup
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
@@ -21,9 +22,14 @@ def read_list(
     *,
     current_user=Depends(get_current_user),
     repo=Depends(get_repo_permission_group),
+    filters: PermissionGroupFilter = Depends(),
     sort_by: str | None = None,
 ):
-    return paginate(repo.find_allowed_all(current_user.permission_group_ids, sort_by))
+    return paginate(
+        repo.find_allowed_all(
+            current_user.permission_group_ids, sort_by, filters=filters
+        )
+    )
 
 
 @router.get("/{id}", response_model=PermissionGroup, summary=f"Get one {entity_name}")

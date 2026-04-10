@@ -22,6 +22,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :preselectedItem="itemPermissionGroup"
             :rules="[(val) => !!val || 'Permission group is required']"
           />
 
@@ -47,7 +48,8 @@
             class="q-mb-md"
             :disable="!formData.permission_group_id"
             v-model="formData.parser_csv_id"
-            :permission_group_id="formData.permission_group_id"
+            :permission_group_id="formData.permission_group_id!"
+            :preselected-item="itemParser"
           />
 
           <!-- Action Buttons -->
@@ -74,22 +76,23 @@
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import CsvParserSelect from 'components/CsvParserSelect.vue';
-import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
+import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
-  permissionGroupId?: number | null;
-  itemParser?: CsvParserPublic | number;
+  itemPermissionGroup?: PermissionGroup | null;
+  itemParser?: CsvParserPublic | null;
 }>();
 
 defineEmits<{
   save: [];
 }>();
 
-const formData = defineModel<IngestSftpCreate>({
+const formData = defineModel<IngestSftpCreate | IngestSftpUpdate>({
   default: {
     permission_group_id: null,
     name: null,

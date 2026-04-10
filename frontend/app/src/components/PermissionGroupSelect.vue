@@ -30,7 +30,7 @@ const model = defineModel();
 
 const { preselectedItem } = defineProps<{
   rules?: Array<(val: unknown) => string | boolean>;
-  preselectedItem?: PermissionGroup | null;
+  preselectedItem?: PermissionGroup | null | undefined;
   label?: string;
 }>();
 
@@ -52,12 +52,12 @@ watch(
   () => preselectedItem,
   (newValue) => {
     if (newValue != null) {
-      includeStationOfItemIfMissing();
+      includeItemIfMissing();
     }
   },
 );
 
-function includeStationOfItemIfMissing() {
+function includeItemIfMissing() {
   if (preselectedItem) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {
