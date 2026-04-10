@@ -21,6 +21,7 @@ class IngestS3StoreCreate(IngestS3StoreBase):
 
 
 class IngestS3StoreUpdate(SQLModel):
+    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     filename_pattern: str | None = None

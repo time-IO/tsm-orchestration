@@ -37,7 +37,7 @@ const $q = useQuasar();
 
 const model = defineModel();
 const { preselectedItem, permission_group_id } = defineProps<{
-  preselectedItem?: CsvParserPublic | null;
+  preselectedItem?: CsvParserPublic | null | undefined;
   permission_group_id: number | null;
 }>();
 

@@ -28,6 +28,7 @@ export type IngestSftpCreate = {
 };
 
 export type IngestSftpUpdate = {
+  permission_group_id?: number | null;
   name?: string | null;
   description?: string | null;
   parser_csv_id?: number | null;

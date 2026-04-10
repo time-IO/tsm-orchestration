@@ -131,43 +131,6 @@ class BaseRepository(Generic[T]):
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def update_ingest_sftp(
-        self, id: int, payload, permission_group_ids, ingest_type_info, parser=None
-    ):
-
-        # it is currently not allowed to update the permission group of an ingest sftp (s3store)
-        # therefore the payload does not contain a permission_group_id , so we use an extra method
-        try:
-            entity = self.find_allowed_one(id, permission_group_ids)
-
-            if not entity:
-                raise HTTPException(status_code=404, detail="Not found")
-
-            self.check_for_existing_name_update(
-                payload.name, entity.permission_group_id, entity.id
-            )
-
-            # check that we are allowed to use the parser
-            if (
-                parser is not None
-                and parser.permission_group_id != entity.permission_group_id
-            ):
-                raise HTTPException(status_code=401, detail="Not allowed to use parser")
-
-            data = payload.model_dump(exclude_unset=True)
-            entity.sqlmodel_update(data)
-            self.session.add(entity)
-            self.session.commit()
-            self.session.refresh(entity)
-            publish_frontend_thing_update(entity, ingest_type_info)
-            return entity
-        except HTTPException as exception:
-            raise exception
-        except Exception as e:
-            print(str(e))
-            self.session.rollback()
-            raise HTTPException(status_code=400, detail="Failed to update.")
-
     def update_parser(self, id: int, data, permission_group_ids):
         print(f"data: {str(data)}")
 
@@ -227,9 +190,16 @@ class PermissionGroupRepository(BaseRepository):
         return entity
 
     def find_allowed_all(
-        self, permission_group_ids: list[int], sort_by: Optional[str] = None
+        self,
+        permission_group_ids: list[int],
+        sort_by: Optional[str] = None,
+        filters: FilterSet | None = None,
     ) -> List[T]:
         statement = select(self.model).where(self.model.id.in_(permission_group_ids))
+
+        if filters:
+            statement = apply_filters(statement, filters)
+
         items = self.session.exec(statement).all()
         return apply_sort_list(items, sort_by) if sort_by else items
 
