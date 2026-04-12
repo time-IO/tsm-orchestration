@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import pytest
+import random
 
+import pytest
 import numpy as np
 import pandas as pd
 
@@ -12,48 +13,7 @@ from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamErr
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
 
-"""
-TODO:
-- test context window
-- test index modification
-"""
 
-class MockDBapi:
-    _data = [
-        {
-            "result_time": "2025-03-15T22:13:00Z",
-            "result_type": 0,
-            "result_number": 6268.0,
-            "result_quality": None,
-        },
-        {
-            "result_time": "2025-03-15T22:28:00Z",
-            "result_type": 0,
-            "result_number": 6269.0,
-            "result_quality": None,
-        },
-        {
-            "result_time": "2025-03-15T22:43:00Z",
-            "result_type": 0,
-            "result_number": 6270.0,
-            "result_quality": None,
-        },
-        {
-            "result_time": "2025-03-15T22:58:00Z",
-            "result_type": 0,
-            "result_number": 6271.0,
-            "result_quality": None,
-        },
-        {
-            "result_time": "2025-03-15T23:13:00Z",
-            "result_type": 0,
-            "result_number": 6272.0,
-            "result_quality": None,
-        },
-    ]
-
-    def get_datastream_observations(self, *args, **kwargs):
-        return {"observations": self._data}
 T1S27 = QcFunctionStream(
     key="field",
     alias="T1S27",
@@ -63,7 +23,7 @@ T1S27 = QcFunctionStream(
     schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
     thing_uuid="3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
     datastream_id=15,
-    context_window=pd.Timedelta(0),
+    context_window=pd.Timedelta(days=5),
     position="N1Cts",
 )
 T1S33 = QcFunctionStream(
@@ -138,6 +98,33 @@ NEW = QcFunctionStream(
     context_window=pd.Timedelta(0),
     position="NEW",
 )
+
+
+class MockDBapi:
+    def get_datastream_observations(
+        self, *args, start_date=None, end_date=None, **kwargs
+    ):
+        out = []
+        for date in pd.date_range(start_date, end_date, periods=10):
+            out.append(
+                {
+                    "result_time": date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "result_type": 0,
+                    "result_number": random.uniform(10, 500),
+                    "result_quality": None,
+                }
+            )
+
+        return {"observations": out}
+
+    def upsert_qc_labels(self, thing_uuid, qc_labels):
+        dates = sorted([pd.Timestamp(d["result_time"]) for d in qc_labels])
+        import ipdb; ipdb.set_trace()
+        pass
+
+    def __getattr__(self, name):
+        print("NAME:", name)
+        return lambda *args, **kwargs: None
 
 
 @pytest.fixture()
@@ -324,6 +311,12 @@ def test_immutable_stream_overwrite(mock_dbapi):
         write_qc_data(dbapi=mock_dbapi, qc=qc)
 
 
+def test_context_window(mock_dbapi):
+    start_date = pd.Timestamp("2021-03-06", tz="UTC")
+    data = read_stream_data(mock_dbapi, streams=[T1S27], start_date=start_date, end_date=start_date+pd.Timedelta(days=10))
+    assert data[T1S27].index[0] == start_date - T1S27.context_window
+
+
 def test_db_data_reading(local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
@@ -346,7 +339,6 @@ def test_db_data_reading(local_dbapi):
 
 
 def test_processing_workflow(local_dbapi):
-    # TODO: check again
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
     fields = [T1S27, NEW]
@@ -367,9 +359,10 @@ def test_processing_workflow(local_dbapi):
 
     # reloading the data checks that the format is right
     data_mod = read_stream_data(local_dbapi, streams=fields)
-    # import ipdb; ipdb.set_trace()
+    qc = SaQCWrapper(data_mod)
 
-    # qc = SaQCWrapper(data_mod)
+    src, trg = data_mod.values()
+    assert trg.sort_index().equals(src.sort_index() + 5)
 
 
 @pytest.mark.parametrize(
