@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import random
+import urllib
 
 import pytest
 import numpy as np
@@ -146,7 +148,7 @@ def local_dbapi():
     token = "local_bearer_token_processing"
     try:
         return DBapi(base_url=url, auth_token=token)
-    except ConnectionError:
+    except urllib.error.URLError:
         pytest.skip("local dbapi connection not available")
 
 
@@ -321,7 +323,6 @@ def test_context_window(mock_dbapi):
         end_date=start_date + pd.Timedelta(days=10),
     )
     assert data[T1S27].index[0] == start_date - T1S27.context_window
-
 
 def test_db_data_reading(local_dbapi):
     # NOTE:
