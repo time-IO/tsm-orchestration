@@ -324,6 +324,7 @@ def test_context_window(mock_dbapi):
     )
     assert data[T1S27].index[0] == start_date - T1S27.context_window
 
+
 def test_db_data_reading(local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
