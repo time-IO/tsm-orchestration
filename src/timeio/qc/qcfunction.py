@@ -8,6 +8,7 @@ import pandas as pd
 
 if TYPE_CHECKING:
     from timeio import feta
+    from timeio.typehints import TimestampT
 
 
 class QcFunctionStream:
@@ -29,6 +30,8 @@ class QcFunctionStream:
         datastream_id: int | None,
         thing_uuid: str,
         context_window: pd.Timedelta,
+        start_date: TimestampT | None = None,
+        end_date: TimestampT | None = None,
     ):
         # TODO: improve attribute names
         self.key = key
@@ -42,6 +45,10 @@ class QcFunctionStream:
         self.position = position
         self.is_mutable = mutable
         self.context_window = context_window
+        # we store the data linking start and end date to allow
+        # queries against the observation instead of OBSERVATIONS
+        self.start_date = start_date
+        self.end_date = end_date
 
     def to_target(self):
         out = copy.deepcopy(self)
@@ -80,7 +87,7 @@ class QcFunction:
         self.targets = targets or [f.to_target() for f in fields]
 
     def __repr__(self):
-        return f"QcFunction({self.name}, func={self.func_name}, params={self.params})"
+        return f"QcFunction({self.name}, field={self.field_names}, target={self.target_names}, func={self.func_name}, params={self.params})"
 
     @property
     def streams(self) -> list[QcFunctionStream]:
@@ -101,7 +108,7 @@ def get_functions(conf: feta.QAQC) -> list[QcFunction]:
     """
 
     out = []
-    rename_map = {"arg_name": "key"}
+    rename_map = {"arg_name": "key", "begin_date": "start_date"}
     for func in conf.get_tests():
 
         streams = [
@@ -132,7 +139,7 @@ def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunctio
 
 def filter_funcs_to_execute(
     all_funcs: list[QcFunction], selected_funcs: list[QcFunction]
-):
+) -> list[QcFunction]:
     to_check = []
     for func in selected_funcs:
         targets = set(t.alias for t in func.targets)
@@ -164,7 +171,7 @@ def filter_funcs_to_execute(
     return selected_funcs
 
 
-def filter_functions(funcs: list[QcFunction], thing_id) -> list[QcFunction]:
-    thing_funcs = filter_thing_funcs(funcs, thing_id)
+def filter_functions(funcs: list[QcFunction], sta_thing_id) -> list[QcFunction]:
+    thing_funcs = filter_thing_funcs(funcs, sta_thing_id)
     funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
     return funcs_to_process

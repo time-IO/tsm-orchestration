@@ -40,9 +40,15 @@ complete[1]) drop-in replacement for classes in thing.py.
 class QcStreamT(TypedDict):
     # TODO: extend
     arg_name: str
-    sta_thing_id: int | None
-    sta_stream_id: int | None
     alias: str
+    sta_thing_id: int
+    sta_stream_id: int | None
+    mutable: bool
+    position: str
+    schema: str
+    datastream_id: int | None
+    thing_uuid: str
+    context_window: str
 
 
 class ObjectNotFound(Exception):
@@ -576,7 +582,6 @@ class QAQCTest(Base):
     args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
     qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
 
     @staticmethod
@@ -598,7 +603,9 @@ class QAQCTest(Base):
             SELECT
                 datasource_id as schema,
                 thing_id as thing_uuid,
-                datastream_id
+                datastream_id,
+                begin_date,
+                end_date
             FROM public.sms_datastream_link
               WHERE device_property_id = %s
             """,
@@ -643,7 +650,12 @@ class QAQCTest(Base):
             raise ValueError(
                 f"STA Thing with id {stream['sta_thing_id']} does not exist"
             )
-        return out | {"position": stream["alias"], "mutable": True}
+        return out | {
+            "position": stream["alias"],
+            "mutable": True,
+            "begin_date": None,
+            "end_date": None,
+        }
 
     def get_streams(self) -> list[QcStreamT]:
         out = []

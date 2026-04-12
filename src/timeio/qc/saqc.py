@@ -163,13 +163,9 @@ class SaQCWrapper:
         )
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
-        # if stream.key == "target" and stream not in self._input_data:
-        #     return True
         return not self._qc._data[stream.alias].equals(self._input_data[stream]["data"])
 
     def index_is_modified(self, stream: QcFunctionStream) -> bool:
-        # if stream.key == "target" and stream not in self._input_data:
-        #     return True
         return not self._qc._data[stream.alias].index.equals(
             self._input_data[stream]["data"].index
         )

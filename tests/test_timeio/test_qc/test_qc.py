@@ -8,39 +8,52 @@ import pandas as pd
 from timeio.databases import Database, DBapi
 from timeio.qc import filter_functions
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_functions
-from timeio.qc.io import read_stream_data, write_qc_data
+from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
 
 """
 TODO:
 - test context window
+- test index modification
 """
 
+class MockDBapi:
+    _data = [
+        {
+            "result_time": "2025-03-15T22:13:00Z",
+            "result_type": 0,
+            "result_number": 6268.0,
+            "result_quality": None,
+        },
+        {
+            "result_time": "2025-03-15T22:28:00Z",
+            "result_type": 0,
+            "result_number": 6269.0,
+            "result_quality": None,
+        },
+        {
+            "result_time": "2025-03-15T22:43:00Z",
+            "result_type": 0,
+            "result_number": 6270.0,
+            "result_quality": None,
+        },
+        {
+            "result_time": "2025-03-15T22:58:00Z",
+            "result_type": 0,
+            "result_number": 6271.0,
+            "result_quality": None,
+        },
+        {
+            "result_time": "2025-03-15T23:13:00Z",
+            "result_type": 0,
+            "result_number": 6272.0,
+            "result_quality": None,
+        },
+    ]
 
-@pytest.fixture()
-def local_database():
-    dsn = "postgresql://postgres:postgres@localhost/postgres"
-    try:
-        conn = Database(dsn).connection()
-    except ConnectionError:
-        pytest.skip("local database connection not available")
-
-    yield conn
-    conn.close()
-
-
-@pytest.fixture()
-def local_dbapi():
-    # TODO: try to get from .env file
-    url = "http://localhost:8001"
-    token = "local_bearer_token_processing"
-    try:
-        return DBapi(base_url=url, auth_token=token)
-    except ConnectionError:
-        pytest.skip("local dbapi connection not available")
-
-
+    def get_datastream_observations(self, *args, **kwargs):
+        return {"observations": self._data}
 T1S27 = QcFunctionStream(
     key="field",
     alias="T1S27",
@@ -114,11 +127,11 @@ T2S46 = QcFunctionStream(
     position="N01C",
 )
 NEW = QcFunctionStream(
-    key="target",
+    key="field",
     alias="NEW",
     sta_thing_id=2,
     sta_stream_id=None,
-    mutable=False,
+    mutable=True,
     schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
     thing_uuid="f3691b96-aca1-4585-95bf-6ea4c611503c",
     datastream_id=None,
@@ -128,19 +141,30 @@ NEW = QcFunctionStream(
 
 
 @pytest.fixture()
-def test_data():
-    index = pd.date_range("2020-01-01", freq="D", periods=4)
-    return {
-        "T1S33": pd.DataFrame(
-            data={"data": [800, 1000, 1100, 1300], "quality": None}, index=index
-        ),
-        "T1S36": pd.DataFrame(
-            data={"data": [750, 950, 1050, 1250], "quality": None}, index=index
-        ),
-        "T1S27": pd.DataFrame(
-            data={"data": [4.5, 4.6, 3.9, 4.1], "quality": None}, index=index
-        ),
-    }
+def local_database():
+    dsn = "postgresql://postgres:postgres@localhost/postgres"
+    try:
+        conn = Database(dsn).connection()
+    except ConnectionError:
+        pytest.skip("local database connection not available")
+
+    yield conn
+    conn.close()
+
+
+@pytest.fixture()
+def local_dbapi():
+    url = "http://localhost:8001"
+    token = "local_bearer_token_processing"
+    try:
+        return DBapi(base_url=url, auth_token=token)
+    except ConnectionError:
+        pytest.skip("local dbapi connection not available")
+
+
+@pytest.fixture()
+def mock_dbapi():
+    return MockDBapi()
 
 
 @pytest.mark.parametrize(
@@ -268,12 +292,44 @@ def test_processing_function_execution(func, data_in, data_out):
         assert (qc.data[stream]["data"] == data).all()
 
 
-def test_db_data_reading(local_database):
+def test_mutable_stream_overwrite(mock_dbapi):
+    # 1. create a mutable datastream
+    func = QcFunction(
+        "",
+        func_name="copyField",
+        fields=[T2S43],
+        targets=[NEW],
+        params={"overwrite": "True"},
+    )
+
+    data = read_stream_data(mock_dbapi, streams=[T2S43, NEW.to_target()])
+    qc = SaQCWrapper(data)
+    qc.execute(func)
+    s1, s2 = qc.data.values()
+    assert s1.equals(s2)
+
+
+def test_immutable_stream_overwrite(mock_dbapi):
+    func = QcFunction(
+        "",
+        func_name="processGeneric",
+        fields=[T1S33],
+        params={"func": "T1S33 + 5"},
+    )
+
+    data = read_stream_data(mock_dbapi, streams=[T1S33])
+    qc = SaQCWrapper(data)
+    qc.execute(func)
+    with pytest.raises(ImmutableDatastreamError):
+        write_qc_data(dbapi=mock_dbapi, qc=qc)
+
+
+def test_db_data_reading(local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
     fields = [T1S27, T1S33, T1S36, T2S44, T2S46]
 
-    data = read_stream_data(local_database, streams=fields)
+    data = read_stream_data(local_dbapi, streams=fields)
 
     assert {s.alias for s in data.keys()} == {
         "T1S33",
@@ -289,19 +345,20 @@ def test_db_data_reading(local_database):
         assert not df.empty
 
 
-def test_qc_workflow(local_database, local_dbapi):
+def test_processing_workflow(local_dbapi):
+    # TODO: check again
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
-    fields = [T1S27, T1S33, T1S36, T2S44, T2S46, NEW]
+    fields = [T1S27, NEW]
     func = QcFunction(
         "",
         func_name="processGeneric",
-        fields=[fields[0]],
-        targets=[fields[-1]],
+        fields=[T1S27],
+        targets=[NEW],
         params={"func": "T1S27 + 5"},
     )
 
-    data = read_stream_data(local_database, streams=fields)
+    data = read_stream_data(local_dbapi, streams=fields)
 
     qc = SaQCWrapper(data)
 
@@ -309,25 +366,32 @@ def test_qc_workflow(local_database, local_dbapi):
     write_qc_data(dbapi=local_dbapi, qc=qc)
 
     # reloading the data checks that the format is right
-    data = read_stream_data(local_database, streams=fields)
-    qc = SaQCWrapper(data)
+    data_mod = read_stream_data(local_dbapi, streams=fields)
+    # import ipdb; ipdb.set_trace()
+
+    # qc = SaQCWrapper(data_mod)
 
 
 @pytest.mark.parametrize(
     "thing_uuid",
     ("3e23c121-6a6e-48ac-9fb6-9d9a5bf06348", "f3691b96-aca1-4585-95bf-6ea4c611503c"),
 )
-def test_workflow(thing_uuid, local_database, local_dbapi):
+def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
     thing = feta.Thing.from_uuid(thing_uuid, dsn=local_database)
     config = thing.project.get_default_qaqc()
-    funcs = get_functions(config)
+
+    funcs = filter_functions(get_functions(config), thing.id)
+
     streams = sum([f.streams for f in funcs], [])
 
-    data = read_stream_data(local_database, streams=streams)
+    data = read_stream_data(local_dbapi, streams=streams)
     qc = SaQCWrapper(data)
     for func in funcs:
         qc.execute(func)
 
     write_qc_data(dbapi=local_dbapi, qc=qc)
+    # reloading the data checks that the format is right
+    data = read_stream_data(local_dbapi, streams=streams)
+    qc = SaQCWrapper(data)

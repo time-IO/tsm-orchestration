@@ -48,13 +48,6 @@ class QcHandler(AbstractHandler):
             get_envvar("DB_API_AUTH_TOKEN"),
         )
 
-    def _check_data(self, content, keys: list[str]):
-        for key in keys:
-            if key not in content:
-                raise DataNotFoundError(
-                    "mandatory field '{key}' is not present in data"
-                )
-
     @staticmethod
     def _parse_message_v1(
         conn, content: dict
@@ -131,7 +124,10 @@ class QcHandler(AbstractHandler):
 
             N = len(qc_funcs)
             streams = set(sum([f.streams for f in qc_funcs], []))
-            data = read_stream_data(conn, streams, start_date, end_date)
+            data = read_stream_data(self.dbapi, streams, start_date, end_date)
+            for k, v in data.items():
+                if v.empty:
+                    logger.warning(f"no data found for stream: {k}")
             qc = SaQCWrapper(data)
             for i, func in enumerate(qc_funcs, start=1):
                 logger.info("Test %s of %s: %s", i, N, func)

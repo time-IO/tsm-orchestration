@@ -6,6 +6,7 @@ import datetime
 import typing as _t
 
 import pandas as pd
+from pandas._libs.tslibs.nattype import NaTType
 
 JsonScalarT = _t.Union[str, int, float, bool, None]
 JsonArrayT = list["JsonT"]
@@ -15,7 +16,7 @@ JsonT = _t.Union[JsonScalarT, JsonArrayT, JsonObjectT]
 DbScalarT = _t.Union[str, bool, int, float, JsonT, datetime.datetime.timestamp]
 DbRowT = tuple[DbScalarT, ...]
 
-TimestampT = datetime.datetime | pd.Timestamp
+TimestampT = datetime.datetime | pd.Timestamp | NaTType
 
 v1 = 1
 v2 = 2

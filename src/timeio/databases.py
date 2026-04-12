@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import logging
 import json
-import threading
 import urllib.request
 from functools import partial
 from typing import Any, Callable, Literal
@@ -13,7 +11,7 @@ import psycopg
 import requests
 from psycopg import Connection, conninfo
 
-from timeio.errors import DataNotFoundError
+from timeio.typehints import TimestampT
 
 
 class Database:
@@ -59,14 +57,14 @@ class DBapi:
                     f"Failed to ping. HTTP status code: {resp.status}"
                 )
 
-    # TODO: add type hints
     def delete_observations(
-        self, thing_uuid: str, pos: str, start_date=None, end_date=None
+        self, thing_uuid: str, pos: str, start_date=TimestampT, end_date=TimestampT
     ):
-        url = f"{self.base_url}/things/{thing_uuid}/datastreams/observations"
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/{pos}/observations"
 
         resp = requests.delete(
             url,
+            params={"datetime_from": start_date, "datetime_to": end_date},
             headers={
                 "Authorization": f"Bearer {self.auth_token}",
             },
@@ -112,13 +110,38 @@ class DBapi:
             },
         )
         resp.raise_for_status()
-        return resp.json()
+        return [s | {"thing_uuid": thing_uuid} for s in resp.json()]
 
     def get_datastream(self, thing_uuid: str, pos: str):
 
         url = f"{self.base_url}/things/{thing_uuid}/datastreams/{pos}"
         resp = requests.get(
             url,
+            headers={
+                "Authorization": f"Bearer {self.auth_token}",
+            },
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_datastream_observations(
+        self,
+        thing_uuid: str,
+        pos: str,
+        start_date: TimestampT | None = None,
+        end_date: TimestampT | None = None,
+        include_qc: bool = True,
+    ):
+        url = f"{self.base_url}/things/{thing_uuid}/datastreams/{pos}/observations"
+        params = {"show_qc": include_qc}
+        if start_date is not None:
+            params["datetime_from"] = start_date
+        if end_date is not None:
+            params["datetime_to"] = end_date
+
+        resp = requests.get(
+            url,
+            params=params,
             headers={
                 "Authorization": f"Bearer {self.auth_token}",
             },
