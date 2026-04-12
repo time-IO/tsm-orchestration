@@ -13,7 +13,6 @@ from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamErr
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
 
-
 T1S27 = QcFunctionStream(
     key="field",
     alias="T1S27",
@@ -119,7 +118,9 @@ class MockDBapi:
 
     def upsert_qc_labels(self, thing_uuid, qc_labels):
         dates = sorted([pd.Timestamp(d["result_time"]) for d in qc_labels])
-        import ipdb; ipdb.set_trace()
+        import ipdb
+
+        ipdb.set_trace()
         pass
 
     def __getattr__(self, name):
@@ -313,7 +314,12 @@ def test_immutable_stream_overwrite(mock_dbapi):
 
 def test_context_window(mock_dbapi):
     start_date = pd.Timestamp("2021-03-06", tz="UTC")
-    data = read_stream_data(mock_dbapi, streams=[T1S27], start_date=start_date, end_date=start_date+pd.Timedelta(days=10))
+    data = read_stream_data(
+        mock_dbapi,
+        streams=[T1S27],
+        start_date=start_date,
+        end_date=start_date + pd.Timedelta(days=10),
+    )
     assert data[T1S27].index[0] == start_date - T1S27.context_window
 
 

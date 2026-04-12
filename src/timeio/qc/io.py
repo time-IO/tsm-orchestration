@@ -24,7 +24,6 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger("run-quality-control")
 
 
-
 class ImmutableDatastreamError(Exception):
     pass
 
@@ -64,7 +63,7 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
             columns_map = {
                 "quality": "result_quality",
                 "data": get_result_field_name(rt, errors="raise"),
-               }
+            }
             df = df.rename(columns=columns_map)
             df["result_quality"] = df["result_quality"].map(json.dumps)
 
