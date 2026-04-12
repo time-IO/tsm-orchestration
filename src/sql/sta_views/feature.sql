@@ -26,6 +26,7 @@ SELECT
  	    WHEN is_dynamic IS FALSE THEN 'static'
  	    ELSE 'dynamic'
  	END AS "DESCRIPTION",
+    'application/geo+json' as "ENCODING_TYPE",
     to_jsonb(format('{
           "type": "Feature",
           "geometry": {
