@@ -18,6 +18,38 @@
     <template v-slot:hint v-if="!permission_group_id">
       <span class="text-red">Select Permission Group first</span>
     </template>
+    <template v-slot:option="scope">
+      <q-item v-bind="scope.itemProps" clickable>
+        <q-item-section>
+          <q-item-label>
+            {{ scope.opt.name }}
+            <q-icon
+              name="launch"
+              class="cursor-pointer"
+              style="color: grey"
+              @click="openParser(scope.opt.id)"
+            >
+              <q-tooltip> Open in new window </q-tooltip>
+            </q-icon>
+          </q-item-label>
+          <q-item-label caption>
+            <q-chip dense square color="deep-orange-5" text-color="white">
+              {{ scope.opt.delimiter }}
+              <q-tooltip> delimiter </q-tooltip>
+            </q-chip>
+            <q-chip
+              v-for="timestampColumn in scope.opt.timestamp_columns"
+              :key="timestampColumn.id"
+              color="indigo-5"
+              text-color="white"
+            >
+              {{ timestampColumn.column }}:{{ timestampColumn.timestamp_format }}
+              <q-tooltip> timestamp columns (index: format) </q-tooltip>
+            </q-chip>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey"> No results </q-item-section>
@@ -31,9 +63,11 @@ import { nextTick, ref, watch, computed } from 'vue';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
+import { useRouter } from 'vue-router';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
+const router = useRouter();
 
 const model = defineModel();
 const { preselectedItem, permission_group_id } = defineProps<{
@@ -166,6 +200,16 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
     });
   }
 }
+
+const openParser = (id: number) => {
+  if (id) {
+    const route = router.resolve({
+      path: `/parser/csv/${id}`,
+    });
+
+    window.open(route.href, '_blank');
+  }
+};
 </script>
 
 <style scoped></style>
