@@ -54,14 +54,14 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Number of headlines to exclude (0-based)</q-item-label>
+                    <q-item-label>Number of headlines to exclude</q-item-label>
                     <q-item-label caption>{{ item.headlines_to_exclude }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Number of footlines to exclude (0-based)</q-item-label>
+                    <q-item-label>Number of footlines to exclude</q-item-label>
                     <q-item-label caption>{{ item.footlines_to_exclude }}</q-item-label>
                   </q-item-section>
                 </q-item>
