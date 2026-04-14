@@ -308,7 +308,9 @@ def upgrade() -> None:
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("delimiter", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("headlines_to_exclude", sa.Integer(), nullable=True),
+        sa.Column(
+            "headlines_to_exclude", sqlmodel.sql.sqltypes.AutoString(), nullable=True
+        ),
         sa.Column("footlines_to_exclude", sa.Integer(), nullable=True),
         sa.Column("pandas_read_csv", sa.JSON(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),

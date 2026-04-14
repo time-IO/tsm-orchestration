@@ -55,8 +55,10 @@
           <q-input
             filled
             class="q-mb-md"
-            v-model.number="formData.headlines_to_exclude"
+            v-model="formData.headlines_to_exclude"
+            @update:model-value="trimHeadlines"
             label="Number of headlines to exclude"
+            hint="Enter either a single number to indicate of many lines should be excluded or a comma-separated list of numbers indicating the lines which must be excluded (0-based)"
           />
 
           <q-input
@@ -66,13 +68,9 @@
             label="Number of footlines to exclude"
           />
 
-          <parser-timezone-select
-            v-model="formData.timezone"
-          />
+          <parser-timezone-select v-model="formData.timezone" />
 
-          <parser-encoding-select
-            v-model="formData.encoding"
-          />
+          <parser-encoding-select v-model="formData.encoding" />
 
           <!-- Header Field -->
           <q-input
@@ -247,7 +245,7 @@ const formData = defineModel<CsvParserCreate>({
     comment: [],
     header: null,
     timezone: null,
-    encoding: null
+    encoding: null,
   },
 });
 
@@ -273,6 +271,10 @@ function removeCommentCharacter(index: number) {
 const showDocs = () => {
   window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
 };
+
+function trimHeadlines(value: string | number | null) {
+  formData.value.headlines_to_exclude = String(value ?? '').trim();
+}
 </script>
 
 <style scoped></style>
