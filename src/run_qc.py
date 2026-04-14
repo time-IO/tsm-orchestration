@@ -13,7 +13,6 @@ from timeio import feta
 from timeio.common import get_envvar, setup_logging
 from timeio.databases import Database, DBapi
 from timeio.errors import (
-    DataNotFoundError,
     ParsingError,
     ProcessingError,
 )

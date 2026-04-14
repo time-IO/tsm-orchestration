@@ -15,7 +15,7 @@ from psycopg import Connection, sql
 from psycopg.rows import dict_row
 import pandas as pd
 
-from timeio.typehints import JsonObjectT
+from timeio.typehints import JsonObjectT, TimestampT
 
 logger = logging.getLogger("feta")
 
@@ -38,17 +38,17 @@ complete[1]) drop-in replacement for classes in thing.py.
 
 
 class QcStreamT(TypedDict):
-    # TODO: extend
     arg_name: str
-    alias: str
     sta_thing_id: int
-    sta_stream_id: int | None
     mutable: bool
     position: str
     schema: str
-    datastream_id: int | None
     thing_uuid: str
     context_window: str
+    sta_stream_id: int | None
+    datastream_id: int | None
+    begin_date: TimestampT | None
+    end_date: TimestampT | None
 
 
 class ObjectNotFound(Exception):
