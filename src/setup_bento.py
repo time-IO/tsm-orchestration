@@ -36,61 +36,102 @@ class CreateBentoMQTTHandler(AbstractHandler):
         self.create_or_update_stream(stream_config, thing)
 
     def prepare_stream_config(self, thing: Thing):
+        ingest_type_id = thing.ingest_type_id
+        path = thing.url_for_thing if thing.url_for_thing else thing.uuid
 
         # Create Bento stream configuration
-        stream_config = {
-            "input": {
-                "mqtt": {
-                    "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
-                    "client_id": "",
-                    "dynamic_client_id_suffix": "",
-                    "connect_timeout": "30s",
-                    "will": {
-                        "enabled": False,
-                        "qos": 0,
-                        "retained": False,
-                        "topic": "",
-                        "payload": ""
-                    },
-                    "user": thing.ext_mqtt.external_mqtt_username,
-                    "password": thing.ext_mqtt.external_mqtt_password,
-                    "keepalive": 30,
-                    "tls": {
-                        "enabled": False,
-                        "skip_cert_verify": False,
-                        "enable_renegotiation": False,
-                        "root_cas": thing.ext_mqtt.external_mqtt_ca_cert,
-                        "root_cas_file": "",
-                        "client_certs": [
-                            {
-                                "cert": thing.ext_mqtt.external_mqtt_client_cert,
-                                "key": thing.ext_mqtt.external_mqtt_client_key,
-                            }
-                        ]
-                    },
-                    "topics": [thing.ext_mqtt.external_mqtt_topic],
-                    "qos": 1,
-                    "clean_session": True,
-                    "auto_replay_nacks": True
-                }
-            },
-            "pipeline": {
-                "processors": [
-                    {
-                        "bloblang": "root = content()"
+        if ingest_type_id == "5":
+            stream_config = {
+                "input": {
+                    "mqtt": {
+                        "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
+                        "client_id": "",
+                        "dynamic_client_id_suffix": "",
+                        "connect_timeout": "30s",
+                        "will": {
+                            "enabled": False,
+                            "qos": 0,
+                            "retained": False,
+                            "topic": "",
+                            "payload": ""
+                        },
+                        "user": thing.ext_mqtt.external_mqtt_username,
+                        "password": thing.ext_mqtt.external_mqtt_password,
+                        "keepalive": 30,
+                        "tls": {
+                            "enabled": False,
+                            "skip_cert_verify": False,
+                            "enable_renegotiation": False,
+                            "root_cas": thing.ext_mqtt.external_mqtt_ca_cert,
+                            "root_cas_file": "",
+                            "client_certs": [
+                                {
+                                    "cert": thing.ext_mqtt.external_mqtt_client_cert,
+                                    "key": thing.ext_mqtt.external_mqtt_client_key,
+                                }
+                            ]
+                        },
+                        "topics": [thing.ext_mqtt.external_mqtt_topic],
+                        "qos": 1,
+                        "clean_session": True,
+                        "auto_replay_nacks": True
                     }
-                ]
-            },
-            "output": {
-                "mqtt": {
-                    "urls": ["mqtt-broker:1883"],
-                    "user": thing.mqtt.user,
-                    "password": thing.mqtt.password,
-                    "topic": f"mqtt_ingest/{thing.mqtt.user}"
+                },
+                "pipeline": {
+                    "processors": [
+                        {
+                            "bloblang": "root = content()"
+                        }
+                    ]
+                },
+                "output": {
+                    "mqtt": {
+                        "urls": ["mqtt-broker:1883"],
+                        "user": thing.mqtt.user,
+                        "password": thing.mqtt.password,
+                        "topic": f"mqtt_ingest/{thing.mqtt.user}"
+                    }
                 }
             }
-        }
 
+        elif ingest_type_id == "6":
+            stream_config = {
+                "input": {
+                    "http_server": {
+                        "address": "",  # or configurable
+                        "path": f"/http-ingest/{path}",
+                        "ws_path": f"/http-ingest/{path}/ws",
+                        "allowed_verbs": ["POST"],
+                        "timeout": "5s",
+                        "rate_limit": ""
+                    }
+                },
+                "buffer": {
+                    "type": "none"
+                },
+                "pipeline": {
+                    "processors": [
+                        {
+                            "mapping": "root = content()"
+                        }
+                    ]
+                },
+                "output": {
+                    "aws_s3": {
+                        "bucket": "bento-test",
+                        "path": "${!timestamp_unix_nano()}.json",
+                        "endpoint": "http://minio:9000",
+                        "force_path_style_urls": True,
+                        "region": "",
+                        "credentials": {
+                            "id": "",  # ideally inject via env/config
+                            "secret": ""
+                        }
+                    }
+                }
+            }
+        else:
+            raise ValueError(f"Unsupported ingest_type_id: {ingest_type_id}")
         return stream_config
 
     def create_or_update_stream(self, stream_config, thing: Thing):
