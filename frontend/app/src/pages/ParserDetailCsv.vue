@@ -47,6 +47,23 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Timezone</q-item-label>
+                    <q-item-label caption>{{
+                      item.timezone || 'No timezone specified'
+                    }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>File encoding</q-item-label>
+                    <q-item-label caption>{{
+                      item.encoding || 'No encoding specified'
+                    }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Column delimiter</q-item-label>
                     <q-item-label caption>{{ item.delimiter }}</q-item-label>
                   </q-item-section>

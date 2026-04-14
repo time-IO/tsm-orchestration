@@ -66,6 +66,14 @@
             label="Number of footlines to exclude"
           />
 
+          <parser-timezone-select
+            v-model="formData.timezone"
+          />
+
+          <parser-encoding-select
+            v-model="formData.encoding"
+          />
+
           <!-- Header Field -->
           <q-input
             filled
@@ -214,6 +222,8 @@
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
+import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
+import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 defineProps<{
   title: string;
   isLoading: boolean;
@@ -236,6 +246,8 @@ const formData = defineModel<CsvParserCreate>({
     timestamp_columns: [],
     comment: [],
     header: null,
+    timezone: null,
+    encoding: null
   },
 });
 

@@ -24,6 +24,8 @@ from routers import (
     sta_proxy,
     trigger_quality_control,
     trigger_ext_api,
+    parser_timezone,
+    parser_encoding,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -66,3 +68,5 @@ app.include_router(user.router)
 app.include_router(sta_proxy.router)
 app.include_router(trigger_quality_control.router)
 app.include_router(trigger_ext_api.router)
+app.include_router(parser_timezone.router)
+app.include_router(parser_encoding.router)
