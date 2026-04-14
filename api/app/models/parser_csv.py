@@ -46,6 +46,8 @@ class CsvParserBase(SQLModel):
     name: str
     description: str | None = None
     delimiter: str
+    timezone: str | None = None
+    encoding: str | None = None
     headlines_to_exclude: int | None = None
     footlines_to_exclude: int | None = None
     pandas_read_csv: dict | None = Field(sa_column=Column(JSON), default_factory=dict)
@@ -63,6 +65,8 @@ class CsvParserUpdate(SQLModel):
     description: str | None = None
     delimiter: str | None = None
     headlines_to_exclude: int | None = None
+    timezone: str | None = None
+    encoding: str | None = None
     footlines_to_exclude: int | None = None
     pandas_read_csv: dict | None = None
     timestamp_columns: list[CsvParserTimestampColumnUpdate] | None = None
@@ -120,6 +124,8 @@ class CsvParser(CsvParserBase, table=True):
                         "header": self.header,
                         "comment": self.comment,
                         "pandas_read_csv": self.pandas_read_csv,
+                        "timezone": self.timezone,
+                        "encoding": self.encoding,
                         "timestamp_columns": [
                             {
                                 "column": tc.column,

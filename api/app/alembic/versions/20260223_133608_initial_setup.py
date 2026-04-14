@@ -317,6 +317,8 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("comment", sa.JSON(), nullable=True),
         sa.Column("header", sa.Integer(), nullable=True),
+        sa.Column("timezone", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("encoding", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
             ["user.id"],

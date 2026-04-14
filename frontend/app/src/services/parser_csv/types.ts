@@ -30,7 +30,9 @@ export type CsvParserPublic = {
   timestamp_columns: Array<CsvParserTimestampColumnPublic>;
   permission_group: PermissionGroup;
   comment: string[];
-  header: number | null
+  header: number | null;
+  timezone: string | null;
+  encoding: string | null;
 };
 
 export type CsvParserCreate = {
@@ -44,6 +46,8 @@ export type CsvParserCreate = {
   timestamp_columns: Array<CsvParserTimestampColumnCreate>;
   comment: string[];
   header: number | null;
+  timezone: string | null;
+  encoding: string | null;
 };
 
 export type CsvParserUpdate = {
@@ -56,4 +60,6 @@ export type CsvParserUpdate = {
   timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
   header?: number | null;
   comment?: string[];
+  timezone?: string | null;
+  encoding?: string | null;
 };

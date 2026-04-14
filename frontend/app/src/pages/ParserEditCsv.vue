@@ -52,6 +52,10 @@
             label="Number of footlines to exclude (0-based)"
           />
 
+          <parser-timezone-select v-model="formData.timezone" />
+
+          <parser-encoding-select v-model="formData.encoding" />
+
           <!-- Header Field -->
           <q-input
             filled
@@ -202,6 +206,8 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { CsvParserUpdate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
+import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 
 const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
@@ -219,6 +225,8 @@ const formData = ref<CsvParserUpdate>({
   timestamp_columns: [],
   header: null,
   comment: [],
+  timezone: null,
+  encoding: null,
 });
 
 const isLoading = ref(false);
@@ -239,6 +247,8 @@ onMounted(async () => {
         timestamp_columns: data.timestamp_columns || [],
         header: data.header ?? null,
         comment: data.comment || [],
+        timezone: data.timezone,
+        encoding: data.encoding,
       };
     } catch {
       $q.notify({
@@ -287,6 +297,8 @@ async function save() {
           ? formData.value.header
           : null,
       comment: formData.value.comment || [],
+      timezone: formData.value.timezone || null,
+      encoding: formData.value.encoding || null,
     };
 
     isLoading.value = true;

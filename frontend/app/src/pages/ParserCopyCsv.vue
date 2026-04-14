@@ -32,6 +32,8 @@ const formData = ref<CsvParserCreate>({
   timestamp_columns: [],
   comment: [],
   header: null,
+  timezone: null,
+  encoding: null,
 });
 
 const isLoading = ref(false);
@@ -53,6 +55,8 @@ onMounted(async () => {
         timestamp_columns: data.timestamp_columns,
         header: data.header,
         comment: data.comment,
+        timezone: data.timezone,
+        encoding: data.encoding,
       };
     } catch {
       $q.notify({
@@ -85,6 +89,8 @@ async function save() {
       timestamp_columns: formData.value.timestamp_columns,
       comment: formData.value.comment,
       header: formData.value.header,
+      timezone: formData.value.timezone,
+      encoding: formData.value.encoding,
     };
 
     isLoading.value = true;
