@@ -830,6 +830,52 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
+  worker-file-ingest-triggered:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: object_storage_notification_triggered
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: file-ingest-triggered
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
+      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
+      MINIO_URL: "${OBJECT_STORAGE_HOST}"
+      MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
+      MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
+      JOURNALING: "${JOURNALING}"
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "run_file_ingest.py"]
+    volumes:
+      - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
+    logging:
+      options:
+        max-size: "${WROKER_FILE_INGEST_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+
   worker-run-qaqc:
     image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
     build:
@@ -984,6 +1030,46 @@ services:
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: sync-ext-apis
+      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
+      MQTT_QOS: "${MQTT_QOS}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
+      JOURNALING: "${JOURNALING}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
+      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+    entrypoint: ["./worker_launcher.sh", "python3", "sync_extapi_manager.py"]
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
+
+  worker-sync-extapis-triggered:
+    image: "${TIMEIO_IMAGE_REGISTRY}/dispatcher:${TIMEIO_DISPATCHER_IMAGE_TAG}"
+    build:
+      context: .
+      dockerfile: dispatcher/Dockerfile
+      args:
+        UID: "${UID}"
+        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
+    restart: "${SERVICE_WORKER_RESTART_POLICY}"
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
+      timeio-db-api:
+        condition: service_healthy
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      TOPIC: sync_ext_apis_triggered
+      MQTT_BROKER: mqtt-broker:1883
+      MQTT_USER: "${MQTT_USER}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD}"
+      MQTT_CLIENT_ID: sync-ext-apis-triggered
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
