@@ -8,6 +8,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
+# these encodings are from https://docs.python.org/3/library/codecs.html#standard-encodings (date: 2026.04.14)
 encodings = [
     {
         "codec": "utf_8",
