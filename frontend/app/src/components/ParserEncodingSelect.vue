@@ -1,7 +1,7 @@
 <template>
   <q-select
     v-model="model"
-    :options="store.rows"
+    :options="options"
     filled
     label="Select the file encoding"
     v-bind="$attrs"
@@ -9,6 +9,8 @@
     option-label="codec"
     map-options
     emit-value
+    use-input
+    @filter="filterFn"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps" clickable>
@@ -29,13 +31,15 @@
 
 <script setup lang="ts">
 import { useParserEncodingStore } from 'stores/parserEncodingStore';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
 const store = useParserEncodingStore();
 const $q = useQuasar();
 
 const model = defineModel();
+
+const options = ref(store.rows);
 
 onMounted(async () => {
   try {
@@ -48,6 +52,35 @@ onMounted(async () => {
     });
   }
 });
+
+function filterFn(val: string, update: (cb: () => void) => void) {
+  if (val === '') {
+    update(() => {
+      options.value = store.rows;
+
+      // here you have access to "ref" which
+      // is the Vue reference of the QSelect
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = val.toLowerCase();
+
+    options.value = store.rows.filter((item) => {
+      // Check codec
+      if (item.codec.toLowerCase().includes(needle)) return true;
+
+      // Check aliases
+      if (item.aliases.some((alias) => alias.toLowerCase().includes(needle))) return true;
+
+      // Check languages
+      if (item.languages.some((lang) => lang.toLowerCase().includes(needle))) return true;
+
+      return false;
+    });
+  });
+}
 </script>
 
 <style scoped></style>

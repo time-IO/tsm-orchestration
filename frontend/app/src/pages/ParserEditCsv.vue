@@ -3,7 +3,7 @@
     <h5 class="q-mb-none">Edit CSV Parser</h5>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/parser/new" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
       </div>
     </div>
 
@@ -200,7 +200,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
@@ -270,6 +270,14 @@ onMounted(async () => {
   }
 });
 
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/parser/csv/${id}`;
+  }
+  return '';
+});
+
 async function save() {
   if (!route.params.id) return;
 
@@ -304,7 +312,7 @@ async function save() {
     isLoading.value = true;
     await csvParserStore.dispatchUpdate(id, data);
 
-    await router.push(`/parser/csv/${id}`);
+    await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
     let errorCaption = error?.response?.data?.detail || '';
