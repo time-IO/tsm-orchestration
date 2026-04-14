@@ -41,15 +41,17 @@
           <q-input
             filled
             class="q-mb-md"
-            v-model.number="formData.headlines_to_exclude"
-            label="Number of headlines to exclude (0-based)"
+            v-model="formData.headlines_to_exclude"
+            @update:model-value="trimHeadlines"
+            label="Number of headlines to exclude"
+            hint="Enter either a single number to indicate of many lines should be excluded or a comma-separated list of numbers indicating the lines which must be excluded (0-based)"
           />
 
           <q-input
             filled
             class="q-mb-md"
             v-model.number="formData.footlines_to_exclude"
-            label="Number of footlines to exclude (0-based)"
+            label="Number of footlines to exclude"
           />
 
           <parser-timezone-select v-model="formData.timezone" />
@@ -219,8 +221,8 @@ const formData = ref<CsvParserUpdate>({
   name: null,
   description: null,
   delimiter: null,
-  headlines_to_exclude: 0,
-  footlines_to_exclude: 0,
+  headlines_to_exclude: null,
+  footlines_to_exclude: null,
   pandas_read_csv: null,
   timestamp_columns: [],
   header: null,
@@ -241,8 +243,8 @@ onMounted(async () => {
         name: data.name || null,
         description: data.description || null,
         delimiter: data.delimiter || null,
-        headlines_to_exclude: data.headlines_to_exclude || 0,
-        footlines_to_exclude: data.footlines_to_exclude || 0,
+        headlines_to_exclude: data.headlines_to_exclude || null,
+        footlines_to_exclude: data.footlines_to_exclude || null,
         pandas_read_csv: data.pandas_read_csv || null,
         timestamp_columns: data.timestamp_columns || [],
         header: data.header ?? null,
@@ -359,6 +361,10 @@ function removeCommentCharacter(index: number) {
   if (formData.value.comment) {
     formData.value.comment.splice(index, 1);
   }
+}
+
+function trimHeadlines(value: string | number | null) {
+  formData.value.headlines_to_exclude = String(value ?? '').trim();
 }
 </script>
 

@@ -48,7 +48,7 @@ class CsvParserBase(SQLModel):
     delimiter: str
     timezone: str | None = None
     encoding: str | None = None
-    headlines_to_exclude: int | None = None
+    headlines_to_exclude: str | None = None
     footlines_to_exclude: int | None = None
     pandas_read_csv: dict | None = Field(sa_column=Column(JSON), default_factory=dict)
     comment: list[str] = Field(sa_column=Column(JSON), default_factory=list)
@@ -64,7 +64,7 @@ class CsvParserUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     delimiter: str | None = None
-    headlines_to_exclude: int | None = None
+    headlines_to_exclude: str | None = None
     timezone: str | None = None
     encoding: str | None = None
     footlines_to_exclude: int | None = None
@@ -111,6 +111,18 @@ class CsvParser(CsvParserBase, table=True):
 
     @property
     def mqtt_information(self) -> dict:
+        # Parse headlines_to_exclude: handle "1" or "1,3,5"
+        skip_rows: int | list[int] = []
+        if self.headlines_to_exclude:
+            if "," in self.headlines_to_exclude:
+                # Comma-separated list: send as list
+                skip_rows = [
+                    int(x.strip()) for x in self.headlines_to_exclude.split(",")
+                ]
+            else:
+                # Single number: send as int
+                skip_rows = int(self.headlines_to_exclude.strip())
+
         return {
             "default": 0,
             "parsers": [
@@ -120,7 +132,7 @@ class CsvParser(CsvParserBase, table=True):
                     "settings": {
                         "delimiter": self.delimiter,
                         "skipfooter": self.footlines_to_exclude,
-                        "skiprows": self.headlines_to_exclude,
+                        "skiprows": skip_rows,
                         "header": self.header,
                         "comment": self.comment,
                         "pandas_read_csv": self.pandas_read_csv,
