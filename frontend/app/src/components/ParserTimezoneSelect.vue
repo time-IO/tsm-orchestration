@@ -1,22 +1,26 @@
 <template>
   <q-select
     v-model="model"
-    :options="store.rows"
+    :options="options"
     filled
     v-bind="$attrs"
     label="Select the timezone"
-  ></q-select>
+    use-input
+    @filter="filterFn"
+  />
 </template>
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useParserTimezoneStore } from 'stores/parserTimezoneStore';
 
 const store = useParserTimezoneStore();
 const $q = useQuasar();
 
 const model = defineModel();
+
+const options = ref(store.rows);
 
 onMounted(async () => {
   try {
@@ -29,6 +33,23 @@ onMounted(async () => {
     });
   }
 });
+
+function filterFn(val: string, update: (cb: () => void) => void) {
+  if (val === '') {
+    update(() => {
+      options.value = store.rows;
+
+      // here you have access to "ref" which
+      // is the Vue reference of the QSelect
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = val.toLowerCase();
+    options.value = store.rows.filter((v) => v.toLowerCase().indexOf(needle) > -1);
+  });
+}
 </script>
 
 <style scoped></style>

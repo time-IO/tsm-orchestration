@@ -2,14 +2,14 @@
   <parser-form-csv
     title="Copy CSV Parser"
     :is-loading="isLoading"
-    back-route="/parser/new"
+    :back-route="detailRoute"
     v-model="formData"
     @save="save"
   />
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
@@ -66,6 +66,14 @@ onMounted(async () => {
       await router.push('/parser');
     }
   }
+});
+
+const detailRoute = computed(() => {
+  if (route.params.id) {
+    const id = Number(route.params.id);
+    return `/parser/csv/${id}`;
+  }
+  return '';
 });
 
 async function save() {
