@@ -118,17 +118,6 @@ class MockDBapi:
 
         return {"observations": out}
 
-    def upsert_qc_labels(self, thing_uuid, qc_labels):
-        dates = sorted([pd.Timestamp(d["result_time"]) for d in qc_labels])
-        import ipdb
-
-        ipdb.set_trace()
-        pass
-
-    def __getattr__(self, name):
-        print("NAME:", name)
-        return lambda *args, **kwargs: None
-
 
 @pytest.fixture()
 def local_database():
