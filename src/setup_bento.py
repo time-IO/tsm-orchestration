@@ -38,6 +38,7 @@ class CreateBentoMQTTHandler(AbstractHandler):
     def prepare_stream_config(self, thing: Thing):
         ingest_type_id = thing.ingest_type_id
         path = thing.url_for_thing if thing.url_for_thing else thing.uuid
+        bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
 
         # Create Bento stream configuration
         if ingest_type_id == "5":
@@ -118,14 +119,14 @@ class CreateBentoMQTTHandler(AbstractHandler):
                 },
                 "output": {
                     "aws_s3": {
-                        "bucket": "bento-test",
-                        "path": "${!timestamp_unix_nano()}.json",
-                        "endpoint": "http://minio:9000",
+                        "bucket": f"{thing.s3_store.bucket}",
+                        "path": f"{bento_timestamp}.{thing.ext_http.file_type}",
+                        "endpoint": "http://object-storage:9000",
                         "force_path_style_urls": True,
                         "region": "",
                         "credentials": {
-                            "id": "",  # ideally inject via env/config
-                            "secret": ""
+                            "id": f"{thing.s3_store.user}",  # ideally inject via env/config
+                            "secret": f"{thing.s3_store.password}
                         }
                     }
                 }
