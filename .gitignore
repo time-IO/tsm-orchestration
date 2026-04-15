@@ -1,4 +1,5 @@
 .env*
+env.*
 venv
 .idea
 data/
@@ -17,3 +18,4 @@ docker-compose-dev.yml
 cron/crontab.txt
 **/__pycache__
 keycloak/mqtt-notifier/target
+migrations/worker_file_ingest/datastream_mapping
