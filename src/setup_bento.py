@@ -9,7 +9,7 @@ from timeio.typehints import MqttPayload
 logger = logging.getLogger("bento-setup")
 
 
-class CreateBentoMQTTHandler(AbstractHandler):
+class CreateThingInBentoHandler(AbstractHandler):
 
     def __init__(self):
         super().__init__(
@@ -126,7 +126,7 @@ class CreateBentoMQTTHandler(AbstractHandler):
                         "region": "",
                         "credentials": {
                             "id": f"{thing.s3_store.user}",  # ideally inject via env/config
-                            "secret": f"{thing.s3_store.password}
+                            "secret": f"{thing.s3_store.password}"
                         }
                     }
                 }
@@ -166,4 +166,4 @@ class CreateBentoMQTTHandler(AbstractHandler):
 
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
-    CreateBentoMQTTHandler().run_loop()
+    CreateThingInBentoHandler().run_loop()
