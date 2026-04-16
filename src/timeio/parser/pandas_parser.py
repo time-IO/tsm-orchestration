@@ -34,7 +34,7 @@ class PandasParser(AbcParser):
         raise NotImplementedError
 
     def to_observations(
-        self, data: pd.DataFrame, origin: str, parser_id: int | None = None
+        self, data: pd.DataFrame, origin: str, parser_uuid: str | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
 
@@ -87,7 +87,7 @@ class PandasParser(AbcParser):
                     "origin": origin,
                     "column_header": col,
                     "parsed_at": datetime.now().isoformat(),
-                    "parser_id": parser_id,
+                    "parser_id": parser_uuid,
                 }
             )
 

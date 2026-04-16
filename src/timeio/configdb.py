@@ -22,8 +22,7 @@ if get_envvar_as_bool("DEBUG_SQL"):
     del _help, _l
 
 
-_IDS_BY_UUID_QUERY = sql.SQL(
-    """\
+_IDS_BY_UUID_QUERY = sql.SQL("""\
 SELECT t.id as thing_id, t.project_id, p.database_id, t.ingest_type_id, t.s3_store_id,
 s3s.file_parser_id, fp.file_parser_type_id, t.mqtt_id, m.mqtt_device_type_id,
 t.ext_sftp_id, t.ext_api_id, ea.api_type_id
@@ -34,8 +33,7 @@ LEFT JOIN config_db.file_parser fp ON s3s.file_parser_id = fp.id
 LEFT JOIN config_db.mqtt m ON t.mqtt_id = m.id
 LEFT JOIN config_db.ext_api ea ON t.ext_api_id = ea.id
 WHERE t.uuid = %s
-"""
-)
+""")
 _no_ids = {
     "thing_id": None,
     "project_id": None,

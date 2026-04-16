@@ -40,6 +40,7 @@ CREATE TABLE "datastream"
     "properties"  jsonb        NULL,
     "position"    varchar(200) NOT NULL,
     "thing_id"    bigint       NOT NULL,
+    "mutable"     boolean      NOT NULL DEFAULT false,
 
     CONSTRAINT "datastream_thing_id_position_9f2cfe68_uniq" UNIQUE ("thing_id", "position"),
     CONSTRAINT "datastream_thing_id_f55522a4_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
@@ -73,7 +74,11 @@ CREATE TABLE "observation"
     CONSTRAINT "observation_datastream_id_result_time_1d043396_uniq" UNIQUE ("datastream_id", "result_time"),
     CONSTRAINT "observation_datastream_id_77f5c4fb_fk_datastream_id" FOREIGN KEY ("datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
 );
-CREATE INDEX "observation_datastream_id_77f5c4fb" ON "observation" ("datastream_id");
+
+-- not necessary, unique constraint generates automatically an index, see above
+-- CREATE INDEX "observation_datastream_id_77f5c4fb" ON "observation" ("datastream_id");
+
+CREATE INDEX idx_observation_result_time ON observation (result_time);
 
 
 --
@@ -115,3 +120,14 @@ CREATE TABLE related_datastream
 COMMENT ON COLUMN related_datastream.datastream_id IS 'Domain, source or set of departure of the relation.';
 COMMENT ON COLUMN related_datastream.role_id IS 'The type of the relation.';
 COMMENT ON COLUMN related_datastream.target_id IS 'Codomain, target  or set of destination of the relation.';
+
+
+CREATE TABLE mqtt_message
+(
+    "id"          bigserial                NOT NULL PRIMARY KEY,
+    "timestamp"   timestamp with time zone NOT NULL,
+    "message"     text                     NOT NULL,
+    "thing_id"    bigint                   NOT NULL,
+
+    CONSTRAINT "mqtt_message_thing_id_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
+);

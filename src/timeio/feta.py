@@ -4,8 +4,6 @@ import atexit
 import warnings
 from typing import Any, TypedDict
 
-from timeio.errors import DataNotFoundError
-
 try:
     from typing import Self
 except ImportError:
@@ -20,20 +18,20 @@ from timeio.typehints import JsonObjectT
 logger = logging.getLogger("feta")
 
 """
-FETA - Front End Thing Abstraction 
+FETA - Front End Thing Abstraction
 
-This file provide a convenient way to access the (meta-) data 
-from the frontend (Thing, Project, QC-Settings, etc.) Currently 
-this is a simple wrapper around the configDB, but also a (nearly 
-complete[1]) drop-in replacement for classes in thing.py. 
+This file provide a convenient way to access the (meta-) data
+from the frontend (Thing, Project, QC-Settings, etc.) Currently
+this is a simple wrapper around the configDB, but also a (nearly
+complete[1]) drop-in replacement for classes in thing.py.
 
 [1]
-- `thing.ExternalSFTP.private_key_path` is not supported, 
-    because now we store the private ssh key directly in 
-    the DB. One should use `feta.ExtSFTP.ssh_priv_key` 
+- `thing.ExternalSFTP.private_key_path` is not supported,
+    because now we store the private ssh key directly in
+    the DB. One should use `feta.ExtSFTP.ssh_priv_key`
     instead.
-- `thing.Thing.properties` is not supported, because we 
-    don't use/need it anymore. 
+- `thing.Thing.properties` iso not supported, because we
+    don't use/need it anymore.
 """
 
 
@@ -512,12 +510,13 @@ class ExtSFTP(Base):
     public_key = ssh_pub_key
 
 
-class FileParser(Base):
+class FileParser(Base, FromUUIDMixin):
     _schema = "config_db"
     _table_name = "file_parser"
     id: int = _prop(lambda self: self._attrs["id"])
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
     name: str = _prop(lambda self: self._attrs["name"])
+    uuid = _prop(lambda self: self._attrs["uuid"])
     params: JsonT | None = _prop(lambda self: self._attrs["params"])
     file_parser_type: FileParserType = _create(
         FileParserType,
@@ -681,7 +680,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :return: Returns a feta.Thing instance.
         """
         query = (
-            f"select t.* from {cls._schema}.thing t join s3_store s3 on "
+            f"select t.* from {cls._schema}.thing t join {cls._schema}.s3_store s3 on "
             "t.s3_store_id = s3.id where s3.bucket = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)

@@ -8,10 +8,8 @@ from timeio.parser import (
     CsvParser,
     JsonParser,
     CampbellCr6Parser,
-    BrightskyDwdApiParser,
     YdocMl417Parser,
     ChirpStackGenericParser,
-    SineDummyParser,
     AbcParser,
     _default_settings,
 )
@@ -23,10 +21,8 @@ from timeio.parser import (
         ("csvparser", CsvParser, {"settings": dict}),
         ("jsonparser", JsonParser, {"settings": dict, "normalize_kws": dict}),
         ("campbell_cr6", CampbellCr6Parser, {}),
-        ("brightsky_dwd_api", BrightskyDwdApiParser, {}),
         ("ydoc_ml417", YdocMl417Parser, {}),
         ("chirpstack_generic", ChirpStackGenericParser, {}),
-        ("sine_dummy", SineDummyParser, {}),
     ],
 )
 def test__get_parser__type(parser_type, expected_type, expected_attrs):
@@ -69,6 +65,11 @@ JSON_DEFAULT_SETTINGS = _default_settings[JsonParser]
             "csvparser",
             {"header": "b", "pandas_read_csv": {"header": "a"}},
             CSV_DEFAULT_SETTINGS | {"header": "a"},
+        ),
+        (
+            "csvparser",
+            {"header": "b", "pandas_read_csv": None},
+            CSV_DEFAULT_SETTINGS | {"header": "b"},
         ),
         # JSON PARSER
         ("jsonparser", {}, JSON_DEFAULT_SETTINGS),

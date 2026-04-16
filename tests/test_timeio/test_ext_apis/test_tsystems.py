@@ -76,21 +76,21 @@ def test_tsytsems_do_parse():
         {
             "deviceId": "device_id",
             "locationId": "location_id",
-            "timestamp": 1730548000,
+            "sendTimestamp": 1730548000,
             "param1": 1,
             "param2": 2,
         },
         {
             "deviceId": "device_id",
             "locationId": "location_id",
-            "timestamp": 1730448000,
+            "sendTimestamp": 1730448000,
             "param1": 3,
             "param2": 2,
         },
     ]
     parsed = ext_api.TsystemsApiSyncer().do_parse(api_response)
-    obs = parsed["observations"][0]
-    assert len(parsed["observations"]) == 4
+    obs = parsed[0]
+    assert len(parsed) == 4
     assert obs["result_number"] == 1
     assert (
         obs["parameters"]

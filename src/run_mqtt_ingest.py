@@ -33,7 +33,9 @@ class ParseMqttDataHandler(AbstractHandler):
         )
 
         self.configdb_dsn = get_envvar("CONFIGDB_DSN")
-        self.dbapi = DBapi(get_envvar("DB_API_BASE_URL"))
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
+        )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
 
     def act(self, content: typing.Any, message: MQTTMessage):
@@ -43,6 +45,9 @@ class ParseMqttDataHandler(AbstractHandler):
         mqtt_user = message.topic.split("/")[1]
         thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.configdb_dsn)
         thing_uuid = thing.uuid
+
+        logger.info("persisting rawdata")
+        self.dbapi.insert_mqtt_message(thing_uuid, content)
 
         logger.info(f"get parser")
         parser: MqttParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
@@ -55,7 +60,12 @@ class ParseMqttDataHandler(AbstractHandler):
             raise UserInputError("Parsing data failed") from e
 
         logger.info(f"store observations")
-        self.dbapi.upsert_observations(thing_uuid, observations)
+        try:
+            self.dbapi.upsert_observations_and_datastreams(
+                thing_uuid, observations, mutable=False
+            )
+        except Exception as e:
+            logger.exception(f"Failed to store data: {e}")
         journal.info(f"parsed mqtt data from {origin}", thing_uuid)
 
         logger.info(f"send mqtt message")

@@ -50,7 +50,7 @@ black:
 
 pytest:
   stage: check
-  image: python:3.11-slim
+  image: python:3.11
   before_script:
     - pip install -r src/requirements.txt
     - pip install pytest

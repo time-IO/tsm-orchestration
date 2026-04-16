@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from minio_cli_wrapper.mc import Mc
+from timeio.minio.client import MinioClient
+from timeio.minio.admin_client import MinioAdminClient
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -24,8 +25,15 @@ class CreateThingInMinioHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        # Custom minio client wrapper
-        self.mcw = Mc(
+        # Custom minio client
+        self.minio = MinioClient(
+            url=get_envvar("MINIO_URL"),
+            access_key=get_envvar("MINIO_ACCESS_KEY"),
+            secret_key=get_envvar("MINIO_SECURE_KEY"),
+            secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
+        )
+        # Custom minio admin client
+        self.minio_admin = MinioAdminClient(
             url=get_envvar("MINIO_URL"),
             access_key=get_envvar("MINIO_ACCESS_KEY"),
             secret_key=get_envvar("MINIO_SECURE_KEY"),
@@ -45,53 +53,35 @@ class CreateThingInMinioHandler(AbstractHandler):
         passw = decrypt(thing.raw_data_storage.password, get_crypt_key())
         bucket = thing.raw_data_storage.bucket_name
 
-        # create user
-        # not implemented in minio python sdk yet :(
-        # so we have to use minio cli client wrapper
-        logger.info("create user")
-        self.mcw.user_add(user, passw)
+        logger.debug(f"Adding MinIO user {user}")
+        self.minio_admin.user_add(access_key=user, secret_key=passw)
 
-        # mc admin policy add myminio/ datalogger1-policy /root/iam-policy-datalogger1.json
-        # not implemented in minio python sdk yet :(
-        self.mcw.policy_add(
-            user,
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "s3:GetBucketLocation",
-                            "s3:GetObject",
-                            "s3:ListBucket",
-                            "s3:PutObject",
-                        ],
-                        "Resource": [
-                            f"arn:aws:s3:::{bucket}",
-                            f"arn:aws:s3:::{bucket}/*",
-                        ],
-                    }
-                ],
-            },
+        logger.debug(f"Creating MinIO policy {user} for bucket {bucket}")
+        policy = self.minio_admin.build_bucket_policy(bucket_name=bucket)
+        self.minio_admin.policy_add(
+            policy_name=user,
+            policy=policy,
         )
 
-        # mc admin policy set myminio/ datalogger1-policy user=datalogger1-user
-        # not implemented in minio python sdk yet :(
-        self.mcw.policy_set_user(user, user)
+        logger.debug(f"Assigning policy {user} to user {user}")
+        self.minio_admin.user_policy_set(policy_name=user, user=user)
 
-        # Create bucket
-        if self.mcw.bucket_exists(bucket):
-            logger.info(f"bucket {bucket} already exists")
+        if self.minio.bucket_exists(bucket_name=bucket):
+            logger.debug(f"Bucket {bucket} already exists")
         else:
-            logger.info(f"create bucket {bucket}")
-            try:
-                self.mcw.make_locked_bucket(bucket)
-            except Exception as e:
-                raise ValueError(f'Unable to create bucket "{bucket}"') from e
+            logger.debug(f"Creating bucket {bucket}")
+            self.minio.make_bucket(bucket_name=bucket, object_lock=True)
 
-        self.mcw.set_bucket_100y_retention(bucket)
-        self.mcw.enable_bucket_notification(bucket)
-        logger.info("store bucket metadata (db connection, thing uuid, etc.)")
+        if self.minio.get_bucket_retention(bucket_name=bucket):
+            logger.debug(f"Bucket {bucket} already has retention set")
+        else:
+            logger.debug(f"Setting retention for bucket {bucket}")
+            self.minio.set_bucket_retention(bucket_name=bucket, years=100)
+
+        logger.debug(f"Setting notification for bucket {bucket}")
+        self.minio.set_bucket_notification(bucket_name=bucket)
+
+        # we could set bucket quotas here...
 
 
 if __name__ == "__main__":

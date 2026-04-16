@@ -49,7 +49,7 @@ class GrafanaUser:
         """
         Remove the user from the current organization.
         """
-        self.api.organization.delete_user_from_current_organization(user_id)
+        self.api.organization.delete_user_current_organization(user_id)
 
     def is_in_team(self, team_id: int, user_id: int) -> bool:
         """

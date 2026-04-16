@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import warnings
+import base64
 from datetime import datetime, timezone
 from http.client import HTTPResponse
 from typing import Literal
@@ -50,6 +51,7 @@ class Journal:
         self.name = name
         self.enabled = get_envvar_as_bool("JOURNALING")
         self.base_url = get_envvar("DB_API_BASE_URL", None)
+        self.api_token = get_envvar("DB_API_AUTH_TOKEN", None)
 
         if not self.enabled:
             warnings.warn(
@@ -95,9 +97,12 @@ class Journal:
         logger.info("Message to journal:\n>> %s[%s]: %s", self.name, level, message)
 
         req = request.Request(
-            url=f"{self.base_url}/journal/{thing_uuid}",
+            url=f"{self.base_url}/things/{thing_uuid}/journal",
             data=json.dumps(data).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_token}",
+            },
             method="POST",
         )
         logger.debug(f"%s %s, data: %s", req.method, req.full_url, req.data)

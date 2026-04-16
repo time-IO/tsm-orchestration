@@ -26,3 +26,5 @@ sudo docker compose $COMPOSE_FILES $ENV_FILES create --build
 sudo docker compose $COMPOSE_FILES $ENV_FILES up -d
 sleep 10
 sudo docker compose $COMPOSE_FILES $ENV_FILES ps
+# remove dangling docker images
+docker rmi $(docker images -f dangling=true -q)

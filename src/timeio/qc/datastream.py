@@ -13,9 +13,10 @@ import requests
 from psycopg import sql
 
 from timeio import feta
-from timeio.common import ObservationResultType, get_result_field_name
+from timeio.common import ObservationResultType, get_result_field_name, get_envvar
 from timeio.cast import rm_tz
 from timeio.errors import DataNotFoundError
+from timeio.databases import DBapi
 
 if typing.TYPE_CHECKING:
     from timeio.qc.typeshints import TimestampT, WindowT
@@ -26,8 +27,8 @@ __all__ = [
     "LocalStream",
 ]
 
-""" 
-This module provides a convenient abstraction for retrieving and 
+"""
+This module provides a convenient abstraction for retrieving and
 storing datastreams from/to the users observation database.
 """
 
@@ -132,19 +133,17 @@ class DatastreamSTA:
         #
         # See also ProductStream._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
+        query = sql.SQL("""
             select "RESULT_TIME", "RESULT_TYPE", "RESULT_NUMBER", "RESULT_STRING",
-                "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id 
-            from "OBSERVATIONS" o 
-            join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id 
-            where o."DATASTREAM_ID" = %s 
-              and o."RESULT_TIME" >= %s 
-              and o."RESULT_TIME" <= %s 
-            order by o."RESULT_TIME" desc 
-            limit %s 
-            """
-        )
+                "RESULT_JSON", "RESULT_BOOLEAN", "RESULT_QUALITY",  l.datastream_id
+            from "OBSERVATIONS" o
+            join public.sms_datastream_link l on o."DATASTREAM_ID" = l.device_property_id
+            where o."DATASTREAM_ID" = %s
+              and o."RESULT_TIME" >= %s
+              and o."RESULT_TIME" <= %s
+            order by o."RESULT_TIME" desc
+            limit %s
+            """)
 
         if date_end in [None, pd.NaT]:
             date_end = "Infinity"
@@ -224,11 +223,11 @@ class DatastreamSTA:
         self,
     ) -> tuple[TimestampT, TimestampT] | tuple[None, None]:
         """Returns (earliest, latest) timestamp of data that was never seen by QC."""
-        query = """ 
+        query = """
            select o."RESULT_TIME" from "OBSERVATIONS" o
-           where o."DATASTREAM_ID" = %s 
+           where o."DATASTREAM_ID" = %s
              and (o."RESULT_QUALITY" is null or o."RESULT_QUALITY" = 'null'::jsonb)
-           order by "RESULT_TIME" {order} 
+           order by "RESULT_TIME" {order}
            limit 1
         """
 
@@ -326,7 +325,7 @@ class DatastreamSTA:
 
         self._data.loc[index, "quality"] = labels.loc[index]
 
-    def upload(self, api_base_url):
+    def upload(self, api_base_url, api_token):
         """Update locally stored quality labels to the DB"""
         df: pd.DataFrame = self._data.loc[self._upload_ptr :].copy()
         if df.empty:
@@ -342,9 +341,12 @@ class DatastreamSTA:
         labels = df.to_json(orient="records", date_format="iso")
 
         r = requests.post(
-            f"{api_base_url}/observations/qaqc/{self._thing.uuid}",
+            f"{api_base_url}/things/{self._thing.uuid}/observations/qaqc",
             data=f'{{"qaqc_labels":{labels}}}',
-            headers={"Content-type": "application/json"},
+            headers={
+                "Content-type": "application/json",
+                "Authorization": f"Bearer {api_token}",
+            },
         )
         r.raise_for_status()
 
@@ -388,6 +390,9 @@ class ProductStream(Datastream):
         # The name of the stream is in the form `T{STA_THING_ID}S{UserGivenName}`
         # e.g. T42Ssomefoo.
         self.position = self.name.split("S", maxsplit=1)[1]
+        self.dbapi = DBapi(
+            get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
+        )
         assert stream_id is None
 
     def _fetch_thing_uuid(self):
@@ -422,9 +427,8 @@ class ProductStream(Datastream):
         #
         # See also DatastreamSTA._fetch which basically do
         # the same query on different tables.
-        query = sql.SQL(
-            """
-            select o.result_time, o.result_type, o.result_number, o.result_string, 
+        query = sql.SQL("""
+            select o.result_time, o.result_type, o.result_number, o.result_string,
                    o.result_json, o.result_boolean, o.result_quality, o.datastream_id
             from observation o
             join datastream d on o.datastream_id = d.id
@@ -435,8 +439,7 @@ class ProductStream(Datastream):
               and o.result_time <= %s
             order by o.result_time desc
             limit %s
-            """
-        )
+            """)
 
         we_are = f"{self.__class__.__name__}{self.name}"
         logger.debug(
@@ -481,7 +484,7 @@ class ProductStream(Datastream):
         _data.index = rm_tz(index)
         self._data = _data
 
-    def upload(self, api_base_url):
+    def upload(self, api_base_url, api_token):
         """Update locally stored data and quality labels to the DB"""
         df: pd.DataFrame = self._data.loc[self._upload_ptr :]
         df["result_type"] = rt = get_result_type(df["data"])
@@ -497,12 +500,9 @@ class ProductStream(Datastream):
         assert len(df.columns) == 5
         labels = df.to_json(orient="records", date_format="iso")
 
-        r = requests.post(
-            f"{api_base_url}/observations/upsert/{self.thing_id}",
-            json={"observations": labels},
-            headers={"Content-type": "application/json"},
+        self.dbapi.upsert_observations_and_datastreams(
+            self.thing_id, labels, mutable=True
         )
-        r.raise_for_status()
 
 
 class LocalStream(Datastream):

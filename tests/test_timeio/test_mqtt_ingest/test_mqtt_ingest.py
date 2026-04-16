@@ -16,6 +16,7 @@ def mock_env(monkeypatch):
     monkeypatch.setenv("MQTT_CLEAN_SESSION", "true")
     monkeypatch.setenv("CONFIGDB_DSN", "dsn")
     monkeypatch.setenv("DB_API_BASE_URL", "http://fake-db")
+    monkeypatch.setenv("DB_API_AUTH_TOKEN", "token")
     monkeypatch.setenv("TOPIC_DATA_PARSED", "topic/parsed")
 
 
@@ -42,8 +43,8 @@ def test_act_parses_and_publishes(mock_get_parser, mock_Thing, mock_DBapi, mock_
 
     handler.act({}, msg)
 
-    handler.dbapi.upsert_observations.assert_called_once_with(
-        "UUID", [{"result_number": 1}]
+    handler.dbapi.upsert_observations_and_datastreams.assert_called_once_with(
+        "UUID", [{"result_number": 1}], mutable=False
     )
     handler.mqtt_client.publish.assert_called_once()
     args, kwargs = handler.mqtt_client.publish.call_args

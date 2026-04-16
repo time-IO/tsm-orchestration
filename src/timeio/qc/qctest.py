@@ -113,6 +113,9 @@ class QcTest:
     def __repr__(self):
         return f"QcTest({self.name}, func={self.func_name}, params={self.params})"
 
+    def get_streams_by_key(self, key: str) -> list[StreamInfo]:
+        return [s for s in self.streams if s.key == key]
+
     def load_data(
         self,
         sm: StreamManager,
@@ -132,7 +135,7 @@ class QcTest:
                 start_date, end_date = stream.get_unprocessed_range()
 
             df = stream.get_data(start_date, end_date, self.context_window)
-            data[name] = df["data"]
+            data[name] = df["data"].astype(float)
             qual[name] = df["quality"]
 
         self._qctool.add_data(data, qual)

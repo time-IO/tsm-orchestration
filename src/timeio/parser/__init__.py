@@ -7,20 +7,16 @@ from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
 from timeio.parser.json_parser import JsonParser
 from timeio.parser.mqtt_parser import MqttParser
-from timeio.parser.mqtt_devices.brightsky_dwd import BrightskyDwdApiParser
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
-from timeio.parser.mqtt_devices.sine_dummy import SineDummyParser
 
 _parser_map = {
     "csvparser": CsvParser,
     "jsonparser": JsonParser,
     "campbell_cr6": CampbellCr6Parser,
-    "brightsky_dwd_api": BrightskyDwdApiParser,
     "ydoc_ml417": YdocMl417Parser,
     "chirpstack_generic": ChirpStackGenericParser,
-    "sine_dummy": SineDummyParser,
 }
 
 _default_settings = {
@@ -52,7 +48,7 @@ def get_parser(
     default_settings = _default_settings.get(klass, {})
 
     if issubclass(klass, CsvParser):
-        pd_kws = settings.pop("pandas_read_csv", {})
+        pd_kws = settings.pop("pandas_read_csv", None) or {}
         settings = {**default_settings, **settings, **pd_kws}
         instance = klass(settings)
 
