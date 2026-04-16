@@ -93,11 +93,7 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
             "password": encryption_service.encrypt(self.password),
             "sync_interval": self.sync_interval_in_minutes,
             "public_key": self.ssh_public_key,
-            "private_key": encryption_service.encrypt(
-                get_ssh_priv_key(
-                    f"/app/sftp-private-keys/{self.uuid}", self.ssh_private_key
-                )
-            ),
+            "private_key": encryption_service.encrypt(self.ssh_private_key),
         }
 
     @property

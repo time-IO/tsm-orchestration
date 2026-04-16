@@ -2,5 +2,3 @@
 venv
 .venv
 **/__pycache__
-!api/sftp-private-keys/.gitkeep
-api/sftp-private-keys/*
