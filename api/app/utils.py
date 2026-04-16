@@ -37,14 +37,6 @@ def create_db_username(permisison_group_name: str, readonly: bool = False):
 def get_connection_string_secure(db, readonly: bool = False):
     if db:
         usr = db.read_only_username if readonly else db.username
+
         return f"postgresql://{usr}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
     return "-"
-
-
-def get_ssh_priv_key(filepath, priv_key):
-    if Path(filepath).is_file():
-        try:
-            return Path(filepath).read_text().strip()
-        except Exception as e:
-            raise ValueError(f"Invalid SSH key: {e}")
-    return priv_key

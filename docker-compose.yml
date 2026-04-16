@@ -40,7 +40,6 @@ services:
 
     volumes:
       - ./api/app:/app:rw,cached
-      - ./api/sftp-private-keys:/app/sftp-private-keys
     depends_on:
       api-db:
         condition: "service_healthy"
