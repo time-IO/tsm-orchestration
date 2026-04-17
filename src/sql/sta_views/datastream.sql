@@ -32,10 +32,10 @@ SELECT
 	) as "UNIT_OF_MEASUREMENT",
     public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
 	null as "RESULT_TIME",
-	null as "PHENOMENON_TIME",
+	'FROM ' || dma.begin_date::text || ' TO ' || last_obs.result_time_text AS "PHENOMENON_TIME",
 	dma.begin_date AS "PHENOMENON_TIME_START",
     dma.begin_date AS "RESULT_TIME_START",
-    dma.end_date AS "PHENOMENON_TIME_END",
+    last_obs.result_time AS "PHENOMENON_TIME_END",
     dma.end_date AS "RESULT_TIME_END",
 	jsonb_build_object(
         '@context', public.get_schema_org_context(),
@@ -124,8 +124,16 @@ LEFT JOIN public.sms_cv_unit cv_ua ON coalesce(nullif(split_part(dp.accuracy_uni
 LEFT JOIN public.sms_cv_license cv_l ON coalesce(nullif(split_part(dsl.license_uri,'/',9),'')::integer) =cv_l.id
 LEFT JOIN public.sms_configuration_dynamic_location_begin_action cdl ON c.id = cdl.configuration_id
 LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = csl.configuration_id
-WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
-GROUP BY dsl.device_property_id, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
+LEFT JOIN LATERAL (
+    SELECT result_time,
+           result_time::text AS result_time_text
+    FROM ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
+    WHERE o.datastream_id = dsl.datastream_id
+    ORDER BY result_time DESC
+    LIMIT 1
+) last_obs ON true
+WHERE c.is_public AND d.is_public AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+GROUP BY dsl.datastream_id, device_property_id, last_obs.result_time, last_obs.result_time_text, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
 	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,
 	dp.measuring_range_max, cv_l.term, cv_l.provenance_uri, cv_l.definition, c.id, dma.id, dma.label, dma.begin_description, dma.begin_date, dma.offset_x,
