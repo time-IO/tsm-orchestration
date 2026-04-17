@@ -9,14 +9,14 @@
 
 ## 2026-04-17
 ### Added
-- Seperate redo workers for file ingest and exteranel APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/591))
+- Special redo workers for file ingest and exteranel APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/591))
 ### Fixed
 - Added missing STA property `FEATURE.encodingType` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/589))
 ### Changed
 - Improved error handling/journaling for external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/588))
-  - Rewrite of the QC intergation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/581))
+- Rewrite of the QC integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/581))
 ### Removed
-- Unuses MQTT Parsers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/586))
+- Unused MQTT Parsers ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/586))
 
 ## 2026-03-18
 ### Added
