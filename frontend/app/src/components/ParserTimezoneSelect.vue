@@ -4,7 +4,7 @@
     :options="options"
     filled
     v-bind="$attrs"
-    label="Select the timezone"
+    label="Select the timezone *"
     use-input
     @filter="filterFn"
   />
