@@ -180,9 +180,9 @@ def read_stream_data(
             out[stream] = pd.DataFrame(
                 data={
                     "data": df.result_number.to_numpy(),
-                    "quality": df.result_quality.to_numpy().astype(object)
+                    "quality": df.result_quality.to_numpy().astype(object),
                 },
                 index=pd.to_datetime(df["result_time"]),
-            )
+            ).sort_index()
 
     return out
