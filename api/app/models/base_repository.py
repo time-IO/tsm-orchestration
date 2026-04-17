@@ -132,7 +132,6 @@ class BaseRepository(Generic[T]):
             raise HTTPException(status_code=400, detail="Failed to update.")
 
     def update_parser(self, id: int, data, permission_group_ids):
-        print(f"data: {str(data)}")
 
         try:
             entity = self.find_allowed_one(id, permission_group_ids)

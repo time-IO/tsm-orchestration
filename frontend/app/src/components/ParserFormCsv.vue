@@ -68,7 +68,10 @@
             label="Number of footlines to exclude"
           />
 
-          <parser-timezone-select v-model="formData.timezone" />
+          <parser-timezone-select
+            v-model="formData.timezone"
+            :rules="[(val: string | null) => !!val || 'Timezone is required']"
+          />
 
           <parser-encoding-select v-model="formData.encoding" />
 
