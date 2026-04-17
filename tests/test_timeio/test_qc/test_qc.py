@@ -373,7 +373,7 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
     thing = feta.Thing.from_uuid(thing_uuid, dsn=local_database)
-    config = thing.project.get_default_qaqc()
+    config = thing.project.get_default_qaqcs()
 
     funcs = filter_functions(get_functions(config), thing.id)
 

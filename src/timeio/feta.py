@@ -441,7 +441,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     )
 
     # thing.Project interface
-    # uuid and name are already defines above
+    # uuid and name are already defined above
 
     def get_things(self) -> list[Thing]:
         query = f"select * from {self._schema}.thing where project_id = %s"
@@ -451,14 +451,17 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
             for attr in self._fetchall(conn, query, self.id)
         ]
 
-    def get_default_qaqc(self) -> QAQC | None:
+    def get_default_qaqcs(self) -> list[QAQC] | None:
         query = (
             f"select * from {self._schema}.qaqc q "
             f"where q.project_id = %s and q.default = true "
             f"order by q.id desc"
         )
-        if res := self._fetchone(self._conn, query, self.id):
-            return QAQC._from_parent(res, self)
+        if _ := self._fetchall(self._conn, query, self.id):
+            return [
+                QAQC._from_parent(attr, self)
+                for attr in self._fetchall(self._conn, query, self.id)
+            ]
         return None
 
     def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:

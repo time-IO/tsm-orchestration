@@ -102,29 +102,27 @@ class QcFunction:
         return [f.alias for f in self.targets]
 
 
-def get_functions(conf: feta.QAQC) -> list[QcFunction]:
+def get_functions(configs: list[feta.QAQC]) -> list[QcFunction]:
     """
     Convert between the database/feta layer and business logic objects
     """
-
     out = []
     rename_map = {"arg_name": "key", "begin_date": "start_date"}
-    for func in conf.get_tests():
+    for config in configs:
+        for func in config.get_tests():
+            streams = [
+                QcFunctionStream(**{rename_map.get(k, k): v for k, v in stream.items()})
+                for stream in func.get_streams()
+            ]
 
-        streams = [
-            QcFunctionStream(**{rename_map.get(k, k): v for k, v in stream.items()})
-            for stream in func.get_streams()
-        ]
-
-        qctest = QcFunction(
-            name=func.name,
-            func_name=func.function,
-            fields=[s for s in streams if s.key == "field"],
-            targets=[s for s in streams if s.key == "target"],
-            params=func.args,
-        )
-        out.append(qctest)
-
+            qctest = QcFunction(
+                name=func.name,
+                func_name=func.function,
+                fields=[s for s in streams if s.key == "field"],
+                targets=[s for s in streams if s.key == "target"],
+                params=func.args,
+            )
+            out.append(qctest)
     return out
 
 
@@ -171,7 +169,7 @@ def filter_funcs_to_execute(
     return selected_funcs
 
 
-def filter_functions(funcs: list[QcFunction], sta_thing_id) -> list[QcFunction]:
+def filter_functions(funcs: list[QcFunction], sta_thing_id: int) -> list[QcFunction]:
     thing_funcs = filter_thing_funcs(funcs, sta_thing_id)
     funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
     return funcs_to_process
