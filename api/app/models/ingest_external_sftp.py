@@ -1,7 +1,6 @@
 from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
 import uuid as uuid_pkg
 from datetime import datetime, timezone
-from utils import get_ssh_priv_key
 from .permission_group import PermissionGroup
 from encryption import EncryptedType
 
