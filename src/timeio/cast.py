@@ -47,24 +47,3 @@ def flatten(
         else:
             return None
     return flat
-
-
-DtWithTZ = TypeVar("DtWithTZ", bound=pd.Timestamp | pd.DatetimeIndex | datetime)
-
-
-def rm_tz(obj: DtWithTZ) -> DtWithTZ:
-    """If the given object has a timezone we localize it to UTC and
-    remove the timezone information. Objects that have no timezone
-    information in the first place are returned as they are."""
-
-    if isinstance(obj, datetime):
-        if obj.tzinfo is None:
-            return obj
-        return obj.astimezone(timezone.utc).replace(tzinfo=None)
-
-    if isinstance(obj, (pd.Timestamp, pd.DatetimeIndex)):
-        if obj.tz is None:
-            return obj
-        return obj.tz_convert("UTC").tz_localize(None)
-
-    raise TypeError(f"Unsupported type {type(obj).__qualname__}")
