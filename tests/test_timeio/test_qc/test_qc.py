@@ -118,6 +118,9 @@ class MockDBapi:
 
         return {"observations": out}
 
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
 
 @pytest.fixture()
 def local_database():
@@ -359,7 +362,7 @@ def test_processing_workflow(local_dbapi):
     qc = SaQCWrapper(data_mod)
 
     src, trg = data_mod.values()
-    assert trg.sort_index().equals(src.sort_index() + 5)
+    assert trg["data"].sort_index().equals(src["data"].sort_index() + 5)
 
 
 @pytest.mark.parametrize(

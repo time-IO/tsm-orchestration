@@ -176,12 +176,11 @@ def read_stream_data(
             )
 
             df = pd.DataFrame(data["observations"])
+            df = df[df.result_type == 0]
             out[stream] = pd.DataFrame(
                 data={
-                    "data": df.to_numpy()[
-                        np.arange(len(df)), df["result_type"] + 2
-                    ].astype(float),
-                    "quality": df["result_quality"].astype(object),
+                    "data": df.result_number.to_numpy(),
+                    "quality": df.result_quality.to_numpy().astype(object)
                 },
                 index=pd.to_datetime(df["result_time"]),
             )
