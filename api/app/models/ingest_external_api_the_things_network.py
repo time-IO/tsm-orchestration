@@ -32,7 +32,7 @@ class IngestExternalApiTheThingsNetworkUpdate(SQLModel):
 class IngestExternalApiTheThingsNetworkPublic(IngestExternalApiTheThingsNetworkBase):
     id: int
     uuid: uuid_pkg.UUID
-    created_by_id: int
+    created_by_id: int | None = None
     created_at: datetime
     permission_group: "PermissionGroup"
 
@@ -53,7 +53,7 @@ class IngestExternalApiTheThingsNetwork(
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int = Field(foreign_key="user.id")
+    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))

@@ -77,7 +77,7 @@ class CsvParserUpdate(SQLModel):
 class CsvParserPublic(CsvParserBase):
     id: int
     uuid: uuid_pkg.UUID
-    created_by_id: int
+    created_by_id: int | None = None
     created_at: datetime
     timestamp_columns: list[CsvParserTimestampColumnPublic] = []
     permission_group: "PermissionGroup"
@@ -97,7 +97,7 @@ class CsvParser(CsvParserBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int = Field(foreign_key="user.id")
+    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     timestamp_columns: list[CsvParserTimestampColumn] = Relationship(
         back_populates="csv_parser", cascade_delete=True

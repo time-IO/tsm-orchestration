@@ -40,7 +40,7 @@ class IngestExternalSftpUpdate(SQLModel):
 class IngestExternalSftpPublic(IngestExternalSftpBase):
     id: int
     uuid: uuid_pkg.UUID
-    created_by_id: int
+    created_by_id: int | None = None
     created_at: datetime
     ssh_public_key: str
     permission_group: "PermissionGroup"
@@ -62,7 +62,7 @@ class IngestExternalSftp(IngestExternalSftpBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int = Field(foreign_key="user.id")
+    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ssh_private_key: str = Field(
         sa_column=Column("ssh_private_key", EncryptedType, nullable=True)
