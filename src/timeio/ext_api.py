@@ -635,7 +635,7 @@ class SensotoApiSyncer(ExtApiSyncer):
         for s in sensor_data:
             res = request_with_handling(
                 "GET",
-                f"{self.base_url}/{network}/devices/{device}/sensors/{s["sensor"]}/measurements/raw",
+                f"{self.base_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
                 params=params,
             )
             api_data = res.json()
