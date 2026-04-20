@@ -127,12 +127,12 @@ LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = cs
 LEFT JOIN LATERAL (
     SELECT result_time,
            result_time::text AS result_time_text
-    FROM ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2.observation o
+    FROM observation o
     WHERE o.datastream_id = dsl.datastream_id
     ORDER BY result_time DESC
     LIMIT 1
 ) last_obs ON true
-WHERE c.is_public AND d.is_public AND dsl.datasource_id = 'ufztimese_aiamoartificial_4bf3ba9d58a34330bcda9c90471866e2'
+WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
 GROUP BY dsl.datastream_id, device_property_id, last_obs.result_time, last_obs.result_time_text, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
 	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,
