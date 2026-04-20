@@ -30,7 +30,7 @@ class IngestMqttUpdate(SQLModel):
 class IngestMqttPublic(IngestMqttBase):
     id: int
     uuid: uuid_pkg.UUID
-    created_by_id: int
+    created_by_id: int | None = None
     created_at: datetime
     permission_group: "PermissionGroup"
     username: str
@@ -52,7 +52,7 @@ class IngestMqtt(IngestMqttBase, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID
-    created_by_id: int = Field(foreign_key="user.id")
+    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     username: str
     password: str = Field(sa_column=Column("password", EncryptedType, nullable=False))

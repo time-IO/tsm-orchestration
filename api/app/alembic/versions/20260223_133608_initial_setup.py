@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.Column("period_in_minutes", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -122,7 +122,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -151,7 +151,7 @@ def upgrade() -> None:
         sa.Column("time_resolution_in_minutes", sa.Integer(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -184,7 +184,7 @@ def upgrade() -> None:
         sa.Column("endpoint_uri", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -219,7 +219,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -247,7 +247,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("sync_interval_in_minutes", sa.Integer(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -275,7 +275,7 @@ def upgrade() -> None:
         sa.Column("mqtt_parser_id", sa.Integer(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -315,7 +315,7 @@ def upgrade() -> None:
         sa.Column("pandas_read_csv", sa.JSON(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("comment", sa.JSON(), nullable=True),
         sa.Column("header", sa.Integer(), nullable=True),
@@ -360,7 +360,7 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
@@ -389,7 +389,7 @@ def upgrade() -> None:
         ),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("password", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -452,7 +452,7 @@ def upgrade() -> None:
         sa.Column("sync_enabled", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("uuid", sa.Uuid(), nullable=False),
-        sa.Column("created_by_id", sa.Integer(), nullable=False),
+        sa.Column("created_by_id", sa.Integer(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column(
             "ssh_private_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False
