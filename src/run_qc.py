@@ -121,7 +121,6 @@ class QcHandler(AbstractHandler):
                 qc_funcs = filter_qc_functions(qc_funcs, thing.id)
             logger.info(f"COLLECTED TESTS: {qc_funcs}")
 
-
             # load data
             streams = list(set(sum([f.streams for f in qc_funcs], [])))
             start_date = pd.Timestamp(content["start_date"])
