@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 
 from timeio.databases import Database, DBapi
-from timeio.qc import filter_functions
-from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_functions
+from timeio.qc import filter_qc_functions
+from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_qc_functions
 from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
@@ -193,7 +193,7 @@ def test_collect_tests(thing_id, expected):
         ),
     ]
 
-    tests = filter_functions(qc_functions, thing_id)
+    tests = filter_qc_functions(qc_functions, thing_id)
     assert set(set([t.name for t in tests])) == set(expected)
 
 
@@ -375,7 +375,7 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     thing = feta.Thing.from_uuid(thing_uuid, dsn=local_database)
     config = thing.project.get_default_qaqcs()
 
-    funcs = filter_functions(get_functions(config), thing.id)
+    funcs = filter_qc_functions(get_qc_functions(config), thing.id)
 
     streams = sum([f.streams for f in funcs], [])
 

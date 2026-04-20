@@ -142,7 +142,7 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
 
 def read_stream_data(
     db_api: DBapi,
-    streams: list[QcFunctionStream] | set[QcFunctionStream],
+    streams: list[QcFunctionStream],
     start_date: pd.Timestamp = pd.Timestamp("1717-01-01", tz="UTC"),
     end_date: pd.Timestamp = pd.Timestamp("2222-12-11", tz="UTC"),
 ) -> dict[QcFunctionStream, pd.DataFrame]:

@@ -567,7 +567,7 @@ class QAQC(Base):
         Project, f"select * from {_schema}.project where id = %s", "project_id"
     )
 
-    def get_tests(self) -> list[QAQCTest]:
+    def get_functions(self) -> list[QAQCTest]:
         query = f"select * from {self._schema}.qaqc_test where qaqc_id = %s"
         conn = self._conn
         return [

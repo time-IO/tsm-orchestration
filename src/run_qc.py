@@ -21,7 +21,7 @@ from timeio.mqtt import AbstractHandler
 
 from timeio.qc.io import read_stream_data, write_qc_data
 from timeio.qc.saqc import SaQCWrapper
-from timeio.qc.qcfunction import get_functions, filter_functions
+from timeio.qc.qcfunction import get_qc_functions, filter_qc_functions, get_qc_things
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -103,38 +103,37 @@ class QcHandler(AbstractHandler):
         t0 = datetime.now()
 
         self.dbapi.ping_dbapi()
+
         with self.db.connection() as conn:
             logger.debug("successfully connected to configdb")
-            project, configs, thing = self._parse_message(conn, content)
-            if configs is None:
-                return
 
-            logger.info(f"Got the following configurations {configs}")
-            qc_funcs = get_functions(configs)
+            # get QC settings
+            project, qc_settings, thing = self._parse_message(conn, content)
+            if qc_settings is None:
+                return
+            logger.info(f"Got the following configurations {qc_settings}")
+
+            # get QC functions
+            qc_funcs = get_qc_functions(qc_settings)
             if not qc_funcs:
                 return
             if thing is not None:
-                qc_funcs = filter_functions(qc_funcs, thing.id)
-            else:
-                # NOTE:
-                # We don't have a thing, if the qc run was manually triggered.
-                # As we need a thing to write information to the journal, we
-                # just select the first thing used in the setting
-                # TODO:
-                # Remove if we have a project wide journal endpoint
-                thing = feta.Thing.from_uuid(
-                    qc_funcs[0].streams[0].thing_uuid, dsn=conn
-                )
+                qc_funcs = filter_qc_functions(qc_funcs, thing.id)
             logger.info(f"COLLECTED TESTS: {qc_funcs}")
+
+
+            # load data
+            streams = list(set(sum([f.streams for f in qc_funcs], [])))
             start_date = pd.Timestamp(content["start_date"])
             end_date = pd.Timestamp(content["end_date"])
-
-            N = len(qc_funcs)
-            streams = set(sum([f.streams for f in qc_funcs], []))
             data = read_stream_data(self.dbapi, streams, start_date, end_date)
             for k, v in data.items():
                 if v.empty:
                     logger.warning(f"no data found for stream: {k}")
+
+            # execute QC functions
+            N = len(qc_funcs)
+            things = get_qc_things(qc_funcs)
             qc = SaQCWrapper(data)
             for i, func in enumerate(qc_funcs, start=1):
                 logger.info("Test %s of %s: %s", i, N, func)
@@ -142,18 +141,23 @@ class QcHandler(AbstractHandler):
                     qc.execute(func)
                 except Exception as e:
                     msg = f"Executing SaQC function '{func}' failed"
-                    journal.error(f"{msg}, because of {e}", thing.uuid)
+                    for uuid in things:
+                        journal.error(f"{msg}, because of {e}", uuid)
                     raise ProcessingError(msg) from e
 
+            # write data
             write_qc_data(self.dbapi, qc)
 
-        config_names = [c.name for c in configs]
-        journal.info(
-            f"Successfully executed the following QC Setups: {config_names} "
-            f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds",
-            thing.uuid,
-        )
+        # push journal entries
+        config_names = [c.name for c in qc_settings]
+        for uuid in things:
+            journal.info(
+                f"Successfully executed the following QC Setups: {config_names} "
+                f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds",
+                uuid,
+            )
 
+        # push system info
         logger.debug("inform downstream services about success of qc.")
         payload = json.dumps(
             {
