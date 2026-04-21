@@ -105,7 +105,7 @@ class Journal:
             },
             method="POST",
         )
-        logger.debug(f"%s %s, data: %s", req.method, req.full_url, req.data)
+        logger.debug("%s %s, data: %s", req.method, req.full_url, req.data)
 
         try:
             resp: HTTPResponse = request.urlopen(req)

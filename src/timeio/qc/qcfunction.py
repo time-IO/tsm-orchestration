@@ -102,33 +102,39 @@ class QcFunction:
         return [f.alias for f in self.targets]
 
 
-def get_functions(conf: feta.QAQC) -> list[QcFunction]:
+def get_qc_functions(qc_settings: list[feta.QAQC]) -> list[QcFunction]:
     """
     Convert between the database/feta layer and business logic objects
     """
-
     out = []
     rename_map = {"arg_name": "key", "begin_date": "start_date"}
-    for func in conf.get_tests():
+    for setting in qc_settings:
+        for func in setting.get_functions():
+            streams = [
+                QcFunctionStream(**{rename_map.get(k, k): v for k, v in stream.items()})
+                for stream in func.get_streams()
+            ]
 
-        streams = [
-            QcFunctionStream(**{rename_map.get(k, k): v for k, v in stream.items()})
-            for stream in func.get_streams()
-        ]
-
-        qctest = QcFunction(
-            name=func.name,
-            func_name=func.function,
-            fields=[s for s in streams if s.key == "field"],
-            targets=[s for s in streams if s.key == "target"],
-            params=func.args,
-        )
-        out.append(qctest)
-
+            qctest = QcFunction(
+                name=func.name,
+                func_name=func.function,
+                fields=[s for s in streams if s.key == "field"],
+                targets=[s for s in streams if s.key == "target"],
+                params=func.args,
+            )
+            out.append(qctest)
     return out
 
 
-def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
+def get_qc_things(funcs: list[QcFunction]) -> list[str]:
+    uuids = set()
+    for func in funcs:
+        for stream in func.streams:
+            uuids.add(stream.thing_uuid)
+    return list(uuids)
+
+
+def filter_thing_functions(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
     out = []
     for func in funcs:
         thing_ids = set(int(f.sms_configuration_id) for f in func.fields)
@@ -137,7 +143,7 @@ def filter_thing_funcs(funcs: list[QcFunction], thing_id: int) -> list[QcFunctio
     return out
 
 
-def filter_funcs_to_execute(
+def filter_functions_to_execute(
     all_funcs: list[QcFunction], selected_funcs: list[QcFunction]
 ) -> list[QcFunction]:
     to_check = []
@@ -171,7 +177,7 @@ def filter_funcs_to_execute(
     return selected_funcs
 
 
-def filter_functions(funcs: list[QcFunction], sta_thing_id) -> list[QcFunction]:
-    thing_funcs = filter_thing_funcs(funcs, sta_thing_id)
-    funcs_to_process = filter_funcs_to_execute(funcs, thing_funcs)
+def filter_qc_functions(funcs: list[QcFunction], sta_thing_id: int) -> list[QcFunction]:
+    thing_funcs = filter_thing_functions(funcs, sta_thing_id)
+    funcs_to_process = filter_functions_to_execute(funcs, thing_funcs)
     return funcs_to_process

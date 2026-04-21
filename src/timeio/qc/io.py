@@ -142,7 +142,7 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
 
 def read_stream_data(
     db_api: DBapi,
-    streams: list[QcFunctionStream] | set[QcFunctionStream],
+    streams: list[QcFunctionStream],
     start_date: pd.Timestamp = pd.Timestamp("1717-01-01", tz="UTC"),
     end_date: pd.Timestamp = pd.Timestamp("2222-12-11", tz="UTC"),
 ) -> dict[QcFunctionStream, pd.DataFrame]:
@@ -176,14 +176,13 @@ def read_stream_data(
             )
 
             df = pd.DataFrame(data["observations"])
+            df = df[df.result_type == 0]
             out[stream] = pd.DataFrame(
                 data={
-                    "data": df.to_numpy()[
-                        np.arange(len(df)), df["result_type"] + 2
-                    ].astype(float),
-                    "quality": df["result_quality"].astype(object),
+                    "data": df.result_number.to_numpy(),
+                    "quality": df.result_quality.to_numpy().astype(object),
                 },
                 index=pd.to_datetime(df["result_time"]),
-            )
+            ).sort_index()
 
     return out
