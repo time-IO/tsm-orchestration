@@ -126,6 +126,8 @@ LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = cs
 LEFT JOIN LATERAL (
     SELECT result_time FROM observation o
     WHERE o.datastream_id = dsl.datastream_id
+    AND o.result_time >= dsl.begin_date
+    AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
     ORDER BY result_time DESC
     LIMIT 1
 ) last_obs ON true
