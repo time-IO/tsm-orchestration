@@ -12,12 +12,12 @@ SELECT_PROJECT_AND_DB = """
 """
 
 INSERT_PROJECT = """
-    INSERT INTO public.permission_group ("name", uuid, entitlement)
+    INSERT INTO dsm_db.permission_group ("name", uuid, entitlement)
     VALUES (%(project_name)s, %(project_uuid)s, %(project_name)s)
     RETURNING id
 """
 
 INSERT_DB = """
-    INSERT INTO public.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url", "name")
+    INSERT INTO dsm_db.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url", "name")
     VALUES (%(project_id)s, %(user)s, %(password)s, %(ro_user)s, %(ro_password)s, %(url)s, 'dummy')
 """
