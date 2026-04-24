@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 
 from timeio.databases import Database, DBapi
-from timeio.qc import filter_functions
-from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_functions
+from timeio.qc import filter_qc_functions
+from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_qc_functions
 from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
@@ -118,6 +118,9 @@ class MockDBapi:
 
         return {"observations": out}
 
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
 
 @pytest.fixture()
 def local_database():
@@ -190,7 +193,7 @@ def test_collect_tests(thing_id, expected):
         ),
     ]
 
-    tests = filter_functions(qc_functions, thing_id)
+    tests = filter_qc_functions(qc_functions, thing_id)
     assert set(set([t.name for t in tests])) == set(expected)
 
 
@@ -359,7 +362,7 @@ def test_processing_workflow(local_dbapi):
     qc = SaQCWrapper(data_mod)
 
     src, trg = data_mod.values()
-    assert trg.sort_index().equals(src.sort_index() + 5)
+    assert trg["data"].sort_index().equals(src["data"].sort_index() + 5)
 
 
 @pytest.mark.parametrize(
@@ -370,9 +373,9 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     # NOTE:
     # test only runs if "postgresql://postgres:postgres@localhost/postgres" is available
     thing = feta.Thing.from_uuid(thing_uuid, dsn=local_database)
-    config = thing.project.get_default_qaqc()
+    config = thing.project.get_default_qaqcs()
 
-    funcs = filter_functions(get_functions(config), thing.id)
+    funcs = filter_qc_functions(get_qc_functions(config), thing.id)
 
     streams = sum([f.streams for f in funcs], [])
 
