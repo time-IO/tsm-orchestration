@@ -1,7 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">External Api Ingest</h5>
-    <h6 class="q-mt-none">TSystems</h6>
+    <h5 class="q-mb-none">MQTT Ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl" />
