@@ -22,6 +22,7 @@ from models import (
     BaseRepository,
     PermissionGroupRepository,
     DatabaseRepository,
+    QualityControlSettingRepository,
 )
 import logging
 
@@ -199,7 +200,7 @@ def get_repo_neutron_monitor_station(session=Depends(get_session)):
 
 
 def get_repo_quality_control_setting(session=Depends(get_session)):
-    return BaseRepository(QualityControlSetting, session)
+    return QualityControlSettingRepository(session)
 
 
 def get_repo_csv_parser_timestamp_column(session=Depends(get_session)):

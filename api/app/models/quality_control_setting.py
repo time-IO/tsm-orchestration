@@ -19,6 +19,12 @@ class QualityControlFunctionArgumentCreate(SQLModel):
     input: dict
 
 
+class QualityControlFunctionArgumentUpdate(SQLModel):
+    name: str | None = None
+    type: str | None = None
+    input: dict | None = None
+
+
 class QualityControlFunctionArgumentPublic(SQLModel):
     id: int
     name: str
@@ -45,6 +51,13 @@ class QualityControlFunctionBase(SQLModel):
 class QualityControlFunctionCreate(SQLModel):
     name: str
     quality_control_function_arguments: list[QualityControlFunctionArgumentCreate]
+
+
+class QualityControlFunctionUpdate(SQLModel):
+    name: str | None = None
+    quality_control_function_arguments: (
+        list[QualityControlFunctionArgumentUpdate] | None
+    ) = None
 
 
 class QualityControlFunctionPublic(SQLModel):
@@ -75,6 +88,15 @@ class QualityControlSettingBase(SQLModel):
 
 class QualityControlSettingCreate(QualityControlSettingBase):
     quality_control_functions: list[QualityControlFunctionCreate]
+
+
+class QualityControlSettingUpdate(SQLModel):
+    permission_group_id: int | None = None
+    name: str | None = None
+    description: str | None = None
+    context_window: str | None = None
+    is_active: bool | None = None
+    quality_control_functions: list[QualityControlFunctionUpdate] | None = None
 
 
 class QualityControlSettingPublic(QualityControlSettingBase):
@@ -108,3 +130,40 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     permission_group: "PermissionGroup" = Relationship(
         back_populates="quality_control_setting"
     )
+
+    @property
+    def mqtt_information(self) -> list:
+        return [
+            self.func_mqtt_information(func) for func in self.quality_control_functions
+        ]
+
+    @staticmethod
+    def func_mqtt_information(func) -> dict:
+        kwargs = {}
+        datastreams = []
+        for arg in func.quality_control_function_arguments:
+            if arg.type == "datastream":
+                for d in arg.input["value"]:
+                    datastreams.append(
+                        {
+                            "arg_name": arg.name,
+                            "alias": d["alias"],
+                            "sta_thing_id": d["Thing"]["@iot.id"],
+                            "sta_stream_id": d["@iot.id"],
+                        }
+                    )
+            if arg.type == "float":
+                kwargs[arg.name] = float(arg.input["value"])
+            if arg.type == "int":
+                kwargs[arg.name] = int(arg.input["value"])
+            if arg.type in {"offset", "enum", "str"}:
+                kwargs[arg.name] = str(arg.input["value"])
+            if arg.type == "bool":
+                kwargs[arg.name] = bool(arg.input["value"])
+
+        return {
+            "name": func.name,
+            "func_id": func.name,
+            "kwargs": kwargs,
+            "datastreams": datastreams,
+        }

@@ -2,21 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from dependencies import (
-    get_session,
     get_current_user,
     get_repo_quality_control_setting,
 )
-from sqlmodel import Session, select, func
-from sqlalchemy.exc import IntegrityError
+from mqtt import publish_qaqc_settings_update
 
 from models.quality_control_setting import (
     QualityControlSettingCreate,
-    QualityControlSetting,
-    QualityControlFunction,
-    QualityControlFunctionArgument,
     QualityControlSettingPublic,
+    QualityControlSettingUpdate,
 )
 from models.filters import QualityControlSettingFilter
+from models import User, QualityControlSettingRepository
+from validation import QualityControlConstraints
 
 router = APIRouter(
     prefix="/quality-control-setting",
@@ -66,67 +64,54 @@ def read_one(
 )
 def create(
     *,
-    session: Session = Depends(get_session),
     payload: QualityControlSettingCreate,
-    user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
+    repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
 ):
+    # Validate the function arguments using the separated validation module
+    is_valid, errors = QualityControlConstraints.validate_settings(
+        payload.quality_control_functions
+    )
 
-    try:
-
-        existing_statement = select(QualityControlSetting).where(
-            func.lower(QualityControlSetting.name) == func.lower(str(payload.name)),
-            QualityControlSetting.permission_group_id == payload.permission_group_id,
-        )
-        existing = session.exec(existing_statement).first()
-        if existing:
-            raise HTTPException(status_code=400, detail="This name already exists.")
-
-        extra_data = {"created_by_id": user.id}
-
-        data = payload.model_dump(exclude={"quality_control_functions"})
-        entity = QualityControlSetting.model_validate(data, update=extra_data)
-
-        session.add(entity)
-        session.flush()
-
-        quality_control_setting_id_data = {"quality_control_setting_id": entity.id}
-
-        for function_payload in payload.quality_control_functions:
-
-            function_data = function_payload.model_dump(
-                exclude={"quality_control_function_arguments"}
-            )
-            db_function = QualityControlFunction.model_validate(
-                function_data, update=quality_control_setting_id_data
-            )
-
-            session.add(db_function)
-            session.flush()
-
-            quality_control_function_id_data = {
-                "quality_control_function_id": db_function.id
-            }
-
-            for (
-                function_argument_payload
-            ) in function_payload.quality_control_function_arguments:
-                db_argument = QualityControlFunctionArgument.model_validate(
-                    function_argument_payload, update=quality_control_function_id_data
-                )
-                session.add(db_argument)
-
-        session.commit()
-        session.refresh(entity)
-
-        return entity
-    except HTTPException as exc:
-        raise exc
-    except IntegrityError:
-        session.rollback()
+    if not is_valid:
         raise HTTPException(
-            status_code=409,
-            detail=f"{entity_name} with the same name and permission group already exists.",
+            status_code=400,
+            detail={
+                "message": "Invalid quality control function arguments",
+                "errors": errors,
+            },
         )
-    except:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=f"Failed to create {entity_name}")
+
+    extra_data = {"created_by_id": current_user.id}
+    entity = repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    publish_qaqc_settings_update(entity)
+
+    return entity
+
+
+@router.patch(
+    "/{id}",
+    summary=f"Update one {entity_name}",
+    response_model=QualityControlSettingPublic,
+)
+def update(
+    *,
+    id: int,
+    payload: QualityControlSettingUpdate,
+    current_user: User = Depends(get_current_user),
+    repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
+):
+    updated = repo.update_allowed(id, payload, current_user.permission_group_ids)
+    publish_qaqc_settings_update(updated)
+
+    return updated
+
+
+@router.delete("/{id}", summary=f"Delete one {entity_name}")
+def delete(
+    *,
+    id: int,
+    current_user=Depends(get_current_user),
+    repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
+):
+    return repo.delete_allowed(id, current_user.permission_group_ids)

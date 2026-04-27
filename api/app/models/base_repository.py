@@ -4,6 +4,11 @@ from fastapi_filters.ext.sqlalchemy import apply_filters
 from sqlmodel import Session, select, SQLModel, func
 from fastapi import HTTPException
 
+from .quality_control_setting import (
+    QualityControlSetting,
+    QualityControlFunction,
+    QualityControlFunctionArgument,
+)
 from .permission_group import PermissionGroup
 from .database import Database
 from utils import create_db_username, generate_password
@@ -240,3 +245,130 @@ class DatabaseRepository(BaseRepository):
             print("Failed to create database entity")
             print(str(e))
             self.session.rollback()
+
+
+class QualityControlSettingRepository(BaseRepository):
+    def __init__(self, session: Session):
+        super().__init__(model=QualityControlSetting, session=session)
+
+    def create_allowed(
+        self, payload, extra_data, permission_group_ids, ingest_type_info=None
+    ):
+        self.check_payload_permission_group(
+            payload.permission_group_id, permission_group_ids
+        )
+
+        self.check_for_existing_name(payload.name, payload.permission_group_id)
+
+        try:
+
+            data = payload.model_dump(exclude={"quality_control_functions"})
+            entity = QualityControlSetting.model_validate(data, update=extra_data)
+
+            self.session.add(entity)
+            self.session.flush()
+
+            quality_control_setting_id_data = {"quality_control_setting_id": entity.id}
+
+            for function_payload in payload.quality_control_functions:
+
+                function_data = function_payload.model_dump(
+                    exclude={"quality_control_function_arguments"}
+                )
+                db_function = QualityControlFunction.model_validate(
+                    function_data, update=quality_control_setting_id_data
+                )
+
+                self.session.add(db_function)
+                self.session.flush()
+
+                quality_control_function_id_data = {
+                    "quality_control_function_id": db_function.id
+                }
+
+                for (
+                    function_argument_payload
+                ) in function_payload.quality_control_function_arguments:
+                    db_argument = QualityControlFunctionArgument.model_validate(
+                        function_argument_payload,
+                        update=quality_control_function_id_data,
+                    )
+                    self.session.add(db_argument)
+
+            self.session.commit()
+            self.session.refresh(entity)
+            return entity
+        except:
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail=f"Failed to create.")
+
+    def update_allowed(
+        self, id: int, payload, permission_group_ids, ingest_type_info=None
+    ):
+        try:
+            update_payload = payload.model_dump(
+                exclude_unset=True, exclude={"quality_control_functions"}
+            )
+
+            entity = self.find_allowed_one(id, permission_group_ids)
+
+            if not entity:
+                raise HTTPException(status_code=404, detail="Not found")
+
+            self.check_for_existing_name_update(
+                update_payload["name"], entity.permission_group_id, entity.id
+            )
+
+            entity.sqlmodel_update(update_payload)
+            self.session.add(entity)
+            self.session.commit()
+            self.session.refresh(entity)
+
+            if payload.quality_control_functions is not None:
+                try:
+                    # Delete all existing functions + their arguments
+                    statement = select(QualityControlFunction).where(
+                        QualityControlFunction.quality_control_setting_id == id
+                    )
+                    existing_functions = self.session.exec(statement).all()
+                    for func in existing_functions:
+                        self.session.delete(func)
+
+                    # Create new functions with arguments
+                    for func_payload in payload.quality_control_functions:
+                        func_data = func_payload.model_dump(
+                            exclude={"quality_control_function_arguments"}
+                        )
+                        db_function = QualityControlFunction.model_validate(
+                            func_data, update={"quality_control_setting_id": id}
+                        )
+                        self.session.add(db_function)
+                        self.session.flush()
+
+                        func_id_data = {"quality_control_function_id": db_function.id}
+                        for arg_payload in (
+                            func_payload.quality_control_function_arguments or []
+                        ):
+                            db_arg = QualityControlFunctionArgument.model_validate(
+                                arg_payload.model_dump(),  # Converts Pydantic to dict
+                                update=func_id_data,
+                            )
+                            self.session.add(db_arg)
+
+                    self.session.commit()
+                    self.session.refresh(entity)
+
+                except Exception as e:
+                    self.session.rollback()
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to update quality control functions: {str(e)}",
+                    )
+
+            return entity
+        except HTTPException as exception:
+            raise exception
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to update.")

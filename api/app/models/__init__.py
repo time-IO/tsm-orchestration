@@ -6,6 +6,7 @@ from .base_repository import (
     BaseRepository,
     PermissionGroupRepository,
     DatabaseRepository,
+    QualityControlSettingRepository,
 )
 from .user import User
 from .ingest_external_api_bosch import IngestExternalApiBosch
@@ -30,6 +31,7 @@ __all__ = [
     "BaseRepository",
     "PermissionGroupRepository",
     "DatabaseRepository",
+    "QualityControlSettingRepository",
     "PermissionGroup",
     "PermissionGroupUserLink",
     "User",

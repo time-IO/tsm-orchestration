@@ -44,3 +44,15 @@ def create_frontend_thing_update(ingest, ingest_type_info):
         msg["external_sftp"] = ingest.mqtt_information
         msg["raw_data_storage"] = ingest.mqtt_rawdatastorage
     return msg
+
+
+def create_qc_settings_msg(qc_setting):
+    msg = {
+        "version": 3,
+        "default": qc_setting.is_active,
+        "project_uuid": str(qc_setting.permission_group.uuid),
+        "name": qc_setting.name,
+        "context_window": qc_setting.context_window,
+        "functions": qc_setting.mqtt_information,
+    }
+    return msg

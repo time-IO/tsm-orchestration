@@ -30,6 +30,36 @@ black:
   script:
     - black --check api/app/
 
+api-test:
+  stage: check
+  needs: []
+  image: python:3-slim
+  variables:
+    POSTGRES_SERVER: "api-db"
+    POSTGRES_PORT: "5432"
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "postgres"
+    POSTGRES_DB: "db_dev"
+    OIDC_WELL_KNOWN: "http://proxy/keycloak/realms/local-dev/.well-known/openid-configuration"
+    OIDC_ISSUER: "http://proxy/keycloak/realms/local-dev"
+    OIDC_AUDIENCE: "dev-client"
+    ALLOWED_VOS: "UFZ-TSM,VO"
+    ALLOWED_ORIGINS: "http://localhost"
+    MINIO_SFTP_PORT: "127.0.0.1:40022"
+    PROXY_URL: "http://localhost:80"
+    FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
+    STA_ROOT_URL: "https://tsm.ufz.de/sta/"
+    STA_VERSION: "/v1.1/"
+    MQTT_BROKER_HOST: "mqtt-broker"
+    MQTT_PORT: "1883"
+    MQTT_CLIENT_ID: "datasource_management"
+    MQTT_USER: "dsm"
+    MQTT_PASSWORD: "dsm"
+    MQTT_QOS: "2"
+  before_script:
+    - pip install -r ./api/requirements.txt
+  script:
+    - pytest
 
 npm-lint:
   stage: check
