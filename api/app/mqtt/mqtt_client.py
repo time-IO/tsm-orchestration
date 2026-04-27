@@ -13,6 +13,7 @@ from .generate_mqtt_messages import (
     create_sync_ext_api_msg,
     create_sync_quality_control,
     create_frontend_thing_update,
+    create_qc_settings_msg,
 )
 
 logger = logging.getLogger("app.mqtt")
@@ -108,4 +109,11 @@ def publish_frontend_thing_update(
     msg = create_frontend_thing_update(ingest, ingest_type_info)
     publish_message(
         msg, topic, f"Ingest with UUID '{ingest.uuid}' published on '{topic}'"
+    )
+
+
+def publish_qaqc_settings_update(qc_settings, topic="qaqc_settings_update"):
+    msg = create_qc_settings_msg(qc_settings)
+    publish_message(
+        msg, topic, f"QC Settings '{qc_settings.name}' published on '{topic}'"
     )

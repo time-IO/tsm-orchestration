@@ -38,6 +38,9 @@ docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest
 
 # Create Alembic migration (runs via docker compose)
 ./api/create_alembic_migration.sh <slug>
+
+# Run tests
+docker compose run --rm -u $UID --entrypoint "" api pytest
 ```
 
 ### CI Pipeline (.gitlab-ci.yml)
@@ -90,4 +93,4 @@ Router inclusion order in `api/app/main.py` defines OpenAPI doc order. Edit impo
 ## Testing
 
 - No frontend tests configured (`npm test` is a placeholder)
-- No backend tests visible in repo
+- Backend tests run via: `docker compose run --rm -u $UID --entrypoint "" api pytest`

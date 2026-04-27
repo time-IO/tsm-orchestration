@@ -39,7 +39,7 @@
                 color="secondary"
                 icon="edit"
               >
-                <q-tooltip>Edit Ingest</q-tooltip>
+                <q-tooltip>Edit</q-tooltip>
               </q-btn>
               <q-btn
                 :to="`${ingestPath}/${props.row.id}/copy`"
@@ -48,7 +48,7 @@
                 color="black"
                 icon="content_copy"
               >
-                <q-tooltip>Copy Ingest</q-tooltip>
+                <q-tooltip>Copy</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -57,7 +57,7 @@
                 icon="delete"
                 @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
               >
-                <q-tooltip>Delete Ingest</q-tooltip>
+                <q-tooltip>Delete</q-tooltip>
               </q-btn>
             </template>
             <template v-else>

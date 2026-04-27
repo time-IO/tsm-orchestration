@@ -313,3 +313,80 @@ BEGIN
     END LOOP;
 END $$;
 ```
+
+## Quality Control Functions
+
+### Adding a New QC Function
+
+To add a new quality control function to the validation module:
+
+#### 1. Define the Function in `_definition`
+
+Add your function to `api/app/validation/qc_function_definitions.py` in the `_definition` dictionary:
+
+```
+"functionName": {
+    "description": "Brief description of what the function does",
+    "arguments": [
+        {
+            "name": "arg_name",
+            "description": "What this argument does",
+            "optional": True/False,
+            "default_value": None,
+            "types": [
+                {"type": "offset", "constraint": {"regex": OFFSET_REGEX}},
+                {"type": "float", "constraint": {"min": 0, "max": 100}},
+                {"type": "enum", "constraint": {"only": ["option1", "option2"]}},
+                # ... other types
+            ],
+        },
+        # ... more arguments
+    ],
+},
+```
+
+**Predefined types available:**
+- `OFFSET_TYPE` - Time offset strings (e.g., "1H", "2D")
+- `DATASTREAM_TYPE` - List of datastream references
+- `BOOL_TYPE` - Boolean values
+- `FIELD_ARG` - Standard input field argument
+- `TARGET_ARG` / `TARGET_ARG_SIMPLE` - Standard target output argument
+
+#### 2. Add Tests
+
+Create or update tests in `api/app/tests/validation/test_quality_control_constraints.py`:
+
+- Test valid arguments
+- Test missing required arguments
+- Test invalid argument types
+- Test edge cases
+
+Also add tests in `api/app/tests/validation/test_qc_function_definitions.py`:
+
+- Verify function exists in `_definition`
+- Verify all arguments have required fields
+- Verify enum matches definition keys
+
+#### Validation Rule Summary
+
+**Available types:**
+- `datastream` - List/tuple with optional min count
+- `float` - Numeric with optional min/max
+- `int` - Integer with optional min/max
+- `offset` - Time duration string matching offset pattern
+- `bool` - Boolean or "true"/"false" string
+- `str` - Any string
+- `enum` - Value must be in allowed list
+
+**Argument structure:**
+```
+{
+    "name": "argument_name",
+    "description": "Description text",
+    "optional": False,
+    "default_value": None,
+    "types": [{"type": "type_name", "constraint": {...}}]
+}
+```
+
+Run tests after adding: `docker compose run --rm -u $UID --entrypoint "" api pytest`

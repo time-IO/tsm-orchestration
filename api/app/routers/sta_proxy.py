@@ -44,5 +44,6 @@ async def redirect_query(
         )
     try:
         return response.json()
-    except httpx.DecodingError:
-        raise HTTPException(status_code=502, detail="Invalid JSON in response")
+    except Exception as e:
+        print(f"Error during sta request:: {str(e)}")
+        raise HTTPException(status_code=404, detail="Not Found")

@@ -59,6 +59,9 @@ import IngestCopyExternalSftp from 'pages/IngestCopyExternalSftp.vue';
 import LegalNotice from 'pages/info/LegalNoticeUfz.vue'
 import TermsOfUse from 'pages/info/TermsOfUseUfz.vue'
 import ParserCopyCsv from 'pages/ParserCopyCsv.vue';
+import QualityControlDetail from 'pages/QualityControlDetail.vue';
+import QualityControlEdit from "pages/QualityControlEdit.vue";
+import QualityControlCopy from 'pages/QualityControlCopy.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -352,6 +355,21 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/quality-control/:id',
+    component: QualityControlDetail,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/quality-control/:id/edit',
+    component: QualityControlEdit,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/quality-control/:id/copy',
+    component: QualityControlCopy,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/info/legal_notice',
     name: 'legal_notice',
     component: LegalNotice,
@@ -363,7 +381,6 @@ const routes: RouteRecordRaw[] = [
     component: TermsOfUse,
     meta: { requiresAuth: true },
   },
-
   // Always leave this as last one,
   // but you can also remove it
   {
