@@ -34,6 +34,10 @@ _TEMPLATE = """\
         username="{username}" password="{password}"
         maxTotal="20" maxIdle="10" maxWaitMillis="-1"
         defaultAutoCommit="false"
+        
+         testWhileIdle="true"
+         validationQuery="SELECT 1"
+         timeBetweenEvictionRunsMillis="60000"
     />
 </Context>
 """
