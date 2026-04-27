@@ -31,11 +31,10 @@ SELECT
 		'definition', dp.unit_uri
 	) as "UNIT_OF_MEASUREMENT",
     public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
-	null as "RESULT_TIME",
+
 	min(dsl.begin_date) AS "PHENOMENON_TIME_START",
-    min(dsl.begin_date) AS "RESULT_TIME_START",
     max(last_obs.result_time) AS "PHENOMENON_TIME_END",
-    max(last_obs.result_time) AS "RESULT_TIME_END",
+
 	jsonb_build_object(
         '@context', public.get_schema_org_context(),
 		'jsonld.id',  '{sms_url}' || 'datastream-links/' || MAX(dsl.id),
