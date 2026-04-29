@@ -29,19 +29,22 @@ class CreateThingInBentoHandler(AbstractHandler):
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
 
-        # Prepare Bento stream configuration
-        stream_config = self.prepare_stream_config(thing)
-
-        # Create or update the Bento stream
-        self.create_or_update_stream(stream_config, thing)
+        # Only act for "Bento"-Ingests
+        if thing.ingest_type  in ("ExtMQTT", "HTTP"):
+            # Prepare Bento stream configuration
+            stream_config = self.prepare_stream_config(thing)
+            # Create or update the Bento stream
+            self.create_or_update_stream(stream_config, thing)
 
     def prepare_stream_config(self, thing: Thing):
-        ingest_type_id = thing.ingest_type_id
+        ingest_type = thing.ingest_type
+
+        # outsource some logic for HTTP-streams
         path = thing.http.url_for_thing if thing.http.url_for_thing else thing.uuid
         bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
 
         # Create Bento stream configuration
-        if ingest_type_id == "5":
+        if ingest_type == "ExtMQTT":
             stream_config = {
                 "input": {
                     "mqtt": {
@@ -95,7 +98,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                 }
             }
 
-        elif ingest_type_id == "6":
+        elif ingest_type == "HTTP":
             stream_config = {
                 "input": {
                     "http_server": {
@@ -132,7 +135,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                 }
             }
         else:
-            raise ValueError(f"Unsupported ingest_type_id: {ingest_type_id}")
+            raise ValueError(f"Unsupported ingest_type: {ingest_type}")
         return stream_config
 
     def create_or_update_stream(self, stream_config, thing: Thing):
