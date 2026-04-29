@@ -35,7 +35,7 @@ pipeline:
     - mapping: |
         root = content()
         # ignores * for mqtt
-        meta path_for_api = metadata("http_server_request_path").replace("/streams/mqtt/", "/streams/")
+        meta path_for_api = metadata("http_server_request_path").replace("/streams/*/", "/streams/")
 
 output:
   broker:

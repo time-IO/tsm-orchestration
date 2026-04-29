@@ -600,6 +600,7 @@ class S3Store(Base):
     bucket_name = bucket
 
 class ExtMQTT(Base):
+    _schema = "config_db"
     _table_name = "ext_mqtt"
     id: int = _prop(lambda self: self._attrs["id"])
     external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
@@ -610,12 +611,15 @@ class ExtMQTT(Base):
     external_mqtt_client_cert: str = _prop(lambda self: self._attrs["external_mqtt_client_cert"])
     external_mqtt_client_key: str = _prop(lambda self: self._attrs["external_mqtt_client_key"])
     external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])
+    enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
-class ExtHTTP(Base):
-    _table_name = "Ext_HTTP"
+class HTTP(Base):
+    _schema = "config_db"
+    _table_name = "http"
     id: int = _prop(lambda self: self._attrs["id"])
     url_for_thing: str = _prop(lambda self: self._attrs["url_for_thing"])
-    file_type: int = _prop(lambda self: self._attrs["file_type"])
+    file_type: str = _prop(lambda self: self._attrs["file_type"])
+    enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _schema = "config_db"
@@ -630,7 +634,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_mqtt_id: int | None = _prop(lambda self: self._attrs["ext_mqtt_id"])
     ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
-    ext_http_id:int | None = _prop(lambda self: self._attrs["ext_http_id"])
+    http_id:int | None = _prop(lambda self: self._attrs["http_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
     project: Project = _create(Project, f"select * from {_schema}.project where id = %s", "project_id")  # fmt: skip
     ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
@@ -639,7 +643,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "ext_mqtt_id")
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
-    ext_http: ExtHTTP = _create(ExtHTTP, f"select * from {_schema}.ext_http where id = %s", "ext_http_id")  # fmt: skip
+    http: HTTP = _create(HTTP, f"select * from {_schema}.http where id = %s", "http_id")  # fmt: skip
     legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))
 
     # thing.Thing interface

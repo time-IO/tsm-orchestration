@@ -37,7 +37,7 @@ class CreateThingInBentoHandler(AbstractHandler):
 
     def prepare_stream_config(self, thing: Thing):
         ingest_type_id = thing.ingest_type_id
-        path = thing.url_for_thing if thing.url_for_thing else thing.uuid
+        path = thing.http.url_for_thing if thing.http.url_for_thing else thing.uuid
         bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
 
         # Create Bento stream configuration
@@ -120,7 +120,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                 "output": {
                     "aws_s3": {
                         "bucket": f"{thing.s3_store.bucket}",
-                        "path": f"{bento_timestamp}.{thing.ext_http.file_type}",
+                        "path": f"{bento_timestamp}.{thing.http.file_type}",
                         "endpoint": "http://object-storage:9000",
                         "force_path_style_urls": True,
                         "region": "",
@@ -137,7 +137,7 @@ class CreateThingInBentoHandler(AbstractHandler):
 
     def create_or_update_stream(self, stream_config, thing: Thing):
         """Create or update a Bento stream via JSON API"""
-        url = f"{self.bento_api_url_POST}/streams/mqtt/{thing.uuid}"
+        url = f"{self.bento_api_url_POST}/streams/{thing.ingest_type}/{thing.uuid}"
 
         try:
             # First try to get existing stream
