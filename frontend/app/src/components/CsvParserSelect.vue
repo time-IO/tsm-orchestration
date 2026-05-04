@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch, computed } from 'vue';
+import { nextTick, ref, watch, computed, onMounted } from 'vue';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
@@ -70,8 +70,8 @@ const $q = useQuasar();
 const router = useRouter();
 
 const model = defineModel();
-const { preselectedItem, permission_group_id } = defineProps<{
-  preselectedItem?: CsvParserPublic | null | undefined;
+const { preselected_item_id, permission_group_id } = defineProps<{
+  preselected_item_id?: number | null | undefined;
   permission_group_id: number | null;
 }>();
 
@@ -83,15 +83,24 @@ const accumulatedRows = ref<CsvParserPublic[]>([]);
 
 // Use store rows directly, but maintain local filtered options
 const filteredOptions = ref<CsvParserPublic[]>([]);
+const isFiltering = ref(false);
 
 // Computed reference to store rows for reactivity
 const storeRows = computed(() => csvParserStore.rows as CsvParserPublic[]);
 
+onMounted(async () => {
+  /**
+   * added extra on mounted, because it didn't fetch the missing item
+   * when copy a ingest and directly editing it
+   */
+  await includeItemIfMissing();
+});
+
 watch(
-  () => preselectedItem,
-  (newValue) => {
+  () => preselected_item_id,
+  async (newValue) => {
     if (newValue != null) {
-      includeItemIfMissing();
+      await includeItemIfMissing();
     }
   },
 );
@@ -113,10 +122,12 @@ watch(
   },
 );
 
-function includeItemIfMissing() {
-  if (preselectedItem) {
-    const isItemMissing = !storeRows.value.some((option) => option.id === preselectedItem.id);
+async function includeItemIfMissing() {
+  if (preselected_item_id) {
+    const isItemMissing = !storeRows.value.some((option) => option.id === preselected_item_id);
     if (isItemMissing) {
+      const preselectedItem = await csvParserStore.dispatchGetOne(preselected_item_id);
+
       // Add to store directly since we're using its rows
       csvParserStore.rows = [...csvParserStore.rows, preselectedItem];
       filteredOptions.value = [...csvParserStore.rows];
@@ -174,11 +185,13 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
   if (val === '') {
     update(() => {
       filteredOptions.value = [...storeRows.value];
+      isFiltering.value = false;
     });
     return;
   }
 
   update(() => {
+    isFiltering.value = true;
     const needle = val.toLowerCase();
     filteredOptions.value = storeRows.value.filter((v) => v.name.toLowerCase().includes(needle));
   });
@@ -188,6 +201,7 @@ async function onVirtualScroll({ to, ref }: { to: number; ref?: { refresh: () =>
   const lastIndex = filteredOptions.value.length - 1;
 
   if (
+    !isFiltering.value &&
     !paginationLoading.value &&
     !allPagesFetched.value &&
     to >= lastIndex - 2 // trigger slightly before end for smoother UX

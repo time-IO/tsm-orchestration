@@ -4,7 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
-    :item-parser="itemParser"
+    :item-parser-id="formData.parser_id"
     v-model="formData"
     @save="save"
   />
@@ -16,7 +16,6 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
 
@@ -29,7 +28,7 @@ const formData = ref<IngestExternalSftpUpdate>({
   permission_group_id: null,
   name: null,
   description: null,
-  parser_csv_id: null,
+  parser_id: null,
   filename_pattern: null,
   uri: null,
   path: null,
@@ -41,7 +40,6 @@ const formData = ref<IngestExternalSftpUpdate>({
 
 const isLoading = ref(false);
 
-const itemParser = ref<CsvParserPublic | null>(null);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
@@ -50,14 +48,13 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await ingestExternalSftpStore.dispatchGetOne(id);
 
-      itemParser.value = data.csv_parser;
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         permission_group_id: data.permission_group_id || null,
         name: data.name || null,
         description: data.description || null,
-        parser_csv_id: data.parser_csv_id || null,
+        parser_id: data.parser_id || null,
         filename_pattern: data.filename_pattern || null,
         uri: data.uri || null,
         path: data.path || null,
@@ -94,7 +91,7 @@ async function save() {
       permission_group_id: formData.value.permission_group_id || null,
       name: formData.value.name || null,
       description: formData.value.description || null,
-      parser_csv_id: formData.value.parser_csv_id || null,
+      parser_id: formData.value.parser_id || null,
       filename_pattern: formData.value.filename_pattern || null,
       uri: formData.value.uri || null,
       path: formData.value.path || null,

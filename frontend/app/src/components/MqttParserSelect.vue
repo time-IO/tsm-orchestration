@@ -26,16 +26,16 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import type { MqttParser } from 'src/services/mqtt_parser/type';
-import { useMqttParserStore } from 'stores/mqttParserStore';
+import type { MqttParser } from 'src/services/parser_mqtt/type';
+import { useMqttParserStore } from 'stores/parserMqttStore';
 import { useQuasar } from 'quasar';
 
 const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
 
 const model = defineModel();
-const { preselectedItem } = defineProps<{
-  preselectedItem?: MqttParser | null | undefined;
+const { preselectedItemId } = defineProps<{
+  preselectedItemId?: number | null | undefined;
 }>();
 
 // Pagination state
@@ -53,18 +53,21 @@ onMounted(async () => {
 });
 
 watch(
-  () => preselectedItem,
-  (newValue) => {
+  () => preselectedItemId,
+  async (newValue) => {
     if (newValue != null) {
-      includeItemIfMissing();
+      await includeItemIfMissing();
     }
   },
 );
 
-function includeItemIfMissing() {
-  if (preselectedItem) {
-    const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
+async function includeItemIfMissing() {
+  if (preselectedItemId) {
+    const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItemId);
     if (isItemMissing) {
+
+      const preselectedItem = await mqttParserStore.dispatchGetOne(preselectedItemId)
+
       fetchedOptions.value = [...fetchedOptions.value, preselectedItem];
 
       filteredOptions.value = [...fetchedOptions.value];

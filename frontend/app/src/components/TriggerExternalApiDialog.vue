@@ -51,8 +51,7 @@ import { useTriggerExternalGenericApiStore } from 'stores/externalApiTriggerStor
 import { useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });
-const { provider, ids_to_trigger } = defineProps<{
-  provider: string;
+const { ids_to_trigger } = defineProps<{
   ids_to_trigger: Array<number>;
 }>();
 
@@ -77,7 +76,7 @@ async function triggerExtApi() {
     end_date: endDate.value,
   };
   try {
-    await store.dispatchTriggerApi(provider, data);
+    await store.dispatchTriggerApi(data);
     $q.notify({
       type: 'positive',
       position: 'top',

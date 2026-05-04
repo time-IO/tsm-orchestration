@@ -49,6 +49,13 @@
             hint="DWD station ID, typically five alphanumeric characters."
             :rules="[(val) => !!val || 'Valid station ID is required']"
           />
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.period_in_minutes"
+            label="Period (in minutes)"
+            :rules="[(val) => !val || val > 0 || 'Interval must be a positive number']"
+          />
 
           <!-- Sync Settings -->
           <q-card-section class="q-pa-none">
@@ -64,11 +71,20 @@
             <div class="q-mt-md">
               <q-input
                 filled
-                disable
-                v-model.number="syncInterval"
-                label="Sync Interval (minutes)"
+                :disable="!formData.sync_enabled"
+                v-model.number="formData.sync_interval_in_minutes"
+                :label="
+                  formData.sync_enabled
+                    ? 'Sync Interval (in minutes) *'
+                    : 'Sync Interval (in minutes)'
+                "
                 type="number"
-                hint="Fixed interval for automatic synchronization"
+                :rules="[
+                  (val) =>
+                    !formData.sync_enabled ||
+                    (val !== null && val !== '' && val > 0) ||
+                    'Interval must be a positive number when sync is enabled',
+                ]"
               />
             </div>
           </q-card-section>
@@ -95,7 +111,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiDwdCreate,
@@ -121,10 +136,10 @@ const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUp
     description: '',
     station_id: null,
     sync_enabled: false,
+    sync_interval_in_minutes: null,
+    period_in_minutes: null,
   },
 });
-
-const syncInterval = ref(1440);
 </script>
 
 <style scoped></style>

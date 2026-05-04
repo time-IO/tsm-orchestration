@@ -4,8 +4,10 @@ import paramiko
 import io
 import re
 import uuid
-from pathlib import Path
 from config import settings
+import os
+import hashlib
+import base64
 
 
 def generate_password(length: int):
@@ -40,3 +42,33 @@ def get_connection_string_secure(db, readonly: bool = False):
 
         return f"postgresql://{usr}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
     return "-"
+
+
+def hash_password(
+    password: str,
+    hasher: str = "pbkdf2_sha256",
+    iterations: int = 260000,
+    salt: bytes = None,
+) -> str:
+    """
+    Hash a password using PBKDF2 (equivalent to Django's make_password with PBKDF2 hasher).
+
+    Returns a string in Django-compatible format: 'algorithm$iterations$salt$hash'
+    """
+    if hasher != "pbkdf2_sha256":
+        raise ValueError("Only 'pbkdf2_sha256' is supported in this implementation")
+
+    if salt is None:
+        salt = os.urandom(16)  # Django uses 16-byte random salt
+
+    # Ensure password is bytes
+    password_bytes = password.encode("utf-8")
+
+    # PBKDF2-HMAC-SHA256
+    hash_bytes = hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
+
+    # Encode salt and hash in base64 (Django uses base64 without padding)
+    salt_b64 = base64.b64encode(salt).rstrip(b"=").decode("ascii")
+    hash_b64 = base64.b64encode(hash_bytes).rstrip(b"=").decode("ascii")
+
+    return f"pbkdf2_sha256${iterations}${salt_b64}${hash_b64}"

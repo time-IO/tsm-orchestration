@@ -4,7 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
-    :item-parser="itemParser"
+    :item-parser-id="formData.parser_id"
     v-model="formData"
     @save="save"
   />
@@ -16,7 +16,6 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
 
@@ -29,7 +28,7 @@ const formData = ref<IngestExternalSftpCreate>({
   permission_group_id: null,
   name: null,
   description: null,
-  parser_csv_id: null,
+  parser_id: null,
   filename_pattern: null,
   uri: null,
   path: null,
@@ -41,7 +40,6 @@ const formData = ref<IngestExternalSftpCreate>({
 
 const isLoading = ref(false);
 
-const itemParser = ref<CsvParserPublic | null>(null);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
@@ -50,14 +48,13 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await ingestExternalSftpStore.dispatchGetOne(id);
 
-      itemParser.value = data.csv_parser;
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         permission_group_id: data.permission_group_id,
         name: `${data.name} - Copy`,
         description: data.description,
-        parser_csv_id: data.parser_csv_id,
+        parser_id: data.parser_id,
         filename_pattern: data.filename_pattern,
         uri: data.uri,
         path: data.path,
@@ -89,7 +86,7 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     name: formData.value.name,
     description: formData.value.description,
-    parser_csv_id: formData.value.parser_csv_id,
+    parser_id: formData.value.parser_id,
     filename_pattern: formData.value.filename_pattern,
     uri: formData.value.uri,
     path: formData.value.path,

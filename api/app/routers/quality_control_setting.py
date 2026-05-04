@@ -33,7 +33,7 @@ entity_name = "quality control setting"
 )
 def read_list(
     *,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_quality_control_setting),
     filters: QualityControlSettingFilter = Depends(),
     sort_by: str | None = None,
@@ -53,7 +53,7 @@ def read_list(
 def read_one(
     *,
     id: int,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_quality_control_setting),
 ):
     return repo.find_allowed_one(id, current_user.permission_group_ids)
@@ -111,7 +111,7 @@ def update(
 def delete(
     *,
     id: int,
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
 ):
     return repo.delete_allowed(id, current_user.permission_group_ids)

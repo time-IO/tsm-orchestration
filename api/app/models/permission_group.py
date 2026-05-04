@@ -28,34 +28,12 @@ class PermissionGroup(SQLModel, table=True):
         back_populates="permission_groups", link_model=PermissionGroupUserLink
     )
 
-    csv_parser: list["CsvParser"] = Relationship(back_populates="permission_group")
     database: "Database" = Relationship(back_populates="permission_group")
-    ingest_external_api_bosch: list["IngestExternalApiBosch"] = Relationship(
-        back_populates="permission_group"
-    )
-    ingest_external_api_dwd: list["IngestExternalApiDwd"] = Relationship(
-        back_populates="permission_group"
-    )
-    ingest_external_api_neutron_monitor: list["IngestExternalApiNeutronMonitor"] = (
-        Relationship(back_populates="permission_group")
-    )
-    ingest_external_api_the_things_network: list[
-        "IngestExternalApiTheThingsNetwork"
-    ] = Relationship(back_populates="permission_group")
-    ingest_external_api_tsystems: list["IngestExternalApiTSystems"] = Relationship(
-        back_populates="permission_group"
-    )
-    ingest_external_api_uba: list["IngestExternalApiUba"] = Relationship(
-        back_populates="permission_group"
-    )
-    ingest_external_sftp: list["IngestExternalSftp"] = Relationship(
-        back_populates="permission_group"
-    )
-    ingest_mqtt: list["IngestMqtt"] = Relationship(back_populates="permission_group")
-    ingest_s3store: list["IngestS3Store"] = Relationship(
-        back_populates="permission_group"
-    )
     quality_control_setting: list["QualityControlSetting"] = Relationship(
+        back_populates="permission_group"
+    )
+    ingest: list["Ingest"] = Relationship(back_populates="permission_group")
+    parser_detailed: list["ParserDetailed"] = Relationship(
         back_populates="permission_group"
     )
 
@@ -86,17 +64,9 @@ class PermissionGroup(SQLModel, table=True):
 
 
 # fix to avoid circular imports
-from .parser_csv import CsvParser
 from .database import Database
-from .ingest_external_api_bosch import IngestExternalApiBosch
-from .ingest_external_api_dwd import IngestExternalApiDwd
-from .ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
-from .ingest_external_api_the_things_network import IngestExternalApiTheThingsNetwork
-from .ingest_external_api_tsystems import IngestExternalApiTSystems
-from .ingest_external_api_uba import IngestExternalApiUba
-from .ingest_external_sftp import IngestExternalSftp
-from .ingest_mqtt import IngestMqtt
-from .ingest_s3store import IngestS3Store
 from .quality_control_setting import QualityControlSetting
+from .ingest import Ingest
+from .parser_detailed import ParserDetailed
 
 PermissionGroup.model_rebuild()

@@ -1,113 +1,93 @@
-from sqlmodel import Field, SQLModel, Column, Relationship, Index, func, column
-import uuid as uuid_pkg
-from datetime import datetime, timezone
+from sqlmodel import SQLModel, Field, Column, Relationship
+from typing import Optional
 from sqlalchemy import JSON
 
-
-from .permission_group import PermissionGroup
-
-# ------------------- CsvParserTimestamp
-
-
-class CsvParserTimestampColumnBase(SQLModel):
-    csv_parser_id: int = Field(foreign_key="parser_csv.id", ondelete="CASCADE")
-    column: int
-    timestamp_format: str
+from .parser_detailed import (
+    ParserDetailed,
+    ParserDetailedRead,
+    ParserDetailedCreate,
+    ParserDetailedUpdate,
+)
 
 
-class CsvParserTimestampColumnCreate(SQLModel):
-    column: int
-    timestamp_format: str
-
-
-class CsvParserTimestampColumnUpdate(SQLModel):
-    column: int | None = None
-    timestamp_format: str | None = None
-
-
-class CsvParserTimestampColumnPublic(SQLModel):
+class ParserCsvTimestampColumnPublic(SQLModel):
     id: int
     column: int
     timestamp_format: str
 
 
-class CsvParserTimestampColumn(CsvParserTimestampColumnBase, table=True):
-    __tablename__ = "parser_csv_timestamp_column"
-
-    id: int | None = Field(default=None, primary_key=True)
-    csv_parser: "CsvParser" = Relationship(back_populates="timestamp_columns")
-
-
-# ------------------- CsvParser
-
-
-class CsvParserBase(SQLModel):
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    name: str
-    description: str | None = None
+class ParserCsvRead(ParserDetailedRead):
+    timestamp_columns: list[ParserCsvTimestampColumnPublic] = []
     delimiter: str
-    timezone: str | None = None
-    encoding: str | None = None
-    headlines_to_exclude: str | None = None
-    footlines_to_exclude: int | None = None
-    pandas_read_csv: dict | None = Field(sa_column=Column(JSON), default_factory=dict)
-    comment: list[str] = Field(sa_column=Column(JSON), default_factory=list)
-    header: int | None = None
+    timezone: Optional[str] = None
+    encoding: Optional[str] = None
+    headlines_to_exclude: Optional[str] = None
+    footlines_to_exclude: Optional[int] = None
+    pandas_read_csv: Optional[dict] = Field(
+        sa_column=Column(JSON), default_factory=dict
+    )
+    comment: Optional[list[str]] = Field(sa_column=Column(JSON), default_factory=list)
+    header: Optional[int] = None
 
 
-class CsvParserCreate(CsvParserBase):
-    timestamp_columns: list[CsvParserTimestampColumnCreate]
+class ParserCsvTimestampColumnCreate(SQLModel):
+    column: int
+    timestamp_format: str
 
 
-class CsvParserUpdate(SQLModel):
-    # it should not __currently__ be possible to update the permission_group_id
-    name: str | None = None
-    description: str | None = None
-    delimiter: str | None = None
-    headlines_to_exclude: str | None = None
-    timezone: str | None = None
-    encoding: str | None = None
-    footlines_to_exclude: int | None = None
-    pandas_read_csv: dict | None = None
-    timestamp_columns: list[CsvParserTimestampColumnUpdate] | None = None
-    header: int | None = None
-    comment: list[str] | None = None
+class ParserCsvCreate(ParserDetailedCreate):
+    delimiter: str
+    timezone: str
+    encoding: str
+    headlines_to_exclude: Optional[str] = None
+    footlines_to_exclude: Optional[int] = None
+    pandas_read_csv: Optional[dict] = None
+    comment: Optional[list[str]] = None
+    header: Optional[int] = None
+    timestamp_columns: list[ParserCsvTimestampColumnCreate]
 
 
-class CsvParserPublic(CsvParserBase):
-    id: int
-    uuid: uuid_pkg.UUID
-    created_by_id: int | None = None
-    created_at: datetime
-    timestamp_columns: list[CsvParserTimestampColumnPublic] = []
-    permission_group: "PermissionGroup"
+class ParserCsvTimestampColumnUpdate(ParserCsvTimestampColumnCreate):
+    pass
 
 
-class CsvParser(CsvParserBase, table=True):
+class ParserCsvUpdate(ParserDetailedUpdate):
+    delimiter: Optional[str] = None
+    timezone: Optional[str] = None
+    encoding: Optional[str] = None
+    headlines_to_exclude: Optional[str] = None
+    footlines_to_exclude: Optional[int] = None
+    pandas_read_csv: Optional[dict] = None
+    comment: Optional[list[str]] = None
+    header: Optional[int] = None
+    timestamp_columns: Optional[list[ParserCsvTimestampColumnUpdate]] = None
+
+
+class ParserCsv(SQLModel, table=True):
     __tablename__ = "parser_csv"
 
-    __table_args__ = (
-        Index(
-            "ix_parser_csv_name_permission_group",
-            func.lower(column("name")),
-            column("permission_group_id"),
-            unique=True,
-        ),
+    parser_id: int = Field(
+        foreign_key="parser_detailed.parser_id",
+        primary_key=True,
+        ondelete="CASCADE",
+    )
+    delimiter: str
+    timezone: Optional[str] = None
+    encoding: Optional[str] = None
+    headlines_to_exclude: Optional[str] = None
+    footlines_to_exclude: Optional[int] = None
+    pandas_read_csv: Optional[dict] = Field(
+        sa_column=Column(JSON), default_factory=dict
+    )
+    comment: Optional[list[str]] = Field(sa_column=Column(JSON), default_factory=list)
+    header: Optional[int] = None
+
+    timestamp_columns: list["ParserCsvTimestampColumn"] = Relationship(
+        back_populates="parser_csv", cascade_delete=True
     )
 
-    id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    timestamp_columns: list[CsvParserTimestampColumn] = Relationship(
-        back_populates="csv_parser", cascade_delete=True
-    )
-
-    permission_group: "PermissionGroup" = Relationship(back_populates="csv_parser")
-    ingest_s3store: list["IngestS3Store"] = Relationship(back_populates="csv_parser")
-    ingest_external_sftp: list["IngestExternalSftp"] = Relationship(
-        back_populates="csv_parser"
-    )
+    # Relationships
+    parser_detailed: ParserDetailed = Relationship(back_populates="parser_csv")
 
     @property
     def mqtt_information(self) -> dict:
@@ -128,7 +108,7 @@ class CsvParser(CsvParserBase, table=True):
             "parsers": [
                 {
                     "type": "csvparser",
-                    "name": self.name,
+                    "name": self.parser_detailed.name,
                     "settings": {
                         "delimiter": self.delimiter,
                         "skipfooter": self.footlines_to_exclude,
@@ -151,5 +131,13 @@ class CsvParser(CsvParserBase, table=True):
         }
 
 
-from .ingest_s3store import IngestS3Store
-from .ingest_external_sftp import IngestExternalSftp
+class ParserCsvTimestampColumn(SQLModel, table=True):
+    __tablename__ = "parser_csv_timestamp_column"
+
+    parser_csv_id: int = Field(foreign_key="parser_csv.parser_id", ondelete="CASCADE")
+
+    id: int | None = Field(default=None, primary_key=True)
+    column: int
+    timestamp_format: str
+
+    parser_csv: "ParserCsv" = Relationship(back_populates="timestamp_columns")

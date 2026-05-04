@@ -2,9 +2,10 @@
   <q-select
     filled
     v-model="model"
+    v-bind="$attrs"
     :options="filteredOptions"
     @filter="filterOptions"
-    :label="label? label: 'Permission Group *'"
+    :label="label ? label : 'Permission Group *'"
     @virtual-scroll="onVirtualScroll"
     option-value="id"
     option-label="name"

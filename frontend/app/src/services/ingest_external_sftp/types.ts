@@ -1,5 +1,5 @@
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type {ParserRead} from "src/services/types";
 
 export type IngestExternalSftpPublic = {
   id: number;
@@ -10,7 +10,7 @@ export type IngestExternalSftpPublic = {
   created_by_id: number;
   created_at: string;
   permission_group: PermissionGroup;
-  parser_csv_id: number;
+  parser_id: number;
   uri: string;
   path: string;
   username: string | null;
@@ -18,7 +18,7 @@ export type IngestExternalSftpPublic = {
   ssh_public_key: string;
   sync_interval_in_minutes: number | null;
   sync_enabled: boolean;
-  csv_parser: CsvParserPublic;
+  parser: ParserRead;
   filename_pattern: string;
 };
 
@@ -26,7 +26,7 @@ export type IngestExternalSftpCreate = {
   permission_group_id: number | null;
   name: string | null;
   description: string | null;
-  parser_csv_id: number | null;
+  parser_id: number | null;
   uri: string | null;
   path: string | null;
   username: string | null;
@@ -40,7 +40,7 @@ export type IngestExternalSftpUpdate = {
   permission_group_id?: number | null;
   name?: string | null;
   description?: string | null;
-  parser_csv_id?: number | null;
+  parser_id?: number | null;
   uri?: string | null;
   path?: string | null;
   username?: string | null;

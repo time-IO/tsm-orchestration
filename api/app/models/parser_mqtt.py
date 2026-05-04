@@ -1,13 +1,23 @@
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import SQLModel, Field, Relationship
+from .parser import Parser, ParserRead
 
 
-class MqttParser(SQLModel, table=True):
-    __tablename__ = "mqtt_parser"
-
-    id: int | None = Field(default=None, primary_key=True)
+class ParserMqttRead(ParserRead):
     name: str
 
-    ingest_mqtt: list["IngestMqtt"] = Relationship(back_populates="mqtt_parser")
 
+class ParserMqtt(SQLModel, table=True):
+    __tablename__ = "parser_mqtt"
 
-from .ingest_mqtt import IngestMqtt
+    parser_id: int = Field(foreign_key="parser.id", primary_key=True)
+    name: str
+
+    parser: Parser = Relationship(back_populates="parser_mqtt_detail")
+
+    @property
+    def mqtt_information(self):
+        return {"mqtt_device_type": self.name}
+
+    @property
+    def parser_info(self):
+        return {"name": self.name}

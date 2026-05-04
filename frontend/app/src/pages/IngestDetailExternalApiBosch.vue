@@ -104,8 +104,12 @@
               <q-list>
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Period (in minutes)</q-item-label>
-                    <q-item-label caption>{{ item.period_in_minutes }}</q-item-label>
+                    <q-item-label>Period</q-item-label>
+                    <q-item-label caption>{{
+                      item.period_in_minutes
+                        ? `${item.period_in_minutes} minutes`
+                        : 'No period specified'
+                    }}</q-item-label>
                   </q-item-section>
                 </q-item>
 
@@ -180,7 +184,6 @@
     <trigger-external-api-dialog
       v-if="item !== null"
       v-model="showTriggerDialog"
-      :provider="TRIGGER_EXTERNAL_API_PROVIDER.BOSCH"
       :ids_to_trigger="[item.id]"
     />
   </q-page>
@@ -192,7 +195,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import type { IngestExternalApiBoschPublic } from 'src/services/ingest_external_api_bosch/types';
-import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
 
@@ -208,7 +210,7 @@ const isPwd = ref(true);
 
 const showTriggerDialog = ref(false);
 
-const backUrl = '/ingest/external-api/bosch';
+const backUrl = '/ingest';
 
 onMounted(async () => {
   try {

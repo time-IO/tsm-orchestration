@@ -1,110 +1,118 @@
-from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
-import uuid as uuid_pkg
-from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+from sqlmodel import SQLModel, Field, Relationship, Column
+from typing import Optional
 from encryption import EncryptedType
+from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
 
 
-class IngestExternalSftpBase(SQLModel):
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    parser_csv_id: int = Field(foreign_key="parser_csv.id")
-    name: str
-    description: str | None = None
+class IngestExternalSftpRead(IngestRead):
+    parser_id: int
     uri: str
     path: str
-    username: str | None = None
-    password: str | None = None
-    sync_interval_in_minutes: int | None = Field(ge=10, nullable=True)
-    sync_enabled: bool = False
+    username: Optional[str]
+    password: Optional[str]
+    sync_interval_in_minutes: Optional[int]
+    sync_enabled: bool
     filename_pattern: str
-
-
-class IngestExternalSftpCreate(IngestExternalSftpBase):
-    pass
-
-
-class IngestExternalSftpUpdate(SQLModel):
-    permission_group_id: int | None = None
-    name: str | None = None
-    description: str | None = None
-    uri: str | None = None
-    path: str | None = None
-    username: str | None = None
-    password: str | None = None
-    sync_interval_in_minutes: int | None = Field(ge=10, default=None)
-    sync_enabled: bool | None = None
-    parser_csv_id: int | None = None
-    filename_pattern: str | None = None
-
-
-class IngestExternalSftpPublic(IngestExternalSftpBase):
-    id: int
-    uuid: uuid_pkg.UUID
-    created_by_id: int | None = None
-    created_at: datetime
+    parser: dict
     ssh_public_key: str
-    permission_group: "PermissionGroup"
-    parser_csv_id: int
-    csv_parser: "CsvParser"
 
 
-class IngestExternalSftp(IngestExternalSftpBase, table=True):
+class IngestExternalSftpCreate(IngestCreate):
+    parser_id: int
+    uri: str
+    path: str
+    filename_pattern: str
+    username: Optional[str] = None
+    password: Optional[str] = None
+    sync_interval_in_minutes: Optional[int] = None
+    sync_enabled: bool = False
+
+
+class IngestExternalSftpUpdate(IngestUpdate):
+    uri: Optional[str] = None
+    path: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    sync_interval_in_minutes: Optional[int] = None
+    sync_enabled: Optional[bool] = None
+    filename_pattern: Optional[str] = None
+
+
+class IngestExternalSftp(SQLModel, table=True):
     __tablename__ = "ingest_external_sftp"
 
-    __table_args__ = (
-        Index(
-            "ix_ext_sftp_name_permission_group",
-            func.lower(column("name")),
-            column("permission_group_id"),
-            unique=True,
-        ),
+    ingest_id: int = Field(
+        foreign_key="ingest.id", primary_key=True, ondelete="CASCADE"
     )
 
-    id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    uri: str
+    path: str
+    filename_pattern: str
+    username: Optional[str] = None
+    password: Optional[str] = Field(
+        sa_column=Column("password", EncryptedType, nullable=True)
+    )
+
+    sync_interval_in_minutes: Optional[int] = Field(ge=10, nullable=True)
+    sync_enabled: bool = False
+
     ssh_private_key: str = Field(
         sa_column=Column("ssh_private_key", EncryptedType, nullable=True)
     )
     ssh_public_key: str
-    password: str = Field(sa_column=Column("password", EncryptedType, nullable=True))
+
     bucket_name: str
     bucket_username: str
     bucket_password: str = Field(
         sa_column=Column("bucket_password", EncryptedType, nullable=False)
     )
 
-    permission_group: "PermissionGroup" = Relationship(
-        back_populates="ingest_external_sftp"
-    )
-    csv_parser: "CsvParser" = Relationship(back_populates="ingest_external_sftp")
+    ingest: Ingest = Relationship(back_populates="external_sftp_detail")
 
     @property
-    def mqtt_information(self):
+    def mqtt_information(self) -> dict:
         from encryption import encryption_service
 
         return {
-            "sync_enabled": self.sync_enabled,
-            "uri": self.uri,
-            "path": self.path,
-            "username": self.username,
-            "password": encryption_service.encrypt(self.password),
-            "sync_interval": self.sync_interval_in_minutes,
-            "public_key": self.ssh_public_key,
-            "private_key": encryption_service.encrypt(self.ssh_private_key),
+            "external_sftp": {
+                "sync_enabled": self.sync_enabled,
+                "uri": self.uri,
+                "path": self.path,
+                "username": self.username,
+                "password": encryption_service.encrypt(self.password),
+                "sync_interval": self.sync_interval_in_minutes,
+                "public_key": self.ssh_public_key,
+                "private_key": encryption_service.encrypt(self.ssh_private_key),
+            },
+            "raw_data_storage": {
+                "bucket_name": self.bucket_name,
+                "username": self.bucket_username,
+                "password": encryption_service.encrypt(self.bucket_password),
+                "filename_pattern": self.filename_pattern,
+            },
+            "parsers": self.parser_information,
         }
 
     @property
-    def mqtt_rawdatastorage(self):
-        from encryption import encryption_service
+    def parser_information(self):
+        return self.ingest.parser.mqtt_information
 
-        return {
-            "bucket_name": self.bucket_name,
-            "username": self.bucket_username,
-            "password": encryption_service.encrypt(self.bucket_password),
-            "filename_pattern": self.filename_pattern,
-        }
+    @property
+    def ingest_type(self):
+        return self.ingest.ingest_type
 
+    @property
+    def permission_group(self):
+        return self.ingest.permission_group
 
-from .parser_csv import CsvParser
+    @property
+    def uuid(self):
+        return self.ingest.uuid
+
+    @property
+    def name(self):
+        return self.ingest.name
+
+    @property
+    def description(self):
+        return self.ingest.description

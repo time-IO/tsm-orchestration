@@ -1,14 +1,20 @@
-from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
-import uuid as uuid_pkg
-from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+from sqlmodel import SQLModel, Field, Relationship, Column
+from typing import Optional
+
+from constants import ApiType
+from .ingest_external_api import IngestExternalApi, IngestExternalApiRead
+from .ingest import IngestCreate, IngestUpdate
 from encryption import EncryptedType
 
 
-class IngestExternalApiTSystemsBase(SQLModel):
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    name: str
-    description: str | None = None
+class IngestExternalApiTSystemsRead(IngestExternalApiRead):
+    group: str
+    station_id: str
+    tsystems_username: str
+    tsystems_password: str
+
+
+class IngestExternalApiTSystemsCreate(IngestCreate):
     sync_enabled: bool = False
     group: str
     station_id: str
@@ -16,68 +22,68 @@ class IngestExternalApiTSystemsBase(SQLModel):
     tsystems_password: str
 
 
-class IngestExternalApiTSystemsCreate(IngestExternalApiTSystemsBase):
-    pass
+class IngestExternalApiTSystemsUpdate(IngestUpdate):
+    sync_enabled: Optional[bool] = None
+    group: Optional[str] = None
+    station_id: Optional[str] = None
+    tsystems_username: Optional[str] = None
+    tsystems_password: Optional[str] = None
 
 
-class IngestExternalApiTSystemsUpdate(SQLModel):
-    permission_group_id: int | None = None
-    name: str | None = None
-    description: str | None = None
-    sync_enabled: bool | None = None
-    group: str | None = None
-    station_id: str | None = None
-    tsystems_username: str | None = None
-    tsystems_password: str | None = None
-
-
-class IngestExternalApiTSystemsPublic(IngestExternalApiTSystemsBase):
-    id: int
-    uuid: uuid_pkg.UUID
-    sync_interval_in_minutes: int
-    created_by_id: int | None = None
-    created_at: datetime
-    permission_group: "PermissionGroup"
-
-
-class IngestExternalApiTSystems(IngestExternalApiTSystemsBase, table=True):
+class IngestExternalApiTSystems(SQLModel, table=True):
     __tablename__ = "ingest_external_api_tsystems"
 
-    __table_args__ = (
-        Index(
-            "ix_tsystems_name_permission_group",
-            func.lower(column("name")),
-            column("permission_group_id"),
-            unique=True,
-        ),
+    ingest_id: int = Field(
+        foreign_key="ingest_external_api.ingest_id",
+        primary_key=True,
+        ondelete="CASCADE",
     )
 
-    id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    sync_interval_in_minutes: int = 60
-    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    group: str
+    station_id: str
+    tsystems_username: str
 
     tsystems_password: str = Field(
         sa_column=Column("tsystems_password", EncryptedType, nullable=False)
     )
-    permission_group: "PermissionGroup" = Relationship(
-        back_populates="ingest_external_api_tsystems"
-    )
+
+    external_api: IngestExternalApi = Relationship(back_populates="tsystems_detail")
 
     @property
     def mqtt_information(self) -> dict:
         from encryption import encryption_service
 
         return {
-            "type": "tsystems",
-            "version_id": 1,
-            "enabled": self.sync_enabled,
-            "sync_interval": self.sync_interval_in_minutes,
-            "settings": {
-                "group": self.group,
-                "username": self.tsystems_username,
-                "password": encryption_service.encrypt(self.tsystems_password),
-                "station_id": self.station_id,
-            },
+            "external_api": {
+                "type": ApiType.TSYSTEMS,
+                "version_id": 1,
+                "enabled": self.external_api.sync_enabled,
+                "sync_interval": self.external_api.sync_interval_in_minutes,
+                "settings": {
+                    "group": self.group,
+                    "username": self.tsystems_username,
+                    "password": encryption_service.encrypt(self.tsystems_password),
+                    "station_id": self.station_id,
+                },
+            }
         }
+
+    @property
+    def ingest_type(self):
+        return self.external_api.ingest.ingest_type
+
+    @property
+    def permission_group(self):
+        return self.external_api.ingest.permission_group
+
+    @property
+    def uuid(self):
+        return self.external_api.ingest.uuid
+
+    @property
+    def name(self):
+        return self.external_api.ingest.name
+
+    @property
+    def description(self):
+        return self.external_api.ingest.description

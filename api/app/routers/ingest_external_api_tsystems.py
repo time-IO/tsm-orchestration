@@ -6,12 +6,17 @@ from dependencies import (
     get_repo_ingest_external_api_tsystems,
     create_database_if_not_exists,
 )
+from models import User
 from models.ingest_external_api_tsystems import (
     IngestExternalApiTSystemsCreate,
     IngestExternalApiTSystemsUpdate,
-    IngestExternalApiTSystemsPublic,
+    IngestExternalApiTSystemsRead,
 )
-from models.filters import IngestExternalApiTSystemsFilter
+from models.filters import IngestExternalApiFilter
+from mqtt import publish_frontend_thing_update
+from repositories.ingest_external_api_tsystems import (
+    IngestExternalApiTSystemsRepository,
+)
 
 router = APIRouter(
     prefix="/ingest/external-api/tsystems",
@@ -21,66 +26,74 @@ router = APIRouter(
 )
 
 entity_name = "ingest external api tsystems"
-ingest_type_info = {"ingest_type": "extapi"}
 
 
 @router.get(
     "/",
-    response_model=Page[IngestExternalApiTSystemsPublic],
+    response_model=Page[IngestExternalApiTSystemsRead],
     summary=f"Get a list of {entity_name}",
 )
 def read_list(
     *,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_external_api_tsystems),
-    filters: IngestExternalApiTSystemsFilter = Depends(),
+    current_user: User = Depends(get_current_user),
+    repo: IngestExternalApiTSystemsRepository = Depends(
+        get_repo_ingest_external_api_tsystems
+    ),
+    filters: IngestExternalApiFilter = Depends(),
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_allowed_all(
-            current_user.permission_group_ids, sort_by, filters=filters
-        )
+        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
     )
 
 
 @router.get(
     "/{id}",
-    response_model=IngestExternalApiTSystemsPublic,
+    response_model=IngestExternalApiTSystemsRead,
     summary=f"Get one {entity_name}",
 )
 def read_one(
     *,
     id: int,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_external_api_tsystems),
+    current_user: User = Depends(get_current_user),
+    repo: IngestExternalApiTSystemsRepository = Depends(
+        get_repo_ingest_external_api_tsystems
+    ),
 ):
-    return repo.find_allowed_one(id, current_user.permission_group_ids)
+    return repo.to_flat(
+        repo.find_one(
+            id, permission_group_ids_of_user=current_user.permission_group_ids
+        )
+    )
 
 
 @router.post(
     "/",
-    response_model=IngestExternalApiTSystemsPublic,
+    response_model=IngestExternalApiTSystemsRead,
     summary=f"Create one {entity_name}",
     dependencies=[Depends(create_database_if_not_exists)],
 )
 def create(
     *,
     payload: IngestExternalApiTSystemsCreate,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_external_api_tsystems),
+    current_user: User = Depends(get_current_user),
+    repo: IngestExternalApiTSystemsRepository = Depends(
+        get_repo_ingest_external_api_tsystems
+    ),
 ):
     extra_data = {"created_by_id": current_user.id}
-    return repo.create_allowed(
+    entity = repo.create(
         payload,
         extra_data,
-        current_user.permission_group_ids,
-        ingest_type_info=ingest_type_info,
+        permission_group_ids_of_user=current_user.permission_group_ids,
     )
+    publish_frontend_thing_update(entity)
+    return repo.to_flat(entity)
 
 
 @router.patch(
     "/{id}",
-    response_model=IngestExternalApiTSystemsPublic,
+    response_model=IngestExternalApiTSystemsRead,
     summary=f"Update one {entity_name}",
     dependencies=[Depends(create_database_if_not_exists)],
 )
@@ -88,22 +101,27 @@ def update(
     *,
     id: int,
     payload: IngestExternalApiTSystemsUpdate,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_external_api_tsystems),
+    current_user: User = Depends(get_current_user),
+    repo: IngestExternalApiTSystemsRepository = Depends(
+        get_repo_ingest_external_api_tsystems
+    ),
 ):
-    return repo.update_allowed(
-        id,
-        payload,
-        current_user.permission_group_ids,
-        ingest_type_info=ingest_type_info,
+    entity = repo.update(
+        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
     )
+    publish_frontend_thing_update(entity)
+    return repo.to_flat(entity)
 
 
 @router.delete("/{id}", summary=f"Delete one {entity_name}")
 def delete(
     *,
     id: int,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_ingest_external_api_tsystems),
+    current_user: User = Depends(get_current_user),
+    repo: IngestExternalApiTSystemsRepository = Depends(
+        get_repo_ingest_external_api_tsystems
+    ),
 ):
-    return repo.delete_allowed(id, current_user.permission_group_ids)
+    return repo.delete(
+        id, permission_group_ids_of_user=current_user.permission_group_ids
+    )

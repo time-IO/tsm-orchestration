@@ -69,6 +69,14 @@
               <q-list>
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Period</q-item-label>
+                    <q-item-label caption>{{
+                        item.period_in_minutes ? `${item.period_in_minutes} minutes` : 'No period specified'
+                      }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Sync Enabled</q-item-label>
                     <q-item-label caption>
                       <q-badge :color="item.sync_enabled ? 'positive' : 'negative'">
@@ -138,7 +146,6 @@
     <trigger-external-api-dialog
       v-if="item !== null"
       v-model="showTriggerDialog"
-      :provider="TRIGGER_EXTERNAL_API_PROVIDER.DWD"
       :ids_to_trigger="[item.id]"
     />
   </q-page>
@@ -150,7 +157,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import type { IngestExternalApiDwdPublic } from 'src/services/ingest_external_api_dwd/types';
-import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
 
@@ -164,7 +170,7 @@ const deleteDialog = ref(false);
 const isLoading = ref(false);
 const showTriggerDialog = ref(false);
 
-const backUrl = '/ingest/external-api/dwd';
+const backUrl = '/ingest';
 
 onMounted(async () => {
   try {

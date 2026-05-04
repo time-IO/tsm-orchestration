@@ -1,14 +1,8 @@
 <template>
-  <div class="q-mb-xl">
-    <div class="row items-center q-mb-xs">
-      <div class="text-h5" v-if="title">{{ title }}</div>
-      <q-space />
-      <slot name="actions" />
-    </div>
     <q-table
       ref="tableRef"
       :rows="rows"
-      :columns="columns"
+      :columns="default_ingest_columns"
       row-key="id"
       flat
       bordered
@@ -18,13 +12,10 @@
     >
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-          <q-td v-if="showSelection" auto-width>
-            <q-checkbox v-model="props.selected" />
-          </q-td>
           <q-td v-for="col in props.cols" :key="col.name" :props="props">
             <template v-if="col.name === 'action'">
               <q-btn
-                :to="`${ingestPath}/${props.row.id}`"
+                :to="`${generateIngestPath(props.row)}`"
                 flat
                 outline
                 color="primary"
@@ -33,7 +24,7 @@
                 <q-tooltip>View details</q-tooltip>
               </q-btn>
               <q-btn
-                :to="`${ingestPath}/${props.row.id}/edit`"
+                :to="`${generateIngestPath(props.row)}/edit`"
                 flat
                 outline
                 color="secondary"
@@ -42,7 +33,7 @@
                 <q-tooltip>Edit</q-tooltip>
               </q-btn>
               <q-btn
-                :to="`${ingestPath}/${props.row.id}/copy`"
+                :to="`${generateIngestPath(props.row)}/copy`"
                 flat
                 outline
                 color="black"
@@ -82,33 +73,16 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, useAttrs, computed } from 'vue';
-import type { QTableColumn } from 'quasar';
+import { onMounted, ref } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-
-const attrs = useAttrs();
-
-const showSelection = computed(() => attrs.selection === 'multiple');
+import { default_ingest_columns, generateIngestPath } from 'src/utils/pagination_utils';
 
 defineProps({
-  title: {
-    type: String,
-    required: false,
-  },
   rows: {
     type: Array,
-    required: true,
-  },
-  columns: {
-    type: Array<QTableColumn>,
-    required: true,
-  },
-  ingestPath: {
-    type: String,
     required: true,
   },
 });

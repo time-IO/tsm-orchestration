@@ -5,19 +5,7 @@ from auth import oidc, OIDCError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models import (
     PermissionGroup,
-    IngestExternalApiBosch,
-    IngestExternalApiDwd,
-    IngestExternalApiNeutronMonitor,
-    IngestExternalApiTheThingsNetwork,
-    IngestExternalApiTSystems,
-    IngestExternalApiUba,
-    IngestExternalSftp,
-    IngestMqtt,
-    IngestS3Store,
-    MqttParser,
     NeutronMonitorStation,
-    CsvParser,
-    QualityControlSetting,
     User,
     BaseRepository,
     PermissionGroupRepository,
@@ -25,6 +13,26 @@ from models import (
     QualityControlSettingRepository,
 )
 import logging
+
+from repositories.ingest import IngestRepository
+from repositories.ingest_external_api_bosch import IngestExternalApiBoschRepository
+from repositories.ingest_external_api_dwd import IngestExternalApiDwdRepository
+from repositories.ingest_external_api_neutron_monitor import (
+    IngestExternalApiNeutronMonitorRepository,
+)
+from repositories.ingest_external_api_the_things_network import (
+    IngestExternalApiTheThingsNetworkRepository,
+)
+from repositories.ingest_external_api_tsystems import (
+    IngestExternalApiTSystemsRepository,
+)
+from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
+from repositories.ingest_external_sftp import IngestExternalSftpRepository
+from repositories.ingest_mqtt import IngestMqttRepository
+from repositories.ingest_sftp import IngestSftpRepository
+from repositories.parser_csv import ParserCsvRepository
+from repositories.parser_detailed import ParserDetailedRepository
+from repositories.parser_mqtt import ParserMqttRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -151,48 +159,56 @@ def sync_permission_groups(
         )
 
 
+def get_repo_ingest(session=Depends(get_session)):
+    return IngestRepository(session)
+
+
 def get_repo_ingest_external_api_uba(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiUba, session)
+    return IngestExternalApiUbaRepository(session)
 
 
 def get_repo_ingest_external_api_bosch(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiBosch, session)
+    return IngestExternalApiBoschRepository(session)
 
 
 def get_repo_ingest_external_api_dwd(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiDwd, session)
+    return IngestExternalApiDwdRepository(session)
 
 
 def get_repo_ingest_external_api_neutron_monitor(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiNeutronMonitor, session)
+    return IngestExternalApiNeutronMonitorRepository(session)
 
 
 def get_repo_ingest_external_api_the_things_network(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiTheThingsNetwork, session)
+    return IngestExternalApiTheThingsNetworkRepository(session)
 
 
 def get_repo_ingest_external_api_tsystems(session=Depends(get_session)):
-    return BaseRepository(IngestExternalApiTSystems, session)
+    return IngestExternalApiTSystemsRepository(session)
 
 
 def get_repo_ingest_external_sftp(session=Depends(get_session)):
-    return BaseRepository(IngestExternalSftp, session)
+    return IngestExternalSftpRepository(session)
 
 
 def get_repo_ingest_mqtt(session=Depends(get_session)):
-    return BaseRepository(IngestMqtt, session)
+    return IngestMqttRepository(session)
 
 
-def get_repo_ingest_s3stores(session=Depends(get_session)):
-    return BaseRepository(IngestS3Store, session)
+def get_repo_ingest_sftp(session=Depends(get_session)):
+    return IngestSftpRepository(session)
 
 
-def get_repo_csv_parser(session=Depends(get_session)):
-    return BaseRepository(CsvParser, session)
+def get_repo_parser_detailed(session=Depends(get_session)):
+    return ParserDetailedRepository(session)
 
 
-def get_repo_mqtt_parser(session=Depends(get_session)):
-    return BaseRepository(MqttParser, session)
+def get_repo_parser_csv(session=Depends(get_session)):
+    return ParserCsvRepository(session)
+
+
+def get_repo_parser_mqtt(session=Depends(get_session)):
+    return ParserMqttRepository(session)
 
 
 def get_repo_neutron_monitor_station(session=Depends(get_session)):
@@ -201,10 +217,6 @@ def get_repo_neutron_monitor_station(session=Depends(get_session)):
 
 def get_repo_quality_control_setting(session=Depends(get_session)):
     return QualityControlSettingRepository(session)
-
-
-def get_repo_csv_parser_timestamp_column(session=Depends(get_session)):
-    return BaseRepository(CsvParser, session)
 
 
 def get_repo_database(session=Depends(get_session)):

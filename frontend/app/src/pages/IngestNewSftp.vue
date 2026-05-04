@@ -24,7 +24,7 @@ const formData = ref<IngestSftpCreate>({
   permission_group_id: null,
   name: null,
   description: null,
-  parser_csv_id: null,
+  parser_id: null,
   filename_pattern: null,
 });
 
@@ -35,7 +35,7 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     name: formData.value.name,
     description: formData.value.description,
-    parser_csv_id: formData.value.parser_csv_id,
+    parser_id: formData.value.parser_id,
     filename_pattern: formData.value.filename_pattern,
   };
   try {

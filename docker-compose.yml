@@ -37,6 +37,7 @@ services:
       MQTT_USER: "${MQTT_USER:-dsm}"
       MQTT_PASSWORD: "${MQTT_PASSWORD:-dsm}"
       MQTT_QOS: "${MQTT_QOS:-2}"
+      INGEST_MQTT_BROKER_URI: "${INGEST_MQTT_BROKER_URI:-localhost:1883}"
 
     volumes:
       - ./api/app:/app:rw,cached

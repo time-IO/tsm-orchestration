@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
-from dependencies import get_current_user, get_repo_mqtt_parser
-from models.parser_mqtt import MqttParser
-from models.filters import MqttParserFilter
+from dependencies import get_current_user, get_repo_parser_mqtt
+from models.parser_mqtt import ParserMqttRead
+from models.filters import ParserMqttFilter
+from repositories.parser_mqtt import ParserMqttRepository
 
 router = APIRouter(
-    prefix="/mqtt-parser",
-    tags=["mqtt-parser"],
+    prefix="/parser/mqtt",
+    tags=["parser/mqtt"],
     responses={404: {"description": "Not found"}},
     dependencies=[Depends(get_current_user)],
 )
@@ -16,21 +17,20 @@ entity_name = "mqtt-parser"
 
 
 @router.get(
-    "/", response_model=Page[MqttParser], summary=f"Get a list of {entity_name}"
+    "/", response_model=Page[ParserMqttRead], summary=f"Get a list of {entity_name}"
 )
 def read_list(
     *,
-    repo=Depends(get_repo_mqtt_parser),
-    filters: MqttParserFilter = Depends(),
+    repo: ParserMqttRepository = Depends(get_repo_parser_mqtt),
+    filters: ParserMqttFilter = Depends(),
 ):
     return paginate(repo.find_all(filters=filters))
 
 
-@router.get("/{id}", response_model=MqttParser, summary=f"Get one {entity_name}")
+@router.get("/{id}", response_model=ParserMqttRead, summary=f"Get one {entity_name}")
 def read_one(
     *,
     id: int,
-    current_user=Depends(get_current_user),
-    repo=Depends(get_repo_mqtt_parser),
+    repo: ParserMqttRepository = Depends(get_repo_parser_mqtt),
 ):
-    return repo.find_one(id, current_user.permission_group_ids)
+    return repo.to_flat(repo.find_one(id))

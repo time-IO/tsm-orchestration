@@ -47,9 +47,9 @@
           <csv-parser-select
             class="q-mb-md"
             :disable="!formData.permission_group_id"
-            v-model="formData.parser_csv_id"
+            v-model="formData.parser_id"
             :permission_group_id="formData.permission_group_id!"
-            :preselected-item="itemParser"
+            :preselected_item_id="itemParserId"
           />
 
           <!-- Action Buttons -->
@@ -77,7 +77,6 @@
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import CsvParserSelect from 'components/CsvParserSelect.vue';
 import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
@@ -85,7 +84,7 @@ defineProps<{
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
-  itemParser?: CsvParserPublic | null;
+  itemParserId?: number | null | undefined;
 }>();
 
 defineEmits<{
@@ -97,7 +96,7 @@ const formData = defineModel<IngestSftpCreate | IngestSftpUpdate>({
     permission_group_id: null,
     name: null,
     description: null,
-    parser_csv_id: null,
+    parser_id: null,
     filename_pattern: null,
   },
 });

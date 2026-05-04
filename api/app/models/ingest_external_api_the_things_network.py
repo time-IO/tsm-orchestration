@@ -1,65 +1,45 @@
-from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
-import uuid as uuid_pkg
-from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+from sqlmodel import SQLModel, Field, Relationship, Column
+from typing import Optional
+
+from constants import ApiType
+from .ingest_external_api import (
+    IngestExternalApi,
+    IngestExternalApiRead,
+    IngestExternalApiCreate,
+    IngestExternalApiUpdate,
+)
 from encryption import EncryptedType
 
 
-class IngestExternalApiTheThingsNetworkBase(SQLModel):
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    name: str
-    description: str | None = None
-    sync_interval_in_minutes: int | None = Field(nullable=True)
-    sync_enabled: bool = False
+class IngestExternalApiTheThingsNetworkRead(IngestExternalApiRead):
     api_key: str
     endpoint_uri: str
 
 
-class IngestExternalApiTheThingsNetworkCreate(IngestExternalApiTheThingsNetworkBase):
-    pass
+class IngestExternalApiTheThingsNetworkCreate(IngestExternalApiCreate):
+    api_key: str
+    endpoint_uri: str
 
 
-class IngestExternalApiTheThingsNetworkUpdate(SQLModel):
-    permission_group_id: int | None = None
-    name: str | None = None
-    description: str | None = None
-    sync_interval_in_minutes: int | None = None
-    sync_enabled: bool | None = None
-    api_key: str | None = None
-    endpoint_uri: str | None = None
+class IngestExternalApiTheThingsNetworkUpdate(IngestExternalApiUpdate):
+    api_key: Optional[str] = None
+    endpoint_uri: Optional[str] = None
 
 
-class IngestExternalApiTheThingsNetworkPublic(IngestExternalApiTheThingsNetworkBase):
-    id: int
-    uuid: uuid_pkg.UUID
-    created_by_id: int | None = None
-    created_at: datetime
-    permission_group: "PermissionGroup"
-
-
-class IngestExternalApiTheThingsNetwork(
-    IngestExternalApiTheThingsNetworkBase, table=True
-):
+class IngestExternalApiTheThingsNetwork(SQLModel, table=True):
     __tablename__ = "ingest_external_api_the_things_network"
 
-    __table_args__ = (
-        Index(
-            "ix_ttn_name_permission_group",
-            func.lower(column("name")),
-            column("permission_group_id"),
-            unique=True,
-        ),
+    ingest_id: int = Field(
+        foreign_key="ingest_external_api.ingest_id",
+        primary_key=True,
+        ondelete="CASCADE",
     )
 
-    id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
     api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
+    endpoint_uri: str
 
-    permission_group: "PermissionGroup" = Relationship(
-        back_populates="ingest_external_api_the_things_network"
+    external_api: IngestExternalApi = Relationship(
+        back_populates="the_things_network_detail"
     )
 
     @property
@@ -67,12 +47,34 @@ class IngestExternalApiTheThingsNetwork(
         from encryption import encryption_service
 
         return {
-            "type": "ttn",
-            "version_id": 1,
-            "enabled": self.sync_enabled,
-            "sync_interval": self.sync_interval_in_minutes,
-            "settings": {
-                "api_key": encryption_service.encrypt(self.api_key),
-                "endpoint_uri": self.endpoint_uri,
-            },
+            "external_api": {
+                "type": ApiType.THE_THINGS_NETWORK,
+                "version_id": 1,
+                "enabled": self.external_api.sync_enabled,
+                "sync_interval": self.external_api.sync_interval_in_minutes,
+                "settings": {
+                    "api_key": encryption_service.encrypt(self.api_key),
+                    "endpoint_uri": self.endpoint_uri,
+                },
+            }
         }
+
+    @property
+    def ingest_type(self):
+        return self.external_api.ingest.ingest_type
+
+    @property
+    def permission_group(self):
+        return self.external_api.ingest.permission_group
+
+    @property
+    def uuid(self):
+        return self.external_api.ingest.uuid
+
+    @property
+    def name(self):
+        return self.external_api.ingest.name
+
+    @property
+    def description(self):
+        return self.external_api.ingest.description

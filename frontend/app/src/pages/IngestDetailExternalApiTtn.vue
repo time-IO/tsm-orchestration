@@ -159,7 +159,6 @@
     <trigger-external-api-dialog
       v-if="item !== null"
       v-model="showTriggerDialog"
-      :provider="TRIGGER_EXTERNAL_API_PROVIDER.TTN"
       :ids_to_trigger="[item.id]"
     />
   </q-page>
@@ -171,7 +170,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import type { IngestExternalApiTheThingsNetworkPublic } from 'src/services/ingest_external_api_the_things_network/types';
-import { TRIGGER_EXTERNAL_API_PROVIDER } from 'src/utils/trigger_utils';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
 
@@ -186,7 +184,7 @@ const isLoading = ref(false);
 const isPwd = ref(true);
 const showTriggerDialog = ref(false);
 
-const backUrl = '/ingest/external-api/ttn';
+const backUrl = '/ingest';
 
 onMounted(async () => {
   try {

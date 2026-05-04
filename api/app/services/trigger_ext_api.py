@@ -1,18 +1,19 @@
 from fastapi import HTTPException
-from models import TriggerSyncExtApiBase, BaseRepository
+from models import TriggerSyncExtApiBase
 
 from mqtt import publish_trigger_ext_api
+from repositories.ingest import IngestRepository
 
 
 def trigger_external_api_service(
     payload: TriggerSyncExtApiBase,
     allowed_permission_group_ids: list[int],
-    repo_ingest: BaseRepository,
+    repo_ingest: IngestRepository,
 ) -> dict:
     triggered_ids = []
     for i in set(payload.ingest_ids):
         try:
-            ingest = repo_ingest.find_allowed_one(i, allowed_permission_group_ids)
+            ingest = repo_ingest.find_one(i, allowed_permission_group_ids)
         except HTTPException:
             continue
         publish_trigger_ext_api(

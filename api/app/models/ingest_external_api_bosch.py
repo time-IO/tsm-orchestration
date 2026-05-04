@@ -1,16 +1,17 @@
-from sqlmodel import Field, SQLModel, Relationship, Column, Index, func, column
-import uuid as uuid_pkg
-from datetime import datetime, timezone
-from .permission_group import PermissionGroup
+from sqlmodel import SQLModel, Field, Relationship, Column
+from typing import Optional
+
+from constants import ApiType
+from .ingest_external_api import (
+    IngestExternalApi,
+    IngestExternalApiRead,
+    IngestExternalApiCreate,
+    IngestExternalApiUpdate,
+)
 from encryption import EncryptedType
 
 
-class IngestExternalApiBoschBase(SQLModel):
-    permission_group_id: int = Field(foreign_key="permission_group.id")
-    name: str
-    description: str | None = None
-    sync_enabled: bool = False
-    sync_interval_in_minutes: int | None = Field(nullable=True)
+class IngestExternalApiBoschRead(IngestExternalApiRead):
     endpoint: str
     sensor_id: str
     bosch_username: str
@@ -18,70 +19,84 @@ class IngestExternalApiBoschBase(SQLModel):
     period_in_minutes: int
 
 
-class IngestExternalApiBoschCreate(IngestExternalApiBoschBase):
-    pass
+class IngestExternalApiBoschCreate(IngestExternalApiCreate):
+    endpoint: str
+    sensor_id: str
+    bosch_username: str
+    bosch_password: str
+    period_in_minutes: int
 
 
-class IngestExternalApiBoschUpdate(SQLModel):
-    permission_group_id: int | None = None
-    name: str | None = None
-    description: str | None = None
-    sync_interval_in_minutes: int | None = None
-    sync_enabled: bool | None = None
-    endpoint: str | None = None
-    sensor_id: str | None = None
-    username: str | None = None
-    password: str | None = None
-    period_in_minutes: int | None = None
+class IngestExternalApiBoschUpdate(IngestExternalApiUpdate):
+    """Payload for a partial update of an Bosch‑type external‑API ingest.
+
+    All fields are optional – you only have to send the ones you actually
+    want to change.  Read‑only fields (id, uuid, created_at, ingest_type,
+    api_type, permission_group) are intentionally omitted.
+    """
+
+    # ---- IngestExternalApiBosch fields ----
+    endpoint: Optional[str] = None
+    sensor_id: Optional[str] = None
+    bosch_username: Optional[str] = None
+    bosch_password: Optional[str] = None
+    period_in_minutes: Optional[int] = None
 
 
-class IngestExternalApiBoschPublic(IngestExternalApiBoschBase):
-    id: int
-    uuid: uuid_pkg.UUID
-    created_by_id: int | None = None
-    created_at: datetime
-    permission_group: "PermissionGroup"
-
-
-class IngestExternalApiBosch(IngestExternalApiBoschBase, table=True):
+class IngestExternalApiBosch(SQLModel, table=True):
     __tablename__ = "ingest_external_api_bosch"
 
-    __table_args__ = (
-        Index(
-            "ix_bosch_name_permission_group",
-            func.lower(column("name")),
-            column("permission_group_id"),
-            unique=True,
-        ),
+    ingest_id: int = Field(
+        foreign_key="ingest_external_api.ingest_id",
+        primary_key=True,
+        ondelete="CASCADE",
     )
-
-    id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
-    created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
+    endpoint: str
+    sensor_id: str
+    bosch_username: str
     bosch_password: str = Field(
         sa_column=Column("bosch_password", EncryptedType, nullable=False)
     )
+    period_in_minutes: int
 
-    permission_group: "PermissionGroup" = Relationship(
-        back_populates="ingest_external_api_bosch"
-    )
+    external_api: IngestExternalApi = Relationship(back_populates="bosch_detail")
 
     @property
     def mqtt_information(self) -> dict:
         from encryption import encryption_service
 
         return {
-            "type": "bosch",
-            "version_id": 1,
-            "enabled": self.sync_enabled,
-            "sync_interval": self.sync_interval_in_minutes,
-            "settings": {
-                "period": self.period_in_minutes,
-                "endpoint": self.endpoint,
-                "username": self.bosch_username,
-                "password": encryption_service.encrypt(self.bosch_password),
-                "sensor_id": self.sensor_id,
-            },
+            "external_api": {
+                "type": ApiType.BOSCH,
+                "version_id": 1,
+                "enabled": self.external_api.sync_enabled,
+                "sync_interval": self.external_api.sync_interval_in_minutes,
+                "settings": {
+                    "period": self.period_in_minutes,
+                    "endpoint": self.endpoint,
+                    "username": self.bosch_username,
+                    "password": encryption_service.encrypt(self.bosch_password),
+                    "sensor_id": self.sensor_id,
+                },
+            }
         }
+
+    @property
+    def ingest_type(self):
+        return self.external_api.ingest.ingest_type
+
+    @property
+    def permission_group(self):
+        return self.external_api.ingest.permission_group
+
+    @property
+    def uuid(self):
+        return self.external_api.ingest.uuid
+
+    @property
+    def name(self):
+        return self.external_api.ingest.name
+
+    @property
+    def description(self):
+        return self.external_api.ingest.description

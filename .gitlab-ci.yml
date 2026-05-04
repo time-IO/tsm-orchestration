@@ -56,6 +56,7 @@ api-test:
     MQTT_USER: "dsm"
     MQTT_PASSWORD: "dsm"
     MQTT_QOS: "2"
+    INGEST_MQTT_BROKER_URI: "localhost:1883"
   before_script:
     - pip install -r ./api/requirements.txt
   script:

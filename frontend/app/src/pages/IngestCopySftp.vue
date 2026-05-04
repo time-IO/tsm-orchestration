@@ -4,8 +4,8 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     v-model="formData"
-    :item-parser="itemParser"
     :item-permission-group="itemPermissionGroup"
+    :item-parser-id="formData.parser_id"
     @save="save"
   />
 </template>
@@ -16,7 +16,6 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
 import IngestFormSftp from 'components/IngestFormSftp.vue';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 
@@ -29,14 +28,13 @@ const formData = ref<IngestSftpCreate>({
   permission_group_id: null,
   name: null,
   description: null,
-  parser_csv_id: null,
+  parser_id: null,
   filename_pattern: null,
 });
 
 const isLoading = ref(false);
 
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
-const itemParser = ref<CsvParserPublic | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -44,7 +42,6 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await sftpStore.dispatchGetOne(id);
 
-      itemParser.value = data.csv_parser;
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
@@ -52,7 +49,7 @@ onMounted(async () => {
         permission_group_id: data.permission_group_id,
         description: data.description,
         filename_pattern: data.filename_pattern,
-        parser_csv_id: data.parser_csv_id,
+        parser_id: data.parser_id,
       };
     } catch {
       $q.notify({
@@ -77,7 +74,7 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     name: formData.value.name,
     description: formData.value.description,
-    parser_csv_id: formData.value.parser_csv_id,
+    parser_id: formData.value.parser_id,
     filename_pattern: formData.value.filename_pattern,
   };
   try {

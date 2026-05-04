@@ -7,6 +7,7 @@ from dependencies import (
     get_repo_ingest_external_api_uba,
     get_repo_ingest_external_api_the_things_network,
     get_repo_ingest_external_api_neutron_monitor,
+    get_repo_ingest,
 )
 from models import TriggerSyncExtApiBase, TriggerSyncExtApiResponse, User
 import logging
@@ -25,14 +26,14 @@ router = APIRouter(
 
 
 @router.post(
-    "/bosch",
+    "/",
     response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one bosch_api ingest",
+    summary=f"Triggers a MQTT message to sync historic data of at least one external api ingest",
 )
-def trigger_bosch_api(
+def trigger_api(
     current_user: CurrentUser,
     payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_bosch),
+    repo=Depends(get_repo_ingest),
 ):
     return trigger_external_api_service(
         payload=payload,
@@ -41,86 +42,105 @@ def trigger_bosch_api(
     )
 
 
-@router.post(
-    "/tsystems",
-    response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one tsystems_api ingest",
-)
-def trigger_tsystems_api(
-    current_user: CurrentUser,
-    payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_tsystems),
-):
-    return trigger_external_api_service(
-        payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
-    )
-
-
-@router.post(
-    "/dwd",
-    response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one dwd_api ingest",
-)
-def trigger_dwd_api(
-    current_user: CurrentUser,
-    payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_dwd),
-):
-    return trigger_external_api_service(
-        payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
-    )
-
-
-@router.post(
-    "/uba",
-    response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one uba_api ingest",
-)
-def trigger_uba_api(
-    current_user: CurrentUser,
-    payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_uba),
-):
-    return trigger_external_api_service(
-        payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
-    )
-
-
-@router.post(
-    "/the-things-network",
-    response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one ttn_api ingest",
-)
-def trigger_ttn_api(
-    current_user: CurrentUser,
-    payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_the_things_network),
-):
-    return trigger_external_api_service(
-        payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
-    )
-
-
-@router.post(
-    "/neutron-monitor",
-    response_model=TriggerSyncExtApiResponse,
-    summary=f"Triggers a MQTT message to sync historic data of at least one nm_api ingest",
-)
-def trigger_nm_api(
-    current_user: CurrentUser,
-    payload: TriggerSyncExtApiBase,
-    repo=Depends(get_repo_ingest_external_api_neutron_monitor),
-):
-    return trigger_external_api_service(
-        payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
-    )
+#
+#
+# @router.post(
+#     "/bosch",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one bosch_api ingest",
+# )
+# def trigger_bosch_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_bosch),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )
+#
+#
+# @router.post(
+#     "/tsystems",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one tsystems_api ingest",
+# )
+# def trigger_tsystems_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_tsystems),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )
+#
+#
+# @router.post(
+#     "/dwd",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one dwd_api ingest",
+# )
+# def trigger_dwd_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_dwd),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )
+#
+#
+# @router.post(
+#     "/uba",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one uba_api ingest",
+# )
+# def trigger_uba_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_uba),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )
+#
+#
+# @router.post(
+#     "/the-things-network",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one ttn_api ingest",
+# )
+# def trigger_ttn_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_the_things_network),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )
+#
+#
+# @router.post(
+#     "/neutron-monitor",
+#     response_model=TriggerSyncExtApiResponse,
+#     summary=f"Triggers a MQTT message to sync historic data of at least one nm_api ingest",
+# )
+# def trigger_nm_api(
+#         current_user: CurrentUser,
+#         payload: TriggerSyncExtApiBase,
+#         repo=Depends(get_repo_ingest_external_api_neutron_monitor),
+# ):
+#     return trigger_external_api_service(
+#         payload=payload,
+#         allowed_permission_group_ids=current_user.permission_group_ids,
+#         repo_ingest=repo,
+#     )

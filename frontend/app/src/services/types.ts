@@ -25,7 +25,15 @@ export type DefaultFilter = {
   permission_group_id: number | undefined;
   date_from: string | undefined;
   date_to: string | undefined;
-}
+};
+
+export type IngestFilter = DefaultFilter & {
+  ingest_type: string | undefined;
+};
+
+export type ParserFilter = DefaultFilter & {
+  parser_type: string | undefined;
+};
 
 export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
   getList(
@@ -36,4 +44,10 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
   create(payload: TPayloadCreate): Promise<AxiosResponse<TPublic>>;
   update(id: number, payload: TPayloadUpdate): Promise<AxiosResponse<TPublic>>;
   deleteOne(id: number): Promise<AxiosResponse<void>>;
+}
+
+export type ParserRead = {
+  parser_type: string;
+  name: string;
+  id: number
 }

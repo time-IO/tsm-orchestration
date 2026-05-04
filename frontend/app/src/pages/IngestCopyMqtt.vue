@@ -4,7 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
-    :item-parser="itemParser"
+    :item-parser-id="formData.parser_id"
     v-model="formData"
     @save="save"
   />
@@ -16,7 +16,6 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
-import type { MqttParser } from 'src/services/mqtt_parser/type';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormMqtt from 'components/IngestFormMqtt.vue';
 
@@ -29,13 +28,10 @@ const formData = ref<IngestMqttCreate>({
   name: null,
   permission_group_id: null,
   description: null,
-  topic: null,
-  uri: null,
-  mqtt_parser_id: null,
+  parser_id: null,
 });
 
 const isLoading = ref(false);
-const itemParser = ref<MqttParser | null>(null);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
 onMounted(async () => {
@@ -44,16 +40,13 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await mqttStore.dispatchGetOne(id);
 
-      itemParser.value = data.mqtt_parser;
       itemPermissionGroup.value = data.permission_group;
 
       formData.value = {
         name: `${data.name} - Copy`,
         permission_group_id: data.permission_group_id,
         description: data.description,
-        topic: data.topic,
-        uri: data.uri,
-        mqtt_parser_id: data.mqtt_parser_id,
+        parser_id: data.parser_id,
       };
     } catch {
       $q.notify({
@@ -78,9 +71,7 @@ async function save() {
     name: formData.value.name,
     permission_group_id: formData.value.permission_group_id,
     description: formData.value.description,
-    topic: formData.value.topic,
-    uri: formData.value.uri,
-    mqtt_parser_id: formData.value.mqtt_parser_id,
+    parser_id: formData.value.parser_id,
   };
   try {
     isLoading.value = true;
