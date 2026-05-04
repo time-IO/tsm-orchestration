@@ -51,9 +51,9 @@
               <csv-parser-select
                 class="q-mb-md"
                 :disable="!formData.permission_group_id"
-                v-model="formData.parser_csv_id"
+                v-model="formData.parser_id"
                 :permission_group_id="formData.permission_group_id!"
-                :preselected-item="itemParser"
+                :preselected_item_id="itemParserId"
               />
             </div>
           </q-card-section>
@@ -167,14 +167,13 @@ import type {
   IngestExternalSftpUpdate,
 } from 'src/services/ingest_external_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
-  itemParser?: CsvParserPublic | null;
+  itemParserId?: number | null | undefined;
 }>();
 
 defineEmits<{
@@ -186,7 +185,7 @@ const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate
     permission_group_id: null,
     name: null,
     description: null,
-    parser_csv_id: null,
+    parser_id: null,
     filename_pattern: null,
     uri: null,
     path: null,

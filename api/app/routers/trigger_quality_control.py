@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from typing import Any
-from dependencies import get_current_user
 from models import TriggerQualityControl, User
 from dependencies import (
     get_current_user,

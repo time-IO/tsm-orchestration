@@ -96,21 +96,27 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>Broker URI</q-item-label>
-                    <q-item-label caption>{{ item.uri }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.uri }}</q-item-label>
+                      <copy-btn title="Copy Broker URI" :text-to-copy="item.uri" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
                     <q-item-label>Topic</q-item-label>
-                    <q-item-label caption>{{ item.topic }}</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.topic }}</q-item-label>
+                      <copy-btn title="Copy Topic" :text-to-copy="item.topic" />
+                    </div>
                   </q-item-section>
                 </q-item>
 
                 <q-item>
                   <q-item-section>
                     <q-item-label>Mqtt Parser</q-item-label>
-                    <q-item-label caption>{{ item.mqtt_parser.name }}</q-item-label>
+                    <q-item-label caption>{{ item.parser.name }}</q-item-label>
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -166,7 +172,7 @@ const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
 
-const backUrl = '/ingest/mqtt';
+const backUrl = '/ingest';
 
 onMounted(async () => {
   try {

@@ -11,10 +11,9 @@ export const useTriggerExternalGenericApiStore = defineStore('triggerExternalApi
 
   actions: {
     async dispatchTriggerApi(
-      provider: string,
       input: TriggerSyncExtApiBase,
     ): Promise<TriggerSyncExtApiResponse> {
-      const response = await API.triggerExternalGenAPI.trigger_api_generic(provider, input);
+      const response = await API.triggerExternalGenAPI.trigger_api_generic(input);
       return response.data;
     },
   },

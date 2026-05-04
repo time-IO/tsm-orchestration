@@ -8,7 +8,8 @@ export type IngestExternalApiDwdPublic = {
   station_id: string;
   description: string | null;
   sync_enabled: boolean;
-  sync_interval_in_minutes: number;
+  sync_interval_in_minutes: number | null;
+  period_in_minutes: number | null;
   created_by_id: number;
   created_at: string;
   permission_group: PermissionGroup;
@@ -20,6 +21,8 @@ export type IngestExternalApiDwdCreate = {
   station_id: string | null;
   description: string | null;
   sync_enabled: boolean;
+  sync_interval_in_minutes: number | null;
+  period_in_minutes: number | null;
 };
 
 export type IngestExternalApiDwdUpdate = {
@@ -28,4 +31,6 @@ export type IngestExternalApiDwdUpdate = {
   station_id?: string | null;
   description?: string | null;
   sync_enabled?: boolean;
-}
+  sync_interval_in_minutes?: number | null;
+  period_in_minutes?: number | null;
+};

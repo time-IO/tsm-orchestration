@@ -14,8 +14,27 @@ class BaseFilter(FilterSet):
     created_at: FilterField[datetime]
 
 
-class ExternalApiBaseFilter(BaseFilter):
-    """Base filter class for external API models."""
+class IngestFilter(FilterSet):
+    """Ingest filter class for ingest models."""
 
-    sync_interval_in_minutes: FilterField[int]
-    sync_enabled: FilterField[bool]
+    id: FilterField[int]
+    permission_group_id: FilterField[int]
+    name: FilterField[str]
+    uuid: FilterField[UUID]
+    created_by_id: FilterField[int]
+    created_at: FilterField[datetime]
+    ingest_type: FilterField[str]
+
+
+class IngestExternalApiFilter(IngestFilter):
+    api_type: FilterField[str]
+
+
+class ParserDetailedFilter(FilterSet):
+    id: FilterField[int]
+    permission_group_id: FilterField[int]
+    name: FilterField[str]
+    uuid: FilterField[UUID]
+    created_by_id: FilterField[int]
+    created_at: FilterField[datetime]
+    parser_type: FilterField[str]

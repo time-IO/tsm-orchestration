@@ -86,7 +86,7 @@
               (val) => !!val || 'Period is required',
               (val) =>
                 (val !== null && val !== '' && val > 0) ||
-                'Interval must be a positive number when sync is enabled',
+                'Interval must be a positive number',
             ]"
           />
 

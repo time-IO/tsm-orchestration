@@ -124,7 +124,7 @@
                   <q-item-section>
                     <q-item-label>Parser</q-item-label>
                     <q-item-label caption>
-                      {{ item.csv_parser.name }}
+                      {{ item.parser.name }}
                       <q-icon name="launch" class="cursor-pointer" @click="openParser">
                         <q-tooltip> Open in new window </q-tooltip>
                       </q-icon>
@@ -203,7 +203,7 @@ const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
 
-const backUrl = '/ingest/external-sftp';
+const backUrl = '/ingest';
 
 onMounted(async () => {
   try {
@@ -269,9 +269,9 @@ const deleteItem = async () => {
 };
 
 const openParser = () => {
-  if (item.value && item.value.csv_parser) {
+  if (item.value && item.value.parser && item.value.parser.parser_type === 'csv') {
     const route = router.resolve({
-      path: `/parser/csv/${item.value.csv_parser.id}`,
+      path: `/parser/csv/${item.value.parser.id}`,
     });
 
     window.open(route.href, '_blank');

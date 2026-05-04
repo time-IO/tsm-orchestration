@@ -32,6 +32,8 @@ const formData = ref<Partial<IngestExternalApiDwdUpdate>>({
   description: '',
   station_id: null,
   sync_enabled: false,
+  sync_interval_in_minutes: null,
+  period_in_minutes: null,
 });
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
@@ -49,6 +51,8 @@ onMounted(async () => {
         description: data.description || '',
         station_id: data.station_id || null,
         sync_enabled: data.sync_enabled || false,
+        sync_interval_in_minutes: data.sync_interval_in_minutes || null,
+        period_in_minutes: data.period_in_minutes || null,
       };
     } catch {
       $q.notify({
@@ -80,6 +84,8 @@ async function save() {
       description: formData.value.description || '',
       station_id: formData.value.station_id || null,
       sync_enabled: formData.value.sync_enabled || false,
+      sync_interval_in_minutes: formData.value.sync_interval_in_minutes || null,
+      period_in_minutes: formData.value.period_in_minutes || null,
     };
 
     isLoading.value = true;

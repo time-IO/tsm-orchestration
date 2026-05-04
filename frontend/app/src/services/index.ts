@@ -11,7 +11,7 @@ import triggerExternalApiGenController from 'src/services/trigger_external_api_g
 import permissionGroupController from "src/services/permission_group"
 import userController from "src/services/user"
 import neutronMonitorStationController from "src/services/neutron_monitor_stations"
-import mqttParserController from "src/services/mqtt_parser"
+import mqttParserController from "src/services/parser_mqtt"
 import csvParserController from "src/services/parser_csv"
 import qualityControlSettingController from "src/services/quality_control_setting"
 import staController from "src/services/sta"
@@ -19,6 +19,9 @@ import qualityControlSettingsTriggerController from "src/services/quality_contro
 
 import parserTimezoneController from 'src/services/parser_timezone';
 import parserEncodingController from 'src/services/parser_encoding';
+
+import ingestController from 'src/services/ingest'
+import parserDetailedController from 'src/services/parser_detailed'
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -40,5 +43,7 @@ export const API = {
   sta: staController,
   triggerQCSetting: qualityControlSettingsTriggerController,
   parserTimezone: parserTimezoneController,
-  parserEncoding: parserEncodingController
+  parserEncoding: parserEncodingController,
+  ingest: ingestController,
+  parserDetailed: parserDetailedController,
 };

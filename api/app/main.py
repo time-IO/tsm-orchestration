@@ -6,7 +6,7 @@ from fastapi_pagination import add_pagination
 from fastapi_pagination.utils import disable_installed_extensions_check
 from routers import (
     permission_group,
-    ingest_s3store,
+    ingest_sftp,
     ingest_mqtt,
     parser_csv,
     ingest_external_api_the_things_network,
@@ -26,6 +26,8 @@ from routers import (
     trigger_ext_api,
     parser_timezone,
     parser_encoding,
+    ingest,
+    parser_detailed,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -50,6 +52,7 @@ app.add_middleware(
 
 # the order of the router defines the order of the openapi doc
 app.include_router(parser_csv.router)
+app.include_router(ingest.router)
 app.include_router(ingest_external_api_bosch.router)
 app.include_router(ingest_external_api_dwd.router)
 app.include_router(ingest_external_api_neutron_monitor.router)
@@ -58,7 +61,7 @@ app.include_router(ingest_external_api_tsystems.router)
 app.include_router(ingest_external_api_uba.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
-app.include_router(ingest_s3store.router)
+app.include_router(ingest_sftp.router)
 app.include_router(parser_mqtt.router)
 app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)
@@ -70,3 +73,4 @@ app.include_router(trigger_quality_control.router)
 app.include_router(trigger_ext_api.router)
 app.include_router(parser_timezone.router)
 app.include_router(parser_encoding.router)
+app.include_router(parser_detailed.router)

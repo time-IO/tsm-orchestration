@@ -24,9 +24,7 @@ const formData = ref<IngestMqttCreate>({
   name: null,
   permission_group_id: null,
   description: null,
-  topic: null,
-  uri: null,
-  mqtt_parser_id: null,
+  parser_id: null,
 });
 
 const isLoading = ref(false);
@@ -36,9 +34,7 @@ async function save() {
     name: formData.value.name,
     permission_group_id: formData.value.permission_group_id,
     description: formData.value.description,
-    topic: formData.value.topic,
-    uri: formData.value.uri,
-    mqtt_parser_id: formData.value.mqtt_parser_id,
+    parser_id: formData.value.parser_id,
   };
   try {
     isLoading.value = true;

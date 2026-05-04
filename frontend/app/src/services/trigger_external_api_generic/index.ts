@@ -7,8 +7,8 @@ import type {
 
 
 
-async function trigger_api_generic(provider: string, input: TriggerSyncExtApiBase) {
-  const apiPath = `/trigger/external-api/${provider}`;
+async function trigger_api_generic(input: TriggerSyncExtApiBase) {
+  const apiPath = `/trigger/external-api/`;
   return await axiosInstance.post<TriggerSyncExtApiResponse>(apiPath, input);
 }
 

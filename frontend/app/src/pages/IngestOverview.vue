@@ -5,64 +5,64 @@
       <q-space />
       <q-btn color="green" :label="t('newIngest')" to="/ingest/new" />
     </div>
-
-    <div class="row">
-      <div class="col-3 q-pa-sm" v-for="item in data" :key="item.name">
-        <q-card>
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar :icon="item.icon" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ item.label }}</q-item-label>
-              <q-item-label caption> {{ item.description }} </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <q-card-actions>
-            <q-space />
-            <q-btn :to="item.path" class="full-width" color="primary">Show</q-btn>
-          </q-card-actions>
-        </q-card>
-      </div>
-    </div>
+    <ingest-overview-filter
+      v-model:name="store.filters.name"
+      v-model:ingest_type="store.filters.ingest_type"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
+    <ingest-overview-table
+      class="q-mt-sm"
+      v-model:pagination="pagination"
+      :rows="store.rows"
+      @onRequest="store.onRequest"
+      @delete="deleteItem"
+    />
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
+import { useQuasar } from 'quasar';
+import { useIngestStore } from 'stores/ingestStore';
+import IngestOverviewTable from 'components/IngestOverviewTable.vue';
+import IngestOverviewFilter from 'components/IngestOverviewFilter.vue';
 const { t } = useI18n();
 
-const data = [
-  {
-    name: 'sftp',
-    icon: 'folder_copy',
-    label: 'SFTP',
-    description: 'some description for sftp',
-    path: '/ingest/sftp',
-  },
-  {
-    name: 'ext_sftp',
-    icon: 'folder_special',
-    label: 'External SFTP',
-    description: 'some description for ext_sftp',
-    path: '/ingest/external-sftp',
-  },
-  {
-    name: 'mqtt',
-    icon: 'wifi_tethering',
-    label: 'MQTT',
-    description: 'some description for mqtt',
-    path: '/ingest/mqtt',
-  },
-  {
-    name: 'ext_api',
-    icon: 'control_camera',
-    label: 'External API',
-    description: 'some description for sftp',
-    path: '/ingest/external-api',
-  },
-];
+const $q = useQuasar();
+
+const store = useIngestStore();
+
+const pagination = computed({
+  get: () => store.pagination,
+  set: (val) => store.setPagination(val),
+});
+
+const deleteItem = async (itemId: number | null) => {
+  if (!itemId) {
+    return;
+  }
+
+  try {
+    await store.dispatchDelete(itemId);
+    $q.notify({
+      type: 'positive',
+      position: 'top',
+      message: 'Item deleted successfully',
+    });
+
+    await store.dispatchGetList();
+  } catch {
+    $q.notify({
+      type: 'negative',
+      position: 'top',
+      message: 'Failed to delete item',
+    });
+  }
+};
 </script>
 
 <style scoped></style>

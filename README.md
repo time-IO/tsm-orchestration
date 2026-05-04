@@ -22,6 +22,9 @@ Edit your `/etc/hosts` file and add the following entry:
 ```
 docker compose up -d
 ```
+
+For Qc-Settings to work on local machine also see: `Qc-Setting Form locally` section in this Readme
+
 ### Frontend
 - visit: http://localhost
 
@@ -159,6 +162,11 @@ docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest
   - afterward they can be used with `process.env.<KEY>`
   - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts` 
 
+### Qc-Setting Form locally
+- to be able to select a field and/or target datastream in local setup you will need to do the following: 
+- create any ingest
+- update the table `database` column `username` to `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`
+
 ### Auth
 - Keycloak
   - accessible at http://localhost/keycloak 
@@ -180,110 +188,20 @@ If you applied changes to models that should be propagated to the database, you 
 - To view the container+logs, go to:
   - http://localhost/dozzle
 
-### Data
+### Datamodel
 
-Should be inserted through migration if necessary.
+#### Problem with custom type EncryptedType in alembic migration
+When creating a new migration file, alembic will assume that `EncryptedType` is a new type and will try to change the respective columns to that new type.
+This __must be manually removed__ from the migration file (in `upgrade` __and__ `downgrade`).
 
-#### Neutron Monitor Stations
-```sql
-
-INSERT INTO neutron_monitor_station (station_id,description) VALUES
-	 ('AATA','Alma-Ata A (R=5.90, Alt=897 m)'),
-	 ('AATB','Alma-Ata B (R=5.90, Alt=3340 m)'),
-	 ('AHMD','Ahmedabad (R=15.94, Alt=50 m)'),
-	 ('APTY','Apatity (R=0.65, Alt=181 m)'),
-	 ('ARNM','Aragats (R=7.10, Alt=3200 m)'),
-	 ('ATHN','Athens (R=8.53, Alt=260 m)'),
-	 ('BKSN','Baksan (R=5.70, Alt=1700 m)'),
-	 ('CALG','Calgary (R=1.08, Alt=1123 m)'),
-	 ('CALM','NM de Castilla la Mancha (R=6.95, Alt=708 m)'),
-	 ('CLMX','Climax (R=3.00, Alt=3400 m)'),
-	 ('DJON','Daejeon (R=11.20, Alt=200 m)'),
-	 ('DOMB','Dome C mini NM (bare) (R=0.01, Alt=3233 m)'),
-	 ('DOMC','Dome C mini NM (R=0.01, Alt=3233 m)'),
-	 ('DRBS','Dourbes (R=3.18, Alt=225 m)'),
-	 ('ESOI','Emilio Segre Obs. Israel (R=10.75, Alt=2055 m)'),
-	 ('FSMT','Fort Smith (R=0.30, Alt=180 m)'),
-	 ('HRMS','Hermanus (R=4.58, Alt=26 m)'),
-	 ('HUAN','Huancayo (R=12.92, Alt=3400 m)'),
-	 ('INVK','Inuvik (R=0.30, Alt=21 m)'),
-	 ('IRK2','Irkustk 2 (R=3.64, Alt=2000 m)'),
-	 ('IRK3','Irkutsk 3 (R=3.64, Alt=3000 m)'),
-	 ('IRKT','Irkustk (R=3.64, Alt=435 m)'),
-	 ('JBGO','JangBogo (R=0.30, Alt=29 m)'),
-	 ('JUNG','IGY Jungfraujoch (R=4.49, Alt=3570 m)'),
-	 ('JUNG1','NM64 Jungfraujoch (R=4.49, Alt=3475 m)'),
-	 ('KERG','Kerguelen (R=1.14, Alt=33 m)'),
-	 ('KGSN','Kingston (R=1.88, Alt=65 m)'),
-	 ('KIEL','Kiel (R=2.36, Alt=54 m)'),
-	 ('KIEL2','KielRT (R=2.36, Alt=54 m)'),
-	 ('LMKS','Lomnicky Stit (R=3.84, Alt=2634 m)'),
-	 ('MCMU','Mc Murdo (R=0.30, Alt=48 m)'),
-	 ('MCRL','Mobile Cosmic Ray Laboratory (R=2.46, Alt=200 m)'),
-	 ('MGDN','Magadan (R=2.10, Alt=220 m)'),
-	 ('MOSC','Moscow (R=2.43, Alt=200 m)'),
-	 ('MRNY','Mirny (R=0.03, Alt=30 m)'),
-	 ('MWSB','Mawson Bare (R=0.22, Alt=30 m)'),
-	 ('MWSN','Mawson (R=0.22, Alt=30 m)'),
-	 ('MXCO','Mexico (R=8.28, Alt=2274 m)'),
-	 ('NAIN','Nain (R=0.30, Alt=46 m)'),
-	 ('NANM','Nor-Amberd (R=7.10, Alt=2000 m)'),
-	 ('NEU3','Neumayer III mini neutron monitor (R=0.10, Alt=40 m)'),
-	 ('NEWK','Newark (R=2.40, Alt=50 m)'),
-	 ('NRLK','Norilsk (R=0.63, Alt=0 m)'),
-	 ('NVBK','Novosibirsk (R=2.91, Alt=163 m)'),
-	 ('OULU','Oulu (R=0.81, Alt=15 m)'),
-	 ('PSNM','Doi Inthanon (Princess Sirindhorn NM) (R=16.80, Alt=2565 m)'),
-	 ('PTFM','Potchefstroom (R=6.98, Alt=1351 m)'),
-	 ('PWNK','Peawanuck (R=0.30, Alt=53 m)'),
-	 ('ROME','Rome (R=6.27, Alt=0 m)'),
-	 ('SANB','Sanae D (R=0.73, Alt=52 m)'),
-	 ('SNAE','Sanae IV (R=0.73, Alt=856 m)'),
-	 ('SOPB','South Pole Bare (R=0.10, Alt=2820 m)'),
-	 ('SOPO','South Pole (R=0.10, Alt=2820 m)'),
-	 ('TERA','Terre Adelie (R=0.01, Alt=32 m)'),
-	 ('THUL','Thule (R=0.30, Alt=26 m)'),
-	 ('TSMB','Tsumeb (R=9.15, Alt=1240 m)'),
-	 ('TXBY','Tixie Bay (R=0.48, Alt=0 m)'),
-	 ('UFSZ','Zugspitze (R=4.10, Alt=2650 m)'),
-	 ('YKTK','Yakutsk (R=1.65, Alt=105 m)'),
-	 ('ZUGS','Zugspitze (R=4.24, Alt=2960 m)');
-
-```
-
-#### MQTT Parser
-
-```sql
-INSERT INTO mqtt_parser(name) values
-('Campbell CR6'),
-('Schlumberger'),
-('campbell_cr6'),
-('brightsky_dwd_api'),
-('ydoc_ml417'),
-('sine_dummy'),
-('Gude');
-```
+#### Adding new ingests/parser
+- Create the model
+- To add a new ingest/parser you will need to update the `CheckConstraint` (`api/app/models/ingest.py` or `api/app/models/parser.py`).
+- Create a new migration (pay attention to `Problem with custom type EncryptedType in alembic migration`), drop the existing `CheckConstraint`, create a new one
+- Also extend `api/app/constants.py`
+- Create the repository
 
 ### Generate Dummy Data using SQL
-
-#### MQTT Parser
-```
-DO $$
-DECLARE
-    i INTEGER := 1;
-    max_items INTEGER := 1000;
-BEGIN
-    WHILE i <= max_items LOOP
-        INSERT INTO public.mqtt_parser (id, name)
-        VALUES (NEXTVAL('mqtt_parser_id_seq'), 'mqtt_parser' || i);
-        i := i + 1;
-    END LOOP;
-END $$;
-```
-__Note__
-
-An error may occur, because the sequence is not up to date:
-```SELECT setval('mqtt_parser_id_seq', (SELECT MAX(id) FROM mqtt_parser));```
 
 #### Permission Groups
 ```
@@ -294,7 +212,6 @@ DECLARE
     group_uuid UUID;
 BEGIN
     WHILE i <= max_groups LOOP
-        -- Generate a deterministic but unique UUID (for demo; use gen_random_uuid() in production)
         group_uuid := gen_random_uuid();
 
         INSERT INTO permission_group (id, name, uuid, entitlement)

@@ -103,10 +103,8 @@ def publish_trigger_ext_api(ingest_uuid, date_from, date_to, topic="sync_ext_api
     )
 
 
-def publish_frontend_thing_update(
-    ingest, ingest_type_info, topic="frontend_thing_update"
-):
-    msg = create_frontend_thing_update(ingest, ingest_type_info)
+def publish_frontend_thing_update(ingest, topic="frontend_thing_update"):
+    msg = create_frontend_thing_update(ingest)
     publish_message(
         msg, topic, f"Ingest with UUID '{ingest.uuid}' published on '{topic}'"
     )

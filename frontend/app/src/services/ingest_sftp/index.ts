@@ -5,7 +5,7 @@ import type {
 } from 'src/services/ingest_sftp/types';
 import { createIngestApiService } from 'src/services/factoryIngestService';
 
-const apiPath = 'ingest/s3store/';
+const apiPath = 'ingest/sftp/';
 
 export default createIngestApiService<IngestSftpPublic, IngestSftpCreate, IngestSftpUpdate>(
   apiPath,

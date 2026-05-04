@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 import httpx
-from sentry_sdk.utils import current_stacktrace
-
 from config import settings
 from dependencies import get_current_user, get_repo_database
+from models import User
 
 router = APIRouter(
     prefix="/sta",
@@ -18,7 +17,7 @@ async def redirect_query(
     permission_group_id: int,
     q: str,
     repo=Depends(get_repo_database),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
 
     if not permission_group_id:

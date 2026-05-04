@@ -22,7 +22,9 @@
           <q-separator />
           <q-card-actions>
             <q-space />
-            <q-btn :to="item.path" class="full-width" color="green">Create</q-btn>
+            <q-btn :to="item.path" class="full-width" color="green" icon="add">
+              <q-tooltip>Create new ingest</q-tooltip>
+            </q-btn>
           </q-card-actions>
         </q-card>
       </div>
@@ -46,7 +48,9 @@
                   <q-item-label>{{ item.label }}</q-item-label>
                 </q-item-section>
                 <q-item-section avatar>
-                  <q-btn :to="item.path" square color="green" icon="add" />
+                  <q-btn :to="item.path" square color="green" icon="add">
+                    <q-tooltip>Create new ingest</q-tooltip>
+                  </q-btn>
                 </q-item-section>
               </q-item>
               <q-separator />

@@ -20,6 +20,8 @@ from .quality_control_constraints import (
     TypeConstraint,
 )
 
+from .repository_validator import RepositoryValidator
+
 __all__ = [
     # Base validators
     "ConstraintViolation",
@@ -32,4 +34,6 @@ __all__ = [
     "QCFunction",
     "FunctionArgument",
     "TypeConstraint",
+    # Repository
+    "RepositoryValidator",
 ]

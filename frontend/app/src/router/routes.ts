@@ -37,16 +37,6 @@ import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
 import IngestEditSftp from 'pages/IngestEditSftp.vue';
 import IngestDetailExternalSftp from 'pages/IngestDetailExternalSftp.vue';
 import IngestEditExternalSftp from 'pages/IngestEditExternalSftp.vue';
-import IngestOverviewSftp from "pages/IngestOverviewSftp.vue";
-import IngestOverviewMqtt from 'pages/IngestOverviewMqtt.vue';
-import IngestOverviewExternalSftp from 'pages/IngestOverviewExternalSftp.vue';
-import IngestOverviewExternalApi from 'pages/IngestOverviewExternalApi.vue';
-import IngestOverviewExternalApiBosch from 'pages/IngestOverviewExternalApiBosch.vue';
-import IngestOverviewExternalApiDwd from 'pages/IngestOverviewExternalApiDwd.vue';
-import IngestOverviewExternalApiNm from 'pages/IngestOverviewExternalApiNm.vue';
-import IngestOverviewExternalApiTSystems from 'pages/IngestOverviewExternalApiTSystems.vue';
-import IngestOverviewExternalApiTtn from 'pages/IngestOverviewExternalApiTtn.vue';
-import IngestOverviewExternalApiUba from 'pages/IngestOverviewExternalApiUba.vue';
 import IngestCopyExternalApiUba from 'pages/IngestCopyExternalApiUba.vue';
 import IngestCopyExternalApiBosch from 'pages/IngestCopyExternalApiBosch.vue';
 import IngestCopyExternalApiDwd from 'pages/IngestCopyExternalApiDwd.vue';
@@ -77,56 +67,6 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest',
     component: IngestOverview,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/sftp',
-    component: IngestOverviewSftp,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/mqtt',
-    component: IngestOverviewMqtt,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-sftp',
-    component: IngestOverviewExternalSftp,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api',
-    component: IngestOverviewExternalApi,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/bosch',
-    component: IngestOverviewExternalApiBosch,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/dwd',
-    component: IngestOverviewExternalApiDwd,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/nm',
-    component: IngestOverviewExternalApiNm,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/tsystems',
-    component: IngestOverviewExternalApiTSystems,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/ttn',
-    component: IngestOverviewExternalApiTtn,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/ingest/external-api/uba',
-    component: IngestOverviewExternalApiUba,
     meta: { requiresAuth: true },
   },
   {

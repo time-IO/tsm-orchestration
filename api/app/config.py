@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     MQTT_USER: str
     MQTT_PASSWORD: str
     MQTT_QOS: int = 2
+    INGEST_MQTT_BROKER_URI: str
 
     @computed_field  # type: ignore[prop-decorator]
     @property
