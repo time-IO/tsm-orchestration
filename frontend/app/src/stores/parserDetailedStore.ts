@@ -6,7 +6,7 @@ import type {
   QTableRequestPropPagination,
 } from 'src/services/types';
 import { defaultPagination } from 'src/utils/pagination_utils';
-import type {ParserDetailedRead} from "src/services/parser_detailed/types";
+import type { ParserDetailedRead } from 'src/services/parser_detailed/types';
 
 export const useParserDetailedStore = defineStore('parserDetailedStore', {
   state: () => ({
@@ -19,6 +19,7 @@ export const useParserDetailedStore = defineStore('parserDetailedStore', {
       date_from: undefined,
       date_to: undefined,
     } as ParserFilter,
+    loading: false,
   }),
 
   getters: {},
@@ -47,11 +48,16 @@ export const useParserDetailedStore = defineStore('parserDetailedStore', {
       await this.dispatchGetList();
     },
     async dispatchGetList() {
-      const response = await API.parserDetailed.getList(this.pagination, this.filters);
-      this.rows = response.data.items;
-      this.pagination.rowsPerPage = response.data.size;
-      this.pagination.page = response.data.page;
-      this.pagination.rowsNumber = response.data.total;
+      try {
+        this.loading = true;
+        const response = await API.parserDetailed.getList(this.pagination, this.filters);
+        this.rows = response.data.items;
+        this.pagination.rowsPerPage = response.data.size;
+        this.pagination.page = response.data.page;
+        this.pagination.rowsNumber = response.data.total;
+      } finally {
+        this.loading = false;
+      }
     },
     async dispatchDelete(id: number): Promise<void> {
       await API.parserDetailed.deleteOne(id);

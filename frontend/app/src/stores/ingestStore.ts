@@ -19,6 +19,7 @@ export const useIngestStore = defineStore('ingestStore', {
       date_from: undefined,
       date_to: undefined,
     } as IngestFilter,
+    loading: false,
   }),
 
   getters: {},
@@ -47,11 +48,16 @@ export const useIngestStore = defineStore('ingestStore', {
       await this.dispatchGetList();
     },
     async dispatchGetList() {
-      const response = await API.ingest.getList(this.pagination, this.filters);
-      this.rows = response.data.items;
-      this.pagination.rowsPerPage = response.data.size;
-      this.pagination.page = response.data.page;
-      this.pagination.rowsNumber = response.data.total;
+      try {
+        this.loading = true
+        const response = await API.ingest.getList(this.pagination, this.filters);
+        this.rows = response.data.items;
+        this.pagination.rowsPerPage = response.data.size;
+        this.pagination.page = response.data.page;
+        this.pagination.rowsNumber = response.data.total;
+      } finally {
+        this.loading = false
+      }
     },
     async dispatchDelete(id: number): Promise<void> {
       await API.ingest.deleteOne(id);
