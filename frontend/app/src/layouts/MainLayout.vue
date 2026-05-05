@@ -18,14 +18,6 @@
                 <q-item @click="handleLogout" clickable v-close-popup>
                   <q-item-section>Logout</q-item-section>
                 </q-item>
-                <q-separator />
-                <q-item clickable v-close-popup>
-                  <q-item-section>Settings</q-item-section>
-                </q-item>
-                <q-separator />
-                <q-item clickable v-close-popup>
-                  <q-item-section>Help &amp; Feedback</q-item-section>
-                </q-item>
               </template>
               <template v-else>
                 <q-item @click="handleLogin" clickable v-close-popup>
