@@ -158,9 +158,13 @@ docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest
 - Environment Variables must be used, using the `settings` instance (instantiated at the end of `api/app/config.py`)
 
 ### Environment Variables Frontend
-- Environment Variables must be defined in `frontend/app/quasar.config.ts`>`build`>`env`
-  - afterward they can be used with `process.env.<KEY>`
-  - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts` 
+- Environment Variables must be defined in
+  - `frontend/app/quasar.config.ts`>`build`>`env`
+  - `frontend/docker/generic-image/entrypoint.sh` --> the placeholder string must be added to `environmentPlaceholders`
+  - always follow the existing naming structure, e.g. `const ENV_OBJECT_STORAGE_URL = process.env.OBJECT_STORAGE_URL || 'ENV_OBJECT_STORAGE_URL_PLACEHOLDER'` 
+- afterward they can be used with `process.env.<KEY>`
+  - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts`
+ 
 
 ### Qc-Setting Form locally
 - to be able to select a field and/or target datastream in local setup you will need to do the following: 
