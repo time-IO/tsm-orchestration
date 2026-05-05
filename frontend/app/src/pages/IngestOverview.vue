@@ -6,6 +6,7 @@
       <q-btn color="green" :label="t('newIngest')" to="/ingest/new" />
     </div>
     <ingest-overview-filter
+      class="q-mt-md q-mb-md"
       v-model:name="store.filters.name"
       v-model:ingest_type="store.filters.ingest_type"
       v-model:permission_group_id="store.filters.permission_group_id"
@@ -14,7 +15,6 @@
       @apply-filters="store.applyFilters"
     />
     <ingest-overview-table
-      class="q-mt-sm"
       v-model:pagination="pagination"
       :rows="store.rows"
       @onRequest="store.onRequest"

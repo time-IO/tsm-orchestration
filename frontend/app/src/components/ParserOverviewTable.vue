@@ -3,7 +3,9 @@
     ref="tableRef"
     :rows="rows"
     :columns="default_parser_columns"
-    row-key="name"
+    row-key="id"
+    flat
+    bordered
     v-model:pagination="pagination"
     @request="onRequest"
     v-bind="$attrs"
