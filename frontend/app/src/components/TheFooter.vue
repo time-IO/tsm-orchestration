@@ -5,7 +5,19 @@
     style="left: 0 !important; width: 100% !important"
   >
     <div class="row items-center q-px-md q-py-sm" style="width: 100%">
-      <div class="col-auto"></div>
+      <div class="col-auto row items-center q-gutter-sm">
+        <a href="https://www.ufz.de" target="_blank">
+          <img src="/images/UFZ_Logo_RGB_EN.png" alt="UFZ" style="height: 50px; opacity: 0.85" />
+        </a>
+
+       <a href="https://www.ufz.de/index.php?de=45348" target="_blank">
+        <img
+          src="/images/259253_RDM_subline_fullcolor_rgb.png"
+          alt="RDM"
+          style="height: 50px; opacity: 0.85"/>
+       </a>
+
+      </div>
 
       <div class="col-grow row justify-center q-gutter-x-md">
         <div class="row items-center q-gutter-x-sm">
@@ -75,4 +87,5 @@
   </q-footer>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+</script>
