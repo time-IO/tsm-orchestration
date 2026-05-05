@@ -3,6 +3,7 @@
     ref="tableRef"
     :rows="rows"
     :columns="default_parser_columns"
+    :loading="loading"
     row-key="id"
     flat
     bordered
@@ -10,6 +11,9 @@
     @request="onRequest"
     v-bind="$attrs"
   >
+    <template v-slot:loading>
+      <q-inner-loading showing color="primary" />
+    </template>
     <template v-slot:body="props">
       <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
@@ -83,6 +87,10 @@ import { onMounted, ref } from 'vue';
 defineProps({
   rows: {
     type: Array,
+    required: true,
+  },
+  loading: {
+    type: Boolean,
     required: true,
   },
 });

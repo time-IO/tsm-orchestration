@@ -22,6 +22,7 @@ export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
         date_from: undefined,
         date_to: undefined,
       } as DefaultFilter,
+      loading: false,
     }),
     actions: {
       setPagination(pagination: Partial<QTableRequestPropPagination>) {
@@ -47,11 +48,16 @@ export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
         await this.dispatchGetList();
       },
       async dispatchGetList() {
-        const response = await apiService.getList(this.pagination, this.filters);
-        this.rows = response.data.items;
-        this.pagination.rowsPerPage = response.data.size;
-        this.pagination.page = response.data.page;
-        this.pagination.rowsNumber = response.data.total;
+        try {
+          this.loading = true;
+          const response = await apiService.getList(this.pagination, this.filters);
+          this.rows = response.data.items;
+          this.pagination.rowsPerPage = response.data.size;
+          this.pagination.page = response.data.page;
+          this.pagination.rowsNumber = response.data.total;
+        } finally {
+          this.loading = false;
+        }
       },
       async dispatchGetOne(id: number): Promise<TPublic> {
         const response = await apiService.getOne(id);

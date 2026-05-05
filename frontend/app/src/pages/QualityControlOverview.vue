@@ -31,11 +31,15 @@
       ref="tableRef"
       :rows="store.rows"
       :columns="columns"
+      :loading="store.loading"
       v-model:pagination="pagination"
       @request="store.onRequest"
       selection="multiple"
       v-model:selected="selection"
     >
+      <template v-slot:loading>
+        <q-inner-loading showing color="primary" />
+      </template>
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
           <q-td auto-width>

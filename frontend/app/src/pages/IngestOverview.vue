@@ -17,6 +17,7 @@
     <ingest-overview-table
       v-model:pagination="pagination"
       :rows="store.rows"
+      :loading="store.loading"
       @onRequest="store.onRequest"
       @delete="deleteItem"
     />
