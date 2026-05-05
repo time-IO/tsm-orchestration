@@ -40,6 +40,7 @@ class IngestRepository:
         statement = (
             select(self.model)
             .where(self.model.permission_group_id.in_(permission_group_ids_of_user))
+            .options(joinedload(self.model.external_api_detail))
             .options(joinedload(self.model.permission_group))
         )
 
