@@ -1,7 +1,7 @@
 <template>
   <q-layout view="lHh lpR lff">
     <q-header elevated>
-      <q-toolbar>
+      <q-toolbar class="bg-blue-grey-5 text-white">
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>{{ t('appname') }}</q-toolbar-title>

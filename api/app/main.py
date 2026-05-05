@@ -28,6 +28,7 @@ from routers import (
     parser_encoding,
     ingest,
     parser_detailed,
+    usage_statistics,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -74,3 +75,4 @@ app.include_router(trigger_ext_api.router)
 app.include_router(parser_timezone.router)
 app.include_router(parser_encoding.router)
 app.include_router(parser_detailed.router)
+app.include_router(usage_statistics.router)

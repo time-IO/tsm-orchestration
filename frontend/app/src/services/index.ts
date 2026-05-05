@@ -1,7 +1,7 @@
-import ingestExternalApiBoschController from "src/services/ingest_external_api_bosch"
-import ingestExternalApiDwdController from "src/services/ingest_external_api_dwd"
-import ingestExternalApiNeutronMonitorController from "src/services/ingest_external_api_neutron_monitor"
-import ingestExternalApiUbaController from "src/services/ingest_external_api_uba"
+import ingestExternalApiBoschController from 'src/services/ingest_external_api_bosch';
+import ingestExternalApiDwdController from 'src/services/ingest_external_api_dwd';
+import ingestExternalApiNeutronMonitorController from 'src/services/ingest_external_api_neutron_monitor';
+import ingestExternalApiUbaController from 'src/services/ingest_external_api_uba';
 import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
 import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
 import ingestMqttController from 'src/services/ingest_mqtt';
@@ -22,6 +22,8 @@ import parserEncodingController from 'src/services/parser_encoding';
 
 import ingestController from 'src/services/ingest'
 import parserDetailedController from 'src/services/parser_detailed'
+
+import usageStatisticsController from "src/services/usage_statistics"
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -44,6 +46,7 @@ export const API = {
   triggerQCSetting: qualityControlSettingsTriggerController,
   parserTimezone: parserTimezoneController,
   parserEncoding: parserEncodingController,
+  usageStatistics: usageStatisticsController,
   ingest: ingestController,
   parserDetailed: parserDetailedController,
 };
