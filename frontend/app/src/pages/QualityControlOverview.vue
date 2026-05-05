@@ -32,6 +32,8 @@
       :rows="store.rows"
       :columns="columns"
       :loading="store.loading"
+      flat
+      bordered
       v-model:pagination="pagination"
       @request="store.onRequest"
       selection="multiple"
