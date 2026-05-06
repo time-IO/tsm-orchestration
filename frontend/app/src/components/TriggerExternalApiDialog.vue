@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" style="width: 90%">
+  <q-dialog v-model="showDialog" style="width: 90%" backdrop-filter="blur(4px) saturate(150%)">
     <q-card class="q-pa-sm">
       <q-card-section>
         <div class="row q-mb-md">

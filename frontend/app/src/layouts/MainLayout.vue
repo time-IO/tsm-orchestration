@@ -121,6 +121,11 @@ const topNavigation = [
     route: '/quality-control',
     icon: 'verified',
   },
+  {
+    name: 'Trigger External Api',
+    route: '/trigger/external-api',
+    icon: 'verified',
+  },
 ];
 
 function toggleLeftDrawer() {

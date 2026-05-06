@@ -52,6 +52,7 @@ import ParserCopyCsv from 'pages/ParserCopyCsv.vue';
 import QualityControlDetail from 'pages/QualityControlDetail.vue';
 import QualityControlEdit from "pages/QualityControlEdit.vue";
 import QualityControlCopy from 'pages/QualityControlCopy.vue';
+import TriggerExternalApi from 'pages/TriggerExternalApi.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -319,6 +320,11 @@ const routes: RouteRecordRaw[] = [
     path: '/info/terms_of_use',
     name: 'terms_of_use',
     component: TermsOfUse,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/trigger/external-api',
+    component: TriggerExternalApi,
     meta: { requiresAuth: true },
   },
   // Always leave this as last one,

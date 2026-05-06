@@ -31,6 +31,10 @@ export type IngestFilter = DefaultFilter & {
   ingest_type: string | undefined;
 };
 
+export type IngestExternalApiFilter = DefaultFilter & {
+  api_type: string | undefined;
+}
+
 export type ParserFilter = DefaultFilter & {
   parser_type: string | undefined;
 };
