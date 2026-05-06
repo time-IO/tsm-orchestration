@@ -22,6 +22,7 @@ import parserEncodingController from 'src/services/parser_encoding';
 
 import ingestController from 'src/services/ingest'
 import parserDetailedController from 'src/services/parser_detailed'
+import ingestExternalApiController from 'src/services/ingest_external_api'
 
 import usageStatisticsController from "src/services/usage_statistics"
 
@@ -49,4 +50,5 @@ export const API = {
   usageStatistics: usageStatisticsController,
   ingest: ingestController,
   parserDetailed: parserDetailedController,
+  ingestExternalApi: ingestExternalApiController,
 };

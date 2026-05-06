@@ -68,6 +68,69 @@ export const default_ingest_columns: QTableColumn[] = [
   },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
+export const default_ingest_external_api_columns: QTableColumn[] = [
+  {
+    name: 'id',
+    required: true,
+    label: 'ID',
+    align: 'left',
+    field: (row) => row.id,
+    format: (val) => `${val}`,
+    sortable: true,
+  },
+  {
+    name: 'permission-group',
+    label: 'Permission Group',
+    field: (row) => row.permission_group.name,
+    sortable: true,
+    align: 'center',
+  },
+  { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
+  {
+    name: 'api_type',
+    label: 'Type',
+    field: 'api_type',
+    sortable: true,
+    align: 'center',
+    format: (val) => {
+      if (!val) return '';
+      switch (val) {
+        case 'bosch':
+          return 'Bosch IoT';
+        case 'dwd':
+          return 'Deutscher Wetterdienst';
+        case 'nm':
+          return 'Neutron Monitor';
+        case 'ttn':
+          return 'The Things network';
+        case 'tsystems':
+          return 'TSystems';
+        case 'uba':
+          return 'Umweltbundesamt (UBA) Air Data';
+        default:
+          return '';
+      }
+    },
+  },
+  {
+    name: 'created_at',
+    label: 'Created at',
+    field: 'created_at',
+    sortable: true,
+    align: 'center',
+    format: (val) => {
+      if (!val) return '';
+      const date = new Date(val);
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const year = date.getUTCFullYear();
+      return `${day}.${month}.${year}`;
+    },
+  },
+  { name: 'action', label: 'Actions', align: 'center', field: () => '' },
+];
+
+
 export const default_parser_columns: QTableColumn[] = [
   {
     name: 'id',

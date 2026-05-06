@@ -1,32 +1,34 @@
-from sqlmodel import Session
-from models import ParserDetailed, Parser
-from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from fastapi import HTTPException
+from sqlmodel import Session
 from typing import Optional
+from models import IngestExternalApi, Ingest
+from models.filters import IngestExternalApiFilter
+from sqlalchemy import select
 from fastapi_filters.ext.sqlalchemy import apply_filters
-from models.filters import ParserDetailedFilter
-from models.parser_detailed import ParserDetailedRead
+from fastapi import HTTPException
 
+from models.ingest_external_api import IngestExternalApiRead
 from sorting import apply_sort_list
 
 
-class ParserDetailedRepository:
+class IngestExternalApiRepository:
     def __init__(self, session: Session):
-        self.model = ParserDetailed
+        self.model = IngestExternalApi
         self.session = session
 
     def find_one(
         self, id: int, permission_group_ids_of_user: list[int]
-    ) -> ParserDetailed:
+    ) -> IngestExternalApi:
         statement = (
             select(self.model)
+            .join(self.model.ingest)
             .where(
-                self.model.parser_id == id,
-                self.model.permission_group_id.in_(permission_group_ids_of_user),
+                self.model.ingest_id == id,
+                Ingest.permission_group_id.in_(permission_group_ids_of_user),
             )
-            .options(joinedload(self.model.parser).joinedload(Parser.ingest))
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -36,14 +38,15 @@ class ParserDetailedRepository:
         self,
         permission_group_ids_of_user: list[int],
         sort_by: Optional[str] = None,
-        filters: Optional[ParserDetailedFilter] = None,
+        filters: Optional[IngestExternalApiFilter] = None,
     ):
         statement = (
             select(self.model)
-            .join(self.model.parser)
-            .where(self.model.permission_group_id.in_(permission_group_ids_of_user))
-            .options(joinedload(self.model.parser).joinedload(Parser.ingest))
+            .join(self.model.ingest)
+            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
         if filters:
             statement = apply_filters(statement, filters)
 
@@ -54,17 +57,8 @@ class ParserDetailedRepository:
     def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
         entity = self.find_one(ingest_id, permission_group_ids_of_user)
 
-        parser = entity.parser
-
-        # don't delete parser that are connected to any ingest
-        if parser.ingest:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete parser that is connected to an ingest",
-            )
-
         try:
-            self.session.delete(parser)
+            self.session.delete(entity)
             self.session.commit()
             return {"ok": True}
         except Exception as e:
@@ -73,25 +67,30 @@ class ParserDetailedRepository:
             raise HTTPException(status_code=400, detail="Failed to delete.")
 
     @staticmethod
-    def to_flat(entity: ParserDetailed) -> ParserDetailedRead:
+    def to_flat(entity: IngestExternalApi) -> IngestExternalApiRead:
 
-        parser = entity.parser
+        ing = entity.ingest
 
-        permission_group = entity.permission_group
+        permission_group = ing.permission_group
 
-        return ParserDetailedRead(
-            id=parser.id,
-            parser_type=parser.parser_type,
-            uuid=entity.uuid,
-            created_at=entity.created_at,
-            name=entity.name,
-            permission_group_id=entity.permission_group_id,
-            description=entity.description,
-            created_by_id=entity.created_by_id,
+        return IngestExternalApiRead(
+            # Ingest
+            id=ing.id,
+            uuid=ing.uuid,
+            created_at=ing.created_at,
+            ingest_type=ing.ingest_type,
+            name=ing.name,
+            permission_group_id=ing.permission_group_id,
+            description=ing.description,
+            created_by_id=ing.created_by_id,
+            parser_id=ing.parser_id,
+            # External API
+            api_type=entity.api_type,
+            sync_enabled=entity.sync_enabled,
+            sync_interval_in_minutes=entity.sync_interval_in_minutes,
             permission_group={
                 "id": permission_group.id,
                 "uuid": permission_group.uuid,
                 "name": permission_group.name,
             },
         )
-        pass

@@ -15,6 +15,7 @@ from models import (
 import logging
 
 from repositories.ingest import IngestRepository
+from repositories.ingest_external_api import IngestExternalApiRepository
 from repositories.ingest_external_api_bosch import IngestExternalApiBoschRepository
 from repositories.ingest_external_api_dwd import IngestExternalApiDwdRepository
 from repositories.ingest_external_api_neutron_monitor import (
@@ -161,6 +162,10 @@ def sync_permission_groups(
 
 def get_repo_ingest(session=Depends(get_session)):
     return IngestRepository(session)
+
+
+def get_repo_ingest_external_api(session=Depends(get_session)):
+    return IngestExternalApiRepository(session)
 
 
 def get_repo_ingest_external_api_uba(session=Depends(get_session)):
