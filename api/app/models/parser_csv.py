@@ -1,6 +1,10 @@
+from pydantic import field_validator
 from sqlmodel import SQLModel, Field, Column, Relationship
-from typing import Optional
+from typing import Optional, Any
 from sqlalchemy import JSON
+import pytz
+
+from utils import valid_codecs
 
 from .parser_detailed import (
     ParserDetailed,
@@ -88,6 +92,20 @@ class ParserCsv(SQLModel, table=True):
 
     # Relationships
     parser_detailed: ParserDetailed = Relationship(back_populates="parser_csv")
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: Any) -> str:
+        if value not in pytz.all_timezones:
+            raise ValueError(f"{value} is not a valid timezone")
+        return value
+
+    @field_validator("encoding")
+    @classmethod
+    def validate_encoding(cls, value: Any) -> str:
+        if value not in valid_codecs:
+            raise ValueError(f"{value} is not a valid encoding")
+        return value
 
     @property
     def mqtt_information(self) -> dict:

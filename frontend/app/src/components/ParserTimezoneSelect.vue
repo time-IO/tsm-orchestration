@@ -4,7 +4,7 @@
     :options="options"
     filled
     v-bind="$attrs"
-    label="Select the timezone *"
+    :label="label ? label : 'Select the timezone *'"
     use-input
     @filter="filterFn"
   />
@@ -19,6 +19,10 @@ const store = useParserTimezoneStore();
 const $q = useQuasar();
 
 const model = defineModel();
+
+defineProps<{
+  label?: string;
+}>();
 
 const options = ref(store.rows);
 

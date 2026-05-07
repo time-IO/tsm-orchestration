@@ -124,7 +124,7 @@ const topNavigation = [
   {
     name: 'Trigger External Api',
     route: '/trigger/external-api',
-    icon: 'verified',
+    icon: 'sync',
   },
 ];
 
