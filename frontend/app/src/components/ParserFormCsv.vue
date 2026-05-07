@@ -73,7 +73,10 @@
             :rules="[(val: string | null) => !!val || 'Timezone is required']"
           />
 
-          <parser-encoding-select v-model="formData.encoding" />
+          <parser-encoding-select
+            v-model="formData.encoding"
+            :rules="[(val: string | null) => !!val || 'File encoding is required']"
+          />
 
           <!-- Header Field -->
           <q-input

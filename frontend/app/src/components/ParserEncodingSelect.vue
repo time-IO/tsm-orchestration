@@ -3,7 +3,7 @@
     v-model="model"
     :options="options"
     filled
-    label="Select the file encoding"
+    :label="label ? label : 'Select the file encoding *'"
     v-bind="$attrs"
     option-value="codec"
     option-label="codec"
@@ -38,6 +38,10 @@ const store = useParserEncodingStore();
 const $q = useQuasar();
 
 const model = defineModel();
+
+defineProps<{
+  label?: string;
+}>();
 
 const options = ref(store.rows);
 
