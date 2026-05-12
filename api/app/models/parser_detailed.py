@@ -1,12 +1,10 @@
 from sqlmodel import SQLModel, Field, Index, func, Column, Relationship
 from typing import Optional
-import uuid as uuid_pkg
 from datetime import datetime, timezone
 from .parser import Parser, ParserRead
 
 
 class ParserDetailedRead(ParserRead):
-    uuid: uuid_pkg.UUID
     created_at: datetime
     name: str
     permission_group_id: int
@@ -45,7 +43,6 @@ class ParserDetailed(SQLModel, table=True):
         primary_key=True,
         ondelete="CASCADE",
     )
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, unique=True, index=True)
     permission_group_id: int = Field(foreign_key="permission_group.id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by_id: Optional[int] = None

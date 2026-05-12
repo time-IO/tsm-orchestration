@@ -82,7 +82,7 @@ class ParserDetailedRepository:
         return ParserDetailedRead(
             id=parser.id,
             parser_type=parser.parser_type,
-            uuid=entity.uuid,
+            uuid=parser.uuid,
             created_at=entity.created_at,
             name=entity.name,
             permission_group_id=entity.permission_group_id,

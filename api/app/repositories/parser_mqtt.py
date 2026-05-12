@@ -46,5 +46,8 @@ class ParserMqttRepository:
         parser = entity.parser
 
         return ParserMqttRead(
-            id=parser.id, parser_type=parser.parser_type, name=entity.name
+            id=parser.id,
+            uuid=parser.uuid,
+            parser_type=parser.parser_type,
+            name=entity.name,
         )

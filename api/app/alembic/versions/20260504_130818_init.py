@@ -32,6 +32,7 @@ def upgrade() -> None:
     op.create_table(
         "parser",
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("parser_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.CheckConstraint(
             "parser_type IN ('csv','json','mqtt')", name="ck_parser_type"
@@ -41,6 +42,7 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_parser_parser_type"), "parser", ["parser_type"], unique=False
     )
+    op.create_index(op.f("ix_parser_uuid"), "parser", ["uuid"], unique=True)
     op.create_table(
         "permission_group",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -124,7 +126,6 @@ def upgrade() -> None:
     op.create_table(
         "parser_detailed",
         sa.Column("parser_id", sa.Integer(), nullable=False),
-        sa.Column("uuid", sa.Uuid(), nullable=False),
         sa.Column("permission_group_id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("created_by_id", sa.Integer(), nullable=True),
@@ -136,9 +137,6 @@ def upgrade() -> None:
             ["permission_group.id"],
         ),
         sa.PrimaryKeyConstraint("parser_id"),
-    )
-    op.create_index(
-        op.f("ix_parser_detailed_uuid"), "parser_detailed", ["uuid"], unique=True
     )
     op.create_index(
         "ix_parser_name_permission_group",
@@ -423,7 +421,6 @@ def downgrade() -> None:
     op.drop_table("permission_group_user_link")
     op.drop_table("parser_mqtt")
     op.drop_index("ix_parser_name_permission_group", table_name="parser_detailed")
-    op.drop_index(op.f("ix_parser_detailed_uuid"), table_name="parser_detailed")
     op.drop_table("parser_detailed")
     op.drop_index(op.f("ix_ingest_uuid"), table_name="ingest")
     op.drop_index("ix_ingest_name_permission_group", table_name="ingest")
@@ -433,6 +430,7 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_user_sub"), table_name="user")
     op.drop_table("user")
     op.drop_table("permission_group")
+    op.drop_index(op.f("ix_parser_uuid"), table_name="parser")
     op.drop_index(op.f("ix_parser_parser_type"), table_name="parser")
     op.drop_table("parser")
     op.drop_table("neutron_monitor_station")
