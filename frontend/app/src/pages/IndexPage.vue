@@ -42,7 +42,7 @@
               class="row justify-center q-mb-sm"
               style="flex-direction: column; align-items: center"
             >
-              <div class="text-h5 text-yellow-13" style="font-weight: bold">
+              <div class="text-h5 text-yellow-14" style="font-weight: bold">
                 {{ card.count }}
               </div>
               <div style="color: white; font-size: 80%; font-weight: bold">{{ card.label }}</div>
@@ -144,7 +144,15 @@
                     >
                       SensorThings API
                     </a>
-                    is used.
+                    is used. (See the
+                    <a
+                      href="https://doi.org/10.5281/zenodo.8354840"
+                      target="_blank"
+                      style="color: #519ba5; text-decoration: none"
+                      >full paper.
+                    </a>
+                    )
+
                     <!--                    and utilises the FROST-Server as a reference implementation for the OGC STA-->
                     <!--                    interface.-->
                   </p>
