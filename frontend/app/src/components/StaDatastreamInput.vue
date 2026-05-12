@@ -17,7 +17,7 @@
             <sta-datastream-selection-view
               :selected="selectedDatastreams"
               hide-open-button
-              :default-opened="false"
+              :default-opened="true"
               @remove="removeSelected"
               :style="{ maxHeight: maxHeight || '200px', overflowY: 'auto' }"
             />

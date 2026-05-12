@@ -23,18 +23,18 @@
             </div>
           </template>
 
-          <div style="width: 100%; overflow-x: auto">
-            <q-virtual-scroll :items="datastreams" virtual-scroll-horizontal>
-              <template #default="{ item: ds }">
-                <sta-datastream-card
-                  :datastream="ds"
-                  :removable="removable"
-                  :hide-open-button="hideOpenButton"
-                  @remove="removeDatastream"
-                />
-              </template>
-            </q-virtual-scroll>
-          </div>
+
+                <q-list dense separator bordered class="rounded-borders">
+                  <sta-datastream-list
+                    v-for="(ds, index) in datastreams"
+                    :key="ds['@iot.id'] ?? index"
+                    :datastream="ds"
+                    :removable="removable"
+                    :hide-open-button="hideOpenButton"
+                    @remove="removeDatastream"
+                  />
+                </q-list>
+
         </q-expansion-item>
       </div>
     </template>
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Datastream } from 'src/services/sta/types';
-import StaDatastreamCard from 'components/StaDatastreamCard.vue';
+import StaDatastreamList from 'components/StaDatastreamList.vue';
 
 const props = defineProps<{
   selected: Datastream[];
