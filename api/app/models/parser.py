@@ -1,10 +1,12 @@
 from sqlmodel import SQLModel, Field, CheckConstraint, Relationship
 from typing import Optional
+import uuid as uuid_pkg
 
 
 class ParserRead(SQLModel):
     id: int
     parser_type: str
+    uuid: uuid_pkg.UUID
 
 
 class ParserCreate(SQLModel):
@@ -26,6 +28,7 @@ class Parser(SQLModel, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, unique=True, index=True)
     parser_type: str = Field(
         description="type used for inheritance", index=True
     )  # e.g csv, json, mqtt

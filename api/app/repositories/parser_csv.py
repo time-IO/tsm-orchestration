@@ -257,7 +257,7 @@ class ParserCsvRepository:
         return ParserCsvRead(
             id=parser.id,
             parser_type=parser.parser_type,
-            uuid=parser_detailed.uuid,
+            uuid=parser.uuid,
             created_at=parser_detailed.created_at,
             name=parser_detailed.name,
             permission_group_id=parser_detailed.permission_group_id,

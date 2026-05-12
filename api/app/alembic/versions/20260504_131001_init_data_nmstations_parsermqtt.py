@@ -11,6 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
+import uuid as uuid_pkg
 
 # revision identifiers, used by Alembic.
 revision: str = "ab9ee236aa8c"
@@ -31,6 +32,7 @@ def upgrade() -> None:
     parser = sa.table(
         "parser",
         sa.column("id", sa.Integer),
+        sa.column("uuid", sa.Uuid),
         sa.column("parser_type", sa.String),
     )
     parser_mqtt = sa.table(
@@ -324,9 +326,21 @@ def upgrade() -> None:
     op.bulk_insert(
         parser,
         [
-            {"id": 1, "parser_type": "mqtt"},
-            {"id": 2, "parser_type": "mqtt"},
-            {"id": 3, "parser_type": "mqtt"},
+            {
+                "id": 1,
+                "uuid": uuid_pkg.UUID("4163d425-254a-495f-b7cd-61516017c82b"),
+                "parser_type": "mqtt",
+            },
+            {
+                "id": 2,
+                "uuid": uuid_pkg.UUID("64dff22a-e472-4292-8b9f-d0836e68ba67"),
+                "parser_type": "mqtt",
+            },
+            {
+                "id": 3,
+                "uuid": uuid_pkg.UUID("2b882a37-5dec-48b7-9c2a-341ae9cc25c8"),
+                "parser_type": "mqtt",
+            },
         ],
     )
     op.bulk_insert(
