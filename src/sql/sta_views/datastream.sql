@@ -31,12 +31,10 @@ SELECT
 		'definition', dp.unit_uri
 	) as "UNIT_OF_MEASUREMENT",
     public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
-	null as "RESULT_TIME",
-	null as "PHENOMENON_TIME",
-	dma.begin_date AS "PHENOMENON_TIME_START",
-    dma.begin_date AS "RESULT_TIME_START",
-    dma.end_date AS "PHENOMENON_TIME_END",
-    dma.end_date AS "RESULT_TIME_END",
+
+	min(dsl.begin_date) AS "PHENOMENON_TIME_START",
+    max(last_obs.result_time) AS "PHENOMENON_TIME_END",
+
 	jsonb_build_object(
         '@context', public.get_schema_org_context(),
 		'jsonld.id',  '{sms_url}' || 'datastream-links/' || MAX(dsl.id),
@@ -124,6 +122,14 @@ LEFT JOIN public.sms_cv_unit cv_ua ON coalesce(nullif(split_part(dp.accuracy_uni
 LEFT JOIN public.sms_cv_license cv_l ON coalesce(nullif(split_part(dsl.license_uri,'/',9),'')::integer) =cv_l.id
 LEFT JOIN public.sms_configuration_dynamic_location_begin_action cdl ON c.id = cdl.configuration_id
 LEFT JOIN public.sms_configuration_static_location_begin_action csl ON c.id = csl.configuration_id
+LEFT JOIN LATERAL (
+    SELECT result_time FROM observation o
+    WHERE o.datastream_id = dsl.datastream_id
+    AND o.result_time >= dsl.begin_date
+    AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
+    ORDER BY result_time DESC
+    LIMIT 1
+) last_obs ON true
 WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
 GROUP BY dsl.device_property_id, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,

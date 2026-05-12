@@ -45,6 +45,8 @@ WITH static_data AS (
             ON o.datastream_id = dsl.datastream_id
        WHERE o.result_time >= sla.begin_date
          AND (sla.end_date IS NULL OR o.result_time <= sla.end_date)
+         AND o.result_time >= dsl.begin_date
+         AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
      ),
 
 xyzDatastream AS MATERIALIZED (
@@ -124,6 +126,8 @@ dynamic_data AS(
         LEFT JOIN observation oz
             ON oz.datastream_id = data.z_datastream_id
             AND oz.result_time = o.result_time
+    WHERE o.result_time >= dsl.begin_date
+         AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
 )
 
 SELECT * FROM static_data
