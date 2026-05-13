@@ -105,6 +105,7 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
                 row["dwd_period"] = row["ea_settings"].get("period")
                 dsm_cur.execute(queries.INSERT_INGEST_DWD_API, row)
             if row["ea_type_name"] == "nm":
+                # currently no things with ext_api = Neutronenmonitor in configdb
                 pass
             if row["ea_type_name"] == "bosch":
                 row["bosch_sensor"] = row["ea_settings"].get("sensor_id")
