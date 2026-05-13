@@ -1,4 +1,4 @@
-{{- if .Values.enabled }}
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,7 +15,7 @@ data:
   MQTT_BROKER: "tcp://mosquitto:1883"
   MQTT_TOPIC: "userinfo_keycloak"
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
-  MQTT_CLIENT_ID: keycloak
+  MQTT_CLIENT_ID: "keycloak"
   KC_LOG_LEVEL: "{{ .Values.global.envvars.KC_LOG_LEVEL }}"
   KC_PROXY: "edge"
   KEYCLOAK_GENERIC_OIDC_ALIAS: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_ALIAS }}"
@@ -25,10 +25,16 @@ data:
   KEYCLOAK_GENERIC_OIDC_USERINFO_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_USERINFO_URL }}"
   KEYCLOAK_GENERIC_OIDC_CONF_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_CONF_URL }}"
   KEYCLOAK_GENERIC_OIDC_AUTH_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_AUTH_URL }}"
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: '["{{ .Values.global.ingress.url }}/thing-management/login/callback"]'
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "{{ .Values.global.ingress.url }}/thing-management/login"
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "{{ .Values.global.ingress.url }}/thing-management"
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "{{ .Values.global.ingress.url }}/thing-management"
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "{{ .Values.global.ingress.url }}/thing-management"
-  KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: '["{{ .Values.global.ingress.url }}"]'
+  KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: '["{{ .Values.global.ingress.url }}/data-source-management/login-callback"]'
+  KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "{{ .Values.global.ingress.url }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_BASE_URL: "{{ .Values.global.ingress.url }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_ADMIN_URL: "{{ .Values.global.ingress.url }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_ROOT_URL: "{{ .Values.global.ingress.url }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: '["{{ .Values.global.ingress.url }}"]'
+  KEYCLOAK_GRAFANA_CLIENT_REDIRECT_URIS: '["{{ .Values.global.ingress.url }}/visualization/login/generic_oauth"]'
+  KEYCLOAK_GRAFANA_CLIENT_POST_LOGOUT_URIS: "{{ .Values.global.ingress.url }}/visualization/login"
+  KEYCLOAK_GRAFANA_CLIENT_BASE_URL: "{{ .Values.global.ingress.url }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_ADMIN_URL: "{{ .Values.global.ingress.url }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_ROOT_URL: "{{ .Values.global.ingress.url }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_WEB_ORIGINS: '["{{ .Values.global.ingress.url }}"]'
 {{- end }}

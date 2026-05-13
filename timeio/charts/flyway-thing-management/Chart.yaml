@@ -1,4 +1,0 @@
-apiVersion: v2
-name: flyway-thing-management
-version: 0.0.1
-description: A Helm chart for the flyway-thing-management service

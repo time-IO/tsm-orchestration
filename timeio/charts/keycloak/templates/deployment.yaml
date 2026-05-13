@@ -1,9 +1,18 @@
 {{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
 {{- $secretName := "" }}
 {{- if .Values.global.createSecrets }}
   {{- $secretName = printf "%s-secret" .Values.name }}
 {{- else }}
-  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
 {{- end }}
 
 apiVersion: apps/v1
@@ -28,15 +37,33 @@ spec:
       initContainers:
       - name: "mqtt-connection-check"
         image: "eclipse-mosquitto:2.0"
+        securityContext:
+          runAsUser: {{ .Values.mqtt_init.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.mqtt_init.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.mqtt_init.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.mqtt_init.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.mqtt_init.securityContext.seccompProfile.type }}
         command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
         volumeMounts:
           - name: init-mqtt-worker
             mountPath: /tmp/init-mqtt-worker
+{{- if or $configMapName $secretName }}
         envFrom:
+{{- if $configMapName }}
         - configMapRef:
-            name: {{ .Values.name }}-envvars
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
         - secretRef:
             name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.mqtt_init.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
       containers:
       - name: {{ .Values.name }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -55,11 +82,21 @@ spec:
         - "{{ .Values.global.envvars.KC_START_COMMAND }}"
         - "--import-realm"
         - "--http-port={{ .Values.port }}"
+{{- if or $configMapName $secretName }}
         envFrom:
+{{- if $configMapName }}
         - configMapRef:
-            name: {{ .Values.name }}-envvars
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
         - secretRef:
             name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
         volumeMounts:
           - mountPath: /opt/keycloak/data/import/keycloak-init.json
             name: {{ .Values.name }}-init

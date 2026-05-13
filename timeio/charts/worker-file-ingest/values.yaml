@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: "prod-2025-12-17"
+  tag: "prod-2026-04-17"
   pullPolicy: Always
 name: worker-file-ingest
 
@@ -17,4 +17,18 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+env: []
+
+mqtt_init:
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: [ "ALL" ]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  env: []
+
 existingSecret: ""
+existingConfigMap: ""

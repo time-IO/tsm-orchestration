@@ -1,9 +1,3 @@
-{{- $secretName := "" }}
-{{- if .Values.global.createSecrets }}
-  {{- $secretName = printf "%s-secret" .Values.name }}
-{{- else }}
-  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
-{{- end }}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -22,11 +16,9 @@ spec:
         app: {{ .Values.name }}
       annotations:
         checksum/css-cm: {{ include (print $.Template.BasePath "/css-CM.yaml") . | sha256sum }}
-        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
         checksum/html-cm: {{ include (print $.Template.BasePath "/html-CM.yaml") . | sha256sum }}
         checksum/locations-cm: {{ include (print $.Template.BasePath "/locations-CM.yaml") . | sha256sum }}
         checksum/nginx-conf-cm: {{ include (print $.Template.BasePath "/nginx-conf-CM.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
@@ -44,64 +36,13 @@ spec:
           runAsUser: {{ .Values.securityContext.runAsUser }}
         volumeMounts:
         - name: {{ .Values.name }}-html
-          #mountPath: /app
           mountPath: /usr/share/nginx/html
         - name: {{ .Values.name }}-css
-          #mountPath: /app/css
           mountPath: /usr/share/nginx/html/css
         - name: {{ .Values.name }}-default
-          #mountPath: /opt/bitnami/nginx/conf.d/
           mountPath: /etc/nginx/conf.d
         - name: {{ .Values.name }}-locs
-          #mountPath: /opt/bitnami/nginx/locations/
           mountPath: /etc/nginx/locations
-        - name: {{ .Values.name }}-static
-          mountPath: /home/appuser/app/static
-          readOnly: true
-
-      - name: {{ .Values.frontend.name }}
-        image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
-        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
-        securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
-          capabilities:
-            drop: {{ .Values.securityContext.capabilities.drop }}
-          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
-          seccompProfile:
-            type: {{ .Values.securityContext.seccompProfile.type }}
-        envFrom:
-        - configMapRef:
-            name: {{ .Values.name }}-envvars
-        - secretRef:
-            name: {{ $secretName }}
-        command:
-          - /bin/sh
-          - -c
-          - "python3 manage.py migrate
-        && python3 manage.py loaddata admin_interface_theme_foundation.json
-        && python3 manage.py loaddata ufz_theme.json
-        && python3 manage.py loaddata nm_station.json
-        && python3 manage.py createsuperuser --noinput
-        || echo 'Superuser already created'
-        && python3 manage.py collectstatic --noinput
-        && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
-        volumeMounts:
-          - name: {{ .Values.name }}-static
-            mountPath: "/home/appuser/app/static"
-            readOnly: false
-      initContainers:
-      - name: "mqtt-connection-check"
-        image: "eclipse-mosquitto:2.0"
-        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
-        volumeMounts:
-          - name: init-mqtt-worker
-            mountPath: /tmp/init-mqtt-worker
-        envFrom:
-          - configMapRef:
-              name: {{ .Values.name }}-envvars
-          - secretRef:
-              name: {{ $secretName }}
       volumes:
       - name: {{ .Values.name }}-html
         configMap:
@@ -115,9 +56,3 @@ spec:
       - name: {{ .Values.name }}-locs
         configMap:
           name: {{ .Values.name }}-locs
-      - name: init-mqtt-worker
-        configMap:
-          name: init-mqtt-worker
-      - name: {{ .Values.name }}-static
-        persistentVolumeClaim:
-          claimName: {{ .Values.name }}-static-pvc

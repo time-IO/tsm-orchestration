@@ -1,8 +1,17 @@
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
 {{- $secretName := "" }}
 {{- if .Values.global.createSecrets }}
   {{- $secretName = printf "%s-secret" .Values.name }}
 {{- else }}
-  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
 {{- end }}
 
 apiVersion: batch/v1
@@ -29,6 +38,7 @@ spec:
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
+            - repair
             - migrate
           volumeMounts:
             - mountPath: /flyway/sql
@@ -37,11 +47,21 @@ spec:
             - mountPath: /flyway/conf
               name: {{ .Values.name }}-conf
               readOnly: true
+{{- if or $configMapName $secretName }}
           envFrom:
+{{- if $configMapName }}
           - configMapRef:
-              name: {{ .Values.name }}-envvars
+              name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
           - secretRef:
               name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+          env:
+{{ toYaml . | nindent 12 }}
+{{- end }}
           securityContext:
             runAsUser: {{ .Values.securityContext.runAsUser }}
             allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}

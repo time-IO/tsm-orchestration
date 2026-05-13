@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-conf
-data:
-  flyway.conf: {{ .Files.Get "conf/flyway.conf" | quote }}

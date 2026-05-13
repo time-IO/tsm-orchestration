@@ -1,4 +1,0 @@
-apiVersion: v2
-name: thing-management-frontend
-version: 0.0.1
-description: A Helm chart for the thing-management-frontend service
