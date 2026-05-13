@@ -75,3 +75,59 @@ INSERT_PARSER_TS_COLUMNS = """
     VALUES
         (%(parser_csv_id)s, %(column)s, %(timestamp_format)s)
 """
+
+SELECT_THING_AND_INGEST = """
+                          SELECT t.id,
+                                 t."uuid"              AS "thing_uuid",
+                                 t."name"              AS "thing_name",
+                                 t.project_id,
+                                 p.uuid                as "project_uuid",
+                                 t.description         as thing_descriptiopn,
+                                 it."name"             AS ingest_type_name,
+                                 ea.id                 AS ea_id,
+                                 ea.api_type_id        AS ea_api_type_id,
+                                 ea.sync_interval      AS ea_sync_interval,
+                                 ea.sync_enabled       AS ea_sync_enabled,
+                                 ea.settings           AS ea_settings,
+                                 es.id                 AS es_id,
+                                 es.uri                AS es_uri,
+                                 es."path"             AS es_path,
+                                 es."user"             AS es_user,
+                                 es."password"         AS es_password,
+                                 es.ssh_priv_key       AS es_ssh_priv_key,
+                                 es.ssh_pub_key        AS es_ssh_pub_key,
+                                 es.sync_interval      AS es_sync_interval,
+                                 es.sync_enabled       AS es_sync_enabled,
+                                 m.id                  AS mqtt_id,
+                                 m."user"              AS mqtt_user,
+                                 m."password"          AS mqtt_password,
+                                 m."password_hashed"   AS mqtt_password_hashed,
+                                 m.topic               AS mqtt_topic,
+                                 m.mqtt_device_type_id AS mqtt_device_type_id,
+                                 mdt."name"            as "mqtt_device_type_name",
+                                 s3.id                 AS s3_id,
+                                 s3."user"             AS s3_user,
+                                 s3."password"         AS s3_password,
+                                 s3.bucket             AS s3_bucket,
+                                 s3.filename_pattern   AS s3_filename_pattern,
+                                 fp."uuid"             as "file_parser_uuid"
+                          FROM config_db.thing t
+                                   LEFT JOIN config_db.ext_api ea ON ea.id = t.ext_api_id
+                                   LEFT JOIN config_db.ext_sftp es ON es.id = t.ext_sftp_id
+                                   LEFT JOIN config_db.mqtt m ON m.id = t.mqtt_id
+                                   LEFT JOIN config_db.s3_store s3 ON s3.id = t.s3_store_id
+                                   JOIN config_db.ingest_type it ON it.id = t.ingest_type_id
+                                   JOIN config_db.project p on p.id = t.project_id
+                                   LEFT JOIN config_db.mqtt_device_type mdt on mdt.id = m.mqtt_device_type_id
+                                   left join config_db.file_parser fp on fp.id = s3.file_parser_id \
+                          """
+
+INSERT_INGEST = """
+                INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
+                VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, 
+                        %(parser_id)s)
+                ON CONFLICT ("uuid") DO UPDATE SET "name"      = EXCLUDED."name",
+                                                   description = EXCLUDED.description,
+                                                   parser_id   = EXCLUDED.parser_id 
+
+                """

@@ -67,6 +67,30 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
                     )
 
 
+def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
+    dsm_cur.execute("SELECT id, uuid from public.permission_group")
+    projects = dsm_cur.fetchall()
+    projects = {p["uuid"]: p["id"] for p in projects}
+    dsm_cur.execute("SELECT id, uuid from public.parser")
+    parser = dsm_cur.fetchall()
+    parser = {p["uuid"]: p["id"] for p in parser}
+    cfgdb_cur.execute(queries.SELECT_THING_AND_INGEST)
+    rows = cfgdb_cur.fetchall()
+    for row in rows:
+        if row["thing_uuid"] not in django_things:
+            continue
+        row["project_id"] = projects[row["project_uuid"]]
+        file_parser_uuid = row["file_parser_uuid"]
+        row["parser_id"] = (
+            parser[file_parser_uuid] if file_parser_uuid is not None else None
+        )
+        if row["ingest_type_name"] == "extapi":
+            row["ingest_type_name"] = "external_api"
+        if row["ingest_type_name"] == "extsftp":
+            row["ingest_type_name"] = "external_sftp"
+        dsm_cur.execute(queries.INSERT_INGEST, row)
+
+
 def adapt_json_fields(row):
     for k, v in row.items():
         if isinstance(v, dict):
@@ -83,6 +107,7 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
             django_things = get_django_things(django_cur)
             migrate_project_and_db(cfgdb_cur, dsm_cur)
             migrate_parsers(cfgdb_cur, dsm_cur, django_things)
+            migrate_ingests(cfgdb_cur, dsm_cur, django_things)
     except Exception as e:
         print(f"migration failed: {e}")
         cfgdb_conn.rollback()
