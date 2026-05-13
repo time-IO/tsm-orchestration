@@ -8,6 +8,9 @@ variables:
   PACKAGE_REGISTRY: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm"
   PACKAGE_REGISTRY_TOKEN: "${CI_JOB_TOKEN}"
   HELM_IMAGE_TAG: "latest"
+  OCI_HELM_REPO: "${CI_REGISTRY_IMAGE}/helm"
+  ENABLE_CLASSIC_PUSH: "true"
+  ENABLE_OCI_PUSH: "true"
 
 lint:
   image:
@@ -47,7 +50,7 @@ build:
     - main
 
 
-push:
+push_classic:
   image: alpine
   stage: push
   before_script:
@@ -55,5 +58,20 @@ push:
     - CHART=$(ls ./*.tgz)
   script:
     - curl --fail-with-body --request POST --user gitlab-ci-token:${CI_JOB_TOKEN} --form chart=@${CHART} ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_CLASSIC_PUSH == "true"'
+
+
+push_oci:
+  image:
+    name: alpine/helm:${HELM_IMAGE_TAG}
+    entrypoint: [""]
+  stage: push
+  before_script:
+    - CHART=$(ls ./*.tgz)
+  script:
+    - helm registry login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
+    - helm push "${CHART}" "oci://${OCI_HELM_REPO}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $ENABLE_OCI_PUSH == "true"'
+

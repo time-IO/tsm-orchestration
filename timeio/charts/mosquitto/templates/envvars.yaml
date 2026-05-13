@@ -1,3 +1,4 @@
+{{- if .Values.global.createConfigMaps }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,3 +8,4 @@ data:
   MQTT_AUTH_POSTGRES_PORT: "{{ .Values.global.envvars.MQTT_AUTH_POSTGRES_PORT }}"
   MQTT_AUTH_POSTGRES_DB: "{{ .Values.global.envvars.MQTT_AUTH_POSTGRES_DB }}"
   MQTT_AUTH_PG_TLSMODE: "{{ .Values.global.envvars.MQTT_AUTH_PG_TLSMODE }}"
+{{- end }}

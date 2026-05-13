@@ -27,11 +27,4 @@ proxy:
     tag: latest
     pullPolicy: Always
 
-frontend:
-  name: frontend
-  image:
-    repository: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend"
-    tag: 2025-09-11-165227
-    pullPolicy: Always
-
 existingSecret: ""

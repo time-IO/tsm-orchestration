@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/cron-scheduler"
-  tag: "prod-2025-12-17"
+  tag: "prod-2026-04-17"
   pullPolicy: Always
 name: cron-scheduler
 securityContext:
@@ -17,11 +17,14 @@ securityContext:
   runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
+env: []
+existingSecret: ""
+existingConfigMap: ""
 
 worker:
   image:
     repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-    tag: "prod-2025-12-17"
+    tag: "prod-2026-04-17"
     pullPolicy: Always
   name: worker-crontab-setup
   securityContext:
@@ -32,3 +35,17 @@ worker:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+  env: []
+  existingSecret: ""
+  existingConfigMap: ""
+
+mqtt_init:
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: [ "ALL" ]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  env: []

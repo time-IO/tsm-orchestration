@@ -1,69 +1,60 @@
-# database specific settings
-# bitnami postgresql helm chart is used,
-# ENVVARs and SECRETS defined further below can not be used here
+# local PostgreSQL chart using postgis/postgis image
 database:
-  image:
-    registry: docker.io
-    repository: bitnami/postgresql
-    tag: "latest"
-    pullPolicy: IfNotPresent
   enabled: true
+  image:
+    repository: postgis/postgis
+    tag: "17-3.5"
   fullnameOverride: "database"
-  global:
-    postgresql:
-      auth:
-        username: "postgres"
-        password: "postgres"
-        database: "postgres"
-        postgresPassword: "postgres"
-  primary:
-    persistence:
-      enabled: false
-    networkPolicy:
-      enabled: false
-    pdb:
-      create: false
-  serviceAccount:
-    create: false
+  auth:
+    username: "postgres"
+    password: "postgres"
+    database: "postgres"
+  persistence:
+    enabled: true
+    storageClass: "tanzu-storage-policy-raid5-ftt1"
+    size: 1Gi
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenDeleted: "Delete"
+  containerSecurityContext:
+    seccompProfile:
+      type: "RuntimeDefault"
 
 global:
 
   pvc:
-    storageClassName: "microk8s-hostpath"
-    #storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:
     enabled: true
     enableTLS: true
-    className: nginx
+    className: haproxy
     annotations:
-      nginx.ingress.kubernetes.io/force-ssl-redirect: 'false'
-      nginx.ingress.kubernetes.io/rewrite-target: '/'
-      nginx.ingress.kubernetes.io/backend-protocol: http
       cert-manager.io/cluster-issuer: "cert-manager-acme"
       cert-manager.io/private-key-algorithm: "ECDSA"
       cert-manager.io/private-key-size: "384"
       cert-manager.io/private-key-rotation-policy: "Always"
-      nginx.ingress.kubernetes.io/configuration-snippet: |
-        add_header 'X-Content-Type-Options' 'nosniff' always;
-        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.host ; child-src 'self' *.host ; object-src 'none' ; frame-ancestors 'self' http://*.host https://*.host ;" always;
-        add_header 'X-XSS-Protection' '1';
+      external-dns.alpha.kubernetes.io/hostname: "timeio.web-intern-stage.app.ufz.de"
+      haproxy-ingress.github.io/config-backend: |
+        http-response set-header 'X-Content-Type-Options' 'nosniff';
+        http-response set-header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'self' *.web-intern-stage.app.ufz.de; child-src 'self' *.web-intern-stage.app.ufz.de; object-src 'none'; frame-ancestors 'self' http://*.web-intern-stage.app.ufz.de https://*.web-intern-stage.app.ufz.de;";
+        http-response set-header 'X-XSS-Protection' '1';
     hosts:
-    - host: "local.host"
+    - host: "timeio.web-intern-stage.app.ufz.de"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 80
-    url: "https://local.host"
+    url: "https://timeio.web-intern-stage.app.ufz.de"
     tls:
     - secretName: "timeio-ingress-tls"
       hosts:
-        - "local.host"
+        - "timeio.web-intern-stage.app.ufz.de"
 
   s3ingress:
-    enabled: true
+    enabled: false
     enableTLS: true
     className: nginx
     annotations:
@@ -76,25 +67,26 @@ global:
       cert-manager.io/private-key-rotation-policy: "Always"
       nginx.ingress.kubernetes.io/configuration-snippet: |
         add_header 'X-Content-Type-Options' 'nosniff' always;
-        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.host ; child-src 'self' *.host ; object-src 'none' ; frame-ancestors 'self' http://*.host https://*.host ;" always;
+        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
         add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "s3.local.host"
+    - host: "s3.web-intern-stage.app.ufz.de"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 9000
-    url: "https://s3.local.host"
+    url: "https://s3.web-intern-stage.app.ufz.de"
     tls:
     - secretName: "timeio-s3-ingress-tls"
       hosts:
-        - "s3.local.host"
+        - "s3.web-intern-stage.app.ufz.de"
 
   createSecrets: true
+  createConfigMaps: true
   secrets:
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "postgres"
+    #POSTGRES_USER: "postgres"
+    #POSTGRES_PASSWORD: "postgres"
     CREATEDB_POSTGRES_USER: "postgres"
     CREATEDB_POSTGRES_PASSWORD: "postgres"
     MQTT_AUTH_POSTGRES_USER: "db_mqtt_auth"
@@ -113,16 +105,19 @@ global:
     KEYCLOAK_DB_PASSWORD: "keycloak"
     MONITORING_DB_USER: "monitoring"
     MONITORING_DB_PASSWORD: "monitoring"
-    THING_MANAGEMENT_DB_USER: "thing_management_db"
-    THING_MANAGEMENT_DB_PASSWORD: "thing_management_db"
     GRAFANA_USER: "admin_grafana"
     GRAFANA_PASSWORD: "admin_grafana"
     MINIO_ROOT_USER: "admin_minio"
     MINIO_ROOT_PASSWORD: "admin_minio"
     KEYCLOAK_ADMIN_USER: "admin_keycloak"
     KEYCLOAK_ADMIN_PASS: "admin_keycloak"
-    KEYCLOAK_LOCAL_OIDC_CLIENT: "timeio-oidc-client"
+    KEYCLOAK_DSM_CLIENT_ID: "dsm-oidc-client"
+    KEYCLOAK_GRAFANA_CLIENT_ID: "grafana-oidc-client"
+    KEYCLOAK_GRAFANA_CLIENT_SECRET: "000000000000000000000000000000000"
     KEYCLOAK_GENERIC_OIDC_CLIENT: "timeio-thing-management"
+    DB_API_AUTH_TOKEN_ADMIN: "db_api_admin_token"
+    DSM_API_DATABASE_USER: "db_dsm"
+    DSM_API_DATABASE_PASS: "db_dsm"
     FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin_django"
     FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin_django"
     DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -132,7 +127,7 @@ global:
     SMS_API_TOKEN: ""
     CV_DB_USER: "postgres"
     CV_DB_PASSWORD: "postgres"
-    OIDC_CLIENT_ID: "timeio_oidc_client"
+    OIDC_CLIENT_ID: "timeio-oidc-client"
     OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
     FERNET_ENCRYPTION_SECRET: "tl6rVmqwjRn3PDuAjxppMYxpDEv0UKuCgqFr8Q5p8_4="
 
@@ -142,7 +137,7 @@ global:
     UID: "1000"
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
-    PROXY_HOST: "local.host"
+    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
@@ -186,20 +181,21 @@ global:
     SMS_DB_PORT: "5432"
     SMS_DB_DB: "postgres"
     SMS_DB_HOST: "database"
-    SMS_URL: "https://local.host/sms/"
+    SMS_URL: "https://web-intern-stage.app.ufz.de/sms/"
     SMS_ACCESS_TYPE: "db"
     CV_DB_PORT: "5432"
     CV_DB_DB: "postgres"
     CV_DB_HOST: "database"
-    CV_URL: "https://local.host/sms/cv/"
+    CV_URL: "https://web-intern-stage.app.ufz.de/sms/cv/"
     CV_ACCESS_TYPE: "db"
     GRAFANA_URL: "http://visualization:3000"
     GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "disable"
-    OIDC_CONF_URL: "https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration"
-    OIDC_AUTH_URL: "https://login-dev.helmholtz.de/oauth2-as/oauth2-authz"
-    OIDC_TOKEN_URL: "https://login-dev.helmholtz.de/oauth2/token"
-    OIDC_API_URL: "https://login-dev.helmholtz.de/oauth2/userinfo"
-    ALLOWED_VOS: "UFZ-TSM"
+    OIDC_ISSUER: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio"
+    OIDC_CONF_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/.well-known/openid-configuration"
+    OIDC_AUTH_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/auth"
+    OIDC_TOKEN_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/token"
+    OIDC_API_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/userinfo"
+    ALLOWED_VOS: "VO"
     KC_DB: "postgres"
     KC_DB_URL: "jdbc:postgresql://database:5432/postgres"
     KC_PROXY_HEADERS: "xforwarded"
@@ -234,70 +230,119 @@ global:
     FLYWAY_BASELINE_VERSION: "0.0.1"
     FLYWAY_THING_MANAGEMENT_BASELINE_VERSION: "0.0.1"
     DB_API_BASE_URL: "http://timeio-db-api:8001"
+    DSM_API_ROOT_PATH: "/data-source-management/api"
     JOURNALING: "true"
-    TSM_DL_ENVIRONMENT: "staging"
     SAQC_VERSION: "v2.6.0"
     THING_MANAGEMENT_ENVIRONMENT: "production"
 
 
-# Here we can enable/disable certain deployments/statefulsets
+# Here we can enable/disable certain deployments/statefulsets and define
+# additional inline env vars for services, workers, and init containers.
 
 keycloak:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
-thing-management-api:
+dsm-api:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
-thing-management-frontend:
+dsm-frontend:
   enabled: true
+  env: []
 
 tsmdl:
   enabled: true
+  env: []
 
 frost:
   enabled: true
+  worker:
+    env: []
+  mqtt_init:
+    env: []
 
 cron-scheduler:
   enabled: true
+  env: []
+  worker:
+    env: []
+  mqtt_init:
+    env: []
 
 visualization:
   enabled: true
+  env: []
 
 object-storage:
   enabled: true
+  env: []
 
-worker-db-setup:
+timeio-db-api:
+  env: []
+
+flyway:
+  env: []
+
+mosquitto:
+  env: []
+  db_init:
+    env: []
+
+worker-thing-setup:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-configdb-updater:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-file-ingest:
   enabled: true
-
-worker-grafana-dashboard:
-  enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-grafana-user-orgs:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-mqtt-ingest:
   enabled: true
-
-worker-mqtt-user-creation:
-  enabled: true
-
-worker-object-storage-setup:
-  enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-run-qaqc:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-sync-extapis:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-sync-extsftp:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []
 
 worker-sync-sms:
   enabled: true
+  env: []
+  mqtt_init:
+    env: []

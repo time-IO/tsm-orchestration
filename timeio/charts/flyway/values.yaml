@@ -15,6 +15,9 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+env: []
+
 restartPolicy: OnFailure
 
 existingSecret: ""
+existingConfigMap: ""

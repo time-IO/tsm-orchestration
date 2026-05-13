@@ -1,3 +1,4 @@
+{{- if .Values.global.createConfigMaps }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,3 +16,4 @@ data:
   FLYWAY_PLACEHOLDERS_CV_DB_PORT: {{ .Values.global.envvars.CV_DB_PORT | quote }}
   FLYWAY_PLACEHOLDERS_CV_DB_DB: {{ .Values.global.envvars.CV_DB_DB | quote }}
   FLYWAY_PLACEHOLDERS_CV_DB_HOST: {{ .Values.global.envvars.CV_DB_HOST | quote }}
+{{- end }}

@@ -1,8 +1,17 @@
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
 {{- $secretName := "" }}
 {{- if .Values.global.createSecrets }}
   {{- $secretName = printf "%s-secret" .Values.name }}
 {{- else }}
-  {{- $secretName = index .Values.global .Values.name "existingSecret" }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
 {{- end }}
 
 apiVersion: apps/v1
@@ -41,8 +50,18 @@ spec:
         command:
         - "/bin/sh"
         - "/app/start.sh"
+{{- if or $configMapName $secretName }}
         envFrom:
+{{- if $configMapName }}
         - configMapRef:
-            name: {{ .Values.name }}-envvars
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
         - secretRef:
             name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}

@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "minio/minio"
-  tag: "RELEASE.2025-04-22T22-12-26Z"
+  tag: "RELEASE.2025-09-07T16-13-09Z"
   pullPolicy: Always
 name: object-storage
 
@@ -19,4 +19,7 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+env: []
+
 existingSecret: ""
+existingConfigMap: ""

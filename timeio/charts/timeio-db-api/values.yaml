@@ -16,4 +16,7 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
 
+env: []
+
 existingSecret: ""
+existingConfigMap: ""

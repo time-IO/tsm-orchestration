@@ -1,4 +1,0 @@
-apiVersion: v2
-name: worker-db-setup
-version: 0.0.1
-description: A Helm chart for the worker-db-setup service

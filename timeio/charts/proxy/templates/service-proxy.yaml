@@ -10,10 +10,6 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 8080
-    - name: frontend
-      protocol: TCP
-      port: 8000
-      targetPort: 8000
     - name: s3
       protocol: TCP
       port: 9000

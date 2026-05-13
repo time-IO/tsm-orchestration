@@ -1,13 +1,13 @@
-{{- if .Values.enabled }}
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  GF_SERVER_ROOT_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/{{ .Values.name }}/"
+  GF_SERVER_ROOT_URL: "{{ .Values.global.ingress.url }}/{{ .Values.name }}/"
   GF_SERVER_SERVE_FROM_SUB_PATH: "true"
   GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
-  GF_AUTH_GENERIC_OAUTH_NAME: "OpenID Connect"
+  GF_AUTH_GENERIC_OAUTH_NAME: "time.IO Keycloak"
   GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
   GF_AUTH_GENERIC_OAUTH_SCOPES: "openid email profile eduperson_principal_name"
   GF_AUTH_GENERIC_OAUTH_AUTH_URL: "{{ .Values.global.envvars.OIDC_AUTH_URL }}"
