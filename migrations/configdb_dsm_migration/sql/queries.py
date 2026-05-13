@@ -163,3 +163,46 @@ INSERT_INGEST_EXT_API = """
         sync_enabled = EXCLUDED.sync_enabled,
         sync_interval_in_minutes = EXCLUDED.sync_interval_in_minutes    
 """
+
+INSERT_INGEST_TTN_API = """
+    INSERT INTO dsm_db.ingest_external_api_the_things_network (ingest_id, api_key, endpoint_uri)
+    VALUES (%(ingest_id)s, %(ttn_api_key)s, %(ttn_uri)s)
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        api_key = EXCLUDED.api_key,
+        endpoint_uri = EXCLUDED.endpoint_uri    
+"""
+
+INSERT_INGEST_DWD_API = """
+    INSERT INTO dsm_db.ingest_external_api_dwd (ingest_id, station_id, period_in_minutes)
+    VALUES (%(ingest_id)s, %(dwd_station_id)s, %(dwd_period)s)
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        period_in_minutes = EXCLUDED.period_in_minutes    
+"""
+
+INSERT_INGEST_UBA_API = """
+    INSERT INTO dsm_db.ingest_external_api_uba (ingest_id, station_id)
+    VALUES (%(ingest_id)s, %(uba_station_id)s)
+    ON CONFLICT (ingest_id) DO NOTHING  
+"""
+
+INSERT_INGEST_TSYSTEMS_API = """
+    INSERT INTO dsm_db.ingest_external_api_tsystems
+        (ingest_id, "group", station_id, tsystems_username, tsystems_password)
+    VALUES (%(ingest_id)s, %(tsystems_group)s, %(tsystems_station)s, %(tsystems_username)s, %(tsystems_password)s)
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        "group" = EXCLUDED."group",
+        tsystems_username = EXCLUDED.tsystems_username,
+        tsystems_password = EXCLUDED.tsystems_password
+"""
+
+INSERT_INGEST_BOSCH_API = """
+    INSERT INTO dsm_db.ingest_external_api_bosch
+        (ingest_id, endpoint, sensor_id, bosch_username, bosch_password, period_in_minutes)
+    VALUES
+        (%(ingest_id)s, %(bosch_endpoint)s, %(bosch_sensor)s, %(bosch_user)s, %(bosch_password)s, %(bosch_period)s)
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        endpoint = EXCLUDED.endpoint,
+        period_in_minutes = EXCLUDED.period_in_minutes,
+        bosch_username = EXCLUDED.bosch_username,
+        bosch_password = EXCLUDED.bosch_password
+"""

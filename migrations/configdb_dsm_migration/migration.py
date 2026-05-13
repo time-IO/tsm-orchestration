@@ -96,6 +96,32 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
             dsm_cur.execute(queries.INSERT_INGEST_EXT_SFTP, row)
         if row["ingest_type_name"] == "external_api":
             dsm_cur.execute(queries.INSERT_INGEST_EXT_API, row)
+            if row["ea_type_name"] == "ttn":
+                row["ttn_api_key"] = row["ea_settings"].get("api_key")
+                row["ttn_uri"] = row["ea_settings"].get("endpoint_uri")
+                dsm_cur.execute(queries.INSERT_INGEST_TTN_API, row)
+            if row["ea_type_name"] == "dwd":
+                row["dwd_station_id"] = row["ea_settings"].get("station_id")
+                row["dwd_period"] = row["ea_settings"].get("period")
+                dsm_cur.execute(queries.INSERT_INGEST_DWD_API, row)
+            if row["ea_type_name"] == "nm":
+                pass
+            if row["ea_type_name"] == "bosch":
+                row["bosch_sensor"] = row["ea_settings"].get("sensor_id")
+                row["bosch_user"] = row["ea_settings"].get("username")
+                row["bosch_password"] = row["ea_settings"].get("password")
+                row["bosch_endpoint"] = row["ea_settings"].get("endpoint")
+                row["bosch_period"] = row["ea_settings"].get("period")
+                dsm_cur.execute(queries.INSERT_INGEST_BOSCH_API, row)
+            if row["ea_type_name"] == "tsystems":
+                row["tsystems_group"] = row["ea_settings"].get("group")
+                row["tsystems_station"] = row["ea_settings"].get("station_id")
+                row["tsystems_password"] = row["ea_settings"].get("password")
+                row["tsystems_username"] = row["ea_settings"].get("username")
+                dsm_cur.execute(queries.INSERT_INGEST_TSYSTEMS_API, row)
+            if row["ea_type_name"] == "uba":
+                row["uba_station_id"] = row["ea_settings"].get("station_id")
+                dsm_cur.execute(queries.INSERT_INGEST_UBA_API, row)
 
 
 def adapt_json_fields(row):
