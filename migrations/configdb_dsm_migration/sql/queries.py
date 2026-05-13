@@ -157,7 +157,7 @@ INSERT_INGEST_EXT_SFTP = """
 """
 
 INSERT_INGEST_EXT_API = """
-    INSERT INTO public.ingest_external_api (ingest_id, api_type, sync_enabled, sync_interval_in_minutes)
+    INSERT INTO dsm_db.ingest_external_api (ingest_id, api_type, sync_enabled, sync_interval_in_minutes)
     VALUES  (%(ingest_id)s, %(ea_type_name)s, %(ea_sync_enabled)s, %(ea_sync_interval)s)
     ON CONFLICT (ingest_id) DO UPDATE SET
         sync_enabled = EXCLUDED.sync_enabled,
