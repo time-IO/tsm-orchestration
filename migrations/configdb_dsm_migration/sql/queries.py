@@ -130,4 +130,26 @@ INSERT_INGEST = """
                                                    description = EXCLUDED.description,
                                                    parser_id   = EXCLUDED.parser_id 
 
-                """
+"""
+
+INSERT_INGEST_SFTP = """
+    INSERT INTO dsm_db.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name, fileserver_uri)
+    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, 'sftp://localhost:40022')
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        filename_pattern = EXCLUDED.filename_pattern
+"""
+
+INSERT_INGEST_EXT_SFTP = """
+    INSERT INTO dsm_db.ingest_external_sftp
+        (ingest_id, uri, "path", filename_pattern, username, "password", sync_interval_in_minutes, sync_enabled, ssh_private_key, ssh_public_key, bucket_name, bucket_username, bucket_password)
+    VALUES
+         (%(ingest_id)s, %(es_uri)s, %(es_path)s, %(s3_filename_pattern)s, %(es_user)s, %(es_password)s, %(es_sync_interval)s, %(es_sync_enabled)s, %(es_ssh_priv_key)s, %(es_ssh_pub_key)s ,%(s3_bucket)s, %(s3_user)s, %(s3_password)s)
+    ON CONFLICT (ingest_id) DO UPDATE SET
+        filename_pattern = EXCLUDED.filename_pattern,
+        "path" = EXCLUDED."path",
+        uri = EXCLUDED.uri,
+        username = EXCLUDED.username,
+        "password" = EXCLUDED."password",
+        sync_enabled = EXCLUDED.sync_enabled,
+        sync_interval_in_minutes = EXCLUDED.sync_interval_in_minutes
+"""

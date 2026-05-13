@@ -89,6 +89,11 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
         if row["ingest_type_name"] == "extsftp":
             row["ingest_type_name"] = "external_sftp"
         dsm_cur.execute(queries.INSERT_INGEST, row)
+        row["ingest_id"] = dsm_cur.fetchone()["id"]
+        if row["ingest_type_name"] == "sftp":
+            dsm_cur.execute(queries.INSERT_INGEST_SFTP, row)
+        if row["ingest_type_name"] == "external_sftp":
+            dsm_cur.execute(queries.INSERT_INGEST_EXT_SFTP, row)
 
 
 def adapt_json_fields(row):
