@@ -21,4 +21,5 @@ data:
   PROXY_URL: "{{ .Values.global.ingress.url }}"
   STA_ROOT_URL: "{{ .Values.global.ingress.url }}/sta"
   STA_VERSION: "/v1.1/"
+  INGEST_MQTT_BROKER_URI: "tsm.ufz.de:8883"
 {{- end }}

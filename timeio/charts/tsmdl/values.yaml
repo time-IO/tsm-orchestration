@@ -7,7 +7,7 @@ image:
   tag: latest
   pullPolicy: Always
 name: tsmdl
-port: 8000
+port: 8001
 
 securityContext:
   allowPrivilegeEscalation: False
