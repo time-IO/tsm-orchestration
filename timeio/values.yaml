@@ -85,50 +85,53 @@ global:
   createSecrets: true
   createConfigMaps: true
   secrets:
-    #POSTGRES_USER: "postgres"
-    #POSTGRES_PASSWORD: "postgres"
+    # Database credentials
     CREATEDB_POSTGRES_USER: "postgres"
     CREATEDB_POSTGRES_PASSWORD: "postgres"
     MQTT_AUTH_POSTGRES_USER: "db_mqtt_auth"
     MQTT_AUTH_POSTGRES_PASS: "db_mqtt_auth"
+    FRONTEND_POSTGRES_USER: "db_frontend"
+    FRONTEND_POSTGRES_PASS: "db_frontend"
+    CONFIGDB_POSTGRES_USER: "db_config"
+    CONFIGDB_POSTGRES_PASSWORD: "db_config"
+    DSM_API_DATABASE_USER: "db_dsm"
+    DSM_API_DATABASE_PASS: "db_dsm"
+    KEYCLOAK_DB_USER: "db_keycloak"
+    KEYCLOAK_DB_PASSWORD: "db_keycloak"
+    MONITORING_DB_USER: "db_monitoring"
+    MONITORING_DB_PASSWORD: "db_monitoring"
+    # MQTT credentials
     MQTT_USER: "mqtt_dispatcher"
     MQTT_PASSWORD: "mqtt_dispatcher"
     MQTT_INGEST_USER: "mqtt_ingest"
     MQTT_INGEST_PASSWORD: "mqtt_ingest"
-    FRONTEND_POSTGRES_USER: "db_frontend"
-    FRONTEND_POSTGRES_PASS: "db_frontend"
     FRONTEND_MQTT_USER: "mqtt_frontend"
     FRONTEND_MQTT_PASS: "mqtt_frontend"
-    CONFIGDB_POSTGRES_USER: "db_config"
-    CONFIGDB_POSTGRES_PASSWORD: "db_config"
-    KEYCLOAK_DB_USER: "keycloak"
-    KEYCLOAK_DB_PASSWORD: "keycloak"
-    MONITORING_DB_USER: "monitoring"
-    MONITORING_DB_PASSWORD: "monitoring"
+    # Grafana credentials
     GRAFANA_USER: "admin_grafana"
     GRAFANA_PASSWORD: "admin_grafana"
+    # MinIO credentials
     MINIO_ROOT_USER: "admin_minio"
     MINIO_ROOT_PASSWORD: "admin_minio"
+    # Keycloak credentials
     KEYCLOAK_ADMIN_USER: "admin_keycloak"
     KEYCLOAK_ADMIN_PASS: "admin_keycloak"
+    # OIDC credentials
     KEYCLOAK_DSM_CLIENT_ID: "dsm-oidc-client"
     KEYCLOAK_GRAFANA_CLIENT_ID: "grafana-oidc-client"
     KEYCLOAK_GRAFANA_CLIENT_SECRET: "000000000000000000000000000000000"
     KEYCLOAK_GENERIC_OIDC_CLIENT: "timeio-thing-management"
-    DB_API_AUTH_TOKEN_ADMIN: "db_api_admin_token"
-    DSM_API_DATABASE_USER: "db_dsm"
-    DSM_API_DATABASE_PASS: "db_dsm"
-    FRONTEND_DJANGO_SUPERUSER_USERNAME: "admin_django"
-    FRONTEND_DJANGO_SUPERUSER_PASSWORD: "admin_django"
-    DJANGO_SECRET_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-    # only available after sensor management system (SMS) is deployed
+    # DB API tokens
+    DB_API_AUTH_TOKEN_ADMIN: "local_bearer_token_admin"
+    DB_API_AUTH_TOKEN_INGEST: "local_bearer_token_ingest"
+    DB_API_AUTH_TOKEN_PROCESSING: "local_bearer_token_processing"
+    # SMS credentials
     SMS_DB_USER: "postgres"
     SMS_DB_PASSWORD: "postgres"
     SMS_API_TOKEN: ""
     CV_DB_USER: "postgres"
     CV_DB_PASSWORD: "postgres"
-    OIDC_CLIENT_ID: "timeio-oidc-client"
-    OIDC_CLIENT_SECRET: "00000000000000000000000000000000000000"
+    # Encryption secret
     FERNET_ENCRYPTION_SECRET: "tl6rVmqwjRn3PDuAjxppMYxpDEv0UKuCgqFr8Q5p8_4="
 
   envvars:

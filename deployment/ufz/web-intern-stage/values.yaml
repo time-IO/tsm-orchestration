@@ -1,0 +1,916 @@
+# local PostgreSQL chart using postgis/postgis image
+database:
+  # ToDo: disable when using external postgres database
+  enabled: true
+  image:
+    repository: postgis/postgis
+    tag: "17-3.5"
+  fullnameOverride: "database"
+  auth:
+    username: "postgres"
+    # ToDo: Change password and use secret instead of hardcoding it here
+    password: "ChangeMe!"
+    database: "postgres"
+  persistence:
+    enabled: true
+    storageClass: "tanzu-storage-policy-raid5-ftt1"
+    # ToDo: Adjust according to needs
+    size: 1Gi
+  persistentVolumeClaimRetentionPolicy:
+    # ToDo: Adjust according to needs
+    enabled: true
+    whenDeleted: "Delete"
+  containerSecurityContext:
+    seccompProfile:
+      type: "RuntimeDefault"
+
+global:
+
+  pvc:
+    storageClassName: "tanzu-storage-policy-raid5-ftt1"
+    createPVC: true
+
+  ingress:
+    enabled: true
+    enableTLS: true
+    className: haproxy
+    annotations:
+      cert-manager.io/cluster-issuer: "cert-manager-acme"
+      cert-manager.io/private-key-algorithm: "ECDSA"
+      cert-manager.io/private-key-size: "384"
+      cert-manager.io/private-key-rotation-policy: "Always"
+      external-dns.alpha.kubernetes.io/hostname: "timeio.web-intern-stage.app.ufz.de"
+      haproxy-ingress.github.io/config-backend: |
+        http-response set-header 'X-Content-Type-Options' 'nosniff';
+        http-response set-header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'self' *.web-intern-stage.app.ufz.de; child-src 'self' *.web-intern-stage.app.ufz.de; object-src 'none'; frame-ancestors 'self' http://*.web-intern-stage.app.ufz.de https://*.web-intern-stage.app.ufz.de;";
+        http-response set-header 'X-XSS-Protection' '1';
+    hosts:
+    - host: "timeio.web-intern-stage.app.ufz.de"
+      paths:
+      - path: "/"
+        pathType: Prefix
+        serviceName: "proxy"
+        servicePort: 80
+    url: "https://timeio.web-intern-stage.app.ufz.de"
+    tls:
+    - secretName: "timeio-ingress-tls"
+      hosts:
+        - "timeio.web-intern-stage.app.ufz.de"
+
+  # ToDo: Adjust according to needs
+  s3ingress:
+    enabled: false
+    enableTLS: true
+    className: haproxy
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'false'
+      nginx.ingress.kubernetes.io/rewrite-target: '/'
+      nginx.ingress.kubernetes.io/backend-protocol: http
+      cert-manager.io/cluster-issuer: "cert-manager-acme"
+      cert-manager.io/private-key-algorithm: "ECDSA"
+      cert-manager.io/private-key-size: "384"
+      cert-manager.io/private-key-rotation-policy: "Always"
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        add_header 'X-Content-Type-Options' 'nosniff' always;
+        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
+        add_header 'X-XSS-Protection' '1';
+    hosts:
+    - host: "s3.web-intern-stage.app.ufz.de"
+      paths:
+      - path: "/"
+        pathType: Prefix
+        serviceName: "proxy"
+        servicePort: 9000
+    url: "https://s3.web-intern-stage.app.ufz.de"
+    tls:
+    - secretName: "timeio-s3-ingress-tls"
+      hosts:
+        - "s3.web-intern-stage.app.ufz.de"
+
+  createSecrets: false
+
+  createConfigMaps: true
+
+  envvars:
+    LOG_LEVEL: "DEBUG"
+    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
+    OIDC_ISSUER: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio"
+    OIDC_CONF_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/.well-known/openid-configuration"
+    OIDC_AUTH_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/auth"
+    OIDC_TOKEN_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/token"
+    OIDC_API_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/userinfo"
+    ALLOWED_VOS: "VO,UFZ-TSM"
+    KC_LOG_LEVEL: "DEBUG"
+    KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "https://login-dev.helmholtz.de"
+    KEYCLOAK_GENERIC_OIDC_ISSUER: "https://login-dev.helmholtz.de/oauth2"
+    KEYCLOAK_GENERIC_OIDC_AUTH_URL: "https://login-dev.helmholtz.de/oauth2-as/oauth2-authz"
+    KEYCLOAK_GENERIC_OIDC_TOKEN_URL: "https://login-dev.helmholtz.de/oauth2/token"
+    KEYCLOAK_GENERIC_OIDC_USERINFO_URL: "https://login-dev.helmholtz.de/oauth2/userinfo"
+    KEYCLOAK_GENERIC_OIDC_JWKS_URL: "https://login-dev.helmholtz.de/oauth2/jwk"
+    KEYCLOAK_GENERIC_OIDC_CONF_URL: "https://login-dev.helmholtz.de/oauth2/.well-known/openid-configuration"
+
+
+# Here we can enable/disable certain deployments/statefulsets and define
+# inline env vars for services, workers, and init containers.
+
+keycloak:
+  enabled: true
+  env:
+  - name: "KEYCLOAK_ADMIN"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: KEYCLOAK_ADMIN_USER
+  - name: "KEYCLOAK_ADMIN_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: KEYCLOAK_ADMIN_PASS
+  - name: "KEYCLOAK_DSM_CLIENT_ID"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_DSM_CLIENT_ID
+  - name: "KEYCLOAK_GRAFANA_CLIENT_ID"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_GRAFANA_CLIENT_ID
+  - name: "KEYCLOAK_GRAFANA_CLIENT_SECRET"
+    valueFrom:
+        secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_GRAFANA_CLIENT_SECRET
+  - name: "KEYCLOAK_GENERIC_OIDC_CLIENT_ID"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_GENERIC_OIDC_CLIENT
+  - name: "KC_DB_USERNAME"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: KEYCLOAK_DB_USER
+  - name: "KC_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: KEYCLOAK_DB_PASSWORD
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+dsm-api:
+  enabled: true
+  env:
+  - name: "POSTGRES_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DSM_API_DATABASE_USER
+  - name: "POSTGRES_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DSM_API_DATABASE_PASS
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "OIDC_AUDIENCE"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_DSM_CLIENT_ID
+  - name: "FERNET_ENCRYPTION_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: fernet-encryption
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+dsm-frontend:
+  enabled: true
+  env:
+  - name: "ENV_OIDC_CLIENT_ID_PLACEHOLDER"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_DSM_CLIENT_ID
+
+tsmdl:
+  enabled: true
+  env:
+  - name: "UFZ_DB_URL"
+    valueFrom:
+    secretKeyRef:
+        name: db-credentials
+        key: DATABASE_DSN
+
+frost:
+  enabled: true
+  worker:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+    - name: "FERNET_ENCRYPTION_SECRET"
+      valueFrom:
+        secretKeyRef:
+          name: fernet-encryption
+          key: FERNET_ENCRYPTION_SECRET
+    - name: "CONFIGDB_DSN"
+      valueFrom:
+        secretKeyRef:
+          name: db-credentials
+          key: CONFIGDB_DSN
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+cron-scheduler:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "FERNET_ENCRYPTION_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: fernet-encryption
+        key: FERNET_ENCRYPTION_SECRET
+  worker:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+    - name: "CONFIGDB_DSN"
+      valueFrom:
+        secretKeyRef:
+          name: db-credentials
+          key: CONFIGDB_DSN
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+visualization:
+  enabled: true
+  env:
+  - name: "GF_SECURITY_ADMIN_USER"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_USER
+  - name: "GF_SECURITY_ADMIN_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_PASSWORD
+  - name: "GF_AUTH_GENERIC_OAUTH_CLIENT_ID"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_GRAFANA_CLIENT_ID
+  - name: "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: oidc-credentials
+        key: KEYCLOAK_GRAFANA_CLIENT_SECRET
+
+object-storage:
+  enabled: true
+  env:
+  - name: "MINIO_ROOT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_USER
+  - name: "MINIO_ROOT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_PASSWORD
+  - name: "MINIO_NOTIFY_MQTT_USERNAME_LOCAL_BROKER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MINIO_NOTIFY_MQTT_PASSWORD_LOCAL_BROKER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+
+timeio-db-api:
+  env:
+  - name: "DB_URL"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DATABASE_DSN
+  - name: "DB_API_AUTH_TOKEN_ADMIN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_ADMIN
+  - name: "DB_API_AUTH_TOKEN_INGEST"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_INGEST
+  - name: "DB_API_AUTH_TOKEN_PROCESSING"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_PROCESSING
+
+flyway:
+  env:
+  - name: "FLYWAY_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CREATEDB_POSTGRES_USER
+  - name: "FLYWAY_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CREATEDB_POSTGRES_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_CONFIGDB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_POSTGRES_USER
+  - name: "FLYWAY_PLACEHOLDERS_CONFIGDB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_POSTGRES_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: MQTT_AUTH_POSTGRES_USER
+  - name: "FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: MQTT_AUTH_POSTGRES_PASS
+  - name: "FLYWAY_PLACEHOLDERS_SMS_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: sms-credentials
+        key: SMS_DB_USER
+  - name: "FLYWAY_PLACEHOLDERS_SMS_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: sms-credentials
+        key: SMS_DB_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_CV_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: sms-credentials
+        key: CV_DB_USER
+  - name: "FLYWAY_PLACEHOLDERS_CV_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: sms-credentials
+        key: CV_DB_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: KEYCLOAK_DB_USER
+  - name: "FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: KEYCLOAK_DB_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_MONITORING_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: MONITORING_DB_USER
+  - name: "FLYWAY_PLACEHOLDERS_MONITORING_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: MONITORING_DB_PASSWORD
+  - name: "FLYWAY_PLACEHOLDERS_DSM_DB_USER"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DSM_API_DATABASE_USER
+  - name: "FLYWAY_PLACEHOLDERS_DSM_DB_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DSM_API_DATABASE_PASS
+
+mosquitto:
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "MQTT_INGEST_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_INGEST_USER
+  - name: "MQTT_INGEST_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_INGEST_PASSWORD
+  - name: "MQTT_AUTH_POSTGRES_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_AUTH_POSTGRES_USER
+  - name: "MQTT_AUTH_POSTGRES_PASS"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_AUTH_POSTGRES_PASS
+  - name: "FRONTEND_MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: FRONTEND_MQTT_USER
+  - name: "FRONTEND_MQTT_PASS"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: FRONTEND_MQTT_PASSWORD
+  db_init:
+    env:
+    - name: "MQTT_AUTH_POSTGRES_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_AUTH_POSTGRES_USER
+    - name: "MQTT_AUTH_POSTGRES_PASS"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_AUTH_POSTGRES_PASS
+
+worker-thing-setup:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "DATABASE_URL"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DATABASE_DSN
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "MINIO_ACCESS_KEY"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_USER
+  - name: "MINIO_SECURE_KEY"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_PASSWORD
+  - name: "GRAFANA_USER"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_USER
+  - name: "GRAFANA_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_PASSWORD
+  - name: "DB_API_AUTH_TOKEN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_ADMIN
+  - name: "FERNET_ENCRYPTION_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: fernet-encryption
+        key: FERNET_ENCRYPTION_SECRET
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+
+worker-configdb-updater:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+
+worker-file-ingest:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "MINIO_ACCESS_KEY"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_USER
+  - name: "MINIO_SECURE_KEY"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_PASSWORD
+  - name: "DB_API_AUTH_TOKEN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_INGEST
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+
+worker-grafana-user-orgs:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "GRAFANA_USER"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_USER
+  - name: "GRAFANA_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: GRAFANA_PASSWORD
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+worker-mqtt-ingest:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "DB_API_AUTH_TOKEN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_INGEST
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+worker-run-qaqc:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "DATABASE_URL"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DATABASE_DSN
+  - name: "DB_API_AUTH_TOKEN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_PROCESSING
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+
+worker-sync-extapis:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "DB_API_AUTH_TOKEN"
+    valueFrom:
+      secretKeyRef:
+        name: db-api-token
+        key: DB_API_AUTH_TOKEN_INGEST
+  - name: "FERNET_ENCRYPTION_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: fernet-encryption
+        key: FERNET_ENCRYPTION_SECRET
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+
+worker-sync-extsftp:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "CONFIGDB_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: CONFIGDB_DSN
+  - name: "MINIO_USER"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_USER
+  - name: "MINIO_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: login-credentials
+        key: MINIO_ROOT_PASSWORD
+  - name: "FERNET_ENCRYPTION_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: fernet-encryption
+        key: FERNET_ENCRYPTION_SECRET
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
+
+worker-sync-sms:
+  enabled: true
+  env:
+  - name: "MQTT_USER"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_USER
+  - name: "MQTT_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: mqtt-credentials
+        key: MQTT_PASSWORD
+  - name: "DATABASE_DSN"
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: DATABASE_DSN
+  mqtt_init:
+    env:
+    - name: "MQTT_USER"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_USER
+    - name: "MQTT_PASSWORD"
+      valueFrom:
+        secretKeyRef:
+          name: mqtt-credentials
+          key: MQTT_PASSWORD
