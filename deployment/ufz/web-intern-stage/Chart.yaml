@@ -1,0 +1,9 @@
+name: timeio
+description: A Helm chart wrapper of time.IO for the UFZ staging cluster
+version: 0.3.1
+apiVersion: v2
+
+dependencies:
+- name: timeio
+  version: "0.3.1"
+  repository: "oci://registry.hzdr.de/ufz-tsm/helm-deployment"

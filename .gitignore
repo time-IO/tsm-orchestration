@@ -1,6 +1,6 @@
 .idea/
-timeio/charts/*.tgz
-timeio/Chart.lock
+**/*.tgz
+**/Chart.lock
 timeio/.env
 timeio/core/object-storage/conf/id_ed25519
 timeio/core/object-storage/conf/id_ed25519.pub
@@ -11,7 +11,7 @@ timeio/core/proxy/conf/public.crt
 timeio/prod-values.yaml
 timeio/certs
 secrets-base64
-stage
 timeio/*.yaml
 !timeio/values.yaml
 !timeio/Chart.yaml
+**/secrets/

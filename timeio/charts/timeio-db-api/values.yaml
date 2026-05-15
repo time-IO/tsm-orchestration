@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api"
-  tag: 2024-12-11-131256
+  tag: 2026-03-05-133937
   pullPolicy: Always
 name: timeio-db-api
 port: 8001

@@ -1,0 +1,16 @@
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: fernet-encryption
+  namespace: custom-rdm-timeio
+spec:
+  encryptedData:
+    FERNET_ENCRYPTION_SECRET: AgB94iEdgI/oNnRkaOC0yYCrG5jf+bQ4gW8ebQv6ksgId4gcd5PU3fcobsFlLpyacR47C6cG3hGLUy1RWLTyDZR+K5NTTsWoktE+CbSGw+KnLIf4KZk75h+Ock4rdnLyc9czsmvNMM4jtEzd6x0z7RQASi9mYlCddare/5eW1W066WIERyit8cUsqxIsuP18jf1TlNXMutf4a8IfOcHGKuNG/Qt3M5i9GDJ+u08nZ5m/XSoCd4ytBdpfSRVqucdkd54++eezt7mAkmiA9KHvpi08lIliBV41gNQ9ymJttbfFIrvPyDgmeE6lQ2B83usu5q2qTchkdoWAQHcc6iNKTaovcTwkR2lNeWibiImvOUhK8qKmOxDkqRAGNrWTdqAgfRNhWKoqKQfQ9R7Jw6QBQG9sj3jF0g8OJA60T6yjPitYZrRGXtir9PCEtw1R45huRxrYGl2fFXxSxW1GA1kspTLQcPaC20LrnapYhDbyokH55QQYlkP1cKqZu+hAtIXf6CCrfUftdOB2wKnXvSZuD1p+6x9PCTCsvR1wMGUmyQcGe2QwH+ZcrB7UIg/Zv+XGl8QmPkSiHq6SQ9NF8z3viIsAuOcQImyFi7lV+VBViFkAiVxZKtsOqyJCFNvGdivac3ZsxL2cSUkKHPyrK5dNnZN5VUZ9aldDpdDpaLvWnHBBvyDR9KoQiyVND7Ts4xpSWXIlvEqyF1YTs+6M8afmG4xNTpd8WvKLdF16TnlKC9RskaHXpRoqRflnQJmyCQ==
+  template:
+    metadata:
+      creationTimestamp: null
+      name: fernet-encryption
+      namespace: custom-rdm-timeio
+    type: Opaque
+
