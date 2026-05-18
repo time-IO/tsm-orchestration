@@ -11,6 +11,7 @@
     emit-value
     use-input
     @filter="filterFn"
+    popup-content-class="limited-dropdown"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps" clickable>
