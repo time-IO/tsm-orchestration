@@ -54,6 +54,12 @@ def mk_client():
     client.on_publish = on_publish
 
     try:
+        logger.debug(
+            "Connecting MQTT client id=%s host=%s port=%s",
+            client._client_id.decode(),
+            mqtt_config["broker_host"],
+            mqtt_config["broker_port"],
+        )
         client.connect(host=mqtt_config["broker_host"], port=mqtt_config["broker_port"])
     except (socket.gaierror, ConnectionRefusedError) as e:
         raise ConnectionError(
@@ -76,6 +82,12 @@ def publish_message(msg: dict, topic: str, success_log: str):
             "Client not connected."
         )
     qos = mqtt_config.get("qos")
+    logger.debug(
+        "Publishing MQTT message to topic='%s' qos=%s payload_keys=%s",
+        topic,
+        qos,
+        sorted(msg.keys()),
+    )
     result = client.publish(topic, json.dumps(msg), qos=qos)
     result.wait_for_publish(5)
     logger.info(success_log)

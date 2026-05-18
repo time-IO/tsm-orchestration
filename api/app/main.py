@@ -42,7 +42,13 @@ disable_installed_extensions_check()
 log_level = os.environ.get("LOG_LEVEL", "info").upper()
 if log_level == "TRACE":
     log_level = "DEBUG"
+logging.getLogger().setLevel(log_level)
 logging.getLogger("app").setLevel(log_level)
+logging.getLogger("app.main").info(
+    "API startup configured with LOG_LEVEL=%s and API_ROOT_PATH=%s",
+    log_level,
+    API_ROOT_PATH,
+)
 
 app.add_middleware(
     CORSMiddleware,
