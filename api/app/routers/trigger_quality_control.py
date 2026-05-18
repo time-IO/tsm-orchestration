@@ -27,6 +27,13 @@ def trigger_quality_control(
     current_user: CurrentUser,
     repo_quality_control=Depends(get_repo_quality_control_setting),
 ) -> Any:
+    logger.debug(
+        "Trigger quality-control requested by user_id=%s for ids=%s range=%s..%s",
+        current_user.id,
+        payload.quality_control_setting_ids,
+        payload.start_date,
+        payload.end_date,
+    )
     return trigger_quality_control_service(
         payload=payload,
         allowed_permission_group_ids=current_user.permission_group_ids,

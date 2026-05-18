@@ -14,7 +14,10 @@ def trigger_quality_control_service(
     allowed_permission_group_ids: list[int],
     repo_quality_control: BaseRepository,
 ) -> dict:
-
+    logger.debug(
+        "Trigger quality-control service started for ids=%s",
+        payload.quality_control_setting_ids,
+    )
     triggered_ids = []
     for identifier in set(payload.quality_control_setting_ids):
         try:
@@ -22,6 +25,10 @@ def trigger_quality_control_service(
                 identifier, allowed_permission_group_ids
             )
         except HTTPException:
+            logger.debug(
+                "Skipping quality-control trigger for inaccessible setting_id=%s",
+                identifier,
+            )
             continue
         publish_trigger_quality_control(
             permission_group_uuid=str(qc_setting.permission_group.uuid),
@@ -30,5 +37,10 @@ def trigger_quality_control_service(
             end_date=payload.end_date,
         )
         triggered_ids.append(identifier)
+    logger.info(
+        "Triggered quality-control for %s of %s requested settings",
+        len(triggered_ids),
+        len(set(payload.quality_control_setting_ids)),
+    )
 
     return {"triggered_quality_control_settings": list(triggered_ids)}

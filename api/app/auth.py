@@ -35,38 +35,64 @@ class OIDCService:
         self._config_cache = TTLCache(maxsize=1, ttl=cache_ttl)
         self._jwks_cache = TTLCache(maxsize=1, ttl=cache_ttl)
 
+        logger.debug(
+            "OIDC service initialized (issuer=%s audience=%s cache_ttl=%s timeout=%s)",
+            self.issuer,
+            self.audience,
+            cache_ttl,
+            self.request_timeout,
+        )
+
     def _get_oidc_config(self) -> dict[str, Any]:
-        logger.debug(f"Fetching OIDC configuration from {settings.OIDC_WELL_KNOWN}")
+        logger.debug("Loading OIDC configuration")
         try:
+            logger.debug("OIDC configuration cache HIT")
             return self._config_cache["config"]
         except KeyError:
             url = settings.OIDC_WELL_KNOWN
+            logger.debug(f"OIDC configuration cache MISS, fetching from {url}")
 
-            resp = requests.get(url, timeout=self.request_timeout)
-            resp.raise_for_status()
+            try:
+                resp = requests.get(url, timeout=self.request_timeout)
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                logger.error("Failed to fetch OIDC configuration from %s: %s", url, exc)
+                raise OIDCError("Failed to fetch OIDC configuration") from exc
 
             config = resp.json()
 
             if config.get("issuer") != self.issuer:
+                logger.error(
+                    "OIDC issuer mismatch from discovery: expected=%s got=%s",
+                    self.issuer,
+                    config.get("issuer"),
+                )
                 raise OIDCError("OIDC issuer mismatch")
 
-            self._config_cache["oidc_config"] = config
+            self._config_cache["config"] = config
+            logger.debug("OIDC configuration cached successfully")
             return config
 
     def _get_jwks(self) -> jwk.JWKSet:
         try:
+            logger.debug("JWKS cache HIT")
             return self._jwks_cache["jwks"]
         except KeyError:
             config = self._get_oidc_config()
             jwks_uri = config["jwks_uri"]
 
-            logger.debug(f"Fetching JWKS from {jwks_uri}")
+            logger.debug(f"JWKS cache MISS, fetching from {jwks_uri}")
 
-            resp = requests.get(jwks_uri, timeout=self.request_timeout)
-            resp.raise_for_status()
+            try:
+                resp = requests.get(jwks_uri, timeout=self.request_timeout)
+                resp.raise_for_status()
+            except requests.RequestException as exc:
+                logger.error("Failed to fetch JWKS from %s: %s", jwks_uri, exc)
+                raise OIDCError("Failed to fetch JWKS") from exc
 
             jwks = jwk.JWKSet.from_json(resp.text)
             self._jwks_cache["jwks"] = jwks
+            logger.debug("JWKS cached successfully")
             return jwks
 
     def verify_access_token(self, token: str) -> dict[str, Any]:
@@ -74,6 +100,7 @@ class OIDCService:
             return self._verify(token)
         except JWException:
             # likely key rotation → retry once
+            logger.warning("JWT verification failed; refreshing JWKS and retrying once")
             self._jwks_cache.pop("jwks", None)
             return self._verify(token)
 
@@ -119,13 +146,17 @@ class OIDCService:
             raise OIDCError("Userinfo endpoint not available")
 
         logger.debug(f"Fetching userinfo from {userinfo_endpoint}")
-        resp = requests.get(
-            userinfo_endpoint,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            timeout=self.request_timeout,
-        )
+        try:
+            resp = requests.get(
+                userinfo_endpoint,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                },
+                timeout=self.request_timeout,
+            )
+        except requests.RequestException as exc:
+            logger.exception("Failed to call userinfo endpoint")
+            raise OIDCError("Failed to fetch userinfo") from exc
 
         if resp.status_code != 200:
             logger.error(f"Failed to fetch userinfo: {resp.status_code} {resp.text}")

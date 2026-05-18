@@ -35,6 +35,13 @@ def trigger_api(
     payload: TriggerSyncExtApiBase,
     repo=Depends(get_repo_ingest),
 ):
+    logger.debug(
+        "Trigger external API sync requested by user_id=%s for ingest_ids=%s range=%s..%s",
+        current_user.id,
+        payload.ingest_ids,
+        payload.start_date,
+        payload.end_date,
+    )
     return trigger_external_api_service(
         payload=payload,
         allowed_permission_group_ids=current_user.permission_group_ids,

@@ -52,11 +52,13 @@ def get_current_user(
     session=Depends(get_session),
 ):
     if not credentials:
+        logger.warning("Authentication failed: missing Authorization header")
         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
     try:
         claims = oidc.authenticate(access_token=credentials.credentials)
     except OIDCError as exc:
+        logger.warning(f"Authentication failed during OIDC validation: {str(exc)}")
         raise HTTPException(status_code=401, detail=str(exc))
 
     user = get_or_create_user(
@@ -66,6 +68,7 @@ def get_current_user(
     )
 
     if not user.is_active:
+        logger.warning(f"Authentication rejected: inactive user_id={user.id}")
         raise HTTPException(status_code=403, detail="User disabled")
 
     return user
@@ -99,6 +102,7 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
         session.add(user)
         session.commit()
         session.refresh(user)
+        logger.info(f"Created new user for subject '{external_id}'")
 
         return user
     except Exception as e:
@@ -124,6 +128,12 @@ def sync_permission_groups(
             for entitlement in set_of_entitlements
             if PermissionGroup.get_entitlement_vo(entitlement) in allowed_vos
         }
+        logger.debug(
+            "Syncing permission groups for user_id=%s (entitlements total=%s, allowed=%s)",
+            user.id,
+            len(set_of_entitlements),
+            len(filtered_entitlements),
+        )
 
         existing_permission_groups = user.permission_groups
 
@@ -150,6 +160,7 @@ def sync_permission_groups(
 
         # Commit once at the end
         session.commit()
+        logger.debug(f"Permission-group sync completed for user_id={user.id}")
 
     except Exception as e:
         logger.error(f"Failed to sync permission groups: {str(e)}")
@@ -244,6 +255,9 @@ async def create_database_if_not_exists(
     if not permission_group_id:
         # this method will also be called for update routes
         # we currently use http.patch so the body may not include permisison_group_id so we skip here
+        logger.debug(
+            "Skipping database creation check: permission_group_id missing in request"
+        )
         return
 
     database = database_repo.find_one_permission_group_id(permission_group_id)
@@ -254,4 +268,7 @@ async def create_database_if_not_exists(
         return
 
     if not database:
+        logger.debug(
+            f"Creating database entity for permission_group_id={permission_group_id}"
+        )
         database_repo.create(permission_group, current_user.permission_group_ids)
