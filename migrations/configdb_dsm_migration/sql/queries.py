@@ -206,3 +206,22 @@ INSERT_INGEST_BOSCH_API = """
         bosch_username = EXCLUDED.bosch_username,
         bosch_password = EXCLUDED.bosch_password
 """
+
+SELECT_QAQC = """
+    SELECT q.id, q."name" as "qc_name", q.context_window, q.default, qt."function", qt.args, qt.position, qt.name as "test_name", qt.streams, p."uuid" as "project_uuid"
+    FROM config_db.qaqc q
+    JOIN config_db.qaqc_test qt ON qt.qaqc_id = q.id
+    join config_db.project p on p.id = q.project_id 
+    WHERE q."name" <> 'MyConfig'
+"""
+
+INSERT_QC_SETTINGS = """
+    INSERT INTO dsm_db.quality_control_setting
+        (permission_group_id, "name", context_window, is_active, "uuid")
+    VALUES 
+        (%(project_id)s, %(qc_name)s, %(context_window)s, %(default)s, %(qc_uuid)s)
+    ON CONFLICT ("uuid") DO UPDATE SET
+        "name" = EXCLUDED."name",
+        context_window = EXCLUDED.context_window,
+        is_active = EXCLUDED.is_active    
+"""

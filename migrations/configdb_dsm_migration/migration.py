@@ -1,3 +1,4 @@
+import uuid
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb, Json
@@ -12,11 +13,26 @@ def get_django_things(django_cur):
     return {r["thing_id"] for r in rows}
 
 
+def get_django_qc(django_cur):
+    django_cur.execute("""SELECT "name" FROM frontenddb.tsm_qaqcsetting""")
+    rows = django_cur.fetchall()
+
+    return {r["name"] for r in rows}
+
+
+def get_existing_dsm_projects(dsm_cur):
+    dsm_cur.execute("SELECT id, uuid from dsm_db.permission_group")
+    projects = dsm_cur.fetchall()
+    projects = {p["uuid"]: p["id"] for p in projects}
+
+    return projects
+
+
 def migrate_project_and_db(cfgdb_cur, dsm_cur):
     cfgdb_cur.execute(queries.SELECT_PROJECT_AND_DB)
     rows = cfgdb_cur.fetchall()
 
-    dsm_cur.execute("SELECT uuid FROM public.permission_group")
+    dsm_cur.execute("SELECT uuid FROM dsm_db.permission_group")
     existing_projects = {r["uuid"] for r in dsm_cur.fetchall()}
 
     for row in rows:
@@ -31,9 +47,7 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
 
 
 def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
-    dsm_cur.execute("SELECT id, uuid from public.permission_group")
-    projects = dsm_cur.fetchall()
-    projects = {p["uuid"]: p["id"] for p in projects}
+    projects = get_existing_dsm_projects(dsm_cur)
     cfgdb_cur.execute(queries.GET_PARSER)
     rows = cfgdb_cur.fetchall()
     for row in rows:
@@ -68,10 +82,8 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
 
 
 def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
-    dsm_cur.execute("SELECT id, uuid from public.permission_group")
-    projects = dsm_cur.fetchall()
-    projects = {p["uuid"]: p["id"] for p in projects}
-    dsm_cur.execute("SELECT id, uuid from public.parser")
+    projects = get_existing_dsm_projects(dsm_cur)
+    dsm_cur.execute("SELECT id, uuid from dsm_db.parser")
     parser = dsm_cur.fetchall()
     parser = {p["uuid"]: p["id"] for p in parser}
     cfgdb_cur.execute(queries.SELECT_THING_AND_INGEST)
@@ -132,6 +144,18 @@ def adapt_json_fields(row):
     return row
 
 
+def migrate_qc(cfgdb_cur, dsm_cur, django_qc):
+    projects = get_existing_dsm_projects(dsm_cur)
+    cfgdb_cur.execute(queries.SELECT_QAQC)
+    rows = cfgdb_cur.fetchall()
+    for row in rows:
+        if row["qc_name"] not in django_qc:
+            continue
+        row["project_id"] = projects[row["project_uuid"]]
+        row["qc_uuid"] = uuid.uuid5(uuid.NAMESPACE_DNS, f"{row["id"]}")
+        dsm_cur.execute(queries.INSERT_QC_SETTINGS, row)
+
+
 def run_migration(cfgdb_conn, dsm_conn, django_conn):
     try:
         with dsm_conn.transaction():
@@ -139,9 +163,11 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
             dsm_cur = dsm_conn.cursor()
             django_cur = django_conn.cursor()
             django_things = get_django_things(django_cur)
+            django_qc = get_django_qc(django_cur)
             migrate_project_and_db(cfgdb_cur, dsm_cur)
             migrate_parsers(cfgdb_cur, dsm_cur, django_things)
             migrate_ingests(cfgdb_cur, dsm_cur, django_things)
+            migrate_qc(cfgdb_cur, dsm_cur, django_qc)
     except Exception as e:
         print(f"migration failed: {e}")
         cfgdb_conn.rollback()
