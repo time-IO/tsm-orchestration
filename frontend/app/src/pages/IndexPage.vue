@@ -3,7 +3,6 @@
     <q-layout view="lHh lpR fFf">
       <q-parallax src="/images/_DCS9774_8bit-JPEG 3000px.jpg">
         <template v-slot:content="scope">
-          <!-- FIXES LOGO LINKS OBEN -->
           <div class="absolute-top-left q-pa-md" style="width: 300px; z-index: 10">
             <img src="/images/UFZ_Logo_RGB_EN_white.png" style="width: 100%; display: block" />
           </div>
@@ -29,24 +28,32 @@
           width: 90%;
           max-width: 1500px;
           position: relative;
-          margin-top: -8em;
+          margin-top: -12em;
           margin-left: auto;
           margin-right: auto;
           z-index: 1;
           padding: 0 3em;
         "
       >
+        <div class="col-12">
+          <div class="row justify-center q-mb-xs" style="font-weight: bold">
+            <div class="col q-px-sm text-center" v-for="card in cards" :key="card.label + '-stat'">
+              <div class="text-h5 text-amber-12" style="font-weight: bold">{{ card.count }}</div>
+              <div
+                class="text-h5 text-grey-1"
+                style="color: white; font-size: 100%; font-weight: bold"
+              >
+                {{ card.label }}
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="col-12 col-md-6 col-lg-3 q-px-sm" v-for="card in cards" :key="card.label">
           <div style="display: flex; flex-direction: column; height: 100%">
             <div
               class="row justify-center q-mb-sm"
               style="flex-direction: column; align-items: center"
-            >
-              <div class="text-h5 text-yellow-14" style="font-weight: bold">
-                {{ card.count }}
-              </div>
-              <div style="color: white; font-size: 80%; font-weight: bold">{{ card.label }}</div>
-            </div>
+            ></div>
             <q-card
               dark
               class="bg-light-blue-8 text-white shadow-1"
@@ -63,103 +70,98 @@
             </q-card>
           </div>
         </div>
-      </div>
 
-      <div class="row justify-center q-pa-md">
-        <div style="width: 70%; max-width: 1500px; padding: 0 3em">
-          <q-card class="bg-light-blue-8 text-white shadow-1">
-            <q-card-section>
-              <div class="text-h6">Data Source Management - Introduction</div>
-              <div class="text-subtitle2">Getting Started</div>
-            </q-card-section>
-            <q-separator dark inset />
-            <q-card-section class="bg-white text-black">
-              <p>
-                Data Source Management (DSM) is a centralized platform for managing time series data
-                ingestion from various external sources. Configure data ingestion from APIs (Bosch,
-                DWD, The Things Network, T-Systems, UBA), MQTT brokers and SFTP servers.
-              </p>
-              <p>
-                Organize your data into Permission Groups to control access. Apply Quality Control
-                Settings to validate and filter your time series data. Use parsers to process batch
-                data uploads.
-              </p>
-              <p>
-                For detailed documentation and guides, visit the
-                <a
-                  href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/"
-                  target="_blank"
-                  class="text-primary"
-                  style="text-decoration: none"
-                  >TimeIO Wiki</a
-                >.
-              </p>
-            </q-card-section>
-          </q-card>
+        <div class="row justify-center q-pa-md">
+          <div style="width: 80%; max-width: 1500px; padding: 0 3em">
+            <q-card class="bg-light-blue-8 text-white shadow-1">
+              <q-card-section>
+                <div class="text-h6">Data Source Management - Introduction</div>
+                <div class="text-subtitle2">Getting Started</div>
+              </q-card-section>
+              <q-separator dark inset />
+              <q-card-section class="bg-white text-black">
+                <p>
+                  Data Source Management (DSM) is a centralized platform for managing time series
+                  data ingestion from various external sources. Configure data ingestion from APIs
+                  (Bosch, DWD, The Things Network, T-Systems, UBA), MQTT brokers and SFTP servers.
+                </p>
+                <p>
+                  Organize your data into Permission Groups to control access. Apply Quality Control
+                  Settings to validate and filter your time series data. Use parsers to process
+                  batch data uploads.
+                </p>
+                <p>
+                  For detailed documentation and guides, visit the
+                  <a
+                    href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/"
+                    target="_blank"
+                    class="text-primary"
+                    style="text-decoration: none"
+                    >TimeIO Wiki</a
+                  >.
+                </p>
+              </q-card-section>
+            </q-card>
 
-          <q-card flat class="bg-transparent">
-            <q-card-section>
-              <div class="row items-start q-gutter-md">
-                <!-- Bild links -->
-                <img src="/images/timeio.svg" style="width: 300px; display: block" />
+            <q-card flat class="bg-transparent">
+              <q-card-section>
+                <div class="row items-start q-gutter-md">
+                  <!-- Bild links -->
+                  <img
+                    src="/images/timeio.svg"
+                    style="width: 40%; max-width: 200px; min-width: 150px; display: block"
+                  />
 
-                <!-- Text rechts -->
-                <div class="col">
-                  <p
-                    class="text-justify"
-                    style="white-space: pre-line; line-height: 1.6; padding: 5%"
-                  >
-                    time.IO provides the infrastructure for storing and managing time series data.
-                    It supports the entire lifecycle of time series data, providing efficient data
-                    transfer and storage, real-time data visualisation using
-                    <a
-                      href="https://en.wikipedia.org/wiki/Grafana"
-                      target="_blank"
-                      style="color: #519ba5; text-decoration: none"
-                      >Grafana</a
-                    >, and integrated data analysis and quality control with
-                    <a
-                      href="https://rdm-software.pages.ufz.de/saqc/"
-                      target="_blank"
-                      style="color: #519ba5; text-decoration: none"
+                  <!-- Text rechts -->
+                  <div class="col">
+                    <p
+                      class="text-justify"
+                      style="white-space: pre-line; line-height: 1.6; padding: 5%"
                     >
-                      SaQC </a
-                    >. The container-based deployment model facilitates easy integration and
-                    scalability within existing IT infrastructures, including seamless connection to
-                    geospatial infrastructures such as spatial.IO for advanced spatial data
-                    analyses. time.IO also links to the
-                    <a
-                      href="https://web.app.ufz.de/sms/"
-                      target="_blank"
-                      style="color: #519ba5; text-decoration: none"
-                    >
-                      SMS
-                    </a>
-                    for consistent and standardised metadata management, ensuring a cohesive data
-                    management process. For data access, the standardised OGC
-                    <a
-                      href="https://en.wikipedia.org/wiki/SensorThings_API "
-                      target="_blank"
-                      style="color: #519ba5; text-decoration: none"
-                    >
-                      SensorThings API
-                    </a>
-                    is used. (See the
-                    <a
-                      href="https://doi.org/10.5281/zenodo.8354840"
-                      target="_blank"
-                      style="color: #519ba5; text-decoration: none"
-                      >full paper.
-                    </a>
-                    )
-
-                    <!--                    and utilises the FROST-Server as a reference implementation for the OGC STA-->
-                    <!--                    interface.-->
-                  </p>
+                      time.IO provides the infrastructure for storing and managing time series data.
+                      It supports the entire lifecycle of time series data, providing efficient data
+                      transfer and storage, real-time data visualisation using
+                      <a
+                        href="https://en.wikipedia.org/wiki/Grafana"
+                        target="_blank"
+                        style="color: #519ba5; text-decoration: none"
+                        >Grafana</a
+                      >, and integrated data analysis and quality control with
+                      <a
+                        href="https://rdm-software.pages.ufz.de/saqc/"
+                        target="_blank"
+                        style="color: #519ba5; text-decoration: none"
+                      >
+                        SaQC </a
+                      >. The container-based deployment model facilitates easy integration and
+                      scalability within existing IT infrastructures, including seamless connection
+                      to geospatial infrastructures such as spatial.IO for advanced spatial data
+                      analyses. time.IO also links to the
+                      <a
+                        href="https://web.app.ufz.de/sms/"
+                        target="_blank"
+                        style="color: #519ba5; text-decoration: none"
+                      >
+                        SMS
+                      </a>
+                      for consistent and standardised metadata management, ensuring a cohesive data
+                      management process. For data access, the standardised OGC
+                      <a
+                        href="https://en.wikipedia.org/wiki/SensorThings_API "
+                        target="_blank"
+                        style="color: #519ba5; text-decoration: none"
+                      >
+                        SensorThings API
+                      </a>
+                      is used.
+                      <!--                    and utilises the FROST-Server as a reference implementation for the OGC STA-->
+                      <!--                    interface.-->
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </q-card-section>
-          </q-card>
+              </q-card-section>
+            </q-card>
+          </div>
         </div>
       </div>
     </q-layout>

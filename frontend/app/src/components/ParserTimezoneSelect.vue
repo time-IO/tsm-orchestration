@@ -7,6 +7,7 @@
     :label="label ? label : 'Select the timezone *'"
     use-input
     @filter="filterFn"
+    popup-content-class="limited-dropdown"
   />
 </template>
 
