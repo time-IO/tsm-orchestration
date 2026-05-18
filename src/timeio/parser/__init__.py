@@ -10,6 +10,7 @@ from timeio.parser.mqtt_parser import MqttParser
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
+from timeio.parser.mqtt_devices.quaesta import QuaestaParser
 
 _parser_map = {
     "csvparser": CsvParser,
@@ -17,6 +18,7 @@ _parser_map = {
     "campbell_cr6": CampbellCr6Parser,
     "ydoc_ml417": YdocMl417Parser,
     "chirpstack_generic": ChirpStackGenericParser,
+    "quaesta": QuaestaParser,
 }
 
 _default_settings = {
