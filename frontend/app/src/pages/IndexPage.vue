@@ -1,10 +1,10 @@
 <template>
   <q-page>
     <q-layout view="lHh lpR fFf">
-      <q-parallax src="/images/_DCS9774_8bit-JPEG 3000px.jpg">
+      <q-parallax :src="heroImageSrc">
         <template v-slot:content="scope">
           <div class="absolute-top-left q-pa-md" style="width: 300px; z-index: 10">
-            <img src="/images/UFZ_Logo_RGB_EN_white.png" style="width: 100%; display: block" />
+            <img :src="ufzLogoSrc" style="width: 100%; display: block" />
           </div>
 
           <div
@@ -17,7 +17,7 @@
               transformOrigin: 'top left',
             }"
           >
-            <img src="/images/ufz-timeio_logo_dark.svg" style="width: 100%; display: block" />
+            <img :src="timeIoDarkLogoSrc" style="width: 100%; display: block" />
           </div>
         </template>
       </q-parallax>
@@ -108,7 +108,7 @@
                 <div class="row items-start q-gutter-md">
                   <!-- Bild links -->
                   <img
-                    src="/images/timeio.svg"
+                    :src="timeIoLogoSrc"
                     style="width: 40%; max-width: 200px; min-width: 150px; display: block"
                   />
 
@@ -172,6 +172,12 @@
 import { onMounted, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useUsageStatisticsStore } from 'src/stores/usageStatisticsStore';
+import { publicAsset } from 'src/utils/public_asset';
+
+const heroImageSrc = publicAsset('images/_DCS9774_8bit-JPEG 3000px.jpg');
+const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN_white.png');
+const timeIoDarkLogoSrc = publicAsset('images/ufz-timeio_logo_dark.svg');
+const timeIoLogoSrc = publicAsset('images/timeio.svg');
 
 const $q = useQuasar();
 const usageStatisticsStore = useUsageStatisticsStore();
