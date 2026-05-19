@@ -18,8 +18,8 @@ INSERT_PROJECT = """
 """
 
 INSERT_DB = """
-    INSERT INTO public.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url", "name")
-    VALUES (%(project_id)s, %(user)s, %(password)s, %(ro_user)s, %(ro_password)s, %(url)s, 'dummy')
+    INSERT INTO public.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url")
+    VALUES (%(project_id)s, %(user)s, %(password)s, %(ro_user)s, %(ro_password)s, %(url)s)
 """
 
 GET_PARSER = """
@@ -37,7 +37,7 @@ GET_PARSER = """
 
 INSERT_PARSER = """
     INSERT INTO public.parser (uuid, parser_type) VALUES (%(parser_uuid)s, 'csv')
-    ON CONFLICT (uuid)
+    ON CONFLICT (uuid) 
     DO UPDATE SET
         parser_type = EXCLUDED.parser_type
     RETURNING id
@@ -46,9 +46,7 @@ INSERT_PARSER_DETAILED = """
     INSERT INTO public.parser_detailed 
         (parser_id, permission_group_id, "name")
         VALUES (%(parser_id)s, %(project_id)s, %(name)s)
-        ON CONFLICT (parser_id)
-        DO UPDATE SET
-            name = EXCLUDED.name
+        ON CONFLICT (parser_id) DO NOTHING
 """
 
 
@@ -57,16 +55,7 @@ INSERT_PARSER_CSV = """
         (parser_id, delimiter, timezone, encoding, headlines_to_exclude, footlines_to_exclude, pandas_read_csv, comment, header)
     VALUES 
         (%(parser_id)s, %(delimiter)s, %(timezone)s, %(encoding)s, %(skiprows)s, %(skipfooter)s, %(pandas_read_csv)s, %(comment)s, %(header)s)
-    ON CONFLICT ("parser_id") 
-    DO UPDATE SET
-        delimiter = EXCLUDED.delimiter,
-        timezone = EXCLUDED.timezone,
-        encoding = EXCLUDED.encoding,
-        headlines_to_exclude = EXCLUDED.headlines_to_exclude,
-        footlines_to_exclude = EXCLUDED.footlines_to_exclude,
-        pandas_read_csv = EXCLUDED.pandas_read_csv,
-        comment = EXCLUDED.comment,
-        header = EXCLUDED.header
+    ON CONFLICT ("parser_id") DO NOTHING
 """
 
 INSERT_PARSER_TS_COLUMNS = """
@@ -127,18 +116,12 @@ SELECT_THING_AND_INGEST = """
 INSERT_INGEST = """
     INSERT INTO public.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
     VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s)
-    ON CONFLICT ("uuid") DO UPDATE SET
-        "name" = EXCLUDED."name",
-        description = EXCLUDED.description,
-        parser_id = EXCLUDED.parser_id
     RETURNING id        
 """
 
 INSERT_INGEST_SFTP = """
-    INSERT INTO public.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name, fileserver_uri)
-    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, 'sftp://localhost:40022')
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        filename_pattern = EXCLUDED.filename_pattern
+    INSERT INTO public.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name)
+    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s)
 """
 
 INSERT_INGEST_EXT_SFTP = """
@@ -146,53 +129,32 @@ INSERT_INGEST_EXT_SFTP = """
         (ingest_id, uri, "path", filename_pattern, username, "password", sync_interval_in_minutes, sync_enabled, ssh_private_key, ssh_public_key, bucket_name, bucket_username, bucket_password)
     VALUES
          (%(ingest_id)s, %(es_uri)s, %(es_path)s, %(s3_filename_pattern)s, %(es_user)s, %(es_password)s, %(es_sync_interval)s, %(es_sync_enabled)s, %(es_ssh_priv_key)s, %(es_ssh_pub_key)s ,%(s3_bucket)s, %(s3_user)s, %(s3_password)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        filename_pattern = EXCLUDED.filename_pattern,
-        "path" = EXCLUDED."path",
-        uri = EXCLUDED.uri,
-        username = EXCLUDED.username,
-        "password" = EXCLUDED."password",
-        sync_enabled = EXCLUDED.sync_enabled,
-        sync_interval_in_minutes = EXCLUDED.sync_interval_in_minutes
 """
 
 INSERT_INGEST_EXT_API = """
     INSERT INTO public.ingest_external_api (ingest_id, api_type, sync_enabled, sync_interval_in_minutes)
     VALUES  (%(ingest_id)s, %(ea_type_name)s, %(ea_sync_enabled)s, %(ea_sync_interval)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        sync_enabled = EXCLUDED.sync_enabled,
-        sync_interval_in_minutes = EXCLUDED.sync_interval_in_minutes    
 """
 
 INSERT_INGEST_TTN_API = """
     INSERT INTO public.ingest_external_api_the_things_network (ingest_id, api_key, endpoint_uri)
     VALUES (%(ingest_id)s, %(ttn_api_key)s, %(ttn_uri)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        api_key = EXCLUDED.api_key,
-        endpoint_uri = EXCLUDED.endpoint_uri    
 """
 
 INSERT_INGEST_DWD_API = """
     INSERT INTO public.ingest_external_api_dwd (ingest_id, station_id, period_in_minutes)
     VALUES (%(ingest_id)s, %(dwd_station_id)s, %(dwd_period)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        period_in_minutes = EXCLUDED.period_in_minutes    
 """
 
 INSERT_INGEST_UBA_API = """
     INSERT INTO public.ingest_external_api_uba (ingest_id, station_id)
     VALUES (%(ingest_id)s, %(uba_station_id)s)
-    ON CONFLICT (ingest_id) DO NOTHING  
 """
 
 INSERT_INGEST_TSYSTEMS_API = """
     INSERT INTO public.ingest_external_api_tsystems
         (ingest_id, "group", station_id, tsystems_username, tsystems_password)
     VALUES (%(ingest_id)s, %(tsystems_group)s, %(tsystems_station)s, %(tsystems_username)s, %(tsystems_password)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        "group" = EXCLUDED."group",
-        tsystems_username = EXCLUDED.tsystems_username,
-        tsystems_password = EXCLUDED.tsystems_password
 """
 
 INSERT_INGEST_BOSCH_API = """
@@ -200,11 +162,6 @@ INSERT_INGEST_BOSCH_API = """
         (ingest_id, endpoint, sensor_id, bosch_username, bosch_password, period_in_minutes)
     VALUES
         (%(ingest_id)s, %(bosch_endpoint)s, %(bosch_sensor)s, %(bosch_user)s, %(bosch_password)s, %(bosch_period)s)
-    ON CONFLICT (ingest_id) DO UPDATE SET
-        endpoint = EXCLUDED.endpoint,
-        period_in_minutes = EXCLUDED.period_in_minutes,
-        bosch_username = EXCLUDED.bosch_username,
-        bosch_password = EXCLUDED.bosch_password
 """
 
 SELECT_QAQC = """
