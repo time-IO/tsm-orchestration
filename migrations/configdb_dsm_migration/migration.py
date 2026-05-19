@@ -39,7 +39,9 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
     for row in rows:
         if row["project_uuid"] in existing_projects:
             continue
-        row["project_name"] = row["project_name"].split(":")[1]
+        row["entitlement"] = (
+            f"urn:geant:helmholtz.de:group:{row["project_name"]}#login-dev.helmholtz.de"
+        )
 
         dsm_cur.execute(queries.INSERT_PROJECT, row)
         project_id = dsm_cur.fetchone()["id"]

@@ -13,7 +13,7 @@ SELECT_PROJECT_AND_DB = """
 
 INSERT_PROJECT = """
     INSERT INTO public.permission_group ("name", uuid, entitlement)
-    VALUES (%(project_name)s, %(project_uuid)s, %(project_name)s)
+    VALUES (%(project_name)s, %(project_uuid)s, %(entitlement)s)
     RETURNING id
 """
 
