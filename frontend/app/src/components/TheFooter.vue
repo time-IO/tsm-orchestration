@@ -7,12 +7,12 @@
     <div class="row items-center q-px-md q-py-sm" style="width: 100%">
       <div class="col-auto row items-center q-gutter-sm">
         <a href="https://www.ufz.de" target="_blank">
-          <img src="/images/UFZ_Logo_RGB_EN.png" alt="UFZ" style="height: 50px; opacity: 0.85" />
+          <img :src="ufzLogoSrc" alt="UFZ" style="height: 50px; opacity: 0.85" />
         </a>
 
        <a href="https://www.ufz.de/index.php?de=45348" target="_blank">
         <img
-          src="/images/259253_RDM_subline_fullcolor_rgb.png"
+          :src="rdmLogoSrc"
           alt="RDM"
           style="height: 50px; opacity: 0.85"/>
        </a>
@@ -88,4 +88,8 @@
 </template>
 
 <script setup lang="ts">
+import { publicAsset } from 'src/utils/public_asset';
+
+const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN.png');
+const rdmLogoSrc = publicAsset('images/259253_RDM_subline_fullcolor_rgb.png');
 </script>
