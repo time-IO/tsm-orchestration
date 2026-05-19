@@ -1,5 +1,6 @@
 import uuid
 import psycopg
+import requests
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb, Json
 
@@ -7,21 +8,21 @@ from sql import queries
 
 
 def get_django_things(django_cur):
-    django_cur.execute("SELECT thing_id FROM frontenddb.tsm_thing")
+    django_cur.execute("SELECT thing_id FROM tsm_frontend.tsm_thing")
     rows = django_cur.fetchall()
 
     return {r["thing_id"] for r in rows}
 
 
 def get_django_qc(django_cur):
-    django_cur.execute("""SELECT "name" FROM frontenddb.tsm_qaqcsetting""")
+    django_cur.execute("""SELECT "name" FROM tsm_frontend.tsm_qaqcsetting""")
     rows = django_cur.fetchall()
 
     return {r["name"] for r in rows}
 
 
 def get_existing_dsm_projects(dsm_cur):
-    dsm_cur.execute("SELECT id, uuid from dsm_db.permission_group")
+    dsm_cur.execute("SELECT id, uuid from public.permission_group")
     projects = dsm_cur.fetchall()
     projects = {p["uuid"]: p["id"] for p in projects}
 
@@ -32,7 +33,7 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
     cfgdb_cur.execute(queries.SELECT_PROJECT_AND_DB)
     rows = cfgdb_cur.fetchall()
 
-    dsm_cur.execute("SELECT uuid FROM dsm_db.permission_group")
+    dsm_cur.execute("SELECT uuid FROM public.permission_group")
     existing_projects = {r["uuid"] for r in dsm_cur.fetchall()}
 
     for row in rows:
@@ -83,7 +84,7 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
 
 def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
     projects = get_existing_dsm_projects(dsm_cur)
-    dsm_cur.execute("SELECT id, uuid from dsm_db.parser")
+    dsm_cur.execute("SELECT id, uuid from public.parser")
     parser = dsm_cur.fetchall()
     parser = {p["uuid"]: p["id"] for p in parser}
     cfgdb_cur.execute(queries.SELECT_THING_AND_INGEST)
@@ -154,6 +155,52 @@ def migrate_qc(cfgdb_cur, dsm_cur, django_qc):
         row["project_id"] = projects[row["project_uuid"]]
         row["qc_uuid"] = uuid.uuid5(uuid.NAMESPACE_DNS, f"{row["id"]}")
         dsm_cur.execute(queries.INSERT_QC_SETTINGS, row)
+        row["qc_setting_id"] = dsm_cur.fetchone()["id"]
+        if row["function"] == "flagMissing":
+            row["function"] = "flagNAN"
+        dsm_cur.execute(queries.INSERT_QC_FUNCTION, row)
+        row["qc_func_id"] = dsm_cur.fetchone()["id"]
+        func_args = list()
+        for s in row["streams"]:
+            r = dict()
+            r["name"] = s["arg_name"]
+            r["type"] = "datastream"
+            r["input"] = {
+                "value": [
+                    build_sta_input(row["schema"], s["sta_stream_id"], s["alias"])
+                ]
+            }
+            r["func_id"] = row["qc_func_id"]
+            adapt_json_fields(r)
+            func_args.append(r)
+        for k, v in row["args"].items():
+            r = dict()
+            if isinstance(v, int):
+                r["type"] = "float"
+            else:
+                r["type"] = type(v).__name__
+            r["name"] = k
+            r["input"] = {"value": v}
+            r["func_id"] = row["qc_func_id"]
+            adapt_json_fields(r)
+            func_args.append(r)
+        dsm_cur.executemany(queries.INSERT_QC_FUNC_ARGS, func_args)
+
+
+def build_sta_input(schema, stream_id, alias):
+    base_url = f"https://tsm.ufz.de/sta/{schema}/v1.1"
+    filter_ds = "?$select=@iot.id,@iot.selfLink,name,description"
+    filter_sensor_thing = (
+        "&$expand=Sensor($select=@iot.id,name),Thing($select=@iot.id,name)"
+    )
+    stream_resp = requests.get(
+        f"{base_url}/Datastreams({stream_id}){filter_ds}{filter_sensor_thing}"
+    )
+    stream = stream_resp.json()
+    stream["Thing@iot.navigationLink"] = f"{base_url}/Datastreams({stream_id})/Thing"
+    stream["Sensor@iot.navigationLink"] = f"{base_url}/Datastreams({stream_id})/Sensor"
+    stream["alias"] = alias
+    return stream
 
 
 def run_migration(cfgdb_conn, dsm_conn, django_conn):
@@ -164,25 +211,35 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
             django_cur = django_conn.cursor()
             django_things = get_django_things(django_cur)
             django_qc = get_django_qc(django_cur)
+            print("migrate projects and dbs")
             migrate_project_and_db(cfgdb_cur, dsm_cur)
+            print("migrate parsers")
             migrate_parsers(cfgdb_cur, dsm_cur, django_things)
+            print("migrate ingests")
             migrate_ingests(cfgdb_cur, dsm_cur, django_things)
+            print("migrate qc")
             migrate_qc(cfgdb_cur, dsm_cur, django_qc)
     except Exception as e:
         print(f"migration failed: {e}")
         cfgdb_conn.rollback()
-        tmm_conn.rollback()
+        dsm_conn.rollback()
         django_conn.rollback()
         raise
 
 
+# HINTS FOR LOCAL TESTING
+# start dsm locally
+# add respective DSN Entries here for accessing PROD DB (config_db and django)
+# Later we can use the same DSN for cfgdb and dsm. But for testing you can requets PROD config_db schema and write
+# into local dsm_db schema
+
 if __name__ == "__main__":
     cfgdb_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    tmm_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
+    dsm_dsn = "postgresql://postgres:postgres@localhost:5432/db_dev"
     django_dsn = "postgresql://frontenddb:frontenddb@localhost:5432/postgres"
 
     cfgdb_conn = psycopg.connect(cfgdb_dsn, row_factory=dict_row)
-    tmm_conn = psycopg.connect(tmm_dsn, row_factory=dict_row)
+    dsm_conn = psycopg.connect(dsm_dsn, row_factory=dict_row)
     django_conn = psycopg.connect(django_dsn, row_factory=dict_row)
 
-    run_migration(cfgdb_conn, tmm_conn, django_conn)
+    run_migration(cfgdb_conn, dsm_conn, django_conn)
