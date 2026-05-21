@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-from __future__ import annotations
 
-import json
 import warnings
-from typing import Any
 
+import ast
 import numpy as np
 import pandas as pd
-import saqc
-from saqc import DictOfSeries
 
-from timeio.qc.qctools import QcTool
+import saqc
+from saqc.parsing.visitor import ConfigFunctionParser
+
+from timeio.qc.qcfunction import QcFunction, QcFunctionStream
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
@@ -38,7 +37,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
         }
 
     @staticmethod
-    def fromSTAannotations(s: pd.Series[dict]) -> pd.DataFrame:
+    def fromSTAannotations(s: pd.Series) -> pd.DataFrame:
         """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
         timeIO/STA standard quality labels (dicts parsed from a structured JSON).
         """
@@ -84,9 +83,9 @@ class STAMPLATEScheme(saqc.FloatScheme):
             # The df has the index from series.
             df = pd.DataFrame(
                 {
-                    "annotationType": Saqc.name,
+                    "annotationType": "SaQC",
                     "annotation": series,
-                    "version": Saqc.version,
+                    "version": saqc.__version__,
                     "measure": "",  # filled below
                     "userLabel": "",  # filled below
                 }
@@ -109,43 +108,68 @@ class STAMPLATEScheme(saqc.FloatScheme):
         return out
 
 
-class Saqc(QcTool):
+class SaQCWrapper:
+    def __init__(self, data: dict[QcFunctionStream, pd.DataFrame]):
+        values = {}
+        flags = {}
 
-    name = "saqc"
-    version = saqc.__version__
+        for k, df in data.items():
+            values[k.alias] = df["data"]
+            flags[k.alias] = df.get("quality", pd.Series(None, index=df["data"].index))
 
-    def __init__(self):
-        self._qc = saqc.SaQC(scheme=STAMPLATEScheme())
+        self._qc = saqc.SaQC(
+            data=saqc.DictOfSeries(values),
+            flags=saqc.DictOfSeries(flags),
+            scheme=STAMPLATEScheme(),
+        )
+        # we keep the original data to check for modifications later
+        self._input_data = data
+        self._streams = {s.alias: s for s in data.keys()}
 
     @property
-    def columns(self) -> pd.Index:
-        return self._qc.columns
+    def data(self) -> dict[QcFunctionStream, pd.DataFrame]:
+        out = {}
+        for col in self._qc.columns:
+            out[self._streams[col]] = pd.DataFrame(
+                {"data": self._qc.data[col], "quality": self._qc.flags.get(col, None)}
+            )
+        return out
 
-    def check_func_name(self, func_name: str):
-        if not hasattr(saqc.SaQC, func_name):
-            raise ValueError(f"Unknown qc routine {func_name} for SaQC")
+    def execute(self, func: QcFunction):
+        # add targets
+        for stream in func.targets:
+            self._streams[stream.alias] = stream
 
-    def execute(self, func_name: str, *args, **kwargs) -> Saqc:
-        qc = self._qc
-        func = getattr(qc, func_name)
-        self._qc = func(*args, **kwargs)
-        return self
+        saqc_func = getattr(self._qc, func.func_name)
+        if func.func_name == "flagRange":
+            # NOTE: needed to work around a SaQC-Bug,
+            #       that will be fixed in the next release
+            # TODO: remove entire block after the bug is fixed
+            for f in func.field_names:
+                self._qc = saqc_func(field=f, target=func.target_names, **func.params)
+            return
 
-    def add_data(
-        self, data: dict[str, pd.Series], quality: dict[str, pd.Series] | None = None
-    ):
-        if quality is not None:
-            quality = DictOfSeries(quality)
+        if func.func_name.endswith("Generic"):
+            # NOTE:
+            # The generic function parser is not as well exposed in
+            # SaQC as is could be, that's why we need to go the extra
+            # mile and built a valid saqc config-file function
+            func_string = f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
+            tree = ast.parse(func_string, mode="eval").body
+            _, kwargs = ConfigFunctionParser().parse(tree)
+            func.params["func"] = kwargs["func"]
+        self._qc = saqc_func(
+            field=func.field_names, target=func.target_names, **func.params
+        )
 
-        # If quality is not None we will end up in STAMPLATEScheme.toInternal
-        # which then do the parsing of the STA-json annotations.
-        new = saqc.SaQC(DictOfSeries(data), quality, scheme=STAMPLATEScheme())
-        self._qc[new.columns] = new
+    def data_is_modified(self, stream: QcFunctionStream) -> bool:
+        if stream in self._input_data:
+            return not self._qc._data[stream.alias].equals(
+                self._input_data[stream]["data"]
+            )
+        return False
 
-    def get_quality(self) -> dict[str, pd.Series]:
-        # The back translation to STA-compatible json annotations is
-        # done in the STAMPLATEScheme.toExternal .
-        return self._qc.flags  # type: ignore
-
-    def get_data(self) -> dict[str, pd.Series]:
-        return self._qc.data  # type: ignore
+    def index_is_modified(self, stream: QcFunctionStream) -> bool:
+        return not self._qc._data[stream.alias].index.equals(
+            self._input_data[stream]["data"].index
+        )

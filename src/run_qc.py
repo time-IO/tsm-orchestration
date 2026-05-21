@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime
 
 import pandas as pd
 from paho.mqtt.client import MQTTMessage
@@ -12,18 +13,15 @@ from timeio import feta
 from timeio.common import get_envvar, setup_logging
 from timeio.databases import Database, DBapi
 from timeio.errors import (
-    DataNotFoundError,
     ParsingError,
     ProcessingError,
 )
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler
-from timeio.qc import (
-    QcTest,
-    StreamManager,
-    get_qc_functions,
-    get_qc_functions_to_execute,
-)
+
+from timeio.qc.io import read_stream_data, write_qc_data
+from timeio.qc.saqc import SaQCWrapper
+from timeio.qc.qcfunction import get_qc_functions, filter_qc_functions, get_qc_things
 from timeio.typehints import MqttPayload, check_dict_by_TypedDict as _chkmsg
 
 logger = logging.getLogger("run-quality-control")
@@ -49,23 +47,10 @@ class QcHandler(AbstractHandler):
             get_envvar("DB_API_AUTH_TOKEN"),
         )
 
-    def _check_data(self, content, keys: list[str]):
-        for key in keys:
-            if key not in content:
-                raise DataNotFoundError(
-                    "mandatory field '{key}' is not present in data"
-                )
-
     @staticmethod
-    def get_config_from_project(
-        project: feta.Project, config_name: str | None = None
-    ) -> feta.QAQC | None:
-        pass
-
-    @staticmethod
-    def parse_version1(
+    def _parse_message_v1(
         conn, content: dict
-    ) -> tuple[feta.Project, feta.QAQC | None, feta.Thing]:
+    ) -> tuple[feta.Project, list[feta.QAQC] | None, feta.Thing]:
         try:
             content = _chkmsg(content, MqttPayload.DataParsedV1, "v1 message")
         except KeyError as e:
@@ -74,15 +59,15 @@ class QcHandler(AbstractHandler):
         thing_uuid = content["thing_uuid"]
         thing = feta.Thing.from_uuid(thing_uuid, dsn=conn)
         project = thing.project
-        config = project.get_default_qaqc()
-        if config is None:
+        configs = project.get_default_qaqcs()
+        if configs is None:
             logger.info(f"No active QC-Settings found for {project}")
-        return project, config, thing
+        return project, configs, thing
 
     @staticmethod
-    def parse_version2(
+    def _parse_message_v2(
         conn, content: dict
-    ) -> tuple[feta.Project, feta.QAQC | None, None]:
+    ) -> tuple[feta.Project, list[feta.QAQC] | None, None]:
         try:
             content = _chkmsg(content, MqttPayload.DataParsedV2, "v2 message")
         except KeyError as e:
@@ -91,84 +76,93 @@ class QcHandler(AbstractHandler):
         proj_uuid = content["project_uuid"]
         config_name = content["qc_settings_name"]
         project = feta.Project.from_uuid(proj_uuid, dsn=conn)
-        config = (project.get_qaqcs(name=config_name) or [None])[0]
-        if config is None:
+        configs = project.get_qaqcs(name=config_name)
+        if configs is None:
             logger.info(f"No QC-Settings with name {config_name} found in {project}")
-        return project, config, None
+        return project, configs, None
 
-    def act(self, content: dict, message: MQTTMessage):
+    def _parse_message(
+        self, conn, content
+    ) -> tuple[feta.Project, list[feta.QAQC] | None, feta.Thing | None]:
+        version = content.setdefault("version", 1)
+        if version == 1:
+            logger.info(f"QC was triggered by data upload to thing. {content=}")
+            project, config, thing = self._parse_message_v1(conn, content)
 
-        if (version := content.setdefault("version", 1)) not in [1, 2]:
+        elif version == 2:
+            logger.info(f"QC was triggered by user (or scheduled). {content=}")
+            project, config, thing = self._parse_message_v2(conn, content)
+        else:
             raise NotImplementedError(
                 f"data_parsed payload version {version} is not supported yet."
             )
+        return project, config, thing
+
+    def act(self, content: dict, message: MQTTMessage):
+
+        t0 = datetime.now()
 
         self.dbapi.ping_dbapi()
+
         with self.db.connection() as conn:
             logger.debug("successfully connected to configdb")
 
-            if version == 1:
-                logger.info(f"QC was triggered by data upload to thing. {content=}")
-                project, config, thing = self.parse_version1(conn, content)
-
-            else:
-                logger.info(f"QC was triggered by user (or scheduled). {content=}")
-                project, config, thing = self.parse_version2(conn, content)
-
-            if config is None:
+            # get QC settings
+            project, qc_settings, thing = self._parse_message(conn, content)
+            if qc_settings is None:
                 return
+            logger.info(f"Got the following configurations {qc_settings}")
 
-            logger.info(f"Got config %s", config)
+            # get QC functions
+            qc_funcs = get_qc_functions(qc_settings)
+            if not qc_funcs:
+                return
+            if thing is not None:
+                qc_funcs = filter_qc_functions(qc_funcs, thing.id)
+            logger.info(f"COLLECTED TESTS: {qc_funcs}")
 
-            sm = StreamManager(conn)
-            try:
-                tests = get_qc_functions(config)
-                if thing is not None:
-                    get_qc_functions_to_execute(tests, thing.id)
-                logger.info(f"COLLECTED TESTS: {tests}")
+            # load data
+            streams = list(set(sum([f.streams for f in qc_funcs], [])))
+            start_date = pd.Timestamp(content["start_date"])
+            end_date = pd.Timestamp(content["end_date"])
+            data = read_stream_data(self.dbapi, streams, start_date, end_date)
+            for k, v in data.items():
+                if v.empty:
+                    logger.warning(f"no data found for stream: {k}")
 
-                if start_date := content.get("start_date", None):
-                    start_date = pd.Timestamp(start_date)
-                if end_date := content.get("end_date", None):
-                    end_date = pd.Timestamp(end_date)
-            except (NotImplementedError, ValueError, TypeError, ParsingError) as e:
-                msg = f"Parsing QC tests or parsing start/end failed"
-                if thing:
-                    journal.error(f"{msg}, because of {e}", thing.uuid)
-                raise ParsingError(msg) from e
-
-            N = len(tests)
-            for i, test in enumerate(tests, start=1):  # type: QcTest
-                logger.info("Test %s of %s: %s", i, N, test)
+            # execute QC functions
+            N = len(qc_funcs)
+            things = get_qc_things(qc_funcs)
+            qc = SaQCWrapper(data)
+            for i, func in enumerate(qc_funcs, start=1):
+                logger.info("Test %s of %s: %s", i, N, func)
                 try:
-                    stage = "Loading data for"
-                    test.load_data(sm, start_date, end_date)
-                    stage = "Running QC function of"
-                    test.run()
-                    stage = "Storing result of"
-                    sm.update(test.result)
+                    qc.execute(func)
                 except Exception as e:
-                    msg = f"{stage} QC-Test {i} of {N} ({test}) failed"
-                    if thing:
-                        journal.error(f"{msg}, because of {e}", thing.uuid)
+                    msg = f"Executing SaQC function '{func}' failed"
+                    for uuid in things:
+                        journal.error(f"{msg}, because of {e}", uuid)
                     raise ProcessingError(msg) from e
 
-            sm.upload(self.dbapi.base_url, self.dbapi.auth_token)
+            # write data
+            write_qc_data(self.dbapi, qc)
 
-        if thing:
+        # push journal entries
+        config_names = [c.name for c in qc_settings]
+        for uuid in things:
             journal.info(
-                f"Successfully executed QC Setup {config.name}, which was "
-                f"triggered by new data for thing {thing.name} ({thing.uuid})",
-                thing.uuid,
+                f"Successfully executed the following QC Setups: {config_names} "
+                f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds",
+                uuid,
             )
 
-        logger.debug(f"inform downstream services about success of qc.")
+        # push system info
+        logger.debug("inform downstream services about success of qc.")
         payload = json.dumps(
             {
                 "version": 1,
                 "project_uuid": project.uuid,
-                "thing_uuid": thing and thing.uuid,  # uuid if thing is not None
-                "config": config.name,
+                "config": config_names,
             }
         )
         self.mqtt_client.publish(

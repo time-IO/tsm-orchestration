@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import atexit
 import warnings
 from typing import Any, TypedDict
@@ -12,8 +13,9 @@ except ImportError:
 import psycopg
 from psycopg import Connection, sql
 from psycopg.rows import dict_row
-import logging
-from timeio.typehints import JsonObjectT
+import pandas as pd
+
+from timeio.typehints import JsonObjectT, TimestampT
 
 logger = logging.getLogger("feta")
 
@@ -37,9 +39,16 @@ complete[1]) drop-in replacement for classes in thing.py.
 
 class QcStreamT(TypedDict):
     arg_name: str
-    sta_thing_id: int | None
+    sta_thing_id: int
+    mutable: bool
+    position: str
+    schema: str
+    thing_uuid: str
+    context_window: str
     sta_stream_id: int | None
-    alias: str
+    datastream_id: int | None
+    begin_date: TimestampT | None
+    end_date: TimestampT | None
 
 
 class ObjectNotFound(Exception):
@@ -432,7 +441,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     )
 
     # thing.Project interface
-    # uuid and name are already defines above
+    # uuid and name are already defined above
 
     def get_things(self) -> list[Thing]:
         query = f"select * from {self._schema}.thing where project_id = %s"
@@ -442,14 +451,17 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
             for attr in self._fetchall(conn, query, self.id)
         ]
 
-    def get_default_qaqc(self) -> QAQC | None:
+    def get_default_qaqcs(self) -> list[QAQC] | None:
         query = (
             f"select * from {self._schema}.qaqc q "
             f"where q.project_id = %s and q.default = true "
             f"order by q.id desc"
         )
-        if res := self._fetchone(self._conn, query, self.id):
-            return QAQC._from_parent(res, self)
+        if _ := self._fetchall(self._conn, query, self.id):
+            return [
+                QAQC._from_parent(attr, self)
+                for attr in self._fetchall(self._conn, query, self.id)
+            ]
         return None
 
     def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
@@ -555,7 +567,7 @@ class QAQC(Base):
         Project, f"select * from {_schema}.project where id = %s", "project_id"
     )
 
-    def get_tests(self) -> list[QAQCTest]:
+    def get_functions(self) -> list[QAQCTest]:
         query = f"select * from {self._schema}.qaqc_test where qaqc_id = %s"
         conn = self._conn
         return [
@@ -573,8 +585,100 @@ class QAQCTest(Base):
     args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    streams: list[QcStreamT] | None = _prop(lambda self: self._attrs["streams"])
     qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
+
+    @staticmethod
+    def _parse_context_window(window: str | None) -> pd.Timedelta:
+        if window is not None:
+            if isinstance(window, str):
+                window = pd.Timedelta(window)
+                if window.days < 0:
+                    raise ValueError("context window must not be negative.")
+                return window
+            # we used to support integer windows
+            raise ValueError("context window must be a timedelta string")
+        return pd.Timedelta(0)
+
+    def _get_existing_stream(self, stream):
+        tmp1 = self._fetchone(
+            self._conn,
+            """
+            SELECT
+                datasource_id as schema,
+                thing_id as thing_uuid,
+                datastream_id,
+                begin_date,
+                end_date
+            FROM public.sms_datastream_link
+              WHERE device_property_id = %s
+            """,
+            stream["sta_stream_id"],
+        )
+
+        if tmp1 is None:
+            raise ValueError(
+                f"STA Datastream with id {stream['sta_stream_id']} does not exist"
+            )
+
+        tmp2 = self._fetchone(
+            self._conn,
+            f"""
+            SELECT position, mutable FROM {tmp1["schema"]}.datastream where id = %s
+            """,
+            tmp1["datastream_id"],
+        )
+        if tmp2 is None:
+            raise ValueError(
+                f"Failed to query STA datastream {stream['sta_stream_id']}"
+            )
+
+        return tmp1 | tmp2
+
+    def _get_new_stream(self, stream):
+        out = self._fetchone(
+            self._conn,
+            """
+            SELECT DISTINCT
+                l.datasource_id as schema,
+                thing_id as thing_uuid,
+            FROM
+              sms_device_mount_action m
+              JOIN sms_configuration c on c.id = m.configuration_id
+              JOIN sms_datastream_link l on l.device_mount_action_id = m.id
+            WHERE configuration_id = %s
+            """,
+            stream["sta_thing_id"],
+        )
+        if out is None:
+            raise ValueError(
+                f"STA Thing with id {stream['sta_thing_id']} does not exist"
+            )
+        return out | {
+            "position": stream["alias"],
+            "mutable": True,
+            "begin_date": None,
+            "end_date": None,
+        }
+
+    def get_streams(self) -> list[QcStreamT]:
+        out = []
+        for stream in self._attrs["streams"]:
+            stream["sta_stream_id"] = int(stream["sta_stream_id"])
+            stream["sta_thing_id"] = int(stream["sta_thing_id"])
+            if stream["sta_stream_id"] is None:
+                meta = self._get_new_stream(stream)
+            else:
+                meta = self._get_existing_stream(stream)
+            out.append(
+                stream
+                | meta
+                | {
+                    "context_window": self._parse_context_window(
+                        self.qaqc.context_window
+                    )
+                }
+            )
+        return out
 
 
 class S3Store(Base):
