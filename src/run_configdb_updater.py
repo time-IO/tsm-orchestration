@@ -100,8 +100,8 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
     if data.get("mqtt", {}).get("username", None) is None:
         data["mqtt"] = None
     else:
-        # move top level mqtt_device_type to mqtt key
-        data["mqtt"]["mqtt_device_type"] = data["mqtt_device_type"]
+        if not data["mqtt"]["mqtt_device_type"]:
+            data["mqtt"]["mqtt_device_type"] = data["mqtt_device_type"]
 
     # set ext_sftp to None if keys have no relevant values
     if data.get("external_sftp", {}).get("uri", None) is None:
