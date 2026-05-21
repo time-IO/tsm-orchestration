@@ -12,7 +12,31 @@
           />
         </q-item-section>
         <q-item-section>
-          {{ item.name }}
+          <div>{{ item.name }}</div>
+          <div class="text-caption text-grey-6">
+            <template v-if="getAlias(item, 'field').length">
+              Field: {{ getAlias(item, 'field').join(', ') }}
+            </template>
+            <template v-if="getAlias(item, 'target', getAlias(item, 'field')).length">
+              <span class="text-blue-9 q-mx-xs"> | </span>
+              Target: {{ getAlias(item, 'target', getAlias(item, 'field')).join(', ') }}
+            </template>
+            <span
+              v-if="
+                item.quality_control_function_arguments.filter((a) => !isDatastreamType(a)).length >
+                0
+              "
+              class="text-blue-9 q-mx-xs"
+            >
+              |
+            </span>
+            {{
+              item.quality_control_function_arguments
+                .filter((a) => !isDatastreamType(a))
+                .map((a) => `${a.name}: ${a.input.value}`)
+                .join(' | ')
+            }}
+          </div>
         </q-item-section>
         <q-space></q-space>
       </template>
@@ -22,15 +46,6 @@
             <div v-if="isDatastreamType(arg)">
               {{ arg.name }}:
               <sta-datastream-selection-view :selected="arg.input.value" :default-opened="true" />
-            </div>
-            <div v-else>
-              <q-field :label="arg.name" filled stack-label>
-                <template v-slot:control>
-                  <div class="self-center full-width no-outline">
-                    {{ arg.input.value }}
-                  </div>
-                </template>
-              </q-field>
             </div>
           </q-item-section>
         </q-item>
@@ -47,6 +62,7 @@ import type {
   QualityControlFunctionPublic,
   QualityControlFunctionUpdate,
 } from 'src/services/quality_control_setting/types';
+import type { Datastream } from 'src/services/sta/types';
 
 defineProps<{
   removable?: boolean;
@@ -60,6 +76,20 @@ const emit = defineEmits(['remove']);
 
 function removeFunction(index: number | string) {
   emit('remove', index);
+}
+
+function getAlias(
+  item: QualityControlFunctionCreate | QualityControlFunctionPublic | QualityControlFunctionUpdate,
+  name: string,
+  alreadyShown: string[] = [],
+): string[] {
+  const datastreamArg = item.quality_control_function_arguments.find(
+    (a) => isDatastreamType(a) && a.name === name,
+  );
+  if (!datastreamArg) return [];
+  return (datastreamArg.input.value as Datastream[])
+    .map((ds) => ds.alias)
+    .filter((alias): alias is string => alias != null && !alreadyShown.includes(alias));
 }
 </script>
 
