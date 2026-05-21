@@ -36,6 +36,8 @@ complete[1]) drop-in replacement for classes in thing.py.
     don't use/need it anymore.
 """
 
+SCHEMA = "public"
+
 
 class QcStreamT(TypedDict):
     arg_name: str
@@ -382,45 +384,45 @@ class FromUUIDMixin:
 
 
 class IngestType(Base, FromNameMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "ingest_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class FileParserType(Base, FromNameMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "file_parser_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class MQTTDeviceType(Base, FromNameMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "mqtt_device_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class ExtAPIType(Base, FromNameMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "ext_api_type"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
 
 
 class Database(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "database"
     _protected_values = frozenset({"password", "ro_password"})
     id: int = _prop(lambda self: self._attrs["id"])
-    schema: str = _prop(lambda self: self._attrs["schema"])
-    user: str = _prop(lambda self: self._attrs["user"])
+    schema: str = _prop(lambda self: self._attrs["username"])
+    user: str = _prop(lambda self: self._attrs["username"])
     password: str = _prop(lambda self: self._attrs["password"])
-    ro_user: str = _prop(lambda self: self._attrs["ro_user"])
-    ro_password: str = _prop(lambda self: self._attrs["ro_password"])
+    ro_user: str = _prop(lambda self: self._attrs["read_only_user"])
+    ro_password: str = _prop(lambda self: self._attrs["read_only_password"])
     url: str | None = _prop(lambda self: self._attrs["url"])
-    ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
+    # ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
 
     # thing.Datebase interface
     # password url, ro_password, ro_url
@@ -430,14 +432,16 @@ class Database(Base):
 
 
 class Project(Base, FromNameMixin, FromUUIDMixin):
-    _schema = "config_db"
-    _table_name = "project"
+    _schema = SCHEMA
+    _table_name = "permission_group"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
     uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
-    database_id: int = _prop(lambda self: self._attrs["database_id"])
+    entitlement: str = _prop(lambda self: str(self._attrs["entitlement"]))
     database: Database = _create(
-        Database, f"SELECT * FROM {_schema}.database WHERE id = %s", "database_id"
+        Database,
+        f"SELECT * FROM {_schema}.database WHERE permission_group_id = %s",
+        "id",
     )
 
     # thing.Project interface
@@ -480,7 +484,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
 
 class ExtAPI(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "ext_api"
     id: int = _prop(lambda self: self._attrs["id"])
     api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
@@ -499,7 +503,7 @@ class ExtAPI(Base):
 
 
 class ExtSFTP(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "ext_sftp"
     _protected_values = frozenset({"password", "ssh_priv_key"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -523,7 +527,7 @@ class ExtSFTP(Base):
 
 
 class FileParser(Base, FromUUIDMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "file_parser"
     id: int = _prop(lambda self: self._attrs["id"])
     file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
@@ -538,7 +542,7 @@ class FileParser(Base, FromUUIDMixin):
 
 
 class MQTT(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "mqtt"
     _protected_values = frozenset({"password", "password_hashed"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -557,7 +561,7 @@ class MQTT(Base):
 
 
 class QAQC(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "qaqc"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
@@ -577,7 +581,7 @@ class QAQC(Base):
 
 
 class QAQCTest(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "qaqc_test"
     id: int = _prop(lambda self: self._attrs["id"])
     qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
@@ -682,7 +686,7 @@ class QAQCTest(Base):
 
 
 class S3Store(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "s3_store"
     _protected_values = frozenset({"password"})
     id: int = _prop(lambda self: self._attrs["id"])
@@ -705,7 +709,7 @@ class S3Store(Base):
 
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "thing"
     id: int = _prop(lambda self: self._attrs["id"])
     uuid = _prop(lambda self: str(self._attrs["uuid"]))
