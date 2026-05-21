@@ -167,11 +167,15 @@ def migrate_qc(cfgdb_cur, dsm_cur, django_qc):
             r = dict()
             r["name"] = s["arg_name"]
             r["type"] = "datastream"
-            r["input"] = {
-                "value": [
-                    build_sta_input(row["schema"], s["sta_stream_id"], s["alias"])
-                ]
-            }
+            sta_input = build_sta_input(
+                row["schema"],
+                s["sta_stream_id"],
+                s["alias"],
+            )
+
+            if sta_input is None:
+                continue
+            r["input"] = {"value": [sta_input]}
             r["func_id"] = row["qc_func_id"]
             adapt_json_fields(r)
             func_args.append(r)
@@ -198,6 +202,8 @@ def build_sta_input(schema, stream_id, alias):
     stream_resp = requests.get(
         f"{base_url}/Datastreams({stream_id}){filter_ds}{filter_sensor_thing}"
     )
+    if stream_resp.status_code != 200:
+        return None
     stream = stream_resp.json()
     stream["Thing@iot.navigationLink"] = f"{base_url}/Datastreams({stream_id})/Thing"
     stream["Sensor@iot.navigationLink"] = f"{base_url}/Datastreams({stream_id})/Sensor"
