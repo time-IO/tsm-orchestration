@@ -30,7 +30,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
 
         # Only act for "Bento"-Ingests
-        if thing.ingest_type in ("ExtMQTT", "HTTP"):
+        if thing.ingest_type  in ("ExtMQTT", "HTTP"):
             # Prepare Bento stream configuration
             stream_config = self.prepare_stream_config(thing)
             # Create or update the Bento stream
@@ -41,16 +41,14 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         # outsource some logic for HTTP-streams
         path = thing.http.url_for_thing if thing.http.url_for_thing else thing.uuid
-        bento_timestamp = '${!now().ts_format("1_Jan_2006_15:04:05")}'
+        bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
 
         # Create Bento stream configuration
         if ingest_type == "ExtMQTT":
             stream_config = {
                 "input": {
                     "mqtt": {
-                        "urls": [
-                            f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"
-                        ],
+                        "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
                         "client_id": "",
                         "dynamic_client_id_suffix": "",
                         "connect_timeout": "30s",
@@ -59,7 +57,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                             "qos": 0,
                             "retained": False,
                             "topic": "",
-                            "payload": "",
+                            "payload": ""
                         },
                         "user": thing.ext_mqtt.external_mqtt_username,
                         "password": thing.ext_mqtt.external_mqtt_password,
@@ -75,23 +73,29 @@ class CreateThingInBentoHandler(AbstractHandler):
                                     "cert": thing.ext_mqtt.external_mqtt_client_cert,
                                     "key": thing.ext_mqtt.external_mqtt_client_key,
                                 }
-                            ],
+                            ]
                         },
                         "topics": [thing.ext_mqtt.external_mqtt_topic],
                         "qos": 1,
                         "clean_session": True,
-                        "auto_replay_nacks": True,
+                        "auto_replay_nacks": True
                     }
                 },
-                "pipeline": {"processors": [{"bloblang": "root = content()"}]},
+                "pipeline": {
+                    "processors": [
+                        {
+                            "bloblang": "root = content()"
+                        }
+                    ]
+                },
                 "output": {
                     "mqtt": {
                         "urls": ["mqtt-broker:1883"],
                         "user": thing.mqtt.user,
                         "password": thing.mqtt.password,
-                        "topic": f"mqtt_ingest/{thing.mqtt.user}",
+                        "topic": f"mqtt_ingest/{thing.mqtt.user}"
                     }
-                },
+                }
             }
 
         elif ingest_type == "HTTP":
@@ -103,11 +107,19 @@ class CreateThingInBentoHandler(AbstractHandler):
                         "ws_path": f"/http-ingest/{path}/ws",
                         "allowed_verbs": ["POST"],
                         "timeout": "5s",
-                        "rate_limit": "",
+                        "rate_limit": ""
                     }
                 },
-                "buffer": {"type": "none"},
-                "pipeline": {"processors": [{"mapping": "root = content()"}]},
+                "buffer": {
+                    "type": "none"
+                },
+                "pipeline": {
+                    "processors": [
+                        {
+                            "mapping": "root = content()"
+                        }
+                    ]
+                },
                 "output": {
                     "aws_s3": {
                         "bucket": f"{thing.s3_store.bucket}",
@@ -117,10 +129,10 @@ class CreateThingInBentoHandler(AbstractHandler):
                         "region": "",
                         "credentials": {
                             "id": f"{thing.s3_store.user}",  # ideally inject via env/config
-                            "secret": f"{thing.s3_store.password}",
-                        },
+                            "secret": f"{thing.s3_store.password}"
+                        }
                     }
-                },
+                }
             }
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
@@ -137,22 +149,23 @@ class CreateThingInBentoHandler(AbstractHandler):
             if response.status_code == 200:
                 # Stream exists, update it
                 logger.info(f"Updating existing stream: {thing.uuid}")
-                response = requests.put(url, json=stream_config, timeout=30)
+                response = requests.put(url,
+                                        json=stream_config,
+                                        timeout=30)
             else:
                 # Stream doesn't exist, create it
                 logger.info(f"Creating new stream: {thing.uuid}")
-                response = requests.post(url, json=stream_config, timeout=30)
+                response = requests.post(url,
+                                         json=stream_config,
+                                         timeout=30)
 
             if response.ok:
                 logger.info(f"Successfully configured stream: {thing.uuid}")
             else:
-                logger.error(
-                    f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}"
-                )
+                logger.error(f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}")
 
         except Exception as e:
             logger.error(f"Error configuring Bento stream: {e}")
-
 
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
