@@ -703,19 +703,33 @@ class S3Store(Base):
     username = user
     bucket_name = bucket
 
+
 class ExtMQTT(Base):
     _schema = "config_db"
     _table_name = "ext_mqtt"
     id: int = _prop(lambda self: self._attrs["id"])
-    external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
+    external_mqtt_address: str = _prop(
+        lambda self: self._attrs["external_mqtt_address"]
+    )
     external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
-    external_mqtt_username: str = _prop(lambda self: self._attrs["external_mqtt_username"])
-    external_mqtt_password: str = _prop(lambda self: self._attrs["external_mqtt_password"])
-    external_mqtt_ca_cert: str = _prop(lambda self: self._attrs["external_mqtt_ca_cert"])
-    external_mqtt_client_cert: str = _prop(lambda self: self._attrs["external_mqtt_client_cert"])
-    external_mqtt_client_key: str = _prop(lambda self: self._attrs["external_mqtt_client_key"])
+    external_mqtt_username: str = _prop(
+        lambda self: self._attrs["external_mqtt_username"]
+    )
+    external_mqtt_password: str = _prop(
+        lambda self: self._attrs["external_mqtt_password"]
+    )
+    external_mqtt_ca_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_ca_cert"]
+    )
+    external_mqtt_client_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_cert"]
+    )
+    external_mqtt_client_key: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_key"]
+    )
     external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
+
 
 class HTTP(Base):
     _schema = "config_db"
@@ -724,6 +738,7 @@ class HTTP(Base):
     url_for_thing: str = _prop(lambda self: self._attrs["url_for_thing"])
     file_type: str = _prop(lambda self: self._attrs["file_type"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
+
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _schema = "config_db"
@@ -738,13 +753,15 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_mqtt_id: int | None = _prop(lambda self: self._attrs["ext_mqtt_id"])
     ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
     ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
-    http_id:int | None = _prop(lambda self: self._attrs["http_id"])
+    http_id: int | None = _prop(lambda self: self._attrs["http_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
     project: Project = _create(Project, f"select * from {_schema}.project where id = %s", "project_id")  # fmt: skip
     ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
     s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.s3_store where id = %s", "s3_store_id")  # fmt: skip
     mqtt: MQTT = _create(MQTT, f"select * from {_schema}.mqtt where id = %s", "mqtt_id")  # fmt: skip
-    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "ext_mqtt_id")
+    ext_mqtt: ExtMQTT | None = _create(
+        ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "ext_mqtt_id"
+    )
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
     http: HTTP = _create(HTTP, f"select * from {_schema}.http where id = %s", "http_id")  # fmt: skip
