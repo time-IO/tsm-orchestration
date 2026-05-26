@@ -106,7 +106,9 @@ def publish_trigger_quality_control(
     )
 
 
-def publish_trigger_ext_api(ingest_uuid, date_from, date_to, topic="sync_ext_apis"):
+def publish_trigger_ext_api(
+    ingest_uuid, date_from, date_to, topic="sync_ext_apis_triggered"
+):
     msg = create_sync_ext_api_msg(ingest_uuid, date_from, date_to)
     publish_message(
         msg,
