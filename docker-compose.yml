@@ -134,7 +134,7 @@ services:
     volumes:
       - "api-data:/var/lib/postgresql/data/"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U db_dev" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${API_DB_POSTGRES_USER:-postgres}" ]
       interval: 10s
       timeout: 5s
       retries: 10
