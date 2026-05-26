@@ -44,8 +44,29 @@
         <q-item v-for="(arg, j) in item.quality_control_function_arguments" :key="`${i}-${j}`">
           <q-item-section>
             <div v-if="isDatastreamType(arg)">
-              {{ arg.name }}:
-              <sta-datastream-selection-view :selected="arg.input.value" :default-opened="true" />
+              <div class="row items-center justify-between q-mb-xs">
+                <span>{{ arg.name }}:</span>
+                <q-btn
+                  v-if="removable"
+                  flat
+                  dense
+                  icon="add"
+                  label="Add Datastream"
+                  size="sm"
+                  @click.stop="
+                    () => {
+                      console.log('btn clicked', i, j);
+                      onAddDatastream(i, j);
+                    }
+                  "
+                />
+              </div>
+              <sta-datastream-selection-view
+                :selected="arg.input.value"
+                :default-opened="true"
+                :removable="removable === true"
+                @remove="removeDatastream(i, j, $event)"
+              />
             </div>
           </q-item-section>
         </q-item>
@@ -72,7 +93,7 @@ defineProps<{
     | QualityControlFunctionUpdate[];
 }>();
 
-const emit = defineEmits(['remove']);
+const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream']);
 
 function removeFunction(index: number | string) {
   emit('remove', index);
@@ -90,6 +111,14 @@ function getAlias(
   return (datastreamArg.input.value as Datastream[])
     .map((ds) => ds.alias)
     .filter((alias): alias is string => alias != null && !alreadyShown.includes(alias));
+}
+
+function removeDatastream(funcIndex: number, argIndex: number, datastream: Datastream) {
+  emit('remove-datastream', { funcIndex, argIndex, datastream });
+}
+
+function onAddDatastream(funcIndex: number, argIndex: number) {
+  emit('add-datastream', { funcIndex, argIndex });
 }
 </script>
 

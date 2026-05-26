@@ -67,22 +67,22 @@ const data = [
   {
     name: 'sftp',
     icon: 'folder_copy',
-    label: 'SFTP',
-    description: 'some description for sftp',
+    label: 'SFTP/S3',
+    description: 'Create a new S3 bucket with SFTP endpoint and parser.',
     path: '/ingest/new/sftp',
   },
   {
     name: 'ext_sftp',
     icon: 'folder_special',
     label: 'External SFTP',
-    description: 'some description for ext_sftp',
+    description: 'Sync external SFTP folders into a new S3 bucket with a fitting file format and parser',
     path: '/ingest/new/external-sftp',
   },
   {
     name: 'mqtt',
     icon: 'wifi_tethering',
     label: 'MQTT',
-    description: 'some description for mqtt',
+    description: 'Create an ingest topic on the time.IO MQTT broker with a fitting MQTT parser.',
     path: '/ingest/new/mqtt',
   },
 ];
@@ -91,7 +91,7 @@ const externalAPis = {
   name: 'ext_api',
   icon: 'control_camera',
   label: 'External API',
-  description: 'some description for sftp',
+  description: 'Create a schedule and access credentials for requesting a registered external API.',
   options: [
     { name: 'bosch', label: 'Bosch IoT', path: '/ingest/new/external-api/bosch' },
     { name: 'dwd', label: 'Deutscher Wetterdienst', path: '/ingest/new/external-api/dwd' },

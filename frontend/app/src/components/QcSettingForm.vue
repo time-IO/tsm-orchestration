@@ -54,7 +54,9 @@
         title="SaQC Functions"
       >
         <q-form>
-          <q-btn class="q-mb-lg" @click="openFunctionsDialog">Add Function</q-btn>
+          <div class="row justify-end q-mb-lg">
+            <q-btn @click="openFunctionsDialog">Add Function</q-btn>
+          </div>
           <component
             :is="currentFunctionFormComponent"
             v-if="currentFunctionFormComponent && formData.permission_group_id"
@@ -66,9 +68,11 @@
         <div class="row">
           <div class="col-12">
             <qc-function-arg-list-view
-              removable
+              :removable="true"
               :quality_control_functions="formData.quality_control_functions!"
               @remove="removeFunction"
+              @remove-datastream="handleRemoveDatastream"
+              @add-datastream="handleAddDatastream"
             />
           </div>
         </div>
@@ -99,7 +103,10 @@
               @click="openSubmitDialog"
               :loading="isLoading"
               :disable="
-                !formData.permission_group_id || formData.quality_control_functions!.length == 0 || selectedFunctionName !== null
+                !formData.permission_group_id ||
+                formData.quality_control_functions!.length == 0 ||
+                selectedFunctionName !== null ||
+                !hasValidDatastreams
               "
             />
           </div>
@@ -126,6 +133,14 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <sta-datastream-selection-dialog
+      v-if="formData.permission_group_id"
+      v-model="addDatastreamDialog"
+      :permission_group_id="formData.permission_group_id!"
+      :initial-selection="currentArgSelection"
+      @apply-selection="handleApplyDatastreamSelection"
+    />
   </q-page>
 </template>
 
@@ -134,8 +149,10 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import { QForm } from 'quasar';
 import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
 import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
+import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
 import { computed, type Ref, ref } from 'vue';
 import type {
+  QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
   QualityControlSettingCreate,
   QualityControlSettingUpdate,
@@ -146,6 +163,8 @@ import {
   type QcFunctionName,
 } from 'src/utils/quality_control_function_utils';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { Datastream } from 'src/services/sta/types';
+import { isDatastreamType } from 'src/utils/quality_control_utils';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
   default: {
@@ -172,6 +191,9 @@ const functionDialog = ref(false);
 const submitDialog = ref(false);
 const qcBaseForm = ref() as Ref<QForm>;
 const selectedFunctionName = ref<string | null>(null);
+const addDatastreamDialog = ref(false);
+const addDatastreamFuncIndex = ref<number>(0);
+const addDatastreamArgIndex = ref<number>(0);
 
 const currentFunctionFormComponent = computed(() => {
   if (selectedFunctionName.value) {
@@ -179,6 +201,45 @@ const currentFunctionFormComponent = computed(() => {
   }
   return null;
 });
+
+const currentArgSelection = computed(() => {
+  const functions = formData.value.quality_control_functions as QualityControlFunctionCreate[];
+  const func = functions[addDatastreamFuncIndex.value];
+  if (!func) return [];
+  const arg = func.quality_control_function_arguments[addDatastreamArgIndex.value];
+  if (!arg) return [];
+  return arg.input.value as Datastream[];
+});
+
+const hasValidDatastreams = computed(() => {
+  return formData.value.quality_control_functions!.every((func) => {
+    const field = func.quality_control_function_arguments.find(
+      (a) => isDatastreamType(a) && a.name === 'field',
+    );
+    const target = func.quality_control_function_arguments.find(
+      (a) => isDatastreamType(a) && a.name === 'target',
+    );
+    const fieldOk = field ? (field.input.value as Datastream[]).length > 0 : true;
+    const targetOk = target ? (target.input.value as Datastream[]).length > 0 : true;
+    return fieldOk && targetOk;
+  });
+});
+
+function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
+  addDatastreamFuncIndex.value = funcIndex;
+  addDatastreamArgIndex.value = argIndex;
+  addDatastreamDialog.value = true;
+}
+
+function handleApplyDatastreamSelection(selection: Datastream[]) {
+  const functions = formData.value.quality_control_functions as QualityControlFunctionCreate[];
+  const func = functions[addDatastreamFuncIndex.value];
+  if (!func) return;
+  const arg = func.quality_control_function_arguments[addDatastreamArgIndex.value];
+  if (!arg) return;
+  arg.input.value = selection;
+  addDatastreamDialog.value = false;
+}
 
 function validateBaseFormAndGoToNextStep() {
   if (qcBaseForm.value !== null) {
@@ -203,9 +264,34 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     name: selectedFunctionName.value,
     quality_control_function_arguments: submittedData,
   });
-
-  //reset
   selectedFunctionName.value = null;
+}
+
+function removeDatastream(funcIndex: number, argIndex: number, datastream: Datastream) {
+  const functions = formData.value.quality_control_functions as QualityControlFunctionCreate[];
+  const func = functions[funcIndex];
+  if (!func) return;
+  const args = func.quality_control_function_arguments;
+  const arg = args[argIndex];
+  if (!arg) return;
+  (arg.input.value as Datastream[]) = (arg.input.value as Datastream[]).filter((ds) =>
+    ds['@iot.id'] !== null
+      ? ds['@iot.id'] !== datastream['@iot.id']
+      : ds.name !== datastream.name || ds.Thing?.name !== datastream.Thing?.name,
+  );
+}
+
+function handleRemoveDatastream({
+  funcIndex,
+  argIndex,
+  datastream,
+}: {
+  funcIndex: number;
+  argIndex: number;
+  datastream: Datastream;
+}) {
+  removeDatastream(funcIndex, argIndex, datastream);
+  //reset
 }
 
 function selectFunction(item: FunctionOption) {

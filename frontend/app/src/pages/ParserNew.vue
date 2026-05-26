@@ -36,7 +36,7 @@ const data = [
     name: 'csv',
     icon: 'folder_copy',
     label: 'CSV',
-    description: 'some description for csv',
+    description: 'A parser for tabular text data using the python pandas library.',
     path: '/parser/new/csv',
   },
 ];

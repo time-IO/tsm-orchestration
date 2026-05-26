@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" backdrop-filter="blur(4px) saturate(150%)" persistent>
+  <q-dialog v-model="showDialog" backdrop-filter="blur(4px) saturate(150%)" @keydown.esc="showDialog = false">
 
     <q-card class="column"
   style="width: 90vw;  height: 80vh">
@@ -20,6 +20,8 @@
             clickable
             v-ripple
             @click="emitSelectFunction(item)"
+            @keydown.enter="emitSelectFunction(item)"
+            tabindex="0"
           >
             <q-item-section>
               <q-item-label class="text-weight-medium">

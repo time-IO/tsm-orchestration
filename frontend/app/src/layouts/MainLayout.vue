@@ -48,12 +48,64 @@
           <q-item-section class="text-uppercase" data-cy="SidebarMenu_ItemLabel">
             {{ item.name }}
           </q-item-section>
+          <q-item-section v-if="item.addRoute || item.addOptions" side>
+            <div
+              class="relative-position"
+              @mouseenter="item.addOptions ? openMenu(item.name) : undefined"
+              @mouseleave="item.addOptions ? scheduleClose() : undefined"
+            >
+              <q-btn
+                flat
+                round
+                dense
+                icon="add"
+                size="xs"
+                color="grey-6"
+                :title="'Add ' + item.name"
+                @click.prevent.stop="item.addRoute ? router.push(item.addRoute) : undefined"
+              />
+              <q-menu
+                v-if="item.addOptions"
+                :model-value="hoveredMenuName === item.name"
+                no-parent-event
+                no-focus
+                anchor="bottom left"
+                self="top left"
+                transition-show="fade"
+                transition-hide="fade"
+                :transition-duration="120"
+                @update:model-value="(val: boolean) => { if (!val) closeMenu() }"
+                @mouseenter="cancelClose()"
+                @mouseleave="scheduleClose()"
+              >
+                <q-list dense style="min-width: 220px">
+                  <template v-for="(opt, i) in item.addOptions" :key="i">
+                    <template v-if="'separator' in opt">
+                      <q-separator />
+                      <q-item-label v-if="opt.label" header class="text-grey-6" style="font-size: 0.7rem; padding: 4px 16px">
+                        {{ opt.label }}
+                      </q-item-label>
+                    </template>
+                    <q-item
+                      v-else
+                      clickable
+                      @click="router.push(opt.route); closeMenu()"
+                    >
+                      <q-item-section>{{ opt.label }}</q-item-section>
+                    </q-item>
+                  </template>
+                </q-list>
+              </q-menu>
+            </div>
+          </q-item-section>
         </q-item>
       </q-list>
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <div :class="{ 'page-width-constrained': route.meta.constrainWidth }">
+        <router-view />
+      </div>
     </q-page-container>
     <the-footer />
   </q-layout>
@@ -63,7 +115,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/authStore';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
 import TheFooter from 'components/TheFooter.vue';
 
@@ -72,6 +124,7 @@ const leftDrawerOpen = ref(false);
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const $q = useQuasar();
 
 const handleLogin = async () => {
@@ -105,21 +158,55 @@ const handleLogout = async () => {
   }
 };
 
-const topNavigation = [
+interface NavOptionItem {
+  label: string;
+  route: string;
+}
+interface NavSeparatorItem {
+  separator: true;
+  label?: string;
+}
+interface NavEntry {
+  name: string;
+  route: string;
+  icon: string;
+  addRoute?: string;
+  addOptions?: Array<NavOptionItem | NavSeparatorItem>;
+}
+
+const topNavigation: NavEntry[] = [
   {
     name: 'Ingest',
     route: '/ingest',
     icon: 'input',
+    addRoute: '/ingest/new',
+    addOptions: [
+      { label: 'SFTP/S3', route: '/ingest/new/sftp' },
+      { label: 'External SFTP', route: '/ingest/new/external-sftp' },
+      { label: 'MQTT', route: '/ingest/new/mqtt' },
+      { separator: true, label: 'External API' },
+      { label: 'Bosch IoT', route: '/ingest/new/external-api/bosch' },
+      { label: 'Deutscher Wetterdienst', route: '/ingest/new/external-api/dwd' },
+      { label: 'Neutron Monitor', route: '/ingest/new/external-api/nm' },
+      { label: 'TSystems', route: '/ingest/new/external-api/tsystems' },
+      { label: 'The Things Network', route: '/ingest/new/external-api/ttn' },
+      { label: 'Umweltbundesamt (UBA)', route: '/ingest/new/external-api/uba' },
+    ],
   },
   {
     name: 'Parser',
     route: '/parser',
     icon: 'difference',
+    addRoute: '/parser/new',
+    addOptions: [
+      { label: 'CSV', route: '/parser/new/csv' },
+    ],
   },
   {
     name: 'Quality Control',
     route: '/quality-control',
     icon: 'verified',
+    addRoute: '/quality-control/new',
   },
   {
     name: 'Trigger External Api',
@@ -128,7 +215,43 @@ const topNavigation = [
   },
 ];
 
+const hoveredMenuName = ref<string | null>(null);
+let closeTimer: ReturnType<typeof setTimeout> | null = null;
+let openTimer: ReturnType<typeof setTimeout> | null = null;
+
+function openMenu(name: string) {
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+  if (openTimer) return; // already scheduled
+  openTimer = setTimeout(() => {
+    hoveredMenuName.value = name;
+    openTimer = null;
+  }, 500);
+}
+
+function scheduleClose() {
+  if (openTimer) { clearTimeout(openTimer); openTimer = null; }
+  closeTimer = setTimeout(() => {
+    hoveredMenuName.value = null;
+    closeTimer = null;
+  }, 150);
+}
+
+function cancelClose() {
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+}
+
+function closeMenu() {
+  hoveredMenuName.value = null;
+}
+
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 </script>
+
+<style scoped>
+.page-width-constrained {
+  max-width: 1200px;
+  width: 100%;
+}
+</style>

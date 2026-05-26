@@ -38,6 +38,7 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -186,6 +187,7 @@ import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSyst
 import type { IngestExternalApiTSystemsPublic } from 'src/services/ingest_external_api_tsystems/types';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
+import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
