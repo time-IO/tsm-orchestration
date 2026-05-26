@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" persistent maximized>
+  <q-dialog v-model="showDialog" maximized @keydown.esc="showDialog = false" @keydown.enter="applySelection">
     <q-card class="q-pa-lg q-ma-md" style="max-width: 95vw; height: 90vh">
       <div class="q-mb-md">
         <div class="text-h5">Select Datastreams</div>
@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import StaThingSelection from 'components/StaThingSelection.vue';
 import StaDatastreamSearchTable from 'components/StaDatastreamSearchTable.vue';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import type {
   QuasarPaginationInterface,
   StaDatastream,
@@ -75,7 +75,7 @@ import StaDatastreamSelectionView from 'components/StaDatastreamSelectionView.vu
 import type { Datastream } from 'src/services/sta/types';
 
 import StaTemporaryDatastreamTable from 'components/StaTemporaryDatastreamTable.vue';
-import type{ AxiosError } from 'axios';
+import type { AxiosError } from 'axios';
 
 const staStore = useStaStore();
 const $q = useQuasar();
@@ -90,7 +90,7 @@ const showDialog = defineModel<boolean>({ default: false });
 const showCreateDialog = ref(false);
 const loading = ref(false);
 
-const { initialSelection, permission_group_id } = defineProps<{
+const props = defineProps<{
   permission_group_id: number;
   initialSelection?: Datastream[];
 }>();
@@ -99,16 +99,23 @@ const emit = defineEmits<{
   (e: 'apply-selection', selection: Datastream[]): void;
 }>();
 
-onMounted(async () => {
-  if (initialSelection && Array.isArray(initialSelection)) {
-    const sta = initialSelection.filter((d): d is StaDatastream => d['@iot.id'] !== null);
-    const tmp = initialSelection.filter((d): d is TemporaryDatastream => d['@iot.id'] === null);
-    selectedSta.value = sta;
-
-    for (const entry of tmp) {
-      onAddTemporary(entry);
+watch(
+  () => props.initialSelection,
+  (newSelection) => {
+    if (newSelection && Array.isArray(newSelection)) {
+      const sta = newSelection.filter((d): d is StaDatastream => d['@iot.id'] !== null);
+      const tmp = newSelection.filter((d): d is TemporaryDatastream => d['@iot.id'] === null);
+      selectedSta.value = sta;
+      selectedCreated.value = [];
+      for (const entry of tmp) {
+        onAddTemporary(entry);
+      }
     }
-  }
+  },
+  { immediate: true },
+);
+
+onMounted(async () => {
   await loadData();
 });
 
@@ -176,7 +183,7 @@ async function loadData() {
   };
 
   try {
-    const response = await staStore.dispatchFetchDatastreams(permission_group_id, requestParams);
+    const response = await staStore.dispatchFetchDatastreams(props.permission_group_id, requestParams);
     staRows.value = response.value;
 
     const total = response['@iot.count'] ?? response.value.length;

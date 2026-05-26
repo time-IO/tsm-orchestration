@@ -48,7 +48,7 @@
         2. Unacceptable Use
       </h6>
       <p>The following uses of the Services are strictly forbidden and may result in IP blocking when doing so:</p>
-      <p>
+
         <ul>
           <li>
             heavy use of the Services by an application or individual person; examples of heavy use include: using our
@@ -61,11 +61,9 @@
           <li>bulk downloading, unless explicitly permitted (see next paragraph I. (3))</li>
           <li>attempting to circumvent administrative authorisations and security mechanisms.</li>
         </ul>
-      </p>
       <p>
         Furthermore, the following conditions must be complied with when using the Services:
       </p>
-      <p>
         <ul>
           <li>no uploading of private content;</li>
           <li>no uploading of illegal content;</li>
@@ -75,7 +73,6 @@
             respective home institution will be notified. The institution will then decide on any necessary legal action.
           </li>
         </ul>
-      </p>
 
       <h6 class="q-mb-sm">
         3. Bulk Downloading
@@ -85,13 +82,11 @@
         may be possible if you ask the system administrators for permission to do so. The following additional rules
         apply to those bulk downloads:
       </p>
-      <p>
         <ul>
           <li>limit your request to a single thread;</li>
           <li>request from one machine only, no distributed scripts (e.g. a cluster or cloud service)</li>
           <li>results must be cached on your side, so clients repeatedly sending the same request may be blocked.</li>
         </ul>
-      </p>
     </section>
     <section class="mb-6">
       <h5 class="q-mb-sm">

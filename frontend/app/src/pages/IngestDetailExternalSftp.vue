@@ -37,6 +37,7 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -192,6 +193,7 @@ import { useQuasar } from 'quasar';
 import type { IngestExternalSftpPublic } from 'src/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 import CopyBtn from 'components/CopyBtn.vue';
+import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();

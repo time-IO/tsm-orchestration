@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" style="width: 90%">
+  <q-dialog v-model="showDialog" style="width: 90%" @keydown.esc="showDialog = false" @keydown.enter="triggerQCIfValid">
     <q-card class="q-pa-sm">
       <q-card-section>
         <div class="row q-mb-md">
@@ -33,7 +33,7 @@
         <q-btn
           label="Synchronise"
           :disable="!beginDateIsAfterEndDate"
-          @click="triggerExtApi"
+          @click="triggerQC"
           color="primary"
         >
           <q-tooltip v-if="!beginDateIsAfterEndDate"> End date must be after begin date </q-tooltip>
@@ -67,7 +67,7 @@ const beginDateIsAfterEndDate = computed(() => {
 
 const emit = defineEmits(['success']);
 
-async function triggerExtApi() {
+async function triggerQC() {
   if (ids_to_trigger.length === 0) return;
 
   const data: TriggerQCSBase = {
@@ -91,6 +91,12 @@ async function triggerExtApi() {
     });
   } finally {
     showDialog.value = false;
+  }
+}
+
+function triggerQCIfValid() {
+  if (beginDateIsAfterEndDate.value) {
+    void triggerQC();
   }
 }
 </script>

@@ -38,6 +38,7 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -159,6 +160,7 @@ import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import type { IngestExternalApiDwdPublic } from 'src/services/ingest_external_api_dwd/types';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
+import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -204,6 +206,7 @@ const copyRoute = computed(() => {
   }
   return '';
 });
+
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();

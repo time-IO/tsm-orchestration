@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="showDialog" style="width: 90%" backdrop-filter="blur(4px) saturate(150%)">
+  <q-dialog v-model="showDialog" style="width: 90%" backdrop-filter="blur(4px) saturate(150%)" @keydown.esc="showDialog = false" @keydown.enter="triggerExtApiIfValid">
     <q-card class="q-pa-sm">
       <q-card-section>
         <div class="row q-mb-md">
@@ -91,6 +91,12 @@ async function triggerExtApi() {
     });
   } finally {
     showDialog.value = false;
+  }
+}
+
+function triggerExtApiIfValid() {
+  if (beginDateIsAfterEndDate.value) {
+    void triggerExtApi();
   }
 }
 </script>
