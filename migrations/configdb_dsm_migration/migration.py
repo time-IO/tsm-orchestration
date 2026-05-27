@@ -72,16 +72,18 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
             row["parser_id"] = parser_id
             dsm_cur.execute(queries.INSERT_PARSER_DETAILED, row)
             dsm_cur.execute(queries.INSERT_PARSER_CSV, row)
-            if timestamp_columns:
-                for ts in timestamp_columns:
-                    dsm_cur.execute(
-                        queries.INSERT_PARSER_TS_COLUMNS,
-                        {
-                            "parser_csv_id": parser_id,
-                            "column": ts["column"],
-                            "timestamp_format": ts["format"],
-                        },
-                    )
+            csv_row = dsm_cur.fetchone()
+            if csv_row:
+                if timestamp_columns:
+                    for ts in timestamp_columns:
+                        dsm_cur.execute(
+                            queries.INSERT_PARSER_TS_COLUMNS,
+                            {
+                                "parser_csv_id": parser_id,
+                                "column": ts["column"],
+                                "timestamp_format": ts["format"],
+                            },
+                        )
 
 
 def migrate_ingests(cfgdb_cur, dsm_cur, django_things):

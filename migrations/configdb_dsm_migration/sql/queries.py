@@ -56,6 +56,7 @@ INSERT_PARSER_CSV = """
     VALUES 
         (%(parser_id)s, %(delimiter)s, %(timezone)s, %(encoding)s, %(skiprows)s, %(skipfooter)s, %(pandas_read_csv)s, %(comment)s, %(header)s)
     ON CONFLICT ("parser_id") DO NOTHING
+    RETURNING parser_id
 """
 
 INSERT_PARSER_TS_COLUMNS = """
