@@ -12,13 +12,13 @@ SELECT_PROJECT_AND_DB = """
 """
 
 INSERT_PROJECT = """
-    INSERT INTO public.permission_group ("name", uuid, entitlement)
+    INSERT INTO dsm_db.permission_group ("name", uuid, entitlement)
     VALUES (%(project_name)s, %(project_uuid)s, %(entitlement)s)
     RETURNING id
 """
 
 INSERT_DB = """
-    INSERT INTO public.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url")
+    INSERT INTO dsm_db.database (permission_group_id, "username", "password", read_only_username, read_only_password, "url")
     VALUES (%(project_id)s, %(user)s, %(password)s, %(ro_user)s, %(ro_password)s, %(url)s)
 """
 
@@ -36,14 +36,14 @@ GET_PARSER = """
 """
 
 INSERT_PARSER = """
-    INSERT INTO public.parser (uuid, parser_type) VALUES (%(parser_uuid)s, 'csv')
+    INSERT INTO dsm_db.parser (uuid, parser_type) VALUES (%(parser_uuid)s, 'csv')
     ON CONFLICT (uuid) 
     DO UPDATE SET
         parser_type = EXCLUDED.parser_type
     RETURNING id
 """
 INSERT_PARSER_DETAILED = """
-    INSERT INTO public.parser_detailed 
+    INSERT INTO dsm_db.parser_detailed 
         (parser_id, permission_group_id, "name")
         VALUES (%(parser_id)s, %(project_id)s, %(name)s)
         ON CONFLICT (parser_id) DO NOTHING
@@ -51,7 +51,7 @@ INSERT_PARSER_DETAILED = """
 
 
 INSERT_PARSER_CSV = """
-    INSERT INTO public.parser_csv 
+    INSERT INTO dsm_db.parser_csv 
         (parser_id, delimiter, timezone, encoding, headlines_to_exclude, footlines_to_exclude, pandas_read_csv, comment, header)
     VALUES 
         (%(parser_id)s, %(delimiter)s, %(timezone)s, %(encoding)s, %(skiprows)s, %(skipfooter)s, %(pandas_read_csv)s, %(comment)s, %(header)s)
@@ -59,7 +59,7 @@ INSERT_PARSER_CSV = """
 """
 
 INSERT_PARSER_TS_COLUMNS = """
-    INSERT INTO public.parser_csv_timestamp_column
+    INSERT INTO dsm_db.parser_csv_timestamp_column
         (parser_csv_id, "column", timestamp_format)
     VALUES
         (%(parser_csv_id)s, %(column)s, %(timestamp_format)s)
@@ -114,51 +114,51 @@ SELECT_THING_AND_INGEST = """
                                     """
 
 INSERT_INGEST = """
-    INSERT INTO public.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
+    INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
     VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s)
     RETURNING id        
 """
 
 INSERT_INGEST_SFTP = """
-    INSERT INTO public.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name)
+    INSERT INTO dsm_db.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name)
     VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s)
 """
 
 INSERT_INGEST_EXT_SFTP = """
-    INSERT INTO public.ingest_external_sftp
+    INSERT INTO dsm_db.ingest_external_sftp
         (ingest_id, uri, "path", filename_pattern, username, "password", sync_interval_in_minutes, sync_enabled, ssh_private_key, ssh_public_key, bucket_name, bucket_username, bucket_password)
     VALUES
          (%(ingest_id)s, %(es_uri)s, %(es_path)s, %(s3_filename_pattern)s, %(es_user)s, %(es_password)s, %(es_sync_interval)s, %(es_sync_enabled)s, %(es_ssh_priv_key)s, %(es_ssh_pub_key)s ,%(s3_bucket)s, %(s3_user)s, %(s3_password)s)
 """
 
 INSERT_INGEST_EXT_API = """
-    INSERT INTO public.ingest_external_api (ingest_id, api_type, sync_enabled, sync_interval_in_minutes)
+    INSERT INTO dsm_db.ingest_external_api (ingest_id, api_type, sync_enabled, sync_interval_in_minutes)
     VALUES  (%(ingest_id)s, %(ea_type_name)s, %(ea_sync_enabled)s, %(ea_sync_interval)s)
 """
 
 INSERT_INGEST_TTN_API = """
-    INSERT INTO public.ingest_external_api_the_things_network (ingest_id, api_key, endpoint_uri)
+    INSERT INTO dsm_db.ingest_external_api_the_things_network (ingest_id, api_key, endpoint_uri)
     VALUES (%(ingest_id)s, %(ttn_api_key)s, %(ttn_uri)s)
 """
 
 INSERT_INGEST_DWD_API = """
-    INSERT INTO public.ingest_external_api_dwd (ingest_id, station_id, period_in_minutes)
+    INSERT INTO dsm_db.ingest_external_api_dwd (ingest_id, station_id, period_in_minutes)
     VALUES (%(ingest_id)s, %(dwd_station_id)s, %(dwd_period)s)
 """
 
 INSERT_INGEST_UBA_API = """
-    INSERT INTO public.ingest_external_api_uba (ingest_id, station_id)
+    INSERT INTO dsm_db.ingest_external_api_uba (ingest_id, station_id)
     VALUES (%(ingest_id)s, %(uba_station_id)s)
 """
 
 INSERT_INGEST_TSYSTEMS_API = """
-    INSERT INTO public.ingest_external_api_tsystems
+    INSERT INTO dsm_db.ingest_external_api_tsystems
         (ingest_id, "group", station_id, tsystems_username, tsystems_password)
     VALUES (%(ingest_id)s, %(tsystems_group)s, %(tsystems_station)s, %(tsystems_username)s, %(tsystems_password)s)
 """
 
 INSERT_INGEST_BOSCH_API = """
-    INSERT INTO public.ingest_external_api_bosch
+    INSERT INTO dsm_db.ingest_external_api_bosch
         (ingest_id, endpoint, sensor_id, bosch_username, bosch_password, period_in_minutes)
     VALUES
         (%(ingest_id)s, %(bosch_endpoint)s, %(bosch_sensor)s, %(bosch_user)s, %(bosch_password)s, %(bosch_period)s)
@@ -174,7 +174,7 @@ SELECT_QAQC = """
 """
 
 INSERT_QC_SETTINGS = """
-    INSERT INTO public.quality_control_setting
+    INSERT INTO dsm_db.quality_control_setting
         (permission_group_id, "name", context_window, is_active, "uuid")
     VALUES 
         (%(project_id)s, %(qc_name)s, %(context_window)s, %(default)s, %(qc_uuid)s)
@@ -186,14 +186,14 @@ INSERT_QC_SETTINGS = """
 """
 
 INSERT_QC_FUNCTION = """
-    INSERT INTO public.quality_control_function
+    INSERT INTO dsm_db.quality_control_function
         (quality_control_setting_id, "name")
     VALUES (%(qc_setting_id)s, %(function)s)
     RETURNING id
 """
 
 INSERT_QC_FUNC_ARGS = """
-    INSERT INTO public.quality_control_function_argument
+    INSERT INTO dsm_db.quality_control_function_argument
         (quality_control_function_id, "name", "type", "input")
     VALUES
        (%(func_id)s, %(name)s, %(type)s, %(input)s)
