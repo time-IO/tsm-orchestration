@@ -38,25 +38,16 @@
     <div id="section-links">
         <ul id="link-card-list">
             <!-- remove list item when frontend switch is complete -->
-            <li class="link-card-wrapper draggable" id="draggable-card" draggable="true" style="animation-duration: .4s;">
+            <li class="link-card-wrapper" style="animation-duration: .4s;">
                 <a href="frontend/tsm">
                     <div class="link-card">
-                        <div class="link-card-header">thing management</div>
-                        <div class="link-card-text">Set up and manage things, data ingests, and quality checks</div>
-                        <div class="link-card-arrow">&nearr;</div>
-                    </div>
-                </a>
-            </li>
-            <!-- remove hidden classes when frontend switch is complete -->
-            <li class="link-card-wrapper hidden" id="hidden-card" style="animation-duration: .4s;">
-                <a href="data-source-management">
-                    <div class="link-card">
                         <div class="link-card-header">data source management</div>
-                        <div class="link-card-text">Set up and manage data sources and processing</div>
+                        <div class="link-card-text">Set up and manage data ingests and processing</div>
                         <div class="link-card-arrow">&nearr;</div>
                     </div>
                 </a>
             </li>
+
             <li class="link-card-wrapper" style="animation-duration: .5s;">
                 <a href="object-storage/login">
                     <div class="link-card">
@@ -96,24 +87,6 @@
     </div>
 </div>
 
-<!-- delete script when frontend switch is complete -->
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const draggableCard = document.getElementById("draggable-card");
-        const hiddenCard = document.getElementById("hidden-card");
-
-        draggableCard.addEventListener("dragstart", () => {
-            draggableCard.classList.add("dragging");
-            setTimeout(() => {
-                draggableCard.style.display = "none";
-                hiddenCard.style.display = "block";
-                hiddenCard.classList.add("sparkle-border");
-                hiddenCard.style.opacity = "1";
-                hiddenCard.style.animationDuration = "1s";
-            }, 200)
-        });
-    });
-</script>
 </body>
 
 </html>
