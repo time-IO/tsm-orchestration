@@ -31,9 +31,8 @@ class User(SQLModel, table=True):
     is_active: bool = True
     is_superuser: bool = False
 
-    created_at: datetime = Field(
+    created_at: datetime | None = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False,
     )
 
     permission_groups: list["PermissionGroup"] = Relationship(

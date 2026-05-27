@@ -5,7 +5,7 @@ from .parser import Parser, ParserRead
 
 
 class ParserDetailedRead(ParserRead):
-    created_at: datetime
+    created_at: Optional[datetime]
     name: str
     permission_group_id: int
     description: Optional[str]
@@ -44,7 +44,9 @@ class ParserDetailed(SQLModel, table=True):
         ondelete="CASCADE",
     )
     permission_group_id: int = Field(foreign_key="permission_group.id")
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     created_by_id: Optional[int] = None
     name: str
     description: Optional[str] = None

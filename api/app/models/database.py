@@ -10,7 +10,7 @@ class Database(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     permission_group_id: int = Field(foreign_key="permission_group.id", unique=True)
-    name: str
+    name: str | None
     username: str
     password: str = Field(sa_column=Column("password", EncryptedType, nullable=False))
     read_only_username: str
