@@ -101,7 +101,9 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
         data["mqtt"] = None
     else:
         # keep nested value if present, else fallback to top-level field
-        data["mqtt"]["mqtt_device_type"] = data["mqtt"].get("mqtt_device_type", data.get("mqtt_device_type"))
+        data["mqtt"]["mqtt_device_type"] = data["mqtt"].get(
+            "mqtt_device_type", data.get("mqtt_device_type")
+        )
 
     # set ext_sftp to None if keys have no relevant values
     if data.get("external_sftp", {}).get("uri", None) is None:
