@@ -22,7 +22,7 @@ def get_django_qc(django_cur):
 
 
 def get_existing_dsm_projects(dsm_cur):
-    dsm_cur.execute("SELECT id, uuid from public.permission_group")
+    dsm_cur.execute("SELECT id, uuid from dsm_db.permission_group")
     projects = dsm_cur.fetchall()
     projects = {p["uuid"]: p["id"] for p in projects}
 
@@ -33,7 +33,7 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
     cfgdb_cur.execute(queries.SELECT_PROJECT_AND_DB)
     rows = cfgdb_cur.fetchall()
 
-    dsm_cur.execute("SELECT uuid FROM public.permission_group")
+    dsm_cur.execute("SELECT uuid FROM dsm_db.permission_group")
     existing_projects = {r["uuid"] for r in dsm_cur.fetchall()}
 
     for row in rows:
@@ -86,7 +86,7 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
 
 def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
     projects = get_existing_dsm_projects(dsm_cur)
-    dsm_cur.execute("SELECT id, uuid from public.parser")
+    dsm_cur.execute("SELECT id, uuid from dsm_db.parser")
     parser = dsm_cur.fetchall()
     parser = {p["uuid"]: p["id"] for p in parser}
     cfgdb_cur.execute(queries.SELECT_THING_AND_INGEST)
