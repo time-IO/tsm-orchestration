@@ -8,7 +8,7 @@ from .permission_group import PermissionGroup
 class IngestRead(SQLModel):
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime
+    created_at: Optional[datetime]
     ingest_type: str
     name: str
     permission_group_id: int
@@ -22,7 +22,7 @@ class IngestRead(SQLModel):
 class IngestWithApiInfoRead(SQLModel):
     id: int
     uuid: uuid_pkg.UUID
-    created_at: datetime
+    created_at: Optional[datetime]
     ingest_type: str
     name: str
     permission_group_id: int
@@ -68,7 +68,9 @@ class Ingest(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, unique=True, index=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     ingest_type: str = Field(
         description="type used for inheritance", index=True
     )  # e.g., "mqtt", "sftp", "external_api"

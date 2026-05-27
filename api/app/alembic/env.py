@@ -4,6 +4,7 @@ from alembic import context
 from alembic.config import Config
 from alembic.operations.ops import MigrationScript
 from sqlmodel import SQLModel
+from encryption import EncryptedType
 
 from config import settings
 from dependencies import engine
@@ -27,6 +28,14 @@ target_metadata = SQLModel.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def my_compare_type(
+    context, inspected_column, metadata_column, inspected_type, metadata_type
+):
+    if isinstance(metadata_type, EncryptedType):
+        return False  # Always treat as "equal"
+    return None  # Compare everything else normally
 
 
 def run_migrations_offline() -> None:
@@ -66,7 +75,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            compare_type=True,
+            compare_type=my_compare_type,
         )
 
         with context.begin_transaction():

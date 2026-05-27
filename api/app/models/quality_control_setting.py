@@ -103,7 +103,7 @@ class QualityControlSettingPublic(QualityControlSettingBase):
     id: int
     uuid: uuid_pkg.UUID
     created_by_id: int | None = None
-    created_at: datetime
+    created_at: datetime | None = None
     quality_control_functions: list[QualityControlFunctionPublic]
     permission_group: "PermissionGroup"
 
@@ -121,9 +121,11 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4)
+    uuid: uuid_pkg.UUID = Field(default_factory=uuid_pkg.uuid4, unique=True)
     created_by_id: int | None = Field(foreign_key="user.id", nullable=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     quality_control_functions: list[QualityControlFunction] = Relationship(
         back_populates="quality_control_setting", cascade_delete=True
     )

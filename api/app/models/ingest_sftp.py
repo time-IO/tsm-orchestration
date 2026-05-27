@@ -34,7 +34,7 @@ class IngestSftp(SQLModel, table=True):
     username: str
     password: str = Field(sa_column=Column("password", EncryptedType, nullable=False))
     bucket_name: str
-    fileserver_uri: str
+    fileserver_uri: str | None
 
     ingest: Ingest = Relationship(back_populates="sftp_detail")
 
