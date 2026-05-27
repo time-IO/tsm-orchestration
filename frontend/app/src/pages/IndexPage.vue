@@ -161,6 +161,19 @@
                 </div>
               </q-card-section>
             </q-card>
+
+            <div v-if="!authStore.isAuthenticated" class="row justify-center q-mt-md q-mb-xl">
+              <q-btn
+                unelevated
+                no-caps
+                icon="login"
+                label="Login"
+                color="light-blue-8"
+                text-color="white"
+                size="lg"
+                @click="authStore.login()"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -173,6 +186,9 @@ import { onMounted, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useUsageStatisticsStore } from 'src/stores/usageStatisticsStore';
 import { publicAsset } from 'src/utils/public_asset';
+import { useAuthStore } from 'src/stores/authStore';
+
+const authStore = useAuthStore();
 
 const heroImageSrc = publicAsset('images/_DCS9774_8bit-JPEG 3000px.jpg');
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN_white.png');
