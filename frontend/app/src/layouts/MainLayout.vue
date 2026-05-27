@@ -2,7 +2,15 @@
   <q-layout view="lHh lpR lff">
     <q-header elevated>
       <q-toolbar class="bg-blue-grey-5 text-white">
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn
+          v-if="authStore.isAuthenticated"
+          flat
+          dense
+          round
+          icon="menu"
+          aria-label="Menu"
+          @click="toggleLeftDrawer"
+        />
 
         <q-toolbar-title>{{ t('appname') }}</q-toolbar-title>
 
@@ -30,7 +38,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
+    <q-drawer v-if="authStore.isAuthenticated" v-model="leftDrawerOpen" show-if-above bordered>
       <q-item to="/">
         <q-item-section avatar>
           <q-icon name="home" size="xs" />
@@ -48,7 +56,7 @@
           <q-item-section class="text-uppercase" data-cy="SidebarMenu_ItemLabel">
             {{ item.name }}
           </q-item-section>
-          <q-item-section v-if="item.addRoute || item.addOptions" side>
+          <q-item-section v-if="(item.addRoute || item.addOptions) && authStore.isAuthenticated" side>
             <div
               class="relative-position"
               @mouseenter="item.addOptions ? openMenu(item.name) : undefined"
