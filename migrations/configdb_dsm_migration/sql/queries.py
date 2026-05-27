@@ -126,7 +126,7 @@ INSERT_INGEST_SFTP = """
 
 INSERT_INGEST_EXT_SFTP = """
     INSERT INTO dsm_db.ingest_external_sftp
-        (ingest_id, uri, "path", filename_pattern, username, "password", sync_interval_in_minutes, sync_enabled, ssh_private_key, ssh_dsm_db_key, bucket_name, bucket_username, bucket_password)
+        (ingest_id, uri, "path", filename_pattern, username, "password", sync_interval_in_minutes, sync_enabled, ssh_private_key, ssh_public_key, bucket_name, bucket_username, bucket_password)
     VALUES
          (%(ingest_id)s, %(es_uri)s, %(es_path)s, %(s3_filename_pattern)s, %(es_user)s, %(es_password)s, %(es_sync_interval)s, %(es_sync_enabled)s, %(es_ssh_priv_key)s, %(es_ssh_pub_key)s ,%(s3_bucket)s, %(s3_user)s, %(s3_password)s)
 """
