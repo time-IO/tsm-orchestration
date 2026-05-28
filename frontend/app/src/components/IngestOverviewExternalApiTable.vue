@@ -2,7 +2,7 @@
   <q-table
     ref="tableRef"
     :rows="rows"
-    :columns="default_ingest_external_api_columns"
+    :columns="props.columns"
     :loading="loading"
     row-key="id"
     flat
@@ -21,8 +21,9 @@
 import { onMounted, ref } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { default_ingest_external_api_columns } from 'src/utils/pagination_utils';
+import type {QTableColumn} from 'quasar';
 
-defineProps({
+const props = defineProps({
   rows: {
     type: Array,
     required: true,
@@ -31,12 +32,19 @@ defineProps({
     type: Boolean,
     required: true,
   },
+  columns: {
+    type: Array as () => QTableColumn[],
+    default: () => default_ingest_external_api_columns
+  }
 });
 
 const pagination = defineModel<QTableRequestPropPagination>('pagination');
 
 const emit = defineEmits(['onRequest', 'delete']);
 const tableRef = ref();
+
+
+
 
 onMounted(() => {
   // get initial data from server (1st page)

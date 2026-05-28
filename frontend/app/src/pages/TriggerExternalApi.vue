@@ -27,6 +27,7 @@
       :loading="store.loading"
       :rows="store.rows"
       :pagination="pagination"
+      :columns="columns"
       selection="multiple"
       @onRequest="store.onRequest"
     />
@@ -45,6 +46,7 @@ import { useIngestExternalApiStore } from 'stores/ingestExternalApiStore';
 import type { IngestExternalApiRead } from 'src/services/ingest_external_api/types';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import IngestOverviewExternalApiFilter from 'components/IngestOverviewExternalApiFilter.vue';
+import { default_ingest_external_api_columns } from 'src/utils/pagination_utils';
 
 const store = useIngestExternalApiStore();
 
@@ -63,6 +65,17 @@ const pagination = computed({
   get: () => store.pagination,
   set: (val) => store.setPagination(val),
 });
+
+const columns = computed(() =>
+  default_ingest_external_api_columns.filter(
+    col => col.name !== 'action'
+  )
+    .map(col => ({
+      ...col,
+      align: 'left' as const
+    }))
+)
+
 </script>
 
 <style scoped></style>

@@ -11,12 +11,30 @@
     @request="onRequest"
     v-bind="$attrs"
   >
+    <template v-slot:header="props">
+      <q-tr :props="props">
+        <q-th
+          v-for="col in props.cols"
+          :key="col.name"
+          :props="props"
+          :class="col.name === 'action' ? 'text-center' : 'text-left'"
+        >
+          {{ col.label }}
+        </q-th>
+      </q-tr>
+    </template>
+
     <template v-slot:loading>
       <q-inner-loading showing color="primary" />
     </template>
     <template v-slot:body="props">
       <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-        <q-td v-for="col in props.cols" :key="col.name" :props="props">
+        <q-td
+          v-for="col in props.cols"
+          :key="col.name"
+          :props="props"
+          :class="col.name === 'action' ? 'text-center' : 'text-left'"
+        >
           <template v-if="col.name === 'action'">
             <q-btn
               :to="`${generateParserPath(props.row)}`"
