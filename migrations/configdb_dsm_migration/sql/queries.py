@@ -1,3 +1,13 @@
+SELECT_DJANGO_THINGS = """
+    SELECT
+        tt.thing_id,
+        MIN(l.action_time) AS created_at
+    FROM tsm_frontend.django_admin_log l
+    JOIN tsm_frontend.tsm_thing tt
+        ON tt.id::text = l.object_id
+    GROUP BY tt.thing_id
+"""
+
 SELECT_PROJECT_AND_DB = """
     SELECT p."name"     AS "project_name",
         p.uuid          AS "project_uuid",
@@ -56,6 +66,7 @@ INSERT_PARSER_CSV = """
     VALUES 
         (%(parser_id)s, %(delimiter)s, %(timezone)s, %(encoding)s, %(skiprows)s, %(skipfooter)s, %(pandas_read_csv)s, %(comment)s, %(header)s)
     ON CONFLICT ("parser_id") DO NOTHING
+    RETURNING parser_id
 """
 
 INSERT_PARSER_TS_COLUMNS = """
@@ -111,17 +122,18 @@ SELECT_THING_AND_INGEST = """
                                              LEFT JOIN config_db.mqtt_device_type mdt on mdt.id = m.mqtt_device_type_id
                                              left join config_db.file_parser fp on fp.id = s3.file_parser_id 
                                              left join config_db.ext_api_type eat on eat.id = ea.api_type_id
+                                    where it."name" <> 'mqtt'
                                     """
 
 INSERT_INGEST = """
-    INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
-    VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s)
+    INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id, created_at)
+    VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s, %(created_at)s)
     RETURNING id        
 """
 
 INSERT_INGEST_SFTP = """
-    INSERT INTO dsm_db.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name)
-    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s)
+    INSERT INTO dsm_db.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name, fileserver_uri)
+    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, 'sftp://tsm.intranet.ufz.de:40022')
 """
 
 INSERT_INGEST_EXT_SFTP = """
