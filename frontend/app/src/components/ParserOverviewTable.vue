@@ -73,9 +73,16 @@
               <q-tooltip>Delete parser</q-tooltip>
             </q-btn>
           </template>
+
           <template v-else>
-            {{ col.value }}
+            <span v-if="col.value !== null && col.value !== undefined && col.value !== ''" >
+              {{ col.value }}
+            </span>
+            <span v-else class="text-grey-6">
+              N/A
+            </span>
           </template>
+
         </q-td>
       </q-tr>
     </template>
