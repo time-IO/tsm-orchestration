@@ -819,7 +819,7 @@ class S3Store(Base):
     bucket_name = bucket
 
 
-class Thing(Base, FromNameMixin, FromUUIDMixin):
+class ThingOld(Base, FromNameMixin, FromUUIDMixin):
     _schema = SCHEMA
     _table_name = "thing"
     id: int = _prop(lambda self: self._attrs["id"])
