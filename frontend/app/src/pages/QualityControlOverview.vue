@@ -39,6 +39,24 @@
       selection="multiple"
       v-model:selected="selection"
     >
+      <template v-slot:header="props">
+        <q-tr :props="props">
+          <!-- Selection / Checkbox Header -->
+          <q-th auto-width>
+            <q-checkbox v-model="props.selected" :indeterminate="props.selected === null" />
+          </q-th>
+
+          <q-th
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="col.name === 'action' ? 'text-center' : 'text-left'"
+          >
+            {{ col.label }}
+          </q-th>
+        </q-tr>
+      </template>
+
       <template v-slot:loading>
         <q-inner-loading showing color="primary" />
       </template>
@@ -47,7 +65,12 @@
           <q-td auto-width>
             <q-checkbox v-model="props.selected" />
           </q-td>
-          <q-td v-for="col in props.cols" :key="col.name" :props="props">
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="col.name === 'action' ? 'text-center' : 'text-left'"
+          >
             <template v-if="col.name === 'action'">
               <q-btn
                 :to="`${basePath}/${props.row.id}`"
