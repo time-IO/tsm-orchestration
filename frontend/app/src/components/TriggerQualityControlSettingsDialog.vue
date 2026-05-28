@@ -1,5 +1,10 @@
 <template>
-  <q-dialog v-model="showDialog" style="width: 90%" @keydown.esc="showDialog = false" @keydown.enter="triggerQCIfValid">
+  <q-dialog
+    v-model="showDialog"
+    style="width: 90%"
+    @keydown.esc="showDialog = false"
+    @keydown.enter="triggerQCIfValid"
+  >
     <q-card class="q-pa-sm">
       <q-card-section>
         <div class="row q-mb-md">
@@ -30,13 +35,8 @@
       <q-card-actions>
         <q-btn label="Cancel" @click="showDialog = false" color="grey" unelevated />
         <q-space />
-        <q-btn
-          label="Synchronise"
-          :disable="!beginDateIsAfterEndDate"
-          @click="triggerQC"
-          color="primary"
-        >
-          <q-tooltip v-if="!beginDateIsAfterEndDate"> End date must be after begin date </q-tooltip>
+        <q-btn label="Synchronise" :disable="!!validationError" @click="triggerQC" color="primary">
+          <q-tooltip v-if="validationError">{{ validationError }}</q-tooltip>
         </q-btn>
       </q-card-actions>
     </q-card>
@@ -48,7 +48,7 @@ import DateTimePicker from 'components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerQCSBase } from 'src/services/quality_control_settings_trigger/types';
 import { useTriggerQCSStore } from 'stores/qualityControlSettingsTriggerStore';
-import { useQuasar } from 'quasar';
+import { date, useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 const { ids_to_trigger } = defineProps<{
@@ -67,8 +67,33 @@ const beginDateIsAfterEndDate = computed(() => {
 
 const emit = defineEmits(['success']);
 
+const validationError = computed(() => {
+  if (!isValidDate(beginDate.value) || !isValidDate(endDate.value))
+    return 'Date has an invalid format (YYYY-MM-DD HH:MM:SS).';
+  if (new Date(beginDate.value) >= new Date(endDate.value))
+    return 'End date must be after begin date.';
+  return null;
+});
+
+const dateFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+const dateTimeFormat = 'YYYY-MM-DD HH:mm:ss';
+
+function isValidDate(value: string): boolean {
+  if (!dateFormat.test(value)) return false;
+  const parsed = date.extractDate(value, dateTimeFormat);
+  return !Number.isNaN(parsed.getTime()) && date.formatDate(parsed, dateTimeFormat) === value;
+}
+
 async function triggerQC() {
   if (ids_to_trigger.length === 0) return;
+
+  if (!isValidDate(beginDate.value) || !isValidDate(endDate.value)) {
+    $q.notify({
+      type: 'negative',
+      position: 'top',
+      message: 'Please provide valid dates in the format YYYY-MM-DD HH:MM:SS.',
+    });
+  }
 
   const data: TriggerQCSBase = {
     quality_control_setting_ids: ids_to_trigger,
