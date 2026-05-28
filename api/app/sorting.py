@@ -28,6 +28,9 @@ def apply_sort_list(items: list, sort_param: Optional[str]) -> list:
     reverse = order == "desc"
     return sorted(
         items,
-        key=lambda item: getattr(item, field_name, ""),
+        key=lambda item: (
+            getattr(item, field_name, None) is None,
+            getattr(item, field_name, None),
+        ),
         reverse=reverse,
     )
