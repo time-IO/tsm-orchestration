@@ -8,10 +8,10 @@ from sql import queries
 
 
 def get_django_things(django_cur):
-    django_cur.execute("SELECT thing_id FROM tsm_frontend.tsm_thing")
+    django_cur.execute(queries.SELECT_DJANGO_THINGS)
     rows = django_cur.fetchall()
 
-    return {r["thing_id"] for r in rows}
+    return {r["thing_id"]: r["created_at"] for r in rows}
 
 
 def get_django_qc(django_cur):
@@ -72,16 +72,18 @@ def migrate_parsers(cfgdb_cur, dsm_cur, django_things):
             row["parser_id"] = parser_id
             dsm_cur.execute(queries.INSERT_PARSER_DETAILED, row)
             dsm_cur.execute(queries.INSERT_PARSER_CSV, row)
-            if timestamp_columns:
-                for ts in timestamp_columns:
-                    dsm_cur.execute(
-                        queries.INSERT_PARSER_TS_COLUMNS,
-                        {
-                            "parser_csv_id": parser_id,
-                            "column": ts["column"],
-                            "timestamp_format": ts["format"],
-                        },
-                    )
+            csv_row = dsm_cur.fetchone()
+            if csv_row:
+                if timestamp_columns:
+                    for ts in timestamp_columns:
+                        dsm_cur.execute(
+                            queries.INSERT_PARSER_TS_COLUMNS,
+                            {
+                                "parser_csv_id": parser_id,
+                                "column": ts["column"],
+                                "timestamp_format": ts["format"],
+                            },
+                        )
 
 
 def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
@@ -94,6 +96,7 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
     for row in rows:
         if row["thing_uuid"] not in django_things:
             continue
+        row["created_at"] = django_things[row["thing_uuid"]]
         row["project_id"] = projects[row["project_uuid"]]
         file_parser_uuid = row["file_parser_uuid"]
         row["parser_id"] = (
@@ -243,7 +246,7 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
 
 if __name__ == "__main__":
     cfgdb_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    dsm_dsn = "postgresql://postgres:postgres@localhost:5432/db_dev"
+    dsm_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     django_dsn = "postgresql://frontenddb:frontenddb@localhost:5432/postgres"
 
     cfgdb_conn = psycopg.connect(cfgdb_dsn, row_factory=dict_row)
