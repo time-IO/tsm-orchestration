@@ -133,7 +133,7 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) last_obs ON true
 WHERE c.is_public AND d.is_public AND dsl.datasource_id = '{tsm_schema}'
-GROUP BY dsl.datastream_id, device_property_id, last_obs.result_time,  c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
+GROUP BY dsl.datastream_id, device_property_id, c.label, d.short_name, dp.property_name, dma.offset_z, dp.aggregation_type_name, dsl.aggregation_period,
 	dp.unit_name, dp.unit_uri, d.id, dp.id, cv_agg.definition, dp.aggregation_type_uri, cv_u.provenance, cv_u.term, dp.resolution, cv_ur.provenance,
 	dp.resolution_unit_name, dp.resolution_unit_uri, dp.accuracy, cv_ua.provenance, dp.accuracy_unit_name, dp.accuracy_unit_uri, dp.measuring_range_min,
 	dp.measuring_range_max, cv_l.term, cv_l.provenance_uri, cv_l.definition, c.id, dma.id, dma.label, dma.begin_description, dma.begin_date, dma.offset_x,
