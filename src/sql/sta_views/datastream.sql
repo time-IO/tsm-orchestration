@@ -32,6 +32,8 @@ SELECT
 	) as "UNIT_OF_MEASUREMENT",
     public.ST_GeomFromText('POLYGON EMPTY') as "OBSERVED_AREA",
 
+	min(dsl.begin_date)  AS "RESULT_TIME_START",
+    max(last_obs.result_time) AS "RESULT_TIME_END",
 	min(dsl.begin_date) AS "PHENOMENON_TIME_START",
     max(last_obs.result_time) AS "PHENOMENON_TIME_END",
 
