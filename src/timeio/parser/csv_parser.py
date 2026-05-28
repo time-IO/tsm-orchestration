@@ -210,7 +210,14 @@ class CsvParser(PandasParser):
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
             try:
-                df.index = df.index.tz_localize(tz_info)
+                if df.index.tz is None:
+                    df.index = df.index.tz_localize(tz_info)
+                else:
+                    journal.info(
+                        f"Timestamps are already timezone aware, converting '{df.index.tz}' -> '{tz_info}'",
+                        thing_uuid,
+                    )
+                    df.index = df.index.tz_convert(tz_info)
             except TypeError:
                 raise ParsingError(
                     f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."
