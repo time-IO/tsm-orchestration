@@ -122,6 +122,7 @@ SELECT_THING_AND_INGEST = """
                                              LEFT JOIN config_db.mqtt_device_type mdt on mdt.id = m.mqtt_device_type_id
                                              left join config_db.file_parser fp on fp.id = s3.file_parser_id 
                                              left join config_db.ext_api_type eat on eat.id = ea.api_type_id
+                                    where it."name" <> 'mqtt'
                                     """
 
 INSERT_INGEST = """
