@@ -245,7 +245,7 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
 
 if __name__ == "__main__":
     cfgdb_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
-    dsm_dsn = "postgresql://postgres:postgres@localhost:5432/db_dev"
+    dsm_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     django_dsn = "postgresql://frontenddb:frontenddb@localhost:5432/postgres"
 
     cfgdb_conn = psycopg.connect(cfgdb_dsn, row_factory=dict_row)
