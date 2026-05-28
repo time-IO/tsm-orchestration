@@ -1,3 +1,13 @@
+SELECT_DJANGO_THINGS = """
+    SELECT
+        tt.thing_id,
+        MIN(l.action_time) AS created_at
+    FROM tsm_frontend.django_admin_log l
+    JOIN tsm_frontend.tsm_thing tt
+        ON tt.id::text = l.object_id
+    GROUP BY tt.thing_id
+"""
+
 SELECT_PROJECT_AND_DB = """
     SELECT p."name"     AS "project_name",
         p.uuid          AS "project_uuid",
@@ -115,8 +125,8 @@ SELECT_THING_AND_INGEST = """
                                     """
 
 INSERT_INGEST = """
-    INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id)
-    VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s)
+    INSERT INTO dsm_db.ingest ("uuid", ingest_type, "name", permission_group_id, description, parser_id, created_at)
+    VALUES (%(thing_uuid)s, %(ingest_type_name)s, %(thing_name)s, %(project_id)s, %(thing_descriptiopn)s, %(parser_id)s, %(created_at)s)
     RETURNING id        
 """
 

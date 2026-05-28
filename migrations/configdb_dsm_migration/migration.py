@@ -8,10 +8,10 @@ from sql import queries
 
 
 def get_django_things(django_cur):
-    django_cur.execute("SELECT thing_id FROM tsm_frontend.tsm_thing")
+    django_cur.execute(queries.SELECT_DJANGO_THINGS)
     rows = django_cur.fetchall()
 
-    return {r["thing_id"] for r in rows}
+    return {r["thing_id"]: r["created_at"] for r in rows}
 
 
 def get_django_qc(django_cur):
@@ -96,6 +96,7 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
     for row in rows:
         if row["thing_uuid"] not in django_things:
             continue
+        row["created_at"] = django_things[row["thing_uuid"]]
         row["project_id"] = projects[row["project_uuid"]]
         file_parser_uuid = row["file_parser_uuid"]
         row["parser_id"] = (
