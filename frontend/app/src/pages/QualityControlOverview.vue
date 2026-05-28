@@ -179,7 +179,7 @@ const columns: QTableColumn[] = [
     sortable: true,
   },
   {
-    name: 'permission-group',
+    name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
     sortable: true,
