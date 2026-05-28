@@ -302,7 +302,7 @@ def test_tz(settings, rawdata, expected_index):
     assert df.index.equals(expected_index)
 
 
-def test_double_tz_error():
+def test_tz_conversion():
     settings = {
         "decimal": ".",
         "delimiter": ",",
@@ -312,12 +312,9 @@ def test_double_tz_error():
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
         "timezone": "Europe/Berlin",
     }
-    paser = CsvParser(settings)
-    with pytest.raises(
-        ParsingError,
-        match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
-    ):
-        paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+    assert str(df.index.tz) == "Europe/Berlin"
 
 
 RAWDATA_SKIP_WITH_HEADER = """Skipline
