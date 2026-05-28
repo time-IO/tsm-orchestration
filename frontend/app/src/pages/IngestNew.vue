@@ -8,9 +8,9 @@
     </div>
 
     <div class="row">
-      <div class="col-3 q-pa-sm" v-for="item in data" :key="item.name">
+      <div class="col-12 col-sm-6 col-lg-3 q-pa-sm" v-for="item in data" :key="item.name">
         <q-card>
-          <q-item>
+          <q-item style="min-height: 96px; align-items: center">
             <q-item-section avatar>
               <q-avatar :icon="item.icon" />
             </q-item-section>
@@ -29,9 +29,9 @@
         </q-card>
       </div>
 
-      <div class="col-3 q-pa-sm">
+      <div class="col-12 col-sm-6 col-lg-3 q-pa-sm">
         <q-card>
-          <q-item>
+          <q-item style="min-height: 96px; align-items: center">
             <q-item-section avatar>
               <q-avatar :icon="externalAPis.icon" />
             </q-item-section>
@@ -75,7 +75,8 @@ const data = [
     name: 'ext_sftp',
     icon: 'folder_special',
     label: 'External SFTP',
-    description: 'Sync external SFTP folders into a new S3 bucket with a fitting file format and parser',
+    description:
+      'Sync external SFTP folders into a new S3 bucket with a fitting file format and parser',
     path: '/ingest/new/external-sftp',
   },
   {

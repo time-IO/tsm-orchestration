@@ -39,13 +39,13 @@ export const default_ingest_columns: QTableColumn[] = [
       if (!val) return '';
       switch (val) {
         case 'external_api':
-          return 'External Api';
+          return 'External API';
         case 'sftp':
-          return 'Sftp';
+          return 'SFTP';
         case 'mqtt':
-          return 'Mqtt';
+          return 'MQTT';
         case 'external_sftp':
-          return 'External Sftp';
+          return 'External SFTP';
         default:
           return 'Type not defined';
       }
