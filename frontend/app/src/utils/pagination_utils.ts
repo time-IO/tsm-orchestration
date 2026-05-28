@@ -22,7 +22,7 @@ export const default_ingest_columns: QTableColumn[] = [
     sortable: true,
   },
   {
-    name: 'permission-group',
+    name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
     sortable: true,
@@ -79,7 +79,7 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
     sortable: true,
   },
   {
-    name: 'permission-group',
+    name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
     sortable: true,
@@ -142,7 +142,7 @@ export const default_parser_columns: QTableColumn[] = [
     sortable: true,
   },
   {
-    name: 'permission-group',
+    name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
     sortable: true,
