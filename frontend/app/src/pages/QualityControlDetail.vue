@@ -77,8 +77,20 @@
 
           <q-tab-panel name="functions">
             <q-card-section>
+              <div class="row items-center justify-end q-mb-sm">
+                <q-btn
+                  flat
+                  dense
+                  size="sm"
+                  :icon="expandAllFunctions ? 'unfold_less' : 'unfold_more'"
+                  :label="expandAllFunctions ? 'collapse all' : 'expand all'"
+                  @click="expandAllFunctions = !expandAllFunctions"
+                  class="text-grey-7"
+                />
+              </div>
               <qc-function-arg-list-view
                 :quality_control_functions="item.quality_control_functions"
+                :expand-all="expandAllFunctions"
               />
             </q-card-section>
           </q-tab-panel>
@@ -202,6 +214,8 @@ const deleteItem = async () => {
     deleteDialog.value = false;
   }
 };
+
+const expandAllFunctions = ref(false);
 </script>
 
 <style scoped></style>

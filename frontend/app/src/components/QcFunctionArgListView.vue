@@ -1,6 +1,10 @@
 <template>
   <q-list bordered separator class="rounded-borders">
-    <q-expansion-item v-for="(item, i) in quality_control_functions" :key="i">
+    <q-expansion-item
+      v-for="(item, i) in quality_control_functions"
+      :key="i"
+      :model-value="expandAll ?? false"
+    >
       <template #header>
         <q-item-section side>
           <q-icon
@@ -87,6 +91,7 @@ import type { Datastream } from 'src/services/sta/types';
 
 defineProps<{
   removable?: boolean;
+  expandAll?: boolean;
   quality_control_functions:
     | QualityControlFunctionCreate[]
     | QualityControlFunctionPublic[]
