@@ -32,6 +32,11 @@ class CreateMqttUserHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+
+        if not thing.mqtt:
+            logger.info(f"Thing {thing.name} has no MQTT configuration. Skipping.")
+            return
+
         user = thing.mqtt.user
         pw = thing.mqtt.password_hashed
 
