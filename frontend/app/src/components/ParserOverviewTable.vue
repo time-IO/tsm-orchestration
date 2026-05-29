@@ -52,7 +52,7 @@
               color="secondary"
               icon="edit"
             >
-              <q-tooltip>Edit parser</q-tooltip>
+              <q-tooltip>Edit</q-tooltip>
             </q-btn>
             <q-btn
               :to="`${generateParserPath(props.row)}/copy`"
@@ -61,7 +61,7 @@
               color="black"
               icon="content_copy"
             >
-              <q-tooltip>Edit parser</q-tooltip>
+              <q-tooltip>Copy</q-tooltip>
             </q-btn>
             <q-btn
               flat
@@ -70,7 +70,7 @@
               icon="delete"
               @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
             >
-              <q-tooltip>Delete parser</q-tooltip>
+              <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </template>
 

@@ -97,7 +97,7 @@
                 color="black"
                 icon="content_copy"
               >
-                <q-tooltip>content_copy</q-tooltip>
+                <q-tooltip>Copy</q-tooltip>
               </q-btn>
               <q-btn
                 flat
