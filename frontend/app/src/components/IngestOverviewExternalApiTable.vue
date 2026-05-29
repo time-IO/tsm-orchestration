@@ -11,9 +11,11 @@
     @request="onRequest"
     v-bind="$attrs"
   >
-
     <template v-slot:header="props">
       <q-tr :props="props">
+        <q-th v-if="$attrs.selection === 'multiple'" auto-width>
+          <q-checkbox v-model="props.selected" :indeterminate-value="null" />
+        </q-th>
         <q-th
           v-for="col in props.cols"
           :key="col.name"
@@ -31,6 +33,9 @@
 
     <template v-slot:body="props">
       <q-tr :props="props">
+        <q-td v-if="$attrs.selection === 'multiple' || $attrs.selection === 'single'" auto-width>
+          <q-checkbox v-model="props.selected" />
+        </q-td>
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
             {{ col.value }}
@@ -39,7 +44,6 @@
         </q-td>
       </q-tr>
     </template>
-
   </q-table>
 </template>
 
@@ -48,6 +52,10 @@ import { onMounted, ref } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { default_ingest_external_api_columns } from 'src/utils/pagination_utils';
 import type { QTableColumn } from 'quasar';
+
+defineOptions({
+  inheritAttrs: false,
+});
 
 const props = defineProps({
   rows: {
@@ -61,17 +69,13 @@ const props = defineProps({
   columns: {
     type: Array as () => QTableColumn[],
     default: () => default_ingest_external_api_columns,
-  }
-
+  },
 });
 
 const pagination = defineModel<QTableRequestPropPagination>('pagination');
 
 const emit = defineEmits(['onRequest', 'delete']);
 const tableRef = ref();
-
-
-
 
 onMounted(() => {
   // get initial data from server (1st page)
