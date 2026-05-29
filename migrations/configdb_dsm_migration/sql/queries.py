@@ -133,7 +133,7 @@ INSERT_INGEST = """
 
 INSERT_INGEST_SFTP = """
     INSERT INTO dsm_db.ingest_sftp (ingest_id, filename_pattern, username, password, bucket_name, fileserver_uri)
-    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, 'sftp://tsm.intranet.ufz.de:40022')
+    VALUES (%(ingest_id)s, %(s3_filename_pattern)s, %(s3_user)s, %(s3_password)s, %(s3_bucket)s, %(fileserver_uri)s)
 """
 
 INSERT_INGEST_EXT_SFTP = """
