@@ -40,7 +40,7 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
         if row["project_uuid"] in existing_projects:
             continue
         row["entitlement"] = (
-            f"urn:geant:helmholtz.de:group:{row["project_name"]}#login-dev.helmholtz.de"
+            f"urn:geant:helmholtz.de:group:{row["project_name"]}#{OIDC}"
         )
 
         dsm_cur.execute(queries.INSERT_PROJECT, row)
@@ -246,7 +246,19 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
 # into local dsm_db schema
 
 if __name__ == "__main__":
-    TSM_HOST = "tsm.ufz.de"
+
+    # select stage or prod
+    instance = "prod"
+
+    if instance == "prod":
+        TSM_HOST = "tsm.ufz.de"
+        OIDC = "login.helmholtz.de"
+    elif instance == "stage":
+        TSM_HOST = "tsm.intranet.ufz.de"
+        OIDC = "login-dev.helmholtz.de"
+    else:
+        print("Please set 'instance' to either 'prod' or 'stage'")
+        exit(1)
 
     cfgdb_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     dsm_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
