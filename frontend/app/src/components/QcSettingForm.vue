@@ -67,9 +67,21 @@
         </q-form>
         <div class="row">
           <div class="col-12">
+            <div class="row items-center justify-end q-mb-sm">
+              <q-btn
+                flat
+                dense
+                size="sm"
+                :icon="expandAllFunctions ? 'unfold_less' : 'unfold_more'"
+                :label="expandAllFunctions ? 'collapse all' : 'expand all'"
+                @click="expandAllFunctions = !expandAllFunctions"
+                class="text-grey-7"
+              />
+            </div>
             <qc-function-arg-list-view
               :removable="true"
               :quality_control_functions="formData.quality_control_functions!"
+              :expand-all="expandAllFunctions"
               @remove="removeFunction"
               @remove-datastream="handleRemoveDatastream"
               @add-datastream="handleAddDatastream"
@@ -224,6 +236,8 @@ const hasValidDatastreams = computed(() => {
     return fieldOk && targetOk;
   });
 });
+
+const expandAllFunctions = ref(false);
 
 function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
   addDatastreamFuncIndex.value = funcIndex;
