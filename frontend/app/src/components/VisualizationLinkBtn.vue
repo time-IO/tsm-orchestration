@@ -28,7 +28,6 @@ const visualizationUrl = computed(() => {
     return '';
   }
 
-  return `${window.location.origin}/visualization/d/${encodeURIComponent(props.uuid)}`;
+  return `${window.location.origin}/visualization/d/${encodeURIComponent(props.uuid)}?orgId=1`;
 });
 </script>
-
