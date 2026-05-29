@@ -197,7 +197,7 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
         case 'ttn':
           return `/ingest/external-api/ttn/${val.id}`;
         case 'tsystems':
-          return `/ingest/external-api/dwd/${val.id}`;
+          return `/ingest/external-api/tsystems/${val.id}`;
         case 'uba':
           return `/ingest/external-api/uba/${val.id}`;
         default:
