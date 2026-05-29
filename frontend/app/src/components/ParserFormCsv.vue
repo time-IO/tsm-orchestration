@@ -59,6 +59,7 @@
             @update:model-value="trimHeadlines"
             label="Number of headlines to exclude"
             hint="Enter either a single number to indicate of many lines should be excluded or a comma-separated list of numbers indicating the lines which must be excluded (0-based)"
+            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
           />
 
           <q-input
@@ -66,6 +67,7 @@
             class="q-mb-md"
             v-model.number="formData.footlines_to_exclude"
             label="Number of footlines to exclude"
+            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
           />
 
           <parser-timezone-select
@@ -85,6 +87,7 @@
             v-model.number="formData.header"
             label="Header row index"
             hint="Row index where header is located (0 for first row)"
+            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
           />
 
           <!-- Timestamp Columns -->
@@ -106,8 +109,9 @@
                       v-model.number="col.column"
                       label="Column index (0-based)"
                       :rules="[
-                        (val) => (val !== null && val !== undefined) || 'Column index is required',
-                      ]"
+                        (val) =>
+                          (val !== null && val !== undefined && val !== '') ||
+                          'Column index is required']"
                     />
                     <q-input
                       filled
