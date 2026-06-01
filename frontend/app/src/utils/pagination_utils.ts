@@ -132,7 +132,6 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
-
 export const default_parser_columns: QTableColumn[] = [
   {
     name: 'id',
@@ -224,5 +223,25 @@ export const generateParserPath = (val: ParserDetailedRead) => {
       return `parser/csv/${val.id}`;
     default:
       return '';
+  }
+};
+
+export const formatExternalApiType = (val: string | null) => {
+  if (!val) return '';
+  switch (val) {
+    case 'bosch':
+      return 'Bosch IoT';
+    case 'dwd':
+      return 'Deutscher Wetterdienst';
+    case 'nm':
+      return 'Neutron Monitor';
+    case 'ttn':
+      return 'The Things network';
+    case 'tsystems':
+      return 'TSystems';
+    case 'uba':
+      return 'Umweltbundesamt (UBA) Air Data';
+    default:
+      return val;
   }
 };
