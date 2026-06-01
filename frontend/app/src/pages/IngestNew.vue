@@ -8,7 +8,12 @@
     </div>
 
     <div class="row">
-      <div class="col-12 col-sm-6 col-lg-3 q-pa-sm" v-for="item in data" :key="item.name">
+      <div
+        class="col-12 col-sm-6 col-lg-3 q-pa-sm"
+        style="max-width: 300px"
+        v-for="item in data"
+        :key="item.name"
+      >
         <q-card>
           <q-item style="min-height: 96px; align-items: center">
             <q-item-section avatar>
@@ -29,7 +34,7 @@
         </q-card>
       </div>
 
-      <div class="col-12 col-sm-6 col-lg-3 q-pa-sm">
+      <div class="col-12 col-sm-6 col-lg-3 q-pa-sm" style="max-width: 300px">
         <q-card>
           <q-item style="min-height: 96px; align-items: center">
             <q-item-section avatar>

@@ -14,8 +14,11 @@
     <div v-else-if="item">
       <q-card>
         <q-card-section>
-          <div class="text-h4">{{ item.name }}</div>
-          <div class="text-subtitle1">{{ item.description }}</div>
+          <div class="text-h5 ellipsis" style="max-width: 100%">{{ item.name }}</div>
+          <q-tooltip>
+            {{ item.name }}
+          </q-tooltip>
+          <div class="text-subtitle1" style="max-width: 100%">{{ item.description }}</div>
         </q-card-section>
 
         <q-separator />

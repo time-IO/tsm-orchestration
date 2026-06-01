@@ -17,7 +17,10 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this ingest"
-            :rules="[(val) => !!val || 'Name is required']"
+            :rules="[
+              (val) => !!val || 'Name is required',
+              (val) => val.length <= 80 || 'Maximum 80 characters',
+            ]"
           />
 
           <permission-group-select

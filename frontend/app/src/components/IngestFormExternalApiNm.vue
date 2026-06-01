@@ -20,7 +20,10 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this ingest"
-            :rules="[(val) => !!val || 'Name is required']"
+            :rules="[
+              (val) => !!val || 'Name is required',
+              (val) => val.length <= 80 || 'Maximum 80 characters',
+            ]"
           />
 
           <permission-group-select
@@ -40,8 +43,9 @@
           />
 
           <q-separator class="q-my-lg" />
-          <neutron-monitor-station-select v-model="formData.station_id" 
-          :preselected-item="itemStation"
+          <neutron-monitor-station-select
+            v-model="formData.station_id"
+            :preselected-item="itemStation"
           />
           <q-select
             outlined

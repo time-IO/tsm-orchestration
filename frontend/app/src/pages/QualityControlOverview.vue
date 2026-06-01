@@ -112,11 +112,18 @@
 
             <template v-else>
               <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
-                {{ col.value }}
+                <div
+                  :style="`overflow: hidden;
+                   text-overflow: ellipsis;
+                    hite-space: nowrap;
+                    max-width: ${getMaxWidth(col.field)}`"
+                >
+                  {{ col.value }}
+                  <q-tooltip>{{ col.value }}</q-tooltip>
+                </div>
               </span>
               <span v-else class="text-grey-6"> N/A </span>
             </template>
-
           </q-td>
         </q-tr>
       </template>
@@ -182,6 +189,7 @@ const columns: QTableColumn[] = [
     name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
+    format: (val) => val?.replace(/^UFZ-TSM:\s*/i, '') ?? '',
     sortable: true,
     align: 'center',
   },
@@ -229,6 +237,23 @@ const closeDeleteDialog = () => {
   idToDelete.value = null;
   deleteDialog.value = false;
 };
+
+const windowWidth = ref(window.innerWidth);
+
+window.addEventListener('resize', () => {
+  windowWidth.value = window.innerWidth;
+});
+
+const colMaxWidth: Record<string, { sm: string; lg: string }> = {
+  permission_group: { sm: '80px', lg: '150px' },
+  name: { sm: '80px', lg: '220px' },
+};
+
+const getMaxWidth = computed(() => (colName: string) => {
+  const widths = colMaxWidth[colName];
+  if (!widths) return 'auto';
+  return windowWidth.value < 1200 ? widths.sm : widths.lg;
+});
 </script>
 
 <style scoped></style>

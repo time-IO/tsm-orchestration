@@ -10,6 +10,7 @@
     v-model:pagination="pagination"
     @request="onRequest"
     v-bind="$attrs"
+    :table-style="'table-layout: fixed; width: 100%'"
   >
     <template v-slot:header="props">
       <q-tr :props="props">
@@ -77,11 +78,18 @@
 
           <template v-else>
             <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
-              {{ col.value }}
+              <div
+                :style="`overflow: hidden;
+              text-overflow: ellipsis;
+              hite-space: nowrap;
+             max-width: ${getMaxWidth(col.field)}`"
+              >
+                {{ col.value }}
+                <q-tooltip>{{ col.value }}</q-tooltip>
+              </div>
             </span>
             <span v-else class="text-grey-6"> N/A </span>
           </template>
-          
         </q-td>
       </q-tr>
     </template>
@@ -104,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { default_ingest_columns, generateIngestPath } from 'src/utils/pagination_utils';
 
@@ -150,6 +158,23 @@ const closeDeleteDialog = () => {
   idToDelete.value = null;
   deleteDialog.value = false;
 };
+
+const windowWidth = ref(window.innerWidth);
+
+window.addEventListener('resize', () => {
+  windowWidth.value = window.innerWidth;
+});
+
+const colMaxWidth: Record<string, { sm: string; lg: string }> = {
+  permission_group: { sm: '80px', lg: '150px' },
+  name: { sm: '80px', lg: '220px' },
+};
+
+const getMaxWidth = computed(() => (colName: string) => {
+  const widths = colMaxWidth[colName];
+  if (!widths) return 'auto';
+  return windowWidth.value < 1200 ? widths.sm : widths.lg;
+});
 </script>
 
 <style scoped>
