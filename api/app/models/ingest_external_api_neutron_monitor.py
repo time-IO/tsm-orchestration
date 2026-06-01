@@ -23,7 +23,7 @@ class IngestExternalApiNeutronMonitorCreate(IngestExternalApiCreate):
 
 
 class IngestExternalApiNeutronMonitorUpdate(IngestExternalApiUpdate):
-    station_id: Optional[str] = None
+    station_id: Optional[int] = None
     time_resolution_in_minutes: Optional[int] = None
 
 
