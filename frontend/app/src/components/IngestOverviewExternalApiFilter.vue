@@ -40,10 +40,11 @@
             />
           </div>
         </div>
-
-        <q-card-actions>
-          <q-space></q-space>
-          <q-btn @click="triggerEvent">Apply filter</q-btn>
+        <q-card-actions class="column items-end q-gutter-sm" style="margin-top: -48px">
+          <q-btn @click="resetFilters" style="min-width: 120px" class="text-blue-grey-13"
+            >Clear filters</q-btn
+          >
+          <q-btn @click="triggerEvent" style="min-width: 120px">Apply filters</q-btn>
         </q-card-actions>
       </q-card>
     </q-expansion-item>
@@ -66,6 +67,15 @@ const date_to = defineModel<string | undefined>('date_to', { default: undefined 
 const emit = defineEmits(['applyFilters']);
 
 function triggerEvent() {
+  emit('applyFilters');
+}
+
+function resetFilters() {
+  name.value = undefined;
+  api_type.value = undefined;
+  permission_group_id.value = undefined;
+  date_from.value = undefined;
+  date_to.value = undefined;
   emit('applyFilters');
 }
 </script>
