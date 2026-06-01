@@ -75,14 +75,19 @@
           </template>
 
           <template v-else>
-            <span v-if="col.value !== null && col.value !== undefined && col.value !== ''" >
-              {{ col.value }}
+            <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
+              <div
+                :style="`overflow: hidden;
+              text-overflow: ellipsis;
+              hite-space: nowrap;
+             max-width: ${getMaxWidth(col.field)}`"
+              >
+                {{ col.value }}
+                <q-tooltip>{{ col.value }}</q-tooltip>
+              </div>
             </span>
-            <span v-else class="text-grey-6">
-              N/A
-            </span>
+            <span v-else class="text-grey-6"> N/A </span>
           </template>
-
         </q-td>
       </q-tr>
     </template>
@@ -107,7 +112,7 @@
 <script setup lang="ts">
 import { default_parser_columns, generateParserPath } from 'src/utils/pagination_utils';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 defineProps({
   rows: {
@@ -150,6 +155,23 @@ const closeDeleteDialog = () => {
   idToDelete.value = null;
   deleteDialog.value = false;
 };
+
+const windowWidth = ref(window.innerWidth);
+
+window.addEventListener('resize', () => {
+  windowWidth.value = window.innerWidth;
+});
+
+const colMaxWidth: Record<string, { sm: string; lg: string }> = {
+  permission_group: { sm: '80px', lg: '150px' },
+  name: { sm: '80px', lg: '220px' },
+};
+
+const getMaxWidth = computed(() => (colName: string) => {
+  const widths = colMaxWidth[colName];
+  if (!widths) return 'auto';
+  return windowWidth.value < 1200 ? widths.sm : widths.lg;
+});
 </script>
 
 <style scoped>

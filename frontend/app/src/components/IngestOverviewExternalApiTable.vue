@@ -38,7 +38,15 @@
         </q-td>
         <q-td v-for="col in props.cols" :key="col.name" :props="props">
           <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
-            {{ col.value }}
+            <div
+              :style="`overflow: hidden;
+              text-overflow: ellipsis;
+              hite-space: nowrap;
+             max-width: ${getMaxWidth(col.field)}`"
+            >
+              {{ col.value }}
+              <q-tooltip>{{ col.value }}</q-tooltip>
+            </div>
           </span>
           <span v-else class="text-grey-6">N/A</span>
         </q-td>
@@ -48,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { default_ingest_external_api_columns } from 'src/utils/pagination_utils';
 import type { QTableColumn } from 'quasar';
@@ -85,6 +93,23 @@ onMounted(() => {
 function onRequest(props: QTableRequestProp) {
   emit('onRequest', props);
 }
+
+const windowWidth = ref(window.innerWidth);
+
+window.addEventListener('resize', () => {
+  windowWidth.value = window.innerWidth;
+});
+
+const colMaxWidth: Record<string, { sm: string; lg: string }> = {
+  permission_group: { sm: '80px', lg: '150px' },
+  name: { sm: '80px', lg: '220px' },
+};
+
+const getMaxWidth = computed(() => (colName: string) => {
+  const widths = colMaxWidth[colName];
+  if (!widths) return 'auto';
+  return windowWidth.value < 1200 ? widths.sm : widths.lg;
+});
 </script>
 
 <style scoped></style>
