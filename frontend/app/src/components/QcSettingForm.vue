@@ -162,7 +162,8 @@ import { QForm } from 'quasar';
 import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
 import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
 import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
-import { computed, type Ref, ref } from 'vue';
+import { computed, type Ref, ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import {onBeforeRouteLeave} from 'vue-router';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
@@ -238,6 +239,34 @@ const hasValidDatastreams = computed(() => {
 });
 
 const expandAllFunctions = ref(false);
+
+const isDirty = ref(false);
+
+watch(
+  formData,
+  () => {isDirty.value = true},
+  {deep: true}
+);
+
+onBeforeRouteLeave((to, from, next) => {
+  if (!isDirty.value) return next();
+  const confirmed = window.confirm(
+  'You have unsaved changes. Are you sure you want to leave the site?'
+  );
+ if (confirmed) {
+   next ();
+ }else{next(false);
+ }
+});
+
+function handleBeforeUnload(e: BeforeUnloadEvent){
+  if (!isDirty.value) return;
+  e.preventDefault();
+}
+
+onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnload));
+
 
 function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
   addDatastreamFuncIndex.value = funcIndex;
@@ -341,9 +370,13 @@ function openFunctionsDialog() {
 }
 
 function emitSaveAndCloseDialog() {
+  isDirty.value = false;
   emit('save');
   closeSubmitDialog();
 }
+
+
+
 </script>
 
 <style scoped></style>
