@@ -259,7 +259,7 @@ function toggleLeftDrawer() {
 
 <style scoped>
 .page-width-constrained {
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
 }
 </style>
