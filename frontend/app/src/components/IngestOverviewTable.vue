@@ -81,8 +81,8 @@
               <div
                 :style="`overflow: hidden;
               text-overflow: ellipsis;
-              hite-space: nowrap;
-             max-width: ${getMaxWidth(col.field)}`"
+              white-space: nowrap;
+             max-width: ${getMaxWidth(col.name)}`"
               >
                 {{ col.value }}
                 <q-tooltip>
