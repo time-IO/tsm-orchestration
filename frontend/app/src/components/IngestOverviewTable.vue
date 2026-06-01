@@ -85,7 +85,13 @@
              max-width: ${getMaxWidth(col.field)}`"
               >
                 {{ col.value }}
-                <q-tooltip>{{ col.value }}</q-tooltip>
+                <q-tooltip>
+                  {{
+                    col.name === 'ingest_type' && props.row.external_api_type
+                      ? col.value + ' – ' + formatExternalApiType(props.row.external_api_type)
+                      : col.value
+                  }}
+                </q-tooltip>
               </div>
             </span>
             <span v-else class="text-grey-6"> N/A </span>
@@ -114,7 +120,11 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-import { default_ingest_columns, generateIngestPath } from 'src/utils/pagination_utils';
+import {
+  default_ingest_columns,
+  generateIngestPath,
+  formatExternalApiType,
+} from 'src/utils/pagination_utils';
 
 defineProps({
   rows: {
