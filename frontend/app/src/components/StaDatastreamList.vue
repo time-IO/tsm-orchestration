@@ -3,8 +3,8 @@
     <q-item-section>
       <div class="row items-center q-gutter-x-sm q-gutter-y-xs text-body2" style="flex-wrap: wrap">
         <span>
-          {{ datastream.name }}
-          <q-tooltip>{{ datastream.name }}</q-tooltip>
+          {{ displayDatastreamName }}
+          <q-tooltip>{{ displayDatastreamName }}</q-tooltip>
         </span>
 
         <span v-if="!isCreatedDatastream(datastream)" class="text-grey-6">
@@ -80,13 +80,15 @@
 <script setup lang="ts">
 import type { Datastream } from 'src/services/sta/types';
 import { copyToClipboard, useQuasar } from 'quasar';
+import { computed } from 'vue';
 
 const props = defineProps<{
   datastream: Datastream;
   removable?: boolean | undefined;
   hideOpenButton?: boolean | undefined;
+  hideThingName?: boolean;
 }>();
-
+console.log('hideThingName:', props.hideThingName);
 const $q = useQuasar();
 
 const emit = defineEmits<{
@@ -118,6 +120,19 @@ const copyClipboard = (text: string | null) => {
       });
     });
 };
+
+const displayDatastreamName = computed(() => {
+  const name = props.datastream.name ?? '';
+  const thingName = props.datastream.Thing?.name ?? '';
+
+  if (!props.hideThingName || !thingName) {
+    return name;
+  }
+
+  const escapedThing = thingName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  return name.replace(new RegExp(`^${escapedThing}[\\s\\-:/|]*`, 'i'), '').trim();
+});
 
 function handleRemove() {
   emit('remove', props.datastream);
