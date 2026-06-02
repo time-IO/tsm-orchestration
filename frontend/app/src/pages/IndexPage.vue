@@ -38,10 +38,10 @@
         <div class="col-12">
           <div class="row justify-center q-mb-xs" style="font-weight: bold">
             <div class="col q-px-sm text-center" v-for="card in cards" :key="card.label + '-stat'">
-              <div class="text-h5 text-amber-12" style="font-weight: bold">{{ card.count }}</div>
+              <div class="text-h5 text-amber-13" style="font-weight: bold; font-size: 1.8em">{{ card.count }}</div>
               <div
-                class="text-h5 text-grey-1"
-                style="color: white; font-size: 100%; font-weight: bold"
+                class="text-h5 text-amber-13"
+                style=" font-size: 100%; font-weight: bold; font-size: 1.3em"
               >
                 {{ card.label }}
               </div>
@@ -213,9 +213,9 @@ const cards = computed(() => [
     description: projectDescription,
   },
   {
-    label: 'Data Sources',
+    label: 'Data Ingests',
     count: usageStatisticsStore.counts?.ingests ?? '-',
-    title: 'Data Sources',
+    title: 'Data Ingests',
     subtitle: 'Ingest Configurations',
     description: dataSourcesDescription,
   },
