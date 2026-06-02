@@ -13,35 +13,41 @@
           dense
           header-class="justify-between q-pl-sm"
           :default-opened="defaultOpened"
+          @update:model-value="(val) => setExpanded(thingName, val)"
         >
           <template #header>
             <div class="row items-center" style="width: 100%">
               <span>{{ thingName }}</span>
               <div class="row items-center">
-                <q-chip dense color="primary" text-color="white">{{ datastreams.length }}</q-chip>
+                <q-chip
+                  dense
+                  color="blue-grey-3"
+                  text-color="white"
+                  v-if="!expandedState[thingName]"
+                  >{{ datastreams.length }}</q-chip
+                >
               </div>
             </div>
           </template>
 
-
-                <q-list dense separator bordered class="rounded-borders">
-                  <sta-datastream-list
-                    v-for="(ds, index) in datastreams"
-                    :key="ds['@iot.id'] ?? index"
-                    :datastream="ds"
-                    :removable="removable"
-                    :hide-open-button="hideOpenButton"
-                    @remove="removeDatastream"
-                  />
-                </q-list>
-
+          <q-list dense separator bordered class="rounded-borders">
+            <sta-datastream-list
+              v-for="(ds, index) in datastreams"
+              :key="ds['@iot.id'] ?? index"
+              :datastream="ds"
+              :removable="removable"
+              :hide-open-button="hideOpenButton"
+              :hide-thing-name="hideThingName"
+              @remove="removeDatastream"
+            />
+          </q-list>
         </q-expansion-item>
       </div>
     </template>
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import type { Datastream } from 'src/services/sta/types';
 import StaDatastreamList from 'components/StaDatastreamList.vue';
 
@@ -50,6 +56,7 @@ const props = defineProps<{
   removable?: boolean;
   hideOpenButton?: boolean;
   defaultOpened?: boolean;
+  hideThingName?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -65,6 +72,23 @@ const groupedByThing = computed(() => {
   });
   return map;
 });
+const expandedState = reactive<Record<string, boolean>>({});
+
+watch(
+  groupedByThing,
+  (groups) => {
+    Object.keys(groups).forEach((name) => {
+      if (!(name in expandedState)) {
+        expandedState[name] = props.defaultOpened ?? false;
+      }
+    });
+  },
+  { immediate: true },
+);
+
+function setExpanded(thingName: string, val: boolean) {
+  expandedState[thingName] = val;
+}
 
 function removeDatastream(ds: Datastream) {
   emit('remove', ds);

@@ -1,9 +1,11 @@
 <template>
-  <q-list bordered separator class="rounded-borders">
+  <q-list separator class="rounded-borders q-mt-sm q-ml-sm">
     <q-expansion-item
       v-for="(item, i) in quality_control_functions"
       :key="i"
       :model-value="expandAll ?? false"
+      style="border: 1px solid #cfd8dc; border-radius: 4px"
+      class="q-mb-md"
     >
       <template #header>
         <q-item-section side>
@@ -16,11 +18,12 @@
           />
         </q-item-section>
         <q-item-section>
-          <div>{{ item.name }}</div>
+          <div class="text-weight-medium text-subtitle1">{{ item.name }}</div>
           <div class="text-caption text-grey-6">
             <template v-if="getAlias(item, 'field').length">
               Field: {{ getAlias(item, 'field').join(', ') }}
             </template>
+
             <template v-if="getAlias(item, 'target', getAlias(item, 'field')).length">
               <span class="text-blue-9 q-mx-xs"> | </span>
               Target: {{ getAlias(item, 'target', getAlias(item, 'field')).join(', ') }}
@@ -44,36 +47,49 @@
         </q-item-section>
         <q-space></q-space>
       </template>
-      <q-list>
-        <q-item v-for="(arg, j) in item.quality_control_function_arguments" :key="`${i}-${j}`">
-          <q-item-section>
-            <div v-if="isDatastreamType(arg)">
-              <div class="row items-center justify-between q-mb-xs">
-                <span>{{ arg.name }}:</span>
-                <q-btn
-                  v-if="removable"
-                  flat
-                  dense
-                  icon="add"
-                  label="Add Datastream"
-                  size="sm"
-                  @click.stop="
-                    () => {
-                      console.log('btn clicked', i, j);
-                      onAddDatastream(i, j);
-                    }
-                  "
-                />
-              </div>
-              <sta-datastream-selection-view
-                :selected="arg.input.value"
-                :default-opened="true"
-                :removable="removable === true"
-                @remove="removeDatastream(i, j, $event)"
-              />
-            </div>
-          </q-item-section>
-        </q-item>
+
+      <q-list dense>
+        <template v-for="(arg, j) in item.quality_control_function_arguments" :key="`${i}-${j}`">
+          <q-item v-if="isDatastreamType(arg)">
+            <q-item-section>
+              <q-card flat bordered class="q-mb-sm">
+                <!-- Header -->
+                <q-card-section
+                  class="row items-center q-py-xs q-px-sm"
+                  style="background-color: #e4eaed"
+                >
+                  <div class="text-weight-medium text-capitalize">
+                    {{ arg.name }}
+                  </div>
+                  <q-space />
+
+                  <q-btn
+                    v-if="removable"
+                    flat
+                    dense
+                    icon="add"
+                    label="Add Datastream"
+                    size="sm"
+                    @click.stop="
+                      () => {
+                        onAddDatastream(i, j);
+                      }
+                    "
+                  />
+                </q-card-section>
+                <q-card-section class="q-pa-sm">
+                  <sta-datastream-selection-view
+                    :selected="arg.input.value"
+                    :default-opened="true"
+                    :removable="removable === true"
+                    :hide-thing-name="true"
+                    @remove="removeDatastream(i, j, $event)"
+                  />
+                </q-card-section>
+              </q-card>
+            </q-item-section>
+          </q-item>
+        </template>
       </q-list>
     </q-expansion-item>
   </q-list>
