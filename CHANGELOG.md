@@ -7,6 +7,16 @@
 ### Changed
 ### Removed
 
+## 2026-06-02
+### Added
+- New DataSourceManagement
+### Fixed
+- STA: Added PHENOMENOM_TIME and RESULT_TIME to Datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/598))
+- Parser failes for timezone aware timestamps (https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/606)
+### Changed
+### Removed
+- Django Frontend
+
 ## 2026-04-17
 ### Added
 - Special redo workers for file ingest and exteranel APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/591))
