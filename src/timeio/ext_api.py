@@ -63,9 +63,16 @@ class BoschApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
+        dt_from = datetime.strptime(
+            content["datetime_from"], "%Y-%m-%d %H:%M:%S"
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        dt_to = datetime.strptime(content["datetime_to"], "%Y-%m-%d %H:%M:%S").strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+
         server_url = (
-            f"{settings['endpoint']}/{settings['sensor_id']}/"
-            f"{content['datetime_from']}/{content['datetime_to']}"
+            f"{settings['endpoint']}/{settings['sensor_id']}/" f"{dt_from}/{dt_to}"
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
