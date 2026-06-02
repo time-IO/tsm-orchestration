@@ -1,6 +1,6 @@
-# Thing Management (thing-management)
+# Data Source Management (data-source-management)
 
-FE by me
+Datasource Management for time.IO
 
 ## Install the dependencies
 

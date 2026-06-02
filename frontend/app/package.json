@@ -1,7 +1,7 @@
 {
-  "name": "thing-management",
+  "name": "data-source-management",
   "version": "0.0.1",
-  "description": "FE by me",
+  "description": "Data Source Management for time.IO",
   "productName": "Data Source Management",
   "author": "kuhnert",
   "type": "module",
