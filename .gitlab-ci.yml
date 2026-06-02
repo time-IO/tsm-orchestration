@@ -123,6 +123,7 @@ add-latest-tags:
   script:
     - docker pull ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
     - docker pull ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker pull ${FRONTEND_IMAGE_URL_ROOTLESS}:${CI_COMMIT_REF_NAME}
     - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:latest
     - docker tag ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${API_IMAGE_URL}:${BUILD_DATE}
     - docker tag ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} ${FRONTEND_IMAGE_URL}:latest
