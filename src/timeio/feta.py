@@ -449,8 +449,8 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_default_qaqcs(self) -> list[QAQC] | None:
         query = (
-            f"select * from {self._schema}.qaqc q "
-            f"where q.project_id = %s and q.default = true "
+            f"select * from {self._schema}.quality_control_setting q "
+            f"where q.permission_group_id = %s and q.is_active = true "
             f"order by q.id desc"
         )
         if _ := self._fetchall(self._conn, query, self.id):
@@ -462,7 +462,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
         params = [self.id]
-        query = f"select * from {self._schema}.qaqc where project_id = %s "
+        query = f"select * from {self._schema}.quality_control_setting where permission_group_id = %s "
         if id is not None:
             query += "and id = %s "
             params += [id]
@@ -664,16 +664,20 @@ class QAQCTest(Base):
 
     @property
     def args(self) -> JsonObjectT | None:
-        return self._get_args()
-
-    def _get_args(self) -> dict:
         query = f"""select "name", input from {self._schema}.quality_control_function_argument 
-        where quality_control_function_id = %s and "type" <> 'datastream'"""
+                where quality_control_function_id = %s and "type" <> 'datastream'"""
         rows = self._fetchall(self._conn, query, self.id)
         if not rows:
             return None
         res = {i["name"]: i["input"]["value"] for i in rows}
         return res
+
+    @property
+    def streams(self):
+        query = f"""select "name", input from {self._schema}.quality_control_function_argument 
+                where quality_control_function_id = %s and "type" = 'datastream'"""
+        rows = self._fetchall(self._conn, query, self.id)
+        return rows
 
     @staticmethod
     def _parse_context_window(window: str | None) -> pd.Timedelta:
@@ -750,9 +754,13 @@ class QAQCTest(Base):
 
     def get_streams(self) -> list[QcStreamT]:
         out = []
-        for stream in self._attrs["streams"]:
-            stream["sta_stream_id"] = int(stream["sta_stream_id"])
-            stream["sta_thing_id"] = int(stream["sta_thing_id"])
+        for stream in self.streams:
+            for i in stream["input"]["value"]:
+                stream["sta_stream_id"] = i["@iot.id"]
+                stream["sta_thing_id"] = i["Thing"]["@iot.id"]
+                stream["alias"] = i["alias"]
+                stream["arg_name"] = stream.pop("name")
+                del stream["input"]
             if stream["sta_stream_id"] is None:
                 meta = self._get_new_stream(stream)
             else:
@@ -873,74 +881,74 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     #     res = self._fetchone(self._conn, query, self.legacy_qaqc_id)
     #     return QAQC._from_parent(res, self)
     #
-    # @classmethod
-    # def from_s3_bucket_name(
-    #     cls: type[Self],
-    #     bucket_name: str,
-    #     dsn: str | Connection | None = None,
-    #     caching: bool = True,
-    #     **kwargs,
-    # ) -> Self:
-    #     """
-    #     Create a new Thing instance from an existing S3-bucket name.
-    #
-    #     :param bucket_name: The S3 bucket_name.
-    #     :param dsn: Postgres connection or connection string to make a DB
-    #         connection with `psycopg.connect()`
-    #     :param caching: If `True` (default) the object is cached and
-    #         subsequently lookups will use the cached object. If `False`,
-    #         the object is always fetched from its source (DB table).
-    #     :param kwargs: All kwargs are passed on to the function
-    #         `psycopg.connection`.
-    #     :return: Returns a feta.Thing instance.
-    #     """
-    #     query = (
-    #         f"select t.* from {cls._schema}.thing t join {cls._schema}.s3_store s3 on "
-    #         "t.s3_store_id = s3.id where s3.bucket = %s"
-    #     )
-    #     conn = cls._get_connection(dsn, **kwargs)
-    #     if not (res := cls._fetchall(conn, query, bucket_name)):
-    #         raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
-    #     if len(res) > 1:
-    #         warnings.warn(
-    #             f"Got multiple results from {cls._schema}.thing for "
-    #             f"{bucket_name=}. The returned Thing will be created "
-    #             f"from the first result."
-    #         )
-    #     return cls(res[0], conn, caching)
-    #
-    # @classmethod
-    # def from_mqtt_user_name(
-    #     cls: type[Self],
-    #     mqtt_user_name: str,
-    #     dsn: str | Connection | None = None,
-    #     caching: bool = True,
-    #     **kwargs,
-    # ) -> Self:
-    #     """
-    #     Create a new Thing instance from an existing mqtt username.
-    #
-    #     :param mqtt_user_name: a MQTT username.
-    #     :param dsn: Postgres connection or connection string to make a DB
-    #         connection with `psycopg.connect()`
-    #     :param caching: If `True` (default) the object is cached and
-    #         subsequently lookups will use the cached object. If `False`,
-    #         the object is always fetched from its source (DB table).
-    #     :param kwargs: All kwargs are passed on to the function
-    #         `psycopg.connection`.
-    #     :return: Returns a feta.Thing instance.
-    #     """
-    #     query = (
-    #         f"select t.* from {cls._schema}.thing t join mqtt m on "
-    #         "t.mqtt_id = m.id where m.user = %s"
-    #     )
-    #     conn = cls._get_connection(dsn, **kwargs)
-    #     if not (res := cls._fetchall(conn, query, mqtt_user_name)):
-    #         raise ObjectNotFound(f"No {cls.__name__} found for {mqtt_user_name=}")
-    #     if len(res) > 1:
-    #         warnings.warn(
-    #             f"Got multiple results from {cls._schema}.thing for "
-    #             f"{mqtt_user_name=}. The returned Thing will be created "
-    #             f"from the first result."
-    #         )
-    #     return cls(res[0], conn, caching)
+    @classmethod
+    def from_s3_bucket_name(
+        cls: type[Self],
+        bucket_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing instance from an existing S3-bucket name.
+
+        :param bucket_name: The S3 bucket_name.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = f"""select i.* from {cls._schema}.ingest i
+                left join {cls._schema}.ingest_sftp s on i.id = s.ingest_id
+                left join {cls._schema}.ingest_external_sftp es on i.id = es.ingest_id
+                where es.bucket_name = %s or s.bucket_name = %s"""
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {cls._schema}.thing for "
+                f"{bucket_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)
+
+    @classmethod
+    def from_mqtt_user_name(
+        cls: type[Self],
+        mqtt_user_name: str,
+        dsn: str | Connection | None = None,
+        caching: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Create a new Thing instance from an existing mqtt username.
+
+        :param mqtt_user_name: a MQTT username.
+        :param dsn: Postgres connection or connection string to make a DB
+            connection with `psycopg.connect()`
+        :param caching: If `True` (default) the object is cached and
+            subsequently lookups will use the cached object. If `False`,
+            the object is always fetched from its source (DB table).
+        :param kwargs: All kwargs are passed on to the function
+            `psycopg.connection`.
+        :return: Returns a feta.Thing instance.
+        """
+        query = (
+            f"select i.* from {cls._schema}.ingest i join ingest_mqtt m on "
+            "i.id = m.ingest_id where m.username = %s"
+        )
+        conn = cls._get_connection(dsn, **kwargs)
+        if not (res := cls._fetchall(conn, query, mqtt_user_name)):
+            raise ObjectNotFound(f"No {cls.__name__} found for {mqtt_user_name=}")
+        if len(res) > 1:
+            warnings.warn(
+                f"Got multiple results from {cls._schema}.thing for "
+                f"{mqtt_user_name=}. The returned Thing will be created "
+                f"from the first result."
+            )
+        return cls(res[0], conn, caching)
