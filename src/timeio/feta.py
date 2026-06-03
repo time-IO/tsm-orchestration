@@ -629,17 +629,18 @@ class MQTT(Base):
 
 class QAQC(Base):
     _schema = SCHEMA
-    _table_name = "qaqc"
+    _table_name = "quality_control_setting"
     id: int = _prop(lambda self: self._attrs["id"])
+    uuid: int = _prop(lambda self: self._attrs["uuid"])
     name: str = _prop(lambda self: self._attrs["name"])
-    project_id: int | None = _prop(lambda self: self._attrs["project_id"])
+    project_id: int | None = _prop(lambda self: self._attrs["permission_group_id"])
     context_window: str = _prop(lambda self: self._attrs["context_window"])
     project: Project | None = _create(
-        Project, f"select * from {_schema}.project where id = %s", "project_id"
+        Project, f"select * from {_schema}.permission_group where id = %s", "project_id"
     )
 
     def get_functions(self) -> list[QAQCTest]:
-        query = f"select * from {self._schema}.qaqc_test where qaqc_id = %s"
+        query = f"select * from {self._schema}.quality_control_function where quality_control_setting_id = %s"
         conn = self._conn
         return [
             QAQCTest._from_parent(attr, self)
@@ -649,14 +650,30 @@ class QAQC(Base):
 
 class QAQCTest(Base):
     _schema = SCHEMA
-    _table_name = "qaqc_test"
+    _table_name = "quality_control_function"
     id: int = _prop(lambda self: self._attrs["id"])
-    qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
-    function: str = _prop(lambda self: self._attrs["function"])
-    args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
+    qaqc_id: int = _prop(lambda self: self._attrs["quality_control_setting_id"])
+    function: str = _prop(lambda self: self._attrs["name"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
+    qaqc: QAQC = _create(
+        QAQC,
+        f"select * from {_schema}.quality_control_setting where id = %s",
+        "qaqc_id",
+    )
+
+    @property
+    def args(self) -> JsonObjectT | None:
+        return self._get_args()
+
+    def _get_args(self) -> dict:
+        query = f"""select "name", input from {self._schema}.quality_control_function_argument 
+        where quality_control_function_id = %s and "type" <> 'datastream'"""
+        rows = self._fetchall(self._conn, query, self.id)
+        if not rows:
+            return None
+        res = {i["name"]: i["input"]["value"] for i in rows}
+        return res
 
     @staticmethod
     def _parse_context_window(window: str | None) -> pd.Timedelta:
