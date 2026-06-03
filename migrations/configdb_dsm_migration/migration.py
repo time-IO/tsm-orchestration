@@ -40,7 +40,7 @@ def migrate_project_and_db(cfgdb_cur, dsm_cur):
         if row["project_uuid"] in existing_projects:
             continue
         row["entitlement"] = (
-            f"urn:geant:helmholtz.de:group:{row["project_name"]}#login-dev.helmholtz.de"
+            f"urn:geant:helmholtz.de:group:{row["project_name"]}#{OIDC}"
         )
 
         dsm_cur.execute(queries.INSERT_PROJECT, row)
@@ -109,6 +109,7 @@ def migrate_ingests(cfgdb_cur, dsm_cur, django_things):
         dsm_cur.execute(queries.INSERT_INGEST, row)
         row["ingest_id"] = dsm_cur.fetchone()["id"]
         if row["ingest_type_name"] == "sftp":
+            row["fileserver_uri"] = f"sftp://{TSM_HOST}:40022"
             dsm_cur.execute(queries.INSERT_INGEST_SFTP, row)
         if row["ingest_type_name"] == "external_sftp":
             dsm_cur.execute(queries.INSERT_INGEST_EXT_SFTP, row)
@@ -197,7 +198,7 @@ def migrate_qc(cfgdb_cur, dsm_cur, django_qc):
 
 
 def build_sta_input(schema, stream_id, alias):
-    base_url = f"https://tsm.ufz.de/sta/{schema}/v1.1"
+    base_url = f"https://{TSM_HOST}/sta/{schema}/v1.1"
     filter_ds = "?$select=@iot.id,@iot.selfLink,name,description"
     filter_sensor_thing = (
         "&$expand=Sensor($select=@iot.id,name),Thing($select=@iot.id,name)"
@@ -245,6 +246,20 @@ def run_migration(cfgdb_conn, dsm_conn, django_conn):
 # into local dsm_db schema
 
 if __name__ == "__main__":
+
+    # select stage or prod
+    instance = "prod"
+
+    if instance == "prod":
+        TSM_HOST = "tsm.ufz.de"
+        OIDC = "login.helmholtz.de"
+    elif instance == "stage":
+        TSM_HOST = "tsm.intranet.ufz.de"
+        OIDC = "login-dev.helmholtz.de"
+    else:
+        print("Please set 'instance' to either 'prod' or 'stage'")
+        exit(1)
+
     cfgdb_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     dsm_dsn = "postgresql://postgres:postgres@localhost:5432/postgres"
     django_dsn = "postgresql://frontenddb:frontenddb@localhost:5432/postgres"

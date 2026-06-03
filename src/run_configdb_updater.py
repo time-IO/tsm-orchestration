@@ -77,6 +77,10 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
             d.pop("uri", None)  # unused
 
     elif data["version"] == 7:
+        if data.get("ingest_type") == "external_sftp":
+            data["ingest_type"] = "extsftp"
+        if data.get("ingest_type") == "external_api":
+            data["ingest_type"] = "extapi"
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
 
