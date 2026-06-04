@@ -63,15 +63,15 @@
             >
               <q-tooltip>Copy</q-tooltip>
             </q-btn>
-            <q-btn
-              flat
-              outline
-              color="negative"
-              icon="delete"
-              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
-            >
-              <q-tooltip>Delete</q-tooltip>
-            </q-btn>
+<!--            <q-btn-->
+<!--              flat-->
+<!--              outline-->
+<!--              color="negative"-->
+<!--              icon="delete"-->
+<!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
+<!--            >-->
+<!--              <q-tooltip>Delete</q-tooltip>-->
+<!--            </q-btn>-->
           </template>
 
           <template v-else>
@@ -141,10 +141,10 @@ function onRequest(props: QTableRequestProp) {
   emit('onRequest', props);
 }
 
-const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
-  idToDelete.value = id;
-  deleteDialog.value = true;
-};
+// const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
+//   idToDelete.value = id;
+//   deleteDialog.value = true;
+// };
 
 const emitDelete = () => {
   emit('delete', idToDelete.value);
