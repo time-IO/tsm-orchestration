@@ -166,7 +166,7 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
-          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
+<!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
     </div>
@@ -247,9 +247,9 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();
 };
 
-const openDeleteDialog = () => {
-  deleteDialog.value = true;
-};
+// const openDeleteDialog = () => {
+//   deleteDialog.value = true;
+// };
 
 const deleteItem = async () => {
   if (!item.value) {
