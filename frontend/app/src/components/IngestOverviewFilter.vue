@@ -2,12 +2,23 @@
   <q-list bordered @keyup.enter="triggerEvent">
     <q-expansion-item label="Filter" default-opened>
       <q-card bordered class="q-pa-md">
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3">
             <q-input class="q-mb-sm" label="Filter by Name" v-model="name" clearable dense />
           </div>
+          <span></span>
+          <div class="col-3">
+            <q-input
+              class="q-mb-sm"
+              label="Filter by UUID"
+              v-model="uuid"
+              clearable
+              dense
+              @blur="trimUuid"
+            />
+          </div>
         </div>
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3 q-mr-sm">
             <permission-group-select
               class="q-mb-sm"
@@ -20,7 +31,7 @@
             <ingest-type-select class="q-mb-sm" v-model="ingest_type" dense />
           </div>
         </div>
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3 q-mr-sm">
             <date-time-picker
               clearable
@@ -45,9 +56,7 @@
           <q-btn @click="resetFilters" style="min-width: 120px" class="text-blue-grey-13"
             >Clear filters</q-btn
           >
-          <q-btn @click="triggerEvent" style="min-width: 120px"
-            >Apply filters</q-btn
-          >
+          <q-btn @click="triggerEvent" style="min-width: 120px">Apply filters</q-btn>
         </q-card-actions>
       </q-card>
     </q-expansion-item>
@@ -60,6 +69,7 @@ import DateTimePicker from 'components/DateTimePicker.vue';
 import IngestTypeSelect from 'components/IngestTypeSelect.vue';
 
 const name = defineModel<string | undefined>('name', { default: undefined });
+const uuid = defineModel<string | undefined>('uuid', { default: undefined });
 const ingest_type = defineModel<string | undefined>('ingest_type', { default: undefined });
 const permission_group_id = defineModel<number | undefined>('permission_group_id', {
   default: undefined,
@@ -75,11 +85,18 @@ function triggerEvent() {
 
 function resetFilters() {
   name.value = undefined;
+  uuid.value = undefined;
   ingest_type.value = undefined;
   permission_group_id.value = undefined;
   date_from.value = undefined;
   date_to.value = undefined;
   emit('applyFilters');
+}
+
+function trimUuid() {
+  if (uuid.value) {
+    uuid.value = uuid.value.trim();
+  }
 }
 </script>
 

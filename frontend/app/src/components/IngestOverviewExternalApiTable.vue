@@ -103,6 +103,7 @@ window.addEventListener('resize', () => {
 const colMaxWidth: Record<string, { sm: string; lg: string }> = {
   permission_group: { sm: '80px', lg: '150px' },
   name: { sm: '80px', lg: '220px' },
+  uuid: {sm: '80px', lg: '220px'}
 };
 
 const getMaxWidth = computed(() => (colName: string) => {

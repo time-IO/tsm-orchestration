@@ -6,6 +6,8 @@ from models.filters import IngestFilter
 from sqlalchemy import select
 from fastapi_filters.ext.sqlalchemy import apply_filters
 from fastapi import HTTPException
+from sqlalchemy import cast, String
+from fastapi_filters import FilterOperator
 
 from models.ingest import IngestWithApiInfoRead
 from sorting import apply_sort_list
@@ -45,6 +47,13 @@ class IngestRepository:
         )
 
         if filters:
+            if filters.uuid and FilterOperator.ilike in filters.uuid:
+                uuid_value = filters.uuid[FilterOperator.ilike]
+                statement = statement.where(
+                    cast(self.model.uuid, String).ilike(uuid_value)
+                )
+                filters.uuid = {}
+
             statement = apply_filters(statement, filters)
 
         results = self.session.exec(statement).unique().scalars().all()

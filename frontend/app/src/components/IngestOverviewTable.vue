@@ -63,7 +63,7 @@
               color="black"
               icon="content_copy"
             >
-              <q-tooltip>Copy</q-tooltip>
+              <q-tooltip>Copy Ingest</q-tooltip>
             </q-btn>
 <!--            <q-btn-->
 <!--              flat-->
@@ -77,12 +77,14 @@
           </template>
 
           <template v-else>
-            <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
-              <div
-                :style="`overflow: hidden;
+            <span
+              v-if="col.value !== null && col.value !== undefined && col.value !== ''"
+              :style="`display: inline-flex; align-items: center; max-width: ${getMaxWidth(col.name)}`"
+              >
+              <span
+                style="overflow: hidden;
               text-overflow: ellipsis;
-              white-space: nowrap;
-             max-width: ${getMaxWidth(col.name)}`"
+              white-space: nowrap"
               >
                 {{ col.value }}
                 <q-tooltip>
@@ -92,7 +94,18 @@
                       : col.value
                   }}
                 </q-tooltip>
-              </div>
+              </span>
+              <q-btn
+                v-if="col.name === 'uuid'"
+                flat
+                round
+                icon="content_copy"
+                size="xs"
+                text-color="grey"
+                @click="copyClipboard(props.row.uuid)"
+              >
+                <q-tooltip>Copy UUID</q-tooltip>
+              </q-btn>
             </span>
             <span v-else class="text-grey-6"> N/A </span>
           </template>
@@ -125,6 +138,7 @@ import {
   generateIngestPath,
   formatExternalApiType,
 } from 'src/utils/pagination_utils';
+import { copyToClipboard, useQuasar } from 'quasar';
 
 defineProps({
   rows: {
@@ -178,6 +192,7 @@ window.addEventListener('resize', () => {
 const colMaxWidth: Record<string, { sm: string; lg: string }> = {
   permission_group: { sm: '80px', lg: '150px' },
   name: { sm: '80px', lg: '220px' },
+  uuid: { sm: '80px', lg: '220px' },
 };
 
 const getMaxWidth = computed(() => (colName: string) => {
@@ -185,6 +200,28 @@ const getMaxWidth = computed(() => (colName: string) => {
   if (!widths) return 'auto';
   return windowWidth.value < 1200 ? widths.sm : widths.lg;
 });
+
+const $q = useQuasar();
+const copyClipboard = (text: string | null) => {
+  if (!text) {
+    return;
+  }
+  copyToClipboard(text)
+    .then(() => {
+      $q.notify({
+        message: 'Copied to clipboard',
+        color: 'positive',
+        icon: 'check',
+      });
+    })
+    .catch(() => {
+      $q.notify({
+        message: 'Failed to copy',
+        color: 'negative',
+        icon: 'error',
+      });
+    });
+};
 </script>
 
 <style scoped>

@@ -25,6 +25,7 @@ export type DefaultFilter = {
   permission_group_id: number | undefined;
   date_from: string | undefined;
   date_to: string | undefined;
+  uuid: string | undefined;
 };
 
 export type IngestFilter = DefaultFilter & {
