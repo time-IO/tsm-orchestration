@@ -414,7 +414,10 @@ class Database(Base):
     ro_user: str = _prop(lambda self: self._attrs["read_only_user"])
     ro_password: str = _prop(lambda self: self._attrs["read_only_password"])
     url: str | None = _prop(lambda self: self._attrs["url"])
-    # ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
+
+    @property
+    def ro_url(self) -> None:
+        return None
 
     # thing.Datebase interface
     # password url, ro_password, ro_url

@@ -43,7 +43,7 @@ class SyncExtApiManager(AbstractHandler):
         self.dbapi = DBapi(
             get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
         )
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.sync_handlers: dict[str, ExtApiSyncer] = {
             "tsystems": TsystemsApiSyncer(),
             "bosch": BoschApiSyncer(),
@@ -55,7 +55,7 @@ class SyncExtApiManager(AbstractHandler):
         }
 
     def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         ext_api_name = thing.ext_api.api_type_name
         syncer = self.sync_handlers[ext_api_name]
         try:

@@ -43,7 +43,7 @@ class ParserJobHandler(AbstractHandler):
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.dbapi = DBapi(
             get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
         )
@@ -58,10 +58,10 @@ class ParserJobHandler(AbstractHandler):
         # eg: foo/bar/file.ext -> bucket: foo, file: bar/file.ext
         bucket_name, filename = content["Key"].split("/", maxsplit=1)
 
-        thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.configdb_dsn)
+        thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.dsmdb_dsn)
         thing_uuid = thing.uuid
         file_parser = FileParser.from_id(
-            thing.s3_store.file_parser_id, dsn=self.configdb_dsn
+            thing.s3_store.file_parser_id, dsn=self.dsmdb_dsn
         )
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern

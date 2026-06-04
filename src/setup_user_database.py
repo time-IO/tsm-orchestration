@@ -33,10 +33,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = Database(get_envvar("DATABASE_URL"))
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
         ro_user = thing.database.ro_username.lower()
         user = thing.database.username.lower()

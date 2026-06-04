@@ -35,10 +35,10 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         )
         # needed when defining new datasource
         self.sslmode = get_envvar("GRAFANA_DEFAULT_DATASOURCE_SSLMODE")
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         org = self.api.t.org.get_by_name(thing.project.name)
         if org is None:
             org = self.api.t.org.create(thing.project.name)
