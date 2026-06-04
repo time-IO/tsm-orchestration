@@ -3,6 +3,10 @@ import uuid as uuid_pkg
 from datetime import datetime, timezone
 from typing import Optional
 from .permission_group import PermissionGroup
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class IngestRead(SQLModel):
@@ -29,9 +33,9 @@ class IngestWithApiInfoRead(SQLModel):
     description: Optional[str]
     created_by_id: Optional[int]
     parser_id: Optional[int]
-
     permission_group: dict
     external_api_type: Optional[str]
+    created_by_username: Optional[str] = None
 
 
 class IngestCreate(SQLModel):
@@ -71,14 +75,17 @@ class Ingest(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+    created_by_id: Optional[int] = Field(default=None, foreign_key="user.id")
     ingest_type: str = Field(
         description="type used for inheritance", index=True
     )  # e.g., "mqtt", "sftp", "external_api"
     name: str
     permission_group_id: int = Field(foreign_key="permission_group.id")
     description: Optional[str] = None
-    created_by_id: Optional[int] = None
     parser_id: Optional[int] = Field(foreign_key="parser.id")
+
+    # Relationship to permission user
+    user: Optional["User"] = Relationship(back_populates="ingests")
 
     # Relationship to permission group
     permission_group: "PermissionGroup" = Relationship(back_populates="ingest")

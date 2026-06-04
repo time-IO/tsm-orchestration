@@ -1,5 +1,11 @@
 from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .ingest import Ingest
+    from .parser_detailed import ParserDetailed
+    from .quality_control_setting import QualityControlSetting
 
 from .permission_group import PermissionGroup, PermissionGroupUserLink
 
@@ -37,6 +43,14 @@ class User(SQLModel, table=True):
 
     permission_groups: list["PermissionGroup"] = Relationship(
         back_populates="users", link_model=PermissionGroupUserLink
+    )
+
+    ingests: list["Ingest"] = Relationship(back_populates="user")
+
+    parser_detailed: list["ParserDetailed"] = Relationship(back_populates="user")
+
+    quality_control_setting: list["QualityControlSetting"] = Relationship(
+        back_populates="user"
     )
 
     @property

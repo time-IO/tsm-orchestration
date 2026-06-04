@@ -15,6 +15,7 @@ from utils import create_db_username, generate_password
 from sorting import apply_sort_list
 from config import settings
 from mqtt import publish_frontend_thing_update
+from sqlalchemy.orm import joinedload
 
 T = TypeVar("T", bound=SQLModel)
 
@@ -250,6 +251,22 @@ class DatabaseRepository(BaseRepository):
 class QualityControlSettingRepository(BaseRepository):
     def __init__(self, session: Session):
         super().__init__(model=QualityControlSetting, session=session)
+
+    def find_allowed_all(
+        self,
+        permission_group_ids: list[int],
+        sort_by: Optional[str] = None,
+        filters: FilterSet | None = None,
+    ) -> List[T]:
+        statement = (
+            select(self.model)
+            .where(self.model.permission_group_id.in_(permission_group_ids))
+            .options(joinedload(self.model.user))
+        )
+        if filters:
+            statement = apply_filters(statement, filters)
+        items = self.session.exec(statement).unique().all()
+        return apply_sort_list(items, sort_by) if sort_by else items
 
     def create_allowed(
         self, payload, extra_data, permission_group_ids, ingest_type_info=None

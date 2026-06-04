@@ -2,6 +2,10 @@ from sqlmodel import SQLModel, Field, Index, func, Column, Relationship
 from typing import Optional
 from datetime import datetime, timezone
 from .parser import Parser, ParserRead
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class ParserDetailedRead(ParserRead):
@@ -10,7 +14,7 @@ class ParserDetailedRead(ParserRead):
     permission_group_id: int
     description: Optional[str]
     created_by_id: Optional[int]
-
+    created_by_username: Optional[str] = None
     permission_group: dict
 
 
@@ -47,9 +51,12 @@ class ParserDetailed(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
-    created_by_id: Optional[int] = None
+    created_by_id: Optional[int] = Field(default=None, foreign_key="user.id")
     name: str
     description: Optional[str] = None
+
+    # Relationship to user
+    user: Optional["User"] = Relationship(back_populates="parser_detailed")
 
     # Relationship to permission group
     permission_group: "PermissionGroup" = Relationship(back_populates="parser_detailed")
