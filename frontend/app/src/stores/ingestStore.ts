@@ -14,6 +14,7 @@ export const useIngestStore = defineStore('ingestStore', {
     pagination: defaultPagination,
     filters: {
       name: undefined,
+      uuid: undefined,
       ingest_type: undefined,
       permission_group_id: undefined,
       date_from: undefined,

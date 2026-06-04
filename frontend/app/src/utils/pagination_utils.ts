@@ -67,6 +67,7 @@ export const default_ingest_columns: QTableColumn[] = [
       return `${day}.${month}.${year}`;
     },
   },
+  {name: 'uuid', label: 'UUID', field:'uuid', align: 'center' },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 export const default_ingest_external_api_columns: QTableColumn[] = [
@@ -129,6 +130,7 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
       return `${day}.${month}.${year}`;
     },
   },
+  { name: 'uuid', label: 'UUID', field: 'uuid', align: 'center' },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
@@ -182,6 +184,7 @@ export const default_parser_columns: QTableColumn[] = [
       return `${day}.${month}.${year}`;
     },
   },
+  {name: 'uuid', label:'UUID', align:'center', field:'uuid'},
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 

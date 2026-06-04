@@ -8,6 +8,7 @@
     <parser-overview-filter
       class="q-mt-md q-mb-md"
       v-model:name="store.filters.name"
+      v-model:uuid="store.filters.uuid"
       v-model:parser_type="store.filters.parser_type"
       v-model:permission_group_id="store.filters.permission_group_id"
       v-model:date_from="store.filters.date_from"

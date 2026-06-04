@@ -7,7 +7,8 @@ from typing import Optional
 from fastapi_filters.ext.sqlalchemy import apply_filters
 from models.filters import ParserDetailedFilter
 from models.parser_detailed import ParserDetailedRead
-
+from fastapi_filters import FilterOperator
+from sqlalchemy import cast, String
 from sorting import apply_sort_list
 
 
@@ -45,6 +46,11 @@ class ParserDetailedRepository:
             .options(joinedload(self.model.parser).joinedload(Parser.ingest))
         )
         if filters:
+            if filters.uuid and FilterOperator.ilike in filters.uuid:
+                uuid_value = filters.uuid[FilterOperator.ilike]
+                statement = statement.where(cast(Parser.uuid, String).ilike(uuid_value))
+                filters.uuid = {}
+
             statement = apply_filters(statement, filters)
 
         results = self.session.exec(statement).unique().scalars().all()

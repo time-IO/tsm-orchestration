@@ -2,12 +2,23 @@
   <q-list bordered @keyup.enter="triggerEvent">
     <q-expansion-item label="Filter" default-opened>
       <q-card bordered class="q-pa-md">
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3">
             <q-input class="q-mb-sm" label="Filter by Name" v-model="name" clearable dense />
           </div>
+          <span></span>
+          <div class="col-3">
+            <q-input
+              class="q-mb-sm"
+              label="Filter by UUID"
+              v-model="uuid"
+              clearable
+              dense
+              @blur="trimUuid"
+            />
+          </div>
         </div>
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3 q-mr-sm">
             <permission-group-select
               class="q-mb-sm"
@@ -20,7 +31,7 @@
             <parser-type-select class="q-mb-sm" v-model="parser_type" dense />
           </div>
         </div>
-        <div class="row">
+        <div class="row q-gutter-x-sm">
           <div class="col-3 q-mr-sm">
             <date-time-picker
               clearable
@@ -57,6 +68,7 @@ import DateTimePicker from 'components/DateTimePicker.vue';
 import ParserTypeSelect from 'components/ParserTypeSelect.vue';
 
 const name = defineModel<string | undefined>('name', { default: undefined });
+const uuid = defineModel<string | undefined>('uuid', { default: undefined });
 const parser_type = defineModel<string | undefined>('parser_type', { default: undefined });
 const permission_group_id = defineModel<number | undefined>('permission_group_id', {
   default: undefined,
@@ -72,11 +84,18 @@ function triggerEvent() {
 
 function resetFilters() {
   name.value = undefined;
+  uuid.value = undefined;
   parser_type.value = undefined;
   permission_group_id.value = undefined;
   date_from.value = undefined;
   date_to.value = undefined;
   emit('applyFilters');
+}
+
+function trimUuid() {
+  if (uuid.value) {
+    uuid.value = uuid.value.trim();
+  }
 }
 </script>
 

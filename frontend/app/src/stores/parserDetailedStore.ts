@@ -14,6 +14,7 @@ export const useParserDetailedStore = defineStore('parserDetailedStore', {
     pagination: defaultPagination,
     filters: {
       name: undefined,
+      uuid: undefined,
       parser_type: undefined,
       permission_group_id: undefined,
       date_from: undefined,
