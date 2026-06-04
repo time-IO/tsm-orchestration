@@ -38,10 +38,10 @@
         <div class="col-12">
           <div class="row justify-center q-mb-xs" style="font-weight: bold">
             <div class="col q-px-sm text-center" v-for="card in cards" :key="card.label + '-stat'">
-              <div class="text-h5 text-amber-13" style="font-weight: bold; font-size: 1.8em">{{ card.count }}</div>
+              <div class="text-h5 text-amber-13" style="font-weight: bold; font-size: 1.7em">{{ card.count }}</div>
               <div
                 class="text-h5 text-amber-13"
-                style=" font-size: 100%; font-weight: bold; font-size: 1.3em"
+                style=" font-size: 100%; font-weight: bold; font-size: 1.2em"
               >
                 {{ card.label }}
               </div>
