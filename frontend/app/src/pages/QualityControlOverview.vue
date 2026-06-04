@@ -60,6 +60,7 @@
       <template v-slot:loading>
         <q-inner-loading showing color="primary" />
       </template>
+
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
           <q-td auto-width>
@@ -69,7 +70,7 @@
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
-            :class="col.name === 'action' ? 'text-center' : 'text-left'"
+            :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
           >
             <template v-if="col.name === 'action'">
               <q-btn
@@ -108,6 +109,12 @@
 <!--              >-->
 <!--                <q-tooltip>Delete</q-tooltip>-->
 <!--              </q-btn>-->
+            </template>
+
+            <template v-else-if="col.name === 'created_by'">
+              <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
+                <q-tooltip>{{ col.value ?? 'N/A'}}</q-tooltip>
+              </q-icon>
             </template>
 
             <template v-else>
@@ -194,7 +201,14 @@ const columns: QTableColumn[] = [
     align: 'center',
   },
   { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
+   {
+    name: 'created_by',
+    label: 'Created by',
+    align: 'center',
+    field: (row) => row.created_by_username ?? null,
+  },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
+
 ];
 
 onMounted(() => {

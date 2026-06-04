@@ -1,7 +1,12 @@
 from sqlmodel import SQLModel, Field, Relationship, Column, Index, func, JSON, column
 import uuid as uuid_pkg
+from typing import Optional
 from datetime import datetime, timezone
 from .permission_group import PermissionGroup
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class QualityControlFunctionArgumentBase(SQLModel):
@@ -103,6 +108,7 @@ class QualityControlSettingPublic(QualityControlSettingBase):
     id: int
     uuid: uuid_pkg.UUID
     created_by_id: int | None = None
+    created_by_username: str | None = None
     created_at: datetime | None = None
     quality_control_functions: list[QualityControlFunctionPublic]
     permission_group: "PermissionGroup"
@@ -133,11 +139,17 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
         back_populates="quality_control_setting"
     )
 
+    user: Optional["User"] = Relationship(back_populates="quality_control_setting")
+
     @property
     def mqtt_information(self) -> list:
         return [
             self.func_mqtt_information(func) for func in self.quality_control_functions
         ]
+
+    @property
+    def created_by_username(self) -> str | None:
+        return self.user.username if self.user else None
 
     @staticmethod
     def func_mqtt_information(func) -> dict:

@@ -35,7 +35,7 @@
           v-for="col in props.cols"
           :key="col.name"
           :props="props"
-          :class="col.name === 'action' ? 'text-center' : 'text-left'"
+          :class="['action', 'created_by'].includes(col.name)? 'text-center' : 'text-left'"
         >
           <template v-if="col.name === 'action'">
             <q-btn
@@ -74,6 +74,12 @@
 <!--            >-->
 <!--              <q-tooltip>Delete</q-tooltip>-->
 <!--            </q-btn>-->
+          </template>
+
+          <template v-else-if="col.name === 'created_by'">
+            <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
+              <q-tooltip>{{ col.value ?? 'N/A' }}</q-tooltip>
+            </q-icon>
           </template>
 
           <template v-else>

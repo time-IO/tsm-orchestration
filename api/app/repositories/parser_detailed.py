@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from models import ParserDetailed, Parser
+from models import ParserDetailed, Parser, User
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
@@ -41,8 +41,8 @@ class ParserDetailedRepository:
     ):
         statement = (
             select(self.model)
-            .join(self.model.parser)
             .where(self.model.permission_group_id.in_(permission_group_ids_of_user))
+            .options(joinedload(self.model.user))
             .options(joinedload(self.model.parser).joinedload(Parser.ingest))
         )
         if filters:
@@ -83,6 +83,8 @@ class ParserDetailedRepository:
 
         parser = entity.parser
 
+        user = entity.user
+
         permission_group = entity.permission_group
 
         return ParserDetailedRead(
@@ -90,6 +92,7 @@ class ParserDetailedRepository:
             parser_type=parser.parser_type,
             uuid=parser.uuid,
             created_at=entity.created_at,
+            created_by=entity.created_by_id,
             name=entity.name,
             permission_group_id=entity.permission_group_id,
             description=entity.description,
@@ -99,5 +102,6 @@ class ParserDetailedRepository:
                 "uuid": permission_group.uuid,
                 "name": permission_group.name,
             },
+            created_by_username=user.username if user else None,
         )
         pass

@@ -67,6 +67,13 @@ export const default_ingest_columns: QTableColumn[] = [
       return `${day}.${month}.${year}`;
     },
   },
+  {
+    name: 'created_by',
+    label: 'Created by',
+    align: 'center',
+    field: (row) => row.created_by_username ?? null,
+  },
+
   {name: 'uuid', label: 'UUID', field:'uuid', align: 'center' },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
@@ -184,7 +191,14 @@ export const default_parser_columns: QTableColumn[] = [
       return `${day}.${month}.${year}`;
     },
   },
+  {
+    name: 'created_by',
+    label: 'Created by',
+    align: 'center',
+    field: (row) => row.created_by_username ?? null,
+  },
   {name: 'uuid', label:'UUID', align:'center', field:'uuid'},
+
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
