@@ -61,16 +61,22 @@ RESULT_TYPE_MAPPING = {
 
 class BoschApiSyncer(ExtApiSyncer):
 
+    def normalize_datetime(self, dt_str):
+        formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%SZ",
+        ]
+        for fmt in formats:
+            try:
+                return datetime.strptime(dt_str, fmt).strftime("%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                pass
+        raise ValueError(f"Unsupported datetime format: {dt_str}")
+
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        dt_from = datetime.strptime(
-            content["datetime_from"], "%Y-%m-%d %H:%M:%S"
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        dt_to = datetime.strptime(content["datetime_to"], "%Y-%m-%d %H:%M:%S").strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        )
-
+        dt_from = self.normalize_datetime(content["datetime_from"])
+        dt_to = self.normalize_datetime(content["datetime_to"])
         server_url = (
             f"{settings['endpoint']}/{settings['sensor_id']}/" f"{dt_from}/{dt_to}"
         )
