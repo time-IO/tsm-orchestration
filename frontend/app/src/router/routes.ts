@@ -314,13 +314,13 @@ const routes: RouteRecordRaw[] = [
     path: '/info/legal_notice',
     name: 'legal_notice',
     component: LegalNotice,
-    meta: { requiresAuth: true, constrainWidth: true },
+    meta: { requiresAuth: false, constrainWidth: true },
   },
   {
     path: '/info/terms_of_use',
     name: 'terms_of_use',
     component: TermsOfUse,
-    meta: { requiresAuth: true, constrainWidth: true },
+    meta: { requiresAuth: false, constrainWidth: true },
   },
   {
     path: '/trigger/external-api',
