@@ -59,6 +59,17 @@
 
                     <q-item>
                       <q-item-section>
+                        <q-item-label>Active</q-item-label>
+                        <q-item-label caption>
+                          <q-badge :color="item.is_active ? 'positive' : 'negative'" class="q-px-sm q-py-xs">
+                            {{ item.is_active ? 'Yes' : 'No' }}
+                          </q-badge>
+                        </q-item-label>
+                      </q-item-section>
+                    </q-item>
+
+                    <q-item>
+                      <q-item-section>
                         <q-item-label>Trigger Quality Control Setting</q-item-label>
                         <div>
                           <q-btn
