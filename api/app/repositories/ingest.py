@@ -1,7 +1,7 @@
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session
 from typing import Optional
-from models import Ingest, User
+from models import Ingest
 from models.filters import IngestFilter
 from sqlalchemy import select
 from fastapi_filters.ext.sqlalchemy import apply_filters
@@ -21,13 +21,12 @@ class IngestRepository:
     def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> Ingest:
         statement = (
             select(self.model)
-            .join(self.model.user)
             .where(
                 self.model.id == id,
                 self.model.permission_group_id.in_(permission_group_ids_of_user),
-                User.id == self.model.created_by_id,
             )
             .options(joinedload(self.model.permission_group))
+            .options(joinedload(self.model.user))
         )
 
         entity = self.session.exec(statement).unique().scalar_one_or_none()
