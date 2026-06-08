@@ -30,7 +30,7 @@ class CreateMqttUserHandler(AbstractHandler):
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
 
         if not thing.mqtt:

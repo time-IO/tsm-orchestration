@@ -41,7 +41,7 @@ class CreateThingInMinioHandler(AbstractHandler):
         )
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         if thing.raw_data_storage is None:
             logger.info(

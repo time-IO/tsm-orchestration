@@ -24,7 +24,7 @@ class CreateFrostInstanceHandler(AbstractHandler):
         self.tomcat_proxy_url = get_envvar("TOMCAT_PROXY_URL")
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         frost.write_context_file(
             schema=thing.database.schema,

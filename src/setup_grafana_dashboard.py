@@ -37,7 +37,7 @@ class CreateThingInGrafanaHandler(AbstractHandler):
         self.sslmode = get_envvar("GRAFANA_DEFAULT_DATASOURCE_SSLMODE")
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         org = self.api.t.org.get_by_name(thing.project.name)
         if org is None:
