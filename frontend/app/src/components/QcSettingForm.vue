@@ -46,6 +46,17 @@
             rows="3"
             hint="Provide additional details about this ingest configuration"
           />
+
+          <q-card-section class="q-pa-none q-mt-md">
+            <div class="text-h6 q-mb-md">Activation Settings</div>
+
+            <q-toggle
+              v-model="formData.is_active"
+              label="Enable Quality Control"
+              color="primary"
+              size="md"
+            />
+          </q-card-section>
         </q-form>
       </q-step>
 
