@@ -15,6 +15,7 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const dwdStore = useIngestExternalApiDwdStore();
 const $q = useQuasar();
@@ -72,6 +73,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

@@ -17,6 +17,7 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import QcSettingForm from 'components/QcSettingForm.vue';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();
 const $q = useQuasar();
@@ -105,6 +106,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

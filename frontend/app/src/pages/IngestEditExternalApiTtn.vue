@@ -17,6 +17,7 @@ import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternal
 import type { IngestExternalApiTheThingsNetworkUpdate } from 'src/services/ingest_external_api_the_things_network/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiTtn from 'components/IngestFormExternalApiTtn.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
 const $q = useQuasar();
@@ -116,6 +117,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

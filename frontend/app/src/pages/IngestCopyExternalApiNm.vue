@@ -19,6 +19,7 @@ import type { IngestExternalApiNeutronMonitorCreate } from 'src/services/ingest_
 import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/type';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiNm from 'components/IngestFormExternalApiNm.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();
@@ -120,6 +121,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

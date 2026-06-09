@@ -17,6 +17,7 @@ import type { IngestExternalApiTSystemsUpdate } from 'src/services/ingest_extern
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
@@ -119,6 +120,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

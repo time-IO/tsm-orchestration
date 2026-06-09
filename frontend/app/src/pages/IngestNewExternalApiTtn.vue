@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
 import type { IngestExternalApiTheThingsNetworkCreate } from 'src/services/ingest_external_api_the_things_network/types';
 import IngestFormExternalApiTtn from 'components/IngestFormExternalApiTtn.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
 const $q = useQuasar();
@@ -73,6 +74,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

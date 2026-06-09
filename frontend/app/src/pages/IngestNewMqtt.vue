@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const mqttStore = useIngestMqttStore();
 const $q = useQuasar();
@@ -67,6 +68,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

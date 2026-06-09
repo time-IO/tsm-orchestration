@@ -213,6 +213,7 @@ import type { CsvParserUpdate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
@@ -369,6 +370,10 @@ function removeCommentCharacter(index: number) {
 function trimHeadlines(value: string | number | null) {
   formData.value.headlines_to_exclude = String(value ?? '').trim();
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

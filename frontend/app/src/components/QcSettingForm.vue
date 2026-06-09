@@ -155,7 +155,7 @@
         <q-card-actions>
           <q-btn flat @click="closeSubmitDialog()">Cancel</q-btn>
           <q-space></q-space>
-          <q-btn flat color="primary" @click="emitSaveAndCloseDialog">Submit</q-btn>
+          <q-btn flat color="primary">Submit</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -176,8 +176,7 @@ import { QForm } from 'quasar';
 import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
 import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
 import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
-import { computed, type Ref, ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import {onBeforeRouteLeave} from 'vue-router';
+import { computed, type Ref, ref } from 'vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
@@ -210,8 +209,6 @@ defineProps<{
   backUrl: string;
   itemPermissionGroup?: PermissionGroup | null;
 }>();
-
-const emit = defineEmits(['save']);
 
 const step = ref(1);
 const functionDialog = ref(false);
@@ -253,34 +250,6 @@ const hasValidDatastreams = computed(() => {
 });
 
 const expandAllFunctions = ref(false);
-
-const isDirty = ref(false);
-
-watch(
-  formData,
-  () => {isDirty.value = true},
-  {deep: true}
-);
-
-onBeforeRouteLeave((to, from, next) => {
-  if (!isDirty.value) return next();
-  const confirmed = window.confirm(
-  'You have unsaved changes. Are you sure you want to leave the site?'
-  );
- if (confirmed) {
-   next ();
- }else{next(false);
- }
-});
-
-function handleBeforeUnload(e: BeforeUnloadEvent){
-  if (!isDirty.value) return;
-  e.preventDefault();
-}
-
-onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload));
-onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnload));
-
 
 function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
   addDatastreamFuncIndex.value = funcIndex;
@@ -381,12 +350,6 @@ function removeFunction(index: number) {
 
 function openFunctionsDialog() {
   functionDialog.value = true;
-}
-
-function emitSaveAndCloseDialog() {
-  isDirty.value = false;
-  emit('save');
-  closeSubmitDialog();
 }
 
 

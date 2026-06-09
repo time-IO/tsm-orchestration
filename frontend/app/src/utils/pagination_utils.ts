@@ -25,7 +25,7 @@ export const default_ingest_columns: QTableColumn[] = [
     name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
-    format: (val) => val?.replace(/^UFZ-TSM:\s*/i, '') ?? '',
+    format: (val) => val?.replace(/^[^:]*:\s*/, ''),
     sortable: true,
     align: 'center',
   },
@@ -74,7 +74,7 @@ export const default_ingest_columns: QTableColumn[] = [
     field: (row) => row.created_by_username ?? null,
   },
 
-  {name: 'uuid', label: 'UUID', field:'uuid', align: 'center' },
+  { name: 'uuid', label: 'UUID', field: 'uuid', align: 'center' },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 export const default_ingest_external_api_columns: QTableColumn[] = [
@@ -91,7 +91,7 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
     name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
-    format: (val) => val?.replace(/^UFZ-TSM:\s*/i, '') ?? '',
+    format: (val) => val?.replace(/^[^:]*:\s*/, ''),
     sortable: true,
     align: 'center',
   },
@@ -155,7 +155,7 @@ export const default_parser_columns: QTableColumn[] = [
     name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
-    format: (val) => val?.replace(/^UFZ-TSM:\s*/i, '') ?? '',
+    format: (val) => val?.replace(/^[^:]*:\s*/, ''),
     sortable: true,
     align: 'center',
   },
@@ -197,7 +197,7 @@ export const default_parser_columns: QTableColumn[] = [
     align: 'center',
     field: (row) => row.created_by_username ?? null,
   },
-  {name: 'uuid', label:'UUID', align:'center', field:'uuid'},
+  { name: 'uuid', label: 'UUID', align: 'center', field: 'uuid' },
 
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];

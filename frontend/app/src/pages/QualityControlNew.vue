@@ -10,13 +10,12 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import type {
-  QualityControlSettingCreate,
-} from 'src/services/quality_control_setting/types';
+import type { QualityControlSettingCreate } from 'src/services/quality_control_setting/types';
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import QcSettingForm from 'components/QcSettingForm.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();
 const $q = useQuasar();
@@ -32,7 +31,6 @@ const formData = ref<QualityControlSettingCreate>({
   permission_group_id: null,
   quality_control_functions: [],
 });
-
 
 async function save() {
   const data: QualityControlSettingCreate = {
@@ -71,6 +69,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

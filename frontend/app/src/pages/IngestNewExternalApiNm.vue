@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import type { IngestExternalApiNeutronMonitorCreate } from 'src/services/ingest_external_api_neutron_monitor/types';
 import IngestFormExternalApiNm from 'components/IngestFormExternalApiNm.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();
@@ -76,6 +77,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>
