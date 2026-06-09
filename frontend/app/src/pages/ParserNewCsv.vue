@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import ParserFormCsv from 'components/ParserFormCsv.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
@@ -86,6 +87,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

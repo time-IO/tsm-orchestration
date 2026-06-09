@@ -10,13 +10,9 @@
           <img :src="ufzLogoSrc" alt="UFZ" style="height: 50px; opacity: 0.85" />
         </a>
 
-       <a href="https://www.ufz.de/index.php?de=45348" target="_blank">
-        <img
-          :src="rdmLogoSrc"
-          alt="RDM"
-          style="height: 50px; opacity: 0.85"/>
-       </a>
-
+        <a href="https://www.ufz.de/index.php?de=45348" target="_blank">
+          <img :src="rdmLogoSrc" alt="RDM" style="height: 50px; opacity: 0.85" />
+        </a>
       </div>
 
       <div class="col-grow row justify-center q-gutter-x-md">
@@ -58,15 +54,14 @@
         >
           <q-icon name="lab la-gitlab" :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'" color="grey" />
         </a>
-
         <a
-          href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support"
+          href="data-source-management/api/docs"
           target="_blank"
           class="row items-center q-gutter-xs text-grey-7"
           style="text-decoration: none"
-          title="time.IO Wiki"
+          title="time.IO API"
         >
-          <q-icon name="auto_stories" :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'" color="grey" />
+          <q-icon name="mdi-api" :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'" color="grey" />
         </a>
         <a
           href="mailto:rdm-tsm@ufz.de"
@@ -76,11 +71,20 @@
           title="Request Support"
         >
           <q-icon
-            name="send"
+            name="las la-envelope-open"
             :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'"
             color="grey"
-            style="transform: rotate(-40deg)"
           />
+        </a>
+
+        <a
+          href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support"
+          target="_blank"
+          class="row items-center q-gutter-xs text-grey-7"
+          style="text-decoration: none"
+          title="time.IO Wiki"
+        >
+          <q-icon name="auto_stories" :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'" color="grey" />
         </a>
       </div>
     </div>

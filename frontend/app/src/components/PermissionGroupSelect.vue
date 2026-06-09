@@ -8,7 +8,7 @@
     :label="label ? label : 'Permission Group *'"
     @virtual-scroll="onVirtualScroll"
     option-value="id"
-    option-label="name"
+    :option-label="(opt) => opt?.name?.replace(/^[^:]*:\s*/, '') ?? opt?.name"
     emit-value
     map-options
     clearable

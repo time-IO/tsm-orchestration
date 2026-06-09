@@ -15,6 +15,7 @@ import { useRouter } from 'vue-router';
 import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import IngestFormSftp from 'components/IngestFormSftp.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
@@ -69,6 +70,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

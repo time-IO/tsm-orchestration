@@ -100,20 +100,20 @@
               >
                 <q-tooltip>Copy</q-tooltip>
               </q-btn>
-<!--              <q-btn-->
-<!--                flat-->
-<!--                outline-->
-<!--                color="negative"-->
-<!--                icon="delete"-->
-<!--                @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-<!--              >-->
-<!--                <q-tooltip>Delete</q-tooltip>-->
-<!--              </q-btn>-->
+<!--                <q-btn-->
+<!--                  flat-->
+<!--                  outline-->
+<!--                  color="negative"-->
+<!--                  icon="delete"-->
+<!--                  @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
+<!--                >-->
+<!--                  <q-tooltip>Delete</q-tooltip>-->
+<!--                </q-btn>-->
             </template>
 
             <template v-else-if="col.name === 'created_by'">
               <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
-                <q-tooltip>{{ col.value ?? 'N/A'}}</q-tooltip>
+                <q-tooltip>{{ col.value ?? 'N/A' }}</q-tooltip>
               </q-icon>
             </template>
 
@@ -196,19 +196,18 @@ const columns: QTableColumn[] = [
     name: 'permission_group',
     label: 'Permission Group',
     field: (row) => row.permission_group.name,
-    format: (val) => val?.replace(/^UFZ-TSM:\s*/i, '') ?? '',
+    format: (val) => val?.replace(/^[^:]*:\s*/, ''),
     sortable: true,
     align: 'center',
   },
   { name: 'name', label: 'Name', field: 'name', sortable: true, align: 'center' },
-   {
+  {
     name: 'created_by',
     label: 'Created by',
     align: 'center',
     field: (row) => row.created_by_username ?? null,
   },
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
-
 ];
 
 onMounted(() => {

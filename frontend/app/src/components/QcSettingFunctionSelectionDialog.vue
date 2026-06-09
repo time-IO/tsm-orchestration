@@ -1,8 +1,10 @@
 <template>
-  <q-dialog v-model="showDialog" backdrop-filter="blur(4px) saturate(150%)" @keydown.esc="showDialog = false">
-
-    <q-card class="column"
-  style="width: 90vw;  height: 80vh">
+  <q-dialog
+    v-model="showDialog"
+    backdrop-filter="blur(4px) saturate(150%)"
+    @keydown.esc="showDialog = false"
+  >
+    <q-card class="column" style="width: 90vw; height: 80vh">
       <q-card-section class="row items-center">
         <q-space />
         <div class="text-h6">Choose a quality control function</div>
@@ -101,7 +103,7 @@ const functionOptions: FunctionOption[] = [
   {
     label: 'transferFlags',
     description: 'Transfer flags from one variable to another.',
-  },
+  }
 ];
 
 function emitSelectFunction(item: FunctionOption) {

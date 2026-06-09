@@ -15,6 +15,7 @@ import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import IngestFormExternalApiUba from 'components/IngestFormExternalApiUba.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ubaStore = useIngestExternalApiUbaStore();
 const $q = useQuasar();
@@ -68,6 +69,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

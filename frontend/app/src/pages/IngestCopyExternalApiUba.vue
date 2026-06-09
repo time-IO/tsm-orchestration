@@ -17,6 +17,7 @@ import type { IngestExternalApiUbaCreate } from 'src/services/ingest_external_ap
 import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiUba from 'components/IngestFormExternalApiUba.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 // Composition API
 const $q = useQuasar();
@@ -108,6 +109,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

@@ -15,11 +15,11 @@ import { useRouter } from 'vue-router';
 import type { IngestExternalApiTSystemsCreate } from 'src/services/ingest_external_api_tsystems/types';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
 const router = useRouter();
-
 
 const formData = ref<IngestExternalApiTSystemsCreate>({
   name: '',
@@ -76,6 +76,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

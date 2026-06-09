@@ -18,6 +18,7 @@ import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const mqttStore = useIngestMqttStore();
 const $q = useQuasar();
@@ -104,6 +105,10 @@ async function save() {
     isLoading.value = false;
   }
 }
+
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

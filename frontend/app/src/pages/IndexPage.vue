@@ -1,26 +1,29 @@
 <template>
   <q-page>
     <q-layout view="lHh lpR fFf">
-      <q-parallax :src="heroImageSrc">
-        <template v-slot:content="scope">
-          <div class="absolute-top-left q-pa-md" style="width: 300px; z-index: 10">
-            <img :src="ufzLogoSrc" style="width: 100%; display: block" />
-          </div>
+      <div class="hero-container" style="position: relative; height: 500px; overflow: hidden">
+        <img
+          :src="heroImageSrc"
+          class="hero-mirror"
+          style="
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 10% 80%;
+            display: block;
+          "
+        />
 
-          <div
-            class="absolute"
-            :style="{
-              top: scope.percentScrolled * 0.3 + '%',
-              right: 6 + scope.percentScrolled * 1 + '%',
-              width: 30 + scope.percentScrolled * 0.1 + '%',
-              transform: 'scale(' + (1 + scope.percentScrolled * 0.002) + ')',
-              transformOrigin: 'top left',
-            }"
-          >
-            <img :src="timeIoDarkLogoSrc" style="width: 100%; display: block" />
-          </div>
-        </template>
-      </q-parallax>
+        <!-- UFZ Logo oben links -->
+        <div class="absolute-top-left q-pa-md" style="width: 300px; z-index: 10">
+          <img :src="ufzLogoSrc" style="width: 100%; display: block" />
+        </div>
+
+        <!-- TimeIO Logo -->
+        <div class="absolute" style="top: 3%; right: 6%; width: 30%">
+          <img :src="timeIoDarkLogoSrc" style="width: 100%; display: block" />
+        </div>
+      </div>
 
       <div
         class="row q-col-gutter-md q-pa-md"
@@ -38,10 +41,12 @@
         <div class="col-12">
           <div class="row justify-center q-mb-xs" style="font-weight: bold">
             <div class="col q-px-sm text-center" v-for="card in cards" :key="card.label + '-stat'">
-              <div class="text-h5 text-amber-13" style="font-weight: bold; font-size: 1.7em">{{ card.count }}</div>
+              <div class="text-h5 text-amber-13" style="font-weight: bold; font-size: 1.7em">
+                {{ card.count }}
+              </div>
               <div
                 class="text-h5 text-amber-13"
-                style=" font-size: 100%; font-weight: bold; font-size: 1.2em"
+                style="font-size: 100%; font-weight: bold; font-size: 1.2em"
               >
                 {{ card.label }}
               </div>
@@ -105,60 +110,51 @@
 
             <q-card flat class="bg-transparent">
               <q-card-section>
-                <div class="row items-start q-gutter-md">
-                  <!-- Bild links -->
-                  <img
-                    :src="timeIoLogoSrc"
-                    style="width: 40%; max-width: 200px; min-width: 150px; display: block"
-                  />
-
-                  <!-- Text rechts -->
-                  <div class="col">
-                    <p
-                      class="text-justify"
-                      style="white-space: pre-line; line-height: 1.6; padding: 5%"
-                    >
-                      time.IO provides the infrastructure for storing and managing time series data.
-                      It supports the entire lifecycle of time series data, providing efficient data
-                      transfer and storage, real-time data visualisation using
-                      <a
-                        href="https://en.wikipedia.org/wiki/Grafana"
-                        target="_blank"
-                        style="color: #519ba5; text-decoration: none"
-                        >Grafana</a
-                      >, and integrated data analysis and quality control with
-                      <a
-                        href="https://rdm-software.pages.ufz.de/saqc/"
-                        target="_blank"
-                        style="color: #519ba5; text-decoration: none"
-                      >
-                        SaQC </a
-                      >. The container-based deployment model facilitates easy integration and
-                      scalability within existing IT infrastructures, including seamless connection
-                      to geospatial infrastructures such as spatial.IO for advanced spatial data
-                      analyses. time.IO also links to the
-                      <a
-                        href="https://web.app.ufz.de/sms/"
-                        target="_blank"
-                        style="color: #519ba5; text-decoration: none"
-                      >
-                        SMS
-                      </a>
-                      for consistent and standardised metadata management, ensuring a cohesive data
-                      management process. For data access, the standardised OGC
-                      <a
-                        href="https://en.wikipedia.org/wiki/SensorThings_API "
-                        target="_blank"
-                        style="color: #519ba5; text-decoration: none"
-                      >
-                        SensorThings API
-                      </a>
-                      is used.
-                      <!--                    and utilises the FROST-Server as a reference implementation for the OGC STA-->
-                      <!--                    interface.-->
-                    </p>
-                  </div>
-                </div>
+                <!-- Bild links -->
+                <img
+                  :src="timeIoLogoSrc"
+                  style="float: left; width: 150px; margin: 0 1.5em 1em 0; display: block"
+                />
+                <p class="text-justify" style="line-height: 1.6">
+                  time.IO provides the infrastructure for storing and managing time series data. It
+                  supports the entire lifecycle of time series data, providing efficient data
+                  transfer and storage, real-time data visualisation using
+                  <a
+                    href="https://en.wikipedia.org/wiki/Grafana"
+                    target="_blank"
+                    style="color: #519ba5; text-decoration: none"
+                    >Grafana</a
+                  >, and integrated data analysis and quality control with
+                  <a
+                    href="https://rdm-software.pages.ufz.de/saqc/"
+                    target="_blank"
+                    style="color: #519ba5; text-decoration: none"
+                  >
+                    SaQC </a
+                  >. The container-based deployment model facilitates easy integration and
+                  scalability within existing IT infrastructures, including seamless connection to
+                  geospatial infrastructures such as spatial.IO for advanced spatial data analyses.
+                  time.IO also links to the
+                  <a
+                    href="https://web.app.ufz.de/sms/"
+                    target="_blank"
+                    style="color: #519ba5; text-decoration: none"
+                  >
+                    SMS
+                  </a>
+                  for consistent and standardised metadata management, ensuring a cohesive data
+                  management process. For data access, the standardised OGC
+                  <a
+                    href="https://en.wikipedia.org/wiki/SensorThings_API "
+                    target="_blank"
+                    style="color: #519ba5; text-decoration: none"
+                  >
+                    SensorThings API
+                  </a>
+                  is used.
+                  <!--                    and utilises the FROST-Server as a reference implementation for the OGC STA-->
+                  <!--                    interface.-->
+                </p>
               </q-card-section>
             </q-card>
 
@@ -190,10 +186,10 @@ import { useAuthStore } from 'src/stores/authStore';
 
 const authStore = useAuthStore();
 
-const heroImageSrc = publicAsset('images/_DCS9774_8bit-JPEG 3000px.jpg');
+const heroImageSrc = publicAsset('images/_DCS9779_8bit-JPEG 3000px.jpg');
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN_white.png');
 const timeIoDarkLogoSrc = publicAsset('images/ufz-timeio_logo_dark.svg');
-const timeIoLogoSrc = publicAsset('images/timeio.svg');
+const timeIoLogoSrc = publicAsset('images/LogoTimeIO.png');
 
 const $q = useQuasar();
 const usageStatisticsStore = useUsageStatisticsStore();
@@ -246,3 +242,9 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+.hero-mirror {
+  transform: scaleX(-1);
+}
+</style>
