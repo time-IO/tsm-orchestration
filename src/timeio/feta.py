@@ -411,7 +411,7 @@ class Database(Base):
     schema: str = _prop(lambda self: self._attrs["username"])
     user: str = _prop(lambda self: self._attrs["username"])
     password: str = _prop(lambda self: self._attrs["password"])
-    ro_user: str = _prop(lambda self: self._attrs["read_only_user"])
+    ro_user: str = _prop(lambda self: self._attrs["read_only_username"])
     ro_password: str = _prop(lambda self: self._attrs["read_only_password"])
     url: str | None = _prop(lambda self: self._attrs["url"])
 
