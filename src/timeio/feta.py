@@ -490,7 +490,6 @@ class ExtAPI(Base):
     _schema = SCHEMA
     _table_name = "ingest_external_api"
     id: int = _prop(lambda self: self._attrs["ingest_id"])
-    # api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
     sync_interval: int = _prop(lambda self: self._attrs["sync_interval_in_minutes"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
 
@@ -546,7 +545,6 @@ class FileParser(Base, FromUUIDMixin):
     _table_name = "parser"
     id: int = _prop(lambda self: self._attrs["id"])
     uuid: int = _prop(lambda self: self._attrs["uuid"])
-    # file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
 
     @property
     def file_parser_type(self) -> FileParserType:
@@ -854,11 +852,6 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     uuid = _prop(lambda self: str(self._attrs["uuid"]))
     name = _prop(lambda self: self._attrs["name"])
     project_id: int = _prop(lambda self: self._attrs["permission_group_id"])
-    # ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
-    # s3_store_id: int | None = _prop(lambda self: self._attrs["s3_store_id"])
-    # mqtt_id: int = _prop(lambda self: self._attrs["mqtt_id"])
-    # ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
-    # ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
     project: Project = _create(Project, f"select * from {_schema}.permission_group where id = %s", "project_id") #fmt: skip
     s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id") # fmt: skip
