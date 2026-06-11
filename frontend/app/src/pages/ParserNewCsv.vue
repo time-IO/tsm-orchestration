@@ -65,7 +65,7 @@ async function save() {
 
     isLoading.value = true;
     const result = await csvParserStore.dispatchCreate(data);
-
+    savedForm.value = { ...formData.value };
     await router.push(`/parser/csv/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -90,7 +90,6 @@ async function save() {
 
 const savedForm = ref({ ...formData.value });
 useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
-
 </script>
 
 <style scoped></style>

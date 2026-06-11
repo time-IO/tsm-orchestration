@@ -98,7 +98,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-
+    savedForm.value = { ...formData.value };
     // Navigate back to list
     await router.push(`/ingest/external-api/bosch/${result.id}`);
   } catch (error) {

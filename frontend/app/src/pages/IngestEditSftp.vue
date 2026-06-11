@@ -91,7 +91,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-
+    savedForm.value = { ...formData.value };
     // Navigate to detail
     await router.push(detailRoute.value);
   } catch (error) {
@@ -117,7 +117,6 @@ async function save() {
 
 const savedForm = ref({ ...formData.value });
 useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
-
 </script>
 
 <style scoped></style>

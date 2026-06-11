@@ -49,6 +49,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
+    savedForm.value = { ...formData.value };
     await router.push(`/quality-control/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -72,7 +73,6 @@ async function save() {
 
 const savedForm = ref({ ...formData.value });
 useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
-
 </script>
 
 <style scoped></style>
