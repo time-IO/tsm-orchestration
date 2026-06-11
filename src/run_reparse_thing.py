@@ -68,7 +68,9 @@ def main(
     start_date,
     end_date,
 ):
-    store = Thing.from_uuid(thing_uuid, dsn=dsmdb_dsn).raw_data_storage
+    thing = Thing.from_uuid(thing_uuid, dsn=dsmdb_dsn)
+    store = thing.raw_data_storage
+    bucket = store.bucket
 
     minio = Minio(
         endpoint=minio_host,
@@ -78,7 +80,6 @@ def main(
     )
     mqtt = setupMQTT(mqtt_host, mqtt_user, mqtt_password)
 
-    bucket = store.bucket
     fnpattern_from_thing = store.filename_pattern
     fnpattern_from_job = filename_pattern
     if start_date:
