@@ -35,7 +35,7 @@
           v-for="col in props.cols"
           :key="col.name"
           :props="props"
-          :class="['action', 'created_by'].includes(col.name)? 'text-center' : 'text-left'"
+          :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
         >
           <template v-if="col.name === 'action'">
             <q-btn
@@ -65,15 +65,15 @@
             >
               <q-tooltip>Copy Ingest</q-tooltip>
             </q-btn>
-<!--            <q-btn-->
-<!--              flat-->
-<!--              outline-->
-<!--              color="negative"-->
-<!--              icon="delete"-->
-<!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-<!--            >-->
-<!--              <q-tooltip>Delete</q-tooltip>-->
-<!--            </q-btn>-->
+            <!--            <q-btn-->
+            <!--              flat-->
+            <!--              outline-->
+            <!--              color="negative"-->
+            <!--              icon="delete"-->
+            <!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
+            <!--            >-->
+            <!--              <q-tooltip>Delete</q-tooltip>-->
+            <!--            </q-btn>-->
           </template>
 
           <template v-else-if="col.name === 'created_by'">
@@ -86,12 +86,8 @@
             <span
               v-if="col.value !== null && col.value !== undefined && col.value !== ''"
               :style="`display: inline-flex; align-items: center; max-width: ${getMaxWidth(col.name)}`"
-              >
-              <span
-                style="overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap"
-              >
+            >
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
                 {{ col.value }}
                 <q-tooltip>
                   {{

@@ -60,7 +60,7 @@
         <h5 class="q-mb-sm">Authorized representatives</h5>
         <p>
           The UFZ is legally represented by Prof. Dr. Katrin Böhning-Gaese (Scientific Director) and
-          Dr. Sabine König (Administrative Director).
+          Dr. Sabine Matthiä (Administrative Director).
         </p>
       </section>
       <section>
@@ -136,5 +136,4 @@
   </q-page>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
