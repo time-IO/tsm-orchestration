@@ -11,5 +11,5 @@ data:
   MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
-  CV_API_URL: "{{ .Values.global.envvars.CV_URL }}api/v1/"
+  CV_API_URL: "{{ include "timeio.publicUrl" . }}/sms/cv/api/v1/"
 {{- end }}

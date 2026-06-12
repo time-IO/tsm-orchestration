@@ -9,5 +9,7 @@ spec:
   resources:
     requests:
       storage: 10M
+  {{- if .Values.global.pvc.storageClassName }}
   storageClassName: {{ .Values.global.pvc.storageClassName }}
+  {{- end }}
 {{- end }}

@@ -1,0 +1,7 @@
+global:
+  publicUrl: "https://timeio.web-intern-test.app.ufz.de"
+
+  ingress:
+    enabled: true
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "{{ include \"timeio.publicHost\" . }}"
