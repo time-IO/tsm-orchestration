@@ -505,10 +505,10 @@ class ExtAPI(Base):
     # sync_interval, settings
     # are already defined above
     enabled = sync_enabled
-    api_type_name: str = _prop(lambda self: self.api_type)
+    api_type_name: str = _prop(lambda self: self.api_type.name)
 
     def _get_settings(self) -> dict[str, object] | None:
-        table = self._table_mapping[self.api_type]
+        table = self._table_mapping[self.api_type.name]
         query = f"select * from {self._schema}.{table} where ingest_id = %s"
         row = self._fetchone(self._conn, query, self.id)
         if row is None:
