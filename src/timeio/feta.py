@@ -104,7 +104,7 @@ def _fetch(query, id_attr: str, column: str):
     return property(fetch)
 
 
-def _create(cls: type[Base], query: str, id_attr: str):
+def _create(cls: type[Base], query: str, id_attr: str, optional: bool = False):
     """
     Return a property, with a getter that returns another Model
 
@@ -122,6 +122,8 @@ def _create(cls: type[Base], query: str, id_attr: str):
             return cached
         res = self._fetchall(self._conn, query, id_value)
         if not res:
+            if optional:
+                return None
             raise ObjectNotFound(
                 f"Could not create {cls.__qualname__}"
                 f"(table={cls._schema}.{cls._table_name}) "
@@ -793,19 +795,23 @@ class S3Store(Base):
 
     @property
     def user(self):
-        return self._get_s3_row()["username"]
+        return self._get_s3_value("username")
 
     @property
     def password(self):
-        return self._get_s3_row()["password"]
+        return self._get_s3_value("password")
 
     @property
     def bucket(self):
-        return self._get_s3_row()["bucket_name"]
+        return self._get_s3_value("bucket_name")
 
     @property
     def filename_pattern(self):
-        return self._get_s3_row()["filename_pattern"]
+        return self._get_s3_value("filename_pattern")
+
+    def _get_s3_value(self, key):
+        row = self._get_s3_row()
+        return row.get(key) if row else None
 
     def _get_s3_row(self):
         if self.ingest_type == "sftp":
@@ -854,10 +860,10 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     project_id: int = _prop(lambda self: self._attrs["permission_group_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
     project: Project = _create(Project, f"select * from {_schema}.permission_group where id = %s", "project_id") #fmt: skip
-    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id") # fmt: skip
-    mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id") # fmt: skip
-    ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id")  # fmt: skip
-    ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id")  # fmt: skip
+    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id", optional=True) # fmt: skip
+    mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
+    ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
 
     @property
     def ingest_type(self) -> IngestType:
