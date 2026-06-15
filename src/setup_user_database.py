@@ -50,7 +50,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dll")
             self.deploy_ddl(thing)
             logger.debug("deploy dml")
-            self.deploy_dml()
+            self.deploy_dml(thing)
 
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
@@ -205,12 +205,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=user)
                 )
 
-    def deploy_dml(self):
+    def deploy_dml(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
         with self.db.connection() as conn:
             with conn.cursor() as c:
+                user = sql.Identifier(thing.database.username.lower())
+                c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):
