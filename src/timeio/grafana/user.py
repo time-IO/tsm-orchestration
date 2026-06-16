@@ -100,7 +100,9 @@ class GrafanaUser:
                 self.api.organizations.switch_organization(1)
                 self.add_to_team(org, user_id)
             elif org in user_update_orgs:
-                if new_role != old_role and not (new_role == "Editor" and old_role == "Admin"):
+                if new_role != old_role and not (
+                    new_role == "Editor" and old_role == "Admin"
+                ):
                     # do not demote Admin users to Editor.
                     logger.debug(
                         f"Update user. U=%s, O=%s, R=%s", user_name, org, new_role
