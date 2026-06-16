@@ -31,6 +31,13 @@ def get_bosch_timerange(thing):
     return timestamp_from_str, now_str
 
 
+def get_dwd_timerange(thing):
+    yesterday = datetime.now() - timedelta(days=1)
+    yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
+    yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
+    return yesterday_start, yesterday_end
+
+
 def get_uba_timerange(thing):
     """UBA API expects time_from/time_to in the range of 1 to 24"""
     datetime_now = datetime.now()
