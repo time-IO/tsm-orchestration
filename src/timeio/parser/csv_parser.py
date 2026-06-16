@@ -25,7 +25,10 @@ class CsvParser(PandasParser):
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
 
         date_columns = [df.columns[d["column"]] for d in timestamp_columns]
-        date_format = " ".join([d["format"] for d in timestamp_columns])
+        try:
+            date_format = " ".join([d["format"] for d in timestamp_columns])
+        except:
+            date_format = " ".join([d["timestamp_format"] for d in timestamp_columns])
 
         # for c in date_columns:
         #     if c not in df.columns:
@@ -102,6 +105,9 @@ class CsvParser(PandasParser):
         if isinstance(skiprows, int):
             skiprows = range(skiprows)
         skiprows = set(skiprows)
+
+        if skipfooter is None:
+            skipfooter = 0
 
         lines = [line for i, line in enumerate(lines) if i not in skiprows]
         return lines[: -skipfooter or None]
