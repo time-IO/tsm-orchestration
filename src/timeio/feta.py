@@ -435,6 +435,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
     name: str = _prop(lambda self: self._attrs["name"])
     uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
     entitlement: str = _prop(lambda self: str(self._attrs["entitlement"]))
+    protected_sta: bool = _prop(lambda self: bool(self._attrs["protected_sta"]))
     database: Database = _create(
         Database,
         f"SELECT * FROM {_schema}.database WHERE permission_group_id = %s",
