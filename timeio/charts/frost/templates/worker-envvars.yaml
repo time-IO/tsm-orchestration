@@ -10,7 +10,7 @@ data:
   MQTT_CLIENT_ID: "frost-setup"
   MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
-  TOMCAT_PROXY_URL: "{{ include "timeio.publicUrl" . }}/sta/"
+  TOMCAT_PROXY_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/sta/"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
 {{- end }}

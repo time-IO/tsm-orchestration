@@ -10,8 +10,8 @@ database:
     password: "postgres"
     database: "postgres"
   persistence:
-    enabled: false
-    storageClass: ""
+    enabled: true
+    storageClass: "tanzu-storage-policy-raid5-ftt1"
     size: 1Gi
   persistentVolumeClaimRetentionPolicy:
     enabled: true
@@ -22,19 +22,12 @@ database:
 
 global:
 
-  # Public browser-facing URL for this TimeIO instance. Cluster-specific values
-  # files should normally only override publicUrl; publicHost is optional.
-  publicUrl: ""
-  publicHost: ""
-
   pvc:
-    # Leave unset by default so generic clusters can use their default
-    # StorageClass. Override explicitly for cluster-specific deployments.
-    storageClassName: ""
+    storageClassName: "tanzu-storage-policy-raid5-ftt1"
     createPVC: true
 
   ingress:
-    enabled: false
+    enabled: true
     enableTLS: true
     className: haproxy
     annotations:
@@ -42,48 +35,52 @@ global:
       cert-manager.io/private-key-algorithm: "ECDSA"
       cert-manager.io/private-key-size: "384"
       cert-manager.io/private-key-rotation-policy: "Always"
+      external-dns.alpha.kubernetes.io/hostname: "timeio.web-intern-stage.app.ufz.de"
       haproxy-ingress.github.io/config-backend: |
-        http-response set-header X-Content-Type-Options nosniff;
-        http-response set-header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'self'; child-src 'self'; object-src 'none'; frame-ancestors 'self';";
-        http-response set-header X-XSS-Protection 1;
+        http-response set-header 'X-Content-Type-Options' 'nosniff';
+        http-response set-header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'self' *.web-intern-stage.app.ufz.de; child-src 'self' *.web-intern-stage.app.ufz.de; object-src 'none'; frame-ancestors 'self' http://*.web-intern-stage.app.ufz.de https://*.web-intern-stage.app.ufz.de;";
+        http-response set-header 'X-XSS-Protection' '1';
     hosts:
-    - host: "local.host"
+    - host: "timeio.web-intern-stage.app.ufz.de"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 80
-    url: "https://local.host"
+    url: "https://timeio.web-intern-stage.app.ufz.de"
     tls:
     - secretName: "timeio-ingress-tls"
       hosts:
-        - "local.host"
+        - "timeio.web-intern-stage.app.ufz.de"
 
   s3ingress:
     enabled: false
     enableTLS: true
-    className: haproxy
+    className: nginx
     annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'false'
+      nginx.ingress.kubernetes.io/rewrite-target: '/'
+      nginx.ingress.kubernetes.io/backend-protocol: http
       cert-manager.io/cluster-issuer: "cert-manager-acme"
       cert-manager.io/private-key-algorithm: "ECDSA"
       cert-manager.io/private-key-size: "384"
       cert-manager.io/private-key-rotation-policy: "Always"
-      haproxy-ingress.github.io/config-backend: |
-        http-response set-header X-Content-Type-Options nosniff;
-        http-response set-header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'self'; child-src 'self'; object-src 'none'; frame-ancestors 'self';";
-        http-response set-header X-XSS-Protection 1;
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        add_header 'X-Content-Type-Options' 'nosniff' always;
+        add_header 'Content-Security-Policy' "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' ; frame-src 'self' *.ufz.de ; child-src 'self' *.ufz.de ; object-src 'none' ; frame-ancestors 'self' http://*.ufz.de https://*.ufz.de ;" always;
+        add_header 'X-XSS-Protection' '1';
     hosts:
-    - host: "s3.local.host"
+    - host: "s3.web-intern-stage.app.ufz.de"
       paths:
       - path: "/"
         pathType: Prefix
         serviceName: "proxy"
         servicePort: 9000
-    url: "https://s3.local.host"
+    url: "https://s3.web-intern-stage.app.ufz.de"
     tls:
     - secretName: "timeio-s3-ingress-tls"
       hosts:
-        - "s3.local.host"
+        - "s3.web-intern-stage.app.ufz.de"
 
   createSecrets: true
   createConfigMaps: true
@@ -140,11 +137,10 @@ global:
   envvars:
     RESTART: "unless-stopped"
     LOG_LEVEL: "INFO"
-    TSM_DL_ENVIRONMENT: "local"
     UID: "1000"
     GID: "1000"
     NGINX_IMAGE_TAG: "latest"
-    PROXY_HOST: "local.host"
+    PROXY_HOST: "timeio.web-intern-stage.app.ufz.de"
     PROXY_TLS_CERT_PATH: "/tmp/tsm/fullchain.pem"
     PROXY_TLS_KEY_PATH: "/tmp/tsm/privkey.pem"
     PROXY_SITE_CONFIG: "tsm.dev.conf"
@@ -188,20 +184,20 @@ global:
     SMS_DB_PORT: "5432"
     SMS_DB_DB: "postgres"
     SMS_DB_HOST: "database"
-    SMS_URL: "https://local.host/sms/"
+    SMS_URL: "https://web-intern-stage.app.ufz.de/sms/"
     SMS_ACCESS_TYPE: "db"
     CV_DB_PORT: "5432"
     CV_DB_DB: "postgres"
     CV_DB_HOST: "database"
-    CV_URL: "https://local.host/sms/cv/"
+    CV_URL: "https://web-intern-stage.app.ufz.de/sms/cv/"
     CV_ACCESS_TYPE: "db"
     GRAFANA_URL: "http://visualization:3000"
     GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "disable"
-    OIDC_ISSUER: "https://local.host/keycloak/realms/timeio"
-    OIDC_CONF_URL: "https://local.host/keycloak/realms/timeio/.well-known/openid-configuration"
-    OIDC_AUTH_URL: "https://local.host/keycloak/realms/timeio/protocol/openid-connect/auth"
-    OIDC_TOKEN_URL: "https://local.host/keycloak/realms/timeio/protocol/openid-connect/token"
-    OIDC_API_URL: "https://local.host/keycloak/realms/timeio/protocol/openid-connect/userinfo"
+    OIDC_ISSUER: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio"
+    OIDC_CONF_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/.well-known/openid-configuration"
+    OIDC_AUTH_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/auth"
+    OIDC_TOKEN_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/token"
+    OIDC_API_URL: "https://timeio.web-intern-stage.app.ufz.de/keycloak/realms/timeio/protocol/openid-connect/userinfo"
     ALLOWED_VOS: "VO"
     KC_DB: "postgres"
     KC_DB_URL: "jdbc:postgresql://database:5432/postgres"
