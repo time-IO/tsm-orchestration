@@ -89,7 +89,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-
+    savedForm.value = { ...formData.value };
     // Navigate back to list
     await router.push(`/ingest/external-api/ttn/${result.id}`);
   } catch (error) {
@@ -115,7 +115,6 @@ async function save() {
 
 const savedForm = ref({ ...formData.value });
 useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
-
 </script>
 
 <style scoped></style>

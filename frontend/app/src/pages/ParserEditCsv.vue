@@ -317,7 +317,7 @@ async function save() {
 
     isLoading.value = true;
     await csvParserStore.dispatchUpdate(id, data);
-
+    savedForm.value = { ...formData.value };
     await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -373,7 +373,6 @@ function trimHeadlines(value: string | number | null) {
 
 const savedForm = ref({ ...formData.value });
 useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
-
 </script>
 
 <style scoped></style>
