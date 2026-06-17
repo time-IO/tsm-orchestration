@@ -171,6 +171,8 @@ export const default_parser_columns: QTableColumn[] = [
       switch (val) {
         case 'csv':
           return 'CSV';
+        case 'json':
+          return 'JSON';
         default:
           return 'Type not defined';
       }
@@ -238,6 +240,8 @@ export const generateParserPath = (val: ParserDetailedRead) => {
   switch (val.parser_type) {
     case 'csv':
       return `parser/csv/${val.id}`;
+    case 'json':
+      return `parser/json/${val.id}`;
     default:
       return '';
   }

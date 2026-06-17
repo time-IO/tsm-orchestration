@@ -32,6 +32,7 @@ from repositories.ingest_external_sftp import IngestExternalSftpRepository
 from repositories.ingest_mqtt import IngestMqttRepository
 from repositories.ingest_sftp import IngestSftpRepository
 from repositories.parser_csv import ParserCsvRepository
+from repositories.parser_json import ParserJsonRepository
 from repositories.parser_detailed import ParserDetailedRepository
 from repositories.parser_mqtt import ParserMqttRepository
 
@@ -221,6 +222,10 @@ def get_repo_parser_detailed(session=Depends(get_session)):
 
 def get_repo_parser_csv(session=Depends(get_session)):
     return ParserCsvRepository(session)
+
+
+def get_repo_parser_json(session=Depends(get_session)):
+    return ParserJsonRepository(session)
 
 
 def get_repo_parser_mqtt(session=Depends(get_session)):

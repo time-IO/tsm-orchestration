@@ -268,9 +268,9 @@ const deleteItem = async () => {
 };
 
 const openParser = () => {
-  if (item.value && item.value.parser && item.value.parser.parser_type === 'csv') {
+  if (item.value?.parser?.id && item.value?.parser?.parser_type) {
     const route = router.resolve({
-      path: `/parser/csv/${item.value.parser.id}`,
+      path: `/parser/${item.value.parser.parser_type}/${item.value.parser.id}`,
     });
 
     window.open(route.href, '_blank');

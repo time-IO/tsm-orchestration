@@ -1,37 +1,35 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
-from models.filters import BaseFilter
-from dependencies import (
-    get_current_user,
-    get_repo_parser_csv,
-)
-from models.parser_csv import (
-    ParserCsvCreate,
-    ParserCsvRead,
-    ParserCsvUpdate,
-)
 from models import User
-from repositories.parser_csv import ParserCsvRepository
+from models.filters import BaseFilter
+from dependencies import get_current_user, get_repo_parser_json
+from models.parser_json import (
+    ParserJsonCreate,
+    ParserJsonRead,
+    ParserJsonUpdate,
+)
+
+from repositories.parser_json import ParserJsonRepository
 
 router = APIRouter(
-    prefix="/parser/csv",
-    tags=["parser/csv"],
+    prefix="/parser/json",
+    tags=["parser/json"],
     responses={404: {"description": "Not found"}},
     dependencies=[Depends(get_current_user)],
 )
 
-entity_name = "csv parser"
+entity_name = "json parser"
 
 BigPage = CustomizedPage[Page, UseParamsFields(size=500)]
 
 
 @router.get(
-    "/", response_model=BigPage[ParserCsvRead], summary=f"Get a list of {entity_name}"
+    "/", response_model=BigPage[ParserJsonRead], summary=f"Get a list of {entity_name}"
 )
 def read_list(
     *,
-    repo: ParserCsvRepository = Depends(get_repo_parser_csv),
+    repo: ParserJsonRepository = Depends(get_repo_parser_json),
     sort_by: str | None = None,
     current_user: User = Depends(get_current_user),
     filters: BaseFilter = Depends(),
@@ -45,12 +43,12 @@ def read_list(
     )
 
 
-@router.get("/{id}", response_model=ParserCsvRead, summary=f"Get one {entity_name}")
+@router.get("/{id}", response_model=ParserJsonRead, summary=f"Get one {entity_name}")
 def read_one(
     *,
     id: int,
     current_user: User = Depends(get_current_user),
-    repo: ParserCsvRepository = Depends(get_repo_parser_csv),
+    repo: ParserJsonRepository = Depends(get_repo_parser_json),
 ):
     return repo.to_flat(
         repo.find_one(
@@ -59,11 +57,11 @@ def read_one(
     )
 
 
-@router.post("/", response_model=ParserCsvRead, summary=f"Create one {entity_name}")
+@router.post("/", response_model=ParserJsonRead, summary=f"Create one {entity_name}")
 def create(
     *,
-    payload: ParserCsvCreate,
-    repo: ParserCsvRepository = Depends(get_repo_parser_csv),
+    payload: ParserJsonCreate,
+    repo: ParserJsonRepository = Depends(get_repo_parser_json),
     current_user: User = Depends(get_current_user),
 ):
     extra_data = {"created_by_id": current_user.id}
@@ -73,13 +71,13 @@ def create(
 
 
 @router.patch(
-    "/{id}", summary=f"Update one {entity_name}", response_model=ParserCsvRead
+    "/{id}", summary=f"Update one {entity_name}", response_model=ParserJsonRead
 )
 def update(
     *,
     id: int,
-    payload: ParserCsvUpdate,
-    repo: ParserCsvRepository = Depends(get_repo_parser_csv),
+    payload: ParserJsonUpdate,
+    repo: ParserJsonRepository = Depends(get_repo_parser_json),
     current_user: User = Depends(get_current_user),
 ):
     entity = repo.update(
@@ -93,7 +91,7 @@ def delete(
     *,
     id: int,
     current_user: User = Depends(get_current_user),
-    repo: ParserCsvRepository = Depends(get_repo_parser_csv),
+    repo: ParserJsonRepository = Depends(get_repo_parser_json),
 ):
     return repo.delete(
         id, permission_group_ids_of_user=current_user.permission_group_ids

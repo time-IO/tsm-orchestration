@@ -33,6 +33,7 @@ from .parser import Parser
 from .parser_detailed import ParserDetailed
 from .parser_mqtt import ParserMqtt
 from .parser_csv import ParserCsv, ParserCsvTimestampColumn
+from .parser_json import ParserJson, ParserJsonTimestampKey
 
 __all__ = [
     "Database",
@@ -63,6 +64,7 @@ __all__ = [
     "Parser",
     "ParserDetailed",
     "ParserCsv",
+    "ParserJson",
     "ParserCsvTimestampColumn",
     "ParserMqtt",
 ]
