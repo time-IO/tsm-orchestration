@@ -4,9 +4,9 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  STA_ENDPOINT_URL: "{{ include "timeio.publicUrl" . }}/sta/"
+  STA_ENDPOINT_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/sta/"
   UVICORN_ARGS: ""
   ROOT_PATH: "/tsmdl"
   ORGANIZATION: "ufz"
-  IDP_USERINFO_URL: {{ include "timeio.oidcUserinfoUrl" . | quote }}
+  IDP_USERINFO_URL: {{ .Values.global.envvars.OIDC_API_URL | quote }}
 {{- end }}

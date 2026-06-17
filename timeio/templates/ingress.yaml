@@ -5,13 +5,13 @@ metadata:
   name: timeio-ingress
   annotations:
     {{- range $key, $value := .Values.global.ingress.annotations }}
-    {{ $key }}: {{ tpl $value $ | quote }}
+    {{ $key }}: {{ $value | quote }}
     {{- end }}
 spec:
   ingressClassName: {{ .Values.global.ingress.className }}
   rules:
   {{- range .Values.global.ingress.hosts }}
-  - host: {{ default .host (include "timeio.publicHost" $) | quote }}
+  - host: {{ .host  | quote }}
     http:
       paths:
       {{- range .paths}}
@@ -29,7 +29,7 @@ spec:
   {{- range .Values.global.ingress.tls }}
   - hosts:
     {{- range .hosts }}
-    - {{ default . (include "timeio.publicHost" $) | quote }}
+    - {{ . | quote }}
     {{- end }}
     secretName: {{ .secretName | quote }}
     {{- end }}

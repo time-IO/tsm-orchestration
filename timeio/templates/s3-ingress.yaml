@@ -5,7 +5,7 @@ metadata:
   name: timeio-s3-ingress
   annotations:
     {{- range $key, $value := .Values.global.s3ingress.annotations }}
-    {{ $key }}: {{ tpl $value $ | quote }}
+    {{ $key }}: {{ $value | quote }}
     {{- end }}
 spec:
   ingressClassName: {{ .Values.global.s3ingress.className }}
