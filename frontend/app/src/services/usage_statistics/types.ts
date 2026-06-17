@@ -12,6 +12,7 @@ export type UsageStatisticsCounts = {
   ingest_s3store: number;
   quality_control_setting: number;
   parser_csv: number;
+  parser_json: number;
   ingests: number;
 };
 
