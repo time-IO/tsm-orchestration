@@ -707,7 +707,7 @@ class ZentraApiSyncer(ExtApiSyncer):
         params = {
             "start_datetime": content["datetime_from"],
             "end_datetime": content["datetime_to"],
-            "units": settings["unit"],
+            "units": settings["units"],
         }
         url = f"{self.base_url}/{settings["device_id"]}/data"
         response = request_with_handling("GET", url, headers=headers, params=params)
