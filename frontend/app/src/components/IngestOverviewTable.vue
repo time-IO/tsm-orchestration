@@ -65,6 +65,17 @@
             >
               <q-tooltip>Copy Ingest</q-tooltip>
             </q-btn>
+
+            <q-btn
+              :href="visualizationUrl(props.row.uuid)"
+              flat
+              outline
+              icon="img:icons/grafana_icon.png"
+              target="_blank"
+            >
+              <q-tooltip>Visualization Link</q-tooltip>
+            </q-btn>
+
             <!--            <q-btn-->
             <!--              flat-->
             <!--              outline-->
@@ -224,6 +235,11 @@ const copyClipboard = (text: string | null) => {
       });
     });
 };
+
+function visualizationUrl(uuid: string | null) {
+  if (!uuid) return '';
+  return `${window.location.origin}/visualization/d/${encodeURIComponent(uuid)}?orgId=1`;
+}
 </script>
 
 <style scoped>
