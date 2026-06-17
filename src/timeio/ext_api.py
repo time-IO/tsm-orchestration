@@ -692,3 +692,26 @@ class SensotoApiSyncer(ExtApiSyncer):
             agg = agg_resp.json()["phenomenon"]["aggregation"]
             sensor_data.append({"sensor": s, "aggregation": agg})
         return sensor_data
+
+
+class ZentraApiSyncer(ExtApiSyncer):
+    base_url = "https://api.zentracloud.io/v5/devices"
+
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+        settings = thing.ext_api.settings
+        api_key = decrypt(settings["api_key"], get_crypt_key())
+        headers = {
+            "X-API-Key": api_key,
+            "Accept": "*/*",
+        }
+        params = {
+            "start_datetime": content["datetime_from"],
+            "end_datetime": content["datetime_to"],
+            "units": settings["unit"],
+        }
+        url = f"{self.base_url}/{settings["device_id"]}/data"
+        response = request_with_handling("GET", url, headers=headers, params=params)
+        return response.json()
+
+    def do_parse(self, api_response):
+        pass
