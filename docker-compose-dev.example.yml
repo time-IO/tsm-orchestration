@@ -61,7 +61,12 @@ services:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
-  
+
+  dsm-api:
+    build:
+      context: ../data-source-management/api
+      dockerfile: docker/prod/Dockerfile
+
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
