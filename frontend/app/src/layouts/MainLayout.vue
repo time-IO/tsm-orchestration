@@ -208,6 +208,7 @@ const topNavigation: NavEntry[] = [
     addRoute: '/parser/new',
     addOptions: [
       { label: 'CSV', route: '/parser/new/csv' },
+      { label: 'JSON', route: '/parser/new/json' },
     ],
   },
   {

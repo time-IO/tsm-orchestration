@@ -59,6 +59,7 @@
               class="row justify-center q-mb-sm"
               style="flex-direction: column; align-items: center"
             ></div>
+
             <q-card
               dark
               class="bg-light-blue-8 text-white shadow-1"

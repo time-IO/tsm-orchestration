@@ -17,6 +17,7 @@ import IngestEditExternalApiUba from "pages/IngestEditExternalApiUba.vue";
 import ParserOverview from "pages/ParserOverview.vue";
 import ParserNew from "pages/ParserNew.vue";
 import ParserNewCsv from "pages/ParserNewCsv.vue";
+import ParserNewJson from "pages/ParserNewJson.vue";
 import QualityControlOverview from "pages/QualityControlOverview.vue";
 import QualityControlNew from "pages/QualityControlNew.vue";
 import IngestDetailExternalApiNm from "pages/IngestDetailExternalApiNm.vue";
@@ -32,7 +33,9 @@ import IngestEditExternalApiTSystems from 'pages/IngestEditExternalApiTSystems.v
 import IngestDetailMqtt from "pages/IngestDetailMqtt.vue";
 import IngestEditMqtt from 'pages/IngestEditMqtt.vue';
 import ParserEditCsv from 'pages/ParserEditCsv.vue';
+import ParserEditJson from 'pages/ParserEditJson.vue';
 import ParserDetailCsv from 'pages/ParserDetailCsv.vue';
+import ParserDetailJson from 'pages/ParserDetailJson.vue';
 import IngestDetailSftp from 'pages/IngestDetailSftp.vue';
 import IngestEditSftp from 'pages/IngestEditSftp.vue';
 import IngestDetailExternalSftp from 'pages/IngestDetailExternalSftp.vue';
@@ -49,6 +52,7 @@ import IngestCopyExternalSftp from 'pages/IngestCopyExternalSftp.vue';
 import LegalNotice from 'pages/info/LegalNoticeUfz.vue'
 import TermsOfUse from 'pages/info/TermsOfUseUfz.vue'
 import ParserCopyCsv from 'pages/ParserCopyCsv.vue';
+import ParserCopyJson from 'pages/ParserCopyJson.vue';
 import QualityControlDetail from 'pages/QualityControlDetail.vue';
 import QualityControlEdit from "pages/QualityControlEdit.vue";
 import QualityControlCopy from 'pages/QualityControlCopy.vue';
@@ -271,9 +275,19 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/parser/new/json',
+    component: ParserNewJson,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/parser/csv/:id',
     component: ParserDetailCsv,
     meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/parser/json/:id',
+    component: ParserDetailJson,
+    meta: { requiresAuth: true },
   },
   {
     path: '/parser/csv/:id/edit',
@@ -281,9 +295,19 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/parser/json/:id/edit',
+    component: ParserEditJson,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/parser/csv/:id/copy',
     component: ParserCopyCsv,
     meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/parser/json/:id/copy',
+    component: ParserCopyJson,
+    meta: { requiresAuth: true },
   },
   {
     path: '/quality-control',

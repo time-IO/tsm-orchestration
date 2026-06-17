@@ -47,7 +47,7 @@
             :rules="[(val) => !!val || 'Filename pattern is required']"
           />
 
-          <csv-parser-select
+          <parser-select
             class="q-mb-md"
             :disable="!formData.permission_group_id"
             v-model="formData.parser_id"
@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import CsvParserSelect from 'components/CsvParserSelect.vue';
+import parserSelect from 'components/ParserSelect.vue';
 import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 

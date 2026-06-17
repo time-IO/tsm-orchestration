@@ -68,6 +68,8 @@ class ParserDetailed(SQLModel, table=True):
         back_populates="parser_detailed", cascade_delete=True
     )
 
+    parser_json: Optional["ParserJson"] = Relationship(back_populates="parser_detailed")
+
     @property
     def mqtt_information(self):
         if self.parser_csv is not None:

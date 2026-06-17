@@ -64,6 +64,7 @@
             >
               <q-tooltip>Copy Parser</q-tooltip>
             </q-btn>
+
 <!--            <q-btn-->
 <!--              flat-->
 <!--              outline-->
@@ -73,6 +74,7 @@
 <!--            >-->
 <!--              <q-tooltip>Delete</q-tooltip>-->
 <!--            </q-btn>-->
+
           </template>
 
           <template v-else-if="col.name === 'created_by'">
@@ -84,6 +86,7 @@
           </template>
 
           <template v-else>
+
             <span
               v-if="col.value !== null && col.value !== undefined && col.value !== ''"
               :style="`display: inline-flex; align-items: center; max-width: ${getMaxWidth(col.name)}`"
@@ -132,6 +135,7 @@ import { default_parser_columns, generateParserPath } from 'src/utils/pagination
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { computed, onMounted, ref } from 'vue';
 import { copyToClipboard, useQuasar } from 'quasar';
+
 
 defineProps({
   rows: {
@@ -185,6 +189,7 @@ const colMaxWidth: Record<string, { sm: string; lg: string }> = {
   permission_group: { sm: '80px', lg: '150px' },
   name: { sm: '80px', lg: '220px' },
   uuid: { sm: '80px', lg: '220px' },
+
 };
 
 const getMaxWidth = computed(() => (colName: string) => {
@@ -214,6 +219,7 @@ const copyClipboard = (text: string | null) => {
       });
     });
 };
+
 </script>
 
 <style scoped>

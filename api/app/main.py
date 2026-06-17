@@ -9,6 +9,7 @@ from routers import (
     ingest_sftp,
     ingest_mqtt,
     parser_csv,
+    parser_json,
     ingest_external_api_the_things_network,
     ingest_external_sftp,
     ingest_external_api_tsystems,
@@ -60,6 +61,7 @@ app.add_middleware(
 
 # the order of the router defines the order of the openapi doc
 app.include_router(parser_csv.router)
+app.include_router(parser_json.router)
 app.include_router(ingest.router)
 app.include_router(ingest_external_api_bosch.router)
 app.include_router(ingest_external_api_dwd.router)

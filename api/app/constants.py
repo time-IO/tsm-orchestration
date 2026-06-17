@@ -58,6 +58,7 @@ class ApiType(str, Enum):
 class ParserType(str, Enum):
     CSV = "csv"
     MQTT = "mqtt"
+    JSON = "json"
 
     @classmethod
     def from_string(cls, value: str) -> "ParserType":

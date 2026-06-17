@@ -13,6 +13,7 @@ import userController from "src/services/user"
 import neutronMonitorStationController from "src/services/neutron_monitor_stations"
 import mqttParserController from "src/services/parser_mqtt"
 import csvParserController from "src/services/parser_csv"
+import jsonParserController from "src/services/parser_json"
 import qualityControlSettingController from "src/services/quality_control_setting"
 import staController from "src/services/sta"
 import qualityControlSettingsTriggerController from "src/services/quality_control_settings_trigger";
@@ -41,6 +42,7 @@ export const API = {
   neutronMonitorStation: neutronMonitorStationController,
   mqttParser: mqttParserController,
   csvParser: csvParserController,
+  jsonParser: jsonParserController,
   triggerExternalGenAPI: triggerExternalApiGenController,
   qualityControlSetting: qualityControlSettingController,
   sta: staController,
@@ -51,4 +53,5 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
+
 };
