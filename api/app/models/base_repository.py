@@ -228,12 +228,13 @@ class DatabaseRepository(BaseRepository):
         try:
             database = Database()
             database.permission_group_id = permission_group.id
-            database.url = f"{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}"
             database.name = settings.POSTGRES_DB
             database.username = create_db_username(permission_group.name, False)
+            database.url = f"postgresql://{database.username}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
             database.read_only_username = create_db_username(
                 permission_group.name, True
             )
+            database.read_only_url = f"postgresql://{database.read_only_username}@{settings.POSTGRES_SERVER}/{settings.POSTGRES_DB}"
             database.password = generate_password(24)
             database.read_only_password = generate_password(24)
 
