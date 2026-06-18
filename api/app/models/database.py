@@ -18,6 +18,7 @@ class Database(SQLModel, table=True):
         sa_column=Column("read_only_password", EncryptedType, nullable=False)
     )
     url: str
+    read_only_url: str
 
     permission_group: "PermissionGroup" = Relationship(back_populates="database")
 
