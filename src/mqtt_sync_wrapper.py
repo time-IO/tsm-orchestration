@@ -87,7 +87,7 @@ def get_nm_timerange(thing):
 TIMERANGE_MAPPING = {
     "tsystems": get_tsystems_timerange,
     "bosch": get_bosch_timerange,
-    "dwd": get_dwd_timerange,
+    "dwd": get_bosch_timerange,
     "ttn": get_dwd_timerange,
     "uba": get_uba_timerange,
     "nm": get_nm_timerange,
