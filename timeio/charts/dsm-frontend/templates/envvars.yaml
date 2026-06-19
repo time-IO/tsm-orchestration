@@ -4,10 +4,10 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-envvars
 data:
-  ENV_API_BASE_URL_PLACEHOLDER: "{{ .Values.global.ingress.url}}{{ .Values.global.envvars.DSM_API_ROOT_PATH}}"
+  ENV_API_BASE_URL_PLACEHOLDER: "{{ include "timeio.publicUrl" . }}{{ .Values.global.envvars.DSM_API_ROOT_PATH}}"
   ENV_BASE_URL_PLACEHOLDER: "data-source-management"
-  ENV_OIDC_IDP_URL_PLACEHOLDER: "{{ .Values.global.envvars.OIDC_ISSUER }}"
-  ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "{{ .Values.global.ingress.url }}/data-source-management"
-  ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "{{ .Values.global.ingress.url }}/data-source-management/login-callback"
+  ENV_OIDC_IDP_URL_PLACEHOLDER: "{{ include "timeio.oidcIssuer" . }}"
+  ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "{{ include "timeio.publicUrl" . }}/data-source-management"
+  ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "{{ include "timeio.publicUrl" . }}/data-source-management/login-callback"
   ENV_OIDC_SCOPE_PLACEHOLDER: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
 {{- end }}
