@@ -12,7 +12,7 @@ data:
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
   SMS_URL: "{{ .Values.global.envvars.SMS_URL }}"
   CV_URL: "{{ .Values.global.envvars.CV_URL }}"
-  TOMCAT_PROXY_URL: "https://{{ .Values.global.envvars.PROXY_HOST }}/sta/"
+  TOMCAT_PROXY_URL: "{{ include "timeio.publicUrl" . }}/sta/"
   MINIO_SECURE: "{{ .Values.global.envvars.MINIO_SECURE }}"
   MINIO_URL: "{{ .Values.global.envvars.MINIO_HOST }}"
   GRAFANA_URL: "{{ .Values.global.envvars.VISUALIZATION_URL }}"
