@@ -8,12 +8,14 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from timeio.errors import ParsingError
 from timeio.databases import Database, DBapi
 from timeio.qc import filter_qc_functions
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_qc_functions
 from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
+from run_qc import QcHandler
 
 T1S27 = QcFunctionStream(
     key="field",
@@ -195,6 +197,56 @@ def test_collect_tests(thing_id, expected):
 
     tests = filter_qc_functions(qc_functions, thing_id)
     assert set(set([t.name for t in tests])) == set(expected)
+
+
+@pytest.mark.parametrize(
+    "content, expected",
+    [
+        (
+            {
+                "thing_uuid": "ab2d30d6-abd6-48bb-bc15-104c71485ce5",
+                "version": 1,
+            },
+            "Missing mandatory field 'start_date'",
+        ),
+        (
+            {
+                "thing_uuid": "ab2d30d6-abd6-48bb-bc15-104c71485ce5",
+                "version": 1,
+                "start_date": "not-a-date",
+                "end_date": "2026-06-22T07:08:14",
+            },
+            "Invalid start_date or end_date",
+        ),
+    ],
+)
+def test_qc_rejects_invalid_time_range(content, expected):
+    with pytest.raises(ParsingError, match=expected):
+        QcHandler._parse_time_range(content)
+
+
+def test_qc_rejects_v1_message_without_time_range():
+    content = {
+        "thing_uuid": "ab2d30d6-abd6-48bb-bc15-104c71485ce5",
+        "version": 1,
+    }
+
+    with pytest.raises(ParsingError, match="Message not in version 1 specs"):
+        QcHandler._parse_message_v1(None, content)
+
+
+def test_qc_accepts_valid_time_range():
+    start_date, end_date = QcHandler._parse_time_range(
+        {
+            "thing_uuid": "ab2d30d6-abd6-48bb-bc15-104c71485ce5",
+            "version": 1,
+            "start_date": "2026-06-22T07:08:14",
+            "end_date": "2026-06-22T07:09:14",
+        }
+    )
+
+    assert start_date == pd.Timestamp("2026-06-22T07:08:14")
+    assert end_date == pd.Timestamp("2026-06-22T07:09:14")
 
 
 @pytest.mark.parametrize(

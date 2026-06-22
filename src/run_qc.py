@@ -98,6 +98,20 @@ class QcHandler(AbstractHandler):
             )
         return project, config, thing
 
+    @staticmethod
+    def _parse_time_range(content: dict) -> tuple[pd.Timestamp, pd.Timestamp]:
+        try:
+            start_date = pd.Timestamp(content["start_date"])
+            end_date = pd.Timestamp(content["end_date"])
+        except KeyError as e:
+            raise ParsingError(f"Missing mandatory field {e.args[0]!r}") from e
+        except (TypeError, ValueError) as e:
+            raise ParsingError("Invalid start_date or end_date") from e
+
+        if pd.isna(start_date) or pd.isna(end_date):
+            raise ParsingError("Invalid start_date or end_date")
+        return start_date, end_date
+
     def act(self, content: dict, message: MQTTMessage):
 
         t0 = datetime.now()
@@ -123,8 +137,7 @@ class QcHandler(AbstractHandler):
 
             # load data
             streams = list(set(sum([f.streams for f in qc_funcs], [])))
-            start_date = pd.Timestamp(content["start_date"])
-            end_date = pd.Timestamp(content["end_date"])
+            start_date, end_date = self._parse_time_range(content)
             data = read_stream_data(self.dbapi, streams, start_date, end_date)
             for k, v in data.items():
                 if v.empty:

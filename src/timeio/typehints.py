@@ -83,6 +83,8 @@ class MqttPayload:
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
+        start_date: str
+        end_date: str
 
     class DataParsedV2(_t.TypedDict):
         version: _t.Literal[2]
