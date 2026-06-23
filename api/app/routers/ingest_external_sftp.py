@@ -95,6 +95,7 @@ def create(
 
     extra_data = {
         "created_by_id": current_user.id,
+        "uuid": _uuid,
         "ssh_private_key": private_key,
         "ssh_public_key": public_key,
         "bucket_name": bucket_name,

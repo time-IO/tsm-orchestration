@@ -225,6 +225,8 @@ class IngestExternalSftpRepository:
             path=entity.path,
             username=entity.username,
             password=entity.password,
+            bucket_username=entity.bucket_username,
+            bucket_password=entity.bucket_password,
             sync_interval_in_minutes=entity.sync_interval_in_minutes,
             sync_enabled=entity.sync_enabled,
             filename_pattern=entity.filename_pattern,
