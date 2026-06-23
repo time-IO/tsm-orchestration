@@ -32,7 +32,7 @@ RAWDATA = """
                 "headlines_to_exclude": 4,
                 "footlines_to_exclude": 0,
                 "header": None,
-                "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
+                "timestamp_columns": [{"column": 1, "timestamp_format": "%Y/%m/%d %H:%M:%S"}],
             },
             [2, 4, 8],
         ),
