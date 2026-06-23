@@ -56,6 +56,7 @@
                     }}</q-item-label>
                   </q-item-section>
                 </q-item>
+
                 <q-item>
                   <q-item-section>
                     <q-item-label>File encoding</q-item-label>

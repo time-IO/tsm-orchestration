@@ -7,9 +7,7 @@
       </div>
     </div>
 
-    <div class="text-caption text-grey">
-      Please note: This feature is experimental!
-    </div>
+    <div class="text-caption text-grey">Please note: This feature is experimental!</div>
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
@@ -45,6 +43,11 @@
             v-model="formData.comment"
             label="Comment character (e.g. //)"
             hint="Character(s) used to indicate comment lines"
+          />
+
+          <parser-timezone-select
+            v-model="formData.timezone"
+            :rules="[(val: string | null) => !!val || 'Timezone is required']"
           />
 
           <!-- Timestamp Keys -->
@@ -134,6 +137,7 @@
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate } from 'src/services/parser_json/types.ts';
+import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 
 defineProps<{
   title: string;

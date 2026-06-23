@@ -15,18 +15,19 @@ import { useRouter } from 'vue-router';
 import type { JsonParserCreate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
-
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
 const formData = ref<JsonParserCreate>({
-    name: '',
-    permission_group_id: null,
-    description: null,
-    timestamp_keys: [],
-    comment: null,
+  name: '',
+  permission_group_id: null,
+  description: null,
+  timestamp_keys: [],
+  comment: null,
+  timezone: null,
 });
 
 const isLoading = ref(false);
@@ -37,13 +38,19 @@ async function save() {
       permission_group_id: formData.value.permission_group_id,
       name: formData.value.name,
       description: formData.value.description,
-      timestamp_keys:formData.value.timestamp_keys,
-      comment:formData.value.comment
+      timestamp_keys: formData.value.timestamp_keys,
+      comment: formData.value.comment,
+      timezone: formData.value.timezone,
     };
 
     isLoading.value = true;
     const result = await jsonParserStore.dispatchCreate(data);
-
+    $q.notify({
+      position: 'top',
+      type: 'positive',
+      message: 'Saved successfully',
+    });
+    savedForm.value = { ...formData.value };
     await router.push(`/parser/json/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -65,6 +72,9 @@ async function save() {
     isLoading.value = false;
   }
 }
+const savedForm = ref({ ...formData.value });
+useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
+
 </script>
 
 <style scoped></style>

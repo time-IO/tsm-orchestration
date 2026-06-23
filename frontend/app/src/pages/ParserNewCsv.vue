@@ -65,6 +65,11 @@ async function save() {
 
     isLoading.value = true;
     const result = await csvParserStore.dispatchCreate(data);
+    $q.notify({
+      position: 'top',
+      type: 'positive',
+      message: 'Saved successfully',
+    });
     savedForm.value = { ...formData.value };
     await router.push(`/parser/csv/${result.id}`);
   } catch (error) {
