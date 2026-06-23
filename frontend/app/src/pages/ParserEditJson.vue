@@ -30,6 +30,11 @@
             hint="Provide additional details about this parser"
           />
 
+          <parser-timezone-select
+            v-model="formData.timezone"
+            :rules="[(val: string | null) => !!val || 'Timezone is required']"
+          />
+
           <!-- Timestamp Columns -->
           <div class="q-my-md">
             <div class="row q-gutter-sm items-center q-mb-sm">
@@ -122,6 +127,7 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { JsonParserUpdate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
+import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 
 const permissionGroupStore = usePermissionGroupStore();
 const jsonParserStore = useJsonParserStore();
@@ -134,6 +140,7 @@ const formData = ref<JsonParserUpdate>({
   description: null,
   timestamp_keys: [],
   comment: null,
+  timezone: null,
 });
 
 const isLoading = ref(false);
@@ -149,6 +156,7 @@ onMounted(async () => {
         description: data.description || null,
         timestamp_keys: data.timestamp_keys || [],
         comment: data.comment || null,
+        timezone: data.timezone,
       };
     } catch {
       $q.notify({
@@ -189,6 +197,7 @@ async function save() {
       description: formData.value.description || null,
       timestamp_keys: formData.value.timestamp_keys || [],
       comment: formData.value.comment || null,
+      timezone: formData.value.timezone || null,
     };
 
     isLoading.value = true;

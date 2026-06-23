@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
-
+import pytz
+from pydantic import field_validator
 
 from .parser_detailed import (
     ParserDetailed,
@@ -19,6 +20,7 @@ class ParserJsonTimestampKeyPublic(SQLModel):
 class ParserJsonRead(ParserDetailedRead):
     comment: Optional[str] = None
     timestamp_keys: list[ParserJsonTimestampKeyPublic] = []
+    timezone: Optional[str] = None
 
 
 class ParserJsonTimestampKeyCreate(SQLModel):
@@ -29,6 +31,7 @@ class ParserJsonTimestampKeyCreate(SQLModel):
 class ParserJsonCreate(ParserDetailedCreate):
     comment: Optional[str] = None
     timestamp_keys: list[ParserJsonTimestampKeyCreate]
+    timezone: str
 
 
 class ParserJsonTimestampKeyUpdate(ParserJsonTimestampKeyCreate):
@@ -38,6 +41,7 @@ class ParserJsonTimestampKeyUpdate(ParserJsonTimestampKeyCreate):
 class ParserJsonUpdate(ParserDetailedUpdate):
     comment: Optional[str] = None
     timestamp_keys: Optional[list[ParserJsonTimestampKeyUpdate]] = None
+    timezone: Optional[str] = None
 
 
 class ParserJson(SQLModel, table=True):
@@ -50,7 +54,7 @@ class ParserJson(SQLModel, table=True):
     )
 
     comment: Optional[str] = None
-
+    timezone: Optional[str] = None
     timestamp_keys: list["ParserJsonTimestampKey"] = Relationship(
         back_populates="parser_json", cascade_delete=True
     )
@@ -67,3 +71,12 @@ class ParserJsonTimestampKey(SQLModel, table=True):
     format: str
 
     parser_json: "ParserJson" = Relationship(back_populates="timestamp_keys")
+
+    # @field_validator("timezone")
+    # @classmethod
+    # def validate_timezone(cls, value: any) -> str:
+    #     if value not in pytz.all_timezones:
+    #         raise ValueError(f"{value} is not a valid timezone")
+    #     return value
+    #
+    #

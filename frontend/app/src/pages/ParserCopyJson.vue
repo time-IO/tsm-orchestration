@@ -27,6 +27,7 @@ const formData = ref<JsonParserCreate>({
   description: null,
   timestamp_keys: [],
   comment: null,
+  timezone: null,
 });
 
 const isLoading = ref(false);
@@ -42,6 +43,7 @@ onMounted(async () => {
         name: `${data.name} - Copy`,
         description: data.description,
         timestamp_keys: data.timestamp_keys,
+        timezone: data.timezone,
         comment: data.comment,
       };
     } catch {
@@ -70,6 +72,7 @@ async function save() {
       description: formData.value.description,
       timestamp_keys: formData.value.timestamp_keys,
       comment: formData.value.comment,
+      timezone: formData.value.timezone,
     };
     isLoading.value = true;
     const result = await jsonParserStore.dispatchCreate(data);

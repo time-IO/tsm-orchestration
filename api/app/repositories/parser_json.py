@@ -253,6 +253,7 @@ class ParserJsonRepository:
             created_by_id=parser_detailed.created_by_id,
             comment=entity.comment,
             timestamp_keys=entity.timestamp_keys,
+            timezone=entity.timezone,
             permission_group={
                 "id": permission_group.id,
                 "uuid": permission_group.uuid,

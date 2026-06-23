@@ -45,9 +45,6 @@
                   </q-item-section>
                 </q-item>
 
-
-
-
                 <q-item>
                   <q-item-section>
                     <q-item-label>Created at (UTC)</q-item-label>
@@ -55,6 +52,14 @@
                   </q-item-section>
                 </q-item>
               </q-list>
+
+
+            <q-item>
+              <q-item-section>
+                <q-item-label>Timezone</q-item-label>
+                <q-item-label caption>{{ item.timezone || 'No timezone specified' }}</q-item-label>
+              </q-item-section>
+            </q-item>
             </div>
 
             <div class="col-md-6">
