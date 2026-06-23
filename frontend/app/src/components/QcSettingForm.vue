@@ -155,7 +155,7 @@
         <q-card-actions>
           <q-btn flat @click="closeSubmitDialog()">Cancel</q-btn>
           <q-space></q-space>
-          <q-btn flat color="primary">Submit</q-btn>
+          <q-btn flat color="primary" @click="emitSaveAndCloseDialog">Submit</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -225,6 +225,8 @@ const currentFunctionFormComponent = computed(() => {
   }
   return null;
 });
+
+const emit = defineEmits(['save']);
 
 const currentArgSelection = computed(() => {
   const functions = formData.value.quality_control_functions as QualityControlFunctionCreate[];
@@ -352,8 +354,10 @@ function openFunctionsDialog() {
   functionDialog.value = true;
 }
 
-
-
+function emitSaveAndCloseDialog() {
+  emit('save');
+  closeSubmitDialog();
+}
 </script>
 
 <style scoped></style>
