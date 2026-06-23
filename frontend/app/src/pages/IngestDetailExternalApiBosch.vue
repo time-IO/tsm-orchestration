@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">External Api Ingest</h5>
+    <h5 class="q-mb-none">External API Ingest</h5>
     <h6 class="q-mt-none">Bosch IoT</h6>
     <div class="row">
       <div class="col">

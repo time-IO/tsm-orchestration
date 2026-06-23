@@ -7,7 +7,7 @@
     <q-card class="column" style="width: 90vw; height: 80vh">
       <q-card-section class="row items-center">
         <q-space />
-        <div class="text-h6">Choose a quality control function</div>
+        <div class="text-h6">Choose a Quality Control Function</div>
         <q-space />
         <q-btn v-close-popup dense flat icon="close" round />
       </q-card-section>

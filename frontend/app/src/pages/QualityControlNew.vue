@@ -63,7 +63,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to create quality control setting',
+      message: 'Failed to create Quality Control Setting',
       caption: errorCaption,
     });
   } finally {

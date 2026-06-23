@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5>Overview of Data Ingest</h5>
+    <h5>Overview of Data Ingests</h5>
     <div class="row q-mb-lg">
       <q-space />
       <q-btn color="green" :label="t('newIngest')" to="/ingest/new" />

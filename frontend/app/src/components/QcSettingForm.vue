@@ -15,7 +15,7 @@
             class="q-mb-md"
             v-model="formData.name"
             label="Name *"
-            hint="Enter a descriptive name for this ingest"
+            hint="Enter a descriptive name for this QC Setting"
             :rules="[
               (val) => !!val || 'Name is required',
               (val) => val.length <= 80 || 'Maximum 80 characters',
@@ -25,7 +25,7 @@
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission group is required']"
+            :rules="[(val) => !!val || 'Permission Group is required']"
             class="q-mb-md"
           />
           <!-- Name Field -->
@@ -34,7 +34,7 @@
             class="q-mb-md"
             v-model="formData.context_window"
             label="Context Window *"
-            hint="Enter a Context Window for this ingest"
+            hint="Enter a Context Window for this QC Setting"
             :rules="[(val) => !!val || 'Context Window is required']"
           />
           <!-- Description -->
@@ -44,7 +44,7 @@
             label="Description"
             type="textarea"
             rows="3"
-            hint="Provide additional details about this ingest configuration"
+            hint="Provide additional details about this QC Setting"
           />
 
           <q-card-section class="q-pa-none q-mt-md">
@@ -69,7 +69,7 @@
       >
         <q-form>
           <div class="row justify-end q-mb-lg">
-            <q-btn @click="openFunctionsDialog">Add Function</q-btn>
+            <q-btn @click="openFunctionsDialog">Add function</q-btn>
           </div>
           <component
             :is="currentFunctionFormComponent"

@@ -13,7 +13,7 @@
     map-options
     clearable
     use-input
-    hint="Select the permission group"
+    hint="Select the Permission Group"
     :rules="rules"
   />
 </template>

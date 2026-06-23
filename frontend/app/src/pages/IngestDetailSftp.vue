@@ -64,7 +64,7 @@
                     <q-item-label>Fileserver URI</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.fileserver_uri }}</q-item-label>
-                      <copy-btn title="Copy fileserver uri" :text-to-copy="item.fileserver_uri" />
+                      <copy-btn title="Copy fileserver URI" :text-to-copy="item.fileserver_uri" />
                     </div>
                   </q-item-section>
                 </q-item>

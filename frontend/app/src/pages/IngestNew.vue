@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5>Create a new data ingest</h5>
+    <h5>Create a new Data Ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest" />
@@ -28,7 +28,7 @@
           <q-card-actions>
             <q-space />
             <q-btn :to="item.path" class="full-width" color="green" icon="add">
-              <q-tooltip>Create new ingest</q-tooltip>
+              <q-tooltip>Create new Ingest</q-tooltip>
             </q-btn>
           </q-card-actions>
         </q-card>
@@ -54,7 +54,7 @@
                 </q-item-section>
                 <q-item-section avatar>
                   <q-btn :to="item.path" square color="green" icon="add">
-                    <q-tooltip>Create new ingest</q-tooltip>
+                    <q-tooltip>Create new Ingest</q-tooltip>
                   </q-btn>
                 </q-item-section>
               </q-item>
@@ -88,7 +88,7 @@ const data = [
     name: 'mqtt',
     icon: 'wifi_tethering',
     label: 'MQTT',
-    description: 'Create an ingest topic on the time.IO MQTT broker with a fitting MQTT parser.',
+    description: 'Create an Ingest topic on the time.IO MQTT broker with a fitting MQTT Parser.',
     path: '/ingest/new/mqtt',
   },
 ];

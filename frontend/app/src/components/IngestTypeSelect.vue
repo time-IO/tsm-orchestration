@@ -9,7 +9,7 @@
     clearable
     emit-value
     label="Ingest type"
-    hint="Select the ingest type"
+    hint="Select the Ingest type"
   />
 </template>
 

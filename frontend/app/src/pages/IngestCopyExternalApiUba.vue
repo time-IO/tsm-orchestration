@@ -101,7 +101,7 @@ async function save() {
     $q.notify({
       position: 'top',
       type: 'negative',
-      message: 'Failed to create ingest',
+      message: 'Failed to create Ingest',
       progress: true,
       caption: errorCaption,
     });
