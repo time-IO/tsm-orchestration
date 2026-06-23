@@ -10,6 +10,8 @@ class IngestExternalSftpRead(IngestRead):
     path: str
     username: Optional[str]
     password: Optional[str]
+    bucket_username: str
+    bucket_password: str
     sync_interval_in_minutes: Optional[int]
     sync_enabled: bool
     filename_pattern: str

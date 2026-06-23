@@ -105,6 +105,40 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Bucket Username</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.bucket_username }}</q-item-label>
+                      <copy-btn title="Copy bucket username" :text-to-copy="item.bucket_username" />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Bucket Password</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption class="col-2">
+                        <q-input
+                          borderless
+                          v-model="item.bucket_password"
+                          :type="isBucketPwd ? 'password' : 'text'"
+                        >
+                          <template v-slot:prepend>
+                            <q-icon
+                              :name="isBucketPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isBucketPwd = !isBucketPwd"
+                            />
+                          </template>
+                        </q-input>
+                      </q-item-label>
+                      <copy-btn title="Copy bucket password" :text-to-copy="item.bucket_password" />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Public Key</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ shortenText(item.ssh_public_key) }}</q-item-label>
@@ -207,6 +241,7 @@ const item = ref<IngestExternalSftpPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
+const isBucketPwd = ref(true);
 
 const backUrl = '/ingest';
 
