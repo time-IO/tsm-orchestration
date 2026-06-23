@@ -27,6 +27,15 @@ RAWDATA = """
         ({"skiprows": 4, "header": None}, [2, 4, 8]),
         ({"skiprows": 3, "header": 0}, ["P1_mb", "P4_mb", "T4_C"]),
         ({"skiprows": 3, "header": 0, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]),
+        (
+            {
+                "headlines_to_exclude": 4,
+                "footlines_to_exclude": 0,
+                "header": None,
+                "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
+            },
+            [2, 4, 8],
+        ),
     ],
 )
 def test_parsing(settings, columns):
