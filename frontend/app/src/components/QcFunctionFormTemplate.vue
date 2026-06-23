@@ -15,7 +15,7 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn color="grey" label="Add" type="submit" />
+        <q-btn color="green" label="Add" type="submit" />
       </q-card-actions>
     </q-card>
   </q-form>
