@@ -16,7 +16,7 @@
             class="q-mb-md"
             v-model="formData.name"
             label="Name *"
-            hint="Enter a descriptive name for this ingest"
+            hint="Enter a descriptive name for this Ingest"
             :rules="[
               (val) => !!val || 'Name is required',
               (val) => val.length <= 80 || 'Maximum 80 characters',
@@ -26,7 +26,7 @@
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission group is required']"
+            :rules="[(val) => !!val || 'Permission Group is required']"
           />
 
           <!-- Description -->
@@ -36,7 +36,7 @@
             label="Description"
             type="textarea"
             rows="3"
-            hint="Provide additional details about this ingest configuration"
+            hint="Provide additional details about this Ingest Configuration"
           />
 
           <q-card-section class="q-pa-none">

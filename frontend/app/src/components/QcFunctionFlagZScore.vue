@@ -3,7 +3,7 @@
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
-      <span class="text-caption text-grey block q-mb-sm"> Input data stream(s). </span>
+      <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
         :rules="[requiredDatastreamsRule]"
@@ -16,7 +16,7 @@
     <div class="q-mb-md">
       <span class="text-bold block">Target</span>
       <span class="text-caption text-grey block q-mb-sm">
-        Output data stream(s) to which the results are written. Defaults to field if null.
+        Output Datastream(s) to which the results are written. Defaults to field if null.
       </span>
       <sta-datastream-input
         max-height="300px"

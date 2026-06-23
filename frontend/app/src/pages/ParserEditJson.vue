@@ -16,7 +16,7 @@
             class="q-mb-md"
             v-model="formData.name"
             label="Name *"
-            hint="Enter a descriptive name for this ingest"
+            hint="Enter a descriptive name for this parser"
             :rules="[(val) => !!val || 'Name is required']"
           />
 
@@ -27,7 +27,7 @@
             label="Description"
             type="textarea"
             rows="3"
-            hint="Provide additional details about this ingest configuration"
+            hint="Provide additional details about this parser"
           />
 
           <!-- Timestamp Columns -->

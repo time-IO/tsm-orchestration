@@ -50,7 +50,7 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>Created At (UTC)</q-item-label>
+                    <q-item-label>Created at (UTC)</q-item-label>
                     <q-item-label caption>{{ formatDate(item.created_at) }}</q-item-label>
                   </q-item-section>
                 </q-item>
@@ -100,7 +100,7 @@
     <q-dialog v-model="deleteDialog" persistent>
       <q-card>
         <q-card-section>
-          <h6 class="q-mt-none">Confirm Delete</h6>
+          <h6 class="q-mt-none">Confirm deletion</h6>
         </q-card-section>
 
         <q-card-section> Are you sure you want to delete this item? </q-card-section>

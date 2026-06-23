@@ -20,13 +20,13 @@
             class="q-mb-md"
             v-model="formData.name"
             label="Name *"
-            hint="Enter a descriptive name for this ingest"
+            hint="Enter a descriptive name for this parser"
             :rules="[(val) => !!val || 'Name is required']"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
-            :rules="[(val) => !!val || 'Permission group is required']"
+            :rules="[(val) => !!val || 'Permission Group is required']"
           />
 
           <!-- Description -->
@@ -36,7 +36,7 @@
             label="Description"
             type="textarea"
             rows="3"
-            hint="Provide additional details about this ingest configuration"
+            hint="Provide additional details about this parser"
           />
 
           <q-input

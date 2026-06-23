@@ -8,7 +8,7 @@
           outline
           @click="openDialog"
         />
-        <q-tooltip v-if="!permission_group_id"> Please select a permission group first </q-tooltip>
+        <q-tooltip v-if="!permission_group_id"> Please select a Permission Group first </q-tooltip>
       </div>
 
       <div v-else>
@@ -32,7 +32,7 @@
               :disable="!permission_group_id"
             />
             <q-tooltip v-if="!permission_group_id">
-              Please select a permission group first
+              Please select a Permission Group first
             </q-tooltip>
           </div>
         </div>

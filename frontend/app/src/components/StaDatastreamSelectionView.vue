@@ -2,7 +2,7 @@
   <div style="height: 100%; overflow-y: auto">
     <template v-if="selected.length === 0">
       <div class="row justify-center items-center" style="height: 100%">
-        <div class="text-h6 text-center">No datastreams selected</div>
+        <div class="text-h6 text-center">No Datastreams selected</div>
       </div>
     </template>
 

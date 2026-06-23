@@ -52,7 +52,7 @@ onMounted(async () => {
     } catch {
       $q.notify({
         type: 'negative',
-        message: 'Failed to load ingest data',
+        message: 'Failed to load Ingest Data',
       });
       await router.push('/ingest');
     }
@@ -98,7 +98,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to create ingest',
+      message: 'Failed to create Ingest',
       caption: errorCaption,
     });
   } finally {

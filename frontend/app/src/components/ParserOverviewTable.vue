@@ -62,7 +62,7 @@
               color="black"
               icon="content_copy"
             >
-              <q-tooltip>Copy Parser</q-tooltip>
+              <q-tooltip>Copy parser</q-tooltip>
             </q-btn>
 
 <!--            <q-btn-->

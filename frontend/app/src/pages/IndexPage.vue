@@ -92,7 +92,7 @@
                   (Bosch, DWD, The Things Network, T-Systems, UBA), MQTT brokers and SFTP servers.
                 </p>
                 <p>
-                  Organize your data into Permission Groups to control access. Apply Quality Control
+                  Organize your data using Permission Groups to control access. Apply Quality Control
                   Settings to validate and filter your time series data. Use parsers to process
                   batch data uploads.
                 </p>
@@ -195,11 +195,11 @@ const timeIoLogoSrc = publicAsset('images/LogoTimeIO.png');
 const $q = useQuasar();
 const usageStatisticsStore = useUsageStatisticsStore();
 
-const projectDescription = 'Permission groups to organize projects and manage access control.';
+const projectDescription = 'Permission Groups to organize projects and manage access control.';
 const dataSourcesDescription =
-  'Active ingest configurations for external APIs, MQTT, SFTP, and S3.';
-const usersDescription = 'Registered users with access to the time series management system.';
-const qcSettingsDescription = 'Quality control settings to validate and filter time series data.';
+  'Active Ingest Configurations for external APIs, MQTT, SFTP, and S3.';
+const usersDescription = 'Registered Users with access to the time series management system.';
+const qcSettingsDescription = 'Quality Control Settings to validate and filter time series data.';
 
 const cards = computed(() => [
   {

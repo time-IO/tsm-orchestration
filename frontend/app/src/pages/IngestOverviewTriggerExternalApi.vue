@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5>Trigger External Apis</h5>
+    <h5>Trigger External APIs</h5>
     <p>Select multiple rows you want to synchronise historic data</p>
     <div class="row q-mb-lg">
       <q-space />

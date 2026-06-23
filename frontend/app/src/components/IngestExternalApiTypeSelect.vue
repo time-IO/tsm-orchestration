@@ -8,8 +8,8 @@
     :options="options"
     clearable
     emit-value
-    label="Api type"
-    hint="Select the api type"
+    label="API type"
+    hint="Select the API type"
   />
 </template>
 

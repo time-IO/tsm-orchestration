@@ -54,7 +54,7 @@ onMounted(async () => {
     } catch {
       $q.notify({
         type: 'negative',
-        message: 'Failed to load quality control setting',
+        message: 'Failed to load Quality Control Setting',
       });
       await router.push('/parser');
     }
@@ -106,7 +106,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to update ingest',
+      message: 'Failed to update Ingest',
       caption: errorCaption,
     });
   } finally {

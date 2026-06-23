@@ -66,7 +66,7 @@ async function save() {
       position: 'top',
       type: 'negative',
       progress: true,
-      message: 'Failed to create ingest',
+      message: 'Failed to create Ingest',
       caption: errorCaption,
     });
   } finally {
