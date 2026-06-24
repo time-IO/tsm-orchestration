@@ -397,7 +397,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
             "schema = EXCLUDED.schema, "
             "thing_uuid = EXCLUDED.thing_uuid "
         )
-        conn.execute(cast(Literal, q), [thing.database.username, thing.uuid])
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(cast(Literal, q), [thing.database.username, thing.uuid])
         if curr_schema is None:
             logger.info(f"created thing:schema mapping in DB for thing {thing.uuid}")
         else:
