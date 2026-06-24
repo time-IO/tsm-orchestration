@@ -619,7 +619,7 @@ class MQTT(Base):
 
     def _get_mqtt_device_type(self):
         query = f"""
-            select "name" from {self._schema}.parser_mqtt pm
+            select pm."name" from {self._schema}.parser_mqtt pm
             join {self._schema}.ingest i on pm.parser_id = i.parser_id
             where i.id = %s
         """
