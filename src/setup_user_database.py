@@ -405,6 +405,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         else:
             logger.info(f"updated thing:schema mapping in DB for thing {thing.uuid}")
 
+
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     CreateThingInPostgresHandler().run_loop()
