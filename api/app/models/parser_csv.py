@@ -107,47 +107,6 @@ class ParserCsv(SQLModel, table=True):
             raise ValueError(f"{value} is not a valid encoding")
         return value
 
-    @property
-    def mqtt_information(self) -> dict:
-        # Parse headlines_to_exclude: handle "1" or "1,3,5"
-        skip_rows: int | list[int] = []
-        if self.headlines_to_exclude:
-            if "," in self.headlines_to_exclude:
-                # Comma-separated list: send as list
-                skip_rows = [
-                    int(x.strip()) for x in self.headlines_to_exclude.split(",")
-                ]
-            else:
-                # Single number: send as int
-                skip_rows = int(self.headlines_to_exclude.strip())
-
-        return {
-            "default": 0,
-            "parsers": [
-                {
-                    "type": "csvparser",
-                    "name": self.parser_detailed.name,
-                    "settings": {
-                        "delimiter": self.delimiter,
-                        "skipfooter": self.footlines_to_exclude,
-                        "skiprows": skip_rows,
-                        "header": self.header,
-                        "comment": self.comment,
-                        "pandas_read_csv": self.pandas_read_csv,
-                        "timezone": self.timezone,
-                        "encoding": self.encoding,
-                        "timestamp_columns": [
-                            {
-                                "column": tc.column,
-                                "timestamp_format": tc.timestamp_format,
-                            }
-                            for tc in self.timestamp_columns
-                        ],
-                    },
-                }
-            ],
-        }
-
 
 class ParserCsvTimestampColumn(SQLModel, table=True):
     __tablename__ = "parser_csv_timestamp_column"

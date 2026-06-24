@@ -39,20 +39,6 @@ class IngestSftp(SQLModel, table=True):
     ingest: Ingest = Relationship(back_populates="sftp_detail")
 
     @property
-    def mqtt_information(self) -> dict:
-        from encryption import encryption_service
-
-        return {
-            "raw_data_storage": {
-                "bucket_name": self.bucket_name,
-                "username": self.username,
-                "password": encryption_service.encrypt(self.password),
-                "filename_pattern": self.filename_pattern,
-            },
-            "parsers": self.parser_information,
-        }
-
-    @property
     def parser_information(self):
         return self.ingest.parser.mqtt_information
 

@@ -24,19 +24,7 @@ def create_sync_quality_control(
 
 
 def create_frontend_thing_update(ingest):
-    permission_group = ingest.permission_group
-    database = permission_group.database
-    ingest_type = ingest.ingest_type
-    msg = {
-        "version": 7,
-        "uuid": str(ingest.uuid),
-        "name": ingest.name,
-        "description": ingest.description,
-        "ingest_type": ingest_type,
-        "project": permission_group.mqtt_information,
-        "database": database.mqtt_information,
-        **ingest.mqtt_information,
-    }
+    msg = {"version": 8, "thing": str(ingest.uuid)}
     return msg
 
 

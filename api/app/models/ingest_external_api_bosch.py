@@ -62,26 +62,6 @@ class IngestExternalApiBosch(SQLModel, table=True):
     external_api: IngestExternalApi = Relationship(back_populates="bosch_detail")
 
     @property
-    def mqtt_information(self) -> dict:
-        from encryption import encryption_service
-
-        return {
-            "external_api": {
-                "type": ApiType.BOSCH,
-                "version_id": 1,
-                "enabled": self.external_api.sync_enabled,
-                "sync_interval": self.external_api.sync_interval_in_minutes,
-                "settings": {
-                    "period": self.period_in_minutes,
-                    "endpoint": self.endpoint,
-                    "username": self.bosch_username,
-                    "password": encryption_service.encrypt(self.bosch_password),
-                    "sensor_id": self.sensor_id,
-                },
-            }
-        }
-
-    @property
     def ingest_type(self):
         return self.external_api.ingest.ingest_type
 
