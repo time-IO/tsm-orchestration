@@ -416,7 +416,7 @@ class Database(Base):
     ro_user: str = _prop(lambda self: self._attrs["read_only_username"])
     ro_password: str = _prop(lambda self: self._attrs["read_only_password"])
     url: str | None = _prop(lambda self: self._attrs["url"])
-    ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
+    ro_url: str | None = _prop(lambda self: self._attrs["read_only_url"])
 
     # thing.Datebase interface
     # password url, ro_password, ro_url
@@ -619,7 +619,7 @@ class MQTT(Base):
 
     def _get_mqtt_device_type(self):
         query = f"""
-            select "name" from {self._schema}.parser_mqtt pm
+            select pm."name" from {self._schema}.parser_mqtt pm
             join {self._schema}.ingest i on pm.parser_id = i.parser_id
             where i.id = %s
         """

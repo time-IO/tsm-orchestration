@@ -12,8 +12,8 @@ from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParse
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
 
 _parser_map = {
-    "csvparser": CsvParser,
-    "jsonparser": JsonParser,
+    "csv": CsvParser,
+    "json": JsonParser,
     "campbell_cr6": CampbellCr6Parser,
     "ydoc_ml417": YdocMl417Parser,
     "chirpstack_generic": ChirpStackGenericParser,
