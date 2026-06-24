@@ -133,7 +133,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
         "https://moc.caritc.de/sensorstation-management/api/measurements/average"
     )
     tsytems_auth_url = (
-         "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
     )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
