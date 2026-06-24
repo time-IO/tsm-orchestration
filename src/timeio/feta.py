@@ -485,6 +485,8 @@ class ExtAPI(Base):
         "ttn": "ingest_external_api_the_things_network",
         "tsystems": "ingest_external_api_tsystems",
         "uba": "ingest_external_api_uba",
+        "zentra": "ingest_external_api_zentra",
+        "sensoto": "ingest_external_api_sensoto",
     }
     _schema = SCHEMA
     _table_name = "ingest_external_api"
