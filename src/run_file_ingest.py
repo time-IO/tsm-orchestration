@@ -98,11 +98,11 @@ class ParserJobHandler(AbstractHandler):
                 self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
                 raise e
             except EmptyDataError:
-                journal.warning(
-                    "Parsing skipped. File: {file!r} is empty.", thing_uuid
-                )
+                journal.warning("Parsing skipped. File: {file!r} is empty.", thing_uuid)
             except Exception as e:
-                journal.error(f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid)
+                journal.error(
+                    f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
+                )
                 self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
                 raise UserInputError("Parsing failed") from e
 
@@ -136,7 +136,6 @@ class ParserJobHandler(AbstractHandler):
                 f"Stored observations: {len(obs)}",
                 thing_uuid,
             )
-
 
         self.set_tags(bucket_name, filename, str(parser_uuid), "successful")
         payload = json.dumps(
