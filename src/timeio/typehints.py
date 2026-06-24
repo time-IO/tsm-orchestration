@@ -65,7 +65,7 @@ class MqttPayload:
         thing_sta_id: int | None
         sta_stream_id: int | None
 
-    class ConfigDBUpdate(_t.TypedDict):
+    class UpdateThing(_t.TypedDict):
         version: _t.Literal[1] | None
         thing: str  # UUID of the thing
 

@@ -39,10 +39,10 @@ class CreateThingInMinioHandler(AbstractHandler):
             secret_key=get_envvar("MINIO_SECURE_KEY"),
             secure=get_envvar("MINIO_SECURE", default=True, cast_to=bool),
         )
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         if thing.raw_data_storage is None:
             logger.info(
                 f"Ignoring message, because no s3 storage is associated "

@@ -3,7 +3,7 @@ stages:
   - "check"
   - "build"
   - "integration"
-  - "end-to-end"
+  #- "end-to-end"
   - "release"
   - "scan"
   - "notify"

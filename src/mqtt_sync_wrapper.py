@@ -103,7 +103,7 @@ def cli():
 @cli.command()
 @click.argument("thing_uuid")
 def sync_thing(thing_uuid: str):
-    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
+    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("DSMDB_DSN"))
     if thing.ext_api is not None:
         ext_api_name = thing.ext_api.api_type_name
         datetime_from, datetime_to = TIMERANGE_MAPPING[ext_api_name](thing)

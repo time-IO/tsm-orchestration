@@ -29,7 +29,7 @@ Additional set the following environment variables:
   MINIO_USER        Minio user with r/w privileges
   MINIO_PASSWORD    Password for minio user above.
   MINIO_SECURE      Use minio secure connection; [true, false, 1, 0]
-  CONFIGDB_DSN      DB which stores the credentials for the external sftp server
+  DSMDB_DSN         DB which stores the credentials for the external sftp server
                     (source of sync) and also the (existing) bucket-name for the
                     target S3 storage. See also DSN format below.
 
@@ -55,10 +55,10 @@ class SyncExtSftpManager(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: MqttPayload.SyncExtSftpT, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         minio_secure = get_envvar("MINIO_SECURE").lower() not in ["false", "0"]
         target = MinioFS.from_credentials(
             endpoint=get_envvar("MINIO_URL"),
