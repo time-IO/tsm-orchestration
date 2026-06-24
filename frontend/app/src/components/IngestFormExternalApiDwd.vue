@@ -74,19 +74,13 @@
             <div class="q-mt-md">
               <q-input
                 filled
-                :disable="!formData.sync_enabled"
                 v-model.number="formData.sync_interval_in_minutes"
-                :label="
-                  formData.sync_enabled
-                    ? 'Sync Interval (in minutes) *'
-                    : 'Sync Interval (in minutes)'
-                "
+                label="Sync Interval (in minutes) *"
                 type="number"
                 :rules="[
+                  (val) => !!val || 'Sync intervall is required',
                   (val) =>
-                    !formData.sync_enabled ||
-                    (val !== null && val !== '' && val > 0) ||
-                    'Interval must be a positive number when sync is enabled',
+                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
               />
             </div>

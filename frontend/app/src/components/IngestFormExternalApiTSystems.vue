@@ -104,11 +104,14 @@
             <div class="q-mt-md">
               <q-input
                 filled
-                disable
-                v-model.number="syncInterval"
-                label="Sync Interval (minutes)"
+                v-model.number="formData.sync_interval_in_minutes"
+                label="Sync Interval (in minutes) *"
                 type="number"
-                hint="Fixed interval for automatic synchronization"
+                :rules="[
+                  (val) => !!val || 'Sync intervall is required',
+                  (val) =>
+                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
+                ]"
               />
             </div>
           </q-card-section>
@@ -160,15 +163,17 @@ const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApi
     permission_group_id: null,
     description: null,
     sync_enabled: false,
+    sync_interval_in_minutes: null,
     group: null,
     station_id: null,
     tsystems_username: null,
     tsystems_password: null,
+
   },
 });
 
 const isPwd = ref(true);
-const syncInterval = ref(60);
+
 </script>
 
 <style scoped></style>

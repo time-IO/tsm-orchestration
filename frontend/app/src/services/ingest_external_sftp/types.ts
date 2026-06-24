@@ -18,7 +18,7 @@ export type IngestExternalSftpPublic = {
   bucket_username: string;
   bucket_password: string;
   ssh_public_key: string;
-  sync_interval_in_minutes: number | null;
+  sync_interval_in_minutes: number;
   sync_enabled: boolean;
   parser: ParserRead;
   filename_pattern: string;

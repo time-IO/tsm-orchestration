@@ -7,7 +7,7 @@ export type IngestExternalApiTheThingsNetworkPublic = {
   name: string;
   description: string | null;
   sync_enabled: boolean;
-  sync_interval_in_minutes: number | null;
+  sync_interval_in_minutes: number;
   created_by_id: number;
   created_at: string;
   permission_group: PermissionGroup;
