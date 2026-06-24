@@ -7,7 +7,7 @@ export type IngestExternalApiTSystemsPublic = {
   name: string;
   description: string | null;
   sync_enabled: boolean;
-  sync_interval_in_minutes: number | null;
+  sync_interval_in_minutes: number;
   created_by_id: number;
   created_at: string;
   permission_group: PermissionGroup;
@@ -22,6 +22,7 @@ export type IngestExternalApiTSystemsCreate = {
   name: string;
   description: string | null;
   sync_enabled: boolean;
+  sync_interval_in_minutes: number | null;
   group: string | null;
   station_id: string | null;
   tsystems_username: string | null;
@@ -33,6 +34,7 @@ export type IngestExternalApiTSystemsUpdate = {
   name?: string | null;
   description?: string | null;
   sync_enabled?: boolean;
+  sync_interval_in_minutes?: number | null;
   api_key?: string | null;
   endpoint_uri?: string | null;
   group?: string | null;

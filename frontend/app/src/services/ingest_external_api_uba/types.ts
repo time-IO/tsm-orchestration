@@ -20,6 +20,7 @@ export type IngestExternalApiUbaCreate = {
   station_id: string | null;
   description: string | null;
   sync_enabled: boolean;
+  sync_interval_in_minutes: number | null;
 };
 
 export type IngestExternalApiUbaUpdate = {
@@ -28,4 +29,5 @@ export type IngestExternalApiUbaUpdate = {
   station_id?: string | null;
   description?: string | null;
   sync_enabled?: boolean;
+  sync_interval_in_minutes?: number | null;
 };
