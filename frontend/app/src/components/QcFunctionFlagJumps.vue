@@ -58,7 +58,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   requiredRule,
   offsetAliasMatchRule,
@@ -71,18 +71,38 @@ import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const formData = ref({
-  field: [],
-  target: [],
-  thresh: null,
-  window: null,
-  min_periods: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  thresh: null as number | null,
+  window: null as number | null,
+  min_periods: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const threshArg = props.initialData.find((a) => a.name === 'thresh');
+  const windowArg = props.initialData.find((a) => a.name === 'window');
+  const min_periodsArg = props.initialData.find((a) => a.name === 'min_periods');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.thresh = (threshArg?.input.value as number) ?? null;
+  formData.value.window = (windowArg?.input.value as number) ?? null;
+  formData.value.min_periods = (min_periodsArg?.input.value as number) ?? null;
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const emit = defineEmits(['submit', 'remove']);
 

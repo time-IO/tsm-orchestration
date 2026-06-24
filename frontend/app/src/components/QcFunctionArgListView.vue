@@ -8,15 +8,6 @@
       class="q-mb-md"
     >
       <template #header>
-        <q-item-section side>
-          <q-icon
-            v-if="removable"
-            name="delete"
-            color="red"
-            @click.prevent="removeFunction(i)"
-            class="cursor-pointer"
-          />
-        </q-item-section>
         <q-item-section>
           <div class="text-weight-medium text-subtitle1">{{ item.name }}</div>
           <div class="text-caption text-grey-6">
@@ -45,48 +36,43 @@
             }}
           </div>
         </q-item-section>
-        <q-space></q-space>
+        <q-space />
+
+        <q-item-section side class="q-pl-none">
+          <div class="row items-center no-wrap q-gutter-sm">
+            <q-icon
+              v-if="removable"
+              name="delete"
+              color="red"
+              size="1.6em"
+              @click.prevent="removeFunction(i)"
+              class="cursor-pointer"
+            />
+            <q-icon
+              v-if="removable"
+              name="edit"
+              color="primary"
+              size="1.6em"
+              @click.prevent="editFunction(i)"
+              class="cursor-pointer q-mr-sm"
+            />
+          </div>
+        </q-item-section>
       </template>
 
       <q-list dense>
         <template v-for="(arg, j) in item.quality_control_function_arguments" :key="`${i}-${j}`">
           <q-item v-if="isDatastreamType(arg)">
             <q-item-section>
-              <q-card flat bordered class="q-mb-sm">
-                <!-- Header -->
-                <q-card-section
-                  class="row items-center q-py-xs q-px-sm"
-                  style="background-color: #e4eaed"
-                >
-                  <div class="text-weight-medium text-capitalize">
-                    {{ arg.name }}
-                  </div>
-                  <q-space />
-
-                  <q-btn
-                    v-if="removable"
-                    flat
-                    dense
-                    icon="add"
-                    label="Add Datastream"
-                    size="sm"
-                    @click.stop="
-                      () => {
-                        onAddDatastream(i, j);
-                      }
-                    "
-                  />
-                </q-card-section>
-                <q-card-section class="q-pa-sm">
-                  <sta-datastream-selection-view
-                    :selected="arg.input.value"
-                    :default-opened="true"
-                    :removable="removable === true"
-                    :hide-thing-name="true"
-                    @remove="removeDatastream(i, j, $event)"
-                  />
-                </q-card-section>
-              </q-card>
+              <sta-datastream-card
+                :label="arg.name"
+                :selected="arg.input.value"
+                :removable="removable === true"
+                :addable="removable === true"
+                :hide-thing-name="true"
+                @add="onAddDatastream(i, j)"
+                @remove="removeDatastream(i, j, $event)"
+              />
             </q-item-section>
           </q-item>
         </template>
@@ -97,7 +83,7 @@
 
 <script setup lang="ts">
 import { isDatastreamType } from 'src/utils/quality_control_utils';
-import StaDatastreamSelectionView from 'components/StaDatastreamSelectionView.vue';
+import StaDatastreamCard from 'components/StaDatastreamCard.vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionPublic,
@@ -114,7 +100,7 @@ defineProps<{
     | QualityControlFunctionUpdate[];
 }>();
 
-const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream']);
+const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream', 'edit']);
 
 function removeFunction(index: number | string) {
   emit('remove', index);
@@ -140,6 +126,9 @@ function removeDatastream(funcIndex: number, argIndex: number, datastream: Datas
 
 function onAddDatastream(funcIndex: number, argIndex: number) {
   emit('add-datastream', { funcIndex, argIndex });
+}
+function editFunction(index: number) {
+  emit('edit', index);
 }
 </script>
 

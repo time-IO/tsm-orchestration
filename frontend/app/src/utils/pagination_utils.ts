@@ -80,7 +80,6 @@ export const default_ingest_columns: QTableColumn[] = [
 export const default_ingest_external_api_columns: QTableColumn[] = [
   {
     name: 'id',
-    required: true,
     label: 'ID',
     align: 'left',
     field: (row) => row.id,
@@ -144,7 +143,6 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
 export const default_parser_columns: QTableColumn[] = [
   {
     name: 'id',
-    required: true,
     label: 'ID',
     align: 'left',
     field: (row) => row.id,

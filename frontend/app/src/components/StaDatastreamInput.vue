@@ -14,12 +14,14 @@
       <div v-else>
         <div class="row items-start no-wrap">
           <div style="width: 90%">
-            <sta-datastream-selection-view
+            <sta-datastream-card
+              label="Datastreams"
               :selected="selectedDatastreams"
-              hide-open-button
-              :default-opened="true"
+              :removable="true"
+              :addable="false"
+              :hide-thing-name="true"
+              :hide-open-button="true"
               @remove="removeSelected"
-              :style="{ maxHeight: maxHeight || '200px', overflowY: 'auto' }"
             />
           </div>
           <div class="q-ml-sm">
@@ -37,7 +39,6 @@
           </div>
         </div>
       </div>
-
       <sta-datastream-selection
         v-if="showDialog"
         v-model="showDialog"
@@ -52,8 +53,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Datastream } from 'src/services/sta/types';
-import StaDatastreamSelectionView from 'components/StaDatastreamSelectionView.vue';
 import StaDatastreamSelection from 'components/StaDatastreamSelection.vue';
+import StaDatastreamCard from 'components/StaDatastreamCard.vue';
 
 const selectedDatastreams = defineModel<Datastream[]>({ default: [] });
 

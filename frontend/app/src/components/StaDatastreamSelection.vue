@@ -1,5 +1,10 @@
 <template>
-  <q-dialog v-model="showDialog" maximized @keydown.esc="showDialog = false" @keydown.enter="applySelection">
+  <q-dialog
+    v-model="showDialog"
+    maximized
+    @keydown.esc="showDialog = false"
+    @keydown.enter="applySelection"
+  >
     <q-card class="q-pa-lg q-ma-md" style="max-width: 95vw; height: 90vh">
       <div class="q-mb-md">
         <div class="text-h5">Select Datastreams</div>
@@ -43,10 +48,13 @@
           />
         </div>
         <div class="col-4">
-          <sta-datastream-selection-view
+          <sta-datastream-card
+            label="Datastreams"
             :selected="selected"
-            removable
-            defaultOpened
+            :removable="true"
+            :addable="false"
+            :hide-thing-name="true"
+            :hide-open-button="true"
             @remove="removeDatastreamFromSelection"
           />
         </div>
@@ -71,7 +79,7 @@ import type {
 } from 'src/services/sta/types';
 import { debounce, useQuasar } from 'quasar';
 import { useStaStore } from 'stores/staStore';
-import StaDatastreamSelectionView from 'components/StaDatastreamSelectionView.vue';
+import StaDatastreamCard from 'components/StaDatastreamCard.vue';
 import type { Datastream } from 'src/services/sta/types';
 
 import StaTemporaryDatastreamTable from 'components/StaTemporaryDatastreamTable.vue';
@@ -93,6 +101,7 @@ const loading = ref(false);
 const props = defineProps<{
   permission_group_id: number;
   initialSelection?: Datastream[];
+  removable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -183,7 +192,10 @@ async function loadData() {
   };
 
   try {
-    const response = await staStore.dispatchFetchDatastreams(props.permission_group_id, requestParams);
+    const response = await staStore.dispatchFetchDatastreams(
+      props.permission_group_id,
+      requestParams,
+    );
     staRows.value = response.value;
 
     const total = response['@iot.count'] ?? response.value.length;

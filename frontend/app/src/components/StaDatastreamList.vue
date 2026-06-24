@@ -86,7 +86,7 @@ const props = defineProps<{
   datastream: Datastream;
   removable?: boolean | undefined;
   hideOpenButton?: boolean | undefined;
-  hideThingName?: boolean;
+  hideThingName?: boolean | undefined;
 }>();
 console.log('hideThingName:', props.hideThingName);
 const $q = useQuasar();

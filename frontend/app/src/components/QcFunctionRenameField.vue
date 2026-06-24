@@ -40,21 +40,37 @@
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { requiredDatastreamsRule, requiredRule } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const emit = defineEmits(['submit', 'remove']);
 
 const formData = ref({
-  field: [],
-  target: [],
-  new_name: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  new_name: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const new_nameArg = props.initialData.find((a) => a.name === 'new_name');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.new_name = (new_nameArg?.input.value as number) ?? null;
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const formDataWithTypes = computed(() => {
   const fieldObject = {

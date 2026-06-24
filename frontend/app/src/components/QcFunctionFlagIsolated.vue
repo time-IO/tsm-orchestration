@@ -52,24 +52,41 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { requiredRule, offsetAliasMatchRule, requiredDatastreamsRule } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const formData = ref({
-  field: [],
-  target: [],
-  gap_window: null,
-  group_window: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  gap_window: null as number | null,
+  group_window: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const gap_windowArg = props.initialData.find((a) => a.name === 'gap_window');
+  const group_windowArg = props.initialData.find((a) => a.name === 'group_window');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.gap_window = (gap_windowArg?.input.value as number) ?? null;
+  formData.value.group_window = (group_windowArg?.input.value as number) ?? null;
+}
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const emit = defineEmits(['submit', 'remove']);
 

@@ -1,33 +1,78 @@
 <template>
-  <q-table
-    ref="tableRef"
-    :rows="rows"
-    :columns="default_ingest_columns"
-    :loading="loading"
-    row-key="id"
-    flat
-    bordered
-    v-model:pagination="pagination"
-    @request="onRequest"
-    v-bind="$attrs"
-    :table-style="'table-layout: fixed; width: 100%'"
-  >
-    <template v-slot:header="props">
-      <q-tr :props="props">
-        <q-th
-          v-for="col in props.cols"
-          :key="col.name"
-          :props="props"
-          :class="col.name === 'action' ? 'text-center' : 'text-left'"
-        >
-          {{ col.label }}
-        </q-th>
-      </q-tr>
-    </template>
+  <div>
+    <!-- Icon/Btn: Selecting the Visibility of Columns   -->
+    <div class="row justify-end q-mb-sm">
+      <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
+        <q-menu>
+          <q-list style="min-width: 180px">
+<!--            select all-->
+            <q-item dense clickable @click="toggleAll">
+              <q-item-section side>
+                <q-checkbox
+                  :model-value="allVisible"
+                  @update:model-value="toggleAll"
+                  dense
+                  color="blue-grey-6"
+                />
+              </q-item-section>
+              <q-item-section><strong>All</strong></q-item-section>
+            </q-item>
+            <q-separator />
+<!--            select individually-->
+            <q-item
+              v-for="opt in columnOptions"
+              :key="opt.value"
+              dense
+              clickable
+              @click="toggleColumn(opt.value)"
+            >
+              <q-item-section side>
+                <q-checkbox
+                  :model-value="visibleColumns.includes(opt.value)"
+                  @update:model-value="toggleColumn(opt.value)"
+                  dense
+                  color="blue-grey-6"
+                />
+              </q-item-section>
+              <q-item-section>{{ opt.label }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+    </div>
 
-    <template v-slot:loading>
-      <q-inner-loading showing color="primary" />
-    </template>
+    <q-table
+      ref="tableRef"
+      :rows="rows"
+      :columns="default_ingest_columns"
+      :visible-columns="visibleColumns"
+      :loading="loading"
+      row-key="id"
+      flat
+      bordered
+      v-model:pagination="pagination"
+      @request="onRequest"
+      v-bind="$attrs"
+      :table-style="'table-layout: fixed; width: 100%'"
+    >
+      <template v-slot:header="props">
+        <q-tr :props="props">
+          <q-th
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="col.name === 'action' ? 'text-center' : 'text-left'"
+            :style="`width: ${colWidths[col.name] ?? 'auto'}; position: relative; user-select: none;`"
+          >
+            {{ col.label }}
+            <span class="col-resize-handle" @mousedown="startResize($event, col.name)" />
+          </q-th>
+        </q-tr>
+      </template>
+
+      <template v-slot:loading>
+        <q-inner-loading showing color="primary" />
+      </template>
 
     <template v-slot:body="props">
       <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
@@ -87,45 +132,46 @@
             <!--            </q-btn>-->
           </template>
 
-          <template v-else-if="col.name === 'created_by'">
-            <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
-              <q-tooltip>{{ col.value ?? 'N/A' }}</q-tooltip>
-            </q-icon>
-          </template>
+            <template v-else-if="col.name === 'created_by'">
+              <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
+                <q-tooltip>{{ col.value ?? 'N/A' }}</q-tooltip>
+              </q-icon>
+            </template>
 
-          <template v-else>
-            <span
-              v-if="col.value !== null && col.value !== undefined && col.value !== ''"
-              :style="`display: inline-flex; align-items: center; max-width: ${getMaxWidth(col.name)}`"
-            >
-              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
-                {{ col.value }}
-                <q-tooltip>
-                  {{
-                    col.name === 'ingest_type' && props.row.external_api_type
-                      ? col.value + ' – ' + formatExternalApiType(props.row.external_api_type)
-                      : col.value
-                  }}
-                </q-tooltip>
-              </span>
-              <q-btn
-                v-if="col.name === 'uuid'"
-                flat
-                round
-                icon="content_copy"
-                size="xs"
-                text-color="grey"
-                @click="copyClipboard(props.row.uuid)"
+            <template v-else>
+              <span
+                v-if="col.value !== null && col.value !== undefined && col.value !== ''"
+                :style="`display: inline-flex; align-items: center; max-width: ${colWidths[col.name] ?? 'auto'}`"
               >
-                <q-tooltip>Copy UUID</q-tooltip>
-              </q-btn>
-            </span>
-            <span v-else class="text-grey-6"> N/A </span>
-          </template>
-        </q-td>
-      </q-tr>
-    </template>
-  </q-table>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+                  {{ col.value }}
+                  <q-tooltip>
+                    {{
+                      col.name === 'ingest_type' && props.row.external_api_type
+                        ? col.value + ' – ' + formatExternalApiType(props.row.external_api_type)
+                        : col.value
+                    }}
+                  </q-tooltip>
+                </span>
+                <q-btn
+                  v-if="col.name === 'uuid'"
+                  flat
+                  round
+                  icon="content_copy"
+                  size="xs"
+                  text-color="grey"
+                  @click="copyClipboard(props.row.uuid)"
+                >
+                  <q-tooltip>Copy UUID</q-tooltip>
+                </q-btn>
+              </span>
+              <span v-else class="text-grey-6"> N/A </span>
+            </template>
+          </q-td>
+        </q-tr>
+      </template>
+    </q-table>
+  </div>
   <q-dialog v-model="deleteDialog" persistent>
     <q-card>
       <q-card-section>
@@ -196,24 +242,6 @@ const closeDeleteDialog = () => {
   deleteDialog.value = false;
 };
 
-const windowWidth = ref(window.innerWidth);
-
-window.addEventListener('resize', () => {
-  windowWidth.value = window.innerWidth;
-});
-
-const colMaxWidth: Record<string, { sm: string; lg: string }> = {
-  permission_group: { sm: '80px', lg: '150px' },
-  name: { sm: '80px', lg: '220px' },
-  uuid: { sm: '80px', lg: '220px' },
-};
-
-const getMaxWidth = computed(() => (colName: string) => {
-  const widths = colMaxWidth[colName];
-  if (!widths) return 'auto';
-  return windowWidth.value < 1200 ? widths.sm : widths.lg;
-});
-
 const $q = useQuasar();
 const copyClipboard = (text: string | null) => {
   if (!text) {
@@ -236,14 +264,136 @@ const copyClipboard = (text: string | null) => {
     });
 };
 
+const windowWidth = ref(window.innerWidth);
+
+window.addEventListener('resize', () => {
+  windowWidth.value = window.innerWidth;
+});
+
+const colMinWidths: Record<string, number> = {
+  id: 40,
+  permission_group: 40,
+  name: 40,
+  uuid: 80,
+  ingest_type: 80,
+  created_at: 90,
+  created_by: 60,
+  action: 120,
+};
+
+const defaultColWidths = ref<Record<string, string>>({
+  id: '60px',
+  permission_group: windowWidth.value < 1200 ? '80px' : '150px',
+  name: windowWidth.value < 1200 ? '80px' : '120px',
+  uuid: windowWidth.value < 1200 ? '80px' : '120px',
+  ingest_type: '120px',
+  created_at: '110px',
+  created_by: '80px',
+  action: '140px',
+});
+
+// loading the 'Usersettings'
+const savedColWidths = sessionStorage.getItem('ingest-col-widths');
+// handover the setting
+const colWidths = ref<Record<string, string>>(
+  savedColWidths ? JSON.parse(savedColWidths) : defaultColWidths.value,
+);
+
+// functions for setting a new col-widths
+let resizingCol: string | null = null;
+let startX = 0;
+let startWidth = 0;
+
+function startResize(e: MouseEvent, colName: string) {
+  resizingCol = colName;
+  startX = e.clientX;
+
+  const th = (e.target as HTMLElement).closest('th');
+  startWidth = th ? th.offsetWidth : parseInt(colWidths.value[colName] ?? '100');
+
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', stopResize);
+}
+
+function onResize(e: MouseEvent) {
+  if (!resizingCol) return;
+  const diff = e.clientX - startX;
+  const min = colMinWidths[resizingCol] ?? 50;
+  const newWidth = Math.max(min, startWidth + diff);
+  colWidths.value[resizingCol] = newWidth + 'px';
+}
+
+function stopResize() {
+  resizingCol = null;
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', stopResize);
+  sessionStorage.setItem('ingest-col-widths', JSON.stringify(colWidths.value));
+}
+
+// to select the visibility of the columns
+// except actions
+const columnOptions = computed(() =>
+  default_ingest_columns
+    .filter((c) => c.name !== 'action')
+    .map((c) => ({ label: c.label, value: c.name })),
+);
+
+const savedColumns = sessionStorage.getItem('ingest-visible-columns');
+
+const visibleColumns = ref<string[]>(
+  savedColumns ? JSON.parse(savedColumns) : default_ingest_columns.map((c) => c.name),
+);
+
+function toggleColumn(colName: string) {
+  if (visibleColumns.value.includes(colName)) {
+    visibleColumns.value = visibleColumns.value.filter((c) => c !== colName);
+  } else {
+    visibleColumns.value = [...visibleColumns.value, colName];
+  }
+  sessionStorage.setItem('ingest-visible-columns', JSON.stringify(visibleColumns.value));
+}
+const allVisible = computed(() =>
+  columnOptions.value.every((opt) => visibleColumns.value.includes(opt.value)),
+);
+
+function toggleAll() {
+  if (allVisible.value) {
+    visibleColumns.value = ['action'];
+  } else {
+    visibleColumns.value = default_ingest_columns.map((c) => c.name);
+  }
+  sessionStorage.setItem('ingest-visible-columns', JSON.stringify(visibleColumns.value));
+}
+
 function visualizationUrl(uuid: string | null) {
   if (!uuid) return '';
   return `${window.location.origin}/visualization/d/${encodeURIComponent(uuid)}?orgId=1`;
 }
 </script>
 
+<style>
+thead th {
+  min-width: 0 !important;
+}
+</style>
 <style scoped>
 .row-highlight {
   background-color: rgba(255, 0, 0, 0.1);
+}
+.col-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 8px;
+  cursor: col-resize;
+  background: transparent;
+  border-right: 2px solid rgba(0, 0, 0, 0.15);
+  transition: border-color 0.15s;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle:active {
+  border-right: 2px solid rgba(0, 0, 0, 0.5);
 }
 </style>
