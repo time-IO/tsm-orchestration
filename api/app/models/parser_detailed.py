@@ -71,12 +71,5 @@ class ParserDetailed(SQLModel, table=True):
     parser_json: Optional["ParserJson"] = Relationship(back_populates="parser_detailed")
 
     @property
-    def mqtt_information(self):
-        if self.parser_csv is not None:
-            return self.parser_csv.mqtt_information
-
-        return None
-
-    @property
     def parser_info(self):
         return {"name": self.name}

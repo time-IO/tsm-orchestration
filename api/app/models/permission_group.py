@@ -37,13 +37,6 @@ class PermissionGroup(SQLModel, table=True):
         back_populates="permission_group"
     )
 
-    @property
-    def mqtt_information(self) -> dict:
-        return {
-            "name": self.name,
-            "uuid": str(self.uuid),
-        }
-
     @staticmethod
     def convert_entitlement_to_name(entitlement):
         """Extract the name from the entitlement."""

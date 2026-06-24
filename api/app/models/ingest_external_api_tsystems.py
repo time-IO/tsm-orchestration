@@ -50,25 +50,6 @@ class IngestExternalApiTSystems(SQLModel, table=True):
     external_api: IngestExternalApi = Relationship(back_populates="tsystems_detail")
 
     @property
-    def mqtt_information(self) -> dict:
-        from encryption import encryption_service
-
-        return {
-            "external_api": {
-                "type": ApiType.TSYSTEMS,
-                "version_id": 1,
-                "enabled": self.external_api.sync_enabled,
-                "sync_interval": self.external_api.sync_interval_in_minutes,
-                "settings": {
-                    "group": self.group,
-                    "username": self.tsystems_username,
-                    "password": encryption_service.encrypt(self.tsystems_password),
-                    "station_id": self.station_id,
-                },
-            }
-        }
-
-    @property
     def ingest_type(self):
         return self.external_api.ingest.ingest_type
 

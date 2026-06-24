@@ -43,23 +43,6 @@ class IngestExternalApiTheThingsNetwork(SQLModel, table=True):
     )
 
     @property
-    def mqtt_information(self) -> dict:
-        from encryption import encryption_service
-
-        return {
-            "external_api": {
-                "type": ApiType.THE_THINGS_NETWORK,
-                "version_id": 1,
-                "enabled": self.external_api.sync_enabled,
-                "sync_interval": self.external_api.sync_interval_in_minutes,
-                "settings": {
-                    "api_key": encryption_service.encrypt(self.api_key),
-                    "endpoint_uri": self.endpoint_uri,
-                },
-            }
-        }
-
-    @property
     def ingest_type(self):
         return self.external_api.ingest.ingest_type
 

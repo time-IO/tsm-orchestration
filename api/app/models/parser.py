@@ -40,14 +40,6 @@ class Parser(SQLModel, table=True):
     )
 
     @property
-    def mqtt_information(self):
-        if self.parser_mqtt_detail is not None:
-            return self.parser_mqtt_detail.mqtt_information
-        elif self.parser_detailed is not None:
-            return self.parser_detailed.mqtt_information
-        return None
-
-    @property
     def parser_info(self):
 
         child_info = None

@@ -15,9 +15,5 @@ class ParserMqtt(SQLModel, table=True):
     parser: Parser = Relationship(back_populates="parser_mqtt_detail")
 
     @property
-    def mqtt_information(self):
-        return {"mqtt_device_type": self.name}
-
-    @property
     def parser_info(self):
         return {"name": self.name}

@@ -33,23 +33,6 @@ class IngestMqtt(SQLModel, table=True):
     ingest: Ingest = Relationship(back_populates="mqtt_detail")
 
     @property
-    def mqtt_information(self) -> dict:
-        from encryption import encryption_service
-
-        parser_info = self.ingest.parser.mqtt_information
-
-        return {
-            "mqtt": {
-                "username": self.username,
-                "password_hash": self.password_hashed,
-                "password": encryption_service.encrypt(self.password),
-                "topic": self.topic,
-                "uri": self.uri,
-                **parser_info,
-            }
-        }
-
-    @property
     def ingest_type(self):
         return self.ingest.ingest_type
 

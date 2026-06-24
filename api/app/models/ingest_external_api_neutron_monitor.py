@@ -57,21 +57,6 @@ class IngestExternalApiNeutronMonitor(SQLModel, table=True):
         return v
 
     @property
-    def mqtt_information(self) -> dict:
-        return {
-            "external_api": {
-                "type": ApiType.NEUTRON_MONITOR,
-                "version_id": 1,
-                "enabled": self.external_api.sync_enabled,
-                "sync_interval": self.external_api.sync_interval_in_minutes,
-                "settings": {
-                    "station_id": self.station_id,
-                    "time_resolution": self.time_resolution_in_minutes,
-                },
-            }
-        }
-
-    @property
     def ingest_type(self):
         return self.external_api.ingest.ingest_type
 
