@@ -19,6 +19,8 @@ export function isDatastreamType(
   return arg.type === 'datastream';
 }
 
+export const FUNCTIONS_WITH_REQUIRED_TARGET = ['processGeneric', 'flagGeneric'];
+
 export interface FunctionOption {
   label: string;
   description: string;

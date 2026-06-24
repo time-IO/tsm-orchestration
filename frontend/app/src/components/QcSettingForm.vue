@@ -67,18 +67,12 @@
         caption="Choose your functions"
         title="SaQC Functions"
       >
-        <q-form>
-          <div class="row justify-end q-mb-lg">
-            <q-btn @click="openFunctionsDialog">Add function</q-btn>
-          </div>
-          <component
-            :is="currentFunctionFormComponent"
-            v-if="currentFunctionFormComponent && formData.permission_group_id"
-            :permission_group_id="formData.permission_group_id"
-            @submit="handleFunctionFormSubmit"
-            @remove="handleRemove"
-          />
-        </q-form>
+
+        <div class="row justify-end q-mb-lg">
+          <q-btn @click="openFunctionsDialog">Add Function</q-btn>
+        </div>
+
+
         <div class="row">
           <div class="col-12">
             <div class="row items-center justify-end q-mb-sm">
@@ -99,6 +93,7 @@
               @remove="removeFunction"
               @remove-datastream="handleRemoveDatastream"
               @add-datastream="handleAddDatastream"
+              @edit="handleEditFunction"
             />
           </div>
         </div>
@@ -167,6 +162,21 @@
       :initial-selection="currentArgSelection"
       @apply-selection="handleApplyDatastreamSelection"
     />
+
+    <q-dialog v-model="functionFormDialog" @hide="handleRemove">
+      <q-card style="min-width: 500px; max-width: 700px" class="q-pa-md">
+        <q-form>
+          <component
+            :is="currentFunctionFormComponent"
+            v-if="currentFunctionFormComponent && formData.permission_group_id"
+            :permission_group_id="formData.permission_group_id"
+            :initial-data="editingFunction?.quality_control_function_arguments"
+            @submit="handleFunctionFormSubmit"
+            @remove="handleRemove"
+          />
+        </q-form>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -176,7 +186,8 @@ import { QForm } from 'quasar';
 import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
 import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
 import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
-import { computed, type Ref, ref } from 'vue';
+import { computed, type Ref, ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { onBeforeRouteLeave } from 'vue-router';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
@@ -191,6 +202,7 @@ import {
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { Datastream } from 'src/services/sta/types';
 import { isDatastreamType } from 'src/utils/quality_control_utils';
+import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
   default: {
@@ -210,6 +222,8 @@ defineProps<{
   itemPermissionGroup?: PermissionGroup | null;
 }>();
 
+const emit = defineEmits(['save']);
+
 const step = ref(1);
 const functionDialog = ref(false);
 const submitDialog = ref(false);
@@ -219,6 +233,14 @@ const addDatastreamDialog = ref(false);
 const addDatastreamFuncIndex = ref<number>(0);
 const addDatastreamArgIndex = ref<number>(0);
 
+const editingIndex = ref<number | null>(null);
+const functionFormDialog = ref(false);
+
+const editingFunction = computed(() => {
+  if (editingIndex.value === null) return null;
+  return formData.value.quality_control_functions![editingIndex.value];
+});
+
 const currentFunctionFormComponent = computed(() => {
   if (selectedFunctionName.value) {
     return getQcFunctionComponent(selectedFunctionName.value as QcFunctionName);
@@ -226,7 +248,14 @@ const currentFunctionFormComponent = computed(() => {
   return null;
 });
 
-const emit = defineEmits(['save']);
+
+function handleEditFunction(index: number) {
+  const func = formData.value.quality_control_functions![index];
+  if (!func) return;
+  editingIndex.value = index;
+  selectedFunctionName.value = func.name;
+  functionFormDialog.value = true;
+}
 
 const currentArgSelection = computed(() => {
   const functions = formData.value.quality_control_functions as QualityControlFunctionCreate[];
@@ -245,13 +274,47 @@ const hasValidDatastreams = computed(() => {
     const target = func.quality_control_function_arguments.find(
       (a) => isDatastreamType(a) && a.name === 'target',
     );
+    const targetRequired = FUNCTIONS_WITH_REQUIRED_TARGET.includes(func.name);
+    const targetOk = targetRequired
+      ? !!target && (target.input.value as Datastream[]).length > 0
+      : true;
+
     const fieldOk = field ? (field.input.value as Datastream[]).length > 0 : true;
-    const targetOk = target ? (target.input.value as Datastream[]).length > 0 : true;
     return fieldOk && targetOk;
   });
 });
 
 const expandAllFunctions = ref(false);
+
+const isDirty = ref(false);
+
+watch(
+  formData,
+  () => {
+    isDirty.value = true;
+  },
+  { deep: true },
+);
+
+onBeforeRouteLeave((to, from, next) => {
+  if (!isDirty.value) return next();
+  const confirmed = window.confirm(
+    'You have unsaved changes. Are you sure you want to leave the site?',
+  );
+  if (confirmed) {
+    next();
+  } else {
+    next(false);
+  }
+});
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+  if (!isDirty.value) return;
+  e.preventDefault();
+}
+
+onMounted(() => window.addEventListener('beforeunload', handleBeforeUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', handleBeforeUnload));
 
 function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
   addDatastreamFuncIndex.value = funcIndex;
@@ -288,11 +351,22 @@ function validateBaseFormAndGoToNextStep() {
 function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentCreate[]) {
   if (!selectedFunctionName.value) return;
 
-  formData.value.quality_control_functions!.push({
-    name: selectedFunctionName.value,
-    quality_control_function_arguments: submittedData,
-  });
+  if (editingIndex.value !== null) {
+    // Edit mode: replace existing function
+    formData.value.quality_control_functions![editingIndex.value] = {
+      name: selectedFunctionName.value,
+      quality_control_function_arguments: submittedData,
+    };
+    editingIndex.value = null;
+  } else {
+    // Add mode: attach new function
+    formData.value.quality_control_functions!.push({
+      name: selectedFunctionName.value,
+      quality_control_function_arguments: submittedData,
+    });
+  }
   selectedFunctionName.value = null;
+  functionFormDialog.value = false;
 }
 
 function removeDatastream(funcIndex: number, argIndex: number, datastream: Datastream) {
@@ -325,6 +399,7 @@ function handleRemoveDatastream({
 function selectFunction(item: FunctionOption) {
   functionDialog.value = false;
   selectedFunctionName.value = item.label;
+  functionFormDialog.value = true;
 }
 
 function openSubmitDialog() {
@@ -342,8 +417,9 @@ function decreaseStep() {
 }
 
 function handleRemove() {
-  //reset
   selectedFunctionName.value = null;
+  editingIndex.value = null;
+  functionFormDialog.value = false;
 }
 
 function removeFunction(index: number) {
@@ -355,6 +431,7 @@ function openFunctionsDialog() {
 }
 
 function emitSaveAndCloseDialog() {
+  isDirty.value = false;
   emit('save');
   closeSubmitDialog();
 }

@@ -77,6 +77,7 @@ async function save() {
     description: formData.value.description,
     permission_group_id: formData.value.permission_group_id,
     quality_control_functions: formData.value.quality_control_functions,
+
   };
   try {
     isLoading.value = true;

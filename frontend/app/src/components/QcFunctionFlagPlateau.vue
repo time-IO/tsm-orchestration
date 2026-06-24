@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import {
   requiredRule,
@@ -85,9 +85,11 @@ import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInpu
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const current_min_length_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
@@ -95,13 +97,33 @@ const current_max_length_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 const current_granularity_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 
 const formData = ref({
-  field: [],
-  target: [],
-  min_length: null,
-  max_length: null,
-  min_jump: null,
-  granularity: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  min_length: null as number | null,
+  max_length: null as number | null,
+  min_jump: null as number | null,
+  granularity: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const min_lengthArg = props.initialData.find((a) => a.name === 'min_length');
+  const max_lengthArg = props.initialData.find((a) => a.name === 'max_length');
+  const min_jumpArg = props.initialData.find((a) => a.name === 'min_jump');
+  const granularityArg = props.initialData.find((a) => a.name === 'granularity');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.min_length = (min_lengthArg?.input.value as number) ?? null;
+  formData.value.max_length = (max_lengthArg?.input.value as number) ?? null;
+  formData.value.min_jump = (min_jumpArg?.input.value as number) ?? null;
+  formData.value.granularity = (granularityArg?.input.value as number) ?? null;
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const emit = defineEmits(['submit', 'remove']);
 

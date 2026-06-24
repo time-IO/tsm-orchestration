@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
 
-const model = defineModel({ default: null });
+const model = defineModel<number | null>({ default: null });
 
 defineProps<{
   rules: Array<ValidationRule>;

@@ -60,7 +60,7 @@
     <qc-function-form-offset-input
       :rules="[offsetAliasMatchRule]"
       class="q-mb-md"
-      v-model="formData.window"
+      v-model="formData.sub_window"
       label="sub_window"
       hint="Window size for sub-chunks."
     />
@@ -95,13 +95,15 @@ import {
   requiredRule,
 } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const emit = defineEmits(['submit', 'remove']);
@@ -109,15 +111,38 @@ const emit = defineEmits(['submit', 'remove']);
 const funcOptions: Array<string> = ['std', 'var', 'mad'];
 
 const formData = ref({
-  field: [],
-  target: [],
-  window: null,
-  thresh: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  window: null as number | null,
+  thresh: null as number | null,
   func: 'std',
-  sub_window: null,
-  sub_thresh: null,
-  min_periods: null,
+  sub_window: null as number | null,
+  sub_thresh: null as number | null,
+  min_periods: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const windowArg = props.initialData.find((a) => a.name === 'window');
+  const threshArg = props.initialData.find((a) => a.name === 'thresh');
+  const funcArg = props.initialData.find((a) => a.name === 'func');
+  const subWindowArg = props.initialData.find((a) => a.name === 'sub_window');
+  const subThreshArg = props.initialData.find((a) => a.name === 'sub_thresh');
+  const minPeriodsArg = props.initialData.find((a) => a.name === 'min_periods');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.window = (windowArg?.input.value as number) ?? null;
+  formData.value.thresh = (threshArg?.input.value as number) ?? null;
+  formData.value.func = (funcArg?.input.value as string) ?? 'std';
+  formData.value.sub_window = (subWindowArg?.input.value as number) ?? null;
+  formData.value.sub_thresh = (subThreshArg?.input.value as number) ?? null;
+  formData.value.min_periods = (minPeriodsArg?.input.value as number) ?? null;
+}
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const formDataWithTypes = computed(() => {
   const fieldObject = {

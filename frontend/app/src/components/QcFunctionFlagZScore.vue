@@ -105,13 +105,15 @@ import {
   requiredDatastreamsRule,
 } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInput.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const emit = defineEmits(['submit', 'remove']);
@@ -120,16 +122,42 @@ const current_window_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 const methodOptions: Array<string> = ['standard', 'modified'];
 
 const formData = ref({
-  field: [],
-  target: [],
-  method: null,
-  window: null,
-  thresh: null,
-  min_residuals: null,
-  min_periods: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  method: null as number | null,
+  window: null as number | null,
+  thresh: null as number | null,
+  min_residuals: null as number | null,
+  min_periods: null as number | null,
   center: true,
-  axis: null,
+  axis: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const methodArg = props.initialData.find((a) => a.name === 'method');
+  const windowArg = props.initialData.find((a) => a.name === 'window');
+  const threshArg = props.initialData.find((a) => a.name === 'thresh');
+  const min_residualsArg = props.initialData.find((a) => a.name === 'min_residuals');
+  const min_periodsArg = props.initialData.find((a) => a.name === 'min_periods');
+  const centerArg = props.initialData.find((a) => a.name === 'center');
+  const axisArg = props.initialData.find((a) => a.name === 'axis');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.method = (methodArg?.input.value as number) ?? null;
+  formData.value.window = (windowArg?.input.value as number) ?? null;
+  formData.value.thresh = (threshArg?.input.value as number) ?? null;
+  formData.value.min_residuals = (min_residualsArg?.input.value as number) ?? null;
+  formData.value.min_periods = (min_periodsArg?.input.value as number) ?? null;
+  formData.value.center = (centerArg?.input.value as boolean) ?? true;
+  formData.value.axis = (axisArg?.input.value as number) ?? null;
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const formDataWithTypes = computed(() => {
   const fieldObject = {

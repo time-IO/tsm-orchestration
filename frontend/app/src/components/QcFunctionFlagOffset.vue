@@ -75,24 +75,46 @@ import {
   requiredRule,
 } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const formData = ref({
-  field: [],
-  target: [],
-  tolerance: null,
-  window: null,
-  thresh: null,
-  thresh_relative: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  tolerance: null as number | null,
+  window: null as number | null,
+  thresh: null as number | null,
+  thresh_relative: null as number | null,
 });
+
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const toleranceArg = props.initialData.find((a) => a.name === 'tolerance');
+  const windowArg = props.initialData.find((a) => a.name === 'window');
+  const threshArg = props.initialData.find((a) => a.name === 'thresh');
+  const thresh_relativeArg = props.initialData.find((a) => a.name === 'tresh_relative');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.tolerance = (toleranceArg?.input.value as number) ?? null;
+  formData.value.window = (windowArg?.input.value as number) ?? null;
+  formData.value.thresh = (threshArg?.input.value as number) ?? null;
+  formData.value.thresh_relative = (thresh_relativeArg?.input.value as number) ?? null;
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const formDataWithTypes = computed(() => {
   const fieldObject = {

@@ -2,7 +2,8 @@
   <div style="height: 100%; overflow-y: auto">
     <template v-if="selected.length === 0">
       <div class="row justify-center items-center" style="height: 100%">
-        <div class="text-h6 text-center">No Datastreams selected</div>
+        <div class="text-center">No datastreams selected</div>
+
       </div>
     </template>
 
@@ -17,7 +18,7 @@
         >
           <template #header>
             <div class="row items-center" style="width: 100%">
-              <span>{{ thingName }}</span>
+              <span class="text-dark">{{ thingName }}</span>
               <div class="row items-center">
                 <q-chip
                   dense

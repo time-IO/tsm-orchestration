@@ -147,14 +147,16 @@ import {
   requiredDatastreamsRule,
 } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import QcFunctionFormFloatEnumInput from 'components/QcFunctionFormFloatEnumInput.vue';
 import QcFunctionFormFloatIntInput from 'components/QcFunctionFormFloatIntInput.vue';
+import type { Datastream } from 'src/services/sta/types';
 
-defineProps<{
+const props = defineProps<{
   permission_group_id: number;
+  initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
 const emit = defineEmits(['submit', 'remove']);
@@ -166,20 +168,61 @@ const current_corruption_type = ref(POSSIBLE_QC_FUNCTION_TYPES.FLOAT);
 const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 
 const formData = ref({
-  field: [],
-  target: [],
-  n: 20,
-  thresh: 'auto',
-  probability: null,
-  corruption: null,
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  n: 20 as number,
+  thresh: 'auto' as string | number,
+  probability: null as number | null,
+  corruption: null as number | null,
   algorithm: 'ball_tree',
-  p: 1,
-  density: 'auto',
+  p: 1 as number,
+  density: 'auto' as string | number,
   fill_na: true,
   slope_correct: true,
-  min_offset: null,
+  min_offset: null as number | null,
 });
 
+function loadInitialData() {
+  if (!props.initialData) return;
+
+  const fieldArg = props.initialData.find((a) => a.name === 'field');
+  const targetArg = props.initialData.find((a) => a.name === 'target');
+  const nArg = props.initialData.find((a) => a.name === 'n');
+  const threshArg = props.initialData.find((a) => a.name === 'thresh');
+  const probabilityArg = props.initialData.find((a) => a.name === 'probability');
+  const corruptionArg = props.initialData.find((a) => a.name === 'corruption');
+  const algorithmArg = props.initialData.find((a) => a.name === 'algorithm');
+  const pArg = props.initialData.find((a) => a.name === 'p');
+  const densityArg = props.initialData.find((a) => a.name === 'density');
+  const fillNaArg = props.initialData.find((a) => a.name === 'fill_na');
+  const slopeCorrectArg = props.initialData.find((a) => a.name === 'slope_correct');
+  const minOffsetArg = props.initialData.find((a) => a.name === 'min_offset');
+
+  formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
+  formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.n = (nArg?.input.value as number) ?? 20;
+  formData.value.thresh = (threshArg?.input.value as string | number) ?? 'auto';
+  formData.value.probability = (probabilityArg?.input.value as number) ?? null;
+  formData.value.corruption = (corruptionArg?.input.value as number) ?? null;
+  formData.value.algorithm = (algorithmArg?.input.value as string) ?? 'ball_tree';
+  formData.value.p = (pArg?.input.value as number) ?? 1;
+  formData.value.density = (densityArg?.input.value as string | number) ?? 'auto';
+  formData.value.fill_na = (fillNaArg?.input.value as boolean) ?? true;
+  formData.value.slope_correct = (slopeCorrectArg?.input.value as boolean) ?? true;
+  formData.value.min_offset = (minOffsetArg?.input.value as number) ?? null;
+
+  if (threshArg) {
+    current_thresh_type.value = threshArg.type;
+  }
+  if (corruptionArg) {
+    current_corruption_type.value = corruptionArg.type;
+  }
+  if (densityArg) {
+    current_density_type.value = densityArg.type;
+  }
+}
+
+watch(() => props.initialData, loadInitialData, { immediate: true });
 const formDataWithTypes = computed(() => {
   const fieldObject = {
     name: 'field',

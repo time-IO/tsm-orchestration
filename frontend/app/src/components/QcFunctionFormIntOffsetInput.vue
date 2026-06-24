@@ -43,7 +43,7 @@ defineProps<{
 }>();
 
 const current_type = defineModel('current_type');
-const input = defineModel('input', { default: null });
+const input = defineModel<number | null>('input', { default: null });
 
 const change_type_to = (type: string) => {
   current_type.value = type;
