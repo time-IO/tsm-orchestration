@@ -453,7 +453,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
         query = (
             f"select * from {self._schema}.quality_control_setting q "
             f"where q.permission_group_id = %s and q.is_active = true "
-            f"order by q.id desc"
+            f"order by q.id asc"
         )
         if _ := self._fetchall(self._conn, query, self.id):
             return [
