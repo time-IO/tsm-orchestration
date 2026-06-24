@@ -43,7 +43,7 @@ class CreateThingInMinioHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
-        if thing.raw_data_storage is None:
+        if thing.raw_data_storage is None or thing.raw_data_storage.username is None:
             logger.info(
                 f"Ignoring message, because no s3 storage is associated "
                 f"with the thing {thing.uuid} ({thing.name})"
