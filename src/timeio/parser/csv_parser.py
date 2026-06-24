@@ -150,8 +150,15 @@ class CsvParser(PandasParser):
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
-        skiprows = settings.pop("skiprows", 0)
-        skipfooter = settings.pop("skipfooter", 0)
+
+        # handle deprecated settings keywords for skipping rows and footers
+        skiprows = settings.pop("skiprows", None)
+        headlines_to_exclude = settings.pop("headlines_to_exclude", None)
+        skiprows = skiprows if skiprows is not None else headlines_to_exclude or 0
+        skipfooter = settings.pop("skipfooter", None)
+        footlines_to_exclude = settings.pop("footlines_to_exclude", None)
+        skipfooter = skipfooter if skipfooter is not None else footlines_to_exclude or 0
+
         custom_names = settings.pop("names", None)
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)

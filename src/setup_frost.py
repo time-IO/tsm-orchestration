@@ -22,10 +22,10 @@ class CreateFrostInstanceHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.tomcat_proxy_url = get_envvar("TOMCAT_PROXY_URL")
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         frost.write_context_file(
             schema=thing.database.schema,
             user=f"sta_{thing.database.ro_username.lower()}",

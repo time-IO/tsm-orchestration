@@ -33,10 +33,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = Database(get_envvar("DATABASE_URL"))
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
         ro_user = thing.database.ro_username.lower()
         user = thing.database.username.lower()
@@ -50,7 +50,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dll")
             self.deploy_ddl(thing)
             logger.debug("deploy dml")
-            self.deploy_dml()
+            self.deploy_dml(thing)
 
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
@@ -205,12 +205,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=user)
                 )
 
-    def deploy_dml(self):
+    def deploy_dml(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
         with self.db.connection() as conn:
             with conn.cursor() as c:
+                user = sql.Identifier(thing.database.username.lower())
+                c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):

@@ -28,10 +28,10 @@ class CreateMqttUserHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = Database(get_envvar("DATABASE_URL"))
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
 
         if not thing.mqtt:
             logger.info(f"Thing {thing.name} has no MQTT configuration. Skipping.")
