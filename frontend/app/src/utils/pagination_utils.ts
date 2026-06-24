@@ -14,7 +14,6 @@ export const defaultPagination: QTableRequestPropPagination = {
 export const default_ingest_columns: QTableColumn[] = [
   {
     name: 'id',
-    required: true,
     label: 'ID',
     align: 'left',
     field: (row) => row.id,
