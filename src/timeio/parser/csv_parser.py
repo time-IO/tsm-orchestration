@@ -12,7 +12,7 @@ from io import StringIO
 from functools import reduce
 
 from timeio.parser.pandas_parser import PandasParser
-from timeio.errors import ParsingError, ParsingWarning
+from timeio.errors import ParsingError, ParsingWarning, EmptyDataError
 from timeio.journaling import Journal
 
 parsedT = TypeVar("parsedT")
@@ -144,6 +144,9 @@ class CsvParser(PandasParser):
         NOTE:
             we need to preserve the original column numbering
         """
+        if len(rawdata) == 0:
+            raise EmptyDataError("No data given")
+
         settings = self._validate_settings(self.settings.copy())
         self.logger.info(settings)
 

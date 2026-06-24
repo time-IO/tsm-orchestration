@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+class EmptyDataError(RuntimeError):
+    """The data passed is empty"""
+    pass
 
 class ParsingError(RuntimeError):
     """Parsing failed."""

@@ -7,7 +7,7 @@ import pytest
 import json
 
 from timeio.parser import CsvParser
-from timeio.errors import ParsingError
+from timeio.errors import ParsingError, EmptyDataError
 
 RAWDATA = """
 //Hydroinnova CRS-1000 Data
@@ -425,3 +425,16 @@ def test_skiprows():
     assert df.shape == (3, 3)
     assert df.index.equals(expected_index)
     assert list(df.columns) == expected_col_names
+
+
+def test_empty_file():
+    settings = {
+        "delimiter": ",",
+        "decimal": ".",
+        "header": 0,
+        "skiprows": [0, 2, 3],
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser({**settings})
+    with pytest.raises(EmptyDataError):
+        parser.do_parse("", "project", "thing")

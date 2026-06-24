@@ -11,7 +11,7 @@ from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
-from timeio.errors import UserInputError, ParsingError, ParsingWarning
+from timeio.errors import UserInputError, ParsingError, ParsingWarning, EmptyDataError
 from timeio.feta import Thing, FileParser
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
@@ -78,21 +78,17 @@ class ParserJobHandler(AbstractHandler):
 
         source_uri = f"{bucket_name}/{filename}"
 
-        logger.debug(f"loading parser for: '{thing_uuid}'")
-
         pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
-        logger.debug(f"reading raw data file: '{source_uri}'")
         encoding = pobj.params.pop("encoding", "utf-8")
-        rawdata = self.read_file(bucket_name, filename, encoding)
 
         file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
-        logger.info(f"parsing rawdata file: '{file}'")
 
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
+                rawdata = self.read_file(bucket_name, filename, encoding)
                 df = parser.do_parse(rawdata, schema, thing_uuid)
                 obs = parser.to_observations(df, source_uri, str(parser_uuid))
             except ParsingError as e:
@@ -101,10 +97,15 @@ class ParserJobHandler(AbstractHandler):
                 )
                 self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
                 raise e
+            except EmptyDataError:
+                journal.warning(
+                    "Parsing skipped. File: {file!r} is empty.", thing_uuid
+                )
             except Exception as e:
-                journal.error(f"Parsing failed. File: {file!r}", thing_uuid)
+                journal.error(f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid)
                 self.set_tags(bucket_name, filename, str(parser_uuid), "failed")
                 raise UserInputError("Parsing failed") from e
+
             for w in recorded_warnings:
                 logger.info(f"{w.message!r}")
                 journal.warning(f"{w.message}", thing_uuid)
@@ -124,7 +125,10 @@ class ParserJobHandler(AbstractHandler):
             self.set_tags(bucket_name, filename, str(parser_uuid), "db_insert_failed")
             raise e
 
-        if len(obs) > 0:
+        if len(obs) == 0:
+            journal.warning(f"Parsed file: {file!r} is empty.", thing_uuid)
+            return
+        else:
             # Now everything is fine and we tell the user
             journal.info(
                 f"Parsed file: {file!r} | "
@@ -132,6 +136,7 @@ class ParserJobHandler(AbstractHandler):
                 f"Stored observations: {len(obs)}",
                 thing_uuid,
             )
+
 
         self.set_tags(bucket_name, filename, str(parser_uuid), "successful")
         payload = json.dumps(
