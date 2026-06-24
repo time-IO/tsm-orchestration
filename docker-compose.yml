@@ -513,9 +513,9 @@ services:
     volumes:
       - frontend-statics:/home/appuser/app/static
       - sftp-private-keys:/home/appuser/app/sftp-private-keys
-      # - ./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json
-      # - ./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json
-      # - ./frontend/nm_station.json:/home/appuser/app/tsm/fixtures/nm_station.json
+      - ./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json
+      - ./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json
+      - ./frontend/nm_station.json:/home/appuser/app/tsm/fixtures/nm_station.json
     entrypoint: ""
     # ports:
     #   - "127.0.0.1:8000:8000"
