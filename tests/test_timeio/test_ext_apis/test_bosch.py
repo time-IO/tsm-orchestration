@@ -14,8 +14,8 @@ def test_no_https_error(mock_thing):
         "version": 1,
         "endpoint": "http://bosch.test",
         "sensor_id": "sensor",
-        "username": "user",
-        "password": "enc_pw",
+        "bosch_username": "user",
+        "bosch_password": "enc_pw",
         "period": 1,
     }
     thing = mock_thing(settings)
@@ -44,8 +44,8 @@ def test_bosch_fetch_api_data(
         "version": 1,
         "endpoint": "https://bosch.test",
         "sensor_id": "sensor",
-        "username": "user",
-        "password": "enc_pw",
+        "bosch_username": "user",
+        "bosch_password": "enc_pw",
         "period": 1,
     }
     thing = mock_thing(settings)
