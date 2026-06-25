@@ -7,6 +7,14 @@
 ### Changed
 ### Removed
 
+## [2026-06-25]
+### Added
+### Fixed
+- CSV Parser can handle empty files ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/626))
+### Changed
+- Switch FETA from Config-DB to DSM-DB ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/605))
+### Removed
+
 ## 2026-06-02
 ### Added
 - New DataSourceManagement
