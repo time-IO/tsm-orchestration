@@ -581,7 +581,7 @@ class NmApiSyncer(ExtApiSyncer):
             "stations[]": settings["station_id"],
             "tabchoice": "revori",
             "dtype": "corr_for_efficiency",
-            "tresolution": settings["time_resolution"],
+            "tresolution": settings["time_resolution_in_minutes"],
             "force": 1,
             "date_choice": "bydate",
             "start_year": {start_date.year},
@@ -603,7 +603,7 @@ class NmApiSyncer(ExtApiSyncer):
         return {
             "response_data": rows,
             "station_id": settings["station_id"],
-            "resolution": settings["time_resolution"],
+            "resolution": settings["time_resolution_in_minutes"],
         }
 
     def do_parse(self, api_response):
