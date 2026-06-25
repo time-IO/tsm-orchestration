@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-06-25
+
+- Marked the Flyway Job as an Argo CD sync hook so completed migration Jobs do
+  not remain continuously desired resources after Kubernetes TTL cleanup.
+
 ## [0.1.8] - unreleased
 
 - added `prod-<YYYY-mm-DD>` image tags for workers, cron-scheduler, frost service
