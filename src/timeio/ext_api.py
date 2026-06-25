@@ -82,9 +82,9 @@ class BoschApiSyncer(ExtApiSyncer):
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
-        password = decrypt(settings["password"], get_crypt_key())
+        password = decrypt(settings["bosch_password"], get_crypt_key())
         headers = {
-            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Authorization": f"{self.basic_auth(settings['bosch_username'], password)}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
