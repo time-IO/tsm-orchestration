@@ -81,7 +81,7 @@ class ParserJobHandler(AbstractHandler):
         pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
-        encoding = pobj.params.pop("encoding", "utf-8")
+        encoding = pobj.params.pop("encoding", None) or "utf-8"
 
         file = "/".join(source_uri.split("/")[1:])  # remove bucket name from source_uri
 

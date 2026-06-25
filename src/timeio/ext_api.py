@@ -82,9 +82,9 @@ class BoschApiSyncer(ExtApiSyncer):
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
-        password = decrypt(settings["password"], get_crypt_key())
+        password = decrypt(settings["bosch_password"], get_crypt_key())
         headers = {
-            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Authorization": f"{self.basic_auth(settings['bosch_username'], password)}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -138,8 +138,8 @@ class TsystemsApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        pw_dec = decrypt(settings["password"], get_crypt_key())
-        bearer_token = self.get_bearer_token(settings["username"], pw_dec)
+        pw_dec = decrypt(settings["tsystems_password"], get_crypt_key())
+        bearer_token = self.get_bearer_token(settings["tsystems_username"], pw_dec)
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
             "aggregationTime": "FINEST",
@@ -581,7 +581,7 @@ class NmApiSyncer(ExtApiSyncer):
             "stations[]": settings["station_id"],
             "tabchoice": "revori",
             "dtype": "corr_for_efficiency",
-            "tresolution": settings["time_resolution"],
+            "tresolution": settings["time_resolution_in_minutes"],
             "force": 1,
             "date_choice": "bydate",
             "start_year": {start_date.year},
@@ -603,7 +603,7 @@ class NmApiSyncer(ExtApiSyncer):
         return {
             "response_data": rows,
             "station_id": settings["station_id"],
-            "resolution": settings["time_resolution"],
+            "resolution": settings["time_resolution_in_minutes"],
         }
 
     def do_parse(self, api_response):
