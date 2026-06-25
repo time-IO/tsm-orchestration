@@ -99,6 +99,7 @@ class ParserJobHandler(AbstractHandler):
                 raise e
             except EmptyDataError:
                 journal.warning("Parsing skipped. File: {file!r} is empty.", thing_uuid)
+                return
             except Exception as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
