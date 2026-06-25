@@ -23,8 +23,6 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-        self.logger.debug(df.head())
-
         date_columns = [df.columns[d["column"]] for d in timestamp_columns]
         try:
             date_format = " ".join([d["format"] for d in timestamp_columns])
@@ -107,7 +105,7 @@ class CsvParser(PandasParser):
             skiprows = range(skiprows)
         # in DSM-DB skiprows is stored as a string of comma-separated integers
         if isinstance(skiprows, str):
-            skiprows = [int(i) for i in skiprows.split(',')]
+            skiprows = [int(i) for i in skiprows.split(",")]
             if len(skiprows) == 1:
                 skiprows = range(skiprows[0])
         skiprows = set(skiprows)
