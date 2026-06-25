@@ -1,5 +1,5 @@
 {{- define "timeio.publicUrl" -}}
-{{- default .Values.global.ingress.url .Values.global.publicUrl -}}
+{{- .Values.global.publicUrl -}}
 {{- end -}}
 
 {{- define "timeio.publicHost" -}}
