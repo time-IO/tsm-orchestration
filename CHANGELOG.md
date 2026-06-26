@@ -8,7 +8,6 @@
 ### Removed
 
 ## [2026-06-26]
-
 ### Added
 - More informations, links for users ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/232))
 - new MQTT Device ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/230))
