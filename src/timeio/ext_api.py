@@ -138,14 +138,22 @@ class TsystemsApiSyncer(ExtApiSyncer):
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
+        dt_from = datetime.strptime(
+            content["datetime_from"], "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
+        dt_from = dt_from.strftime("%Y-%m-%dT%H:%M:%SZ")
+        dt_to = datetime.strptime(content["datetime_to"], "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=timezone.utc
+        )
+        dt_to = dt_to.strftime("%Y-%m-%dT%H:%M:%SZ")
         pw_dec = decrypt(settings["tsystems_password"], get_crypt_key())
         bearer_token = self.get_bearer_token(settings["tsystems_username"], pw_dec)
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
             "aggregationTime": "FINEST",
             "aggregationValues": "ALL_FIELDS",
-            "from": content["datetime_from"],
-            "to": content["datetime_to"],
+            "from": dt_from,
+            "to": dt_to,
         }
         response = request_with_handling(
             "GET",
