@@ -7,6 +7,15 @@
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
       </div>
     </div>
+    <div class="text-caption text-grey">
+      For more information on Bosch IoT Insights API properties, visit the
+      <a
+        href="https://bosch-iot-insights.com/ui/pages/api/mongodb-query/latest"
+        target="_blank"
+        class="text-primary"
+        >API documentation</a
+      >.
+    </div>
     <q-card class="q-mb-lg" flat>
       <q-card-section>
         <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
