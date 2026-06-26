@@ -45,7 +45,16 @@
             v-model="formData.filename_pattern"
             label="Filename pattern *"
             :rules="[(val) => !!val || 'Filename pattern is required']"
-          />
+          >
+            <template #append>
+              <help-button
+                titleHelp="Filename pattern"
+                textHelp="SFTP ingest filename patterns can be defined using glob patterns
+                to specify which files to process. For example, a pattern like
+                *.csv will match all CSV files in the specified directory."
+              />
+            </template>
+          </q-input>
 
           <parser-select
             class="q-mb-md"
@@ -81,6 +90,7 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import parserSelect from 'components/ParserSelect.vue';
 import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import HelpButton from 'components/HelpButton.vue';
 
 defineProps<{
   title: string;

@@ -67,7 +67,11 @@
             label="Period (in minutes)"
             :rules="[(val) => !val || val > 0 || 'Interval must be a positive number',
           (val) => !!val || 'Period is required']"
-          />
+          >
+        <template #append>
+              <help-button termHelp="period" />
+        </template>
+          </q-input>
 
           <!-- Sync Settings -->
           <q-card-section class="q-pa-none">
@@ -91,7 +95,11 @@
                   (val) =>
                     (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
-              />
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -123,6 +131,7 @@ import type {
   IngestExternalApiDwdUpdate,
 } from 'src/services/ingest_external_api_dwd/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import HelpButton from 'components/HelpButton.vue';
 
 defineProps<{
   title: string;
@@ -147,8 +156,12 @@ const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUp
   },
 });
 
-function openDwdDocs (){
-  window.open ('https://opendata.dwd.de/climate_environment/CDC/help/RR_Stundenwerte_Beschreibung_Stationen.txt', '_blank')
+
+function openDwdDocs() {
+  window.open(
+    'https://opendata.dwd.de/climate_environment/CDC/help/RR_Stundenwerte_Beschreibung_Stationen.txt',
+    '_blank',
+  );
 }
 
 </script>
