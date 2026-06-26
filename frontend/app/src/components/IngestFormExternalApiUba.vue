@@ -9,7 +9,7 @@
     </div>
     <div class="text-caption text-grey">
       For more information on UBA Air Data API properties, visit the
-      <a href="https://luftqualitaet.api.bund.dev/" target="_blank" class="text-primary"
+      <a href="https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/" target="_blank" class="text-primary"
         >API documentation</a
       >.
     </div>
@@ -53,7 +53,13 @@
             label="Station ID *"
             hint="Unique identifier for the monitoring station"
             :rules="[(val) => !!val || 'Valid station ID is required']"
-          />
+          >
+            <template #append>
+              <q-btn round flat icon="help_outline" @click="openUbaDocs" class="text-grey">
+                <q-tooltip>View UBA station list (use "station id")</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
 
           <!-- Sync Settings -->
           <q-card-section class="q-pa-none">
@@ -131,6 +137,9 @@ const formData = defineModel<IngestExternalApiUbaCreate | IngestExternalApiUbaUp
   },
 });
 
+function openUbaDocs() {
+  window.open('https://luftdaten.umweltbundesamt.de/api/air-data/v3/stations/json', '_blank');
+}
 </script>
 
 <style scoped></style>

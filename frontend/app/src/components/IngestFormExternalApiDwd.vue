@@ -51,7 +51,15 @@
             label="Station ID *"
             hint="DWD station ID, typically five alphanumeric characters."
             :rules="[(val) => !!val || 'Valid station ID is required']"
-          />
+          >
+            <template #append>
+              <q-btn round flat icon="help_outline" @click="openDwdDocs" class="text-grey">
+                <q-tooltip>View DWD station list (use Stations_id)</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
+
+          <!-- Period in minutes -->
           <q-input
             filled
             class="q-mb-md"
@@ -138,6 +146,11 @@ const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUp
     period_in_minutes: null,
   },
 });
+
+function openDwdDocs (){
+  window.open ('https://opendata.dwd.de/climate_environment/CDC/help/RR_Stundenwerte_Beschreibung_Stationen.txt', '_blank')
+}
+
 </script>
 
 <style scoped></style>

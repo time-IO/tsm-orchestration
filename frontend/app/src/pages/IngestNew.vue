@@ -52,6 +52,18 @@
                 <q-item-section>
                   <q-item-label>{{ item.label }}</q-item-label>
                 </q-item-section>
+
+                <q-btn
+                  v-if="item.docsUrl"
+                  round
+                  flat
+                  icon="help_outline"
+                  @click="showDocs(item.docsUrl)"
+                  class="text-grey"
+                >
+                  <q-tooltip> View documentation </q-tooltip>
+                </q-btn>
+
                 <q-item-section avatar>
                   <q-btn :to="item.path" square color="green" icon="add">
                     <q-tooltip>Create new Ingest</q-tooltip>
@@ -99,14 +111,43 @@ const externalAPis = {
   label: 'External API',
   description: 'Create a schedule and access credentials for requesting a registered external API.',
   options: [
-    { name: 'bosch', label: 'Bosch IoT', path: '/ingest/new/external-api/bosch' },
-    { name: 'dwd', label: 'Deutscher Wetterdienst', path: '/ingest/new/external-api/dwd' },
-    { name: 'nm', label: 'Neutron Monitor', path: '/ingest/new/external-api/nm' },
+    {
+      name: 'bosch',
+      label: 'Bosch IoT',
+      path: '/ingest/new/external-api/bosch',
+      docsUrl: 'https://bosch-iot-insights.com/ui/pages/api/mongodb-query/latest',
+    },
+    {
+      name: 'dwd',
+      label: 'Deutscher Wetterdienst',
+      path: '/ingest/new/external-api/dwd',
+      docsUrl: 'https://brightsky.dev/docs/#/operations/getWeather',
+    },
+    {
+      name: 'nm',
+      label: 'Neutron Monitor',
+      path: '/ingest/new/external-api/nm',
+      docsUrl: 'https://www.nmdb.eu/nest/help.php#howto',
+    },
     { name: 'tsystems', label: 'TSystems', path: '/ingest/new/external-api/tsystems' },
-    { name: 'ttn', label: 'The Things network', path: '/ingest/new/external-api/ttn' },
-    { name: 'uba', label: 'Umweltbundesamt (UBA) Air Data', path: '/ingest/new/external-api/uba' },
+    {
+      name: 'ttn',
+      label: 'The Things network',
+      path: '/ingest/new/external-api/ttn',
+      docsUrl: 'https://www.thethingsindustries.com/docs/api/',
+    },
+    {
+      name: 'uba',
+      label: 'Umweltbundesamt (UBA) Air Data',
+      path: '/ingest/new/external-api/uba',
+      docsUrl: 'https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/',
+    },
   ],
 };
+
+function showDocs(url: string) {
+  window.open(url, '_blank');
+}
 </script>
 
 <style scoped></style>
