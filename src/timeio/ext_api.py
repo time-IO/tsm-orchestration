@@ -201,7 +201,6 @@ class TsystemsApiSyncer(ExtApiSyncer):
                     }
                     bodies.append(body)
 
-        print(bodies)
         return bodies
 
     @staticmethod
