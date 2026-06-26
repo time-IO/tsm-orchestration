@@ -49,7 +49,14 @@
       </q-item>
       <q-separator />
       <q-list>
-        <q-item v-for="item in topNavigation" :key="item.name" :to="item.route">
+        <q-item
+          v-for="item in topNavigation"
+          :key="item.name"
+          :to="item.route"
+          class="relative-position"
+          @mouseenter="item.addOptions ? openMenu(item.name) : undefined"
+          @mouseleave="item.addOptions ? scheduleClose() : undefined"
+        >
           <q-item-section v-if="item.icon" avatar>
             <q-icon :name="item.icon" size="xs" />
           </q-item-section>
@@ -57,55 +64,56 @@
             {{ item.name }}
           </q-item-section>
           <q-item-section v-if="(item.addRoute || item.addOptions) && authStore.isAuthenticated" side>
-            <div
-              class="relative-position"
-              @mouseenter="item.addOptions ? openMenu(item.name) : undefined"
-              @mouseleave="item.addOptions ? scheduleClose() : undefined"
-            >
-              <q-btn
-                flat
-                round
-                dense
-                icon="add"
-                size="xs"
-                color="grey-6"
-                :title="'Add ' + item.name"
-                @click.prevent.stop="item.addRoute ? router.push(item.addRoute) : undefined"
-              />
-              <q-menu
-                v-if="item.addOptions"
-                :model-value="hoveredMenuName === item.name"
-                no-parent-event
-                no-focus
-                anchor="bottom left"
-                self="top left"
-                transition-show="fade"
-                transition-hide="fade"
-                :transition-duration="120"
-                @update:model-value="(val: boolean) => { if (!val) closeMenu() }"
-                @mouseenter="cancelClose()"
-                @mouseleave="scheduleClose()"
-              >
-                <q-list dense style="min-width: 220px">
-                  <template v-for="(opt, i) in item.addOptions" :key="i">
-                    <template v-if="'separator' in opt">
-                      <q-separator />
-                      <q-item-label v-if="opt.label" header class="text-grey-6" style="font-size: 0.7rem; padding: 4px 16px">
-                        {{ opt.label }}
-                      </q-item-label>
-                    </template>
-                    <q-item
-                      v-else
-                      clickable
-                      @click="router.push(opt.route); closeMenu()"
-                    >
-                      <q-item-section>{{ opt.label }}</q-item-section>
-                    </q-item>
-                  </template>
-                </q-list>
-              </q-menu>
-            </div>
+            <q-btn
+              flat round dense icon="add" size="xs" color="grey-6"
+              :title="'Add ' + item.name"
+              @click.prevent.stop="item.addRoute ? router.push(item.addRoute) : undefined"
+            />
           </q-item-section>
+
+          <!-- Menu anchored to the q-item itself, not the button -->
+          <q-menu
+            v-if="item.addOptions"
+            :model-value="hoveredMenuName === item.name"
+            no-parent-event
+            no-focus
+            :auto-close="false"
+            anchor="top end"
+            self="top start"
+            :offset="[0, 0]"
+            transition-show="jump-right"
+            transition-hide="jump-left"
+            @update:model-value="(val: boolean) => { if (!val) closeMenu() }"
+            @mouseenter="cancelClose()"
+            @mouseleave="scheduleClose()"
+          >
+            <q-list
+              class="bg-white submenu-list"
+              style="min-width: 240px;"
+            >
+              <template v-for="(opt, i) in item.addOptions" :key="i">
+                <template v-if="'separator' in opt">
+                  <q-separator />
+                  <q-item-label
+                    v-if="opt.label"
+                    header
+                    class="text-grey-6"
+                    style="font-size: 0.75rem; padding: 6px 12px;"
+                  >
+                    {{ opt.label }}
+                  </q-item-label>
+                </template>
+                <q-item
+                  v-else
+                  clickable
+                  v-ripple
+                  @click="router.push(opt.route); closeMenu()"
+                >
+                  <q-item-section>{{ opt.label }}</q-item-section>
+                </q-item>
+              </template>
+            </q-list>
+          </q-menu>
         </q-item>
       </q-list>
     </q-drawer>
