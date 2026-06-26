@@ -64,8 +64,8 @@ const { ids_to_trigger } = defineProps<{
 const store = useTriggerExternalGenericApiStore();
 const $q = useQuasar();
 
-const beginDate = ref('2026-01-01 00:00:00');
 const endDate = ref(new Date().toISOString().slice(0, 19).replace('T', ' '));
+const beginDate = ref(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) + ' 00:00:00');
 
 const validationError = computed(() => {
   if (!isValidDate(beginDate.value) || !isValidDate(endDate.value))
