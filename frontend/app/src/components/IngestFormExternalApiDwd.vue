@@ -57,7 +57,8 @@
             class="q-mb-md"
             v-model="formData.period_in_minutes"
             label="Period (in minutes)"
-            :rules="[(val) => !val || val > 0 || 'Interval must be a positive number']"
+            :rules="[(val) => !val || val > 0 || 'Interval must be a positive number',
+          (val) => !!val || 'Period is required']"
           />
 
           <!-- Sync Settings -->
