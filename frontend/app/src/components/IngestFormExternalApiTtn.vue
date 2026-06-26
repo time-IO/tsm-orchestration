@@ -91,7 +91,11 @@
                   (val) =>
                     (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
-              />
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -124,6 +128,7 @@ import type {
 } from 'src/services/ingest_external_api_the_things_network/types';
 import { ref } from 'vue';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import HelpButton from 'components/HelpButton.vue';
 
 defineProps<{
   title: string;

@@ -49,7 +49,16 @@
                 v-model="formData.filename_pattern"
                 label="Filename pattern *"
                 :rules="[(val) => !!val || 'Filename pattern is required']"
-              />
+              >
+                <template #append>
+                  <help-button
+                    titleHelp="Filename pattern"
+                    textHelp="SFTP ingest filename patterns can be defined using glob patterns
+                    to specify which files to process. For example, a pattern like
+                    *.csv will match all CSV files in the specified directory."
+                  />
+                </template>
+              </q-input>
 
               <parser-select
                 class="q-mb-md"
@@ -71,7 +80,16 @@
                 v-model="formData.uri"
                 label="Fileserver URI *"
                 :rules="[(val) => !!val || 'Fileserver URI is required']"
-              />
+              >
+                <template #append>
+                  <help-button
+                    titleHelp="Fileserver URI"
+                    textHelp="The external SFTP ingest file server URI uses the format
+                    sftp://hostname[:port], where hostname is the server address and port is
+                    optional (default: 22)."
+                  />
+                </template>
+              </q-input>
 
               <q-input
                 filled
@@ -79,7 +97,15 @@
                 v-model="formData.path"
                 label="Path *"
                 :rules="[(val) => !!val || 'Path is required']"
-              />
+              >
+                <template #append>
+                  <help-button
+                    titleHelp="Path"
+                    textHelp="The path refers to the specific directory on the SFTP server where the files are
+              located."
+                  />
+                </template>
+              </q-input>
 
               <q-input
                 filled
@@ -130,7 +156,11 @@
                   (val) =>
                     (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
-              />
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -164,6 +194,7 @@ import type {
   IngestExternalSftpUpdate,
 } from 'src/services/ingest_external_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import HelpButton from 'components/HelpButton.vue';
 
 defineProps<{
   title: string;

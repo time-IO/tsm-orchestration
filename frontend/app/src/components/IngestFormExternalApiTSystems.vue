@@ -112,7 +112,11 @@
                   (val) =>
                     (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
-              />
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -145,6 +149,7 @@ import type {
   IngestExternalApiTSystemsUpdate,
 } from 'src/services/ingest_external_api_tsystems/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import HelpButton from 'components/HelpButton.vue';
 
 defineProps<{
   title: string;
@@ -168,12 +173,10 @@ const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApi
     station_id: null,
     tsystems_username: null,
     tsystems_password: null,
-
   },
 });
 
 const isPwd = ref(true);
-
 </script>
 
 <style scoped></style>
