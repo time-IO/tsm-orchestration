@@ -51,6 +51,21 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         raise ExtApiRequestError(f"Network error: {e}")
 
 
+def dynamic_parameter_mapping(v):
+    if isinstance(v, bool):
+        return 3
+    elif isinstance(v, (int, float)):
+        return 0
+    elif isinstance(v, str):
+        return 1
+    elif isinstance(v, dict):
+        return 2
+    else:
+        raise ExtApiRequestError(
+            f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+        )
+
+
 RESULT_TYPE_MAPPING = {
     0: "result_number",
     1: "result_string",
@@ -174,16 +189,18 @@ class TsystemsApiSyncer(ExtApiSyncer):
             timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
                 if value:
+                    result_type = dynamic_parameter_mapping(value)
                     body = {
                         "result_time": self.unix_ts_to_str(timestamp),
-                        "result_type": 0,
-                        "result_number": value,
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: value,
                         "datastream_pos": parameter,
                         "parameters": json.dumps(
                             {"origin": "tsystems_data", "column_header": source}
                         ),
                     }
                     bodies.append(body)
+
         return bodies
 
     @staticmethod
@@ -514,21 +531,6 @@ class DwdApiSyncer(ExtApiSyncer):
 
 
 class TtnApiSyncer(ExtApiSyncer):
-    @staticmethod
-    def dynamic_parameter_mapping(v):
-        if isinstance(v, bool):
-            return 3
-        elif isinstance(v, (int, float)):
-            return 0
-        elif isinstance(v, str):
-            return 1
-        elif isinstance(v, dict):
-            return 2
-        else:
-            raise ExtApiRequestError(
-                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
-            )
-
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         url = settings["endpoint_uri"]
@@ -554,7 +556,7 @@ class TtnApiSyncer(ExtApiSyncer):
             values = msg["decoded_payload"]
             for k, v in values.items():
                 if v:
-                    result_type = self.dynamic_parameter_mapping(v)
+                    result_type = dynamic_parameter_mapping(v)
                     body = {
                         "result_time": timestamp,
                         "result_type": result_type,
