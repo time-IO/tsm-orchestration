@@ -25,6 +25,7 @@ from .ingest_external_api_neutron_monitor import IngestExternalApiNeutronMonitor
 from .ingest_external_api_the_things_network import IngestExternalApiTheThingsNetwork
 from .ingest_external_api_tsystems import IngestExternalApiTSystems
 from .ingest_external_api_uba import IngestExternalApiUba
+from .ingest_external_api_sensoto import IngestExternalApiSensoto
 from .ingest_external_sftp import IngestExternalSftp
 from .ingest_mqtt import IngestMqtt
 from .ingest_sftp import IngestSftp
@@ -58,6 +59,7 @@ __all__ = [
     "IngestExternalApiTheThingsNetwork",
     "IngestExternalApiTSystems",
     "IngestExternalApiUba",
+    "IngestExternalApiSensoto",
     "IngestExternalSftp",
     "IngestMqtt",
     "IngestSftp",

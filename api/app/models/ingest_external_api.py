@@ -24,7 +24,7 @@ class IngestExternalApi(SQLModel, table=True):
 
     __table_args__ = (
         CheckConstraint(
-            "api_type IN ('bosch','dwd','nm', 'ttn','tsystems','uba')",
+            "api_type IN ('bosch','dwd','nm', 'ttn','tsystems','uba', 'sensoto')",
             name="ck_api_type",
         ),
     )
@@ -51,6 +51,9 @@ class IngestExternalApi(SQLModel, table=True):
         back_populates="external_api", cascade_delete=True
     )
     neutron_monitor_detail: Optional["IngestExternalApiNeutronMonitor"] = Relationship(
+        back_populates="external_api", cascade_delete=True
+    )
+    sensoto: Optional["IngestExternalApiSensoto"] = Relationship(
         back_populates="external_api", cascade_delete=True
     )
     the_things_network_detail: Optional["IngestExternalApiTheThingsNetwork"] = (

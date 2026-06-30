@@ -25,6 +25,7 @@ const options = [
   { id: 'ttn', name: 'The Things network' },
   { id: 'tsystems', name: 'TSystems' },
   { id: 'uba', name: 'Umweltbundesamt (UBA) Air Data' },
+  { id: 'sensoto', name: 'Sensoto'}
 ];
 </script>
 

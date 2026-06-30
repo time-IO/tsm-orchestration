@@ -28,6 +28,7 @@ from repositories.ingest_external_api_tsystems import (
     IngestExternalApiTSystemsRepository,
 )
 from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
+from repositories.ingest_external_api_sensoto import IngestExternalApiSensotoRepository
 from repositories.ingest_external_sftp import IngestExternalSftpRepository
 from repositories.ingest_mqtt import IngestMqttRepository
 from repositories.ingest_sftp import IngestSftpRepository
@@ -194,6 +195,10 @@ def get_repo_ingest_external_api_dwd(session=Depends(get_session)):
 
 def get_repo_ingest_external_api_neutron_monitor(session=Depends(get_session)):
     return IngestExternalApiNeutronMonitorRepository(session)
+
+
+def get_repo_ingest_external_api_sensoto(session=Depends(get_session)):
+    return IngestExternalApiSensotoRepository(session)
 
 
 def get_repo_ingest_external_api_the_things_network(session=Depends(get_session)):

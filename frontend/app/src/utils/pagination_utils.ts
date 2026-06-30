@@ -46,6 +46,8 @@ export const default_ingest_columns: QTableColumn[] = [
           return 'MQTT';
         case 'external_sftp':
           return 'External SFTP';
+        case 'sensoto':
+          return 'Sensoto';
         default:
           return 'Type not defined';
       }
@@ -115,6 +117,8 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
           return 'TSystems';
         case 'uba':
           return 'Umweltbundesamt (UBA) Air Data';
+        case 'sensoto':
+          return 'Sensoto'
         default:
           return '';
       }
@@ -218,6 +222,9 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
           return `/ingest/external-api/tsystems/${val.id}`;
         case 'uba':
           return `/ingest/external-api/uba/${val.id}`;
+        case 'sensoto':
+            return `/ingest/external-api/sensoto/${val.id}`;
+
         default:
           return 'api type not defined';
       }
@@ -259,6 +266,8 @@ export const formatExternalApiType = (val: string | null) => {
       return 'TSystems';
     case 'uba':
       return 'Umweltbundesamt (UBA) Air Data';
+    case 'sensoto':
+      return 'Sensoto';
     default:
       return val;
   }

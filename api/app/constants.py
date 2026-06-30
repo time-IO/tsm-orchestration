@@ -34,6 +34,7 @@ class ApiType(str, Enum):
     THE_THINGS_NETWORK = "ttn"
     TSYSTEMS = "tsystems"
     UBA = "uba"
+    SENSOTO = "sensoto"
 
     @classmethod
     def from_string(cls, value: str) -> "ApiType":

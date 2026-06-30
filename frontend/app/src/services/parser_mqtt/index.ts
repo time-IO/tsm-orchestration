@@ -1,5 +1,5 @@
 import {axiosInstance} from "boot/axios";
-import type {MqttParser} from "src/services/parser_mqtt/type";
+import type {MqttParser} from "src/services/parser_mqtt/types";
 import type { PaginatedResponse } from 'src/services/types';
 
 
