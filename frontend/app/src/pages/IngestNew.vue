@@ -129,6 +129,7 @@ const externalAPis = {
       path: '/ingest/new/external-api/nm',
       docsUrl: 'https://www.nmdb.eu/nest/help.php#howto',
     },
+    { name: 'sensoto', label: 'Sensoto', path: '/ingest/new/external-api/sensoto' },
     { name: 'tsystems', label: 'TSystems', path: '/ingest/new/external-api/tsystems' },
     {
       name: 'ttn',

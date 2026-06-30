@@ -1,5 +1,5 @@
 import type {PermissionGroup} from "src/services/permission_group/types";
-import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/type";
+import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/types";
 
 export type IngestExternalApiNeutronMonitorPublic = {
   id: number

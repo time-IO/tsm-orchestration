@@ -17,6 +17,7 @@ from routers import (
     ingest_external_api_dwd,
     ingest_external_api_neutron_monitor,
     ingest_external_api_bosch,
+    ingest_external_api_sensoto,
     quality_control_setting,
     neutron_monitor_station,
     health,
@@ -69,6 +70,7 @@ app.include_router(ingest_external_api_neutron_monitor.router)
 app.include_router(ingest_external_api_the_things_network.router)
 app.include_router(ingest_external_api_tsystems.router)
 app.include_router(ingest_external_api_uba.router)
+app.include_router(ingest_external_api_sensoto.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_sftp.router)

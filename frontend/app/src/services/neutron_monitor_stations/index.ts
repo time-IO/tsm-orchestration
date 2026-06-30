@@ -1,6 +1,6 @@
 import {axiosInstance} from "boot/axios";
 
-import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/type";
+import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/types";
 import type { PaginatedResponse } from 'src/services/types';
 
 const apiPath = "neutron-monitor-station/"

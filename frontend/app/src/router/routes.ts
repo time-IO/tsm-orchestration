@@ -46,6 +46,10 @@ import IngestCopyExternalApiDwd from 'pages/IngestCopyExternalApiDwd.vue';
 import IngestCopyExternalApiNm from 'pages/IngestCopyExternalApiNm.vue';
 import IngestCopyExternalApiTtn from 'pages/IngestCopyExternalApiTtn.vue';
 import IngestCopyExternalApiTSystems from 'pages/IngestCopyExternalApiTSystems.vue';
+import IngestCopyExternalApiSensoto from 'pages/IngestCopyExternalApiSensoto.vue';
+import IngestDetailExternalApiSensoto from 'pages/IngestDetailExternalApiSensoto.vue';
+import IngestEditExternalApiSensoto from 'pages/IngestEditExternalApiSensoto.vue';
+import IngestNewExternalApiSensoto from 'pages/IngestNewExternalApiSensoto.vue';
 import IngestCopyMqtt from 'pages/IngestCopyMqtt.vue';
 import IngestCopySftp from 'pages/IngestCopySftp.vue';
 import IngestCopyExternalSftp from 'pages/IngestCopyExternalSftp.vue';
@@ -110,6 +114,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/new/external-api/sensoto',
+    component: IngestNewExternalApiSensoto,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/new/external-api/tsystems',
     component: IngestNewExternalApiTSystems,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -147,6 +156,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/tsystems/:id',
     component: IngestDetailExternalApiTSystems,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/sensoto/:id',
+    component: IngestDetailExternalApiSensoto,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -190,13 +204,23 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
-    path: '/ingest/external-api/tsystems/:id/edit',
-    component: IngestEditExternalApiTSystems,
+    path: '/ingest/external-api/sensoto/:id/edit',
+    component: IngestEditExternalApiSensoto,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-sftp/:id/edit',
+    component: IngestEditExternalSftp,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
     path: '/ingest/external-api/uba/:id/edit',
     component: IngestEditExternalApiUba,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/tsystems/:id/edit',
+    component: IngestEditExternalApiTSystems,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -242,6 +266,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/uba/:id/copy',
     component: IngestCopyExternalApiUba,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/sensoto/:id/copy',
+    component: IngestCopyExternalApiSensoto,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {

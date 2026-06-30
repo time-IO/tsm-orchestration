@@ -1,15 +1,15 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">{{ title }}</h5>
-    <h6 class="q-mt-none">Neutron Monitor</h6>
+    <h6 class="q-mt-none">Sensoto</h6>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
       </div>
     </div>
     <p>
-      For more information on Neutronmonitor API properties, visit the API documentation
-      <a href="https://www.nmdb.eu/nest/help.php#howto" target="_blank">here</a>.
+      For more information on Sensoto API properties, visit the API documentation
+      <a href="https://sensoto.io/en/documentation/" target="_blank">here</a>.
     </p>
     <q-card class="q-mb-lg" flat>
       <q-card-section>
@@ -19,7 +19,7 @@
             class="q-mb-md"
             v-model="formData.name"
             label="Name *"
-            hint="Enter a descriptive name for this Ingest"
+            hint="Enter a descriptive name for this ingest"
             :rules="[
               (val) => !!val || 'Name is required',
               (val) => val.length <= 80 || 'Maximum 80 characters',
@@ -29,7 +29,7 @@
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[(val) => !!val || 'Permission group is required']"
           />
 
           <!-- Description -->
@@ -39,24 +39,27 @@
             label="Description"
             type="textarea"
             rows="3"
-            hint="Provide additional details about this Ingest Configuration"
+            hint="Provide additional details about this ingest configuration"
           />
 
           <q-separator class="q-my-lg" />
-          <neutron-monitor-station-select
-            v-model="formData.station_id"
-            :preselected-item="itemStation"
+          <q-input
+            filled
+            v-model="formData.network"
+            label="Network"
+            type="text"
+            hint="Sensoto network identifier"
+            :rules="[(val) => !!val || 'Network is required']"
           />
-          <q-select
-            outlined
-            class="q-mb-md"
-            v-model="formData.time_resolution_in_minutes"
-            :options="timeResolutionOptions"
-            label="Time Resolution (in minutes)"
-            emit-value
-            map-options
-            option-value="value"
-            option-label="label"
+
+          <q-separator class="q-my-lg" />
+          <q-input
+            filled
+            v-model="formData.device"
+            label="Device"
+            type="text"
+            hint="Sensoto device identifier"
+            :rules="[(val) => !!val || 'Device is required']"
           />
 
           <!-- Sync Settings -->
@@ -65,7 +68,7 @@
 
             <q-toggle
               v-model="formData.sync_enabled"
-              label="Enable File Server Sync"
+              label="Enable Sync"
               color="primary"
               size="md"
             />
@@ -81,11 +84,7 @@
                   (val) =>
                     (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
                 ]"
-              >
-                <template #append>
-                  <help-button termHelp="sync_interval" />
-                </template>
-              </q-input>
+              />
             </div>
           </q-card-section>
 
@@ -112,57 +111,34 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import NeutronMonitorStationSelect from 'components/NeutronMonitorStationSelect.vue';
 import type {
-  IngestExternalApiNeutronMonitorCreate,
-  IngestExternalApiNeutronMonitorUpdate,
-} from 'src/services/ingest_external_api_neutron_monitor/types';
+  IngestExternalApiSensotoCreate,
+  IngestExternalApiSensotoUpdate,
+} from '../services/ingest_external_api_sensoto/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
-import HelpButton from 'components/HelpButton.vue';
-
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
-  itemStation?: NeutronMonitorStation | null;
 }>();
 
 defineEmits<{
   save: [];
 }>();
 
-const formData = defineModel<
-  IngestExternalApiNeutronMonitorCreate | IngestExternalApiNeutronMonitorUpdate
->({
+const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiSensotoUpdate>({
   default: {
     name: '',
     permission_group_id: null,
     description: null,
-    station_id: null,
+    network: null,
+    device: null,
     sync_enabled: false,
     sync_interval_in_minutes: null,
-    time_resolution_in_minutes: null,
   },
 });
-
-const timeResolutionOptions = [
-  { value: -1, label: 'none' },
-  { value: 0, label: '0' },
-  { value: 2, label: '2' },
-  { value: 5, label: '5' },
-  { value: 10, label: '10' },
-  { value: 30, label: '30' },
-  { value: 60, label: '60' },
-  { value: 120, label: '120' },
-  { value: 360, label: '360' },
-  { value: 720, label: '720' },
-  { value: 1440, label: '1440' },
-  { value: 39276, label: '39276' },
-  { value: 525969, label: '525969' },
-];
 </script>
 
 <style scoped></style>
