@@ -377,6 +377,11 @@ encodings = [
     },
     {"codec": "mac_turkish", "aliases": ["macturkish"], "languages": ["Turkish"]},
     {
+        "codec": "mbcs",
+        "aliases": ["ansi, dbcs"],
+        "languages": ["all languages (Windows only)"],
+    },
+    {
         "codec": "ptcp154",
         "aliases": ["csptcp154", "pt154", "cp154", "cyrillic-asian"],
         "languages": ["Kazakh"],
