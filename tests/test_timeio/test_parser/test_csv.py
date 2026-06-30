@@ -7,7 +7,7 @@ import pytest
 import json
 
 from timeio.parser import CsvParser
-from timeio.errors import ParsingError
+from timeio.errors import ParsingError, EmptyDataError
 
 RAWDATA = """
 //Hydroinnova CRS-1000 Data
@@ -27,6 +27,17 @@ RAWDATA = """
         ({"skiprows": 4, "header": None}, [2, 4, 8]),
         ({"skiprows": 3, "header": 0}, ["P1_mb", "P4_mb", "T4_C"]),
         ({"skiprows": 3, "header": 0, "comment": "//"}, ["P1_mb", "P4_mb", "T4_C"]),
+        (
+            {
+                "headlines_to_exclude": 4,
+                "footlines_to_exclude": 0,
+                "header": None,
+                "timestamp_columns": [
+                    {"column": 1, "timestamp_format": "%Y/%m/%d %H:%M:%S"}
+                ],
+            },
+            [2, 4, 8],
+        ),
     ],
 )
 def test_parsing(settings, columns):
@@ -302,7 +313,7 @@ def test_tz(settings, rawdata, expected_index):
     assert df.index.equals(expected_index)
 
 
-def test_double_tz_error():
+def test_tz_conversion():
     settings = {
         "decimal": ".",
         "delimiter": ",",
@@ -312,12 +323,9 @@ def test_double_tz_error():
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
         "timezone": "Europe/Berlin",
     }
-    paser = CsvParser(settings)
-    with pytest.raises(
-        ParsingError,
-        match="Cannot localize timezone 'Europe/Berlin': index is already timezone aware with tz \(UTC\+01:00\)\.",
-    ):
-        paser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
+    assert str(df.index.tz) == "Europe/Berlin"
 
 
 RAWDATA_SKIP_WITH_HEADER = """Skipline
@@ -428,3 +436,16 @@ def test_skiprows():
     assert df.shape == (3, 3)
     assert df.index.equals(expected_index)
     assert list(df.columns) == expected_col_names
+
+
+def test_empty_file():
+    settings = {
+        "delimiter": ",",
+        "decimal": ".",
+        "header": 0,
+        "skiprows": [0, 2, 3],
+        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+    }
+    parser = CsvParser({**settings})
+    with pytest.raises(EmptyDataError):
+        parser.do_parse("", "project", "thing")

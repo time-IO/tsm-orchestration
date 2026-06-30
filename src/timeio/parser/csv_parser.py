@@ -12,7 +12,7 @@ from io import StringIO
 from functools import reduce
 
 from timeio.parser.pandas_parser import PandasParser
-from timeio.errors import ParsingError, ParsingWarning
+from timeio.errors import ParsingError, ParsingWarning, EmptyDataError
 from timeio.journaling import Journal
 
 parsedT = TypeVar("parsedT")
@@ -23,9 +23,11 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-
         date_columns = [df.columns[d["column"]] for d in timestamp_columns]
-        date_format = " ".join([d["format"] for d in timestamp_columns])
+        try:
+            date_format = " ".join([d["format"] for d in timestamp_columns])
+        except:
+            date_format = " ".join([d["timestamp_format"] for d in timestamp_columns])
 
         # for c in date_columns:
         #     if c not in df.columns:
@@ -96,12 +98,20 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _apply_skipping(lines, skiprows, skipfooter):
-
         if skiprows is None:
             skiprows = []
+        # in Config-DB or pandas_read_csv JSON, skiprows is stored as an integer
         if isinstance(skiprows, int):
             skiprows = range(skiprows)
+        # in DSM-DB skiprows is stored as a string of comma-separated integers
+        if isinstance(skiprows, str):
+            skiprows = [int(i) for i in skiprows.split(",")]
+            if len(skiprows) == 1:
+                skiprows = range(skiprows[0])
         skiprows = set(skiprows)
+
+        if skipfooter is None:
+            skipfooter = 0
 
         lines = [line for i, line in enumerate(lines) if i not in skiprows]
         return lines[: -skipfooter or None]
@@ -138,14 +148,24 @@ class CsvParser(PandasParser):
         NOTE:
             we need to preserve the original column numbering
         """
+        if len(rawdata) == 0:
+            raise EmptyDataError("No data given")
+
         settings = self._validate_settings(self.settings.copy())
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
-        skiprows = settings.pop("skiprows", 0)
-        skipfooter = settings.pop("skipfooter", 0)
+
+        # handle deprecated settings keywords for skipping rows and footers
+        skiprows = settings.pop("skiprows", None)
+        headlines_to_exclude = settings.pop("headlines_to_exclude", None)
+        skiprows = skiprows if skiprows is not None else headlines_to_exclude or 0
+        skipfooter = settings.pop("skipfooter", None)
+        footlines_to_exclude = settings.pop("footlines_to_exclude", None)
+        skipfooter = skipfooter if skipfooter is not None else footlines_to_exclude or 0
+
         custom_names = settings.pop("names", None)
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
@@ -210,7 +230,14 @@ class CsvParser(PandasParser):
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
             try:
-                df.index = df.index.tz_localize(tz_info)
+                if df.index.tz is None:
+                    df.index = df.index.tz_localize(tz_info)
+                else:
+                    journal.info(
+                        f"Timestamps are already timezone aware, converting '{df.index.tz}' -> '{tz_info}'",
+                        thing_uuid,
+                    )
+                    df.index = df.index.tz_convert(tz_info)
             except TypeError:
                 raise ParsingError(
                     f"Cannot localize timezone '{tz_info}': index is already timezone aware with tz ({df.index.tz})."

@@ -87,7 +87,7 @@ def get_nm_timerange(thing):
 TIMERANGE_MAPPING = {
     "tsystems": get_tsystems_timerange,
     "bosch": get_bosch_timerange,
-    "dwd": get_dwd_timerange,
+    "dwd": get_bosch_timerange,
     "ttn": get_dwd_timerange,
     "uba": get_uba_timerange,
     "nm": get_nm_timerange,
@@ -103,7 +103,7 @@ def cli():
 @cli.command()
 @click.argument("thing_uuid")
 def sync_thing(thing_uuid: str):
-    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
+    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("DSMDB_DSN"))
     if thing.ext_api is not None:
         ext_api_name = thing.ext_api.api_type_name
         datetime_from, datetime_to = TIMERANGE_MAPPING[ext_api_name](thing)

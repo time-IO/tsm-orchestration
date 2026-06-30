@@ -69,7 +69,7 @@ class SetupThingHandler(AbstractHandler):
 
         return handlers
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         """Process all configured actions in sequence"""
         thing_uuid = content.get("thing")
         total = len(self.handlers)

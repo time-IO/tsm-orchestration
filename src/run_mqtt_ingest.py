@@ -32,7 +32,7 @@ class ParseMqttDataHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.dbapi = DBapi(
             get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
         )
@@ -43,7 +43,7 @@ class ParseMqttDataHandler(AbstractHandler):
 
         logger.info(f"get thing")
         mqtt_user = message.topic.split("/")[1]
-        thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.configdb_dsn)
+        thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.dsmdb_dsn)
         thing_uuid = thing.uuid
 
         logger.info("persisting rawdata")

@@ -36,6 +36,8 @@ complete[1]) drop-in replacement for classes in thing.py.
     don't use/need it anymore.
 """
 
+SCHEMA = "dsm_db"
+
 
 class QcStreamT(TypedDict):
     arg_name: str
@@ -102,7 +104,7 @@ def _fetch(query, id_attr: str, column: str):
     return property(fetch)
 
 
-def _create(cls: type[Base], query: str, id_attr: str):
+def _create(cls: type[Base], query: str, id_attr: str, optional: bool = False):
     """
     Return a property, with a getter that returns another Model
 
@@ -120,6 +122,8 @@ def _create(cls: type[Base], query: str, id_attr: str):
             return cached
         res = self._fetchall(self._conn, query, id_value)
         if not res:
+            if optional:
+                return None
             raise ObjectNotFound(
                 f"Could not create {cls.__qualname__}"
                 f"(table={cls._schema}.{cls._table_name}) "
@@ -381,46 +385,38 @@ class FromUUIDMixin:
         return cls(res[0], conn, caching)
 
 
-class IngestType(Base, FromNameMixin):
-    _schema = "config_db"
-    _table_name = "ingest_type"
-    id: int = _prop(lambda self: self._attrs["id"])
-    name: str = _prop(lambda self: self._attrs["name"])
+class IngestType:
+    def __init__(self, name: str):
+        self.name = name
 
 
-class FileParserType(Base, FromNameMixin):
-    _schema = "config_db"
-    _table_name = "file_parser_type"
-    id: int = _prop(lambda self: self._attrs["id"])
-    name: str = _prop(lambda self: self._attrs["name"])
+class FileParserType:
+    def __init__(self, name: str):
+        self.name = name
 
 
-class MQTTDeviceType(Base, FromNameMixin):
-    _schema = "config_db"
-    _table_name = "mqtt_device_type"
-    id: int = _prop(lambda self: self._attrs["id"])
-    name: str = _prop(lambda self: self._attrs["name"])
+class MQTTDeviceType:
+    def __init__(self, name: str):
+        self.name = name
 
 
-class ExtAPIType(Base, FromNameMixin):
-    _schema = "config_db"
-    _table_name = "ext_api_type"
-    id: int = _prop(lambda self: self._attrs["id"])
-    name: str = _prop(lambda self: self._attrs["name"])
+class ExtAPIType:
+    def __init__(self, name: str):
+        self.name = name
 
 
 class Database(Base):
-    _schema = "config_db"
+    _schema = SCHEMA
     _table_name = "database"
     _protected_values = frozenset({"password", "ro_password"})
     id: int = _prop(lambda self: self._attrs["id"])
-    schema: str = _prop(lambda self: self._attrs["schema"])
-    user: str = _prop(lambda self: self._attrs["user"])
+    schema: str = _prop(lambda self: self._attrs["username"])
+    user: str = _prop(lambda self: self._attrs["username"])
     password: str = _prop(lambda self: self._attrs["password"])
-    ro_user: str = _prop(lambda self: self._attrs["ro_user"])
-    ro_password: str = _prop(lambda self: self._attrs["ro_password"])
+    ro_user: str = _prop(lambda self: self._attrs["read_only_username"])
+    ro_password: str = _prop(lambda self: self._attrs["read_only_password"])
     url: str | None = _prop(lambda self: self._attrs["url"])
-    ro_url: str | None = _prop(lambda self: self._attrs["ro_url"])
+    ro_url: str | None = _prop(lambda self: self._attrs["read_only_url"])
 
     # thing.Datebase interface
     # password url, ro_password, ro_url
@@ -430,21 +426,23 @@ class Database(Base):
 
 
 class Project(Base, FromNameMixin, FromUUIDMixin):
-    _schema = "config_db"
-    _table_name = "project"
+    _schema = SCHEMA
+    _table_name = "permission_group"
     id: int = _prop(lambda self: self._attrs["id"])
     name: str = _prop(lambda self: self._attrs["name"])
     uuid: str = _prop(lambda self: str(self._attrs["uuid"]))
-    database_id: int = _prop(lambda self: self._attrs["database_id"])
+    entitlement: str = _prop(lambda self: str(self._attrs["entitlement"]))
     database: Database = _create(
-        Database, f"SELECT * FROM {_schema}.database WHERE id = %s", "database_id"
+        Database,
+        f"SELECT * FROM {_schema}.database WHERE permission_group_id = %s",
+        "id",
     )
 
     # thing.Project interface
     # uuid and name are already defined above
 
     def get_things(self) -> list[Thing]:
-        query = f"select * from {self._schema}.thing where project_id = %s"
+        query = f"select * from {self._schema}.ingest where permission_group_id = %s"
         conn = self._conn
         return [
             Thing._from_parent(attr, self)
@@ -453,9 +451,9 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_default_qaqcs(self) -> list[QAQC] | None:
         query = (
-            f"select * from {self._schema}.qaqc q "
-            f"where q.project_id = %s and q.default = true "
-            f"order by q.id desc"
+            f"select * from {self._schema}.quality_control_setting q "
+            f"where q.permission_group_id = %s and q.is_active = true "
+            f"order by q.id asc"
         )
         if _ := self._fetchall(self._conn, query, self.id):
             return [
@@ -466,7 +464,7 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
     def get_qaqcs(self, id: int | None = None, name: str | None = None) -> list[QAQC]:
         params = [self.id]
-        query = f"select * from {self._schema}.qaqc where project_id = %s "
+        query = f"select * from {self._schema}.quality_control_setting where permission_group_id = %s "
         if id is not None:
             query += "and id = %s "
             params += [id]
@@ -480,16 +478,29 @@ class Project(Base, FromNameMixin, FromUUIDMixin):
 
 
 class ExtAPI(Base):
-    _schema = "config_db"
-    _table_name = "ext_api"
-    id: int = _prop(lambda self: self._attrs["id"])
-    api_type_id: int = _prop(lambda self: self._attrs["api_type_id"])
-    sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
+    _table_mapping = {
+        "bosch": "ingest_external_api_bosch",
+        "dwd": "ingest_external_api_dwd",
+        "nm": "ingest_external_api_neutron_monitor",
+        "ttn": "ingest_external_api_the_things_network",
+        "tsystems": "ingest_external_api_tsystems",
+        "uba": "ingest_external_api_uba",
+        "zentra": "ingest_external_api_zentra",
+        "sensoto": "ingest_external_api_sensoto",
+    }
+    _schema = SCHEMA
+    _table_name = "ingest_external_api"
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
+    sync_interval: int = _prop(lambda self: self._attrs["sync_interval_in_minutes"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
-    settings: JsonT | None = _prop(lambda self: self._attrs["settings"])
-    api_type: ExtAPIType = _create(
-        ExtAPIType, f"SELECT * FROM {_schema}.ext_api_type WHERE id = %s", "api_type_id"
-    )
+
+    @property
+    def settings(self) -> JsonT | None:
+        return self._get_settings()
+
+    @property
+    def api_type(self) -> ExtAPIType:
+        return ExtAPIType(self._attrs["api_type"])
 
     # thing.ExternalApi interface
     # sync_interval, settings
@@ -497,19 +508,27 @@ class ExtAPI(Base):
     enabled = sync_enabled
     api_type_name: str = _prop(lambda self: self.api_type.name)
 
+    def _get_settings(self) -> dict[str, object] | None:
+        table = self._table_mapping[self.api_type.name]
+        query = f"select * from {self._schema}.{table} where ingest_id = %s"
+        row = self._fetchone(self._conn, query, self.id)
+        if row is None:
+            return None
+        return {k: v for k, v in row.items() if k != "ingest_id"}
+
 
 class ExtSFTP(Base):
-    _schema = "config_db"
-    _table_name = "ext_sftp"
+    _schema = SCHEMA
+    _table_name = "ingest_external_sftp"
     _protected_values = frozenset({"password", "ssh_priv_key"})
-    id: int = _prop(lambda self: self._attrs["id"])
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
     uri: str = _prop(lambda self: self._attrs["uri"])
     path: str = _prop(lambda self: self._attrs["path"])
-    user: str = _prop(lambda self: self._attrs["user"])
+    user: str = _prop(lambda self: self._attrs["username"])
     password: str | None = _prop(lambda self: self._attrs["password"])
-    ssh_priv_key: str = _prop(lambda self: self._attrs["ssh_priv_key"])
-    ssh_pub_key: str = _prop(lambda self: self._attrs["ssh_pub_key"])
-    sync_interval: int = _prop(lambda self: self._attrs["sync_interval"])
+    ssh_priv_key: str = _prop(lambda self: self._attrs["ssh_private_key"])
+    ssh_pub_key: str = _prop(lambda self: self._attrs["ssh_public_key"])
+    sync_interval: int = _prop(lambda self: self._attrs["sync_interval_in_minutes"])
     sync_enabled: bool = _prop(lambda self: self._attrs["sync_enabled"])
 
     # thing.ExternalSFTP interface
@@ -523,52 +542,107 @@ class ExtSFTP(Base):
 
 
 class FileParser(Base, FromUUIDMixin):
-    _schema = "config_db"
-    _table_name = "file_parser"
+    _schema = SCHEMA
+    _table_name = "parser"
     id: int = _prop(lambda self: self._attrs["id"])
-    file_parser_type_id: int = _prop(lambda self: self._attrs["file_parser_type_id"])
-    name: str = _prop(lambda self: self._attrs["name"])
-    uuid = _prop(lambda self: self._attrs["uuid"])
-    params: JsonT | None = _prop(lambda self: self._attrs["params"])
-    file_parser_type: FileParserType = _create(
-        FileParserType,
-        f"SELECT * FROM {_schema}.file_parser_type WHERE id = %s",
-        "file_parser_type_id",
-    )
+    uuid: int = _prop(lambda self: self._attrs["uuid"])
+
+    @property
+    def file_parser_type(self) -> FileParserType:
+        return FileParserType(self._attrs["parser_type"])
+
+    @property
+    def name(self) -> str:
+        return self._get_name()
+
+    @property
+    def params(self) -> JsonT | None:
+        return self._get_params()
+
+    def _get_name(self):
+        query = f"""
+                SELECT
+                    CASE
+                        WHEN p.parser_type = 'mqtt' THEN pm."name"
+                        ELSE pd."name"
+                    END AS name
+                FROM {self._schema}."parser" p
+                left join {self._schema}.parser_mqtt pm on pm.parser_id = p.id
+                left join {self._schema}.parser_detailed pd on pd.parser_id = p.id 
+                where p.id = %s
+            """
+        row = self._fetchone(self._conn, query, self.id)
+        return row["name"]
+
+    def _get_params(self) -> dict:
+        if self.file_parser_type == "mqtt":
+            return self._get_mqtt_params()
+        if self.file_parser_type.name == "csv":
+            return self._get_csv_params()
+        if self.file_parser_type == "json":
+            return self._get_json_params()
+
+    def _get_csv_params(self):
+        ts_cols = self._get_ts_cols()
+        query = f"select * from {self._schema}.parser_csv where parser_id = %s"
+        row = self._fetchone(self._conn, query, self.id)
+        if not row:
+            return {}
+        params = {k: v for k, v in row.items() if k != "parser_id"}
+        params["timestamp_columns"] = ts_cols
+        return params
+
+    def _get_json_params(self):
+        return {}
+
+    def _get_mqtt_params(self):
+        return {}
+
+    def _get_ts_cols(self):
+        query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
+        return self._fetchall(self._conn, query, self.id)
 
 
 class MQTT(Base):
-    _schema = "config_db"
-    _table_name = "mqtt"
+    _schema = SCHEMA
+    _table_name = "ingest_mqtt"
     _protected_values = frozenset({"password", "password_hashed"})
-    id: int = _prop(lambda self: self._attrs["id"])
-    user = _prop(lambda self: self._attrs["user"])
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
+    user = _prop(lambda self: self._attrs["username"])
     password = _prop(lambda self: self._attrs["password"])
     password_hashed = _prop(lambda self: self._attrs["password_hashed"])
     topic: str | None = _prop(lambda self: self._attrs["topic"])
-    mqtt_device_type_id: int | None = _prop(
-        lambda self: self._attrs["mqtt_device_type_id"]
-    )
-    mqtt_device_type: MQTTDeviceType | None = _create(
-        MQTTDeviceType,
-        f"SELECT * FROM {_schema}.mqtt_device_type WHERE id = %s",
-        "mqtt_device_type_id",
-    )
+
+    @property
+    def mqtt_device_type(self) -> MQTTDeviceType | None:
+        return self._get_mqtt_device_type()
+
+    def _get_mqtt_device_type(self):
+        query = f"""
+            select pm."name" from {self._schema}.parser_mqtt pm
+            join {self._schema}.ingest i on pm.parser_id = i.parser_id
+            where i.id = %s
+        """
+        row = self._fetchone(self._conn, query, self.id)
+        if row is None:
+            return None
+        return MQTTDeviceType(row["name"])
 
 
 class QAQC(Base):
-    _schema = "config_db"
-    _table_name = "qaqc"
+    _schema = SCHEMA
+    _table_name = "quality_control_setting"
     id: int = _prop(lambda self: self._attrs["id"])
+    uuid: int = _prop(lambda self: self._attrs["uuid"])
     name: str = _prop(lambda self: self._attrs["name"])
-    project_id: int | None = _prop(lambda self: self._attrs["project_id"])
+    project_id: int | None = _prop(lambda self: self._attrs["permission_group_id"])
     context_window: str = _prop(lambda self: self._attrs["context_window"])
     project: Project | None = _create(
-        Project, f"select * from {_schema}.project where id = %s", "project_id"
+        Project, f"select * from {_schema}.permission_group where id = %s", "project_id"
     )
 
     def get_functions(self) -> list[QAQCTest]:
-        query = f"select * from {self._schema}.qaqc_test where qaqc_id = %s"
+        query = f"select * from {self._schema}.quality_control_function where quality_control_setting_id = %s"
         conn = self._conn
         return [
             QAQCTest._from_parent(attr, self)
@@ -577,15 +651,35 @@ class QAQC(Base):
 
 
 class QAQCTest(Base):
-    _schema = "config_db"
-    _table_name = "qaqc_test"
+    _schema = SCHEMA
+    _table_name = "quality_control_function"
     id: int = _prop(lambda self: self._attrs["id"])
-    qaqc_id: int = _prop(lambda self: self._attrs["qaqc_id"])
-    function: str = _prop(lambda self: self._attrs["function"])
-    args: JsonObjectT | None = _prop(lambda self: self._attrs["args"])
+    qaqc_id: int = _prop(lambda self: self._attrs["quality_control_setting_id"])
+    function: str = _prop(lambda self: self._attrs["name"])
     position: int | None = _prop(lambda self: self._attrs["position"])
     name: str | None = _prop(lambda self: self._attrs["name"])
-    qaqc: QAQC = _create(QAQC, f"select * from {_schema}.qaqc where id = %s", "qaqc_id")
+    qaqc: QAQC = _create(
+        QAQC,
+        f"select * from {_schema}.quality_control_setting where id = %s",
+        "qaqc_id",
+    )
+
+    @property
+    def args(self) -> JsonObjectT | None:
+        query = f"""select "name", input from {self._schema}.quality_control_function_argument 
+                where quality_control_function_id = %s and "type" <> 'datastream'"""
+        rows = self._fetchall(self._conn, query, self.id)
+        if not rows:
+            return None
+        res = {i["name"]: i["input"]["value"] for i in rows}
+        return res
+
+    @property
+    def streams(self):
+        query = f"""select "name", input from {self._schema}.quality_control_function_argument 
+                where quality_control_function_id = %s and "type" = 'datastream'"""
+        rows = self._fetchall(self._conn, query, self.id)
+        return rows
 
     @staticmethod
     def _parse_context_window(window: str | None) -> pd.Timedelta:
@@ -662,9 +756,13 @@ class QAQCTest(Base):
 
     def get_streams(self) -> list[QcStreamT]:
         out = []
-        for stream in self._attrs["streams"]:
-            stream["sta_stream_id"] = int(stream["sta_stream_id"])
-            stream["sta_thing_id"] = int(stream["sta_thing_id"])
+        for stream in self.streams:
+            for i in stream["input"]["value"]:
+                stream["sta_stream_id"] = i["@iot.id"]
+                stream["sta_thing_id"] = i["Thing"]["@iot.id"]
+                stream["alias"] = i["alias"]
+                stream["arg_name"] = stream.pop("name")
+                del stream["input"]
             if stream["sta_stream_id"] is None:
                 meta = self._get_new_stream(stream)
             else:
@@ -682,20 +780,68 @@ class QAQCTest(Base):
 
 
 class S3Store(Base):
-    _schema = "config_db"
-    _table_name = "s3_store"
+    _schema = SCHEMA
+    _table_name = "ingest"
     _protected_values = frozenset({"password"})
     id: int = _prop(lambda self: self._attrs["id"])
-    user: str = _prop(lambda self: self._attrs["user"])
-    password: str = _prop(lambda self: self._attrs["password"])
-    bucket: str = _prop(lambda self: self._attrs["bucket"])
-    filename_pattern: str | None = _prop(lambda self: self._attrs["filename_pattern"])
-    file_parser_id: int = _prop(lambda self: self._attrs["file_parser_id"])
+    ingest_type = _prop(lambda self: self._attrs["ingest_type"])
+    file_parser_id: int = _prop(lambda self: self._attrs["parser_id"])
     file_parser: FileParser = _create(
         FileParser,
-        f"select * from {_schema}.file_parser where id = %s",
+        f"select * from {_schema}.parser where id = %s",
         "file_parser_id",
     )
+
+    @property
+    def user(self):
+        return self._get_s3_value("username")
+
+    @property
+    def password(self):
+        return self._get_s3_value("password")
+
+    @property
+    def bucket(self):
+        return self._get_s3_value("bucket_name")
+
+    @property
+    def filename_pattern(self):
+        return self._get_s3_value("filename_pattern")
+
+    def _get_s3_value(self, key):
+        row = self._get_s3_row()
+        return row.get(key) if row else None
+
+    def _get_s3_row(self):
+        if self.ingest_type == "sftp":
+            return self._s3_from_sftp()
+        if self.ingest_type == "external_sftp":
+            return self._s3_from_extsftp()
+
+    def _s3_from_sftp(self):
+        query = f"""
+            SELECT
+                filename_pattern,
+                username,
+                password,
+                bucket_name
+            FROM {self._schema}.ingest_sftp
+            WHERE ingest_id = %s
+        """
+        return self._fetchone(self._conn, query, self.id)
+
+    def _s3_from_extsftp(self):
+        query = f"""
+                SELECT
+                    filename_pattern,
+                    bucket_username as username,
+                    bucket_password as password,
+                    bucket_name
+                FROM {self._schema}.ingest_external_sftp
+                WHERE ingest_id = %s
+            """
+
+        return self._fetchone(self._conn, query, self.id)
 
     # thing.RawDataStorage interface
     # password, filename_pattern
@@ -726,46 +872,37 @@ class HTTP(Base):
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
-    _schema = "config_db"
-    _table_name = "thing"
+    _schema = SCHEMA
+    _table_name = "ingest"
     id: int = _prop(lambda self: self._attrs["id"])
     uuid = _prop(lambda self: str(self._attrs["uuid"]))
     name = _prop(lambda self: self._attrs["name"])
-    project_id: int = _prop(lambda self: self._attrs["project_id"])
-    ingest_type_id: int = _prop(lambda self: self._attrs["ingest_type_id"])
-    s3_store_id: int | None = _prop(lambda self: self._attrs["s3_store_id"])
-    mqtt_id: int = _prop(lambda self: self._attrs["mqtt_id"])
-    ext_mqtt_id: int | None = _prop(lambda self: self._attrs["ext_mqtt_id"])
-    ext_sftp_id: int | None = _prop(lambda self: self._attrs["ext_sftp_id"])
-    ext_api_id: int | None = _prop(lambda self: self._attrs["ext_api_id"])
-    http_id:int | None = _prop(lambda self: self._attrs["http_id"])
+    project_id: int = _prop(lambda self: self._attrs["permission_group_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
-    project: Project = _create(Project, f"select * from {_schema}.project where id = %s", "project_id")  # fmt: skip
-    ingest_type: IngestType = _create(IngestType, f"select * from {_schema}.ingest_type where id = %s", "ingest_type_id")  # fmt: skip
-    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.s3_store where id = %s", "s3_store_id")  # fmt: skip
-    mqtt: MQTT = _create(MQTT, f"select * from {_schema}.mqtt where id = %s", "mqtt_id")  # fmt: skip
-    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ext_mqtt where id = %s", "ext_mqtt_id")
-    ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ext_sftp where id = %s", "ext_sftp_id")  # fmt: skip
-    ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ext_api where id = %s", "ext_api_id")  # fmt: skip
-    http: HTTP = _create(HTTP, f"select * from {_schema}.http where id = %s", "http_id")  # fmt: skip
-    legacy_qaqc_id: int | None = _prop(lambda self: self._attrs.get("legacy_qaqc_id"))
+    project: Project = _create(Project, f"select * from {_schema}.permission_group where id = %s", "project_id") #fmt: skip
+    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id", optional=True) # fmt: skip
+    mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
+    ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
 
-    # thing.Thing interface
-    # uuid, name, project, description are already defined above
+    @property
+    def ingest_type(self) -> IngestType:
+        return IngestType(self._attrs["ingest_type"])
+
     database: Database = _prop(lambda self: self.project.database)
     raw_data_storage = s3_store
     external_sftp = ext_sftp
     external_api = ext_api
-    # Note that thing.properties is not supported anymore
     properties = None
+    legacy_qaqc_id = None
 
-    def get_legacy_qaqc(self) -> QAQC | None:
-        if self.legacy_qaqc_id is None:
-            return None
-        query = f"select * from {self._schema}.qaqc where id = %s"
-        res = self._fetchone(self._conn, query, self.legacy_qaqc_id)
-        return QAQC._from_parent(res, self)
-
+    # def get_legacy_qaqc(self) -> QAQC | None:
+    #     if self.legacy_qaqc_id is None:
+    #         return None
+    #     query = f"select * from {self._schema}.qaqc where id = %s"
+    #     res = self._fetchone(self._conn, query, self.legacy_qaqc_id)
+    #     return QAQC._from_parent(res, self)
+    #
     @classmethod
     def from_s3_bucket_name(
         cls: type[Self],
@@ -787,12 +924,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
             `psycopg.connection`.
         :return: Returns a feta.Thing instance.
         """
-        query = (
-            f"select t.* from {cls._schema}.thing t join {cls._schema}.s3_store s3 on "
-            "t.s3_store_id = s3.id where s3.bucket = %s"
-        )
+        query = f"""select i.* from {cls._schema}.ingest i
+                left join {cls._schema}.ingest_sftp s on i.id = s.ingest_id
+                left join {cls._schema}.ingest_external_sftp es on i.id = es.ingest_id
+                where es.bucket_name = %s or s.bucket_name = %s"""
         conn = cls._get_connection(dsn, **kwargs)
-        if not (res := cls._fetchall(conn, query, bucket_name)):
+        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name)):
             raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
         if len(res) > 1:
             warnings.warn(
@@ -824,8 +961,8 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         :return: Returns a feta.Thing instance.
         """
         query = (
-            f"select t.* from {cls._schema}.thing t join mqtt m on "
-            "t.mqtt_id = m.id where m.user = %s"
+            f"select i.* from {cls._schema}.ingest i join ingest_mqtt m on "
+            "i.id = m.ingest_id where m.username = %s"
         )
         conn = cls._get_connection(dsn, **kwargs)
         if not (res := cls._fetchall(conn, query, mqtt_user_name)):

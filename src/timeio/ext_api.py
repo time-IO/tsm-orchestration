@@ -51,6 +51,21 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         raise ExtApiRequestError(f"Network error: {e}")
 
 
+def dynamic_parameter_mapping(v):
+    if isinstance(v, bool):
+        return 3
+    elif isinstance(v, (int, float)):
+        return 0
+    elif isinstance(v, str):
+        return 1
+    elif isinstance(v, dict):
+        return 2
+    else:
+        raise ExtApiRequestError(
+            f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+        )
+
+
 RESULT_TYPE_MAPPING = {
     0: "result_number",
     1: "result_string",
@@ -61,17 +76,30 @@ RESULT_TYPE_MAPPING = {
 
 class BoschApiSyncer(ExtApiSyncer):
 
+    def normalize_datetime(self, dt_str):
+        formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%SZ",
+        ]
+        for fmt in formats:
+            try:
+                return datetime.strptime(dt_str, fmt).strftime("%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                pass
+        raise ValueError(f"Unsupported datetime format: {dt_str}")
+
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
+        dt_from = self.normalize_datetime(content["datetime_from"])
+        dt_to = self.normalize_datetime(content["datetime_to"])
         server_url = (
-            f"{settings['endpoint']}/{settings['sensor_id']}/"
-            f"{content['datetime_from']}/{content['datetime_to']}"
+            f"{settings['endpoint']}/{settings['sensor_id']}/" f"{dt_from}/{dt_to}"
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
-        password = decrypt(settings["password"], get_crypt_key())
+        password = decrypt(settings["bosch_password"], get_crypt_key())
         headers = {
-            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Authorization": f"{self.basic_auth(settings['bosch_username'], password)}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -120,19 +148,27 @@ class TsystemsApiSyncer(ExtApiSyncer):
         "https://moc.caritc.de/sensorstation-management/api/measurements/average"
     )
     tsytems_auth_url = (
-        "https://moc.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
     )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        pw_dec = decrypt(settings["password"], get_crypt_key())
-        bearer_token = self.get_bearer_token(settings["username"], pw_dec)
+        dt_from = datetime.strptime(
+            content["datetime_from"], "%Y-%m-%d %H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
+        dt_from = dt_from.strftime("%Y-%m-%dT%H:%M:%SZ")
+        dt_to = datetime.strptime(content["datetime_to"], "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=timezone.utc
+        )
+        dt_to = dt_to.strftime("%Y-%m-%dT%H:%M:%SZ")
+        pw_dec = decrypt(settings["tsystems_password"], get_crypt_key())
+        bearer_token = self.get_bearer_token(settings["tsystems_username"], pw_dec)
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
             "aggregationTime": "FINEST",
             "aggregationValues": "ALL_FIELDS",
-            "from": content["datetime_from"],
-            "to": content["datetime_to"],
+            "from": dt_from,
+            "to": dt_to,
         }
         response = request_with_handling(
             "GET",
@@ -153,16 +189,18 @@ class TsystemsApiSyncer(ExtApiSyncer):
             timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
                 if value:
+                    result_type = dynamic_parameter_mapping(value)
                     body = {
                         "result_time": self.unix_ts_to_str(timestamp),
-                        "result_type": 0,
-                        "result_number": value,
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: value,
                         "datastream_pos": parameter,
                         "parameters": json.dumps(
                             {"origin": "tsystems_data", "column_header": source}
                         ),
                     }
                     bodies.append(body)
+
         return bodies
 
     @staticmethod
@@ -493,21 +531,6 @@ class DwdApiSyncer(ExtApiSyncer):
 
 
 class TtnApiSyncer(ExtApiSyncer):
-    @staticmethod
-    def dynamic_parameter_mapping(v):
-        if isinstance(v, bool):
-            return 3
-        elif isinstance(v, (int, float)):
-            return 0
-        elif isinstance(v, str):
-            return 1
-        elif isinstance(v, dict):
-            return 2
-        else:
-            raise ExtApiRequestError(
-                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
-            )
-
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         url = settings["endpoint_uri"]
@@ -533,7 +556,7 @@ class TtnApiSyncer(ExtApiSyncer):
             values = msg["decoded_payload"]
             for k, v in values.items():
                 if v:
-                    result_type = self.dynamic_parameter_mapping(v)
+                    result_type = dynamic_parameter_mapping(v)
                     body = {
                         "result_time": timestamp,
                         "result_type": result_type,
@@ -568,7 +591,7 @@ class NmApiSyncer(ExtApiSyncer):
             "stations[]": settings["station_id"],
             "tabchoice": "revori",
             "dtype": "corr_for_efficiency",
-            "tresolution": settings["time_resolution"],
+            "tresolution": settings["time_resolution_in_minutes"],
             "force": 1,
             "date_choice": "bydate",
             "start_year": {start_date.year},
@@ -590,7 +613,7 @@ class NmApiSyncer(ExtApiSyncer):
         return {
             "response_data": rows,
             "station_id": settings["station_id"],
-            "resolution": settings["time_resolution"],
+            "resolution": settings["time_resolution_in_minutes"],
         }
 
     def do_parse(self, api_response):

@@ -77,6 +77,10 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
             d.pop("uri", None)  # unused
 
     elif data["version"] == 7:
+        if data.get("ingest_type") == "external_sftp":
+            data["ingest_type"] = "extsftp"
+        if data.get("ingest_type") == "external_api":
+            data["ingest_type"] = "extapi"
         if d := data.get("mqtt"):
             d.pop("uri", None)  # unused
 
@@ -100,8 +104,10 @@ def prepare_data_by_version(data: dict[str, Any]) -> dict[str, Any]:
     if data.get("mqtt", {}).get("username", None) is None:
         data["mqtt"] = None
     else:
-        # move top level mqtt_device_type to mqtt key
-        data["mqtt"]["mqtt_device_type"] = data["mqtt_device_type"]
+        # keep nested value if present, else fallback to top-level field
+        data["mqtt"]["mqtt_device_type"] = data["mqtt"].get(
+            "mqtt_device_type", data.get("mqtt_device_type")
+        )
 
     # set ext_sftp to None if keys have no relevant values
     if data.get("external_sftp", {}).get("uri", None) is None:

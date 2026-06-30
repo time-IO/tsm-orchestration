@@ -7,6 +7,33 @@
 ### Changed
 ### Removed
 
+## [2026-06-26]
+### Added
+- More informations, links for users ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/232))
+- new MQTT Device ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/230))
+### Fixed
+- CSV Parser bugfixes ([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/630), [Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/631), [Merge Request 3]([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/632)))
+### Changed
+### Removed
+
+## [2026-06-25]
+### Added
+### Fixed
+- CSV Parser can handle empty files ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/626))
+### Changed
+- Switch FETA from Config-DB to DSM-DB ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/605))
+### Removed
+
+## 2026-06-02
+### Added
+- New DataSourceManagement
+### Fixed
+- STA: Added PHENOMENOM_TIME and RESULT_TIME to Datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/598))
+- Parser failes for timezone aware timestamps (https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/606)
+### Changed
+### Removed
+- Django Frontend
+
 ## 2026-04-17
 ### Added
 - Special redo workers for file ingest and exteranel APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/591))

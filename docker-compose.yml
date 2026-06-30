@@ -390,41 +390,6 @@ services:
   # Description
   # ===========
   # TODO
-  flyway-thing-management:
-    image: flyway/flyway:${FLYWAY_IMAGE_TAG}
-    user: "${UID}:${UID}"
-    command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate migrate
-    volumes:
-      - ./flyway/migrations/thing-management:/flyway/sql
-      - ./flyway/flyway-thing-management.conf:/flyway/conf/flyway.conf
-    environment:
-      FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
-      FLYWAY_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      FLYWAY_BASELINE_VERSION: "${FLYWAY_BASELINE_VERSION}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      THING_MANAGEMENT_DATABASE_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-    depends_on:
-      database:
-        condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
   flyway:
     image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
     user: "${UID}:${UID}"
@@ -463,6 +428,8 @@ services:
       FLYWAY_PLACEHOLDERS_CV_DB_PORT: "${CV_DB_PORT}"
       FLYWAY_PLACEHOLDERS_CV_DB_DB: "${CV_DB_DB}"
       FLYWAY_PLACEHOLDERS_CV_DB_HOST: "${CV_DB_HOST}"
+      FLYWAY_PLACEHOLDERS_DSM_DB_USER: "${DSM_API_DATABASE_USER}"
+      FLYWAY_PLACEHOLDERS_DSM_DB_PASSWORD: "${DSM_API_DATABASE_PASS}"
     depends_on:
       database:
         condition: service_healthy
@@ -472,87 +439,53 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  thing-management-frontend:
-    image: registry.hzdr.de/ufz-tsm/thing-management/frontend/thing-management:${THING_MANAGEMENT_FRONTEND_IMAGE_TAG}
+  dsm-api:
+    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
-    environment:
-      APP_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      API_URL: "${THING_MANAGEMENT_FRONTEND_API_URL}"
-      APP_PATH: "${THING_MANAGEMENT_FRONTEND_PATH}"
-      VERSION: "${THING_MANAGEMENT_FRONTEND_VERSION}"
-      OIDC_URL: "${THING_MANAGEMENT_FRONTEND_OIDC_URL}"
-      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
-      OIDC_REDIRECT_URL: "${THING_MANAGEMENT_FRONTEND_REDIRECT_URL}"
-      OIDC_POST_LOGOUT_URL: "${THING_MANAGEMENT_FRONTEND_POST_LOGOUT_URL}"
-      OIDC_SCOPES: "${THING_MANAGEMENT_FRONTEND_SCOPES}"
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
-      thing-management-api:
-        condition: service_started
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-  # Summary
-  # =======
-  # brief:
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  thing-management-api:
-    image: registry.hzdr.de/ufz-tsm/thing-management/backend/thing-management-api:${THING_MANAGEMENT_API_IMAGE_TAG}
-    restart: "${SERVICE_RESTART_POLICY}"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 8002"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      ENVIRONMENT: "${THING_MANAGEMENT_API_ENVIRONMENT}"
-      DB_URL: "${THING_MANAGEMENT_API_DSN}"
-      DB_SCHEMA: "${THING_MANAGEMENT_API_DATABASE_SCHEMA:-thing_management_db}"
-      DB_HOST: "${DATABASE_ADMIN_HOST}"
-      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
-      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
-      MQTT_PORT: "${THING_MANAGEMENT_MQTT_PORT:-1883}"
-      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
-      MQTT_QOS: "${MQTT_QOS}"
-      MQTT_CLIENT_ID: thing_management
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
-      PROXY_URL: "${PROXY_URL}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_API_ALLOWED_VOS}"
-      OIDC_CONF_URL: "${THING_MANAGEMENT_API_OIDC_URL}/.well-known/openid-configuration"
-      OIDC_CLIENT_ID: "${THING_MANAGEMENT_CLIENT_ID}"
-      OIDC_CLIENT_SECRET: ""
-      OIDC_ADMIN_USERNAME: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      OIDC_ADMIN_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
-      OIDC_ALLOWED_ISSUERS: "${THING_MANAGEMENT_API_ALLOWED_ISSUERS}"
-      OIDC_ALLOWED_AUDIENCES: "${THING_MANAGEMENT_API_ALLOWED_AUDIENCES}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-      flyway-thing-management:
+      flyway:
         condition: service_completed_successfully
-      keycloak:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+    environment:
+      LOG_LEVEL: "debug"
+      API_ROOT_PATH: "${DSM_API_RELATIVE_PATH}"
+      POSTGRES_SERVER: "${DSM_API_DATABASE_HOST}"
+      POSTGRES_USER: "${DSM_API_DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DSM_API_DATABASE_PASS}"
+      POSTGRES_DB: "${DSM_API_DATABASE_DB}"
+      OIDC_WELL_KNOWN: "${DSM_API_OIDC_WELL_KNOWN}"
+      OIDC_ISSUER: "${DSM_API_OIDC_ISSUER}"
+      OIDC_AUDIENCE: "${DSM_API_OIDC_AUDIENCE}"
+      ALLOWED_VOS: "${DSM_API_ALLOWED_VOS}"
+      ALLOWED_ORIGINS: "${DSM_API_ALLOWED_ORIGINS}"
+      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
+      INGEST_MQTT_BROKER_URI: "${DSM_API_INGEST_MQTT_BROKER_URI}"
+      PROXY_URL: "${PROXY_URL}"
+      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
+      MQTT_USER: "${DSM_API_MQTT_USER}"
+      MQTT_PASSWORD: "${DSM_API_MQTT_PASS}"
+      MQTT_PORT: "${DSM_API_MQTT_PORT:-1883}"
+      MQTT_BROKER_HOST: "${DSM_API_MQTT_HOST}"
+      MQTT_QOS: "${MQTT_QOS}"
+      MQTT_CLIENT_ID: datasource_management
+      STA_ROOT_URL: "${DSM_API_STA_ROOT_URL}"
+      STA_VERSION: "${DSM_API_STA_VERSION}"
+
+
+  dsm-frontend:
+    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      dsm-api:
+        condition: service_started
+    environment:
+       ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+       ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+       ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
 
 
   # Summary
@@ -660,6 +593,8 @@ services:
     depends_on:
       frontend:
         condition: service_started
+      dsm-frontend:
+        condition: service_started
       visualization:
         condition: service_started
       object-storage:
@@ -667,8 +602,6 @@ services:
       tsmdl:
         condition: service_started
       frost:
-        condition: service_started
-      thing-management-frontend:
         condition: service_started
       keycloak:
         condition: service_healthy
@@ -744,7 +677,7 @@ services:
         condition: service_healthy
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
-      TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
+      TOPIC: frontend_thing_update
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -769,7 +702,7 @@ services:
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
     entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "all"]
@@ -817,7 +750,7 @@ services:
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
@@ -863,7 +796,7 @@ services:
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_SECURE_KEY: "${OBJECT_STORAGE_ROOT_PASSWORD}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
@@ -942,7 +875,7 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
@@ -1038,7 +971,7 @@ services:
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
     entrypoint: ["./worker_launcher.sh", "python3", "sync_extapi_manager.py"]
@@ -1078,7 +1011,7 @@ services:
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
     entrypoint: ["./worker_launcher.sh", "python3", "sync_extapi_manager.py"]
@@ -1122,7 +1055,7 @@ services:
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
       JOURNALING: "${JOURNALING}"
       FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
@@ -1260,7 +1193,7 @@ services:
       MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
       MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
       MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
-      CONFIGDB_DSN: "${CONFIGDB_READONLY_DSN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
@@ -1312,10 +1245,11 @@ services:
       KC_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
       KC_PROXY_HEADERS: "${KEYCLOAK_PROXY_HEADERS}"
       KC_HTTP_ENABLED: "${KEYCLOAK_HTTP_ENABLED}"
-      KC_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
       KC_HOSTNAME: "${KEYCLOAK_HOSTNAME}"
+      KC_HOSTNAME_STRICT: "${KEYCLOAK_HOSTNAME_STRICT}"
       KC_HTTP_RELATIVE_PATH: "${KEYCLOAK_HTTP_RELATIVE_PATH}"
       KC_HEALTH_ENABLED: "true"
+      KEYCLOAK_HOSTNAME_URL: "${KEYCLOAK_HOSTNAME_URL}"
       # Helmholtz AAI config (used in configuration template)
       KEYCLOAK_HELMHOLTZ_AAI_OAUTH_AUTH_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2-as/oauth2-authz"
       KEYCLOAK_HELMHOLTZ_AAI_OAUTH_TOKEN_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/token"
@@ -1325,12 +1259,12 @@ services:
       KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
       KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
       # Keycloak client config (used in configuration template)
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_REDIRECT_URIS: "[\"${THING_MANAGEMENT_FRONTEND_APP_URL}/login/callback\"]"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_POST_LOGOUT_URIS: "${THING_MANAGEMENT_FRONTEND_APP_URL}/login"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_ADMIN_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_ROOT_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_BASE_URL: "${THING_MANAGEMENT_FRONTEND_APP_URL}"
-      KEYCLOAK_THING_MANAGEMENT_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_APP_URL}/login-callback\"]"
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
       KEYCLOAK_GRAFANA_CLIENT_SECRET: "${VISUALIZATION_KEYCLOAK_CLIENT_SECRET}"
       KEYCLOAK_GRAFANA_CLIENT_ID: "${VISUALIZATION_KEYCLOAK_CLIENT_ID}"
       KEYCLOAK_GRAFANA_CLIENT_REDIRECT_URIS: "[\"${VISUALIZATION_PROXY_URL}login/generic_oauth\"]"

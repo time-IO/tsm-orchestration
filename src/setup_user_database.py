@@ -6,6 +6,7 @@ import os
 
 import psycopg
 from psycopg import sql
+from typing import cast, Literal
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.databases import Database
@@ -33,10 +34,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = Database(get_envvar("DATABASE_URL"))
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
         ro_user = thing.database.ro_username.lower()
         user = thing.database.username.lower()
@@ -50,7 +51,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dll")
             self.deploy_ddl(thing)
             logger.debug("deploy dml")
-            self.deploy_dml()
+            self.deploy_dml(thing)
 
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
@@ -72,6 +73,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.create_grafana_views(thing)
         logger.debug(f"grand grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
+
+        self.upsert_schema_thing_mapping(thing)
 
     def create_user(self, thing):
 
@@ -205,12 +208,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=user)
                 )
 
-    def deploy_dml(self):
+    def deploy_dml(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
         with self.db.connection() as conn:
             with conn.cursor() as c:
+                user = sql.Identifier(thing.database.username.lower())
+                c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):
@@ -366,6 +371,39 @@ class CreateThingInPostgresHandler(AbstractHandler):
             with conn.cursor() as c:
                 c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
                 return len(c.fetchall()) > 0
+
+    def upsert_schema_thing_mapping(self, thing):
+        # This ensures that we don't compare
+        # None to None later at the early exit.
+        if thing.database.username is None:
+            raise ValueError("schema must not be None")
+
+        q = "SELECT schema FROM public.schema_thing_mapping WHERE thing_uuid=%s"
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                curr_schema = c.execute(cast(Literal, q), [thing.uuid]).fetchone()
+
+        if curr_schema is not None:
+            curr_schema = curr_schema[0]
+
+        if curr_schema == thing.database.username:
+            logger.debug(f"thing:schema mapping already exists")
+            return
+
+        q = (
+            "INSERT INTO public.schema_thing_mapping (schema, thing_uuid) "
+            "VALUES (%s::varchar(100), %s::uuid) "
+            "ON CONFLICT (schema, thing_uuid) DO UPDATE SET "
+            "schema = EXCLUDED.schema, "
+            "thing_uuid = EXCLUDED.thing_uuid "
+        )
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(cast(Literal, q), [thing.database.username, thing.uuid])
+        if curr_schema is None:
+            logger.info(f"created thing:schema mapping in DB for thing {thing.uuid}")
+        else:
+            logger.info(f"updated thing:schema mapping in DB for thing {thing.uuid}")
 
 
 if __name__ == "__main__":
