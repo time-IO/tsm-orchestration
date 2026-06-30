@@ -850,9 +850,9 @@ class S3Store(Base):
     bucket_name = bucket
 
 class ExtMQTT(Base):
-    _schema = "config_db"
-    _table_name = "ext_mqtt"
-    id: int = _prop(lambda self: self._attrs["id"])
+    _schema = SCHEMA
+    _table_name = "ingest_external_mqtt"
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
     external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
     external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
     external_mqtt_username: str = _prop(lambda self: self._attrs["external_mqtt_username"])
@@ -864,10 +864,10 @@ class ExtMQTT(Base):
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
 class HTTP(Base):
-    _schema = "config_db"
-    _table_name = "http"
-    id: int = _prop(lambda self: self._attrs["id"])
-    url_for_thing: str = _prop(lambda self: self._attrs["url_for_thing"])
+    _schema = SCHEMA
+    _table_name = "ingest_http"
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
+    path_for_posts: str = _prop(lambda self: self._attrs["path_for_posts"])
     file_type: str = _prop(lambda self: self._attrs["file_type"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
@@ -884,8 +884,10 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
+    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    http: HTTP = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
 
-    @property
+@property
     def ingest_type(self) -> IngestType:
         return IngestType(self._attrs["ingest_type"])
 
