@@ -26,7 +26,7 @@ def get_bosch_timerange(thing):
     settings = thing.ext_api.settings
     now_utc = datetime.now(timezone.utc)
     now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-    timestamp_from = now_utc - timedelta(minutes=settings["period"])
+    timestamp_from = now_utc - timedelta(minutes=settings["period_in_minutes"])
     timestamp_from_str = timestamp_from.strftime("%Y-%m-%dT%H:%M:%SZ")
     return timestamp_from_str, now_str
 
