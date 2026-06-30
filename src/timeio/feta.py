@@ -885,7 +885,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
     ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
-    http: HTTP = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
+    http: HTTP | None = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
 
 @property
     def ingest_type(self) -> IngestType:
