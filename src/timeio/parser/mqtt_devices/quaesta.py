@@ -44,13 +44,22 @@ RecordNum should not be stored, DateTimeUTC should be transformed into datetime.
 
 class QuaestaParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
-        timestamp = datetime.strptime(rawdata.pop("timestampISO8601"), "%Y-%m-%dT%H:%M:%SZ")
+        timestamp = datetime.strptime(
+            rawdata.pop("timestampISO8601"), "%Y-%m-%dT%H:%M:%SZ"
+        )
         timestamp = timestamp.replace(tzinfo=timezone.utc)
         out = []
         if rawdata.get("type") != "dataCRNS":
             return out
         for key, value in rawdata.items():
-            if key in ("stationID", "loggerID", "type", "timestampEpoch", "dataSelect", "recordNum"):
+            if key in (
+                "stationID",
+                "loggerID",
+                "type",
+                "timestampEpoch",
+                "dataSelect",
+                "recordNum",
+            ):
                 continue
             try:
                 out.append(
