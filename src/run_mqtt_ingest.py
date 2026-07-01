@@ -43,7 +43,12 @@ class ParseMqttDataHandler(AbstractHandler):
 
         logger.info(f"get thing")
         mqtt_user = message.topic.split("/")[1]
-        thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.dsmdb_dsn)
+
+        try:
+            thing = Thing.from_mqtt_user_name(mqtt_user, dsn=self.dsmdb_dsn)
+        except:
+            logger.error(f"Thing for mqtt_username {mqtt_user} not found")
+            return
         thing_uuid = thing.uuid
 
         logger.info("persisting rawdata")
