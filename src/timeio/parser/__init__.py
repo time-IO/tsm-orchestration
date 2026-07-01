@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from timeio.parser.abc_parser import AbcParser
 from timeio.parser.csv_parser import CsvParser
 from timeio.parser.json_parser import JsonParser
 from timeio.parser.soilcan_parser import SoilcanParser

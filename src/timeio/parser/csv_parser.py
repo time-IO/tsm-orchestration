@@ -141,7 +141,9 @@ class CsvParser(PandasParser):
         regex = rf"({comment_regex}).*"
         return [re.sub(regex, "", line.strip()) for line in lines]
 
-    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str) -> list[pd.DataFrame]:
+    def do_parse(
+        self, rawdata: str, project_name: str, thing_uuid: str
+    ) -> list[pd.DataFrame]:
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content

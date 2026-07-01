@@ -88,7 +88,9 @@ class ParserJobHandler(AbstractHandler):
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
-                rawdata = self.read_file(bucket_name, filename, encoding, parser.is_binary)
+                rawdata = self.read_file(
+                    bucket_name, filename, encoding, parser.is_binary
+                )
                 dfs = parser.do_parse(rawdata, schema, thing_uuid)
                 obs = parser.to_observations(dfs, source_uri, str(parser_uuid))
             except ParsingError as e:
@@ -201,7 +203,9 @@ class ParserJobHandler(AbstractHandler):
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
-    def read_file(self, bucket_name: str, object_name: str, encoding: str, is_binary: bool) -> str:
+    def read_file(
+        self, bucket_name: str, object_name: str, encoding: str, is_binary: bool
+    ) -> str:
 
         stat = self.minio.stat_object(bucket_name, object_name)
         if stat.size > _FILE_MAX_SIZE:
