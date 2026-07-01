@@ -887,7 +887,7 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
     http: HTTP | None = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
 
-@property
+    @property
     def ingest_type(self) -> IngestType:
         return IngestType(self._attrs["ingest_type"])
 
