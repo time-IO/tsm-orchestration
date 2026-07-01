@@ -46,32 +46,31 @@ def get_connection_string_secure(db, readonly: bool = False):
 
 def hash_password(
     password: str,
-    hasher: str = "pbkdf2_sha256",
-    iterations: int = 260000,
-    salt: bytes = None,
+    iterations: int = 10000,
+    salt: str | None = None,
 ) -> str:
     """
     Hash a password using PBKDF2 (equivalent to Django's make_password with PBKDF2 hasher).
 
-    Returns a string in Django-compatible format: 'algorithm$iterations$salt$hash'
+    Returns:
+        PBKDF2$sha512$<iterations>$<base64(salt)>$<base64(hash)>
     """
-    if hasher != "pbkdf2_sha256":
-        raise ValueError("Only 'pbkdf2_sha256' is supported in this implementation")
 
     if salt is None:
-        salt = os.urandom(16)  # Django uses 16-byte random salt
+        # Generate a random ASCII salt
+        salt = base64.urlsafe_b64encode(os.urandom(9)).rstrip(b"=").decode("ascii")
 
-    # Ensure password is bytes
-    password_bytes = password.encode("utf-8")
+    hash_bytes = hashlib.pbkdf2_hmac(
+        "sha512",
+        password.encode("utf-8"),
+        salt.encode("ascii"),
+        iterations,
+    )
 
-    # PBKDF2-HMAC-SHA256
-    hash_bytes = hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
+    salt_b64 = base64.b64encode(salt.encode("ascii")).decode("ascii").strip()
+    hash_b64 = base64.b64encode(hash_bytes).decode("ascii").strip()
 
-    # Encode salt and hash in base64 (Django uses base64 without padding)
-    salt_b64 = base64.b64encode(salt).rstrip(b"=").decode("ascii")
-    hash_b64 = base64.b64encode(hash_bytes).rstrip(b"=").decode("ascii")
-
-    return f"pbkdf2_sha256${iterations}${salt_b64}${hash_b64}"
+    return f"PBKDF2$sha512${iterations}${salt_b64}${hash_b64}"
 
 
 # these encodings are from https://docs.python.org/3/library/codecs.html#standard-encodings (date: 2026.04.14)
