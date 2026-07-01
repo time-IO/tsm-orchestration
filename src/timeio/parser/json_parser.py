@@ -70,7 +70,12 @@ class JsonParser(PandasParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str, thing, project) -> pd.DataFrame:
+    def do_parse(
+        self,
+        rawdata: str,
+        project_name,
+        thing_uuid,
+    ) -> list[pd.DataFrame]:
         self.logger.info(self.settings)
         comment = self.settings.get("comment")
         timestamp_keys = self.settings.get("timestamp_keys", {})
@@ -81,4 +86,4 @@ class JsonParser(PandasParser):
             raise ParsingError(f"Timestamp path error: {e}")
         self._start_date = df.index[0]
         self._end_date = df.index[-1]
-        return df
+        return [df]

@@ -35,7 +35,7 @@ def test_parsing():
         "comment": "//",
     }
     parser = JsonParser(settings)
-    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")[0]
 
     assert df.columns.tolist() == [
         "Frame_count",
@@ -56,7 +56,7 @@ def test_parsing():
     assert df["Analog_input_voltage_range_4"].tolist() == [0]
 
 
-MULTIDATECOLUMDATA = """    
+MULTIDATECOLUMDATA = """
 {
 "Date": "2025-08-09",
 "Time": "06:15:00",
@@ -86,7 +86,7 @@ def test_multi_date_column_parsing():
         "comment": "?",
     }
     parser = JsonParser(settings)
-    df = parser.do_parse(MULTIDATECOLUMDATA.strip(), "thing", "project")
+    df = parser.do_parse(MULTIDATECOLUMDATA.strip(), "thing", "project")[0]
 
     assert df.columns.tolist() == [
         "Frame_count",
@@ -142,7 +142,7 @@ def test_nested_json_parsing():
         "comment": "#",
     }
     parser = JsonParser(settings)
-    df = parser.do_parse(NESTEDDATA.strip(), "thing", "project")
+    df = parser.do_parse(NESTEDDATA.strip(), "thing", "project")[0]
 
     assert df.columns.tolist() == [
         "Parameters.Frame_count",
@@ -205,7 +205,7 @@ def test_array_json_parsing():
         "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
     }
     parser = JsonParser(settings)
-    df = parser.do_parse(ARRAYDATA.strip(), "thing", "project")
+    df = parser.do_parse(ARRAYDATA.strip(), "thing", "project")[0]
 
     assert df.columns.tolist() == [
         "Frame_count",

@@ -141,7 +141,7 @@ class CsvParser(PandasParser):
         regex = rf"({comment_regex}).*"
         return [re.sub(regex, "", line.strip()) for line in lines]
 
-    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
+    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str) -> list[pd.DataFrame]:
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -189,7 +189,7 @@ class CsvParser(PandasParser):
             raise ParsingError("Parsing failed") from e
 
         if df.empty:
-            return pd.DataFrame(index=pd.DatetimeIndex([]))
+            return []
 
         if header_line is not None:
             if duplicate:
@@ -256,7 +256,7 @@ class CsvParser(PandasParser):
 
         self._start_date = df.index[0]
         self._end_date = df.index[-1]
-        return df
+        return [df]
 
 
 def filter_lines(rawdata: str, comment_regex: str) -> str:

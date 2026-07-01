@@ -22,18 +22,20 @@ from timeio.errors import ParsingError
 
 class PandasParser(AbcParser):
     def __init__(self, settings: dict[str, Any]):
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__qualname__)
         self.settings = settings
-        name = self.__class__.__name__
-        self.logger.debug(f"parser settings in use with {name}: {self.settings}")
+        self.logger.debug(
+            f"parser settings in use with {self.__class__.__name__}: {self.settings}"
+        )
 
     @abstractmethod
     def do_parse(
         self, rawdata: Any, project_name: str, thing_uuid: str
-    ) -> pd.DataFrame:
+    ) -> list[pd.DataFrame]:
         raise NotImplementedError
 
-    def to_observations(
+    def df_to_observation(
         self, data: pd.DataFrame, origin: str, parser_uuid: str | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
@@ -93,3 +95,12 @@ class PandasParser(AbcParser):
 
             observations.extend(chunk.to_dict(orient="records"))
         return observations
+
+    def to_observations(
+        self, data: list[pd.DataFrame], origin: str, parser_uuid: str | None = None
+    ) -> list[ObservationPayloadT]:
+
+        out = []
+        for df in data:
+            out.extend(self.df_to_observation(df, origin, parser_uuid))
+        return out
