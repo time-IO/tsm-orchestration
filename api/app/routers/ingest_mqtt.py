@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from dependencies import (
@@ -31,6 +31,10 @@ router = APIRouter(
 )
 
 entity_name = "ingest mqtt"
+
+
+def normalize_mqtt_username(username: str) -> str:
+    return username.strip().lower()
 
 
 @router.get(
@@ -78,7 +82,20 @@ def create(
 
     password = generate_password(40)
     password_hashed = hash_password(password)
-    username = re.sub("[^a-z0-9-]+", "", f"ingest-mqtt-{_uuid}")
+    if payload.username:
+        username = normalize_mqtt_username(payload.username)
+        if len(username) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail="MQTT username must be at least 8 characters long.",
+            )
+        if not re.fullmatch(r"[a-z0-9-]+", username):
+            raise HTTPException(
+                status_code=400,
+                detail="MQTT username may only contain lowercase letters, numbers, and hyphens.",
+            )
+    else:
+        username = re.sub("[^a-z0-9-]+", "", f"ingest-mqtt-{_uuid}")
 
     topic = "mqtt_ingest/" + username
 

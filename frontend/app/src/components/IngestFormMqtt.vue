@@ -39,6 +39,19 @@
             hint="Provide additional details about this Ingest Configuration"
           />
 
+          <q-input
+            v-if="allowUsernameInput"
+            v-model="usernameModel"
+            filled
+            class="q-mb-md"
+            label="MQTT Username"
+            hint="Optional. Leave empty to auto-generate. Minimum 8 characters. Allowed characters: lowercase letters, numbers, hyphens."
+            :rules="[
+              (val) => !val || val.length >= 8 || 'Must be at least 8 characters long',
+              (val) => !val || /^[a-z0-9-]+$/.test(val) || 'Only lowercase letters, numbers, and hyphens are allowed',
+            ]"
+          />
+
           <mqtt-parser-select v-model="formData.parser_id" :preselected-item-id="itemParserId" />
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
@@ -62,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import MqttParserSelect from 'components/MqttParserSelect.vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { IngestMqttCreate, IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
@@ -73,6 +87,7 @@ defineProps<{
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
   itemParserId?: number | null | undefined;
+  allowUsernameInput?: boolean;
 }>();
 
 defineEmits<{
@@ -85,6 +100,15 @@ const formData = defineModel<IngestMqttCreate | IngestMqttUpdate>({
     permission_group_id: null,
     description: null,
     parser_id: null,
+  },
+});
+
+const usernameModel = computed({
+  get: () => ('username' in formData.value ? formData.value.username : null),
+  set: (value: string | null) => {
+    if ('username' in formData.value) {
+      formData.value.username = value;
+    }
   },
 });
 </script>
