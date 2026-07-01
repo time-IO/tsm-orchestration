@@ -204,6 +204,7 @@ const topNavigation: NavEntry[] = [
       { label: 'Bosch IoT', route: '/ingest/new/external-api/bosch' },
       { label: 'Deutscher Wetterdienst', route: '/ingest/new/external-api/dwd' },
       { label: 'Neutron Monitor', route: '/ingest/new/external-api/nm' },
+      { label: 'Sensoto', route: '/ingest/new/external-api/sensoto' },
       { label: 'TSystems', route: '/ingest/new/external-api/tsystems' },
       { label: 'The Things Network', route: '/ingest/new/external-api/ttn' },
       { label: 'Umweltbundesamt (UBA)', route: '/ingest/new/external-api/uba' },
