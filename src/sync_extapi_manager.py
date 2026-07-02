@@ -88,7 +88,13 @@ class SyncExtApiManager(AbstractHandler):
 
         self.mqtt_client.publish(
             topic="data_parsed",
-            payload=json.dumps({"thing_uuid": thing.uuid}),
+            payload=json.dumps(
+                {
+                    "thing_uuid": thing.uuid,
+                    "start_date": content["datetime_from"],
+                    "end_date": content["datetime_to"],
+                }
+            ),
         )
         journal.info(
             f"Successfully inserted {len(obs)} "
