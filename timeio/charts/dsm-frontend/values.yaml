@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend-rootless"
-  tag: main
+  tag: 2026-06-26-122540
   pullPolicy: Always
 name: dsm-frontend
 port: 8080
