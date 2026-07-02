@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from timeio.parser.abc_parser import AbcParser
+from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
 from timeio.parser.json_parser import JsonParser
 from timeio.parser.soilcan_parser import SoilcanParser
@@ -21,23 +22,6 @@ _parser_map = {
     "chirpstack_generic": ChirpStackGenericParser,
 }
 
-# TODO: move default settings to the respective parser classes/modules
-_default_settings = {
-    CsvParser: {
-        "comment": "#",
-        "decimal": ".",
-        "na_values": None,
-        "encoding": "utf-8",
-        "engine": "python",
-        "on_bad_lines": "warn",
-        "header": None,
-    },
-    JsonParser: {
-        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
-    },
-}
-
-
 def get_parser(
     parser_type: str, settings: dict[str, Any] | None
 ) -> CsvParser | JsonParser | MqttParser | SoilcanParser:
@@ -47,20 +31,7 @@ def get_parser(
     if klass is None:
         raise NotImplementedError(f"parser {parser_type!r} not known")
 
-    settings = settings or {}
-    default_settings = _default_settings.get(klass, {})
+    if issubclass(klass, PandasParser):
+        return klass(settings or {})
 
-    if issubclass(klass, CsvParser):
-        pd_kws = settings.pop("pandas_read_csv", None) or {}
-        settings = {**default_settings, **settings, **pd_kws}
-        instance = klass(settings)
-
-    elif issubclass(klass, JsonParser):
-        settings = {**default_settings, **settings}
-        norm_kws = settings.pop("pandas_json_normalize", {})
-        instance = klass(settings, norm_kws)
-
-    else:
-        instance = klass()
-
-    return instance
+    return klass()

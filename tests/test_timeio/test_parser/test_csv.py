@@ -48,14 +48,14 @@ def test_parsing(settings, columns):
         "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(RAWDATA.strip(), "project", "thing")[0]
+    df = parser.do_parse(RAWDATA.strip(), "project", "thing")
 
     assert df.columns[[1, 3, 7]].equals(pd.Index(columns))
     assert df.iloc[:, 2].tolist() == [989.7, 989.74, 989.76]
     assert df.iloc[:, 14].tolist() == [122, 111, 103]
 
     tframe = df.iloc[:, 3].to_frame()
-    obs = parser.to_observations([tframe], origin="test")
+    obs = parser.to_observations(tframe, origin="test")
 
     assert set([d["datastream_pos"] for d in obs]) == set(map(str, tframe.columns))
     assert set([d["result_number"] for d in obs]) == set(tframe.squeeze().tolist())
@@ -77,18 +77,18 @@ def test_dirty_data_parsing():
     settings = {
         "decimal": ".",
         "delimiter": ",",
-        "skiprows": 3,
+        "skiprows": 6,
         "skipfooter": 0,
         "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
 
     parser = CsvParser(settings)
-    df = parser.do_parse(DIRTYDATA, "project", "thing")[0]
+    df = parser.do_parse(DIRTYDATA, "project", "thing")
 
     assert pd.api.types.is_numeric_dtype(df[2])
     assert pd.api.types.is_string_dtype(df[3])
 
-    obs = parser.to_observations([df[[3]]], origin="test")
+    obs = parser.to_observations(df[[3]], origin="test")
     assert len(obs) == 3
     assert obs[0]["result_time"] == "2021-09-09T06:00:00"
     assert obs[0]["result_string"] == "xW8"
@@ -130,7 +130,7 @@ def test_multi_date_column_parsing():
         ],
     }
     parser = CsvParser(settings)
-    df = parser.do_parse(MULTIDATECOLUMDATA.strip(), "project", "thing")[0]
+    df = parser.do_parse(MULTIDATECOLUMDATA.strip(), "project", "thing")
 
     assert df.index.equals(
         pd.to_datetime(
@@ -164,7 +164,7 @@ def test_empty_col_csv():
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser(settings)
-    df = parser.do_parse(RAWDATA_EMPTY_COLS, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_EMPTY_COLS, "project", "thing")
     assert df.shape == (3, 6)
 
 
@@ -185,14 +185,14 @@ def test_with_ms():
     }
 
     parser = CsvParser(settings)
-    df = parser.do_parse(RAWDATA_WITH_MS, "project", "thing")[0]
-    obs = parser.to_observations([df], origin="test")
-    expected_df_index = pd.Index(
+    df = parser.do_parse(RAWDATA_WITH_MS, "project", "thing")
+    obs = parser.to_observations(df, origin="test")
+    expected_df_index = pd.DatetimeIndex(
         [
-            "2025-09-04T15:32:32.064000",
-            "2025-09-04T15:32:32.065000",
+            "2025-09-04 15:32:32.064000",
+            "2025-09-04 15:32:32.065000",
         ],
-        name="result_time",
+        name="time",
     )
     expected_obs_timestamps = [
         "2025-09-04T15:32:32.064000",
@@ -231,7 +231,7 @@ def test_custom_names(settings, expected_columns, expected_index_name):
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
     }
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
     assert list(df.columns) == expected_columns
     assert df.index.name == expected_index_name
 
@@ -250,7 +250,7 @@ def test_custom_names_error():
         ParsingError,
         match="Number of custom column names does not match number of columns in CSV.",
     ):
-        paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")[0]
+        paser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
 
 
 RAWDATA_WITHOUT_TZ = """time,var1,var2,var3
@@ -309,7 +309,7 @@ def test_tz(settings, rawdata, expected_index):
         "skipfooter": 0,
     }
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(rawdata, "project", "thing")[0]
+    df = parser.do_parse(rawdata, "project", "thing")
     assert df.index.equals(expected_index)
 
 
@@ -324,7 +324,7 @@ def test_tz_conversion():
         "timezone": "Europe/Berlin",
     }
     parser = CsvParser(settings)
-    df = parser.do_parse(RAWDATA_WITH_TZ, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
     assert str(df.index.tz) == "Europe/Berlin"
 
 
@@ -357,7 +357,7 @@ def test_skipping_and_comments_with_header(settings):
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(RAWDATA_SKIP_WITH_HEADER, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_SKIP_WITH_HEADER, "project", "thing")
     expected_index = pd.DatetimeIndex(
         ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
         name="time",
@@ -397,7 +397,7 @@ def test_skipping_and_comments_without_header(settings):
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
-    df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")
     expected_index = pd.DatetimeIndex(
         ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
         name="time",
@@ -427,7 +427,7 @@ def test_skiprows():
         "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**settings})
-    df = parser.do_parse(RAWDATA_SKIP_ROWS, "project", "thing")[0]
+    df = parser.do_parse(RAWDATA_SKIP_ROWS, "project", "thing")
     expected_index = pd.DatetimeIndex(
         ["2025-01-01 00:00:00", "2025-01-01 00:10:00", "2025-01-01 00:20:00"],
         name="datetime",
@@ -448,4 +448,4 @@ def test_empty_file():
     }
     parser = CsvParser({**settings})
     with pytest.raises(EmptyDataError):
-        parser.do_parse("", "project", "thing")[0]
+        parser.do_parse("", "project", "thing")

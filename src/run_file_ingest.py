@@ -91,8 +91,8 @@ class ParserJobHandler(AbstractHandler):
                 rawdata = self.read_file(
                     bucket_name, filename, encoding, parser.is_binary
                 )
-                dfs = parser.do_parse(rawdata, schema, thing_uuid)
-                obs = parser.to_observations(dfs, source_uri, str(parser_uuid))
+                df = parser.do_parse(rawdata, schema, thing_uuid)
+                obs = parser.to_observations(df, source_uri, str(parser_uuid))
             except ParsingError as e:
                 journal.error(
                     f"Parsing failed. File: {file!r} | Detail: {e}", thing_uuid
@@ -135,7 +135,7 @@ class ParserJobHandler(AbstractHandler):
         # Now everything is fine and we tell the user
         journal.info(
             f"Parsed file: {file!r} | "
-            f"Data rows: {sum(len(frame) for frame in dfs)} | "
+            f"Data rows: {df.shape[0]} | "
             f"Stored observations: {len(obs)}",
             thing_uuid,
         )

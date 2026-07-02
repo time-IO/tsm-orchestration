@@ -32,13 +32,15 @@ class PandasParser(AbcParser):
     @abstractmethod
     def do_parse(
         self, rawdata: Any, project_name: str, thing_uuid: str
-    ) -> list[pd.DataFrame]:
+    ) -> pd.DataFrame:
         raise NotImplementedError
 
-    def df_to_observation(
+    def to_observations(
         self, data: pd.DataFrame, origin: str, parser_uuid: str | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
+
+        data = data.copy()
 
         data.index.name = "result_time"
         data.index = data.index.map(lambda ts: ts.isoformat())
@@ -95,12 +97,3 @@ class PandasParser(AbcParser):
 
             observations.extend(chunk.to_dict(orient="records"))
         return observations
-
-    def to_observations(
-        self, data: list[pd.DataFrame], origin: str, parser_uuid: str | None = None
-    ) -> list[ObservationPayloadT]:
-
-        out = []
-        for df in data:
-            out.extend(self.df_to_observation(df, origin, parser_uuid))
-        return out
