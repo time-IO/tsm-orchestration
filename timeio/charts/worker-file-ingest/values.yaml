@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: "prod-2026-04-17"
+  tag: "prod-2026-06-26"
   pullPolicy: Always
 name: worker-file-ingest
 

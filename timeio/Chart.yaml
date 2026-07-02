@@ -3,7 +3,7 @@ name: timeio
 description: "A Helm chart for time.IO"
 type: application
 # to-do: The version used here is not yet in sync with regular time.IO release versions (YYYY-mm-dd)
-version: 0.4.3
+version: 0.5.0
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
@@ -56,10 +56,6 @@ dependencies:
   - name: visualization
     version: 0.0.1
     repository: "file://charts/visualization"
-
-  - name: worker-configdb-updater
-    version: 0.0.1
-    repository: "file://charts/worker-configdb-updater"
 
   - name: worker-thing-setup
     version: 0.0.1

@@ -222,12 +222,6 @@ worker-thing-setup:
   mqtt_init:
     env: []
 
-worker-configdb-updater:
-  enabled: true
-  env: []
-  mqtt_init:
-    env: []
-
 worker-file-ingest:
   enabled: true
   env: []
