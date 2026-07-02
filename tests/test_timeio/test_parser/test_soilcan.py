@@ -20,15 +20,24 @@ def test_parse_soilcan_data(type, expected):
     rawdata = DBD_FILE.read_bytes()
     parser = SoilcanParser({"type": type, "header": False})
     df = parser.do_parse(rawdata, "project", "thing")
-    assert df.iloc[0,:5].astype(float).to_list() == expected
+    assert df.iloc[0, :5].astype(float).to_list() == expected
 
 
 @pytest.mark.parametrize(
     "type,expected",
     [
-        ("operating-parameters", ['WasserUnten (State)', 'WasserOben (State)', 'Spg-12V (State)']),
-        ("sensor-data", ['L_1_TS1_M_030 (hPa)', 'L_1_TS1_M_050 (hPa)', 'L_1_TS1_M_140 (hPa)'],),
-        ("weighing-data", ['L_1_WAG_D_000 (Kg)', 'L_1_WAG_L_000 (Kg)', 'L_2_WAG_D_000 (Kg)'],),
+        (
+            "operating-parameters",
+            ["WasserUnten (State)", "WasserOben (State)", "Spg-12V (State)"],
+        ),
+        (
+            "sensor-data",
+            ["L_1_TS1_M_030 (hPa)", "L_1_TS1_M_050 (hPa)", "L_1_TS1_M_140 (hPa)"],
+        ),
+        (
+            "weighing-data",
+            ["L_1_WAG_D_000 (Kg)", "L_1_WAG_L_000 (Kg)", "L_2_WAG_D_000 (Kg)"],
+        ),
     ],
 )
 def test_parse_soilcan_header(type, expected):
@@ -36,4 +45,3 @@ def test_parse_soilcan_header(type, expected):
     parser = SoilcanParser({"type": type, "header": True})
     df = parser.do_parse(rawdata, "project", "thing")
     assert df.columns[:3].to_list() == expected
-

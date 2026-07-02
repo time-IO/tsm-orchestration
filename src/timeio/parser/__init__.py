@@ -22,6 +22,7 @@ _parser_map = {
     "chirpstack_generic": ChirpStackGenericParser,
 }
 
+
 def get_parser(
     parser_type: str, settings: dict[str, Any] | None
 ) -> CsvParser | JsonParser | MqttParser | SoilcanParser:

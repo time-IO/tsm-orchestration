@@ -41,10 +41,14 @@ class SoilcanParser(PandasParser):
         self.table_no = TABLE_MAP[settings.pop("type")]
         include_header = settings.pop("header")
 
-        csv_settings = DEFAULT_SETTINGS | settings | {
-            "header": 0 if include_header else None,
-            "skiprows": 0 if include_header else 1,
-        }
+        csv_settings = (
+            DEFAULT_SETTINGS
+            | settings
+            | {
+                "header": 0 if include_header else None,
+                "skiprows": 0 if include_header else 1,
+            }
+        )
 
         super().__init__(csv_settings)
 
