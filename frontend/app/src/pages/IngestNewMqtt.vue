@@ -3,6 +3,7 @@
     title="New MQTT Ingest"
     :is-loading="isLoading"
     back-route="/ingest/new"
+    :allow-username-input="true"
     v-model="formData"
     @save="save"
   />
@@ -26,6 +27,7 @@ const formData = ref<IngestMqttCreate>({
   permission_group_id: null,
   description: null,
   parser_id: null,
+  username: null,
 });
 
 const isLoading = ref(false);
@@ -36,6 +38,7 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     description: formData.value.description,
     parser_id: formData.value.parser_id,
+    username: formData.value.username,
   };
   try {
     isLoading.value = true;

@@ -5,6 +5,7 @@
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
     :item-parser-id="formData.parser_id"
+    :allow-username-input="true"
     v-model="formData"
     @save="save"
   />
@@ -30,6 +31,7 @@ const formData = ref<IngestMqttCreate>({
   permission_group_id: null,
   description: null,
   parser_id: null,
+  username: null,
 });
 
 const isLoading = ref(false);
@@ -48,6 +50,7 @@ onMounted(async () => {
         permission_group_id: data.permission_group_id,
         description: data.description,
         parser_id: data.parser_id,
+        username: null,
       };
     } catch {
       $q.notify({
@@ -73,6 +76,7 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     description: formData.value.description,
     parser_id: formData.value.parser_id,
+    username: formData.value.username,
   };
   try {
     isLoading.value = true;

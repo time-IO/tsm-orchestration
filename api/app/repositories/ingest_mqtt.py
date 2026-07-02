@@ -64,6 +64,7 @@ class IngestMqttRepository:
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
+        self.check_for_existing_username_create(extra_data["username"])
 
         try:
             extra_data["ingest_type"] = IngestType.MQTT
@@ -183,6 +184,16 @@ class IngestMqttRepository:
         existing = self.session.exec(statement).scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
+
+    def check_for_existing_username_create(self, username_to_check: str):
+
+        statement = select(self.model).where(
+            func.lower(self.model.username) == func.lower(str(username_to_check))
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(status_code=400, detail="This username already exists.")
 
     @staticmethod
     def check_payload_permission_group(

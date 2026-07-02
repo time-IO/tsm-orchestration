@@ -22,7 +22,8 @@ export type IngestMqttCreate = {
   permission_group_id: number | null;
   name: string | null;
   description: string | null;
-  parser_id: number | null
+  parser_id: number | null;
+  username: string | null;
 };
 
 export type IngestMqttUpdate = {
