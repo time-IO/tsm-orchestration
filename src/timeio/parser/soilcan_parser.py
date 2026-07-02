@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict, Literal
 
 import pandas as pd
 
@@ -12,20 +12,41 @@ from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
 
 EXE = Path(__file__).parent / "bin" / "dump_dbd"
-SETTINGS = {
+
+DEFAULT_SETTINGS = {
     "delimiter": ",",
     "timestamp_columns": [{"column": 0, "format": "%Y/%m/%d %H:%M:%S.%f"}],
     # TODO: Check if this is True
     "timezone": "UTC",
-    "header": 0,
 }
+
+TABLE_MAP = {
+    "operating-parameters": 0,
+    "sensor-data": 1,
+    "weighing-data": 2,
+}
+
+
+class SoilcanParserSetting(TypedDict):
+    type: Literal["operating-parameters", "sensor-data", "weighing-data"]
+    header: bool
 
 
 class SoilcanParser(PandasParser):
     is_binary = True
 
-    def __init__(self):
-        super().__init__(SETTINGS)
+    def __init__(self, settings: SoilcanParserSetting):
+        settings = settings.copy()
+
+        self.table_no = TABLE_MAP[settings.pop("type")]
+        include_header = settings.pop("header")
+
+        csv_settings = DEFAULT_SETTINGS | settings | {
+            "header": 0 if include_header else None,
+            "skiprows": 0 if include_header else 1,
+        }
+
+        super().__init__(csv_settings)
 
     def _dump_data(self, rawdata: bytes) -> str:
         with tempfile.NamedTemporaryFile(suffix=".DBD") as tmp:
@@ -52,7 +73,7 @@ class SoilcanParser(PandasParser):
 
     def do_parse(
         self, rawdata: Any, project_name: str, thing_uuid: str
-    ) -> list[pd.DataFrame]:
+    ) -> pd.DataFrame:
 
         dumped_data = self._dump_data(rawdata)
         blocks = [
@@ -60,26 +81,10 @@ class SoilcanParser(PandasParser):
         ]
 
         parser = CsvParser(self.settings)
-        out: list[pd.DataFrame] = []
-        self._start_date = None
-        self._end_date = None
+        df = parser.do_parse(
+            blocks[self.table_no], project_name=project_name, thing_uuid=thing_uuid
+        )
+        self._start_date = parser._start_date
+        self._end_date = parser._end_date
 
-        for b in blocks:
-            frames = parser.do_parse(
-                b, project_name=project_name, thing_uuid=thing_uuid
-            )
-            for df in frames:
-                if df.empty:
-                    continue
-
-                frame_start = df.index.min()
-                frame_end = df.index.max()
-
-                if self._start_date is None or frame_start < self._start_date:
-                    self._start_date = frame_start
-                if self._end_date is None or frame_end > self._end_date:
-                    self._end_date = frame_end
-
-                out.append(df)
-
-        return out
+        return df
