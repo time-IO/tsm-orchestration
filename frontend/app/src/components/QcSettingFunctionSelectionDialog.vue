@@ -3,6 +3,7 @@
     v-model="showDialog"
     backdrop-filter="blur(4px) saturate(150%)"
     @keydown.esc="showDialog = false"
+    no-backdrop-dismiss
   >
     <q-card class="column" style="width: 90vw; height: 80vh">
       <q-card-section class="row items-center">

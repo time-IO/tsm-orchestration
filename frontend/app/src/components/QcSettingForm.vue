@@ -67,11 +67,9 @@
         caption="Choose your functions"
         title="SaQC Functions"
       >
-
         <div class="row justify-end q-mb-lg">
           <q-btn @click="openFunctionsDialog">Add Function</q-btn>
         </div>
-
 
         <div class="row">
           <div class="col-12">
@@ -163,8 +161,8 @@
       @apply-selection="handleApplyDatastreamSelection"
     />
 
-    <q-dialog v-model="functionFormDialog" @hide="handleRemove">
-      <q-card style="min-width: 500px; max-width: 700px" class="q-pa-md">
+    <q-dialog v-model="functionFormDialog" @hide="handleRemove" no-backdrop-dismiss>
+      <q-card style="min-width: 50vw; max-width: 100vw">
         <q-form>
           <component
             :is="currentFunctionFormComponent"
@@ -247,7 +245,6 @@ const currentFunctionFormComponent = computed(() => {
   }
   return null;
 });
-
 
 function handleEditFunction(index: number) {
   const func = formData.value.quality_control_functions![index];

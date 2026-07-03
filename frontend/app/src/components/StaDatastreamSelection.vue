@@ -36,16 +36,6 @@
               />
             </div>
           </div>
-
-          <sta-temporary-datastream-table
-            v-model:selectedCreated="selectedCreated"
-            v-model:paginationCreated="paginationCreated"
-            :filteredCreatedRows="filteredCreatedRows"
-            :already-selected-thing="filters.thing"
-            :existing-datastreams="selected"
-            :permission_group_id="permission_group_id"
-            @add-temporary="onAddTemporary"
-          />
         </div>
         <div class="col-4">
           <sta-datastream-card
@@ -82,20 +72,17 @@ import { useStaStore } from 'stores/staStore';
 import StaDatastreamCard from 'components/StaDatastreamCard.vue';
 import type { Datastream } from 'src/services/sta/types';
 
-import StaTemporaryDatastreamTable from 'components/StaTemporaryDatastreamTable.vue';
 import type { AxiosError } from 'axios';
 
 const staStore = useStaStore();
 const $q = useQuasar();
 
 const staRows = ref<StaDatastream[]>([]);
-const createdRows = ref<TemporaryDatastream[]>([]);
 
 const selectedSta = ref<StaDatastream[]>([]);
 const selectedCreated = ref<TemporaryDatastream[]>([]);
 
 const showDialog = defineModel<boolean>({ default: false });
-const showCreateDialog = ref(false);
 const loading = ref(false);
 
 const props = defineProps<{
@@ -107,22 +94,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'apply-selection', selection: Datastream[]): void;
 }>();
-
-watch(
-  () => props.initialSelection,
-  (newSelection) => {
-    if (newSelection && Array.isArray(newSelection)) {
-      const sta = newSelection.filter((d): d is StaDatastream => d['@iot.id'] !== null);
-      const tmp = newSelection.filter((d): d is TemporaryDatastream => d['@iot.id'] === null);
-      selectedSta.value = sta;
-      selectedCreated.value = [];
-      for (const entry of tmp) {
-        onAddTemporary(entry);
-      }
-    }
-  },
-  { immediate: true },
-);
 
 onMounted(async () => {
   await loadData();
@@ -138,13 +109,6 @@ const paginationSta = ref<QuasarPaginationInterface>({
   descending: false,
   page: 1,
   rowsPerPage: 10,
-  rowsNumber: 0,
-  pages: 0,
-});
-
-const paginationCreated = ref<QuasarPaginationInterface>({
-  page: 1,
-  rowsPerPage: 0,
   rowsNumber: 0,
   pages: 0,
 });
@@ -166,19 +130,6 @@ const selectedCreatedWithAlias = computed(() => {
 });
 
 const selected = computed(() => [...selectedStaWithAlias.value, ...selectedCreatedWithAlias.value]);
-
-const filteredCreatedRows = computed(() => {
-  if (!filters.value.datastream && !filters.value.thing) return createdRows.value;
-  return createdRows.value.filter((r) => {
-    const nameMatch = filters.value.datastream
-      ? r.name.toLowerCase().includes(filters.value.datastream.toLowerCase())
-      : true;
-    const thingMatch = filters.value.thing
-      ? r.Thing?.name.toLowerCase() === filters.value.thing.name.toLowerCase()
-      : true;
-    return nameMatch && thingMatch;
-  });
-});
 
 async function loadData() {
   loading.value = true;
@@ -242,19 +193,6 @@ function updatePaginationAndLoadData(pagination: QuasarPaginationInterface) {
 
 const debouncedLoadData = debounce(loadData, 400);
 
-function onAddTemporary(ds: TemporaryDatastream) {
-  const exists = createdRows.value.some(
-    (r) => r.name === ds.name && r.Thing?.name === ds.Thing?.name,
-  );
-  if (!exists) createdRows.value.push(ds);
-  paginationCreated.value.rowsNumber = createdRows.value.length;
-  paginationCreated.value.pages = Math.ceil(
-    createdRows.value.length / paginationCreated.value.rowsPerPage,
-  );
-  selectedCreated.value.push(ds);
-  showCreateDialog.value = false;
-}
-
 function removeDatastreamFromSelection(ds: Datastream) {
   selectedSta.value = selectedSta.value.filter(
     (s: StaDatastream) => s['@iot.id'] !== ds['@iot.id'],
@@ -267,6 +205,19 @@ function removeDatastreamFromSelection(ds: Datastream) {
 function applySelection() {
   emit('apply-selection', selected.value);
 }
+
+watch(
+  () => props.initialSelection,
+  (newSelection) => {
+    if (newSelection && Array.isArray(newSelection)) {
+      const sta = newSelection.filter((d): d is StaDatastream => d['@iot.id'] !== null);
+      const tmp = newSelection.filter((d): d is TemporaryDatastream => d['@iot.id'] === null);
+      selectedSta.value = sta;
+      selectedCreated.value = tmp;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

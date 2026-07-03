@@ -50,8 +50,6 @@ async function fetchThings(permission_group_id: number, search: string) {
   const query = `Things?$filter=substringof('${search.toLowerCase()}', tolower(name))&$select=@iot.id,name`;
   const url = `${apiPath}?permission_group_id=${permission_group_id}&q=${encodeURIComponent(query)}`;
 
-  console.log('fetchThings::url', url);
-
   return await axiosInstance.get(url);
 }
 

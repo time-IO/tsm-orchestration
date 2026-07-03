@@ -88,7 +88,7 @@ const props = defineProps<{
   hideOpenButton?: boolean | undefined;
   hideThingName?: boolean | undefined;
 }>();
-console.log('hideThingName:', props.hideThingName);
+
 const $q = useQuasar();
 
 const emit = defineEmits<{
