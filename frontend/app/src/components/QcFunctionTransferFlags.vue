@@ -26,6 +26,7 @@
         max-height="300px"
         v-model="formData.target"
         :permission_group_id="permission_group_id"
+        :showTempCreateBtn="true"
       />
     </div>
 
