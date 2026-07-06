@@ -105,7 +105,7 @@ function loadInitialData() {
   const toleranceArg = props.initialData.find((a) => a.name === 'tolerance');
   const windowArg = props.initialData.find((a) => a.name === 'window');
   const threshArg = props.initialData.find((a) => a.name === 'thresh');
-  const thresh_relativeArg = props.initialData.find((a) => a.name === 'tresh_relative');
+  const thresh_relativeArg = props.initialData.find((a) => a.name === 'thresh_relative');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
