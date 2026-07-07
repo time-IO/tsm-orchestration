@@ -33,7 +33,6 @@ spec:
       labels:
         app: {{ .Values.name }}
       annotations:
-        checksum/certs: {{ include (print $.Template.BasePath "/certs.yaml") . | sha256sum }}
         checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
@@ -77,13 +76,8 @@ spec:
         volumeMounts:
         - mountPath: /vol0
           name: {{ .Values.name }}-pv
-        - mountPath: /certs
-          name: {{ .Values.name }}-certs
       volumes:
       - name: {{ .Values.name }}-pv
         persistentVolumeClaim:
           claimName: {{ .Values.name }}-data-pvc
-      - name: {{ .Values.name }}-certs
-        secret:
-          secretName: {{ .Values.name }}-certs
 {{- end }}
