@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-07-06
+
+- Removed the unused object-storage certificate Secret and `/certs` mount from
+  the Helm deployment. If FTP/SFTP support is needed in Helm later, reintroduce
+  it as a values-gated feature with MinIO flags, service ports, and cert/key
+  Secret together. See #3.
+
 ## [0.4.3] - 2026-06-25
 
 - Use a `Recreate` rollout strategy for object-storage so updates do not try to
