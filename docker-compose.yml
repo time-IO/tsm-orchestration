@@ -468,6 +468,9 @@ services:
       MQTT_BROKER_HOST: "${DSM_API_MQTT_HOST}"
       MQTT_QOS: "${MQTT_QOS}"
       MQTT_CLIENT_ID: datasource_management
+      S3_ENDPOINT: "${DSM_S3_ENDPOINT}"
+      S3_SECURE: "${DSM_S3_SECURE}"
+      S3_REGION: "${DSM_S3_REGION}"
       STA_ROOT_URL: "${DSM_API_STA_ROOT_URL}"
       STA_VERSION: "${DSM_API_STA_VERSION}"
 
