@@ -6,6 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -386,6 +387,15 @@ class UbaApiSyncer(ExtApiSyncer):
                 )
         return measure_data
 
+    @staticmethod
+    def cet_to_utc(dt_string):
+        # timestamps from UBA API /json endpoints are tz aware with tz "Europe/Berlin" (CET)
+        dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
+        dt_cet = dt.replace(tzinfo=ZoneInfo("Europe/Berlin"))
+        dt_utc = dt_cet.astimezone(timezone.utc)
+
+        return dt_utc
+
     def parse_measure_data(self, measure_data: list, station_id: str) -> list:
         """Creates POST body from combined uba measures data"""
         bodies = []
@@ -398,7 +408,7 @@ class UbaApiSyncer(ExtApiSyncer):
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
             if entry["value"]:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["value"],
                     "datastream_pos": entry["measure"],
@@ -463,7 +473,7 @@ class UbaApiSyncer(ExtApiSyncer):
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
             if entry["airquality_index"]:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["airquality_index"],
                     "datastream_pos": "AQI",
