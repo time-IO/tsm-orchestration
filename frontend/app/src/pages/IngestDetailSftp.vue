@@ -40,7 +40,6 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
-                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -132,22 +131,6 @@
                     </q-item-label>
                   </q-item-section>
                 </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label>Object Storage Link</q-item-label>
-                    <q-item-label caption>
-                      <q-btn
-                        class="q-pa-none"
-                        flat
-                        size="sm"
-                        icon-right="launch"
-                        @click="openObjectStorage"
-                      >
-                        Open Object Storage in new Tab</q-btn
-                      >
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
               </q-list>
             </div>
           </div>
@@ -163,6 +146,13 @@
 <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
+
+      <ingest-tools-section
+        :uuid="item.uuid"
+        :ingest-id="item.id"
+        :service="API.ingestSftpStorage"
+        :bucket-name="item.bucket_name"
+      />
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -190,7 +180,8 @@ import { useQuasar } from 'quasar';
 import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import CopyBtn from 'components/CopyBtn.vue';
-import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
+import IngestToolsSection from 'components/IngestToolsSection.vue';
+import { API } from 'src/services';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -275,10 +266,6 @@ const openParser = () => {
 
     window.open(route.href, '_blank');
   }
-};
-
-const openObjectStorage = () => {
-  window.open(process.env.OBJECT_STORAGE_URL, '_blank');
 };
 </script>
 

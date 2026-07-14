@@ -26,6 +26,9 @@ services:
       ALLOWED_VOS: "${ALLOWED_VOS:-UFZ-TSM,VO}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost}"
       MINIO_SFTP_PORT: "${MINIO_SFTP_PORT:-127.0.0.1:40022}"
+      S3_ENDPOINT: "${S3_ENDPOINT:-}"
+      S3_SECURE: "${S3_SECURE:-false}"
+      S3_REGION: "${S3_REGION:-eu-central-1}"
       PROXY_URL: "${PROXY_URL:-http://localhost:80}"
       LOG_LEVEL: "${LOG_LEVEL:-debug}"
       STA_ROOT_URL: "${STA_ROOT_URL:-https://tsm.ufz.de/sta/}"
@@ -81,7 +84,6 @@ services:
       OIDC_REDIRECT_URI: "${OIDC_REDIRECT_URI:-http://localhost/login-callback}"
       OIDC_SCOPE: "${OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
       OIDC_POST_LOGOUT_REDIRECT_URI: "${OIDC_POST_LOGOUT_REDIRECT_URI:-http://localhost}"
-      OBJECT_STORAGE_URL: "${OBJECT_STORAGE_URL:-https://tsm.ufz.de/object-storage}"
       BASE_URL: "${BASE_URL-/}"
     volumes:
       - ./frontend/app:/home/node/app:rw,cached

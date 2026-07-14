@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     ALLOWED_VOS: str = ""
     ALLOWED_ORIGINS: str = ""
     MINIO_SFTP_PORT: str
+    S3_ENDPOINT: str = ""
+    S3_SECURE: bool = False
+    S3_REGION: str = "eu-central-1"
     PROXY_URL: str
     FERNET_ENCRYPTION_SECRET: str
     STA_ROOT_URL: str
