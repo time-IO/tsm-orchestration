@@ -63,11 +63,14 @@ const canAdd = computed(
 function addTemporaryDatastream() {
   if (!canAdd.value || !selectedThing.value) return;
 
+  const thingId = selectedThing.value['@iot.id'] ?? 'CREATED';
+
   const temp: TemporaryDatastream = {
     '@iot.id': null,
     '@iot.selfLink': null,
     Thing: selectedThing.value,
     name: datastreamName.value.trim(),
+    alias: `T${thingId}S${datastreamName.value.trim()}`,
   };
 
   emit('add-temporary', temp);
