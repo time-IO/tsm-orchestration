@@ -695,7 +695,7 @@ class SensotoApiSyncer(ExtApiSyncer):
                 "sensoto_device": entry.pop("device"),
             }
             body = {
-                "result_time": entry["end"],
+                "result_time": entry["end"],  # tz aware with UTC: "%Y-%m-%dT%H:%MZ"
                 "result_type": 0,
                 "datastream_pos": entry["sensor"],
                 "result_number": entry["v"],
