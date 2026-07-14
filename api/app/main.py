@@ -7,6 +7,8 @@ from fastapi_pagination.utils import disable_installed_extensions_check
 from routers import (
     permission_group,
     ingest_sftp,
+    ingest_sftp_storage,
+    ingest_external_sftp_storage,
     ingest_mqtt,
     parser_csv,
     parser_json,
@@ -74,6 +76,8 @@ app.include_router(ingest_external_api_sensoto.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_sftp.router)
+app.include_router(ingest_sftp_storage.router)
+app.include_router(ingest_external_sftp_storage.router)
 app.include_router(parser_mqtt.router)
 app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)
