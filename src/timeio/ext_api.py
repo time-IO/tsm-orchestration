@@ -123,7 +123,7 @@ class BoschApiSyncer(ExtApiSyncer):
             for parameter, value in obs.items():
                 if value:
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # string is tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": 0,
                         "datastream_pos": parameter,
                         "result_number": value,
@@ -191,7 +191,9 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 if value:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
-                        "result_time": self.unix_ts_to_str(timestamp),
+                        "result_time": self.unix_ts_to_str(
+                            timestamp
+                        ),  # unix ts is converted to UTC datetime string
                         "result_type": result_type,
                         RESULT_TYPE_MAPPING[result_type]: value,
                         "datastream_pos": parameter,
@@ -518,7 +520,7 @@ class DwdApiSyncer(ExtApiSyncer):
                 if value:
                     result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # ts is tz aware with UTC: "%Y-%m-%dT%H:%M:%S%z"
                         "result_type": result_type,
                         "datastream_pos": parameter,
                         RESULT_TYPE_MAPPING[result_type]: value,
@@ -558,7 +560,7 @@ class TtnApiSyncer(ExtApiSyncer):
                 if v:
                     result_type = dynamic_parameter_mapping(v)
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": result_type,
                         "datastream_pos": k,
                         RESULT_TYPE_MAPPING[result_type]: v,
@@ -624,10 +626,16 @@ class NmApiSyncer(ExtApiSyncer):
             "nm_api_url": self.nm_base_url,
         }
         for timestamp, value in api_response["response_data"]:
+            ts_dt = datetime.strptime(
+                timestamp, "%Y-%m-%d %H:%M:%S"
+            )  # ts is UTC but not tz aware yet
+            ts_tz = ts_dt.replace(
+                tzinfo=timezone.utc
+            )  # make ts UTC aware before DB insert
             if value:
                 bodies.append(
                     {
-                        "result_time": timestamp,
+                        "result_time": ts_tz,
                         "result_type": 0,
                         "datastream_pos": api_response["station_id"],
                         "result_number": float(value),
