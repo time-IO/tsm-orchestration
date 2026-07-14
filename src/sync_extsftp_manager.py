@@ -4,11 +4,12 @@ from __future__ import annotations
 import io
 import logging
 
+from urllib.parse import urlparse
 from paramiko import WarningPolicy
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
-from timeio.remote_fs import MinioFS, FtpFS, sync
+from timeio.remote_fs import MinioFS, SftpFS, sync, FtpFS
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
@@ -69,8 +70,16 @@ class SyncExtSftpManager(AbstractHandler):
         )
         priv_key = decrypt(thing.ext_sftp.ssh_priv_key, get_crypt_key())
         password = decrypt(thing.ext_sftp.password, get_crypt_key())
+        uri = urlparse(thing.ext_sftp.uri)
+        scheme = uri.scheme.lower()
+        if scheme != "ftp":
+            scheme = "sftp"
+        fs_class = {
+            "ftp": FtpFS,
+            "sftp": SftpFS,
+        }.get(scheme)
         try:
-            source = FtpFS.from_credentials(
+            source = fs_class.from_credentials(
                 uri=thing.ext_sftp.uri,
                 username=thing.ext_sftp.user,
                 password=password,
@@ -79,11 +88,11 @@ class SyncExtSftpManager(AbstractHandler):
                 missing_host_key_policy=WarningPolicy(),
             )
         except Exception as e:
-            msg = f"Failed to create SFTP client. Reason: {e}"
+            msg = f"Failed to create {scheme} client. Reason: {e}"
             journal.error(msg, thing.uuid)
             logger.error(msg)
             return
-        sync(source, target, thing.uuid)
+        sync(source, target, thing.uuid, scheme)
         source.close()
 
 
