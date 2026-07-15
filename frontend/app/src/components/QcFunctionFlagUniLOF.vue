@@ -136,6 +136,16 @@
       :rules="[numberGreaterThanEqualsRule(0)]"
       hint="Minimum value jump before and after clusters to flag."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -181,6 +191,7 @@ const formData = ref({
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -198,6 +209,7 @@ function loadInitialData() {
   const fillNaArg = props.initialData.find((a) => a.name === 'fill_na');
   const slopeCorrectArg = props.initialData.find((a) => a.name === 'slope_correct');
   const minOffsetArg = props.initialData.find((a) => a.name === 'min_offset');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -211,6 +223,7 @@ function loadInitialData() {
   formData.value.fill_na = (fillNaArg?.input.value as boolean) ?? true;
   formData.value.slope_correct = (slopeCorrectArg?.input.value as boolean) ?? true;
   formData.value.min_offset = (minOffsetArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 
   if (threshArg) {
     current_thresh_type.value = threshArg.type;
@@ -293,9 +306,14 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.min_offset },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, flagObject];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -353,6 +371,7 @@ const resetFormData = () => {
   formData.value.fill_na = true;
   formData.value.slope_correct = true;
   formData.value.min_offset = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

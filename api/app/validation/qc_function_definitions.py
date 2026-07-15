@@ -37,6 +37,14 @@ TARGET_ARG_SIMPLE = {
     "types": [DATASTREAM_TYPE],
 }
 
+FLAG_ARG = {
+    "name": "flag",
+    "description": "Flag value used to annotate detected observations. Defaults to the BAD value of the active flagging scheme.",
+    "optional": True,
+    "default_value": 255.0,
+    "types": [{"type": "float", "constraint": {"min": 0}}],
+}
+
 _definition = {
     "flagIsolated": {
         "description": "Find and flag temporally isolated data groups.",
@@ -57,6 +65,7 @@ _definition = {
                 "default_value": None,
                 "types": [OFFSET_TYPE],
             },
+            FLAG_ARG,
         ],
     },
     "flagJumps": {
@@ -85,6 +94,7 @@ _definition = {
                 "default_value": 0,
                 "types": [{"type": "int", "constraint": {"min": 0}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagRange": {
@@ -106,6 +116,7 @@ _definition = {
                 "default_value": None,
                 "types": [{"type": "float", "constraint": {}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagAll": {
@@ -113,6 +124,7 @@ _definition = {
         "arguments": [
             FIELD_ARG,
             TARGET_ARG_SIMPLE,
+            FLAG_ARG,
         ],
     },
     "flagUniLOF": {
@@ -206,6 +218,7 @@ _definition = {
                 "default_value": None,
                 "types": [{"type": "float", "constraint": {"min": 0}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagZScore": {
@@ -270,6 +283,7 @@ _definition = {
                 "default_value": 0,
                 "types": [{"type": "int", "constraint": {"max": 1, "min": 0}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagByScatterLowpass": {
@@ -321,6 +335,7 @@ _definition = {
                 "default_value": None,
                 "types": [{"type": "int", "constraint": {"min": 0}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagOffset": {
@@ -356,6 +371,7 @@ _definition = {
                 "default_value": None,
                 "types": [{"type": "float", "constraint": {}}],
             },
+            FLAG_ARG,
         ],
     },
     "flagPlateau": {
@@ -400,6 +416,7 @@ _definition = {
                     OFFSET_TYPE,
                 ],
             },
+            FLAG_ARG,
         ],
     },
     "propagateFlags": {
@@ -407,6 +424,7 @@ _definition = {
         "arguments": [
             FIELD_ARG,
             TARGET_ARG_SIMPLE,
+            FLAG_ARG,
         ],
     },
     "renameField": {
@@ -421,6 +439,7 @@ _definition = {
                 "default_value": None,
                 "types": [{"type": "str", "constraint": {}}],
             },
+            FLAG_ARG,
         ],
     },
     "rolling": {
@@ -473,6 +492,7 @@ _definition = {
                 "default_value": True,
                 "types": [BOOL_TYPE],
             },
+            FLAG_ARG,
         ],
     },
     "transferFlags": {
@@ -494,6 +514,7 @@ _definition = {
                 "default_value": False,
                 "types": [BOOL_TYPE],
             },
+            FLAG_ARG,
         ],
     },
 }

@@ -55,6 +55,16 @@
       :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
       hint="Minimum observations required for a valid mean calculation."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -85,6 +95,7 @@ const formData = ref({
   thresh: null as number | null,
   window: null as number | null,
   min_periods: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -133,12 +144,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.min_periods },
     type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     threshObject,
     windowObject,
+    flagObject,
   ];
 
   // only add optional fields if their value is not null
@@ -163,6 +180,7 @@ const resetFormData = () => {
   formData.value.thresh = null;
   formData.value.window = null;
   formData.value.min_periods = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

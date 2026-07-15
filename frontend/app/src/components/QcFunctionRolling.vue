@@ -67,6 +67,16 @@
         </q-item-section>
       </q-item>
     </div>
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -112,6 +122,7 @@ const formData = ref({
   func: 'mean',
   min_periods: null as number | null,
   center: true,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -123,6 +134,7 @@ function loadInitialData() {
   const funcArg = props.initialData.find((a) => a.name === 'func');
   const min_periodsArg = props.initialData.find((a) => a.name === 'min_periods');
   const centerArg = props.initialData.find((a) => a.name === 'center');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -130,6 +142,7 @@ function loadInitialData() {
   formData.value.func = (funcArg?.input.value as string) ?? 'mean';
   formData.value.min_periods = (min_periodsArg?.input.value as number) ?? null;
   formData.value.center = (centerArg?.input.value as boolean) ?? true;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -165,12 +178,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.center },
     type: POSSIBLE_QC_FUNCTION_TYPES.BOOL,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     windowObject,
     funcObject,
+    flagObject,
   ];
 
   // only add optional fields if their value is not null
@@ -199,6 +218,7 @@ const resetFormData = () => {
   formData.value.func = 'mean';
   formData.value.min_periods = null;
   formData.value.center = true;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

@@ -83,6 +83,15 @@
       :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
       hint="Minimum points required in a chunk."
     />
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -120,6 +129,7 @@ const formData = ref({
   sub_window: null as number | null,
   sub_thresh: null as number | null,
   min_periods: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -133,6 +143,7 @@ function loadInitialData() {
   const subWindowArg = props.initialData.find((a) => a.name === 'sub_window');
   const subThreshArg = props.initialData.find((a) => a.name === 'sub_thresh');
   const minPeriodsArg = props.initialData.find((a) => a.name === 'min_periods');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -142,6 +153,7 @@ function loadInitialData() {
   formData.value.sub_window = (subWindowArg?.input.value as number) ?? null;
   formData.value.sub_thresh = (subThreshArg?.input.value as number) ?? null;
   formData.value.min_periods = (minPeriodsArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
@@ -186,12 +198,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.min_periods },
     type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     windowObject,
     threshObject,
+    flagObject,
   ];
 
   // only add optional fields if their value is not null
@@ -228,6 +246,7 @@ const resetFormData = () => {
   formData.value.sub_window = null;
   formData.value.sub_thresh = null;
   formData.value.min_periods = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {
