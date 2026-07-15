@@ -5,7 +5,7 @@
       <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
           <q-list style="min-width: 180px">
-<!--            select all-->
+            <!--            select all-->
             <q-item dense clickable @click="toggleAll">
               <q-item-section side>
                 <q-checkbox
@@ -18,7 +18,7 @@
               <q-item-section><strong>All</strong></q-item-section>
             </q-item>
             <q-separator />
-<!--            select individually-->
+            <!--            select individually-->
             <q-item
               v-for="opt in columnOptions"
               :key="opt.value"
@@ -74,63 +74,63 @@
         <q-inner-loading showing color="primary" />
       </template>
 
-    <template v-slot:body="props">
-      <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-        <q-td
-          v-for="col in props.cols"
-          :key="col.name"
-          :props="props"
-          :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
-        >
-          <template v-if="col.name === 'action'">
-            <q-btn
-              :to="`${generateIngestPath(props.row)}`"
-              flat
-              outline
-              color="primary"
-              icon="visibility"
-            >
-              <q-tooltip>View details</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`${generateIngestPath(props.row)}/edit`"
-              flat
-              outline
-              color="secondary"
-              icon="edit"
-            >
-              <q-tooltip>Edit</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`${generateIngestPath(props.row)}/copy`"
-              flat
-              outline
-              color="black"
-              icon="content_copy"
-            >
-              <q-tooltip>Copy Ingest</q-tooltip>
-            </q-btn>
+      <template v-slot:body="props">
+        <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
+          >
+            <template v-if="col.name === 'action'">
+              <q-btn
+                :to="`${generateIngestPath(props.row)}`"
+                flat
+                outline
+                color="primary"
+                icon="visibility"
+              >
+                <q-tooltip>View details</q-tooltip>
+              </q-btn>
+              <q-btn
+                :to="`${generateIngestPath(props.row)}/edit`"
+                flat
+                outline
+                color="secondary"
+                icon="edit"
+              >
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn
+                :to="`${generateIngestPath(props.row)}/copy`"
+                flat
+                outline
+                color="black"
+                icon="content_copy"
+              >
+                <q-tooltip>Copy Ingest</q-tooltip>
+              </q-btn>
 
-            <q-btn
-              :href="visualizationUrl(props.row.uuid)"
-              flat
-              outline
-              icon="img:icons/grafana_icon.png"
-              target="_blank"
-            >
-              <q-tooltip>Visualization Link</q-tooltip>
-            </q-btn>
+              <q-btn
+                :href="visualizationUrl(props.row.uuid)"
+                flat
+                outline
+                icon="img:icons/grafana_icon.png"
+                target="_blank"
+              >
+                <q-tooltip>Visualization Link</q-tooltip>
+              </q-btn>
 
-            <!--            <q-btn-->
-            <!--              flat-->
-            <!--              outline-->
-            <!--              color="negative"-->
-            <!--              icon="delete"-->
-            <!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-            <!--            >-->
-            <!--              <q-tooltip>Delete</q-tooltip>-->
-            <!--            </q-btn>-->
-          </template>
+              <!--            <q-btn-->
+              <!--              flat-->
+              <!--              outline-->
+              <!--              color="negative"-->
+              <!--              icon="delete"-->
+              <!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
+              <!--            >-->
+              <!--              <q-tooltip>Delete</q-tooltip>-->
+              <!--            </q-btn>-->
+            </template>
 
             <template v-else-if="col.name === 'created_by'">
               <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">

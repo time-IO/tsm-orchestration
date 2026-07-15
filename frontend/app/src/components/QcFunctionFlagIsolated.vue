@@ -141,7 +141,7 @@ const formDataWithTypes = computed(() => {
     fieldObject,
     gap_windowObject,
     group_windowObject,
-    flagObject
+    flagObject,
   ];
 
   // only add optional fields if their value is not null

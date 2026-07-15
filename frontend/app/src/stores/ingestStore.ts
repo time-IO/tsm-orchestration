@@ -50,14 +50,14 @@ export const useIngestStore = defineStore('ingestStore', {
     },
     async dispatchGetList() {
       try {
-        this.loading = true
+        this.loading = true;
         const response = await API.ingest.getList(this.pagination, this.filters);
         this.rows = response.data.items;
         this.pagination.rowsPerPage = response.data.size;
         this.pagination.page = response.data.page;
         this.pagination.rowsNumber = response.data.total;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
     async dispatchDelete(id: number): Promise<void> {

@@ -20,7 +20,7 @@ const model = defineModel();
 
 const options = [
   { id: 'csv', name: 'CSV' },
-  {id: 'json', name: 'JSON'}
+  { id: 'json', name: 'JSON' },
 ];
 </script>
 

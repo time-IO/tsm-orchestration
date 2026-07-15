@@ -1,8 +1,11 @@
-import {acceptHMRUpdate} from 'pinia';
-import type {IngestExternalApiNeutronMonitorCreate, IngestExternalApiNeutronMonitorPublic, IngestExternalApiNeutronMonitorUpdate} from "src/services/ingest_external_api_neutron_monitor/types";
-import {API} from "src/services";
+import { acceptHMRUpdate } from 'pinia';
+import type {
+  IngestExternalApiNeutronMonitorCreate,
+  IngestExternalApiNeutronMonitorPublic,
+  IngestExternalApiNeutronMonitorUpdate,
+} from 'src/services/ingest_external_api_neutron_monitor/types';
+import { API } from 'src/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
-
 
 export const useIngestExternalApiNeutronMonitorStore = createIngestStore<
   IngestExternalApiNeutronMonitorPublic,

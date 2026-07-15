@@ -7,10 +7,11 @@ import type {
 import { API } from 'src/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
 
-export const useIngestSftpStore = createIngestStore<IngestSftpPublic, IngestSftpCreate, IngestSftpUpdate>(
-  'ingestSftpStore',
-  API.ingestSftp,
-);
+export const useIngestSftpStore = createIngestStore<
+  IngestSftpPublic,
+  IngestSftpCreate,
+  IngestSftpUpdate
+>('ingestSftpStore', API.ingestSftp);
 
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useIngestSftpStore, import.meta.hot));

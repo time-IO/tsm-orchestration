@@ -121,7 +121,6 @@ import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
 import HelpButton from 'components/HelpButton.vue';
 
-
 defineProps<{
   title: string;
   isLoading: boolean;

@@ -53,9 +53,7 @@
         </div>
 
         <q-card-actions class="column items-end q-gutter-sm" style="margin-top: -48px">
-          <q-btn @click="resetFilters" style="min-width: 120px"
-            >Clear filter</q-btn
-          >
+          <q-btn @click="resetFilters" style="min-width: 120px">Clear filter</q-btn>
           <q-btn @click="triggerEvent" style="min-width: 120px">Apply filter</q-btn>
         </q-card-actions>
       </q-card>

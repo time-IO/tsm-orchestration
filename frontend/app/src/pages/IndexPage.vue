@@ -92,9 +92,9 @@
                   (Bosch, DWD, The Things Network, T-Systems, UBA), MQTT brokers and SFTP servers.
                 </p>
                 <p>
-                  Organize your data using Permission Groups to control access. Apply Quality Control
-                  Settings to validate and filter your time series data. Use parsers to process
-                  batch data uploads.
+                  Organize your data using Permission Groups to control access. Apply Quality
+                  Control Settings to validate and filter your time series data. Use parsers to
+                  process batch data uploads.
                 </p>
                 <p>
                   For detailed documentation and guides, visit the

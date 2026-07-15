@@ -34,7 +34,7 @@ export type IngestFilter = DefaultFilter & {
 
 export type IngestExternalApiFilter = DefaultFilter & {
   api_type: string | undefined;
-}
+};
 
 export type ParserFilter = DefaultFilter & {
   parser_type: string | undefined;
@@ -54,5 +54,5 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
 export type ParserRead = {
   parser_type: string;
   name: string;
-  id: number
-}
+  id: number;
+};

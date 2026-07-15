@@ -9,7 +9,6 @@
     clearable
     :options="filteredOptions"
     @filter="filterOptions"
-
     virtual-scroll-item-size="72"
     option-value="id"
     option-label="name"
@@ -194,8 +193,6 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
     filteredOptions.value = allParsers.value.filter((v) => v.name.toLowerCase().includes(needle));
   });
 }
-
-
 
 const openParser = (id: number, parser_type: string) => {
   const route = router.resolve({

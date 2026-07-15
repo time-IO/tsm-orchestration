@@ -26,7 +26,7 @@ export type QcFunctionName =
   | 'propagateFlags'
   | 'renameField'
   | 'rolling'
-  | 'transferFlags'
+  | 'transferFlags';
 
 export const qcFunctionComponents: Record<QcFunctionName, Component> = {
   flagPlateau: QcFunctionFlagPlateau,

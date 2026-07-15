@@ -4,31 +4,31 @@ import ingestExternalApiNeutronMonitorController from 'src/services/ingest_exter
 import ingestExternalApiUbaController from 'src/services/ingest_external_api_uba';
 import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
 import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
-import ingestExternalApiSensotoController from 'src/services/ingest_external_api_sensoto'
+import ingestExternalApiSensotoController from 'src/services/ingest_external_api_sensoto';
 import ingestMqttController from 'src/services/ingest_mqtt';
 import ingestSftpController from 'src/services/ingest_sftp';
 import ingestSftpStorageController from 'src/services/ingest_sftp_storage';
 import ingestExternalSftpController from 'src/services/ingest_external_sftp';
 import ingestExternalSftpStorageController from 'src/services/ingest_external_sftp_storage';
 import triggerExternalApiGenController from 'src/services/trigger_external_api_generic';
-import permissionGroupController from "src/services/permission_group"
-import userController from "src/services/user"
-import neutronMonitorStationController from "src/services/neutron_monitor_stations"
-import mqttParserController from "src/services/parser_mqtt"
-import csvParserController from "src/services/parser_csv"
-import jsonParserController from "src/services/parser_json"
-import qualityControlSettingController from "src/services/quality_control_setting"
-import staController from "src/services/sta"
-import qualityControlSettingsTriggerController from "src/services/quality_control_settings_trigger";
+import permissionGroupController from 'src/services/permission_group';
+import userController from 'src/services/user';
+import neutronMonitorStationController from 'src/services/neutron_monitor_stations';
+import mqttParserController from 'src/services/parser_mqtt';
+import csvParserController from 'src/services/parser_csv';
+import jsonParserController from 'src/services/parser_json';
+import qualityControlSettingController from 'src/services/quality_control_setting';
+import staController from 'src/services/sta';
+import qualityControlSettingsTriggerController from 'src/services/quality_control_settings_trigger';
 
 import parserTimezoneController from 'src/services/parser_timezone';
 import parserEncodingController from 'src/services/parser_encoding';
 
-import ingestController from 'src/services/ingest'
-import parserDetailedController from 'src/services/parser_detailed'
-import ingestExternalApiController from 'src/services/ingest_external_api'
+import ingestController from 'src/services/ingest';
+import parserDetailedController from 'src/services/parser_detailed';
+import ingestExternalApiController from 'src/services/ingest_external_api';
 
-import usageStatisticsController from "src/services/usage_statistics"
+import usageStatisticsController from 'src/services/usage_statistics';
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -59,5 +59,4 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
-
 };

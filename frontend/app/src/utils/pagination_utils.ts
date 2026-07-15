@@ -118,7 +118,7 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
         case 'uba':
           return 'Umweltbundesamt (UBA) Air Data';
         case 'sensoto':
-          return 'Sensoto'
+          return 'Sensoto';
         default:
           return '';
       }
@@ -223,7 +223,7 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
         case 'uba':
           return `/ingest/external-api/uba/${val.id}`;
         case 'sensoto':
-            return `/ingest/external-api/sensoto/${val.id}`;
+          return `/ingest/external-api/sensoto/${val.id}`;
 
         default:
           return 'api type not defined';

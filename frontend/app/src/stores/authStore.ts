@@ -51,7 +51,7 @@ export const useAuthStore = defineStore('auth', {
         this.userInfo = response.data;
       } catch (error) {
         console.error('failed to fetch user information:', error);
-        await this.logout()
+        await this.logout();
       }
     },
 

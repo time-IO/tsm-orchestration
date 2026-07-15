@@ -63,9 +63,17 @@
           <q-item-section class="text-uppercase" data-cy="SidebarMenu_ItemLabel">
             {{ item.name }}
           </q-item-section>
-          <q-item-section v-if="(item.addRoute || item.addOptions) && authStore.isAuthenticated" side>
+          <q-item-section
+            v-if="(item.addRoute || item.addOptions) && authStore.isAuthenticated"
+            side
+          >
             <q-btn
-              flat round dense icon="add" size="xs" color="grey-6"
+              flat
+              round
+              dense
+              icon="add"
+              size="xs"
+              color="grey-6"
               :title="'Add ' + item.name"
               @click.prevent.stop="item.addRoute ? router.push(item.addRoute) : undefined"
             />
@@ -83,14 +91,15 @@
             :offset="[0, 0]"
             transition-show="jump-right"
             transition-hide="jump-left"
-            @update:model-value="(val: boolean) => { if (!val) closeMenu() }"
+            @update:model-value="
+              (val: boolean) => {
+                if (!val) closeMenu();
+              }
+            "
             @mouseenter="cancelClose()"
             @mouseleave="scheduleClose()"
           >
-            <q-list
-              class="bg-white submenu-list"
-              style="min-width: 240px;"
-            >
+            <q-list class="bg-white submenu-list" style="min-width: 240px">
               <template v-for="(opt, i) in item.addOptions" :key="i">
                 <template v-if="'separator' in opt">
                   <q-separator />
@@ -98,7 +107,7 @@
                     v-if="opt.label"
                     header
                     class="text-grey-6"
-                    style="font-size: 0.75rem; padding: 6px 12px;"
+                    style="font-size: 0.75rem; padding: 6px 12px"
                   >
                     {{ opt.label }}
                   </q-item-label>
@@ -107,7 +116,10 @@
                   v-else
                   clickable
                   v-ripple
-                  @click="router.push(opt.route); closeMenu()"
+                  @click="
+                    router.push(opt.route);
+                    closeMenu();
+                  "
                 >
                   <q-item-section>{{ opt.label }}</q-item-section>
                 </q-item>
@@ -238,7 +250,10 @@ let closeTimer: ReturnType<typeof setTimeout> | null = null;
 let openTimer: ReturnType<typeof setTimeout> | null = null;
 
 function openMenu(name: string) {
-  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
   if (openTimer) return; // already scheduled
   openTimer = setTimeout(() => {
     hoveredMenuName.value = name;
@@ -247,7 +262,10 @@ function openMenu(name: string) {
 }
 
 function scheduleClose() {
-  if (openTimer) { clearTimeout(openTimer); openTimer = null; }
+  if (openTimer) {
+    clearTimeout(openTimer);
+    openTimer = null;
+  }
   closeTimer = setTimeout(() => {
     hoveredMenuName.value = null;
     closeTimer = null;
@@ -255,7 +273,10 @@ function scheduleClose() {
 }
 
 function cancelClose() {
-  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
 }
 
 function closeMenu() {

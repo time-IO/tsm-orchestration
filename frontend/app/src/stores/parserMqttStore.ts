@@ -1,7 +1,6 @@
-import {API} from "src/services";
-import {acceptHMRUpdate, defineStore} from "pinia";
-import type {MqttParser} from "src/services/parser_mqtt/types";
-
+import { API } from 'src/services';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import type { MqttParser } from 'src/services/parser_mqtt/types';
 
 export const useMqttParserStore = defineStore('mqttParserStore', {
   state: () => ({

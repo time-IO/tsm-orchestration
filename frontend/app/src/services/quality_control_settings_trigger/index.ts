@@ -7,5 +7,5 @@ async function trigger_settings(input: TriggerQCSBase) {
 }
 
 export default {
-  trigger_settings
+  trigger_settings,
 };

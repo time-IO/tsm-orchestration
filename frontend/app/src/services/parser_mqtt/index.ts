@@ -1,12 +1,10 @@
-import {axiosInstance} from "boot/axios";
-import type {MqttParser} from "src/services/parser_mqtt/types";
+import { axiosInstance } from 'boot/axios';
+import type { MqttParser } from 'src/services/parser_mqtt/types';
 import type { PaginatedResponse } from 'src/services/types';
 
-
-const apiPath = "parser/mqtt/"
+const apiPath = 'parser/mqtt/';
 
 async function getList(page?: number, size?: number) {
-
   const params: Record<string, number> = {};
   if (page !== undefined) params.page = page;
   if (size !== undefined) params.size = size;
@@ -15,11 +13,11 @@ async function getList(page?: number, size?: number) {
     params,
   });
 }
-async function getOne(id: number){
-  return await axiosInstance.get<MqttParser>(`${apiPath}${id}`)
+async function getOne(id: number) {
+  return await axiosInstance.get<MqttParser>(`${apiPath}${id}`);
 }
 
 export default {
   getList,
-  getOne
-}
+  getOne,
+};

@@ -49,7 +49,6 @@ async function deleteOne(id: number) {
   return await axiosInstance.delete(`${apiPath}${id}`);
 }
 
-
 export default {
   getList,
   deleteOne,

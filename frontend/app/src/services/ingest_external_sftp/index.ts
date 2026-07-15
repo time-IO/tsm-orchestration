@@ -12,5 +12,3 @@ export default createIngestApiService<
   IngestExternalSftpCreate,
   IngestExternalSftpUpdate
 >(apiPath);
-
-

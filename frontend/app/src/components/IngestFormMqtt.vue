@@ -48,7 +48,10 @@
             hint="Optional. Leave empty to auto-generate. Minimum 8 characters. Allowed characters: lowercase letters, numbers, hyphens."
             :rules="[
               (val) => !val || val.length >= 8 || 'Must be at least 8 characters long',
-              (val) => !val || /^[a-z0-9-]+$/.test(val) || 'Only lowercase letters, numbers, and hyphens are allowed',
+              (val) =>
+                !val ||
+                /^[a-z0-9-]+$/.test(val) ||
+                'Only lowercase letters, numbers, and hyphens are allowed',
             ]"
           />
 

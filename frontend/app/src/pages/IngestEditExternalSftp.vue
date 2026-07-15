@@ -140,7 +140,6 @@ async function save() {
     isLoading.value = false;
   }
 }
-
 </script>
 
 <style scoped></style>

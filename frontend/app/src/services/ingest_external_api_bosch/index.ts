@@ -7,4 +7,8 @@ import { createIngestApiService } from 'src/services/factoryIngestService';
 
 const apiPath = 'ingest/external-api/bosch/';
 
-export default createIngestApiService<IngestExternalApiBoschPublic,IngestExternalApiBoschCreate,IngestExternalApiBoschUpdate>(apiPath);
+export default createIngestApiService<
+  IngestExternalApiBoschPublic,
+  IngestExternalApiBoschCreate,
+  IngestExternalApiBoschUpdate
+>(apiPath);

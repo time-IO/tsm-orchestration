@@ -16,13 +16,7 @@
       </q-card-section>
 
       <q-card-section class="row items-center q-gutter-sm">
-        <q-btn
-          dense
-          flat
-          icon="arrow_upward"
-          :disable="!prefix || loading"
-          @click="goUp"
-        >
+        <q-btn dense flat icon="arrow_upward" :disable="!prefix || loading" @click="goUp">
           <q-tooltip>Up one level</q-tooltip>
         </q-btn>
         <q-breadcrumbs class="text-grey-8" active-color="primary">
@@ -104,7 +98,11 @@
 
           <template #body-cell-last_modified="props">
             <q-td :props="props">
-              {{ props.row.is_dir || !props.row.last_modified ? '—' : formatDate(props.row.last_modified) }}
+              {{
+                props.row.is_dir || !props.row.last_modified
+                  ? '—'
+                  : formatDate(props.row.last_modified)
+              }}
             </q-td>
           </template>
 

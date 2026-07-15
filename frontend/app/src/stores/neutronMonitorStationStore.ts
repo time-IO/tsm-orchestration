@@ -1,18 +1,16 @@
-import {API} from "src/services";
-import {acceptHMRUpdate, defineStore} from "pinia";
-import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/types";
-
+import { API } from 'src/services';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
 
 export const useNeutronMonitorStationStore = defineStore('neutronMonitorStationStore', {
-  state: () => ({
-  }),
+  state: () => ({}),
 
   getters: {},
 
   actions: {
     async dispatchGetList(page?: number, size?: number) {
-      const response = await API.neutronMonitorStation.getList(page,size);
-      return response.data
+      const response = await API.neutronMonitorStation.getList(page, size);
+      return response.data;
     },
     async dispatchGetOne(id: number): Promise<NeutronMonitorStation> {
       const response = await API.neutronMonitorStation.getOne(id);

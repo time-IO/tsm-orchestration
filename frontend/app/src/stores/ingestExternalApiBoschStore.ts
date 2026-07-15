@@ -1,4 +1,4 @@
-import {acceptHMRUpdate } from 'pinia';
+import { acceptHMRUpdate } from 'pinia';
 import type {
   IngestExternalApiBoschCreate,
   IngestExternalApiBoschPublic,
@@ -12,7 +12,6 @@ export const useIngestExternalApiBoschStore = createIngestStore<
   IngestExternalApiBoschCreate,
   IngestExternalApiBoschUpdate
 >('ingestExternalApiBoschStore', API.ingestExternalApiBosch);
-
 
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useIngestExternalApiBoschStore, import.meta.hot));
