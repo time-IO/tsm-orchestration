@@ -18,7 +18,6 @@ import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();
@@ -111,7 +110,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate to detail
     await router.push(detailRoute.value);
   } catch (error) {
@@ -143,8 +141,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

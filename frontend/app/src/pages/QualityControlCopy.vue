@@ -26,6 +26,9 @@ const route = useRoute();
 
 const isLoading = ref(false);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 const formData = ref<QualityControlSettingCreate>({
   name: null,
@@ -77,7 +80,6 @@ async function save() {
     description: formData.value.description,
     permission_group_id: formData.value.permission_group_id,
     quality_control_functions: formData.value.quality_control_functions,
-
   };
   try {
     isLoading.value = true;
@@ -87,7 +89,9 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
+    
+    hasUnsavedChanges.value = false;
+
     await router.push(`/quality-control/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -117,8 +121,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

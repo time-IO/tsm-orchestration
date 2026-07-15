@@ -17,7 +17,6 @@ import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschSto
 import type { IngestExternalApiBoschUpdate } from 'src/services/ingest_external_api_bosch/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiBosch from 'components/IngestFormExternalApiBosch.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const boschStore = useIngestExternalApiBoschStore();
 const $q = useQuasar();
@@ -103,7 +102,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate back to list
     await router.push(detailRoute.value);
   } catch (error) {
@@ -135,8 +133,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

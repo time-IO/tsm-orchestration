@@ -1,10 +1,10 @@
 import { onBeforeUnmount } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 
-export function useUnsavedChanges(isDirty: () => boolean) {
+export function useUnsavedChanges(isDirty: boolean) {
   // Browser-Tab schließen / reload
   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-    if (isDirty()) {
+    if (isDirty) {
       e.preventDefault();
     }
   };
@@ -14,7 +14,7 @@ export function useUnsavedChanges(isDirty: () => boolean) {
 
   // Vue Router Navigation
   onBeforeRouteLeave(() => {
-    if (isDirty()) {
+    if (isDirty) {
       return window.confirm('You have unsaved changes. Are you sure you want to leave?');
     }
   });

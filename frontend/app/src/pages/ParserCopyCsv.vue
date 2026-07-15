@@ -38,6 +38,9 @@ const formData = ref<CsvParserCreate>({
 });
 
 const isLoading = ref(false);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -104,7 +107,9 @@ async function save() {
 
     isLoading.value = true;
     const result = await csvParserStore.dispatchCreate(data);
-    savedForm.value = { ...formData.value };
+
+    hasUnsavedChanges.value = false;
+
     await router.push(`/parser/csv/${result.id}`);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -134,9 +139,6 @@ async function save() {
     isLoading.value = false;
   }
 }
-
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

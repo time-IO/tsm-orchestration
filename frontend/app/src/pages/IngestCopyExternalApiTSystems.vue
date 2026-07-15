@@ -17,7 +17,6 @@ import type { IngestExternalApiTSystemsCreate } from 'src/services/ingest_extern
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();
@@ -95,7 +94,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate back to list
     await router.push(`/ingest/external-api/tsystems/${result.id}`);
   } catch (error) {
@@ -127,8 +125,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

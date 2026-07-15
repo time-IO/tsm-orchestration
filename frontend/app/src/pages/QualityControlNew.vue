@@ -22,6 +22,9 @@ const $q = useQuasar();
 const router = useRouter();
 
 const isLoading = ref(false);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 const formData = ref<QualityControlSettingCreate>({
   name: null,
@@ -49,7 +52,9 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
+
+    hasUnsavedChanges.value = false;
+
     await router.push(`/quality-control/${result.id}`);
   } catch (error) {
     // @ts-expect-error Axios error shape
@@ -95,8 +100,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

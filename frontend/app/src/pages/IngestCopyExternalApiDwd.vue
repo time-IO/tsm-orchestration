@@ -17,7 +17,6 @@ import type { IngestExternalApiDwdCreate } from 'src/services/ingest_external_ap
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 // Composition API
 const $q = useQuasar();
@@ -91,7 +90,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate back to list
     await router.push(`/ingest/external-api/dwd/${result.id}`);
   } catch (error) {
@@ -123,8 +121,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>
