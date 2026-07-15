@@ -34,12 +34,26 @@
       label="new_name *"
       hint="Name to assign to the field."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import { requiredDatastreamsRule, requiredRule } from 'src/utils/form_utils';
+import {
+  numberGreaterThanEqualsRule,
+  requiredDatastreamsRule,
+  requiredRule,
+} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -57,6 +71,7 @@ const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
   new_name: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -65,10 +80,12 @@ function loadInitialData() {
   const fieldArg = props.initialData.find((a) => a.name === 'field');
   const targetArg = props.initialData.find((a) => a.name === 'target');
   const new_nameArg = props.initialData.find((a) => a.name === 'new_name');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.new_name = (new_nameArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -89,9 +106,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.new_name },
     type: POSSIBLE_QC_FUNCTION_TYPES.STR,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, new_nameObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [
+    fieldObject,
+    new_nameObject,
+    flagObject,
+  ];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -110,6 +136,7 @@ const resetFormData = () => {
   formData.value.field = [];
   formData.value.target = [];
   formData.value.new_name = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

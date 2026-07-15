@@ -93,6 +93,16 @@
       :rules="[integerRule, numberGreaterThanEqualsRule(0), numberLowerThanEqualsRule(1)]"
       hint="Axis along which scoring is applied."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -132,6 +142,7 @@ const formData = ref({
   min_periods: null as number | null,
   center: true,
   axis: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -146,6 +157,7 @@ function loadInitialData() {
   const min_periodsArg = props.initialData.find((a) => a.name === 'min_periods');
   const centerArg = props.initialData.find((a) => a.name === 'center');
   const axisArg = props.initialData.find((a) => a.name === 'axis');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -156,6 +168,7 @@ function loadInitialData() {
   formData.value.min_periods = (min_periodsArg?.input.value as number) ?? null;
   formData.value.center = (centerArg?.input.value as boolean) ?? true;
   formData.value.axis = (axisArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -206,9 +219,14 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.axis },
     type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, flagObject];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -254,6 +272,7 @@ const resetFormData = () => {
   formData.value.min_periods = null;
   formData.value.center = true;
   formData.value.axis = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

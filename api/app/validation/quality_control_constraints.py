@@ -5,9 +5,8 @@ Defines all quality control functions with their argument constraints.
 Validates incoming parameters against these constraints.
 """
 
-from typing import Any
+from typing import Any, List, Dict
 from dataclasses import dataclass, field
-from enum import Enum
 
 from .validators import (
     TYPE_VALIDATORS,
@@ -139,9 +138,17 @@ class QualityControlConstraints:
         if not func_info:
             return False, [f"Unknown QC function: '{function_name}'"]
 
+        func_info_arguments = func_info["arguments"]
+
         errors = []
 
+        try:
+            cls.validate_input_keys(arguments, func_info_arguments)
+        except ValueError as exc:
+            errors.append(str(exc))
+
         for arg_def in func_info["arguments"]:
+
             arg_name = arg_def["name"]
 
             # Get the provided argument data
@@ -232,3 +239,35 @@ class QualityControlConstraints:
                 errors.append(f"Function '{func_name}': {error}")
 
         return len(errors) == 0, errors
+
+    @classmethod
+    def validate_input_keys(
+        cls, data: Dict[str, Any], schema: List[Dict[str, Any]]
+    ) -> None:
+        """
+        Validate that every top‑level key in ``data`` exists in the schema under the
+        field ``name``.
+
+        Parameters
+        ----------
+        data: dict
+            The JSON‑like payload you want to check (e.g. ``{'field': …, 'flag': …}``).
+        schema: list[dict]
+            List of parameter definitions.
+            Each entry must contain a ``name`` key that holds the allowed name.
+
+        Raises
+        ------
+        ValueError
+            If a key in ``data`` is not present among the allowed ``name`` values.
+        """
+        # Build a set of all allowed names – O(1) look‑ups.
+        allowed_names = {entry["name"] for entry in schema}
+
+        # Check each key in the incoming payload.
+        for key in data:
+            if key not in allowed_names:
+                raise ValueError(
+                    f"Unexpected key “{key}”. "
+                    f"Allowed keys are: {sorted(allowed_names)}"
+                )

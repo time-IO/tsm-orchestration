@@ -52,19 +52,43 @@ async function save() {
     savedForm.value = { ...formData.value };
     await router.push(`/quality-control/${result.id}`);
   } catch (error) {
-    // @ts-expect-error to avoid complicated checks just for type safety, we ignore
-    let errorCaption = error?.response?.data?.detail || '';
+    // @ts-expect-error Axios error shape
+    const detail = error?.response?.data?.detail;
 
-    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
-    if (typeof errorCaption === 'object') {
-      errorCaption = errorCaption[0].msg;
+    let errorCaption = '';
+
+    if (typeof detail === 'string') {
+      errorCaption = detail;
+    } else if (Array.isArray(detail)) {
+      // FastAPI/Pydantic validation errors:
+      // [{ type, loc, msg, input }]
+      errorCaption = detail.map((entry) => entry.msg ?? String(entry)).join('\n');
+    } else if (detail && typeof detail === 'object') {
+      // Custom backend validation errors:
+      // { message: string, errors: string[] }
+      if (Array.isArray(detail.errors)) {
+        errorCaption = detail.errors.join('\n');
+      } else if (typeof detail.message === 'string') {
+        errorCaption = detail.message;
+      } else {
+        errorCaption = JSON.stringify(detail);
+      }
     }
+
     $q.notify({
       position: 'top',
       type: 'negative',
-      progress: true,
       message: 'Failed to create Quality Control Setting',
       caption: errorCaption,
+      timeout: 0,
+      actions: [
+        {
+          icon: 'close',
+          color: 'white',
+          round: true,
+          handler: () => {},
+        },
+      ],
     });
   } finally {
     isLoading.value = false;

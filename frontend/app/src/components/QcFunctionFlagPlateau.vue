@@ -69,6 +69,16 @@
       v-model:input="formData.granularity"
       hint="Precision of the search."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -104,6 +114,7 @@ const formData = ref({
   max_length: null as number | null,
   min_jump: null as number | null,
   granularity: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -115,6 +126,7 @@ function loadInitialData() {
   const max_lengthArg = props.initialData.find((a) => a.name === 'max_length');
   const min_jumpArg = props.initialData.find((a) => a.name === 'min_jump');
   const granularityArg = props.initialData.find((a) => a.name === 'granularity');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -122,6 +134,7 @@ function loadInitialData() {
   formData.value.max_length = (max_lengthArg?.input.value as number) ?? null;
   formData.value.min_jump = (min_jumpArg?.input.value as number) ?? null;
   formData.value.granularity = (granularityArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -159,9 +172,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.granularity },
     type: current_granularity_type.value,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, min_lengthObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [
+    fieldObject,
+    min_lengthObject,
+    flagObject,
+  ];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -192,6 +214,7 @@ const resetFormData = () => {
   formData.value.min_length = null;
   formData.value.min_jump = null;
   formData.value.granularity = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

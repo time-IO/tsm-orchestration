@@ -46,12 +46,26 @@
       label="max * (enter a floating point number)"
       hint="Upper bound for valid data."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import { requiredDatastreamsRule, requiredRule } from 'src/utils/form_utils';
+import {
+  numberGreaterThanEqualsRule,
+  requiredDatastreamsRule,
+  requiredRule,
+} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -70,6 +84,7 @@ const formData = ref({
   target: [] as Datastream[],
   min: null as number | null,
   max: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -79,11 +94,13 @@ function loadInitialData() {
   const targetArg = props.initialData.find((a) => a.name === 'target');
   const minArg = props.initialData.find((a) => a.name === 'min');
   const maxArg = props.initialData.find((a) => a.name === 'max');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.min = (minArg?.input.value as number) ?? null;
   formData.value.max = (maxArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -109,12 +126,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.max },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     minObject,
     maxObject,
+    flagObject,
   ];
 
   // only add optional fields if their value is not null
@@ -135,6 +158,7 @@ const resetFormData = () => {
   formData.value.target = [];
   formData.value.min = null;
   formData.value.max = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

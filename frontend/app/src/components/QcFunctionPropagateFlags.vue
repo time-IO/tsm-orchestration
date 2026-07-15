@@ -28,13 +28,23 @@
         :permission_group_id="permission_group_id"
         :showTempCreateBtn="true"
       />
+
+      <!-- flag     -->
+      <q-input
+        class="q-mb-md"
+        filled
+        v-model.number="formData.flag"
+        label="Flag"
+        :rules="[numberGreaterThanEqualsRule(0)]"
+        hint="Enter a floating point number"
+      />
     </div>
   </qc-function-form-template>
 </template>
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import { requiredDatastreamsRule } from 'src/utils/form_utils';
+import { numberGreaterThanEqualsRule, requiredDatastreamsRule } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -51,6 +61,7 @@ const emit = defineEmits(['submit', 'remove']);
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -58,9 +69,11 @@ function loadInitialData() {
 
   const fieldArg = props.initialData.find((a) => a.name === 'field');
   const targetArg = props.initialData.find((a) => a.name === 'target');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -76,9 +89,14 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.target },
     type: POSSIBLE_QC_FUNCTION_TYPES.DATASTREAM,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, flagObject];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -96,6 +114,7 @@ const submitForm = () => {
 const resetFormData = () => {
   formData.value.field = [];
   formData.value.target = [];
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

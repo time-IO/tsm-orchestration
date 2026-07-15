@@ -49,12 +49,27 @@
       label="group_window *"
       hint="Maximum size of a data chunk to consider for isolation."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { requiredRule, offsetAliasMatchRule, requiredDatastreamsRule } from 'src/utils/form_utils';
+import {
+  requiredRule,
+  offsetAliasMatchRule,
+  requiredDatastreamsRule,
+  numberGreaterThanEqualsRule,
+} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -72,6 +87,7 @@ const formData = ref({
   target: [] as Datastream[],
   gap_window: null as number | null,
   group_window: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -81,11 +97,13 @@ function loadInitialData() {
   const targetArg = props.initialData.find((a) => a.name === 'target');
   const gap_windowArg = props.initialData.find((a) => a.name === 'gap_window');
   const group_windowArg = props.initialData.find((a) => a.name === 'group_window');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.gap_window = (gap_windowArg?.input.value as number) ?? null;
   formData.value.group_window = (group_windowArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
@@ -112,12 +130,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.group_window },
     type: POSSIBLE_QC_FUNCTION_TYPES.OFFSET,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     gap_windowObject,
     group_windowObject,
+    flagObject
   ];
 
   // only add optional fields if their value is not null
@@ -138,6 +162,7 @@ const resetFormData = () => {
   formData.value.target = [];
   formData.value.gap_window = null;
   formData.value.group_window = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

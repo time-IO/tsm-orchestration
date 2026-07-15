@@ -65,6 +65,16 @@
       label="thresh_relative (enter a floating point number)"
       hint="Minimum relative change to consider a sequence as an offset."
     />
+
+    <!-- flag     -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.flag"
+      label="Flag"
+      :rules="[numberGreaterThanEqualsRule(0)]"
+      hint="Enter a floating point number"
+    />
   </qc-function-form-template>
 </template>
 
@@ -95,6 +105,7 @@ const formData = ref({
   window: null as number | null,
   thresh: null as number | null,
   thresh_relative: null as number | null,
+  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -106,6 +117,7 @@ function loadInitialData() {
   const windowArg = props.initialData.find((a) => a.name === 'window');
   const threshArg = props.initialData.find((a) => a.name === 'thresh');
   const thresh_relativeArg = props.initialData.find((a) => a.name === 'thresh_relative');
+  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -113,6 +125,7 @@ function loadInitialData() {
   formData.value.window = (windowArg?.input.value as number) ?? null;
   formData.value.thresh = (threshArg?.input.value as number) ?? null;
   formData.value.thresh_relative = (thresh_relativeArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -148,12 +161,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.thresh_relative },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
+  const flagObject = {
+    name: 'flag',
+    input: { value: formData.value.flag },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     windowObject,
     toleranceObject,
+    flagObject
   ];
 
   // only add optional fields if their value is not null
@@ -184,6 +203,7 @@ const resetFormData = () => {
   formData.value.window = null;
   formData.value.thresh = null;
   formData.value.thresh_relative = null;
+  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {
