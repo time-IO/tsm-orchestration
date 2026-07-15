@@ -18,10 +18,7 @@ export const useStaStore = defineStore('staStore', {
 
       return response.data;
     },
-    async dispatchFetchThings(
-      permission_group_id: number,
-      search: string,
-    ) {
+    async dispatchFetchThings(permission_group_id: number, search: string) {
       const response = await API.sta.fetchThings(permission_group_id, search);
 
       return response.data;

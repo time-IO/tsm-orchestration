@@ -6,5 +6,5 @@ export default {
   success: 'Action was successful',
   appname: 'Data Source Management',
   newIngest: 'Add ingest',
-  newSetting: 'Add Setting'
+  newSetting: 'Add Setting',
 };

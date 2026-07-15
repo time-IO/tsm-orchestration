@@ -19,7 +19,7 @@ export const useIngestExternalApiStore = defineStore('ingestExternalApiStore', {
       permission_group_id: undefined,
       date_from: undefined,
       date_to: undefined,
-      api_type: undefined
+      api_type: undefined,
     } as IngestExternalApiFilter,
     loading: false,
   }),
@@ -51,14 +51,14 @@ export const useIngestExternalApiStore = defineStore('ingestExternalApiStore', {
     },
     async dispatchGetList() {
       try {
-        this.loading = true
+        this.loading = true;
         const response = await API.ingestExternalApi.getList(this.pagination, this.filters);
         this.rows = response.data.items;
         this.pagination.rowsPerPage = response.data.size;
         this.pagination.page = response.data.page;
         this.pagination.rowsNumber = response.data.total;
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
   },

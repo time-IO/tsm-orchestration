@@ -93,7 +93,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    
+
     hasUnsavedChanges.value = false;
 
     // Navigate to detail
@@ -126,7 +126,6 @@ async function save() {
     isLoading.value = false;
   }
 }
-
 </script>
 
 <style scoped></style>

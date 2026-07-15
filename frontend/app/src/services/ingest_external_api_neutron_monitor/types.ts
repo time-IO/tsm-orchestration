@@ -1,13 +1,13 @@
-import type {PermissionGroup} from "src/services/permission_group/types";
-import type {NeutronMonitorStation} from "src/services/neutron_monitor_stations/types";
+import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
 
 export type IngestExternalApiNeutronMonitorPublic = {
-  id: number
+  id: number;
   uuid: string;
   name: string;
   description: string | null;
   permission_group_id: number;
-  permission_group: PermissionGroup
+  permission_group: PermissionGroup;
   created_by_id: number;
   created_at: string;
   sync_enabled: boolean;
@@ -15,7 +15,7 @@ export type IngestExternalApiNeutronMonitorPublic = {
   station_id: number;
   time_resolution_in_minutes: number;
   station: NeutronMonitorStation;
-}
+};
 export type IngestExternalApiNeutronMonitorCreate = {
   name: string;
   description: string | null;
@@ -24,8 +24,7 @@ export type IngestExternalApiNeutronMonitorCreate = {
   sync_interval_in_minutes: number | null;
   station_id: number | null;
   time_resolution_in_minutes: number | null;
-
-}
+};
 export type IngestExternalApiNeutronMonitorUpdate = {
   name?: string;
   description?: string | null;
@@ -34,6 +33,4 @@ export type IngestExternalApiNeutronMonitorUpdate = {
   sync_interval_in_minutes?: number | null;
   station_id?: number | null;
   time_resolution_in_minutes?: number | null;
-}
-
-
+};

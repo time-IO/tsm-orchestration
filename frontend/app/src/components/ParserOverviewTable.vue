@@ -72,54 +72,53 @@
         <q-inner-loading showing color="primary" />
       </template>
 
-    <template v-slot:body="props">
-      <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-        <q-td
-          v-for="col in props.cols"
-          :key="col.name"
-          :props="props"
-          :class="['action', 'created_by'].includes(col.name)? 'text-center' : 'text-left'"
-        >
-          <template v-if="col.name === 'action'">
-            <q-btn
-              :to="`${generateParserPath(props.row)}`"
-              flat
-              outline
-              color="primary"
-              icon="visibility"
-            >
-              <q-tooltip>View details</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`${generateParserPath(props.row)}/edit`"
-              flat
-              outline
-              color="secondary"
-              icon="edit"
-            >
-              <q-tooltip>Edit</q-tooltip>
-            </q-btn>
-            <q-btn
-              :to="`${generateParserPath(props.row)}/copy`"
-              flat
-              outline
-              color="black"
-              icon="content_copy"
-            >
-              <q-tooltip>Copy parser</q-tooltip>
-            </q-btn>
+      <template v-slot:body="props">
+        <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :props="props"
+            :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
+          >
+            <template v-if="col.name === 'action'">
+              <q-btn
+                :to="`${generateParserPath(props.row)}`"
+                flat
+                outline
+                color="primary"
+                icon="visibility"
+              >
+                <q-tooltip>View details</q-tooltip>
+              </q-btn>
+              <q-btn
+                :to="`${generateParserPath(props.row)}/edit`"
+                flat
+                outline
+                color="secondary"
+                icon="edit"
+              >
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn
+                :to="`${generateParserPath(props.row)}/copy`"
+                flat
+                outline
+                color="black"
+                icon="content_copy"
+              >
+                <q-tooltip>Copy parser</q-tooltip>
+              </q-btn>
 
-<!--            <q-btn-->
-<!--              flat-->
-<!--              outline-->
-<!--              color="negative"-->
-<!--              icon="delete"-->
-<!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-<!--            >-->
-<!--              <q-tooltip>Delete</q-tooltip>-->
-<!--            </q-btn>-->
-
-          </template>
+              <!--            <q-btn-->
+              <!--              flat-->
+              <!--              outline-->
+              <!--              color="negative"-->
+              <!--              icon="delete"-->
+              <!--              @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
+              <!--            >-->
+              <!--              <q-tooltip>Delete</q-tooltip>-->
+              <!--            </q-btn>-->
+            </template>
 
             <template v-else-if="col.name === 'created_by'">
               <q-icon flat class="text-grey-8" name="las la-user-edit" size="sm">
@@ -175,10 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  default_parser_columns,
-  generateParserPath,
-} from 'src/utils/pagination_utils';
+import { default_parser_columns, generateParserPath } from 'src/utils/pagination_utils';
 import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
 import { computed, onMounted, ref } from 'vue';
 import { copyToClipboard, useQuasar } from 'quasar';
@@ -348,7 +344,6 @@ function toggleAll() {
   }
   sessionStorage.setItem('parser-visible-columns', JSON.stringify(visibleColumns.value));
 }
-
 </script>
 
 <style>

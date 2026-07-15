@@ -2,7 +2,7 @@ import type { Datastream } from 'src/services/sta/types';
 
 // ##### rules - start #####
 
-export const requiredRule = (label: string) => (val: string | number) => 
+export const requiredRule = (label: string) => (val: string | number) =>
   (val !== undefined && val !== null && val !== '') || `${label} is required`;
 
 const offsetAliasRegex =

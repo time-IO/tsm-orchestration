@@ -114,7 +114,8 @@
                       :rules="[
                         (val) =>
                           (val !== null && val !== undefined && val !== '') ||
-                          'Column index is required']"
+                          'Column index is required',
+                      ]"
                     />
                     <q-input
                       filled

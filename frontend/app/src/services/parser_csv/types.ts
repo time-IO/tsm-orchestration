@@ -1,4 +1,4 @@
-import type {PermissionGroup} from "src/services/permission_group/types";
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 export type CsvParserTimestampColumnCreate = {
   column: number | null;
@@ -9,11 +9,10 @@ export type CsvParserTimestampColumnUpdate = {
   timestamp_format: string | null;
 };
 export type CsvParserTimestampColumnPublic = {
-  id: number
+  id: number;
   column: number;
   timestamp_format: string;
 };
-
 
 export type CsvParserPublic = {
   id: number;

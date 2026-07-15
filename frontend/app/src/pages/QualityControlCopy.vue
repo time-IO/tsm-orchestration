@@ -89,7 +89,7 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    
+
     hasUnsavedChanges.value = false;
 
     await router.push(`/quality-control/${result.id}`);
@@ -120,7 +120,6 @@ async function save() {
     isLoading.value = false;
   }
 }
-
 </script>
 
 <style scoped></style>

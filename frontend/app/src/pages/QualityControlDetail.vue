@@ -61,7 +61,10 @@
                       <q-item-section>
                         <q-item-label>Active</q-item-label>
                         <q-item-label caption>
-                          <q-badge :color="item.is_active ? 'positive' : 'negative'" class="q-px-sm q-py-xs">
+                          <q-badge
+                            :color="item.is_active ? 'positive' : 'negative'"
+                            class="q-px-sm q-py-xs"
+                          >
                             {{ item.is_active ? 'Yes' : 'No' }}
                           </q-badge>
                         </q-item-label>
@@ -114,7 +117,7 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
-<!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
+          <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
     </div>

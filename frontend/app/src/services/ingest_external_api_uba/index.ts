@@ -7,4 +7,8 @@ import { createIngestApiService } from 'src/services/factoryIngestService';
 
 const apiPath = 'ingest/external-api/uba/';
 
-export default createIngestApiService<IngestExternalApiUbaPublic,IngestExternalApiUbaCreate,IngestExternalApiUbaUpdate>(apiPath);
+export default createIngestApiService<
+  IngestExternalApiUbaPublic,
+  IngestExternalApiUbaCreate,
+  IngestExternalApiUbaUpdate
+>(apiPath);

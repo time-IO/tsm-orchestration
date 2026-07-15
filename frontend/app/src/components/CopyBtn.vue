@@ -1,7 +1,12 @@
 <template>
   <q-btn
     v-bind="$attrs"
-    flat round icon="content_copy" size="sm" @click="copyClipboard(textToCopy)">
+    flat
+    round
+    icon="content_copy"
+    size="sm"
+    @click="copyClipboard(textToCopy)"
+  >
     <q-tooltip>{{ title }}</q-tooltip>
   </q-btn>
 </template>

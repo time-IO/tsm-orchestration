@@ -7,4 +7,6 @@ import { createIngestApiService } from 'src/services/factoryIngestService';
 
 const apiPath = 'parser/json/';
 
-export default createIngestApiService<JsonParserPublic, JsonParserCreate, JsonParserUpdate>(apiPath);
+export default createIngestApiService<JsonParserPublic, JsonParserCreate, JsonParserUpdate>(
+  apiPath,
+);

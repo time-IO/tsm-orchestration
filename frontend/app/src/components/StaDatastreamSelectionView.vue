@@ -3,7 +3,6 @@
     <template v-if="selected.length === 0">
       <div class="row justify-center items-center" style="height: 100%">
         <div class="text-center">No datastreams selected</div>
-
       </div>
     </template>
 

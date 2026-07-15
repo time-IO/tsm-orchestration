@@ -1,6 +1,6 @@
-import {API} from "src/services";
-import {acceptHMRUpdate, defineStore} from "pinia";
-import type {PermissionGroup} from "src/services/permission_group/types";
+import { API } from 'src/services';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 export const usePermissionGroupStore = defineStore('permissionGroupStore', {
   state: () => ({

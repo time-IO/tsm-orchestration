@@ -1,11 +1,5 @@
 import { axiosInstance } from 'src/boot/axios';
-import type {
-  TriggerSyncExtApiBase,
-  TriggerSyncExtApiResponse,
-} from './types.ts';
-
-
-
+import type { TriggerSyncExtApiBase, TriggerSyncExtApiResponse } from './types.ts';
 
 async function trigger_api_generic(input: TriggerSyncExtApiBase) {
   const apiPath = `/trigger/external-api/`;
@@ -13,5 +7,5 @@ async function trigger_api_generic(input: TriggerSyncExtApiBase) {
 }
 
 export default {
-  trigger_api_generic
+  trigger_api_generic,
 };

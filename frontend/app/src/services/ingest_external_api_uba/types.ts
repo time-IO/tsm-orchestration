@@ -1,4 +1,4 @@
-import type {PermissionGroup} from "src/services/permission_group/types";
+import type { PermissionGroup } from 'src/services/permission_group/types';
 
 export type IngestExternalApiUbaPublic = {
   id: number;

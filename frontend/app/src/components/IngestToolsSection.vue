@@ -26,7 +26,12 @@
       </div>
 
       <div v-if="service" class="col-12 col-md-6">
-        <q-card flat bordered class="full-height cursor-pointer column" @click="explorerOpen = true">
+        <q-card
+          flat
+          bordered
+          class="full-height cursor-pointer column"
+          @click="explorerOpen = true"
+        >
           <q-card-section class="col row items-center no-wrap q-pa-md">
             <q-avatar rounded size="2.5rem" color="primary" text-color="white" icon="folder_open" />
             <div class="q-ml-md">

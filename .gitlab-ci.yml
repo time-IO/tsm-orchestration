@@ -31,6 +31,16 @@ black:
   script:
     - black --check api/app/
 
+prettier:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd frontend/app
+    - npm ci
+  script:
+    - npx prettier --check .
+
 api-test:
   stage: check
   needs: []
@@ -90,6 +100,7 @@ docker-build:
   stage: build
   needs:
     - black
+    - prettier
     - npm-lint
     - npm-test
   image: docker

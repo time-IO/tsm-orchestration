@@ -13,7 +13,6 @@ export const useIngestExternalSftpStore = createIngestStore<
   IngestExternalSftpUpdate
 >('ingestExternalSftpStore', API.ingestExternalSftp);
 
-
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useIngestExternalSftpStore, import.meta.hot));
 }

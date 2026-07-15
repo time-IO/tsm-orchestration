@@ -65,8 +65,7 @@ async function includeItemIfMissing() {
   if (preselectedItemId) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItemId);
     if (isItemMissing) {
-
-      const preselectedItem = await mqttParserStore.dispatchGetOne(preselectedItemId)
+      const preselectedItem = await mqttParserStore.dispatchGetOne(preselectedItemId);
 
       fetchedOptions.value = [...fetchedOptions.value, preselectedItem];
 

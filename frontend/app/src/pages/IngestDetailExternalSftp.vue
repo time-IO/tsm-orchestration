@@ -199,7 +199,7 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
-<!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
+          <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
 
@@ -316,7 +316,7 @@ const deleteItem = async () => {
 };
 
 const openParser = () => {
-  if  (item.value?.parser?.id && item.value?.parser?.parser_type)  {
+  if (item.value?.parser?.id && item.value?.parser?.parser_type) {
     const route = router.resolve({
       path: `/parser/${item.value.parser.parser_type}/${item.value.parser.id}`,
     });

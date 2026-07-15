@@ -104,7 +104,7 @@ const functionOptions: FunctionOption[] = [
   {
     label: 'transferFlags',
     description: 'Transfer flags from one variable to another.',
-  }
+  },
 ];
 
 function emitSelectFunction(item: FunctionOption) {

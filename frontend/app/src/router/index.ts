@@ -1,4 +1,4 @@
-import {defineRouter} from '#q-app/wrappers';
+import { defineRouter } from '#q-app/wrappers';
 import {
   createMemoryHistory,
   createRouter,
@@ -6,8 +6,8 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
-import {useAuthStore} from "stores/authStore";
-import {Notify} from 'quasar'
+import { useAuthStore } from 'stores/authStore';
+import { Notify } from 'quasar';
 
 /*
  * If not building with SSR mode, you can
@@ -18,9 +18,7 @@ import {Notify} from 'quasar'
  * with the Router instance.
  */
 
-
 export default defineRouter(function (/* { store, ssrContext } */) {
-
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
@@ -28,7 +26,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       : createWebHashHistory;
 
   const Router = createRouter({
-    scrollBehavior: () => ({left: 0, top: 0}),
+    scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
     // Leave this as is and make changes in quasar.conf.js instead!
@@ -37,10 +35,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-
   // Global navigation guard
   Router.beforeEach(async (to, from, next) => {
-    const authStore = useAuthStore()
+    const authStore = useAuthStore();
 
     if (!authStore.user) {
       await authStore.init();
@@ -48,18 +45,17 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
     // If route requires authentication and user is not authenticated
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-
       Notify.create({
-        position: "top",
+        position: 'top',
         type: 'negative',
-        message: 'Authentication required! Please login.'
-      })
+        message: 'Authentication required! Please login.',
+      });
 
-      next('/')
+      next('/');
     } else {
-      next()
+      next();
     }
-  })
+  });
 
   return Router;
 });

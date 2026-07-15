@@ -148,10 +148,26 @@ With this setup, you could access the sms under `<my-fancy-domain>/data-source-m
 ## Development
 
 ### Formatting
+
+#### Api
 - To format the python files of the api using the black formatter, you can use the following docker command:
 ```
 docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .   
 ```
+
+#### Frontend
+- To __check__ the .vue and javascript/typescript files using prettier, you can use the following command:
+
+```
+docker compose run --rm frontend npx prettier --check .
+```
+
+- To __format__ the .vue and javascript/typescript files using prettier, you can use the following command:
+
+```
+docker compose run --rm frontend npx prettier --write .
+```
+
 
 ### Environment Variables API
 - Environment Variables must be defined in `api/app/config.py` > `Settings` class

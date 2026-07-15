@@ -35,7 +35,6 @@
       :rules="[numberGreaterThanEqualsRule(0)]"
       hint="Enter a floating point number"
     />
-
   </qc-function-form-template>
 </template>
 

@@ -9,7 +9,10 @@
     </div>
     <div class="text-caption text-grey">
       For more information on UBA Air Data API properties, visit the
-      <a href="https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/" target="_blank" class="text-primary"
+      <a
+        href="https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/"
+        target="_blank"
+        class="text-primary"
         >API documentation</a
       >.
     </div>

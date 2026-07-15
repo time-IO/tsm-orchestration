@@ -59,7 +59,9 @@ const store = useTriggerQCSStore();
 const $q = useQuasar();
 
 const endDate = ref(new Date().toISOString().slice(0, 19).replace('T', ' '));
-const beginDate = ref(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) + ' 00:00:00');
+const beginDate = ref(
+  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) + ' 00:00:00',
+);
 
 const beginDateIsAfterEndDate = computed(() => {
   return new Date(beginDate.value) < new Date(endDate.value);

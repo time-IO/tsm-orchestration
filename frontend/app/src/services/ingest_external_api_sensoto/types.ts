@@ -6,8 +6,8 @@ export type IngestExternalApiSensotoPublic = {
   permission_group_id: number;
   name: string;
   description: string | null;
-  network: string,
-  device: string,
+  network: string;
+  device: string;
   sync_enabled: boolean;
   sync_interval_in_minutes: number;
   period_in_minutes: number | null;
