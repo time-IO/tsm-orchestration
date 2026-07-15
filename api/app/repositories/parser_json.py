@@ -203,18 +203,15 @@ class ParserJsonRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to delete parser.")
 
-    def check_for_existing_name_create(
-        self, name_to_check: str, permission_group_id: int
-    ):
-        statement = (
-            select(self.model)
-            .join(self.model.parser_detailed)
-            .where(
-                ParserDetailed.permission_group_id == permission_group_id,
-                func.lower(ParserDetailed.name) == func.lower(name_to_check),
-            )
-            .options(joinedload(self.model.parser_detailed))
+    def check_for_existing_name_create(self, name_to_check, permission_group_id):
+
+        clean_name = str(name_to_check).strip()
+
+        statement = select(ParserDetailed).where(
+            ParserDetailed.permission_group_id == permission_group_id,
+            func.lower(ParserDetailed.name) == func.lower(clean_name),
         )
+
         existing = self.session.exec(statement).scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
@@ -222,16 +219,15 @@ class ParserJsonRepository:
     def check_for_existing_name_update(
         self, name_to_check: str, permission_group_id: int, parser_id: int
     ):
-        statement = (
-            select(self.model)
-            .join(self.model.parser_detailed)
-            .where(
-                ParserDetailed.permission_group_id == permission_group_id,
-                func.lower(ParserDetailed.name) == func.lower(name_to_check),
-                ParserDetailed.parser_id != parser_id,
-            )
-            .options(joinedload(self.model.parser_detailed))
+
+        clean_name = str(name_to_check).strip()
+
+        statement = select(ParserDetailed).where(
+            ParserDetailed.permission_group_id == permission_group_id,
+            func.lower(ParserDetailed.name) == func.lower(clean_name),
+            ParserDetailed.parser_id != parser_id,
         )
+
         existing = self.session.exec(statement).scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
