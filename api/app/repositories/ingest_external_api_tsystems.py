@@ -209,19 +209,15 @@ class IngestExternalApiTSystemsRepository:
 
     def check_for_existing_name_create(self, name_to_check, permission_group_id):
 
+        clean_name = str(name_to_check).strip()
+
         statement = (
-            select(self.model)
-            .join(self.model.external_api)
-            .join(IngestExternalApi.ingest)
+            select(Ingest)
             .where(
                 Ingest.permission_group_id == permission_group_id,
-                func.lower(Ingest.name) == func.lower(str(name_to_check)),
+                func.lower(Ingest.name) == func.lower(clean_name),
             )
-            .options(
-                joinedload(self.model.external_api)
-                .joinedload(IngestExternalApi.ingest)
-                .joinedload(Ingest.permission_group)
-            )
+            .options(joinedload(Ingest.permission_group))
         )
 
         existing = self.session.exec(statement).scalar_one_or_none()
@@ -232,20 +228,16 @@ class IngestExternalApiTSystemsRepository:
         self, name_to_check, permission_group_id, entity_id
     ):
 
+        clean_name = str(name_to_check).strip()
+
         statement = (
-            select(self.model)
-            .join(self.model.external_api)
-            .join(IngestExternalApi.ingest)
+            select(Ingest)
             .where(
                 Ingest.permission_group_id == permission_group_id,
-                func.lower(Ingest.name) == func.lower(str(name_to_check)),
+                func.lower(Ingest.name) == func.lower(clean_name),
                 Ingest.id != entity_id,
             )
-            .options(
-                joinedload(self.model.external_api)
-                .joinedload(IngestExternalApi.ingest)
-                .joinedload(Ingest.permission_group)
-            )
+            .options(joinedload(Ingest.permission_group))
         )
 
         existing = self.session.exec(statement).scalar_one_or_none()
