@@ -15,7 +15,6 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
 import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const sensStore = useIngestExternalApiSensotoStore();
 const $q = useQuasar();
@@ -84,8 +83,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

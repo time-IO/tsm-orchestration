@@ -128,6 +128,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { JsonParserUpdate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const permissionGroupStore = usePermissionGroupStore();
 const jsonParserStore = useJsonParserStore();
@@ -144,6 +145,9 @@ const formData = ref<JsonParserUpdate>({
 });
 
 const isLoading = ref(false);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -202,6 +206,8 @@ async function save() {
 
     isLoading.value = true;
     await jsonParserStore.dispatchUpdate(id, data);
+
+    hasUnsavedChanges.value = false;
 
     await router.push(detailRoute.value);
   } catch (error) {

@@ -16,7 +16,6 @@ import { useRouter } from 'vue-router';
 import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import IngestFormMqtt from 'components/IngestFormMqtt.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const mqttStore = useIngestMqttStore();
 const $q = useQuasar();
@@ -48,7 +47,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate to detail
     await router.push(`/ingest/mqtt/${result.id}`);
   } catch (error) {
@@ -80,8 +78,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

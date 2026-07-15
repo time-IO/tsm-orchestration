@@ -15,7 +15,6 @@ import { useRouter } from 'vue-router';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
 import type { IngestExternalApiNeutronMonitorCreate } from 'src/services/ingest_external_api_neutron_monitor/types';
 import IngestFormExternalApiNm from 'components/IngestFormExternalApiNm.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();
@@ -54,7 +53,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
     // Navigate back to detail
     await router.push(`/ingest/external-api/nm/${result.id}`);
   } catch (error) {
@@ -86,8 +84,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

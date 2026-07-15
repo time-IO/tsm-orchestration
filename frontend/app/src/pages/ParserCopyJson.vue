@@ -15,6 +15,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { JsonParserCreate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
+import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
@@ -31,6 +32,9 @@ const formData = ref<JsonParserCreate>({
 });
 
 const isLoading = ref(false);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -76,6 +80,8 @@ async function save() {
     };
     isLoading.value = true;
     const result = await jsonParserStore.dispatchCreate(data);
+
+    hasUnsavedChanges.value = false;
 
     await router.push(`/parser/json/${result.id}`);
   } catch (error) {

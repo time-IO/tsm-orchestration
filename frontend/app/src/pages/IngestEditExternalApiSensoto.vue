@@ -17,7 +17,6 @@ import type { IngestExternalApiSensotoUpdate } from 'src/services/ingest_externa
 import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
 
 // Composition API
 const $q = useQuasar();
@@ -120,8 +119,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

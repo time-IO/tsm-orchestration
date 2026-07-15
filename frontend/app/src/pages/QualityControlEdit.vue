@@ -26,6 +26,9 @@ const route = useRoute();
 
 const isLoading = ref(false);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 const formData = ref<QualityControlSettingUpdate>({
   name: null,
@@ -90,7 +93,9 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-    savedForm.value = { ...formData.value };
+    
+    hasUnsavedChanges.value = false;
+
     // Navigate to detail
     await router.push(detailRoute.value);
   } catch (error) {
@@ -122,8 +127,6 @@ async function save() {
   }
 }
 
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>

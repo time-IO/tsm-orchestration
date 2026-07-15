@@ -236,6 +236,9 @@ const formData = ref<CsvParserUpdate>({
 });
 
 const isLoading = ref(false);
+const hasUnsavedChanges = ref(true);
+
+useUnsavedChanges(hasUnsavedChanges.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -317,7 +320,9 @@ async function save() {
 
     isLoading.value = true;
     await csvParserStore.dispatchUpdate(id, data);
-    savedForm.value = { ...formData.value };
+
+    hasUnsavedChanges.value = false;
+
     await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
@@ -378,9 +383,6 @@ function removeCommentCharacter(index: number) {
 function trimHeadlines(value: string | number | null) {
   formData.value.headlines_to_exclude = String(value ?? '').trim();
 }
-
-const savedForm = ref({ ...formData.value });
-useUnsavedChanges(() => JSON.stringify(formData.value) !== JSON.stringify(savedForm.value));
 </script>
 
 <style scoped></style>
