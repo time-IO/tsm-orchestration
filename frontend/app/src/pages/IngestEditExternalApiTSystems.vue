@@ -112,7 +112,15 @@ async function save() {
     $q.notify({
       position: 'top',
       type: 'negative',
-      progress: true,
+      timeout: 0,
+      actions: [
+        {
+          icon: 'close',
+          color: 'white',
+          round: true,
+          handler: () => {},
+        },
+      ],
       message: 'Failed to update ingest',
       caption: errorCaption,
     });
