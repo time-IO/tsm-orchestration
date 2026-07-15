@@ -55,7 +55,7 @@
           <q-icon name="lab la-gitlab" :size="$q.screen.lt.md ? '1.2rem' : '1.5rem'" color="grey" />
         </a>
         <a
-          href="data-source-management/api/docs"
+          :href="apiDocsHref"
           target="_blank"
           class="row items-center q-gutter-xs text-grey-7"
           style="text-decoration: none"
@@ -96,4 +96,5 @@ import { publicAsset } from 'src/utils/public_asset';
 
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN.png');
 const rdmLogoSrc = publicAsset('images/259253_RDM_subline_fullcolor_rgb.png');
+const apiDocsHref = publicAsset('api/docs');
 </script>
