@@ -236,9 +236,18 @@ const formData = ref<CsvParserUpdate>({
 });
 
 const isLoading = ref(false);
-const hasUnsavedChanges = ref(true);
 
-useUnsavedChanges(hasUnsavedChanges.value);
+const initialFormData = ref<CsvParserUpdate | null>(null);
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  if (!initialFormData.value) return false;
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -246,19 +255,10 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await csvParserStore.dispatchGetOne(id);
 
-      formData.value = {
-        name: data.name || null,
-        description: data.description || null,
-        delimiter: data.delimiter || null,
-        headlines_to_exclude: data.headlines_to_exclude || null,
-        footlines_to_exclude: data.footlines_to_exclude || null,
-        pandas_read_csv: data.pandas_read_csv || null,
-        timestamp_columns: data.timestamp_columns || [],
-        header: data.header ?? null,
-        comment: data.comment || [],
-        timezone: data.timezone,
-        encoding: data.encoding,
-      };
+      const loadedData = normalizeFormData(data);
+
+      formData.value = loadedData;
+      initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
         type: 'negative',
@@ -293,35 +293,12 @@ async function save() {
   try {
     const id = Number(route.params.id);
 
-    const data: CsvParserUpdate = {
-      name: formData.value.name || null,
-      description: formData.value.description || null,
-      delimiter: formData.value.delimiter || null,
-      headlines_to_exclude:
-        formData.value.headlines_to_exclude !== null &&
-        formData.value.headlines_to_exclude !== undefined
-          ? formData.value.headlines_to_exclude
-          : null,
-      footlines_to_exclude:
-        formData.value.footlines_to_exclude !== null &&
-        formData.value.footlines_to_exclude !== undefined
-          ? formData.value.footlines_to_exclude
-          : null,
-      pandas_read_csv: formData.value.pandas_read_csv || null,
-      timestamp_columns: formData.value.timestamp_columns || [],
-      header:
-        formData.value.header !== null && formData.value.header !== undefined
-          ? formData.value.header
-          : null,
-      comment: formData.value.comment || [],
-      timezone: formData.value.timezone || null,
-      encoding: formData.value.encoding || null,
-    };
+    const data: CsvParserUpdate = normalizeFormData(formData.value);
 
     isLoading.value = true;
-    await csvParserStore.dispatchUpdate(id, data);
+    isSaving.value = true;
 
-    hasUnsavedChanges.value = false;
+    await csvParserStore.dispatchUpdate(id, data);
 
     await router.push(detailRoute.value);
   } catch (error) {
@@ -382,6 +359,28 @@ function removeCommentCharacter(index: number) {
 
 function trimHeadlines(value: string | number | null) {
   formData.value.headlines_to_exclude = String(value ?? '').trim();
+}
+
+function normalizeFormData(data: CsvParserUpdate): CsvParserUpdate {
+  return {
+    name: data.name || null,
+    description: data.description || null,
+    delimiter: data.delimiter || null,
+    headlines_to_exclude:
+      data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
+        ? data.headlines_to_exclude
+        : null,
+    footlines_to_exclude:
+      data.footlines_to_exclude !== null && data.footlines_to_exclude !== undefined
+        ? data.footlines_to_exclude
+        : null,
+    pandas_read_csv: data.pandas_read_csv || null,
+    timestamp_columns: data.timestamp_columns || [],
+    header: data.header !== null && data.header !== undefined ? data.header : null,
+    comment: data.comment || [],
+    timezone: data.timezone || null,
+    encoding: data.encoding || null,
+  };
 }
 </script>
 

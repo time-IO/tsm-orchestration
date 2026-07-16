@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import type { QualityControlSettingCreate } from 'src/services/quality_control_setting/types';
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
@@ -22,9 +22,6 @@ const $q = useQuasar();
 const router = useRouter();
 
 const isLoading = ref(false);
-const hasUnsavedChanges = ref(true);
-
-useUnsavedChanges(hasUnsavedChanges.value);
 
 const formData = ref<QualityControlSettingCreate>({
   name: null,
@@ -35,25 +32,30 @@ const formData = ref<QualityControlSettingCreate>({
   quality_control_functions: [],
 });
 
+const initialFormData = ref<QualityControlSettingCreate>(normalizeFormData(formData.value));
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
+
 async function save() {
-  const data: QualityControlSettingCreate = {
-    name: formData.value.name,
-    is_active: formData.value.is_active,
-    context_window: formData.value.context_window,
-    description: formData.value.description,
-    permission_group_id: formData.value.permission_group_id,
-    quality_control_functions: formData.value.quality_control_functions,
-  };
+  const data: QualityControlSettingCreate = normalizeFormData(formData.value);
+
   try {
     isLoading.value = true;
+    isSaving.value = true;
+
     const result = await qualityControlSettingStore.dispatchCreate(data);
     $q.notify({
       position: 'top',
       type: 'positive',
       message: 'Saved successfully',
     });
-
-    hasUnsavedChanges.value = false;
 
     await router.push(`/quality-control/${result.id}`);
   } catch (error) {
@@ -98,6 +100,28 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
+}
+
+function normalizeFormData(data: QualityControlSettingCreate): QualityControlSettingCreate {
+  return {
+    name: data.name || null,
+    context_window: data.context_window || null,
+    is_active: data.is_active || false,
+    description: data.description || null,
+    permission_group_id: data.permission_group_id || null,
+    quality_control_functions: (data.quality_control_functions || []).map((func) => ({
+      name: func.name,
+      quality_control_function_arguments: (func.quality_control_function_arguments || []).map(
+        (arg) => ({
+          name: arg.name,
+          type: arg.type,
+          input: {
+            value: arg.input.value,
+          },
+        }),
+      ),
+    })),
+  };
 }
 </script>
 

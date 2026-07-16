@@ -26,9 +26,6 @@ const route = useRoute();
 
 const isLoading = ref(false);
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
-const hasUnsavedChanges = ref(true);
-
-useUnsavedChanges(hasUnsavedChanges.value);
 
 const formData = ref<QualityControlSettingUpdate>({
   name: null,
@@ -38,6 +35,19 @@ const formData = ref<QualityControlSettingUpdate>({
   permission_group_id: null,
   quality_control_functions: [],
 });
+
+const initialFormData = ref<QualityControlSettingUpdate | null>(null);
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  if (!initialFormData.value) return false;
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
+
 onMounted(async () => {
   if (route.params.id) {
     try {
@@ -46,14 +56,10 @@ onMounted(async () => {
 
       itemPermissionGroup.value = data.permission_group;
 
-      formData.value = {
-        name: data.name,
-        context_window: data.context_window,
-        is_active: data.is_active,
-        description: data.description,
-        permission_group_id: data.permission_group_id,
-        quality_control_functions: data.quality_control_functions,
-      };
+      const loadedData = normalizeFormData(data);
+
+      formData.value = loadedData;
+      initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
         type: 'negative',
@@ -77,14 +83,10 @@ async function save() {
 
   try {
     const id = Number(route.params.id);
-    const data: QualityControlSettingUpdate = {
-      name: formData.value.name || null,
-      context_window: formData.value.context_window || null,
-      is_active: formData.value.is_active || false,
-      description: formData.value.description || null,
-      permission_group_id: formData.value.permission_group_id || null,
-      quality_control_functions: formData.value.quality_control_functions || [],
-    };
+    const data: QualityControlSettingUpdate = normalizeFormData(formData.value);
+
+    isLoading.value = true;
+    isSaving.value = true;
 
     await qualityControlSettingStore.dispatchUpdate(id, data);
 
@@ -93,8 +95,6 @@ async function save() {
       type: 'positive',
       message: 'Saved successfully',
     });
-
-    hasUnsavedChanges.value = false;
 
     // Navigate to detail
     await router.push(detailRoute.value);
@@ -125,6 +125,28 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
+}
+
+function normalizeFormData(data: QualityControlSettingUpdate): QualityControlSettingUpdate {
+  return {
+    name: data.name || null,
+    context_window: data.context_window || null,
+    is_active: data.is_active || false,
+    description: data.description || null,
+    permission_group_id: data.permission_group_id || null,
+    quality_control_functions: (data.quality_control_functions || []).map((func) => ({
+      name: func.name,
+      quality_control_function_arguments: (func.quality_control_function_arguments || []).map(
+        (arg) => ({
+          name: arg.name,
+          type: arg.type,
+          input: {
+            value: arg.input.value,
+          },
+        }),
+      ),
+    })),
+  };
 }
 </script>
 

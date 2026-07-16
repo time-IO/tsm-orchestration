@@ -32,9 +32,18 @@ const formData = ref<JsonParserCreate>({
 });
 
 const isLoading = ref(false);
-const hasUnsavedChanges = ref(true);
 
-useUnsavedChanges(hasUnsavedChanges.value);
+const initialFormData = ref<JsonParserCreate | null>(null);
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  if (!initialFormData.value) return false;
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -42,14 +51,12 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await jsonParserStore.dispatchGetOne(id);
 
-      formData.value = {
-        permission_group_id: data.permission_group_id,
-        name: `${data.name} - Copy`,
-        description: data.description,
-        timestamp_keys: data.timestamp_keys,
-        timezone: data.timezone,
-        comment: data.comment,
-      };
+      data.name = `${data.name} - Copy`;
+
+      const loadedData = normalizeFormData(data);
+
+      formData.value = loadedData;
+      initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
         type: 'negative',
@@ -70,18 +77,12 @@ const detailRoute = computed(() => {
 
 async function save() {
   try {
-    const data: JsonParserCreate = {
-      permission_group_id: formData.value.permission_group_id,
-      name: formData.value.name,
-      description: formData.value.description,
-      timestamp_keys: formData.value.timestamp_keys,
-      comment: formData.value.comment,
-      timezone: formData.value.timezone,
-    };
-    isLoading.value = true;
-    const result = await jsonParserStore.dispatchCreate(data);
+    const data: JsonParserCreate = normalizeFormData(formData.value);
 
-    hasUnsavedChanges.value = false;
+    isLoading.value = true;
+    isSaving.value = true;
+
+    const result = await jsonParserStore.dispatchCreate(data);
 
     await router.push(`/parser/json/${result.id}`);
   } catch (error) {
@@ -111,6 +112,17 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
+}
+
+function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
+  return {
+    permission_group_id: data.permission_group_id,
+    name: data.name || '',
+    description: data.description || null,
+    timestamp_keys: data.timestamp_keys || [],
+    comment: data.comment || null,
+    timezone: data.timezone || null,
+  };
 }
 </script>
 
