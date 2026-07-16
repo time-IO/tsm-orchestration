@@ -61,6 +61,15 @@
                   }}</q-item-label>
                 </q-item-section>
               </q-item>
+
+              <q-item>
+                <q-item-section>
+                  <q-item-label>Comment Characters</q-item-label>
+                  <q-item-label caption>{{
+                    item.comment || 'No comment characters specified'
+                  }}</q-item-label>
+                </q-item-section>
+              </q-item>
             </div>
 
             <div class="col-md-6">
