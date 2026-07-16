@@ -158,7 +158,7 @@ class ParserJsonRepository:
             try:
                 # Delete all existing timestamp columns
                 statement = select(ParserJsonTimestampKey).where(
-                    ParserJsonTimestampKey.parser_id == parser_id
+                    ParserJsonTimestampKey.parser_json_id == parser_id
                 )
                 existing = self.session.exec(statement).scalars().all()
 
