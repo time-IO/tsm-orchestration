@@ -145,9 +145,18 @@ const formData = ref<JsonParserUpdate>({
 });
 
 const isLoading = ref(false);
-const hasUnsavedChanges = ref(true);
 
-useUnsavedChanges(hasUnsavedChanges.value);
+const initialFormData = ref<JsonParserUpdate | null>(null);
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  if (!initialFormData.value) return false;
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -155,13 +164,10 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await jsonParserStore.dispatchGetOne(id);
 
-      formData.value = {
-        name: data.name || '',
-        description: data.description || null,
-        timestamp_keys: data.timestamp_keys || [],
-        comment: data.comment || null,
-        timezone: data.timezone,
-      };
+      const loadedData = normalizeFormData(data);
+
+      formData.value = loadedData;
+      initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
         type: 'negative',
@@ -196,18 +202,12 @@ async function save() {
   try {
     const id = Number(route.params.id);
 
-    const data: JsonParserUpdate = {
-      name: formData.value.name || '',
-      description: formData.value.description || null,
-      timestamp_keys: formData.value.timestamp_keys || [],
-      comment: formData.value.comment || null,
-      timezone: formData.value.timezone || null,
-    };
+    const data: JsonParserUpdate = normalizeFormData(formData.value);
 
     isLoading.value = true;
-    await jsonParserStore.dispatchUpdate(id, data);
+    isSaving.value = true;
 
-    hasUnsavedChanges.value = false;
+    await jsonParserStore.dispatchUpdate(id, data);
 
     await router.push(detailRoute.value);
   } catch (error) {
@@ -252,6 +252,16 @@ function removeTimestampKeys(index: number) {
   if (formData.value.timestamp_keys) {
     formData.value.timestamp_keys.splice(index, 1);
   }
+}
+
+function normalizeFormData(data: JsonParserUpdate): JsonParserUpdate {
+  return {
+    name: data.name || '',
+    description: data.description || null,
+    timestamp_keys: data.timestamp_keys || [],
+    comment: data.comment || null,
+    timezone: data.timezone || null,
+  };
 }
 </script>
 

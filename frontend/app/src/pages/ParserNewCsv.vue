@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
@@ -37,44 +37,31 @@ const formData = ref<CsvParserCreate>({
 });
 
 const isLoading = ref(false);
-const hasUnsavedChanges = ref(true);
 
-useUnsavedChanges(hasUnsavedChanges.value);
+const initialFormData = ref<CsvParserCreate>(normalizeFormData(formData.value));
+const isSaving = ref(false);
+
+const hasUnsavedChanges = computed(() => {
+  return (
+    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+  );
+});
+
+useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 async function save() {
   try {
-    const data: CsvParserCreate = {
-      permission_group_id: formData.value.permission_group_id,
-      name: formData.value.name,
-      description: formData.value.description,
-      delimiter: formData.value.delimiter,
-      headlines_to_exclude:
-        formData.value.headlines_to_exclude !== null &&
-        formData.value.headlines_to_exclude !== undefined
-          ? formData.value.headlines_to_exclude
-          : null,
-      footlines_to_exclude:
-        formData.value.footlines_to_exclude !== null &&
-        formData.value.footlines_to_exclude !== undefined
-          ? formData.value.footlines_to_exclude
-          : null,
-      pandas_read_csv: formData.value.pandas_read_csv,
-      timestamp_columns: formData.value.timestamp_columns,
-      comment: formData.value.comment,
-      header: formData.value.header,
-      timezone: formData.value.timezone,
-      encoding: formData.value.encoding,
-    };
+    const data: CsvParserCreate = normalizeFormData(formData.value);
 
     isLoading.value = true;
+    isSaving.value = true;
+
     const result = await csvParserStore.dispatchCreate(data);
     $q.notify({
       position: 'top',
       type: 'positive',
       message: 'Saved successfully',
     });
-
-    hasUnsavedChanges.value = false;
 
     await router.push(`/parser/csv/${result.id}`);
   } catch (error) {
@@ -104,6 +91,32 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
+}
+
+function normalizeFormData(data: CsvParserCreate): CsvParserCreate {
+  return {
+    permission_group_id: data.permission_group_id,
+    name: data.name || null,
+    description: data.description || null,
+    delimiter: data.delimiter || null,
+    headlines_to_exclude:
+      data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
+        ? data.headlines_to_exclude
+        : null,
+    footlines_to_exclude:
+      data.footlines_to_exclude !== null && data.footlines_to_exclude !== undefined
+        ? data.footlines_to_exclude
+        : null,
+    pandas_read_csv: data.pandas_read_csv || null,
+    timestamp_columns: (data.timestamp_columns || []).map((column) => ({
+      column: column.column,
+      timestamp_format: column.timestamp_format,
+    })),
+    comment: [...(data.comment || [])],
+    header: data.header !== null && data.header !== undefined ? data.header : null,
+    timezone: data.timezone || null,
+    encoding: data.encoding || null,
+  };
 }
 </script>
 
