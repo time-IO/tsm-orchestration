@@ -21,12 +21,12 @@ def test_no_https_error(mock_thing):
     "value, expected", [(1, 0), (1.1, 0), ("string", 1), ({"key": "val"}, 2), (True, 3)]
 )
 def test_ttn_dynamic_parameter_mapping(value, expected):
-    assert ext_api.TtnApiSyncer.dynamic_parameter_mapping(value) == expected
+    assert ext_api.dynamic_parameter_mapping(value) == expected
 
 
 def test_ttn_dynamic_parameter_mapping_invalid():
     with pytest.raises(ext_api.ExtApiRequestError):
-        ext_api.TtnApiSyncer.dynamic_parameter_mapping([1, 2])
+        ext_api.dynamic_parameter_mapping([1, 2])
 
 
 @patch("timeio.ext_api.request_with_handling")
