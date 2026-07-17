@@ -389,7 +389,7 @@ class UbaApiSyncer(ExtApiSyncer):
 
     @staticmethod
     def cet_to_utc(dt_string):
-        # timestamps from UBA API /json endpoints are tz aware with tz "Europe/Berlin" (CET)
+        # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
         dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
         dt_cet = dt.replace(tzinfo=ZoneInfo("Europe/Berlin"))
         dt_utc = dt_cet.astimezone(timezone.utc)
