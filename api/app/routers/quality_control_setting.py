@@ -101,6 +101,22 @@ def update(
     current_user: User = Depends(get_current_user),
     repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
 ):
+
+    if payload.quality_control_functions is not None:
+        # Validate the function arguments using the separated validation module
+        is_valid, errors = QualityControlConstraints.validate_settings(
+            payload.quality_control_functions
+        )
+
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Invalid quality control function arguments",
+                    "errors": errors,
+                },
+            )
+
     updated = repo.update_allowed(id, payload, current_user.permission_group_ids)
     publish_qaqc_settings_update(updated)
 

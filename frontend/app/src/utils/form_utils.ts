@@ -14,7 +14,7 @@ export const offsetAliasMatchRule = (val: string) =>
   'value is not a regular offset, please check the documentation';
 
 export const requiredDatastreamsRule = (val: Datastream[] | null) =>
-  (Array.isArray(val) && val.length > 0) || 'At least one field datastream is required';
+  (Array.isArray(val) && val.length > 0) || 'At least one datastream is required';
 
 export const integerRule = (val: string) =>
   !val || Number.isInteger(Number(val)) || 'value should be a whole number';

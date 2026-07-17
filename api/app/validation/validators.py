@@ -1,8 +1,13 @@
 # validation/validators.py
-from typing import Any, Optional
-from pydantic import BaseModel, Field, field_validator
-from enum import Enum
+import ast
 import re
+from typing import Any
+
+from saqc.parsing.visitor import ConfigExpressionParser
+
+import logging
+
+logger = logging.getLogger("DEBUG-LOGGER")
 
 
 class ConstraintError(Exception):
@@ -45,7 +50,11 @@ class TypeValidator:
     """Validates values against type constraints."""
 
     @staticmethod
-    def validate_datastream(value: Any, constraint: dict) -> bool:
+    def validate_datastream(
+        value: Any,
+        constraint: dict,
+        fields: list[dict],
+    ) -> bool:
         """Validate datastream input (must be a list with min elements)."""
         if not isinstance(value, (list, tuple)):
             raise ConstraintViolation(
@@ -66,7 +75,11 @@ class TypeValidator:
         return True
 
     @staticmethod
-    def validate_float(value: Any, constraint: dict) -> bool:
+    def validate_float(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate float value against min/max constraints."""
         try:
             float_val = float(value)
@@ -90,7 +103,11 @@ class TypeValidator:
         return True
 
     @staticmethod
-    def validate_int(value: Any, constraint: dict) -> bool:
+    def validate_int(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate integer value against min/max constraints."""
         try:
             int_val = int(value)
@@ -114,7 +131,11 @@ class TypeValidator:
         return True
 
     @staticmethod
-    def validate_offset(value: Any, constraint: dict) -> bool:
+    def validate_offset(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate offset string (e.g., '2H', '1D', '30min')."""
         if not isinstance(value, str):
             raise ConstraintViolation("offset", "string", value)
@@ -136,7 +157,11 @@ class TypeValidator:
         return True
 
     @staticmethod
-    def validate_bool(value: Any, constraint: dict) -> bool:
+    def validate_bool(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate boolean value."""
         if not isinstance(value, bool):
             # Also accept string representations
@@ -146,14 +171,22 @@ class TypeValidator:
         return True
 
     @staticmethod
-    def validate_str(value: Any, constraint: dict) -> bool:
+    def validate_str(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate string value."""
         if not isinstance(value, str):
             raise ConstraintViolation("str", "string", value)
         return True
 
     @staticmethod
-    def validate_enum(value: Any, constraint: dict) -> bool:
+    def validate_enum(
+        value: Any,
+        constraint: dict,
+        fields: list[dict] | None = None,
+    ) -> bool:
         """Validate against enum values."""
         allowed = constraint.get("only", [])
         if value not in allowed:
@@ -163,6 +196,42 @@ class TypeValidator:
                 value,
                 f"Value must be one of: {', '.join(str(x) for x in allowed)}",
             )
+        return True
+
+    @staticmethod
+    def validate_generic_function(
+        value: Any,
+        constraint: dict,
+        fields: list[dict],
+    ) -> bool:
+        # TODO: Implement mutability check for target
+        if not isinstance(value, str):
+            raise ConstraintViolation("function", "string expression", value)
+
+        try:
+            tree = ast.parse(value, mode="eval")
+            parser = ConfigExpressionParser(tree)
+        except Exception as e:
+            raise ConstraintViolation(
+                "function",
+                "valid expression",
+                value,
+                f"Invalid expression: {e}",
+            ) from e
+
+        if len(parser.args) != len(fields):
+            variable_label = (
+                "input variable" if len(parser.args) == 1 else "input variables"
+            )
+            field_label = "field was" if len(fields) == 1 else "fields were"
+            raise ConstraintViolation(
+                "function",
+                "one input variable per selected field",
+                value,
+                f"The expression uses {len(parser.args)} {variable_label}, "
+                f"but {len(fields)} {field_label} selected.",
+            )
+
         return True
 
 
@@ -175,4 +244,5 @@ TYPE_VALIDATORS = {
     "bool": TypeValidator.validate_bool,
     "str": TypeValidator.validate_str,
     "enum": TypeValidator.validate_enum,
+    "function": TypeValidator.validate_generic_function,
 }

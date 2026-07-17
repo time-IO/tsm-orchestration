@@ -170,7 +170,7 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
                 kwargs[arg.name] = float(arg.input["value"])
             if arg.type == "int":
                 kwargs[arg.name] = int(arg.input["value"])
-            if arg.type in {"offset", "enum", "str"}:
+            if arg.type in {"offset", "enum", "str", "function"}:
                 kwargs[arg.name] = str(arg.input["value"])
             if arg.type == "bool":
                 kwargs[arg.name] = bool(arg.input["value"])

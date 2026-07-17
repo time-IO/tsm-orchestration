@@ -133,7 +133,7 @@ class TestQualityControlConstraintsGetAvailableFunctions:
         assert "flagJumps" in result
         assert "flagRange" in result
         assert "rolling" in result
-        assert len(result) == 13
+        assert len(result) == 14
 
     def test_returns_string_names(self):
         result = QualityControlConstraints.get_available_functions()
@@ -356,3 +356,58 @@ class TestQualityControlConstraintsValidateSettings:
         is_valid, errors = QualityControlConstraints.validate_settings(settings)
         assert is_valid is False
         assert len(errors) > 0
+
+
+def test_process_generic_valid():
+    settings = [
+        QualityControlFunctionCreate(
+            name="processGeneric",
+            quality_control_function_arguments=[
+                QualityControlFunctionArgumentCreate(
+                    name="field",
+                    type="datastream",
+                    input={"value": ["ds1", "ds2", "ds3"]},
+                ),
+                QualityControlFunctionArgumentCreate(
+                    name="target",
+                    type="datastream",
+                    input={"value": ["ds1created"]},
+                ),
+                QualityControlFunctionArgumentCreate(
+                    name="function",
+                    type="function",
+                    input={"value": "(ds1 + ds2).add(arg=ds3)"},
+                ),
+            ],
+        ),
+    ]
+    is_valid, errors = QualityControlConstraints.validate_settings(settings)
+    assert len(errors) == 0
+    assert is_valid
+
+
+def test_process_generic_invalid():
+    settings = [
+        QualityControlFunctionCreate(
+            name="processGeneric",
+            quality_control_function_arguments=[
+                QualityControlFunctionArgumentCreate(
+                    name="field", type="datastream", input={"value": ["ds1"]}
+                ),
+                QualityControlFunctionArgumentCreate(
+                    name="target", type="datastream", input={"value": ["ds1"]}
+                ),
+                QualityControlFunctionArgumentCreate(
+                    name="function", type="function", input={"value": "import os"}
+                ),
+            ],
+        ),
+    ]
+
+    is_valid, errors = QualityControlConstraints.validate_settings(settings)
+
+    assert is_valid is False
+    assert len(errors) == 1
+    assert "Function 'processGeneric'" in errors[0]
+    assert "Argument 'function'" in errors[0]
+    assert "Invalid expression:" in errors[0]

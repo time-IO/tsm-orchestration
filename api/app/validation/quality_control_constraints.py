@@ -12,7 +12,7 @@ from .validators import (
     TYPE_VALIDATORS,
     ConstraintViolation,
 )
-from .qc_function_definitions import _definition
+from .qc_function_definitions import _definition, FIELD_DESCRIPTOR
 
 
 @dataclass
@@ -134,9 +134,11 @@ class QualityControlConstraints:
         Returns:
             Tuple of (is_valid, list of error messages)
         """
-        func_info = _definition.get(function_name)
+        func_info = cls.get_function_info(function_name)
         if not func_info:
             return False, [f"Unknown QC function: '{function_name}'"]
+
+        fields = arguments.get(FIELD_DESCRIPTOR, {}).get("value") or []
 
         func_info_arguments = func_info["arguments"]
 
@@ -185,10 +187,14 @@ class QualityControlConstraints:
                 try:
                     validator = TYPE_VALIDATORS.get(arg_type)
                     if validator:
-                        validator(arg_value, type_def.get("constraint", {}))
+                        validator(
+                            value=arg_value,
+                            constraint=type_def.get("constraint", {}),
+                            fields=fields,
+                        )
                         break
                 except ConstraintViolation as e:
-                    errors.append(f"Argument '{arg_name}': {str(e)}")
+                    errors.append(f"Argument '{arg_name}': {e.details or str(e)}")
                     break
 
         return len(errors) == 0, errors

@@ -90,6 +90,10 @@ const functionOptions: FunctionOption[] = [
     description: 'Flag data chunks exceeding a deviation threshold.',
   },
   {
+    label: 'processGeneric',
+    description: 'Function with alias as arguments.',
+  },
+  {
     label: 'propagateFlags',
     description: 'Extend existing flags to preceding or subsequent values.',
   },

@@ -9,6 +9,7 @@ export const POSSIBLE_QC_FUNCTION_TYPES = {
   BOOL: 'bool',
   ENUM: 'enum',
   STR: 'str',
+  FUNCTION: 'function',
 };
 
 export function isDatastreamType(
