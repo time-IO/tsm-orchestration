@@ -15,15 +15,26 @@ from timeio.journaling import Journal
 
 journal = Journal("JsonParser", errors="warn")
 
+DEFAULT_SETTINGS = {
+    "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+}
+
 
 class JsonParser(PandasParser):
 
     def __init__(
-        self, settings: dict[str, Any], normalize_kws: dict[str, Any] | None = None
+        self,
+        settings: dict[str, Any] | None = None,
+        normalize_kws: dict[str, Any] | None = None,
     ):
-        super().__init__(settings)
+        settings = dict(settings or {})
+        configured_normalize_kws = settings.pop("pandas_json_normalize", None) or {}
+        super().__init__({**DEFAULT_SETTINGS, **settings})
+
         if normalize_kws is None:
-            normalize_kws = {}
+            normalize_kws = configured_normalize_kws
+        else:
+            normalize_kws = dict(normalize_kws)
 
         # Remove keywords that control program flow
         for key in ["data", "errors"]:
@@ -70,7 +81,12 @@ class JsonParser(PandasParser):
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str, thing, project) -> pd.DataFrame:
+    def do_parse(
+        self,
+        rawdata: str,
+        project_name,
+        thing_uuid,
+    ) -> pd.DataFrame:
         self.logger.info(self.settings)
         comment = self.settings.get("comment")
         timestamp_keys = self.settings.get("timestamp_keys", {})
