@@ -83,6 +83,8 @@ class MqttPayload:
     class DataParsedV1(_t.TypedDict):
         version: _t.Literal[1] | None
         thing_uuid: str
+        start_date: str
+        end_date: str
 
     class DataParsedV2(_t.TypedDict):
         version: _t.Literal[2]
@@ -90,114 +92,6 @@ class MqttPayload:
         qc_settings_name: str
         start_date: str
         end_date: str
-
-
-class ConfDB:
-
-    class DatabaseT(_t.TypedDict):
-        id: int
-        schema: str
-        user: str
-        password: str
-        ro_user: str
-        re_password: str
-        url: str
-        ro_url: str
-
-    class ExtApiT(_t.TypedDict):
-        id: int
-        api_type_id: int
-        sync_interval: int
-        sync_enabled: bool
-        settings: JsonT | None
-
-    class ExtApiTypeT(_t.TypedDict):
-        id: int
-        name: str
-
-    class ExtSFTP_T(_t.TypedDict):
-        id: int
-        uri: str
-        path: str
-        user: str
-        password: str | None
-        ssh_priv_key: int
-        ssh_pub_key: int
-        sync_interval: int
-        sync_enabled: bool
-
-    class FileParserT(_t.TypedDict):
-        id: int
-        file_parser_type_id: int
-        name: str
-        params: JsonT | None
-
-    class FileParserTypeT(_t.TypedDict):
-        id: int
-        name: str
-
-    class IngestTypeT(_t.TypedDict):
-        id: int
-        name: str
-
-    class MqttT(_t.TypedDict):
-        id: int
-        user: str
-        password: str
-        password_hashed: str
-        topic: str | None
-        mqtt_device_type_id: int | None
-
-    class MqttDeviceTypeT(_t.TypedDict):
-        id: int
-        name: str
-
-    class ProjectT(_t.TypedDict):
-        id: int
-        name: str
-        uuid: str
-        database_id: int
-
-    class QaqcT(_t.TypedDict):
-        id: int
-        name: str
-        project_id: int
-        context_window: str
-
-    class QaqcTestT(_t.TypedDict):
-        id: int
-        qaqc_id: int
-        function: str
-        args: JsonT | None
-        position: int | None
-        name: str | None
-        streams: list[ConfDB.QaqcTestStreamT] | None
-
-    class QaqcTestStreamT(_t.TypedDict):
-        arg_name: str
-        sta_thing_id: int | None
-        sta_stream_id: int | None
-        alias: str
-
-    class S3_StoreT(_t.TypedDict):
-        id: int
-        user: str
-        password: str
-        bucket: str
-        filename_pattern: str | None
-        file_parser_id: int
-
-    class ThingT(_t.TypedDict):
-        id: int
-        uuid: int
-        name: str
-        project_id: int
-        ingest_type_id: int
-        s3_store_id: int
-        mqtt_id: int
-        ext_sftp_id: int | None
-        ext_api_id: int | None
-        description: str | None
 
 
 typedDict = _t.TypeVar("typedDict")
