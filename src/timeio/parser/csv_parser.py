@@ -18,8 +18,22 @@ from timeio.journaling import Journal
 parsedT = TypeVar("parsedT")
 journal = Journal("CsvParser", errors="warn")
 
+DEFAULT_SETTINGS = {
+    "comment": "#",
+    "decimal": ".",
+    "na_values": None,
+    "encoding": "utf-8",
+    "engine": "python",
+    "on_bad_lines": "warn",
+    "header": None,
+}
+
 
 class CsvParser(PandasParser):
+    def __init__(self, settings: dict[str, Any] | None = None):
+        settings = dict(settings or {})
+        pandas_read_csv = settings.pop("pandas_read_csv", None) or {}
+        super().__init__({**DEFAULT_SETTINGS, **settings, **pandas_read_csv})
 
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
@@ -141,7 +155,9 @@ class CsvParser(PandasParser):
         regex = rf"({comment_regex}).*"
         return [re.sub(regex, "", line.strip()) for line in lines]
 
-    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
+    def do_parse(
+        self, rawdata: str, project_name: str, thing_uuid: str
+    ) -> pd.DataFrame:
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
@@ -254,8 +270,8 @@ class CsvParser(PandasParser):
 
         self.logger.debug(f"data.shape={df.shape}")
 
-        self._start_date = df.index[0]
-        self._end_date = df.index[-1]
+        self._start_date = df.index.min()
+        self._end_date = df.index.max()
         return df
 
 

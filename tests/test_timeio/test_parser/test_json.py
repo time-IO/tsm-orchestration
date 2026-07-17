@@ -56,7 +56,7 @@ def test_parsing():
     assert df["Analog_input_voltage_range_4"].tolist() == [0]
 
 
-MULTIDATECOLUMDATA = """    
+MULTIDATECOLUMDATA = """
 {
 "Date": "2025-08-09",
 "Time": "06:15:00",

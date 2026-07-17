@@ -22,10 +22,12 @@ from timeio.errors import ParsingError
 
 class PandasParser(AbcParser):
     def __init__(self, settings: dict[str, Any]):
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__qualname__)
         self.settings = settings
-        name = self.__class__.__name__
-        self.logger.debug(f"parser settings in use with {name}: {self.settings}")
+        self.logger.debug(
+            f"parser settings in use with {self.__class__.__name__}: {self.settings}"
+        )
 
     @abstractmethod
     def do_parse(
@@ -37,6 +39,8 @@ class PandasParser(AbcParser):
         self, data: pd.DataFrame, origin: str, parser_uuid: str | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
+
+        data = data.copy()
 
         data.index.name = "result_time"
         data.index = data.index.map(lambda ts: ts.isoformat())

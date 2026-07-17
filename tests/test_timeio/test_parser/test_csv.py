@@ -77,7 +77,7 @@ def test_dirty_data_parsing():
     settings = {
         "decimal": ".",
         "delimiter": ",",
-        "skiprows": 3,
+        "skiprows": 6,
         "skipfooter": 0,
         "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
     }
@@ -187,12 +187,12 @@ def test_with_ms():
     parser = CsvParser(settings)
     df = parser.do_parse(RAWDATA_WITH_MS, "project", "thing")
     obs = parser.to_observations(df, origin="test")
-    expected_df_index = pd.Index(
+    expected_df_index = pd.DatetimeIndex(
         [
-            "2025-09-04T15:32:32.064000",
-            "2025-09-04T15:32:32.065000",
+            "2025-09-04 15:32:32.064000",
+            "2025-09-04 15:32:32.065000",
         ],
-        name="result_time",
+        name="time",
     )
     expected_obs_timestamps = [
         "2025-09-04T15:32:32.064000",

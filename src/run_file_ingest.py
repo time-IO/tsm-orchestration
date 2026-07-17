@@ -88,7 +88,9 @@ class ParserJobHandler(AbstractHandler):
         with warnings.catch_warnings(record=True) as recorded_warnings:
             warnings.simplefilter("always", ParsingWarning)
             try:
-                rawdata = self.read_file(bucket_name, filename, encoding)
+                rawdata = self.read_file(
+                    bucket_name, filename, encoding, parser.is_binary
+                )
                 df = parser.do_parse(rawdata, schema, thing_uuid)
                 obs = parser.to_observations(df, source_uri, str(parser_uuid))
             except ParsingError as e:
@@ -129,14 +131,14 @@ class ParserJobHandler(AbstractHandler):
         if len(obs) == 0:
             journal.warning(f"Parsed file: {file!r} is empty.", thing_uuid)
             return
-        else:
-            # Now everything is fine and we tell the user
-            journal.info(
-                f"Parsed file: {file!r} | "
-                f"Data rows: {df.shape[0]} | "
-                f"Stored observations: {len(obs)}",
-                thing_uuid,
-            )
+
+        # Now everything is fine and we tell the user
+        journal.info(
+            f"Parsed file: {file!r} | "
+            f"Data rows: {df.shape[0]} | "
+            f"Stored observations: {len(obs)}",
+            thing_uuid,
+        )
 
         self.set_tags(bucket_name, filename, str(parser_uuid), "successful")
         payload = json.dumps(
@@ -201,19 +203,20 @@ class ParserJobHandler(AbstractHandler):
         object_tags["parsing_status"] = parsing_status
         self.minio.set_object_tags(bucket_name, filename, object_tags)
 
-    def read_file(self, bucket_name, object_name, encoding) -> str:
+    def read_file(
+        self, bucket_name: str, object_name: str, encoding: str, is_binary: bool
+    ) -> str:
+
         stat = self.minio.stat_object(bucket_name, object_name)
         if stat.size > _FILE_MAX_SIZE:
             raise IOError("Maximum filesize of 256M exceeded")
+
+        rawdata = self.minio.get_object(bucket_name, object_name).read()
+        if is_binary:
+            return rawdata
+
         self.is_valid_encoding(encoding)
-        rawdata = (
-            self.minio.get_object(bucket_name, object_name)
-            .read()
-            .decode(encoding)
-            # remove the ASCII control character ETX (end-of-text)
-            .rstrip("\x03")
-        )
-        return rawdata
+        return rawdata.decode(encoding).rstrip("\x03")
 
     @staticmethod
     def is_valid_encoding(encoding: str):
