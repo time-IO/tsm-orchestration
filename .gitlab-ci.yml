@@ -44,7 +44,7 @@ prettier:
 api-test:
   stage: check
   needs: []
-  image: python:3-slim
+  image: python:3.13-slim
   variables:
     POSTGRES_SERVER: "api-db"
     POSTGRES_PORT: "5432"
@@ -69,6 +69,7 @@ api-test:
     MQTT_QOS: "2"
     INGEST_MQTT_BROKER_URI: "localhost:1883"
   before_script:
+    - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
     - pip install -r ./api/requirements.txt
   script:
     - pytest

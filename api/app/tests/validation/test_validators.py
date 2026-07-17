@@ -93,131 +93,131 @@ class TestTypeValidatorValidateDatastream:
     def test_valid_list(self, sample_datastream_refs):
         constraint = {"min": 1}
         assert (
-            TypeValidator.validate_datastream(sample_datastream_refs, constraint)
+            TypeValidator.validate_datastream(sample_datastream_refs, constraint, [])
             is True
         )
 
     def test_valid_tuple(self):
         constraint = {"min": 1}
-        assert TypeValidator.validate_datastream(("ds1", "ds2"), constraint) is True
+        assert TypeValidator.validate_datastream(("ds1", "ds2"), constraint, []) is True
 
     def test_invalid_not_list_or_tuple(self):
         constraint = {"min": 1}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_datastream("not a list", constraint)
+            TypeValidator.validate_datastream("not a list", constraint, [])
         assert "datastream" in str(exc_info.value).lower()
         assert "list or tuple" in str(exc_info.value)
 
     def test_below_min_count(self):
         constraint = {"min": 3}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_datastream(["ds1"], constraint)
+            TypeValidator.validate_datastream(["ds1"], constraint, [])
         assert "at least 3 items" in str(exc_info.value)
 
     def test_min_count_exactly_met(self):
         constraint = {"min": 2}
-        assert TypeValidator.validate_datastream(["ds1", "ds2"], constraint) is True
+        assert TypeValidator.validate_datastream(["ds1", "ds2"], constraint, []) is True
 
     def test_default_min_is_one(self):
-        assert TypeValidator.validate_datastream(["ds1"], {}) is True
+        assert TypeValidator.validate_datastream(["ds1"], {}, []) is True
         with pytest.raises(ConstraintViolation):
-            TypeValidator.validate_datastream([], {})
+            TypeValidator.validate_datastream([], {}, [])
 
 
 class TestTypeValidatorValidateFloat:
     def test_valid_float(self):
         constraint = {}
-        assert TypeValidator.validate_float(3.14, constraint) is True
+        assert TypeValidator.validate_float(3.14, constraint, []) is True
 
     def test_valid_int_converts_to_float(self):
         constraint = {}
-        assert TypeValidator.validate_float(42, constraint) is True
+        assert TypeValidator.validate_float(42, constraint, []) is True
 
     def test_valid_string_number(self):
         constraint = {}
-        assert TypeValidator.validate_float("3.14", constraint) is True
+        assert TypeValidator.validate_float("3.14", constraint, []) is True
 
     def test_valid_with_min_constraint(self):
         constraint = {"min": 0.0}
-        assert TypeValidator.validate_float(1.5, constraint) is True
+        assert TypeValidator.validate_float(1.5, constraint, []) is True
 
     def test_valid_with_max_constraint(self):
         constraint = {"max": 100.0}
-        assert TypeValidator.validate_float(50.0, constraint) is True
+        assert TypeValidator.validate_float(50.0, constraint, []) is True
 
     def test_valid_with_min_max_constraint(self):
         constraint = {"min": 0.0, "max": 100.0}
-        assert TypeValidator.validate_float(50.0, constraint) is True
+        assert TypeValidator.validate_float(50.0, constraint, []) is True
 
     def test_below_min_constraint(self):
         constraint = {"min": 10.0}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_float(5.0, constraint)
+            TypeValidator.validate_float(5.0, constraint, [])
         assert "minimum 10.0" in str(exc_info.value)
         assert "5.0" in str(exc_info.value)
 
     def test_above_max_constraint(self):
         constraint = {"max": 10.0}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_float(15.0, constraint)
+            TypeValidator.validate_float(15.0, constraint, [])
         assert "maximum 10.0" in str(exc_info.value)
         assert "15.0" in str(exc_info.value)
 
     def test_invalid_non_numeric_string(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_float("not a number", constraint)
+            TypeValidator.validate_float("not a number", constraint, [])
         assert "numeric value" in str(exc_info.value)
 
     def test_invalid_none(self):
         constraint = {}
         with pytest.raises(ConstraintViolation):
-            TypeValidator.validate_float(None, constraint)
+            TypeValidator.validate_float(None, constraint, [])
 
 
 class TestTypeValidatorValidateInt:
     def test_valid_int(self):
         constraint = {}
-        assert TypeValidator.validate_int(42, constraint) is True
+        assert TypeValidator.validate_int(42, constraint, []) is True
 
     def test_valid_float_truncates(self):
         constraint = {}
-        assert TypeValidator.validate_int(42.9, constraint) is True
+        assert TypeValidator.validate_int(42.9, constraint, []) is True
 
     def test_valid_string_number(self):
         constraint = {}
-        assert TypeValidator.validate_int("42", constraint) is True
+        assert TypeValidator.validate_int("42", constraint, []) is True
 
     def test_valid_with_min_constraint(self):
         constraint = {"min": 0}
-        assert TypeValidator.validate_int(1, constraint) is True
+        assert TypeValidator.validate_int(1, constraint, []) is True
 
     def test_valid_with_max_constraint(self):
         constraint = {"max": 100}
-        assert TypeValidator.validate_int(50, constraint) is True
+        assert TypeValidator.validate_int(50, constraint, []) is True
 
     def test_below_min_constraint(self):
         constraint = {"min": 10}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_int(5, constraint)
+            TypeValidator.validate_int(5, constraint, [])
         assert "minimum 10" in str(exc_info.value)
 
     def test_above_max_constraint(self):
         constraint = {"max": 10}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_int(15, constraint)
+            TypeValidator.validate_int(15, constraint, [])
         assert "maximum 10" in str(exc_info.value)
 
     def test_invalid_non_numeric_string(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_int("not a number", constraint)
+            TypeValidator.validate_int("not a number", constraint, [])
         assert "integer value" in str(exc_info.value)
 
     def test_invalid_none(self):
         constraint = {}
         with pytest.raises(ConstraintViolation):
-            TypeValidator.validate_int(None, constraint)
+            TypeValidator.validate_int(None, constraint, [])
 
 
 class TestTypeValidatorValidateOffset:
@@ -243,105 +243,114 @@ class TestTypeValidatorValidateOffset:
     def test_invalid_offset_type(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_offset(123, constraint)
+            TypeValidator.validate_offset(123, constraint, [])
         assert "offset" in str(exc_info.value).lower()
         assert "string" in str(exc_info.value)
 
     def test_invalid_offset_not_match_regex(self):
         constraint = {"regex": r"^\d+H$"}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_offset("1D", constraint)
+            TypeValidator.validate_offset("1D", constraint, [])
         assert "offset" in str(exc_info.value).lower()
         assert "pattern" in str(exc_info.value)
 
     def test_invalid_offset_not_recognized(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_offset("1X", constraint)
+            TypeValidator.validate_offset("1X", constraint, [])
         assert "offset" in str(exc_info.value).lower()
 
 
 class TestTypeValidatorValidateBool:
     def test_valid_true(self):
         constraint = {}
-        assert TypeValidator.validate_bool(True, constraint) is True
+        assert TypeValidator.validate_bool(True, constraint, []) is True
 
     def test_valid_false(self):
         constraint = {}
-        assert TypeValidator.validate_bool(False, constraint) is True
+        assert TypeValidator.validate_bool(False, constraint, []) is True
 
     def test_valid_string_true(self):
         constraint = {}
-        assert TypeValidator.validate_bool("true", constraint) is True
-        assert TypeValidator.validate_bool("TRUE", constraint) is True
+        assert TypeValidator.validate_bool("true", constraint, []) is True
+        assert TypeValidator.validate_bool("TRUE", constraint, []) is True
 
     def test_valid_string_false(self):
         constraint = {}
-        assert TypeValidator.validate_bool("false", constraint) is True
-        assert TypeValidator.validate_bool("FALSE", constraint) is True
+        assert TypeValidator.validate_bool("false", constraint, []) is True
+        assert TypeValidator.validate_bool("FALSE", constraint, []) is True
 
     def test_invalid_string_other(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_bool("yes", constraint)
+            TypeValidator.validate_bool("yes", constraint, [])
         assert "bool" in str(exc_info.value).lower()
 
     def test_invalid_int(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_bool(1, constraint)
+            TypeValidator.validate_bool(1, constraint, [])
         assert "bool" in str(exc_info.value).lower()
 
 
 class TestTypeValidatorValidateStr:
     def test_valid_string(self):
         constraint = {}
-        assert TypeValidator.validate_str("hello", constraint) is True
+        assert TypeValidator.validate_str("hello", constraint, []) is True
 
     def test_valid_empty_string(self):
         constraint = {}
-        assert TypeValidator.validate_str("", constraint) is True
+        assert TypeValidator.validate_str("", constraint, []) is True
 
     def test_invalid_not_string(self):
         constraint = {}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_str(123, constraint)
+            TypeValidator.validate_str(123, constraint, [])
         assert "str" in str(exc_info.value).lower()
         assert "string" in str(exc_info.value)
 
     def test_invalid_none(self):
         constraint = {}
         with pytest.raises(ConstraintViolation):
-            TypeValidator.validate_str(None, constraint)
+            TypeValidator.validate_str(None, constraint, [])
 
 
 class TestTypeValidatorValidateEnum:
     def test_valid_value_in_list(self):
         constraint = {"only": ["red", "green", "blue"]}
-        assert TypeValidator.validate_enum("red", constraint) is True
+        assert TypeValidator.validate_enum("red", constraint, []) is True
 
     def test_valid_int_in_list(self):
         constraint = {"only": [1, 2, 3]}
-        assert TypeValidator.validate_enum(2, constraint) is True
+        assert TypeValidator.validate_enum(2, constraint, []) is True
 
     def test_invalid_value_not_in_list(self):
         constraint = {"only": ["red", "green", "blue"]}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_enum("yellow", constraint)
+            TypeValidator.validate_enum("yellow", constraint, [])
         assert "enum" in str(exc_info.value).lower()
         assert "red, green, blue" in str(exc_info.value)
 
     def test_invalid_empty_list(self):
         constraint = {"only": []}
         with pytest.raises(ConstraintViolation) as exc_info:
-            TypeValidator.validate_enum("anything", constraint)
+            TypeValidator.validate_enum("anything", constraint, [])
         assert "enum" in str(exc_info.value).lower()
         assert "[]" in str(exc_info.value)
 
 
 class TestTypeValidatorsMapping:
     def test_all_type_names_present(self):
-        expected_types = ["datastream", "float", "int", "offset", "bool", "str", "enum"]
+        expected_types = [
+            "datastream",
+            "float",
+            "int",
+            "offset",
+            "bool",
+            "str",
+            "enum",
+            "function",
+        ]
         assert set(TYPE_VALIDATORS.keys()) == set(expected_types)
 
     def test_validator_callable(self):

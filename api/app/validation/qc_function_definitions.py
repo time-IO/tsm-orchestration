@@ -5,32 +5,36 @@ Quality Control Function Definitions
 Reusable argument definitions and constraint data for QC functions.
 """
 
+FIELD_DESCRIPTOR = "field"
+TARGET_DESCRIPTOR = "target"
+
 OFFSET_REGEX = r"^(\d+)?(Y|YS|A|AS|Q|QS|M|MS|W(-MON|-TUE|-WED|-THU|-FRI|-SAT|-SUN)?|SM|SMS|D|B|C|BM|BMS|BQ|BQS|BY|BYS|CBM|CBMS|CQ|CQS|H|T|min|S|L|ms|U|us|N)$"
 
 OFFSET_TYPE = {"type": "offset", "constraint": {"regex": OFFSET_REGEX}}
 
 DATASTREAM_TYPE = {"type": "datastream", "constraint": {"min": 1}}
 
+FUNCTION_TYPE = {"type": "function", "constraint": {}}
 BOOL_TYPE = {"type": "bool", "constraint": {}}
 
 FIELD_ARG = {
-    "name": "field",
+    "name": FIELD_DESCRIPTOR,
     "description": "Input data stream(s).",
     "optional": False,
     "default_value": None,
     "types": [DATASTREAM_TYPE],
 }
 
-TARGET_ARG = {
-    "name": "target",
+TARGET_ARG_REQUIRED = {
+    "name": TARGET_DESCRIPTOR,
     "description": "Output data stream(s) to which the results are written. Defaults to field if null.",
-    "optional": True,
+    "optional": False,
     "default_value": None,
     "types": [DATASTREAM_TYPE],
 }
 
 TARGET_ARG_SIMPLE = {
-    "name": "target",
+    "name": TARGET_DESCRIPTOR,
     "description": "Output data stream(s).",
     "optional": True,
     "default_value": None,
@@ -50,7 +54,7 @@ _definition = {
         "description": "Find and flag temporally isolated data groups.",
         "arguments": [
             FIELD_ARG,
-            TARGET_ARG,
+            TARGET_ARG_SIMPLE,
             {
                 "name": "gap_window",
                 "description": "Minimum gap size required before and after a group to consider it isolated.",
@@ -415,6 +419,21 @@ _definition = {
                     {"type": "int", "constraint": {"min": 1}},
                     OFFSET_TYPE,
                 ],
+            },
+            FLAG_ARG,
+        ],
+    },
+    "processGeneric": {
+        "description": "Process a time series using a custom function.",
+        "arguments": [
+            FIELD_ARG,
+            TARGET_ARG_REQUIRED,
+            {
+                "name": "function",
+                "description": "Function that accepts one input series per field and returns one output series per target.",
+                "optional": False,
+                "default_value": None,
+                "types": [FUNCTION_TYPE],
             },
             FLAG_ARG,
         ],

@@ -1,30 +1,36 @@
 ARG BASE_IMAGE_REGISTRY=python
-ARG BASE_IMAGE_TAG=3.14-slim
+ARG BASE_IMAGE_TAG=3.13-slim
 
-# see https://hub.docker.com/_/python/
-# e.g. python:3.13-slim
+# See https://hub.docker.com/_/python/
 FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG} AS base
+
+# Install Tkinter runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-tk \
+    tk \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS build
 
 COPY ./requirements.txt /tmp/requirements.txt
-RUN python -m venv /opt/venv
-RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
 FROM base AS dist
 
-# copy the python binaries (with baked-in requirement packages) to the actual stage
-COPY --from=build /opt/venv opt/venv
-# first serach in /opt/venv/bin for binaries (e.g. python3)
+# Copy the virtual environment from the build stage
+COPY --from=build /opt/venv /opt/venv
+
+# Search in the virtual environment first
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN mkdir /app
-
-# create a non-root user and run all further commands as 'appuser'
+# Create application directory and non-root user
 ARG UID=1000
-RUN adduser --uid ${UID} --disabled-password appuser
+RUN mkdir /app && \
+    adduser --uid ${UID} --disabled-password appuser
 
+# Copy application as appuser
 COPY --chown=${UID}:${UID} ./app /app
 
 WORKDIR /app

@@ -100,11 +100,15 @@ async function save() {
     await router.push(detailRoute.value);
   } catch (error) {
     // @ts-expect-error to avoid complicated checks just for type safety, we ignore
-    let errorCaption = error?.response?.data?.detail || '';
+    const detail = error?.response?.data?.detail;
+    let errorCaption = '';
 
-    // if it is a validation error, then error.response.data.detail is an array of objects [{type:string, loc: string[], msg: string, input: any, probably an object}]
-    if (typeof errorCaption === 'object') {
-      errorCaption = errorCaption[0].msg;
+    if (Array.isArray(detail)) {
+      errorCaption = detail.map((item) => item.msg).join('\n');
+    } else if (detail && typeof detail === 'object') {
+      errorCaption = detail.errors?.join('\n') || detail.message || '';
+    } else {
+      errorCaption = detail || '';
     }
 
     $q.notify({
@@ -119,7 +123,7 @@ async function save() {
           handler: () => {},
         },
       ],
-      message: 'Failed to update Ingest',
+      message: 'Failed to update Quality Control Setting',
       caption: errorCaption,
     });
   } finally {
