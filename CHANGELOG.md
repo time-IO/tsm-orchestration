@@ -7,6 +7,25 @@
 ### Changed
 ### Removed
 
+## [2026-07-20]
+### Added
+- Json-Parser timezone settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/219))
+- Bucket Credentials for external SFTP ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/222))
+- Sync Interval for external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/213))
+- Questa MQTT Parser (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/230)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/603)))
+- CSV-Parser encoding type `ANSI` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/234))
+- External API Sensoto ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/210))
+- Optional MQTT-Ingest username ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/239))
+- S3-Explorer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/241))
+- Parameter `flag` to all QC Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/226))
+- QC-Function `processGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/199))
+### Fixed
+- TSystems-API parameters ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/634))
+- Failing QC due to incomplete `data_parsed` message ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/635))
+- External APIs timezone handling (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/646)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/647)))
+### Changed
+### Removed
+
 ## [2026-06-26]
 ### Added
 - More informations, links for users ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/232))
