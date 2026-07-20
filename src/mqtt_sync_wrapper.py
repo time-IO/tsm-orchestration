@@ -32,7 +32,7 @@ def get_bosch_timerange(thing):
 
 
 def get_dwd_timerange(thing):
-    yesterday = datetime.now() - timedelta(days=1)
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
     yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
     return yesterday_start, yesterday_end
@@ -40,7 +40,7 @@ def get_dwd_timerange(thing):
 
 def get_uba_timerange(thing):
     """UBA API expects time_from/time_to in the range of 1 to 24"""
-    datetime_now = datetime.now()
+    datetime_now = datetime.now(timezone.utc)
     datetime_from = datetime_now - timedelta(hours=1)
     if datetime_now.hour == 0:
         datetime_to = (datetime_now - timedelta(days=1)).strftime(
@@ -78,10 +78,10 @@ def get_nm_timerange(thing):
             )
             date = cur.fetchone()[0]
             if date:
-                start_date = date
-    return start_date.strftime("%Y-%m-%d %H:%M:%S"), datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+                start_date = date.astimezone(timezone.utc)
+    return start_date.strftime("%Y-%m-%d %H:%M:%S"), datetime.now(
+        timezone.utc
+    ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 TIMERANGE_MAPPING = {
