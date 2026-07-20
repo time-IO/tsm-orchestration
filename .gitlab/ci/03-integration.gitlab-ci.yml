@@ -7,7 +7,7 @@ docker-service-test:
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "docker compose logs init"
     - "sleep 20"
   script:
@@ -42,7 +42,7 @@ mqtt-service-test:
     - "python3 -m pip install --upgrade pip"
     - "export PAHO_MQTT=$(grep 'paho-mqtt' src/requirements.txt)"
     - "python3 -m pip install $PAHO_MQTT"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "sleep 20"
   script:
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
@@ -69,7 +69,7 @@ combined-integration-test:
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
     - "apk add --no-cache curl postgresql-client"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "sleep 20"
   script:
     - "echo 'testing object storage integration...'"
