@@ -11,6 +11,7 @@ stages:
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
+  COMPOSE_PARALLEL_LIMIT: 1
   # ports mapped to 127.0.0.1 will not be reachable from inside docker network
   # need to define PORT Variables here to overwrite ENVVARs from .env
   DATABASE_PORT: 5432
