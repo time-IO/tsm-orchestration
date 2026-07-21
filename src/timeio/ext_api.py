@@ -6,6 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -123,7 +124,7 @@ class BoschApiSyncer(ExtApiSyncer):
             for parameter, value in obs.items():
                 if value:
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # string is tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": 0,
                         "datastream_pos": parameter,
                         "result_number": value,
@@ -191,7 +192,9 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 if value:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
-                        "result_time": self.unix_ts_to_str(timestamp),
+                        "result_time": self.unix_ts_to_str(
+                            timestamp
+                        ),  # unix ts is converted to UTC datetime string
                         "result_type": result_type,
                         RESULT_TYPE_MAPPING[result_type]: value,
                         "datastream_pos": parameter,
@@ -384,6 +387,15 @@ class UbaApiSyncer(ExtApiSyncer):
                 )
         return measure_data
 
+    @staticmethod
+    def cet_to_utc(dt_string):
+        # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
+        dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
+        dt_cet = dt.replace(tzinfo=ZoneInfo("CET"))
+        dt_utc = dt_cet.astimezone(timezone.utc)
+
+        return dt_utc
+
     def parse_measure_data(self, measure_data: list, station_id: str) -> list:
         """Creates POST body from combined uba measures data"""
         bodies = []
@@ -396,7 +408,7 @@ class UbaApiSyncer(ExtApiSyncer):
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
             if entry["value"]:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["value"],
                     "datastream_pos": entry["measure"],
@@ -461,7 +473,7 @@ class UbaApiSyncer(ExtApiSyncer):
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
             if entry["airquality_index"]:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["airquality_index"],
                     "datastream_pos": "AQI",
@@ -518,7 +530,7 @@ class DwdApiSyncer(ExtApiSyncer):
                 if value:
                     result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # ts is tz aware with UTC: "%Y-%m-%dT%H:%M:%S%z"
                         "result_type": result_type,
                         "datastream_pos": parameter,
                         RESULT_TYPE_MAPPING[result_type]: value,
@@ -555,10 +567,10 @@ class TtnApiSyncer(ExtApiSyncer):
             timestamp = msg["received_at"]
             values = msg["decoded_payload"]
             for k, v in values.items():
-                if v:
+                if v is not None:
                     result_type = dynamic_parameter_mapping(v)
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": result_type,
                         "datastream_pos": k,
                         RESULT_TYPE_MAPPING[result_type]: v,
@@ -624,10 +636,16 @@ class NmApiSyncer(ExtApiSyncer):
             "nm_api_url": self.nm_base_url,
         }
         for timestamp, value in api_response["response_data"]:
+            ts_dt = datetime.strptime(
+                timestamp, "%Y-%m-%d %H:%M:%S"
+            )  # ts is UTC but not tz aware yet
+            ts_tz = ts_dt.replace(
+                tzinfo=timezone.utc
+            )  # make ts UTC aware before DB insert
             if value:
                 bodies.append(
                     {
-                        "result_time": timestamp,
+                        "result_time": ts_tz,
                         "result_type": 0,
                         "datastream_pos": api_response["station_id"],
                         "result_number": float(value),
@@ -677,7 +695,7 @@ class SensotoApiSyncer(ExtApiSyncer):
                 "sensoto_device": entry.pop("device"),
             }
             body = {
-                "result_time": entry["end"],
+                "result_time": entry["end"],  # tz aware with UTC: "%Y-%m-%dT%H:%MZ"
                 "result_type": 0,
                 "datastream_pos": entry["sensor"],
                 "result_number": entry["v"],
