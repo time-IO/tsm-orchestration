@@ -567,7 +567,7 @@ class TtnApiSyncer(ExtApiSyncer):
             timestamp = msg["received_at"]
             values = msg["decoded_payload"]
             for k, v in values.items():
-                if v:
+                if v is not None:
                     result_type = dynamic_parameter_mapping(v)
                     body = {
                         "result_time": timestamp,  # tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
