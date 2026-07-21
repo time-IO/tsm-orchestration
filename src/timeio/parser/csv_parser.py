@@ -243,6 +243,12 @@ class CsvParser(PandasParser):
                     df.columns = custom_names
             else:
                 df.columns = range(len(df.columns))
+        df, timestamp_columns = self.normalize_unix_timestamps(
+            df,
+            timestamp_columns,
+            "column",
+            "timestamp_format",
+        )
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
             try:

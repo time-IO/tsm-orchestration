@@ -91,6 +91,9 @@ class JsonParser(PandasParser):
         comment = self.settings.get("comment")
         timestamp_keys = self.settings.get("timestamp_keys", {})
         df = self._json_to_df(rawdata, comment)
+        df, timestamp_keys = self.normalize_unix_timestamps(
+            df, timestamp_keys, "key", "format"
+        )
         try:
             df = self._set_index(df, timestamp_keys)
         except KeyError as e:

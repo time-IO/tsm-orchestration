@@ -29,6 +29,42 @@ class PandasParser(AbcParser):
             f"parser settings in use with {self.__class__.__name__}: {self.settings}"
         )
 
+    @staticmethod
+    def normalize_unix_timestamps(
+        df: pd.DataFrame,
+        timestamps: list[dict[str, Any]],
+        field_name: str,
+        format_name: str,
+        new_format="%Y-%m-%dT%H:%M:%S%z",
+    ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+
+        timestamps = [ts.copy() for ts in timestamps]
+
+        for ts in timestamps:
+            timestamp_format = ts[format_name]
+            if timestamp_format not in ("UNIX_S", "UNIX_MS"):
+                continue
+
+            if field_name == "column":
+                field = df.columns[ts[field_name]]
+            elif field_name == "key":
+                field = ts[field_name]
+
+            unit = {
+                "UNIX_S": "s",
+                "UNIX_MS": "ms",
+            }[timestamp_format]
+
+            df[field] = pd.to_datetime(
+                df[field],
+                unit=unit,
+                utc=True,
+            ).dt.strftime(new_format)
+
+            ts[format_name] = new_format
+
+        return df, timestamps
+
     @abstractmethod
     def do_parse(
         self, rawdata: Any, project_name: str, thing_uuid: str

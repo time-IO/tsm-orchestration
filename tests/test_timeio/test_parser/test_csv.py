@@ -45,7 +45,7 @@ def test_parsing(settings, columns):
         "decimal": ".",
         "delimiter": ",",
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 1, "timestamp_format": "%Y/%m/%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA.strip(), "project", "thing")
@@ -79,7 +79,7 @@ def test_dirty_data_parsing():
         "delimiter": ",",
         "skiprows": 6,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 1, "timestamp_format": "%Y/%m/%d %H:%M:%S"}],
     }
 
     parser = CsvParser(settings)
@@ -125,8 +125,8 @@ def test_multi_date_column_parsing():
         "skipfooter": 0,
         "header": None,
         "timestamp_columns": [
-            {"column": 0, "format": "%d/%m/%y"},
-            {"column": 1, "format": "%H:%M:%S"},
+            {"column": 0, "timestamp_format": "%d/%m/%y"},
+            {"column": 1, "timestamp_format": "%H:%M:%S"},
         ],
     }
     parser = CsvParser(settings)
@@ -161,7 +161,7 @@ def test_empty_col_csv():
         "skiprows": 0,
         "header": 0,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser(settings)
     df = parser.do_parse(RAWDATA_EMPTY_COLS, "project", "thing")
@@ -181,7 +181,9 @@ def test_with_ms():
         "skiprows": 0,
         "header": 0,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+        "timestamp_columns": [
+            {"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"}
+        ],
     }
 
     parser = CsvParser(settings)
@@ -228,7 +230,9 @@ def test_custom_names(settings, expected_columns, expected_index_name):
         "delimiter": ";",
         "skiprows": 0,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+        "timestamp_columns": [
+            {"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"}
+        ],
     }
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA_WITHOUT_HEADER, "project", "thing")
@@ -242,7 +246,9 @@ def test_custom_names_error():
         "delimiter": ";",
         "skiprows": 0,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S.%f"}],
+        "timestamp_columns": [
+            {"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S.%f"}
+        ],
         "names": ["time", "dachnummer", "Temp_degC_1", "Temp_degC_2", "count"],
     }
     paser = CsvParser(settings)
@@ -271,7 +277,9 @@ RAWDATA_WITH_TZ = """time,var1,var2,var3
     [
         (
             {
-                "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+                "timestamp_columns": [
+                    {"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}
+                ],
                 "timezone": "Europe/Berlin",
             },
             RAWDATA_WITHOUT_TZ,
@@ -286,7 +294,11 @@ RAWDATA_WITH_TZ = """time,var1,var2,var3
             ),
         ),
         (
-            {"timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}]},
+            {
+                "timestamp_columns": [
+                    {"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S%z"}
+                ]
+            },
             RAWDATA_WITH_TZ,
             pd.DatetimeIndex(
                 [
@@ -320,7 +332,7 @@ def test_tz_conversion():
         "skiprows": 0,
         "header": 0,
         "skipfooter": 0,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S%z"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S%z"}],
         "timezone": "Europe/Berlin",
     }
     parser = CsvParser(settings)
@@ -354,7 +366,7 @@ def test_skipping_and_comments_with_header(settings):
         "skipfooter": 2,
         "delimiter": ",",
         "decimal": ".",
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA_SKIP_WITH_HEADER, "project", "thing")
@@ -394,7 +406,7 @@ def test_skipping_and_comments_without_header(settings):
         "delimiter": ",",
         "decimal": ".",
         "header": None,
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**base_settings, **settings})
     df = parser.do_parse(RAWDATA_SKIP_WITHOUT_HEADER, "project", "thing")
@@ -424,7 +436,7 @@ def test_skiprows():
         "decimal": ".",
         "header": 0,
         "skiprows": [0, 2, 3],
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**settings})
     df = parser.do_parse(RAWDATA_SKIP_ROWS, "project", "thing")
@@ -444,8 +456,82 @@ def test_empty_file():
         "decimal": ".",
         "header": 0,
         "skiprows": [0, 2, 3],
-        "timestamp_columns": [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}],
+        "timestamp_columns": [{"column": 0, "timestamp_format": "%Y-%m-%d %H:%M:%S"}],
     }
     parser = CsvParser({**settings})
     with pytest.raises(EmptyDataError):
         parser.do_parse("", "project", "thing")
+
+
+RAWDATA_WITH_UNIX_S = """time,var1,var2,var3
+1782856800,1,2,3
+1782943200,1,2,3
+1783029600,1,2,3
+"""
+
+
+def test_unix_seconds_timestamp():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "timestamp_format": "UNIX_S"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_UNIX_S, "project", "thing")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        name="timestamp",
+    )
+    assert df.index.equals(expected_index)
+    assert df.iloc[:, 2].tolist() == [3, 3, 3]
+
+    obs = parser.to_observations(df, origin="test")
+
+    assert obs[0]["result_time"] == "2026-06-30T22:00:00+00:00"
+    assert obs[1]["result_time"] == "2026-07-01T22:00:00+00:00"
+    assert obs[2]["result_time"] == "2026-07-02T22:00:00+00:00"
+
+
+RAWDATA_WITH_UNIX_MS = """time,var1,var2,var3
+1782856800000,1,2,3
+1782943200000,1,2,3
+1783029600000,1,2,3
+"""
+
+
+def test_unix_miliseconds_timestamp():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "timestamp_format": "UNIX_MS"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_UNIX_MS, "project", "thing")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        name="timestamp",
+    )
+    assert df.index.equals(expected_index)
+    assert df.iloc[:, 2].tolist() == [3, 3, 3]
+
+    obs = parser.to_observations(df, origin="test")
+
+    assert obs[0]["result_time"] == "2026-06-30T22:00:00+00:00"
+    assert obs[1]["result_time"] == "2026-07-01T22:00:00+00:00"
+    assert obs[2]["result_time"] == "2026-07-02T22:00:00+00:00"
