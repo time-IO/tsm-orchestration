@@ -7,7 +7,7 @@
 ### Changed
 ### Removed
 
-## [2026-07-20]
+## [2026-07-21]
 ### Added
 - Json-Parser timezone settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/219))
 - Bucket Credentials for external SFTP ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/222))
@@ -23,6 +23,7 @@
 - TSystems-API parameters ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/634))
 - Failing QC due to incomplete `data_parsed` message ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/635))
 - External APIs timezone handling (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/646)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/647)))
+- TTN 0-value bug ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/649))
 ### Changed
 ### Removed
 
