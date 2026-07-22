@@ -122,7 +122,7 @@ class BoschApiSyncer(ExtApiSyncer):
                 obs["IMEI"] = int(obs["IMEI"])  # Convert IMEI to int if present
             timestamp = obs.pop("UTC")
             for parameter, value in obs.items():
-                if value:
+                if value is not None:
                     body = {
                         "result_time": timestamp,  # string is tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": 0,
@@ -189,7 +189,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
             }
             timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
-                if value:
+                if value is not None:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
                         "result_time": self.unix_ts_to_str(
@@ -406,7 +406,7 @@ class UbaApiSyncer(ExtApiSyncer):
         for entry in measure_data:
             if entry["timestamp"][11:13] == "24":
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
-            if entry["value"]:
+            if entry["value"] is not None:
                 body = {
                     "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
@@ -471,7 +471,7 @@ class UbaApiSyncer(ExtApiSyncer):
             }
             if entry["timestamp"][11:13] == "24":
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
-            if entry["airquality_index"]:
+            if entry["airquality_index"] is not None:
                 body = {
                     "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
@@ -527,7 +527,7 @@ class DwdApiSyncer(ExtApiSyncer):
             obs.pop("fallback_source_ids", None)
             obs.pop("source_id", None)
             for parameter, value in obs.items():
-                if value:
+                if value is not None:
                     result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
                         "result_time": timestamp,  # ts is tz aware with UTC: "%Y-%m-%dT%H:%M:%S%z"
@@ -642,7 +642,7 @@ class NmApiSyncer(ExtApiSyncer):
             ts_tz = ts_dt.replace(
                 tzinfo=timezone.utc
             )  # make ts UTC aware before DB insert
-            if value:
+            if value is not None:
                 bodies.append(
                     {
                         "result_time": ts_tz,
