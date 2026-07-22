@@ -15,7 +15,7 @@ EXE = Path(__file__).parent / "bin" / "dump_dbd"
 
 DEFAULT_SETTINGS = {
     "delimiter": ",",
-    "timestamp_columns": [{"column": 0, "timestamp_format": "%Y/%m/%d %H:%M:%S.%f"}],
+    "timestamp_columns": [{"column": 0, "format": "%Y/%m/%d %H:%M:%S.%f"}],
     # TODO: Check if this is True
     "timezone": "UTC",
 }

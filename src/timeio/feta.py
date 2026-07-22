@@ -599,7 +599,7 @@ class FileParser(Base, FromUUIDMixin):
         return {}
 
     def _get_csv_ts_cols(self):
-        query = f"""select "column", timestamp_format from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
+        query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
         return self._fetchall(self._conn, query, self.id)
 
 
