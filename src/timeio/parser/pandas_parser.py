@@ -38,10 +38,13 @@ class PandasParser(AbcParser):
     ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
 
         timestamps = [ts.copy() for ts in timestamps]
-
+        unit_map = {
+            "UNIX_S": "s",
+            "UNIX_MS": "ms",
+        }
         for ts in timestamps:
             timestamp_format = ts["format"]
-            if timestamp_format not in ("UNIX_S", "UNIX_MS"):
+            if timestamp_format not in unit_map.keys():
                 continue
 
             if parser_type == "csv":
@@ -49,10 +52,7 @@ class PandasParser(AbcParser):
             elif parser_type == "json":
                 field = ts["key"]
 
-            unit = {
-                "UNIX_S": "s",
-                "UNIX_MS": "ms",
-            }[ts["format"]]
+            unit = unit_map[timestamp_format]
 
             df[field] = pd.to_datetime(
                 df[field],
