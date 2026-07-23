@@ -3,6 +3,7 @@
 import warnings
 
 import ast
+import inspect
 import numpy as np
 import pandas as pd
 
@@ -164,9 +165,10 @@ class SaQCWrapper:
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
         if stream in self._input_data:
-            return not self._qc._data[stream.alias].equals(
-                self._input_data[stream]["data"]
-            )
+            called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
+            for func_name in called_qc_funcs:
+                if "@processing" in inspect.getsource(getattr(type(self._qc), func_name)):
+                    return True
         return False
 
     def index_is_modified(self, stream: QcFunctionStream) -> bool:
