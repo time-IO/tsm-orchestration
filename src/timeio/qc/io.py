@@ -8,7 +8,6 @@ import typing
 import json
 from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 
 from timeio.common import ObservationResultType, get_result_field_name
@@ -17,7 +16,6 @@ from timeio.databases import DBapi
 if typing.TYPE_CHECKING:
     from timeio.qc.saqc import SaQCWrapper
     from timeio.qc.qcfunction import QcFunctionStream
-
     StreamsT = dict[QcFunctionStream, pd.DataFrame]
 
 
@@ -176,13 +174,16 @@ def read_stream_data(
             )
 
             df = pd.DataFrame(data["observations"])
-            df = df[df.result_type == 0]
-            out[stream] = pd.DataFrame(
-                data={
-                    "data": df.result_number.to_numpy(),
-                    "quality": df.result_quality.to_numpy().astype(object),
-                },
-                index=pd.to_datetime(df["result_time"]),
-            ).sort_index()
-
+            if not df.empty:
+                df = df[df.result_type == 0]
+                data = pd.DataFrame(
+                    data={
+                        "data": df.result_number.to_numpy(),
+                        "quality": df.result_quality.to_numpy().astype(object),
+                    },
+                    index=pd.to_datetime(df["result_time"]),
+                ).sort_index()
+            else:
+                data = pd.DataFrame(columns=["data", "quality"])
+            out[stream] = data
     return out
