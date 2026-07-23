@@ -756,26 +756,26 @@ class QAQCTest(Base):
 
     def get_streams(self) -> list[QcStreamT]:
         out = []
-        for stream in self.streams:
-            for i in stream["input"]["value"]:
+        for stream_info in self.streams:
+            stream = {}
+            for i in stream_info["input"]["value"]:
                 stream["sta_stream_id"] = i["@iot.id"]
                 stream["sta_thing_id"] = i["Thing"]["@iot.id"]
                 stream["alias"] = i["alias"]
-                stream["arg_name"] = stream.pop("name")
-                del stream["input"]
-            if stream["sta_stream_id"] is None:
-                meta = self._get_new_stream(stream)
-            else:
-                meta = self._get_existing_stream(stream)
-            out.append(
-                stream
-                | meta
-                | {
-                    "context_window": self._parse_context_window(
-                        self.qaqc.context_window
-                    )
-                }
-            )
+                stream["arg_name"] = stream_info["name"]
+                if stream["sta_stream_id"] is None:
+                    meta = self._get_new_stream(stream)
+                else:
+                    meta = self._get_existing_stream(stream)
+                out.append(
+                    stream
+                    | meta
+                    | {
+                        "context_window": self._parse_context_window(
+                            self.qaqc.context_window
+                        )
+                    }
+                   )
         return out
 
 
