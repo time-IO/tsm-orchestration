@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 import saqc
-from saqc.parsing.visitor import ConfigFunctionParser
+from saqc.funcs.generic import compileGeneric
 
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream
 
@@ -151,17 +151,12 @@ class SaQCWrapper:
             return
 
         if func.func_name.endswith("Generic"):
-            # NOTE:
-            # The generic function parser is not as well exposed in
-            # SaQC as is could be, that's why we need to go the extra
-            # mile and built a valid saqc config-file function
-            func_string = f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
-            tree = ast.parse(func_string, mode="eval").body
-            _, kwargs = ConfigFunctionParser().parse(tree)
-            func.params["func"] = kwargs["func"]
+            func.params["func"] = compileGeneric(func.params.pop("function"))
+
         self._qc = saqc_func(
             field=func.field_names, target=func.target_names, **func.params
         )
+
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
         if stream in self._input_data:

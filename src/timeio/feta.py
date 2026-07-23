@@ -734,7 +734,7 @@ class QAQCTest(Base):
             """
             SELECT DISTINCT
                 l.datasource_id as schema,
-                thing_id as thing_uuid,
+                thing_id as thing_uuid
             FROM
               sms_device_mount_action m
               JOIN sms_configuration c on c.id = m.configuration_id
@@ -752,6 +752,7 @@ class QAQCTest(Base):
             "mutable": True,
             "begin_date": None,
             "end_date": None,
+            "datastream_id": None,
         }
 
     def get_streams(self) -> list[QcStreamT]:
