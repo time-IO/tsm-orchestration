@@ -157,12 +157,13 @@ class SaQCWrapper:
             field=func.field_names, target=func.target_names, **func.params
         )
 
-
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
         if stream in self._input_data:
             called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
             for func_name in called_qc_funcs:
-                if "@processing" in inspect.getsource(getattr(type(self._qc), func_name)):
+                if "@processing" in inspect.getsource(
+                    getattr(type(self._qc), func_name)
+                ):
                     return True
         return False
 

@@ -16,6 +16,7 @@ from timeio.databases import DBapi
 if typing.TYPE_CHECKING:
     from timeio.qc.saqc import SaQCWrapper
     from timeio.qc.qcfunction import QcFunctionStream
+
     StreamsT = dict[QcFunctionStream, pd.DataFrame]
 
 

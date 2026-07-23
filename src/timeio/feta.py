@@ -776,7 +776,7 @@ class QAQCTest(Base):
                             self.qaqc.context_window
                         )
                     }
-                   )
+                )
         return out
 
 
