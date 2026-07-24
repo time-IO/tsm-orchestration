@@ -222,3 +222,85 @@ def test_array_json_parsing():
     )
     assert df["Frame_count"].tolist() == [123, 124, 125]
     assert df["Illuminance"].tolist() == [123, 130, 128]
+
+
+UNIX_S_DATA = """
+[
+    {
+        "Datetime": 1782856800,
+        "value": 1
+    },
+    {
+        "Datetime": 1782943200,
+        "value": 2
+    },
+    {
+        "Datetime": 1783029600,
+        "value": 3
+    }
+]
+"""
+
+
+def test_unix_seconds_timestamp():
+    settings = {
+        "timestamp_keys": [
+            {"key": "Datetime", "format": "UNIX_S"},
+        ]
+    }
+
+    parser = JsonParser(settings)
+    df = parser.do_parse(UNIX_S_DATA, "thing", "project")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        tz="UTC",
+    )
+
+    assert df.index.equals(expected_index)
+    assert df["value"].tolist() == [1, 2, 3]
+
+
+UNIX_MS_DATA = """
+[
+    {
+        "Datetime": 1782856800000,
+        "value": 1
+    },
+    {
+        "Datetime": 1782943200000,
+        "value": 2
+    },
+    {
+        "Datetime": 1783029600000,
+        "value": 3
+    }
+]
+"""
+
+
+def test_unix_milliseconds_timestamp():
+    settings = {
+        "timestamp_keys": [
+            {"key": "Datetime", "format": "UNIX_MS"},
+        ]
+    }
+
+    parser = JsonParser(settings)
+    df = parser.do_parse(UNIX_MS_DATA, "thing", "project")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        tz="UTC",
+    )
+
+    assert df.index.equals(expected_index)
+    assert df["value"].tolist() == [1, 2, 3]

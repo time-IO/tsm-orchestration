@@ -32,9 +32,7 @@ RAWDATA = """
                 "headlines_to_exclude": 4,
                 "footlines_to_exclude": 0,
                 "header": None,
-                "timestamp_columns": [
-                    {"column": 1, "timestamp_format": "%Y/%m/%d %H:%M:%S"}
-                ],
+                "timestamp_columns": [{"column": 1, "format": "%Y/%m/%d %H:%M:%S"}],
             },
             [2, 4, 8],
         ),
@@ -449,3 +447,77 @@ def test_empty_file():
     parser = CsvParser({**settings})
     with pytest.raises(EmptyDataError):
         parser.do_parse("", "project", "thing")
+
+
+RAWDATA_WITH_UNIX_S = """time,var1,var2,var3
+1782856800,1,2,3
+1782943200,1,2,3
+1783029600,1,2,3
+"""
+
+
+def test_unix_seconds_timestamp():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "UNIX_S"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_UNIX_S, "project", "thing")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        name="timestamp",
+    )
+    assert df.index.equals(expected_index)
+    assert df.iloc[:, 2].tolist() == [3, 3, 3]
+
+    obs = parser.to_observations(df, origin="test")
+
+    assert obs[0]["result_time"] == "2026-06-30T22:00:00+00:00"
+    assert obs[1]["result_time"] == "2026-07-01T22:00:00+00:00"
+    assert obs[2]["result_time"] == "2026-07-02T22:00:00+00:00"
+
+
+RAWDATA_WITH_UNIX_MS = """time,var1,var2,var3
+1782856800000,1,2,3
+1782943200000,1,2,3
+1783029600000,1,2,3
+"""
+
+
+def test_unix_miliseconds_timestamp():
+    settings = {
+        "decimal": ".",
+        "delimiter": ",",
+        "skiprows": 0,
+        "header": 0,
+        "skipfooter": 0,
+        "timestamp_columns": [{"column": 0, "format": "UNIX_MS"}],
+    }
+    parser = CsvParser(settings)
+    df = parser.do_parse(RAWDATA_WITH_UNIX_MS, "project", "thing")
+
+    expected_index = pd.DatetimeIndex(
+        [
+            "2026-06-30 22:00:00+00:00",
+            "2026-07-01 22:00:00+00:00",
+            "2026-07-02 22:00:00+00:00",
+        ],
+        name="timestamp",
+    )
+    assert df.index.equals(expected_index)
+    assert df.iloc[:, 2].tolist() == [3, 3, 3]
+
+    obs = parser.to_observations(df, origin="test")
+
+    assert obs[0]["result_time"] == "2026-06-30T22:00:00+00:00"
+    assert obs[1]["result_time"] == "2026-07-01T22:00:00+00:00"
+    assert obs[2]["result_time"] == "2026-07-02T22:00:00+00:00"
