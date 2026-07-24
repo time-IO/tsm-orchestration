@@ -734,7 +734,7 @@ class QAQCTest(Base):
             """
             SELECT DISTINCT
                 l.datasource_id as schema,
-                thing_id as thing_uuid,
+                thing_id as thing_uuid
             FROM
               sms_device_mount_action m
               JOIN sms_configuration c on c.id = m.configuration_id
@@ -752,30 +752,31 @@ class QAQCTest(Base):
             "mutable": True,
             "begin_date": None,
             "end_date": None,
+            "datastream_id": None,
         }
 
     def get_streams(self) -> list[QcStreamT]:
         out = []
-        for stream in self.streams:
-            for i in stream["input"]["value"]:
+        for stream_info in self.streams:
+            stream = {}
+            for i in stream_info["input"]["value"]:
                 stream["sta_stream_id"] = i["@iot.id"]
                 stream["sta_thing_id"] = i["Thing"]["@iot.id"]
                 stream["alias"] = i["alias"]
-                stream["arg_name"] = stream.pop("name")
-                del stream["input"]
-            if stream["sta_stream_id"] is None:
-                meta = self._get_new_stream(stream)
-            else:
-                meta = self._get_existing_stream(stream)
-            out.append(
-                stream
-                | meta
-                | {
-                    "context_window": self._parse_context_window(
-                        self.qaqc.context_window
-                    )
-                }
-            )
+                stream["arg_name"] = stream_info["name"]
+                if stream["sta_stream_id"] is None:
+                    meta = self._get_new_stream(stream)
+                else:
+                    meta = self._get_existing_stream(stream)
+                out.append(
+                    stream
+                    | meta
+                    | {
+                        "context_window": self._parse_context_window(
+                            self.qaqc.context_window
+                        )
+                    }
+                )
         return out
 
 
