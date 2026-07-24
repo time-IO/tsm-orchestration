@@ -13,6 +13,7 @@ import QcFunctionRenameField from 'src/components/QcFunctionRenameField.vue';
 import QcFunctionRolling from 'src/components/QcFunctionRolling.vue';
 import QcFunctionTransferFlags from 'src/components/QcFunctionTransferFlags.vue';
 import QcFunctionProcessGeneric from 'src/components/QCFunctionProcessGeneric.vue';
+import QCFunctionFlagGeneric from 'components/QCFunctionFlagGeneric.vue';
 
 export type QcFunctionName =
   | 'flagPlateau'
@@ -28,7 +29,8 @@ export type QcFunctionName =
   | 'renameField'
   | 'rolling'
   | 'transferFlags'
-  | 'processGeneric';
+  | 'processGeneric'
+  | 'flagGeneric';
 
 export const qcFunctionComponents: Record<QcFunctionName, Component> = {
   flagPlateau: QcFunctionFlagPlateau,
@@ -45,6 +47,7 @@ export const qcFunctionComponents: Record<QcFunctionName, Component> = {
   rolling: QcFunctionRolling,
   transferFlags: QcFunctionTransferFlags,
   processGeneric: QcFunctionProcessGeneric,
+  flagGeneric: QCFunctionFlagGeneric,
 };
 
 export function getQcFunctionComponent(functionName: QcFunctionName): Component | null {

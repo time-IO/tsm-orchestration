@@ -437,6 +437,21 @@ _definition = {
             },
         ],
     },
+    "flagGeneric": {
+        "description": "Flag a time series using a custom condition.",
+        "arguments": [
+            FIELD_ARG,
+            TARGET_ARG_SIMPLE,
+            {
+                "name": "function",
+                "description": "Function that accepts one input series per field and returns one boolean output series.",
+                "optional": False,
+                "default_value": None,
+                "types": [FUNCTION_TYPE],
+            },
+            FLAG_ARG,
+        ],
+    },
     "propagateFlags": {
         "description": "Extend flags to preceding or subsequent values.",
         "arguments": [

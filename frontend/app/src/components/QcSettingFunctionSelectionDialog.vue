@@ -90,8 +90,12 @@ const functionOptions: FunctionOption[] = [
     description: 'Flag data chunks exceeding a deviation threshold.',
   },
   {
+    label: 'flagGeneric',
+    description: 'Flag values based on custom conditions',
+  },
+  {
     label: 'processGeneric',
-    description: 'Function with alias as arguments.',
+    description: 'Process data using custom functions.',
   },
   {
     label: 'propagateFlags',
