@@ -133,7 +133,7 @@ class TestQualityControlConstraintsGetAvailableFunctions:
         assert "flagJumps" in result
         assert "flagRange" in result
         assert "rolling" in result
-        assert len(result) == 14
+        assert len(result) == 15
 
     def test_returns_string_names(self):
         result = QualityControlConstraints.get_available_functions()
@@ -358,10 +358,17 @@ class TestQualityControlConstraintsValidateSettings:
         assert len(errors) > 0
 
 
-def test_process_generic_valid():
+@pytest.mark.parametrize(
+    "function_name",
+    [
+        "processGeneric",
+        "flagGeneric",
+    ],
+)
+def test_generic_function_valid(function_name):
     settings = [
         QualityControlFunctionCreate(
-            name="processGeneric",
+            name=function_name,
             quality_control_function_arguments=[
                 QualityControlFunctionArgumentCreate(
                     name="field",
@@ -386,10 +393,17 @@ def test_process_generic_valid():
     assert is_valid
 
 
-def test_process_generic_invalid():
+@pytest.mark.parametrize(
+    "function_name",
+    [
+        "processGeneric",
+        "flagGeneric",
+    ],
+)
+def test_generic_function_invalid(function_name):
     settings = [
         QualityControlFunctionCreate(
-            name="processGeneric",
+            name=function_name,
             quality_control_function_arguments=[
                 QualityControlFunctionArgumentCreate(
                     name="field", type="datastream", input={"value": ["ds1"]}
@@ -408,6 +422,6 @@ def test_process_generic_invalid():
 
     assert is_valid is False
     assert len(errors) == 1
-    assert "Function 'processGeneric'" in errors[0]
+    assert f"Function '{function_name}'" in errors[0]
     assert "Argument 'function'" in errors[0]
     assert "Invalid expression:" in errors[0]
