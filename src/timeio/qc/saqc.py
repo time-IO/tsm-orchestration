@@ -21,6 +21,7 @@ QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "vers
 # used to identify which function calls are allowed to overwrite a `target`
 PROCESSING_FUNCTIONS = {"processGeneric", "rolling"}
 
+
 class STAMPLATEScheme(saqc.FloatScheme):
 
     @staticmethod
@@ -140,7 +141,6 @@ class SaQCWrapper:
         # add targets
         for stream in func.targets:
             self._streams[stream.alias] = stream
-
 
         saqc_func = getattr(self._qc, func.func_name)
 
