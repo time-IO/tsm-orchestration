@@ -40,26 +40,12 @@
         as pandas.Series. The function must return one pandas.Series for each selected target.
       </span>
     </div>
-
-    <!-- flag     -->
-    <q-input
-      class="q-mb-md"
-      filled
-      v-model.number="formData.flag"
-      label="Flag"
-      :rules="[numberGreaterThanEqualsRule(0)]"
-      hint="Enter a floating point number"
-    />
   </qc-function-form-template>
 </template>
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import {
-  requiredDatastreamsRule,
-  requiredRule,
-  numberGreaterThanEqualsRule,
-} from 'src/utils/form_utils';
+import { requiredDatastreamsRule, requiredRule } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -77,7 +63,6 @@ const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
   func: '' as string,
-  flag: 255.0 as number | null,
 });
 
 function loadInitialData() {
@@ -86,12 +71,10 @@ function loadInitialData() {
   const fieldArg = props.initialData.find((a) => a.name === 'field');
   const targetArg = props.initialData.find((a) => a.name === 'target');
   const funcArg = props.initialData.find((a) => a.name === 'function');
-  const flagArg = props.initialData.find((a) => a.name === 'flag');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.func = (funcArg?.input.value as string) ?? '';
-  formData.value.flag = (flagArg?.input.value as number) ?? 255;
 }
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
@@ -111,18 +94,12 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.func },
     type: POSSIBLE_QC_FUNCTION_TYPES.FUNCTION,
   };
-  const flagObject = {
-    name: 'flag',
-    input: { value: formData.value.flag },
-    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
-  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
     fieldObject,
     targetObject,
     funcObject,
-    flagObject,
   ];
 
   return returnArray;
@@ -137,7 +114,6 @@ const resetFormData = () => {
   formData.value.field = [];
   formData.value.target = [];
   formData.value.func = '';
-  formData.value.flag = 255.0;
 };
 
 const removeForm = () => {

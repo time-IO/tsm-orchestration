@@ -435,7 +435,6 @@ _definition = {
                 "default_value": None,
                 "types": [FUNCTION_TYPE],
             },
-            FLAG_ARG,
         ],
     },
     "propagateFlags": {
