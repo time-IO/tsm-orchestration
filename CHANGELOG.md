@@ -7,6 +7,16 @@
 ### Changed
 ### Removed
 
+## [2026-07-24]
+### Added
+- QC Function `flagGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/253))
+### Fixed
+- Failing QC ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/652))
+- External APIs skipping falsy values ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/651))
+### Changed
+- Removed parameter `flag` from QC-Function `processGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/254))
+### Removed
+
 ## [2026-07-21]
 ### Added
 - Json-Parser timezone settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/219))
