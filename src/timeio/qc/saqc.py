@@ -2,8 +2,6 @@
 
 import warnings
 
-import ast
-import inspect
 import numpy as np
 import pandas as pd
 
@@ -20,6 +18,8 @@ except ImportError:
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
 
+# used to identify which function calls are allowed to overwrite a `target`
+PROCESSING_FUNCTIONS = {"processGeneric", "rolling"}
 
 class STAMPLATEScheme(saqc.FloatScheme):
 
@@ -141,14 +141,8 @@ class SaQCWrapper:
         for stream in func.targets:
             self._streams[stream.alias] = stream
 
+
         saqc_func = getattr(self._qc, func.func_name)
-        if func.func_name == "flagRange":
-            # NOTE: needed to work around a SaQC-Bug,
-            #       that will be fixed in the next release
-            # TODO: remove entire block after the bug is fixed
-            for f in func.field_names:
-                self._qc = saqc_func(field=f, target=func.target_names, **func.params)
-            return
 
         if func.func_name.endswith("Generic"):
             func.params["func"] = compileGeneric(func.params.pop("function"))
@@ -161,9 +155,7 @@ class SaQCWrapper:
         if stream in self._input_data:
             called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
             for func_name in called_qc_funcs:
-                if "@processing" in inspect.getsource(
-                    getattr(type(self._qc), func_name)
-                ):
+                if func_name in PROCESSING_FUNCTIONS:
                     return True
         return False
 
