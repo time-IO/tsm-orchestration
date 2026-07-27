@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "manual:login": "node scripts/manual-login-handoff.mjs",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "trace": "playwright show-trace"
