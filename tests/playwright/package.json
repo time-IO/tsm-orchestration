@@ -1,0 +1,15 @@
+{
+  "name": "timeio-playwright-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "trace": "playwright show-trace"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "dotenv": "17.2.3"
+  }
+}
