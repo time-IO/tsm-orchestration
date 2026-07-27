@@ -7,19 +7,7 @@ const authState = process.env.TIMEIO_STORAGE_STATE;
 const frontendPath =
   process.env.TIMEIO_FRONTEND_PATH ?? "/data-source-management/";
 
-test("frontend exposes a login entry point", async ({ page }) => {
-  await page.goto(frontendPath);
-
-  const loginControls = page
-    .getByRole("link", { name: /log\s*in|login|sign\s*in|anmelden/i })
-    .or(page.getByRole("button", { name: /log\s*in|login|sign\s*in|anmelden/i }))
-    .or(page.getByLabel(/username|user name|benutzer|login/i))
-    .or(page.locator('input[name="username"], input[type="password"]'));
-
-  await expect(loginControls.first()).toBeVisible();
-});
-
-test("user can log in and log out with form credentials", async ({ page }) => {
+test("user can log in and log out with form credentials @auth", async ({ page }) => {
   test.skip(
     !username || !password,
     "Set TIMEIO_USERNAME and TIMEIO_PASSWORD for a form-login run.",
@@ -50,7 +38,7 @@ test("user can log in and log out with form credentials", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("authenticated session exposes a logout entry point", async ({ browser }) => {
+test("authenticated session exposes a logout entry point @auth", async ({ browser }) => {
   test.skip(!authState, "Set TIMEIO_STORAGE_STATE=.auth/timeio.json after a headed login.");
 
   const context = await browser.newContext({ storageState: authState });

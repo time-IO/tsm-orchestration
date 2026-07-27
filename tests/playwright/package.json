@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "env:generated": "node scripts/write-generated-env.mjs",
     "manual:login": "node scripts/manual-login-handoff.mjs",
     "test": "playwright test",
+    "test:auth": "playwright test --grep @auth",
     "test:headed": "playwright test --headed",
+    "test:smoke": "playwright test --grep @smoke",
     "trace": "playwright show-trace"
   },
   "devDependencies": {

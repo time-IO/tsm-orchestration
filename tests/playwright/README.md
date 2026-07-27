@@ -10,6 +10,18 @@ npm install
 npm test
 ```
 
+Run only the no-secret smoke tests:
+
+```bash
+npm run test:smoke
+```
+
+Run only credential-gated tests:
+
+```bash
+npm run test:auth
+```
+
 For a manual headed login handoff:
 
 ```bash
@@ -31,7 +43,19 @@ Useful environment variables:
   `.auth/timeio.json`.
 - `TIMEIO_SLOWMO_MS`: optional delay between manual browser actions, defaults
   to `50`.
+- `TIMEIO_GENERATED_ENV`: optional output path for `npm run env:generated`,
+  defaults to `.env.generated`.
+
+For throwaway local or CI deployments, generate a local env file:
+
+```bash
+npm run env:generated
+```
+
+The generated file contains a random username/password pair for an environment
+that is provisioned with matching credentials. Creating the app user is still a
+deployment responsibility; Playwright only consumes the values.
 
 For SSO or other interactive login flows, run headed once and save storage
 state manually under `.auth/`. Do not commit `.auth/`, traces, HAR files, or
-other auth-bearing artifacts.
+other auth-bearing artifacts. Do not commit `.env.generated`.

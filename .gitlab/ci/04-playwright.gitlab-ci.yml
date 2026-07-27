@@ -1,0 +1,27 @@
+---
+
+playwright-smoke:
+  stage: "end-to-end"
+  image: "mcr.microsoft.com/playwright:v1.62.0-noble"
+  needs: []
+  variables:
+    TIMEIO_BASE_URL: "https://timeio.web-intern-stage.app.ufz.de"
+    TIMEIO_FRONTEND_PATH: "/data-source-management/"
+  before_script:
+    - "cd tests/playwright"
+    - "npm ci"
+  script:
+    - "npm run test:smoke"
+  artifacts:
+    when: always
+    paths:
+      - "tests/playwright/playwright-report/"
+      - "tests/playwright/test-results/"
+    expire_in: 14 days
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
+      when: manual
+      allow_failure: true
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: manual
+      allow_failure: true
