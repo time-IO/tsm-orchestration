@@ -204,9 +204,6 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
-      # same MQTT auth used by legacy (django) frontend and new frontend
-      FRONTEND_MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      FRONTEND_MQTT_PASS: "${THING_MANAGEMENT_MQTT_PASS}"
     ports:
       - "${MQTT_PORT}:1883"
       - "${MQTT_PORT_SECURE}:8883"
@@ -806,7 +803,7 @@ services:
       GRAFANA_URL: "${VISUALIZATION_URL}"
       GRAFANA_USER: "${VISUALIZATION_USER}"
       GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
+      ALLOWED_VOS: "${DSM_API_ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
       JOURNALING: "${JOURNALING}"
@@ -1207,7 +1204,6 @@ services:
 
 
 volumes:
-  frontend-statics:
   sftp-private-keys:
   tomcat-context:
   database:
