@@ -1048,37 +1048,19 @@ services:
     mem_limit: 4g
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
-      CREATEDB_POSTGRES_USER: "${CRON_DATABASE_ADMIN_USER}"
-      CREATEDB_POSTGRES_PASSWORD: "${CRON_DATABASE_ADMIN_PASSWORD}"
-      CREATEDB_POSTGRES_HOST: "${CRON_DATABASE_ADMIN_HOST}"
-      CREATEDB_POSTGRES_DATABASE: "${CRON_DATABASE_ADMIN_DB_NAME}"
-      SMS_ACCESS_TYPE: "${CRON_SMS_ACCESS_TYPE}"
-      SMS_API_URL: "${CRON_SMS_API_URL}"
-      SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
-      CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
-      CV_API_URL: "${CRON_CV_API_URL}"
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
-      MINIO_URL: "${OBJECT_STORAGE_HOST}"
-      MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
-      MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
-      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
-      DSMDB_DSN: "${DSMDB_DSN}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: cron-scheduler
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
       API_SYNC_TOPIC: sync_ext_apis
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
       MQTT_MONITORING_TOPIC: monitor_mqtt
-      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
-      DB_HOST: "${DATABASE_ADMIN_HOST}"
-      DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
     depends_on:
       init:
         condition: service_completed_successfully
@@ -1089,8 +1071,6 @@ services:
       retries: 5
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - ./src:/scripts:ro
-      - sftp-private-keys:/sftp-private-keys:ro
     logging:
       options:
         max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
@@ -1204,7 +1184,6 @@ services:
 
 
 volumes:
-  sftp-private-keys:
   tomcat-context:
   database:
   visualization:
