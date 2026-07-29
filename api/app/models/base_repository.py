@@ -333,9 +333,10 @@ class QualityControlSettingRepository(BaseRepository):
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
 
-            self.check_for_existing_name_update(
-                update_payload["name"], entity.permission_group_id, entity.id
-            )
+            if "name" in update_payload:
+                self.check_for_existing_name_update(
+                    update_payload["name"], entity.permission_group_id, entity.id
+                )
 
             entity.sqlmodel_update(update_payload)
             self.session.add(entity)
