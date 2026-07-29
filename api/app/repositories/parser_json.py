@@ -125,9 +125,10 @@ class ParserJsonRepository:
         parser_json = self.find_one(parser_id, permission_group_ids_of_user)
         parser_detailed = parser_json.parser_detailed
 
-        self.check_for_existing_name_update(
-            data["name"], parser_detailed.permission_group_id, parser_json.parser_id
-        )
+        if "name" in payload:
+            self.check_for_existing_name_update(
+                data["name"], parser_detailed.permission_group_id, parser_json.parser_id
+            )
 
         try:
             parser_detailed.sqlmodel_update(
