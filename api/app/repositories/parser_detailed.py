@@ -46,14 +46,24 @@ class ParserDetailedRepository:
             .options(joinedload(self.model.parser).joinedload(Parser.ingest))
         )
         if filters:
+
             if filters.uuid and FilterOperator.ilike in filters.uuid:
                 uuid_value = filters.uuid[FilterOperator.ilike]
                 statement = statement.where(cast(Parser.uuid, String).ilike(uuid_value))
                 filters.uuid = {}
 
+            if filters.parser_type and FilterOperator.eq in filters.parser_type:
+                statement = statement.where(
+                    self.model.parser.has(
+                        Parser.parser_type == filters.parser_type[FilterOperator.eq]
+                    )
+                )
+                filters.parser_type = {}
+
             statement = apply_filters(statement, filters)
 
         results = self.session.exec(statement).unique().scalars().all()
+
         flatt_list = [self.to_flat(item) for item in results]
         return apply_sort_list(flatt_list, sort_by) if sort_by else flatt_list
 
