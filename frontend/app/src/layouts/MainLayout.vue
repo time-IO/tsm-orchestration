@@ -43,9 +43,7 @@
         <q-item-section avatar>
           <q-icon name="home" size="xs" />
         </q-item-section>
-        <q-item-section class="text-uppercase" data-cy="SidebarMenu_ItemLabel">
-          Home
-        </q-item-section>
+        <q-item-section class="text-uppercase"> Home </q-item-section>
       </q-item>
       <q-separator />
       <q-list>
@@ -60,7 +58,7 @@
           <q-item-section v-if="item.icon" avatar>
             <q-icon :name="item.icon" size="xs" />
           </q-item-section>
-          <q-item-section class="text-uppercase" data-cy="SidebarMenu_ItemLabel">
+          <q-item-section class="text-uppercase">
             {{ item.name }}
           </q-item-section>
           <q-item-section
