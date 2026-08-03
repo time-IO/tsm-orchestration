@@ -123,7 +123,10 @@ def sync_permission_groups(
         userinfo = oidc.fetch_userinfo(access_token=credentials.credentials)
 
         allowed_vos = settings.ALLOWED_VOS_LIST
-        set_of_entitlements = set(userinfo.get("eduperson_entitlement", []))
+        entitlement_array = userinfo.get("eduperson_entitlement", [])
+        if isinstance(entitlement_array, str):
+            entitlement_array = [entitlement_array]
+        set_of_entitlements = set(entitlement_array)
 
         filtered_entitlements = {
             entitlement
