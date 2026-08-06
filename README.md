@@ -23,8 +23,6 @@ Edit your `/etc/hosts` file and add the following entry:
 docker compose up -d
 ```
 
-For Qc-Settings to work on local machine also see: `Qc-Setting Form locally` section in this Readme
-
 ### Frontend
 - visit: http://localhost
 
@@ -180,12 +178,14 @@ docker compose run --rm frontend npx prettier --write .
   - always follow the existing naming structure, e.g. `const ENV_OBJECT_STORAGE_URL = process.env.OBJECT_STORAGE_URL || 'ENV_OBJECT_STORAGE_URL_PLACEHOLDER'` 
 - afterward they can be used with `process.env.<KEY>`
   - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts`
- 
 
-### Qc-Setting Form locally
-- to be able to select a field and/or target datastream in local setup you will need to do the following: 
-- create any ingest
-- update the table `database` column `username` to `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`
+### STA integration
+- By default, STA is mocked via a FROST server preloaded with [demo data](https://gist.githubusercontent.com/hylkevds/4ffba774fe0128305047b7bcbcd2672e/raw/demoEntities.json) intended for development purposes. This data is available through all STA-endpoints. 
+- Accessible at http://localhost/sta.
+- Additional data can be uploaded to the FROST server by sending a `POST` request to a respective endpoint such as http://localhost/sta/v1.1/Things (see [docs](https://fraunhoferiosb.github.io/FROST-Server/sensorthingsapi/requestingData/STA-Basic-Requests.html)) or by using the HTTP tool available in the [FROST web interface](http://localhost/sta/).
+- However, if you wish to test with productive or other external STA data instead:
+  - Set the environment variable `STA_ROOT_URL` to the base URL of your desired endpoint (e. g. `https://tsm.ufz.de/sta/`) and restart the service.
+  - Update the column `username` in the table `database` to your desired schema/endpoint (e. g. `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`).
 
 ### Auth
 - Keycloak
