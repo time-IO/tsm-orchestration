@@ -31,7 +31,7 @@ services:
       S3_REGION: "${S3_REGION:-eu-central-1}"
       PROXY_URL: "${PROXY_URL:-http://localhost:80}"
       LOG_LEVEL: "${LOG_LEVEL:-debug}"
-      STA_ROOT_URL: "${STA_ROOT_URL:-https://tsm.ufz.de/sta/}"
+      STA_ROOT_URL: "${STA_ROOT_URL:-http://proxy/sta/}"
       STA_VERSION: "${STA_VERSION:-/v1.1/}"
       FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
       MQTT_BROKER_HOST: "${MQTT_BROKER_HOST:-mqtt-broker}"
@@ -173,6 +173,40 @@ services:
       -P "${MQTT_PASSWORD:-dsm}"
       --id "mqtt-cat"
 
+  sta-db:
+    build: ./sta-mock
+    environment:
+      POSTGRES_DB: frost
+      POSTGRES_USER: frost
+      POSTGRES_PASSWORD: frost
+    volumes:
+      - sta-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U frost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mock-sta:
+    image: fraunhoferiosb/frost-server-http:latest
+    depends_on:
+      sta-db:
+        condition: service_healthy
+    environment:
+      serviceRootUrl: http://localhost/sta
+      persistence_db_driver: org.postgresql.Driver
+      persistence_db_url: jdbc:postgresql://sta-db:5432/frost
+      persistence_db_username: frost
+      persistence_db_password: frost
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fs http://localhost:8080/FROST-Server/v1.1 >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    expose:
+      - "8080"
+
 volumes:
   keycloak-data:
   api-data:
+  sta-data:
