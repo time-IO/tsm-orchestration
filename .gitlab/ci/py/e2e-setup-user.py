@@ -87,14 +87,23 @@ def set_password(token, user_id):
     response.raise_for_status()
     print(f"Password set for user {test_username}")
 
-def get_group_id(token):
+def create_or_get_group(token):
     url = f"http://{host}/keycloak/admin/realms/{realm}/groups"
+    response = requests.post(
+        url,
+        headers={"Authorization": f"Bearer {token}"},
+        json={"name": group_path.strip("/")}
+    )
+    if response.status_code not in (201, 409, 400):
+        response.raise_for_status()
+
+    # Look up the group id regardless of whether it was just created or already existed
     response = requests.get(url, headers={"Authorization": f"Bearer {token}"})
     response.raise_for_status()
     for group in response.json():
         if group["path"] == group_path:
             return group["id"]
-    print(f"Group {group_path} not found")
+    print(f"Group {group_path} could not created or found")
     sys.exit(1)
 
 def add_user_to_group(token, user_id, group_id):

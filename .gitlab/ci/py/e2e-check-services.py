@@ -21,12 +21,38 @@ def log(message):
 
 #Grafana
 def check_grafana_dashboard():
+    auth = ("grafana", "grafana")
+
+    #dashboard
     url = f"http://{host}/visualization/api/dashboards/uid/{ingest_uuid}"
-    response = requests.get(url, auth=("grafana", "grafana"))
+    response = requests.get(url, auth=auth)
     if response.status_code != 200:
         log(f"Grafana dashboard check failed: {response.status_code}")
         sys.exit(1)
-    log("Grafana dashboard: OK")
+
+    #folders
+    url = f"http://{host}/visualization/api/folders/{group_uuid}"
+    response = requests.get(url, auth=auth)
+    if response.status_code != 200:
+        log(f"Grafana folder check failed: {response.status_code}")
+        sys.exit(1)
+
+    #datasource
+    url = f"http://{host}/visualization/api/datasources/uid/{group_uuid}"
+    response = requests.get(url, auth=auth)
+    if response.status_code != 200:
+        log(f"Grafana datasource check failed: {response.status_code}")
+        sys.exit(1)
+
+    #teams
+    url = f"http://{host}/visualization/api/teams/search"
+    response = requests.get(url, params={"uid": group_uuid}, auth=auth)
+    response.raise_for_status()
+    if response.json()["totalCount"] < 1:
+        log("Grafana team check failed: no team found")
+        sys.exit(1)
+
+    log("Grafana dashboard, folder, datasource and team: OK")
 
 #DB-Query
 def get_db_connection():
@@ -55,7 +81,7 @@ def get_database_credentials(conn):
         )
         row = cur.fetchone()
         if row is None:
-            log("No database entry found for permission group {group_uuid}")
+            log(f"No database entry found for permission group {group_uuid}")
             sys.exit(1)
         username, encrypted_password = row
         password = decrypt_password(encrypted_password)
@@ -80,6 +106,22 @@ def check_database():
         log(f"Database login check failed: {e}")
         sys.exit(1)
     log("Database login: OK")
+
+    # Verify the thing was actually provisioned in the user's schema
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f'SELECT 1 FROM "{username}".thing WHERE uuid = %s',
+                (ingest_uuid,),
+            )
+            if cur.fetchone() is None:
+                log(f"Thing check failed: no row found for uuid {ingest_uuid}")
+                sys.exit(1)
+    finally:
+        conn.close()
+    log("Thing exists in database: OK")
+
     return username
 
 def check_frost(db_username):
