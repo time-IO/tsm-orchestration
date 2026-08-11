@@ -25,7 +25,7 @@ const isLoading = ref(false);
 
 const formData = ref<QualityControlSettingCreate>({
   name: null,
-  context_window: null,
+  context_window: '0',
   is_active: true,
   description: null,
   permission_group_id: null,
