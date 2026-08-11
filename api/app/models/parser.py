@@ -32,7 +32,7 @@ class Parser(SQLModel, table=True):
     parser_type: str = Field(
         description="type used for inheritance", index=True
     )  # e.g csv, json, mqtt
-    ingest: Optional["Ingest"] = Relationship(back_populates="parser")
+    ingest: Optional[list["Ingest"]] = Relationship(back_populates="parser")
 
     parser_mqtt_detail: Optional["ParserMqtt"] = Relationship(back_populates="parser")
     parser_detailed: Optional["ParserDetailed"] = Relationship(
