@@ -28,14 +28,14 @@
             :rules="[(val) => !!val || 'Permission Group is required']"
             class="q-mb-md"
           />
-          <!-- Name Field -->
+          <!-- Context Window -->
           <q-input
             filled
             class="q-mb-md"
             v-model="formData.context_window"
             label="Context Window *"
             hint="Enter a Context Window for this QC Setting"
-            :rules="[(val) => !!val || 'Context Window is required']"
+            :rules="[(val) => !!val || 'Context Window is required', offsetAliasMatchRule]"
           />
           <!-- Description -->
           <q-input
@@ -200,6 +200,7 @@ import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { Datastream } from 'src/services/sta/types';
 import { isDatastreamType } from 'src/utils/quality_control_utils';
 import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
+import { offsetAliasMatchRule } from 'src/utils/form_utils';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
   default: {

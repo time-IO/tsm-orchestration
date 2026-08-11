@@ -11,7 +11,7 @@ const offsetAliasRegex =
 export const offsetAliasMatchRule = (val: string) =>
   !val ||
   offsetAliasRegex.test(val) ||
-  'value is not a regular offset, please check the documentation';
+  'Value is not a regular offset, please check the documentation';
 
 export const requiredDatastreamsRule = (val: Datastream[] | null) =>
   (Array.isArray(val) && val.length > 0) || 'At least one datastream is required';
