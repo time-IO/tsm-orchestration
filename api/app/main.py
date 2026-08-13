@@ -34,6 +34,7 @@ from routers import (
     parser_detailed,
     usage_statistics,
     ingest_external_api,
+    parser_soilcan,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
@@ -65,6 +66,7 @@ app.add_middleware(
 # the order of the router defines the order of the openapi doc
 app.include_router(parser_csv.router)
 app.include_router(parser_json.router)
+app.include_router(parser_soilcan.router)
 app.include_router(ingest.router)
 app.include_router(ingest_external_api_bosch.router)
 app.include_router(ingest_external_api_dwd.router)

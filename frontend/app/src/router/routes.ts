@@ -61,6 +61,10 @@ import QualityControlDetail from 'pages/QualityControlDetail.vue';
 import QualityControlEdit from 'pages/QualityControlEdit.vue';
 import QualityControlCopy from 'pages/QualityControlCopy.vue';
 import IngestOverviewTriggerExternalApi from 'pages/IngestOverviewTriggerExternalApi.vue';
+import ParserNewSoilcan from 'pages/ParserNewSoilcan.vue';
+import ParserDetailSoilcan from 'pages/ParserDetailSoilcan.vue';
+import ParserEditSoilcan from 'pages/ParserEditSoilcan.vue';
+import ParserCopySoilcan from 'pages/ParserCopySoilcan.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -309,6 +313,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/parser/new/soilcan',
+    component: ParserNewSoilcan,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/parser/csv/:id',
     component: ParserDetailCsv,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -316,6 +325,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/parser/json/:id',
     component: ParserDetailJson,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/parser/soilcan/:id',
+    component: ParserDetailSoilcan,
     meta: { requiresAuth: true },
   },
   {
@@ -329,6 +343,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/parser/soilcan/:id/edit',
+    component: ParserEditSoilcan,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/parser/csv/:id/copy',
     component: ParserCopyCsv,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -336,6 +355,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/parser/json/:id/copy',
     component: ParserCopyJson,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/parser/soilcan/:id/copy',
+    component: ParserCopySoilcan,
     meta: { requiresAuth: true },
   },
   {

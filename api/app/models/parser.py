@@ -22,7 +22,7 @@ class Parser(SQLModel, table=True):
 
     __table_args__ = (
         CheckConstraint(
-            "parser_type IN ('csv','json','mqtt')",
+            "parser_type IN ('csv','json','mqtt', 'soilcan')",
             name="ck_parser_type",
         ),
     )

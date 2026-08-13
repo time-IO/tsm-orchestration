@@ -17,6 +17,7 @@ import neutronMonitorStationController from 'src/services/neutron_monitor_statio
 import mqttParserController from 'src/services/parser_mqtt';
 import csvParserController from 'src/services/parser_csv';
 import jsonParserController from 'src/services/parser_json';
+import soilcanParserController from 'src/services/parser_soilcan';
 import qualityControlSettingController from 'src/services/quality_control_setting';
 import staController from 'src/services/sta';
 import qualityControlSettingsTriggerController from 'src/services/quality_control_settings_trigger';
@@ -49,6 +50,7 @@ export const API = {
   mqttParser: mqttParserController,
   csvParser: csvParserController,
   jsonParser: jsonParserController,
+  soilcanParser: soilcanParserController,
   triggerExternalGenAPI: triggerExternalApiGenController,
   qualityControlSetting: qualityControlSettingController,
   sta: staController,

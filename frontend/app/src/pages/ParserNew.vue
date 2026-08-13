@@ -46,6 +46,13 @@ const data = [
     description: 'An experimental parser for flat JSON data using the python pandas library',
     path: '/parser/new/json',
   },
+  {
+    name: 'soilcan',
+    icon: 'folder_copy',
+    label: 'SOILCAN',
+    description: 'A parser for ingests associated with SoilCan',
+    path: '/parser/new/soilcan',
+  },
 ];
 </script>
 

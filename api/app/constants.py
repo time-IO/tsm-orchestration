@@ -60,6 +60,7 @@ class ParserType(str, Enum):
     CSV = "csv"
     MQTT = "mqtt"
     JSON = "json"
+    SOILCAN = "soilcan"
 
     @classmethod
     def from_string(cls, value: str) -> "ParserType":
