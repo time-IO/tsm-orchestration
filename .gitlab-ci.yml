@@ -9,7 +9,6 @@ stages:
   - build
   - release
 
-
 freeze:
   stage: freeze
   needs: []
@@ -20,7 +19,6 @@ freeze:
       dotenv: date.env
   script:
     - echo "BUILD_DATE=$(date +%Y-%m-%d-%H%M%S)" > date.env
-
 
 black:
   stage: check
@@ -84,7 +82,6 @@ npm-lint:
   script:
     - npm run lint:all
 
-
 npm-test:
   stage: check
   needs: []
@@ -95,7 +92,6 @@ npm-test:
   script:
     # no tests defined yet, but we can already include this job
     - npm run test
-
 
 docker-build:
   stage: build

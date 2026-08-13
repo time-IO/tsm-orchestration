@@ -23,6 +23,7 @@ docker compose up -d
 ## Commands
 
 ### Frontend (`frontend/app/`)
+
 ```bash
 npm run lint      # ESLint
 npm run lint:ts   # vue-tsc --noEmit
@@ -32,6 +33,7 @@ npm run dev       # quasar dev
 ```
 
 ### API
+
 ```bash
 # Format Python with black
 docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
@@ -44,6 +46,7 @@ docker compose run --rm -u $UID --entrypoint "" api pytest
 ```
 
 ### CI Pipeline (.gitlab-ci.yml)
+
 Order: `freeze → check (black, npm-lint, npm-test) → build → release`
 
 - `npm-test` currently exits 0 with no actual tests
@@ -56,9 +59,12 @@ Order: `freeze → check (black, npm-lint, npm-test) → build → release`
 **Frontend** (`frontend/app/quasar.config.ts` > `build.env`): use `process.env.<KEY>` at runtime.
 
 **Important:** Frontend env vars use placeholder pattern for runtime substitution:
+
 ```typescript
-const ENV_API_BASE_URL = process.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER'
+const ENV_API_BASE_URL =
+  process.env.API_BASE_URL || "ENV_API_BASE_URL_PLACEHOLDER";
 ```
+
 During build, missing vars become `<KEY>_PLACEHOLDER` strings. The generic frontend image's entrypoint replaces these at container startup.
 
 ## Database Migrations
@@ -77,6 +83,7 @@ During build, missing vars become `<KEY>_PLACEHOLDER` strings. The generic front
 - Permission groups from `eduperson_entitlement` claim
 
 **Permission group entitlement format:** `a:a:a:group:<VO Name>:<Group Name>#`
+
 - VO names must be in `ALLOWED_VOS` env var (comma-separated)
 
 ## API Router Order

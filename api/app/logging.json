@@ -29,9 +29,7 @@
   },
   "loggers": {
     "uvicorn": {
-      "handlers": [
-        "default"
-      ],
+      "handlers": ["default"],
       "level": "INFO",
       "propagate": false
     },
@@ -39,24 +37,18 @@
       "level": "INFO"
     },
     "uvicorn.access": {
-      "handlers": [
-        "access"
-      ],
+      "handlers": ["access"],
       "level": "INFO",
       "propagate": false
     },
     "app": {
-      "handlers": [
-        "default"
-      ],
+      "handlers": ["default"],
       "level": "INFO",
       "propagate": false
     }
   },
   "root": {
-    "handlers": [
-      "default"
-    ],
+    "handlers": ["default"],
     "level": "INFO"
   }
 }

@@ -7,9 +7,11 @@ SPDX-FileCopyrightText: 2020 - 2023
 
 SPDX-License-Identifier: EUPL-1.2
 -->
+
 # Keycloak
 
 ## Purpose
+
 The purpose of this keycloak is to avoid the dependency to the [Helmholtz AAI](https://hifis.net/aai/) and to mock its behavior.
 
 ## Documents
@@ -22,4 +24,4 @@ The purpose of this keycloak is to avoid the dependency to the [Helmholtz AAI](h
   - Contains information specific for the client:
     - Created groups
     - Created users
-    - __Which environment variables you need to set__
+    - **Which environment variables you need to set**

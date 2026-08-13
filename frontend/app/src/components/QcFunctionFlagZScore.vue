@@ -25,6 +25,7 @@
         :showTempCreateBtn="true"
       />
     </div>
+
     <!--    method-->
     <q-select
       v-model="formData.method"
@@ -35,6 +36,7 @@
       hint="'standard' or 'modified' Z-score calculation."
       filled
     />
+
     <!--    window-->
     <qc-function-form-int-offset-input
       label="window * "
@@ -45,6 +47,7 @@
       v-model:input="formData.window"
       hint="Rolling window size."
     />
+
     <!--    thresh-->
     <q-input
       class="q-mb-md"
@@ -54,6 +57,7 @@
       :rules="[numberGreaterThanEqualsRule(0)]"
       hint="Z-score threshold."
     />
+
     <!--    min_residuals-->
     <q-input
       class="q-mb-md"
@@ -63,6 +67,7 @@
       :rules="[numberGreaterThanEqualsRule(0)]"
       hint="Minimum residual to consider a point as outlier."
     />
+
     <!--    min_periods-->
     <q-input
       class="q-mb-md"
@@ -72,6 +77,7 @@
       :rules="[integerRule, numberGreaterThanEqualsRule(1)]"
       hint="Minimum valid points in a window."
     />
+
     <!--    center-->
     <div class="q-mb-md">
       <q-item tag="label" v-ripple>
@@ -84,6 +90,7 @@
         </q-item-section>
       </q-item>
     </div>
+
     <!--    axis-->
     <q-input
       class="q-mb-md"
@@ -99,9 +106,18 @@
       class="q-mb-md"
       filled
       v-model.number="formData.flag"
-      label="Flag"
+      label="Flag (enter a floating point number)"
       :rules="[numberGreaterThanEqualsRule(0)]"
-      hint="Enter a floating point number"
+      hint="Flag assigned to values identified by this function."
+    />
+
+    <!-- dfilter    -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.dfilter"
+      label="dfilter (enter a floating point number)"
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
   </qc-function-form-template>
 </template>
@@ -143,6 +159,7 @@ const formData = ref({
   center: true,
   axis: null as number | null,
   flag: 255.0 as number | null,
+  dfilter: 0 as number | null,
 });
 
 function loadInitialData() {
@@ -158,6 +175,7 @@ function loadInitialData() {
   const centerArg = props.initialData.find((a) => a.name === 'center');
   const axisArg = props.initialData.find((a) => a.name === 'axis');
   const flagArg = props.initialData.find((a) => a.name === 'flag');
+  const dfilterArg = props.initialData.find((a) => a.name === 'dfilter');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
@@ -169,6 +187,7 @@ function loadInitialData() {
   formData.value.center = (centerArg?.input.value as boolean) ?? true;
   formData.value.axis = (axisArg?.input.value as number) ?? null;
   formData.value.flag = (flagArg?.input.value as number) ?? null;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -224,9 +243,18 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.flag },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
+  const dfilterObject = {
+    name: 'dfilter',
+    input: { value: formData.value.dfilter },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
-  const returnArray: Array<QualityControlFunctionArgumentBase> = [fieldObject, flagObject];
+  const returnArray: Array<QualityControlFunctionArgumentBase> = [
+    fieldObject,
+    flagObject,
+    dfilterObject,
+  ];
 
   // only add optional fields if their value is not null
   if (formData.value.target.length > 0) {
@@ -273,6 +301,7 @@ const resetFormData = () => {
   formData.value.center = true;
   formData.value.axis = null;
   formData.value.flag = 255.0;
+  formData.value.dfilter = 0;
 };
 
 const removeForm = () => {

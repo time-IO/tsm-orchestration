@@ -42,9 +42,18 @@
       class="q-mb-md"
       filled
       v-model.number="formData.flag"
-      label="Flag"
+      label="Flag (enter a floating point number)"
       :rules="[numberGreaterThanEqualsRule(0)]"
-      hint="Enter a floating point number"
+      hint="Flag assigned to values identified by this function."
+    />
+
+    <!-- dfilter    -->
+    <q-input
+      class="q-mb-md"
+      filled
+      v-model.number="formData.dfilter"
+      label="dfilter (enter a floating point number)"
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
   </qc-function-form-template>
 </template>
@@ -74,6 +83,7 @@ const formData = ref({
   target: [] as Datastream[],
   func: '' as string,
   flag: 255.0 as number | null,
+  dfilter: 0 as number | null,
 });
 
 function loadInitialData() {
@@ -83,11 +93,13 @@ function loadInitialData() {
   const targetArg = props.initialData.find((a) => a.name === 'target');
   const funcArg = props.initialData.find((a) => a.name === 'function');
   const flagArg = props.initialData.find((a) => a.name === 'flag');
+  const dfilterArg = props.initialData.find((a) => a.name === 'dfilter');
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.func = (funcArg?.input.value as string) ?? '';
   formData.value.flag = (flagArg?.input.value as number) ?? 255;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
 }
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
@@ -112,6 +124,11 @@ const formDataWithTypes = computed(() => {
     input: { value: formData.value.flag },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
+  const dfilterObject = {
+    name: 'dfilter',
+    input: { value: formData.value.dfilter },
+    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+  };
 
   // include required fields
   const returnArray: Array<QualityControlFunctionArgumentBase> = [
@@ -119,6 +136,7 @@ const formDataWithTypes = computed(() => {
     targetObject,
     funcObject,
     flagObject,
+    dfilterObject,
   ];
 
   return returnArray;
@@ -134,6 +152,7 @@ const resetFormData = () => {
   formData.value.target = [];
   formData.value.func = '';
   formData.value.flag = 255.0;
+  formData.value.dfilter = 0;
 };
 
 const removeForm = () => {
