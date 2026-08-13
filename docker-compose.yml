@@ -58,16 +58,18 @@ services:
       - "./api/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf"
     command: mosquitto -c /mosquitto/config/mosquitto.conf
     healthcheck:
-      test: [ "CMD-SHELL", "mosquitto_sub \
+      test: [
+          "CMD-SHELL",
+          "mosquitto_sub \
           -t '$$SYS/broker/version' \
           -C 1 \
           -u $${MQTT_USER:-dsm} \
           -P $${MQTT_PASSWORD:-dsm} \
-          --id docker-compose-healthcheck" ]
+          --id docker-compose-healthcheck",
+        ]
       interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL:-10s}"
       timeout: 10s
       retries: 6
-
 
   frontend:
     image: time-io-datasource-management-frontend:dev
@@ -136,7 +138,7 @@ services:
     volumes:
       - "api-data:/var/lib/postgresql/data/"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${API_DB_POSTGRES_USER:-postgres}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${API_DB_POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 10

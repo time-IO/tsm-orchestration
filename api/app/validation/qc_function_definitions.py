@@ -49,6 +49,14 @@ FLAG_ARG = {
     "types": [{"type": "float", "constraint": {"min": 0}}],
 }
 
+DFILTER_ARG = {
+    "name": "dfilter",
+    "description": "Values with flags greater than or equal to this threshold are treated as missing during processing.",
+    "optional": True,
+    "default_value": 0,
+    "types": [{"type": "float", "constraint": {}}],
+}
+
 _definition = {
     "flagIsolated": {
         "description": "Find and flag temporally isolated data groups.",
@@ -70,6 +78,7 @@ _definition = {
                 "types": [OFFSET_TYPE],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagJumps": {
@@ -99,6 +108,7 @@ _definition = {
                 "types": [{"type": "int", "constraint": {"min": 0}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagRange": {
@@ -121,15 +131,12 @@ _definition = {
                 "types": [{"type": "float", "constraint": {}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagAll": {
         "description": "Set the given flag at all unflagged positions.",
-        "arguments": [
-            FIELD_ARG,
-            TARGET_ARG_SIMPLE,
-            FLAG_ARG,
-        ],
+        "arguments": [FIELD_ARG, TARGET_ARG_SIMPLE, FLAG_ARG, DFILTER_ARG],
     },
     "flagUniLOF": {
         "description": "Flag outliers using univariate Local Outlier Factor (LOF).",
@@ -223,6 +230,7 @@ _definition = {
                 "types": [{"type": "float", "constraint": {"min": 0}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagZScore": {
@@ -288,6 +296,7 @@ _definition = {
                 "types": [{"type": "int", "constraint": {"max": 1, "min": 0}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagByScatterLowpass": {
@@ -340,6 +349,7 @@ _definition = {
                 "types": [{"type": "int", "constraint": {"min": 0}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagOffset": {
@@ -376,6 +386,7 @@ _definition = {
                 "types": [{"type": "float", "constraint": {}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "flagPlateau": {
@@ -421,6 +432,7 @@ _definition = {
                 ],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "processGeneric": {
@@ -450,15 +462,12 @@ _definition = {
                 "types": [FUNCTION_TYPE],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "propagateFlags": {
         "description": "Extend flags to preceding or subsequent values.",
-        "arguments": [
-            FIELD_ARG,
-            TARGET_ARG_SIMPLE,
-            FLAG_ARG,
-        ],
+        "arguments": [FIELD_ARG, TARGET_ARG_SIMPLE, FLAG_ARG, DFILTER_ARG],
     },
     "renameField": {
         "description": "Rename field to the given name.",
@@ -473,6 +482,7 @@ _definition = {
                 "types": [{"type": "str", "constraint": {}}],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "rolling": {
@@ -526,6 +536,7 @@ _definition = {
                 "types": [BOOL_TYPE],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
     "transferFlags": {
@@ -548,6 +559,7 @@ _definition = {
                 "types": [BOOL_TYPE],
             },
             FLAG_ARG,
+            DFILTER_ARG,
         ],
     },
 }

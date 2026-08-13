@@ -15,16 +15,17 @@ api:
 
 ## Created groups:
 
-  - `a:a:a:group:VO:Group1#`
-  - `a:a:a:group:VO:Group2#`
-  - `a:a:a:group:VO2:Group1#` (can be used as a not allowed VO)
+- `a:a:a:group:VO:Group1#`
+- `a:a:a:group:VO:Group2#`
+- `a:a:a:group:VO2:Group1#` (can be used as a not allowed VO)
 
-- __Note__:
+- **Note**:
 
   - Please note that the `VO` name must be added to the `ALLOWED_VOS` environment variable
 
 ## Created user:
-  - __Note__:  All users have the password `password`
+
+- **Note**: All users have the password `password`
 
 | Username | Groups                                             | Purpose                                    |
 | -------- | -------------------------------------------------- | ------------------------------------------ |

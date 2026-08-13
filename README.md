@@ -1,15 +1,20 @@
 # Data Source Management
 
 ## Setup
+
 Build Docker Images
+
 ```
 docker compose build
 ```
+
 Install node modules
+
 ```
 docker compose run --rm -u $UID frontend npm ci
 ```
-### Update /etc/hosts 
+
+### Update /etc/hosts
 
 Edit your `/etc/hosts` file and add the following entry:
 
@@ -17,23 +22,27 @@ Edit your `/etc/hosts` file and add the following entry:
 127.0.0.1       proxy
 ```
 
-
 ## Run
+
 ```
 docker compose up -d
 ```
 
+For Qc-Settings to work on local machine also see: `Qc-Setting Form locally` section in this Readme
+
 ### Frontend
+
 - visit: http://localhost
 
 ### Api
-- available under http://localhost/api
-- Documentation: http://localhost/api/docs 
 
+- available under http://localhost/api
+- Documentation: http://localhost/api/docs
 
 ## Authentication
+
 - The frontend application (single page application) authenticates against the Identity Provider (IDP) using authorization code flow with proof key for code exchange (pkce)
-- The frontend application receives an id token, access token and a refresh token  
+- The frontend application receives an id token, access token and a refresh token
   - The refresh token is used to get new tokens by the idp
   - The id token does nearly not include any information
   - The access token is used as a bearer token in the authorization header in each request to the api
@@ -42,20 +51,22 @@ docker compose up -d
   - The api therefore requests the sign keys by the IDP
 - The api verifies that the token is issued by the IDP (issuer) and that the token is issued for the frontend (audience)
 - The api uses the `sub` claim in the token to find the user in its database
-  - If the api can't find a corresponding user, it will be created using the information provided by the userinfo endpoint of the idp 
+  - If the api can't find a corresponding user, it will be created using the information provided by the userinfo endpoint of the idp
 - The user is authenticated and can be used in the requests
 - To get any information about the logged-in user, the frontend needs to make an additional request to the api, to retrieve the stored information of the user
 
-Potential Improvements:  
+Potential Improvements:
+
 - The current implementation of the auth flow of the api is implemented synchronously
 - It could be improved using an asynchronous method
 
 ## Permission Groups
+
 - Every entity a user can create with the api, needs to be associated with a permission group
 - A user can be member of several permission groups
 - The identity provider must provide the information to which permission groups a user belongs via the `eduperson_entitlement` claim
 - The name of a permission group in the `eduperson_entitlement` claim must match the pattern `a:a:a:group:<VO Name>:<Group Name>#`
-  - `VO Name`: Virtual Organisation Name, a user can belong to several permission groups in several VOs 
+  - `VO Name`: Virtual Organisation Name, a user can belong to several permission groups in several VOs
   - `Group Name`: Name of the Group, must be unique within the VO
   - example:
   ```
@@ -63,13 +74,17 @@ Potential Improvements:
       "a:a:a:group:VO:Group1#",
       "a:a:a:group:VO:Group2#"
   ]
-   ```
-- Permission Groups of VOs, that should be allowed to be used with the api, must be listed in `ALLOWED_VOS` environment variable 
+  ```
+- Permission Groups of VOs, that should be allowed to be used with the api, must be listed in `ALLOWED_VOS` environment variable
 
 ## Generic Frontend Image
+
 ### Description
-To provide the possibility to set the environment variables for the frontend during runtime we provide a `generic frontend image`. 
+
+To provide the possibility to set the environment variables for the frontend during runtime we provide a `generic frontend image`.
+
 ### How it works
+
 The key to the solution is how the environment variables in frontend are declared, e.g. `const ENV_API_BASE_URL = process.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER'`.
 With `process.env.API_BASE_URL` environment variables can be directly passed. This is useful for development.
 
@@ -82,9 +97,12 @@ Another challenge is that the several institutes have different configurations f
 The new image will be added to the container registry and build in the pipeline for every new version.
 
 ### How to use it
+
 #### Important
+
 You must provide your own nginx configuration files and mount them to the right places during runtime.
-__Important__ is the correct definition of the location of the frontend: 
+**Important** is the correct definition of the location of the frontend:
+
 ```
 ...
   location /data-source-management {
@@ -96,11 +114,14 @@ __Important__ is the correct definition of the location of the frontend:
 ```
 
 #### Example
+
 Here is an example, how to use it with a minimal nginx configuration file and a docker-compose.yml.
-The goal of this example is to make the frontend available under the path `/data-source-management`. 
+The goal of this example is to make the frontend available under the path `/data-source-management`.
 
 ##### nginx config
+
 `default.conf`:
+
 ```
 server {
   listen       80;
@@ -118,6 +139,7 @@ server {
 ```
 
 ##### docker-compose.yml
+
 `docker-compose.yml`
 
 ```yaml
@@ -129,16 +151,13 @@ services:
     volumes:
       - "./nginx-example/default.conf:/etc/nginx/conf.d/default.conf"
     environment:
-       ENV_API_BASE_URL_PLACEHOLDER: "http://localhost/api"
-       ENV_OIDC_IDP_URL_PLACEHOLDER: "https://login-dev.helmholtz.de/oauth2"
-       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "timeio-thing-management"
-       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management/login-callback"
-       ENV_OIDC_SCOPE_PLACEHOLDER: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
-       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management"
-       BASE_URL_ENV_PLACEHOLDER: "data-source-management"
-
-      
-      
+      ENV_API_BASE_URL_PLACEHOLDER: "http://localhost/api"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "https://login-dev.helmholtz.de/oauth2"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "timeio-thing-management"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management/login-callback"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management"
+      BASE_URL_ENV_PLACEHOLDER: "data-source-management"
 ```
 
 With this setup, you could access the sms under `<my-fancy-domain>/data-source-management`
@@ -148,54 +167,58 @@ With this setup, you could access the sms under `<my-fancy-domain>/data-source-m
 ### Formatting
 
 #### Api
+
 - To format the python files of the api using the black formatter, you can use the following docker command:
+
 ```
-docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .   
+docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
 ```
 
 #### Frontend
-- To __check__ the .vue and javascript/typescript files using prettier, you can use the following command:
+
+- To **check** the .vue and javascript/typescript files using prettier, you can use the following command:
 
 ```
 docker compose run --rm frontend npx prettier --check .
 ```
 
-- To __format__ the .vue and javascript/typescript files using prettier, you can use the following command:
+- To **format** the .vue and javascript/typescript files using prettier, you can use the following command:
 
 ```
 docker compose run --rm frontend npx prettier --write .
 ```
 
-
 ### Environment Variables API
+
 - Environment Variables must be defined in `api/app/config.py` > `Settings` class
 - Environment Variables must be used, using the `settings` instance (instantiated at the end of `api/app/config.py`)
 
 ### Environment Variables Frontend
+
 - Environment Variables must be defined in
   - `frontend/app/quasar.config.ts`>`build`>`env`
   - `frontend/docker/generic-image/entrypoint.sh` --> the placeholder string must be added to `environmentPlaceholders`
-  - always follow the existing naming structure, e.g. `const ENV_OBJECT_STORAGE_URL = process.env.OBJECT_STORAGE_URL || 'ENV_OBJECT_STORAGE_URL_PLACEHOLDER'` 
+  - always follow the existing naming structure, e.g. `const ENV_OBJECT_STORAGE_URL = process.env.OBJECT_STORAGE_URL || 'ENV_OBJECT_STORAGE_URL_PLACEHOLDER'`
 - afterward they can be used with `process.env.<KEY>`
   - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts`
 
-### STA integration
-- By default, STA is mocked via a FROST server preloaded with [demo data](https://gist.githubusercontent.com/hylkevds/4ffba774fe0128305047b7bcbcd2672e/raw/demoEntities.json) intended for development purposes. This data is available through all STA-endpoints. 
-- Accessible at http://localhost/sta.
-- Additional data can be uploaded to the FROST server by sending a `POST` request to a respective endpoint such as http://localhost/sta/v1.1/Things (see [docs](https://fraunhoferiosb.github.io/FROST-Server/sensorthingsapi/requestingData/STA-Basic-Requests.html)) or by using the HTTP tool available in the [FROST web interface](http://localhost/sta/).
-- However, if you wish to test with productive or other external STA data instead:
-  - Set the environment variable `STA_ROOT_URL` to the base URL of your desired endpoint (e. g. `https://tsm.ufz.de/sta/`) and restart the service.
-  - Update the column `username` in the table `database` to your desired schema/endpoint (e. g. `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`).
+### Qc-Setting Form locally
+
+- to be able to select a field and/or target datastream in local setup you will need to do the following:
+- create any ingest
+- update the table `database` column `username` to `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`
 
 ### Auth
+
 - Keycloak
-  - accessible at http://localhost/keycloak 
+  - accessible at http://localhost/keycloak
   - well known: http://localhost/keycloak/realms/local-dev/.well-known/openid-configuration
 
 ### Alembic API-DB Migrations
 
 We manage the API-DB (local, stage and prod) using alembic migrations (`api/app/alembic/versions`).
 If you applied changes to models that should be propagated to the database, you need to create an alembic migration.
+
 - We use a small script for the creation of the migrations:
   - `./api/create_alembic_migration.sh <slug>`
 - The script runs the `api` service with the entrypoint:
@@ -204,6 +227,7 @@ If you applied changes to models that should be propagated to the database, you 
   - `YYYYmmdd_HHMMSS_<slug>.py`
 
 ### Browser View for Logs
+
 - We've added [dozzle](https://dozzle.dev/)
 - To view the container+logs, go to:
   - http://localhost/dozzle
@@ -211,10 +235,12 @@ If you applied changes to models that should be propagated to the database, you 
 ### Datamodel
 
 #### Problem with custom type EncryptedType in alembic migration
+
 When creating a new migration file, alembic will assume that `EncryptedType` is a new type and will try to change the respective columns to that new type.
-This __must be manually removed__ from the migration file (in `upgrade` __and__ `downgrade`).
+This **must be manually removed** from the migration file (in `upgrade` **and** `downgrade`).
 
 #### Adding new ingests/parser
+
 - Create the model
 - To add a new ingest/parser you will need to update the `CheckConstraint` (`api/app/models/ingest.py` or `api/app/models/parser.py`).
 - Create a new migration (pay attention to `Problem with custom type EncryptedType in alembic migration`), drop the existing `CheckConstraint`, create a new one
@@ -224,6 +250,7 @@ This __must be manually removed__ from the migration file (in `upgrade` __and__ 
 ### Generate Dummy Data using SQL
 
 #### Permission Groups
+
 ```
 DO $$
 DECLARE
@@ -283,6 +310,7 @@ Add your function to `api/app/validation/qc_function_definitions.py` in the `_de
 ```
 
 **Predefined types available:**
+
 - `OFFSET_TYPE` - Time offset strings (e.g., "1H", "2D")
 - `DATASTREAM_TYPE` - List of datastream references
 - `BOOL_TYPE` - Boolean values
@@ -307,6 +335,7 @@ Also add tests in `api/app/tests/validation/test_qc_function_definitions.py`:
 #### Validation Rule Summary
 
 **Available types:**
+
 - `datastream` - List/tuple with optional min count
 - `float` - Numeric with optional min/max
 - `int` - Integer with optional min/max
@@ -316,6 +345,7 @@ Also add tests in `api/app/tests/validation/test_qc_function_definitions.py`:
 - `enum` - Value must be in allowed list
 
 **Argument structure:**
+
 ```
 {
     "name": "argument_name",
