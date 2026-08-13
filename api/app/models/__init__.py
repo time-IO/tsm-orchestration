@@ -35,6 +35,7 @@ from .parser_detailed import ParserDetailed
 from .parser_mqtt import ParserMqtt
 from .parser_csv import ParserCsv, ParserCsvTimestampColumn
 from .parser_json import ParserJson, ParserJsonTimestampKey
+from .parser_soilcan import ParserSoilcan
 
 __all__ = [
     "Database",
@@ -69,4 +70,5 @@ __all__ = [
     "ParserJson",
     "ParserCsvTimestampColumn",
     "ParserMqtt",
+    "ParserSoilcan",
 ]

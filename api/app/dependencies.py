@@ -36,6 +36,7 @@ from repositories.parser_csv import ParserCsvRepository
 from repositories.parser_json import ParserJsonRepository
 from repositories.parser_detailed import ParserDetailedRepository
 from repositories.parser_mqtt import ParserMqttRepository
+from repositories.parser_soilcan import ParserSoilcanRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -234,6 +235,10 @@ def get_repo_parser_csv(session=Depends(get_session)):
 
 def get_repo_parser_json(session=Depends(get_session)):
     return ParserJsonRepository(session)
+
+
+def get_repo_parser_soilcan(session=Depends(get_session)):
+    return ParserSoilcanRepository(session)
 
 
 def get_repo_parser_mqtt(session=Depends(get_session)):
