@@ -587,7 +587,14 @@ class FileParser(Base, FromUUIDMixin):
         return params
 
     def _get_json_params(self):
-        return {}
+        ts_cols = self._get_json_ts_cols()
+        query = f"select * from {self._schema}.parser_json where parser_id = %s"
+        row = self._fetchone(self._conn, query, self.id)
+        if not row:
+            return {}
+        params = {k: v for k, v in row.items() if k != "parser_id"}
+        params["timestamp_keys"] = ts_cols
+        return params
 
     def _get_mqtt_params(self):
         return {}
@@ -596,6 +603,9 @@ class FileParser(Base, FromUUIDMixin):
         query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
         return self._fetchall(self._conn, query, self.id)
 
+    def _get_json_ts_cols(self):
+        query = f"""select "key", "format" from {self._schema}.parser_json_timestamp_key where parser_json_id = %s"""
+        return self._fetchall(self._conn, query, self.id)
 
 class MQTT(Base):
     _schema = SCHEMA
