@@ -573,7 +573,7 @@ class FileParser(Base, FromUUIDMixin):
             return self._get_mqtt_params()
         if self.file_parser_type.name == "csv":
             return self._get_csv_params()
-        if self.file_parser_type == "json":
+        if self.file_parser_type.name == "json":
             return self._get_json_params()
 
     def _get_csv_params(self):
