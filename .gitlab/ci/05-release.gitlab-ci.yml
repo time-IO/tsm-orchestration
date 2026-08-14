@@ -43,7 +43,7 @@ stage-tag-images-in-registry:
   after_script:
     - docker logout
   script:
-    - docker compose pull -q $BUILD_SERVICES
+    - docker compose pull -q $BUILD_SERVICES dsm-api dsm-frontend
     - |
       for image in $(docker images --format '{{ .Repository }}'); do
         docker tag $image:$BRANCH_NAME $image:latest;
@@ -72,7 +72,7 @@ prod-tag-images-in-registry:
   after_script:
     - docker logout
   script:
-    - docker compose pull -q $BUILD_SERVICES
+    - docker compose pull -q $BUILD_SERVICES dsm-api dsm-frontend
     # Images built in a commit tag pipeline on main are tagged "main" by build job.
     - |
       for image in $(docker images --format '{{ .Repository }}'); do

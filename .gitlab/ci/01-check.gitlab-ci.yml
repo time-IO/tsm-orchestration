@@ -39,7 +39,7 @@ black:
   before_script:
     - pip install black
   script:
-    - black --check src/ tests/
+    - black --check src/ tests/ data-source-management/api/app/
   rules:
     # Never run if pipeline is triggered by a tag commit, a merge_request_event or a push on main
     - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
@@ -48,7 +48,47 @@ black:
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: always
 
-pytest:
+prettier:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd data-source-management/frontend/app
+    - npm ci
+  script:
+    - npx prettier --check .
+  rules:
+    changes:
+      - data-source-management/frontend/app/**/*
+
+npm-lint:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd data-source-management/frontend/app
+    - npm ci
+  script:
+    - npm run lint:all
+  rules:
+    changes:
+      - data-source-management/frontend/app/**/*
+
+npm-test:
+  stage: check
+  needs: []
+  image: node:25
+  before_script:
+    - cd data-source-management/frontend/app
+    - npm ci
+  script:
+    # no tests defined yet, but we can already include this job
+    - npm run test
+  rules:
+    changes:
+      - data-source-management/frontend/app/**/*
+
+pytest-timeio:
   stage: check
   image: python:3.11
   before_script:
@@ -64,6 +104,25 @@ pytest:
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: always
 
+pytest-dsm-api:
+  stage: check
+  image: python:3.11
+
+  before_script:
+    - pip install -r data-source-management/api/requirements.txt
+    - pip install pytest
+
+  script:
+    - python3 -m pytest data-source-management/api/tests
+
+  rules:
+    - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - data-source-management/api/**/*
+      when: always
+
 check-release-env-file:
   stage: check
   image: python:3.11-slim
@@ -77,4 +136,6 @@ check-release-env-file:
       when: never
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
+    - changes:
+        src/**/*
       when: always
