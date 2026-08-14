@@ -6,7 +6,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -30,8 +30,8 @@
     <qc-function-form-int-offset-input
       label="min_length * "
       class="q-mb-md"
-      :rules_int="[requiredRule('min_length'), integerRule, numberGreaterThanEqualsRule(1)]"
-      :rules_offset="[requiredRule('min_length'), offsetAliasMatchRule]"
+      :rules_int="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(1)]"
+      :rules_offset="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
       v-model:current_type="current_min_length_type"
       v-model:input="formData.min_length"
       hint="Minimum temporal extension of a plateau."
@@ -41,8 +41,8 @@
     <qc-function-form-int-offset-input
       label="max_length"
       class="q-mb-md"
-      :rules_int="[integerRule, numberGreaterThanEqualsRule(1)]"
-      :rules_offset="[offsetAliasMatchRule]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
+      :rules_offset="[rules.CONTEXT_WINDOW]"
       v-model:current_type="current_max_length_type"
       v-model:input="formData.max_length"
       hint="Maximum temporal extension of a plateau."
@@ -54,7 +54,7 @@
       filled
       v-model="formData.min_jump"
       label="min_jump (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0)]"
       hint="Minimum difference from preceding/succeeding periods."
     />
 
@@ -63,8 +63,8 @@
     <qc-function-form-int-offset-input
       label="granularity"
       class="q-mb-md"
-      :rules_int="[integerRule, numberGreaterThanEqualsRule(1)]"
-      :rules_offset="[offsetAliasMatchRule]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
+      :rules_offset="[rules.CONTEXT_WINDOW]"
       v-model:current_type="current_granularity_type"
       v-model:input="formData.granularity"
       hint="Precision of the search."
@@ -76,7 +76,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0)]"
       hint="Flag assigned to values identified by this function."
     />
 
@@ -85,6 +85,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -94,18 +95,12 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import {
-  requiredRule,
-  offsetAliasMatchRule,
-  requiredDatastreamsRule,
-  integerRule,
-  numberGreaterThanEqualsRule,
-} from 'src/utils/form_utils';
 import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInput.vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

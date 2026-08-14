@@ -17,7 +17,7 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this parser"
-            :rules="[(val) => !!val || 'Name is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -30,10 +30,7 @@
             hint="Provide additional details about this parser"
           />
 
-          <parser-timezone-select
-            v-model="formData.timezone"
-            :rules="[(val: string | null) => !!val || 'Timezone is required']"
-          />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
           <!-- Timestamp Columns -->
           <div class="q-my-md">
@@ -62,16 +59,14 @@
                       class="col"
                       v-model="ts.key"
                       label="Key (e.g. Datetime)"
-                      :rules="[
-                        (val) => (val !== null && val !== undefined) || 'Column index is required',
-                      ]"
+                      :rules="[rules.REQUIRED]"
                     />
                     <q-input
                       filled
                       class="col"
                       v-model="ts.format"
                       label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
-                      :rules="[(val) => !!val || 'Timestamp format is required']"
+                      :rules="[rules.REQUIRED]"
                     />
                   </div>
                 </q-item-section>
@@ -129,6 +124,7 @@ import type { JsonParserUpdate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { rules } from 'src/utils/validation/rules';
 
 const permissionGroupStore = usePermissionGroupStore();
 const jsonParserStore = useJsonParserStore();

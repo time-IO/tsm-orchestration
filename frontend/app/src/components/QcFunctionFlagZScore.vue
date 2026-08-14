@@ -6,7 +6,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -25,7 +25,6 @@
         :showTempCreateBtn="true"
       />
     </div>
-
     <!--    method-->
     <q-select
       v-model="formData.method"
@@ -36,48 +35,43 @@
       hint="'standard' or 'modified' Z-score calculation."
       filled
     />
-
     <!--    window-->
     <qc-function-form-int-offset-input
       label="window * "
       class="q-mb-md"
-      :rules_int="[integerRule, numberGreaterThanEqualsRule(1)]"
-      :rules_offset="[offsetAliasMatchRule]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
+      :rules_offset="[rules.CONTEXT_WINDOW]"
       v-model:current_type="current_window_type"
       v-model:input="formData.window"
       hint="Rolling window size."
     />
-
     <!--    thresh-->
     <q-input
       class="q-mb-md"
       filled
       v-model="formData.thresh"
       label="thresh * (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Z-score threshold."
     />
-
     <!--    min_residuals-->
     <q-input
       class="q-mb-md"
       filled
       v-model="formData.min_residuals"
       label="min_residuals * (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum residual to consider a point as outlier."
     />
-
     <!--    min_periods-->
     <q-input
       class="q-mb-md"
       filled
       v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(1)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minimum valid points in a window."
     />
-
     <!--    center-->
     <div class="q-mb-md">
       <q-item tag="label" v-ripple>
@@ -90,14 +84,13 @@
         </q-item-section>
       </q-item>
     </div>
-
     <!--    axis-->
     <q-input
       class="q-mb-md"
       filled
       v-model="formData.axis"
       label="axis (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(0), numberLowerThanEqualsRule(1)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(0), ruleFactories.MAX(1)]"
       hint="Axis along which scoring is applied."
     />
 
@@ -107,7 +100,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Flag assigned to values identified by this function."
     />
 
@@ -116,6 +109,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -123,20 +117,13 @@
 </template>
 
 <script setup lang="ts">
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import {
-  integerRule,
-  numberGreaterThanEqualsRule,
-  numberLowerThanEqualsRule,
-  offsetAliasMatchRule,
-  requiredDatastreamsRule,
-} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInput.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

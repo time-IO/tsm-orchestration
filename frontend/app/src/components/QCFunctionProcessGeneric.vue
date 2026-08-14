@@ -10,7 +10,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input data stream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -24,7 +24,7 @@
       </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.target"
         :permission_group_id="permission_group_id"
         :showTempCreateBtn="true"
@@ -33,7 +33,7 @@
 
     <!-- function       -->
     <div class="q-mb-md">
-      <q-input filled v-model="formData.func" :rules="[requiredRule('func')]" label="Function *" />
+      <q-input filled v-model="formData.func" :rules="[rules.REQUIRED]" label="Function *" />
       <span class="text-caption text-grey block">
         Expression or function applied to the selected input fields (e.g. (x + y) / 2). Variables
         are mapped to the selected fields by position, regardless of their names, and are provided
@@ -45,12 +45,12 @@
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import { requiredDatastreamsRule, requiredRule } from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

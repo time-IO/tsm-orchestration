@@ -6,7 +6,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -32,7 +32,7 @@
       filled
       v-model="formData.n"
       label="n (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Number of periods to include in LOF calculation."
     />
 
@@ -42,7 +42,7 @@
       v-model:input="formData.thresh"
       v-model:current_type="current_thresh_type"
       label="thresh"
-      :rules_float="[numberGreaterThanEqualsRule(0)]"
+      :rules_float="[ruleFactories.MIN(0)]"
       :rules_enum="[]"
       :enum-options="['auto']"
       hint="LOF cutoff value."
@@ -54,7 +54,7 @@
       filled
       v-model.number="formData.probability"
       label="probability (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0), numberLowerThanEqualsRule(1)]"
+      :rules="[ruleFactories.RANGE(0, 1), rules.FLOAT]"
       hint="Outlier probability cutoff."
     />
 
@@ -64,8 +64,8 @@
       class="q-mb-md"
       v-model:input="formData.corruption"
       v-model:current_type="current_corruption_type"
-      :rules_float="[numberGreaterThanEqualsRule(0), numberLowerThanEqualsRule(1)]"
-      :rules_int="[numberGreaterThanEqualsRule(0)]"
+      :rules_float="[ruleFactories.RANGE(0, 1)]"
+      :rules_int="[ruleFactories.MIN(0)]"
       hint_float="Portion of data considered anomalous."
       hint_int="Count of data considered anomalous."
     />
@@ -86,7 +86,7 @@
       filled
       v-model="formData.p"
       label="p (enter a floating point number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(1)]"
+      :rules="[rules.FLOAT, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
     />
 
@@ -95,7 +95,7 @@
       v-model:input="formData.density"
       v-model:current_type="current_density_type"
       label="density"
-      :rules_float="[numberGreaterThanEqualsRule(0)]"
+      :rules_float="[ruleFactories.MIN(0)]"
       :rules_enum="[]"
       :enum-options="['auto']"
       hint="LOF cutoff value."
@@ -133,7 +133,7 @@
       filled
       v-model="formData.min_offset"
       label="min_offset (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum value jump before and after clusters to flag."
     />
 
@@ -143,7 +143,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Flag assigned to values identified by this function."
     />
 
@@ -152,6 +152,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -160,12 +161,6 @@
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import {
-  integerRule,
-  numberGreaterThanEqualsRule,
-  numberLowerThanEqualsRule,
-  requiredDatastreamsRule,
-} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
@@ -173,6 +168,7 @@ import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import QcFunctionFormFloatEnumInput from 'components/QcFunctionFormFloatEnumInput.vue';
 import QcFunctionFormFloatIntInput from 'components/QcFunctionFormFloatIntInput.vue';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

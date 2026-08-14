@@ -16,16 +16,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this QC Setting"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
           <!-- Permission Group Field -->
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
             class="q-mb-md"
           />
           <!-- Context Window -->
@@ -35,7 +32,7 @@
             v-model="formData.context_window"
             label="Context Window *"
             hint="Enter a Context Window for this QC Setting"
-            :rules="[(val) => !!val || 'Context Window is required', offsetAliasMatchRule]"
+            :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
           />
           <!-- Description -->
           <q-input
@@ -200,7 +197,7 @@ import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { Datastream } from 'src/services/sta/types';
 import { isDatastreamType } from 'src/utils/quality_control_utils';
 import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
-import { offsetAliasMatchRule } from 'src/utils/form_utils';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
   default: {

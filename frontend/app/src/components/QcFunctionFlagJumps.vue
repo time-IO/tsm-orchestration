@@ -6,7 +6,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -32,14 +32,14 @@
       filled
       v-model="formData.thresh"
       label="thresh * (enter a floating point number)"
-      :rules="[requiredRule('thresh'), numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Threshold for mean difference between adjacent windows to trigger flagging."
     />
 
     <!-- window        -->
 
     <qc-function-form-offset-input
-      :rules="[requiredRule('window'), offsetAliasMatchRule]"
+      :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
       class="q-mb-md"
       v-model="formData.window"
       label="window *"
@@ -52,7 +52,7 @@
       filled
       v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum observations required for a valid mean calculation."
     />
 
@@ -62,7 +62,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       hint="Flag assigned to values identified by this function."
     />
     <!-- dfilter    -->
@@ -70,6 +70,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -77,20 +78,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
-import {
-  requiredRule,
-  offsetAliasMatchRule,
-  integerRule,
-  numberGreaterThanEqualsRule,
-  requiredDatastreamsRule,
-} from 'src/utils/form_utils';
+import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

@@ -20,16 +20,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this ingest"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -49,7 +46,7 @@
             label="Network"
             type="text"
             hint="Sensoto network identifier"
-            :rules="[(val) => !!val || 'Network is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <q-separator class="q-my-lg" />
@@ -59,7 +56,7 @@
             label="Device"
             type="text"
             hint="Sensoto device identifier"
-            :rules="[(val) => !!val || 'Device is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Sync Settings -->
@@ -79,11 +76,7 @@
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
                 type="number"
-                :rules="[
-                  (val) => !!val || 'Sync intervall is required',
-                  (val) =>
-                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-                ]"
+                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
               />
             </div>
           </q-card-section>
@@ -116,6 +109,7 @@ import type {
   IngestExternalApiSensotoUpdate,
 } from '../services/ingest_external_api_sensoto/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

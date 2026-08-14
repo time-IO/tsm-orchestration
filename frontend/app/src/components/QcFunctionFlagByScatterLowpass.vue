@@ -10,7 +10,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input Datastream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -32,7 +32,7 @@
 
     <!--    window-->
     <qc-function-form-offset-input
-      :rules="[requiredRule('window'), offsetAliasMatchRule]"
+      :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
       class="q-mb-md"
       v-model="formData.window"
       label="window *"
@@ -44,7 +44,7 @@
       filled
       v-model="formData.thresh"
       label="thresh * (enter a floating point number)"
-      :rules="[requiredRule('thresh'), numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Threshold for chunk deviation."
     />
     <!--    func-->
@@ -59,7 +59,7 @@
     />
     <!--    sub_window-->
     <qc-function-form-offset-input
-      :rules="[offsetAliasMatchRule]"
+      :rules="[rules.CONTEXT_WINDOW]"
       class="q-mb-md"
       v-model="formData.sub_window"
       label="sub_window"
@@ -71,7 +71,7 @@
       filled
       v-model="formData.sub_thresh"
       label="sub_thresh (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       hint="Threshold for sub-chunk deviation."
     />
     <!--    min_periods-->
@@ -80,7 +80,7 @@
       filled
       v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum points required in a chunk."
     />
     <!-- flag     -->
@@ -89,7 +89,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0)]"
       hint="Enter a floating point number"
     />
     <!-- dfilter    -->
@@ -97,6 +97,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -105,19 +106,13 @@
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import {
-  integerRule,
-  numberGreaterThanEqualsRule,
-  offsetAliasMatchRule,
-  requiredDatastreamsRule,
-  requiredRule,
-} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;
