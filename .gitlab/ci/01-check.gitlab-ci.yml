@@ -102,6 +102,8 @@ pytest-timeio:
       when: never
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
+    - changes:
+        - src/**/*
       when: always
 
 pytest-dsm-api:
@@ -113,7 +115,7 @@ pytest-dsm-api:
     - pip install pytest
 
   script:
-    - python3 -m pytest data-source-management/api/tests
+    - python3 -m pytest data-source-management/api/app/tests
 
   rules:
     - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
@@ -136,6 +138,4 @@ check-release-env-file:
       when: never
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
-    - changes:
-        - src/**/*
       when: always
