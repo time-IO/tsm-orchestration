@@ -137,5 +137,5 @@ check-release-env-file:
     # Always run if pipeline is triggered by a push on a branch
     - if: "$CI_PIPELINE_SOURCE == 'push'"
     - changes:
-        src/**/*
+        - src/**/*
       when: always
