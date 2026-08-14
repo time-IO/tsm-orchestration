@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # set dev settings as default
 FASTAPI_ENV="${FASTAPI_ENV:-dev}"
