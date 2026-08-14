@@ -1,8 +1,6 @@
 from pathlib import Path
 
-__path__.append(
-    str(Path(__file__).resolve().parents[4] / "src" / "timeio")
-)
+__path__.append(str(Path(__file__).resolve().parents[4] / "src" / "timeio"))
 
 # This file refers to src/timeio directory for local development
 # Docker compose setup instead mounts src/timeio directory to this directory instead
