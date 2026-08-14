@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 FROM base AS build
 
-COPY ./requirements.txt /tmp/requirements.txt
+COPY ./data-source-management/api/requirements.txt /tmp/requirements.txt
 
 RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
@@ -31,7 +31,10 @@ RUN mkdir /app && \
     adduser --uid ${UID} --disabled-password appuser
 
 # Copy application as appuser
-COPY --chown=${UID}:${UID} ./app /app
+COPY --chown=${UID}:${UID} ./data-source-management/api/app /app
+
+# Copy external timeio library
+COPY --chown=${UID}:${UID} ./src/timeio /app/timeio
 
 WORKDIR /app
 USER appuser
