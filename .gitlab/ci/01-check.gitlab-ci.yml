@@ -58,7 +58,7 @@ prettier:
   script:
     - npx prettier --check .
   rules:
-    changes:
+    - changes:
       - data-source-management/frontend/app/**/*
 
 npm-lint:
@@ -71,7 +71,7 @@ npm-lint:
   script:
     - npm run lint:all
   rules:
-    changes:
+    - changes:
       - data-source-management/frontend/app/**/*
 
 npm-test:
@@ -85,7 +85,7 @@ npm-test:
     # no tests defined yet, but we can already include this job
     - npm run test
   rules:
-    changes:
+    - changes:
       - data-source-management/frontend/app/**/*
 
 pytest-timeio:
