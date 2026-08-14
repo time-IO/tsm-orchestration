@@ -6,7 +6,7 @@
       <span class="text-caption text-grey block q-mb-sm"> Input data stream(s). </span>
       <sta-datastream-input
         max-height="300px"
-        :rules="[requiredDatastreamsRule]"
+        :rules="[rules.LIST, ruleFactories.MIN(1)]"
         v-model="formData.field"
         :permission_group_id="permission_group_id"
       />
@@ -28,35 +28,34 @@
 
     <!--    window-->
     <qc-function-form-offset-input
-      :rules="[requiredRule('window'), offsetAliasMatchRule]"
+      :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
       class="q-mb-md"
       v-model="formData.window"
       label="window *"
       hint="Size of the rolling window."
     />
-
     <!--    func-->
+
     <q-select
       v-model="formData.func"
       :options="funcOptions"
       class="q-mb-md"
       label="func"
       hint="Function to apply over the rolling window."
-      :rules="[requiredRule('func')]"
+      :rules="[rules.REQUIRED]"
       filled
     />
-
     <!--    min_periods-->
     <q-input
       class="q-mb-md"
       filled
       v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
-      :rules="[integerRule, numberGreaterThanEqualsRule(0)]"
+      :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum points required for a valid result."
     />
-
     <!--    center-->
+
     <div class="q-mb-md">
       <q-item tag="label" v-ripple>
         <q-item-section avatar>
@@ -75,7 +74,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[numberGreaterThanEqualsRule(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Flag assigned to values identified by this function."
     />
 
@@ -84,6 +83,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.dfilter"
+      :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -92,19 +92,13 @@
 
 <script setup lang="ts">
 import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import {
-  integerRule,
-  numberGreaterThanEqualsRule,
-  offsetAliasMatchRule,
-  requiredDatastreamsRule,
-  requiredRule,
-} from 'src/utils/form_utils';
 import StaDatastreamInput from 'components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
 import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;

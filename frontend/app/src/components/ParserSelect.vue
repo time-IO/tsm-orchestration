@@ -13,7 +13,7 @@
     option-value="id"
     option-label="name"
     label="Select the parser *"
-    :rules="[(val) => !!val || 'Parser is required']"
+    :rules="[rules.REQUIRED]"
   >
     <template v-slot:hint v-if="!permission_group_id">
       <span class="text-red">Select Permission Group first</span>
@@ -86,6 +86,7 @@ import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import { useRouter } from 'vue-router';
+import { rules } from 'src/utils/validation/rules';
 
 type AnyParser = CsvParserPublic | JsonParserPublic;
 

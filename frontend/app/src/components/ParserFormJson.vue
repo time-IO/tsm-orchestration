@@ -19,12 +19,12 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this parser"
-            :rules="[(val) => !!val || 'Name is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -45,10 +45,7 @@
             hint="Character(s) used to indicate comment lines"
           />
 
-          <parser-timezone-select
-            v-model="formData.timezone"
-            :rules="[(val: string | null) => !!val || 'Timezone is required']"
-          />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
           <!-- Timestamp Keys -->
           <div class="q-my-md">
@@ -67,14 +64,14 @@
                       class="col"
                       v-model="ts.key"
                       label="Key (e.g. Datetime)"
-                      :rules="[(val) => !!val || 'Key is required']"
+                      :rules="[rules.REQUIRED]"
                     />
                     <q-input
                       filled
                       class="col"
                       v-model="ts.format"
                       label="Format (e.g. %Y-%m-%dT%H:%M:%S)"
-                      :rules="[(val) => !!val || 'Format is required']"
+                      :rules="[rules.REQUIRED, rules.TIMESTAMP_FORMAT]"
                     >
                       <template v-slot:append>
                         <q-btn round flat icon="help_outline" @click="showDocs">
@@ -138,6 +135,7 @@
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import { rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

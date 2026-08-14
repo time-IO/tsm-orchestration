@@ -20,16 +20,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this Ingest"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -76,11 +73,7 @@
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
                 type="number"
-                :rules="[
-                  (val) => !!val || 'Sync intervall is required',
-                  (val) =>
-                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-                ]"
+                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
               >
                 <template #append>
                   <help-button termHelp="sync_interval" />
@@ -120,6 +113,7 @@ import type {
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
 import HelpButton from 'components/HelpButton.vue';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

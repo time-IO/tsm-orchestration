@@ -17,16 +17,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this Ingest"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -46,13 +43,7 @@
             class="q-mb-md"
             label="MQTT Username"
             hint="Optional. Leave empty to auto-generate. Minimum 8 characters. Allowed characters: lowercase letters, numbers, hyphens."
-            :rules="[
-              (val) => !val || val.length >= 8 || 'Must be at least 8 characters long',
-              (val) =>
-                !val ||
-                /^[a-z0-9-]+$/.test(val) ||
-                'Only lowercase letters, numbers, and hyphens are allowed',
-            ]"
+            :rules="[ruleFactories.MIN(8), ruleFactories.REGEX(/^[a-z0-9-]+$/)]"
           />
 
           <mqtt-parser-select v-model="formData.parser_id" :preselected-item-id="itemParserId" />
@@ -83,6 +74,7 @@ import MqttParserSelect from 'components/MqttParserSelect.vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { IngestMqttCreate, IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

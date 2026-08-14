@@ -17,16 +17,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this Ingest"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselectedItem="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -44,7 +41,7 @@
             class="q-mb-md"
             v-model="formData.filename_pattern"
             label="Filename pattern *"
-            :rules="[(val) => !!val || 'Filename pattern is required']"
+            :rules="[rules.REQUIRED]"
           >
             <template #append>
               <help-button
@@ -91,6 +88,7 @@ import parserSelect from 'components/ParserSelect.vue';
 import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import HelpButton from 'components/HelpButton.vue';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

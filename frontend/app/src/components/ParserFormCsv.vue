@@ -26,15 +26,12 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this parser"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -52,7 +49,7 @@
             class="q-mb-md"
             v-model="formData.delimiter"
             label="Column delimiter * (e.g. , ; \t)"
-            :rules="[(val) => !!val || 'Column delimiter is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <q-input
@@ -62,7 +59,7 @@
             @update:model-value="trimHeadlines"
             label="Number of headlines to exclude"
             hint="Enter either a single number to indicate of many lines should be excluded or a comma-separated list of numbers indicating the lines which must be excluded (0-based)"
-            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
           <q-input
@@ -70,18 +67,12 @@
             class="q-mb-md"
             v-model.number="formData.footlines_to_exclude"
             label="Number of footlines to exclude"
-            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
-          <parser-timezone-select
-            v-model="formData.timezone"
-            :rules="[(val: string | null) => !!val || 'Timezone is required']"
-          />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
-          <parser-encoding-select
-            v-model="formData.encoding"
-            :rules="[(val: string | null) => !!val || 'File encoding is required']"
-          />
+          <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]" />
 
           <!-- Header Field -->
           <q-input
@@ -90,7 +81,7 @@
             v-model.number="formData.header"
             label="Header row index"
             hint="Row index where header is located (0 for first row)"
-            :rules="[(val) => !val || val >= 0 || 'Must be 0 or greater']"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
           <!-- Timestamp Columns -->
@@ -111,18 +102,14 @@
                       class="col"
                       v-model.number="col.column"
                       label="Column index (0-based)"
-                      :rules="[
-                        (val) =>
-                          (val !== null && val !== undefined && val !== '') ||
-                          'Column index is required',
-                      ]"
+                      :rules="[rules.REQUIRED]"
                     />
                     <q-input
                       filled
                       class="col"
                       v-model="col.timestamp_format"
                       label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
-                      :rules="[(val) => !!val || 'Timestamp format is required']"
+                      :rules="[rules.REQUIRED, rules.TIMESTAMP_FORMAT]"
                     >
                       <template v-slot:append>
                         <q-btn round flat icon="help_outline" @click="showDocs">
@@ -236,6 +223,7 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { CsvParserCreate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 defineProps<{
   title: string;
   isLoading: boolean;

@@ -22,16 +22,13 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this Ingest"
-            :rules="[
-              (val) => !!val || 'Name is required',
-              (val) => val.length <= 80 || 'Maximum 80 characters',
-            ]"
+            :rules="[rules.REQUIRED, ruleFactories.MAX(80)]"
           />
 
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -50,7 +47,7 @@
             v-model="formData.station_id"
             label="Station ID *"
             hint="DWD station ID, typically five alphanumeric characters."
-            :rules="[(val) => !!val || 'Valid station ID is required']"
+            :rules="[rules.REQUIRED]"
           >
             <template #append>
               <q-btn round flat icon="help_outline" @click="openDwdDocs" class="text-grey">
@@ -65,10 +62,7 @@
             class="q-mb-md"
             v-model="formData.period_in_minutes"
             label="Period (in minutes)"
-            :rules="[
-              (val) => !val || val > 0 || 'Interval must be a positive number',
-              (val) => !!val || 'Period is required',
-            ]"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           >
             <template #append>
               <help-button termHelp="period" />
@@ -92,11 +86,7 @@
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
                 type="number"
-                :rules="[
-                  (val) => !!val || 'Sync intervall is required',
-                  (val) =>
-                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-                ]"
+                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
               >
                 <template #append>
                   <help-button termHelp="sync_interval" />
@@ -134,6 +124,7 @@ import type {
 } from 'src/services/ingest_external_api_dwd/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import HelpButton from 'components/HelpButton.vue';
+import { ruleFactories, rules } from 'src/utils/validation/rules';
 
 defineProps<{
   title: string;

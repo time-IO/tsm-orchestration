@@ -14,7 +14,7 @@
     option-value="id"
     option-label="name"
     label="Select the parser *"
-    :rules="[(val) => !!val || 'Parser is required']"
+    :rules="[rules.REQUIRED]"
   >
     <template v-slot:no-option>
       <q-item>
@@ -29,6 +29,7 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import type { MqttParser } from 'src/services/parser_mqtt/types';
 import { useMqttParserStore } from 'stores/parserMqttStore';
 import { useQuasar } from 'quasar';
+import { rules } from 'src/utils/validation/rules';
 
 const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();

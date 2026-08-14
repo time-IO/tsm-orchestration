@@ -14,7 +14,7 @@
     option-value="id"
     option-label="station_id"
     label="Select a station *"
-    :rules="[(val) => !!val || 'Station is required']"
+    :rules="[rules.REQUIRED]"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps" clickable>
@@ -37,6 +37,7 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
 import { useQuasar } from 'quasar';
 import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
+import { rules } from 'src/utils/validation/rules';
 
 const neutronMonitorStationStore = useNeutronMonitorStationStore();
 

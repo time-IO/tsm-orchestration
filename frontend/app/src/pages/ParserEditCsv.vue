@@ -17,7 +17,7 @@
             v-model="formData.name"
             label="Name *"
             hint="Enter a descriptive name for this parser"
-            :rules="[(val) => !!val || 'Name is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Description -->
@@ -35,7 +35,7 @@
             class="q-mb-md"
             v-model="formData.delimiter"
             label="Column delimiter *"
-            :rules="[(val) => !!val || 'Column delimiter is required']"
+            :rules="[rules.REQUIRED]"
           />
 
           <q-input
@@ -54,10 +54,7 @@
             label="Number of footlines to exclude"
           />
 
-          <parser-timezone-select
-            v-model="formData.timezone"
-            :rules="[(val: string | null) => !!val || 'Timezone is required']"
-          />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
           <parser-encoding-select v-model="formData.encoding" />
 
@@ -98,16 +95,14 @@
                       class="col"
                       v-model.number="col.column"
                       label="Column index (0-based)"
-                      :rules="[
-                        (val) => (val !== null && val !== undefined) || 'Column index is required',
-                      ]"
+                      :rules="[rules.REQUIRED]"
                     />
                     <q-input
                       filled
                       class="col"
                       v-model="col.timestamp_format"
                       label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
-                      :rules="[(val) => !!val || 'Timestamp format is required']"
+                      :rules="[rules.REQUIRED]"
                     />
                   </div>
                 </q-item-section>
@@ -214,6 +209,7 @@ import { useCsvParserStore } from 'stores/parserCsvStore';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { rules } from 'src/utils/validation/rules';
 
 const permissionGroupStore = usePermissionGroupStore();
 const csvParserStore = useCsvParserStore();
