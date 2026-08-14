@@ -24,9 +24,9 @@ build-and-push-images:
     - docker build -t ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./data-source-management/api/docker/prod/Dockerfile .
     - docker build -t ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME} -f ./data-source-management/frontend/docker/generic-image/Dockerfile ./data-source-management/frontend
     - docker build -t ${DSM_FRONTEND_IMAGE_URL_ROOTLESS}:${CI_COMMIT_REF_NAME} -f ./data-source-management/frontend/docker/generic-image/Dockerfile-rootless ./data-source-management/frontend
-    - docker push ${API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker push ${FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
-    - docker push ${FRONTEND_IMAGE_URL_ROOTLESS}:${CI_COMMIT_REF_NAME}
+    - docker push ${DSM_API_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${DSM_FRONTEND_IMAGE_URL}:${CI_COMMIT_REF_NAME}
+    - docker push ${DSM_FRONTEND_IMAGE_URL_ROOTLESS}:${CI_COMMIT_REF_NAME}
   rules:
     # Always run if pipeline is triggered by a tag
     - if: "$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED"
