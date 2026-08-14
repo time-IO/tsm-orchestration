@@ -1,0 +1,214 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    environment:
+      DOZZLE_BASE: /dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  api:
+    image: time-io-datasource-management-api:dev
+    build:
+      context: ./api
+      dockerfile: docker/Dockerfile-Dev
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      API_ROOT_PATH: "${API_ROOT_PATH:-/api}"
+      POSTGRES_SERVER: "${POSTGRES_SERVER:-api-db}"
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-db_dev}"
+      OIDC_WELL_KNOWN: "${OIDC_WELL_KNOWN:-http://proxy/keycloak/realms/local-dev/.well-known/openid-configuration}"
+      OIDC_ISSUER: "${OIDC_ISSUER:-http://proxy/keycloak/realms/local-dev}"
+      OIDC_AUDIENCE: "${OIDC_AUDIENCE:-dev-client}"
+      ALLOWED_VOS: "${ALLOWED_VOS:-UFZ-TSM,VO}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost}"
+      MINIO_SFTP_PORT: "${MINIO_SFTP_PORT:-127.0.0.1:40022}"
+      S3_ENDPOINT: "${S3_ENDPOINT:-}"
+      S3_SECURE: "${S3_SECURE:-false}"
+      S3_REGION: "${S3_REGION:-eu-central-1}"
+      PROXY_URL: "${PROXY_URL:-http://localhost:80}"
+      LOG_LEVEL: "${LOG_LEVEL:-debug}"
+      STA_ROOT_URL: "${STA_ROOT_URL:-http://proxy/sta/}"
+      STA_VERSION: "${STA_VERSION:-/v1.1/}"
+      FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
+      MQTT_BROKER_HOST: "${MQTT_BROKER_HOST:-mqtt-broker}"
+      MQTT_PORT: "${MQTT_PORT:-1883}"
+      MQTT_CLIENT_ID: "${MQTT_CLIENT_ID:-datasource_management}"
+      MQTT_USER: "${MQTT_USER:-dsm}"
+      MQTT_PASSWORD: "${MQTT_PASSWORD:-dsm}"
+      MQTT_QOS: "${MQTT_QOS:-2}"
+      INGEST_MQTT_BROKER_URI: "${INGEST_MQTT_BROKER_URI:-localhost:1883}"
+
+    volumes:
+      - ./api/app:/app:rw,cached
+    depends_on:
+      api-db:
+        condition: "service_healthy"
+      mqtt-broker:
+        condition: "service_healthy"
+
+  mqtt-broker:
+    image: "iegomez/mosquitto-go-auth:${MQTT_BROKER_IMAGE_TAG:-latest}"
+    ports:
+      - "${MQTT_BROKER_PORT:-1883}:1883"
+    volumes:
+      - "./api/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf"
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: [
+          "CMD-SHELL",
+          "mosquitto_sub \
+          -t '$$SYS/broker/version' \
+          -C 1 \
+          -u $${MQTT_USER:-dsm} \
+          -P $${MQTT_PASSWORD:-dsm} \
+          --id docker-compose-healthcheck",
+        ]
+      interval: "${MQTT_BROKER_HEALTHCHECK_INTERVAL:-10s}"
+      timeout: 10s
+      retries: 6
+
+  frontend:
+    image: time-io-datasource-management-frontend:dev
+    container_name: datasource-management-frontend-dev
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile-Dev
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      API_BASE_URL: "${API_BASE_URL:-http://localhost/api}"
+      OIDC_CLIENT_ID: "${OIDC_CLIENT_ID:-dev-client}"
+      OIDC_IDP_URL: "${OIDC_IDP_URL:-http://localhost/keycloak/realms/local-dev}" #url to idp without .well-known
+      OIDC_REDIRECT_URI: "${OIDC_REDIRECT_URI:-http://localhost/login-callback}"
+      OIDC_SCOPE: "${OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "${OIDC_POST_LOGOUT_REDIRECT_URI:-http://localhost}"
+      BASE_URL: "${BASE_URL-/}"
+    volumes:
+      - ./frontend/app:/home/node/app:rw,cached
+    command: "quasar dev"
+
+  keycloak:
+    image: "quay.io/keycloak/keycloak:26.6.1"
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:${KEYCLOAK_PORT:-8080}"
+    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: ${KC_DB:-postgres}
+      KC_DB_URL_DATABASE: ${KC_DB_URL_DATABASE:-keycloak}
+      KC_DB_SCHEMA: ${KC_DB_SCHEMA:-public}
+      KC_DB_URL: ${KC_DB_URL:-jdbc:postgresql://keycloak-db/keycloak}
+      KC_DB_USERNAME: ${KC_DB_USERNAME:-keycloak}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:-password}
+      KC_HTTP_RELATIVE_PATH: ${KC_HTTP_RELATIVE_PATH:-/keycloak}
+      KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-false}
+      KC_HOSTNAME: ${KC_HOSTNAME:-proxy}
+    volumes:
+      - "./keycloak/keycloak-init.json:/opt/keycloak/data/import/keycloak-init.json"
+    command:
+      - start-dev
+      - --import-realm
+      - --http-port=${KEYCLOAK_PORT:-8080}
+    depends_on:
+      - keycloak-db
+
+  keycloak-db:
+    image: "postgres:14-alpine"
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_POSTGRES_DB:-keycloak}
+      POSTGRES_USER: ${KEYCLOAK_DB_POSTGRES_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_POSTGRES_PASSWORD:-password}
+    volumes:
+      - "keycloak-data:/var/lib/postgresql/data/"
+
+  api-db:
+    image: "postgres:14-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "${API_DB_POSTGRES_DB:-db_dev}"
+      POSTGRES_USER: "${API_DB_POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${API_DB_POSTGRES_PASSWORD:-postgres}"
+    volumes:
+      - "api-data:/var/lib/postgresql/data/"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${API_DB_POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  proxy:
+    image: nginx:1.20-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - "./nginx/default.http.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./nginx/locations.conf:/etc/nginx/locations.conf:ro"
+    depends_on:
+      - keycloak
+      - frontend
+      - api
+
+  mqtt-cat:
+    image: "eclipse-mosquitto:latest"
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    logging:
+      options:
+        max-size: "100K"
+        max-file: "10"
+    command: >
+      mosquitto_sub --pretty -v
+      -h mqtt-broker
+      -t "#"
+      -u "${MQTT_USER:-dsm}"
+      -P "${MQTT_PASSWORD:-dsm}"
+      --id "mqtt-cat"
+
+  sta-db:
+    build: ./sta-mock
+    environment:
+      POSTGRES_DB: frost
+      POSTGRES_USER: frost
+      POSTGRES_PASSWORD: frost
+    volumes:
+      - sta-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U frost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mock-sta:
+    image: fraunhoferiosb/frost-server-http:latest
+    depends_on:
+      sta-db:
+        condition: service_healthy
+    environment:
+      serviceRootUrl: http://localhost/sta
+      persistence_db_driver: org.postgresql.Driver
+      persistence_db_url: jdbc:postgresql://sta-db:5432/frost
+      persistence_db_username: frost
+      persistence_db_password: frost
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fs http://localhost:8080/FROST-Server/v1.1 >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    expose:
+      - "8080"
+
+volumes:
+  keycloak-data:
+  api-data:
+  sta-data:
