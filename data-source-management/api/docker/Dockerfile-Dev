@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 FROM base AS build
 
-COPY ../requirements.txt /tmp/requirements.txt
+COPY ./data-source-management/api/requirements.txt /tmp/requirements.txt
 RUN python -m venv /opt/venv
 RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
@@ -21,6 +21,8 @@ COPY --from=build /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN mkdir /app
+
+COPY ./src/timeio /app/timeio
 
 ARG UID=1000
 RUN adduser --uid ${UID} --disabled-password appuser
