@@ -94,7 +94,7 @@
               :key="col.name"
               :props="props"
               :class="col.name === 'action' ? 'text-center' : 'text-left'"
-              :style="`width: ${colWidths[col.name] ?? 'auto'}; position: relative; user-select: none;`"
+              :style="`width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}; position: relative; user-select: none;`"
             >
               {{ col.label }}
               <span class="col-resize-handle" @mousedown="startResize($event, col.name)" />
@@ -165,7 +165,7 @@
               <template v-else>
                 <span v-if="col.value !== null && col.value !== undefined && col.value !== ''">
                   <div
-                    :style="`display: inline-flex; align-items: center; max-width: ${colWidths[col.name] ?? 'auto'}`"
+                    :style="`display: inline-flex; align-items: center; max-width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}`"
                   >
                     <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
                       {{ col.value }}
@@ -309,19 +309,23 @@ const colMinWidths: Record<string, number> = {
   action: 120,
 };
 
-const defaultColWidths = ref<Record<string, string>>({
-  id: '60px',
-  permission_group: windowWidth.value < 1200 ? '80px' : '150px',
-  name: windowWidth.value < 1200 ? '80px' : '120px',
-  created_by: '80px',
-  action: '140px',
-});
+const defaultColWidths: Record<string, number> = {
+  id: 60,
+  permission_group: windowWidth.value < 1200 ? 80 : 150,
+  name: windowWidth.value < 1200 ? 80 : 120,
+  created_by: 80,
+  action: 140,
+};
 
 // loading the 'Usersettings'
 const savedColWidths = sessionStorage.getItem('qcsetting-col-widths');
 // handover the setting
-const colWidths = ref<Record<string, string>>(
-  savedColWidths ? JSON.parse(savedColWidths) : defaultColWidths.value,
+const colWidths = ref<Record<string, number>>(
+  savedColWidths
+    ? Object.fromEntries(
+        Object.entries(JSON.parse(savedColWidths)).map(([key, value]) => [key, Number(value)]),
+      )
+    : defaultColWidths,
 );
 
 // functions for setting a new col-widths per mousemove
@@ -334,7 +338,7 @@ function startResize(e: MouseEvent, colName: string) {
   startX = e.clientX;
 
   const th = (e.target as HTMLElement).closest('th');
-  startWidth = th ? th.offsetWidth : parseInt(colWidths.value[colName] ?? '100');
+  startWidth = th ? th.offsetWidth : (colWidths.value[colName] ?? 100);
 
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
@@ -344,8 +348,7 @@ function onResize(e: MouseEvent) {
   if (!resizingCol) return;
   const diff = e.clientX - startX;
   const min = colMinWidths[resizingCol] ?? 50;
-  const newWidth = Math.max(min, startWidth + diff);
-  colWidths.value[resizingCol] = newWidth + 'px';
+  colWidths.value[resizingCol] = Math.max(min, startWidth + diff);
 }
 
 function stopResize() {
