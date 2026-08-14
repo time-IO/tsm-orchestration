@@ -64,20 +64,41 @@ services:
 
   dsm-api:
     build:
-      context: ../data-source-management/api
-      dockerfile: docker/prod/Dockerfile
+      context: .
+      dockerfile: ./data-source-management/api/docker/Dockerfile-Dev
+    working_dir: /app
+    volumes:
+      - ./data-source-management/api/app:/app:rw,cached
+      - ./src/timeio:/app/timeio:rw,cached
 
   dsm-frontend:
     build:
-      context: ../data-source-management/frontend
-      dockerfile: docker/generic-image/Dockerfile
+      context: ./data-source-management/frontend
+      dockerfile: docker/Dockerfile-Dev
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./data-source-management/frontend/app:/home/node/app:rw,cached
+      - frontend_node_modules:/home/node/app/node_modules
+    environment:
+      API_BASE_URL: "http://localhost/data-source-management/api"
+      OIDC_CLIENT_ID: "timeIO-client"
+      OIDC_IDP_URL: "http://localhost/keycloak/realms/timeio" #url to idp without .well-known
+      OIDC_REDIRECT_URI: "http://localhost/data-source-management/login-callback"
+      OIDC_SCOPE: "openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "http://localhost/data-source-management"
+      BASE_URL: "/data-source-management/"
+    command: "quasar dev"
 
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
 
+  proxy:
+    volumes:
+      - ./nginx/tsm.dev.conf:/etc/nginx/conf.d/default.conf:ro
+
 volumes:
   keycloak-data:
   npm:
-  node_modules:
 
