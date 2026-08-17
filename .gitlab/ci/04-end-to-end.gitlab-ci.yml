@@ -14,6 +14,7 @@ combined-e2e-test:
       - "docker compose up -d --quiet-pull"
       - "sleep 20"
   script:
+      - "grep -n 'def create_or_get_group\\|def get_group_id' .gitlab/ci/py/e2e-setup-user.py"
       # Create a Keycloak test user with the required permission group
       - "python3 .gitlab/ci/py/e2e-setup-user.py"
       #  Create an ingest via the DSM API and capture its UUID and permission group UUID
