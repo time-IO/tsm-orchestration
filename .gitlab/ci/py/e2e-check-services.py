@@ -23,7 +23,6 @@ def log(message):
 def check_grafana_dashboard():
     auth = ("grafana", "grafana")
 
-    #dashboard
     url = f"http://{host}/visualization/api/dashboards/uid/{ingest_uuid}"
     response = requests.get(url, auth=auth)
     if response.status_code != 200:
