@@ -149,7 +149,7 @@ if __name__ == "__main__":
     create_user(token)
     user_id = get_user_id(token)
     set_password(token, user_id)
-    group_id = get_group_id(token)
+    group_id = create_or_get_group(token)
     add_user_to_group(token, user_id, group_id)
     enable_direct_access_grants(token)
     print("Success!")
