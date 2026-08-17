@@ -440,7 +440,7 @@ services:
 
 
   dsm-api:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
@@ -476,7 +476,7 @@ services:
 
 
   dsm-frontend:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       dsm-api:
