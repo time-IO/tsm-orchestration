@@ -69,8 +69,8 @@ services:
       dockerfile: ./data-source-management/api/docker/Dockerfile-Dev
     working_dir: /app
     volumes:
-      - ./data-source-management/api/app:/app:rw,cached
-      - ./src/timeio:/app/timeio:rw,cached
+      - ./data-source-management/api/app:/app:rw
+      - ./src/timeio:/app/timeio:rw
 
   dsm-frontend:
     image: time-io-datasource-management-frontend:dev
