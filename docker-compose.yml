@@ -443,7 +443,7 @@ services:
     image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-api:${DSM_API_IMAGE_TAG}
     build:
       context: .
-      dockerfile: /data-source-management/api/docker/prod/Dockerfile
+      dockerfile: data-source-management/api/docker/prod/Dockerfile
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
