@@ -32,6 +32,7 @@ const formData = ref<Partial<IngestExternalApiTSystemsUpdate>>({
   station_id: null,
   tsystems_username: null,
   tsystems_password: null,
+  sync_interval_in_minutes: null,
 });
 
 const isLoading = ref(false);
@@ -53,6 +54,7 @@ onMounted(async () => {
         station_id: data.station_id || null,
         tsystems_username: data.tsystems_username || null,
         tsystems_password: data.tsystems_password || null,
+        sync_interval_in_minutes: 60,
       };
     } catch {
       $q.notify({

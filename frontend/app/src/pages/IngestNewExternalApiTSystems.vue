@@ -25,7 +25,7 @@ const formData = ref<IngestExternalApiTSystemsCreate>({
   permission_group_id: null,
   description: null,
   sync_enabled: false,
-  sync_interval_in_minutes: null,
+  sync_interval_in_minutes: 60,
   group: null,
   station_id: null,
   tsystems_username: null,
