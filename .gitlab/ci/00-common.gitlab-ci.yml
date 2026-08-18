@@ -27,7 +27,7 @@ variables:
   DOCKER_IMAGE_TAG: 29-cli
   DOCKER_SERVICE_IMAGE_TAG: 29-dind
   TRIVY_VERSION: 0.69.3
-  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater"
+  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater dsm-api dsm-frontend"
   DSM_API_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-api"
   DSM_FRONTEND_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
   DSM_FRONTEND_IMAGE_URL_ROOTLESS: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend-rootless"

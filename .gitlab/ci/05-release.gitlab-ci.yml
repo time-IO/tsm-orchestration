@@ -45,9 +45,10 @@ stage-tag-images-in-registry:
   after_script:
     - docker logout
   script:
-    - docker compose pull -q $BUILD_SERVICES dsm-api dsm-frontend
+    - docker compose pull -q $BUILD_SERVICES
+    - docker pull $DSM_FRONTEND_IMAGE_URL_ROOTLESS
     - |
-      for image in $(docker images --format '{{ .Repository }}'); do
+      for image in $(docker images --format '{{ .Repository }}') $DSM_FRONTEND_IMAGE_URL_ROOTLESS; do
         docker tag $image:$BRANCH_NAME $image:latest;
         docker tag $image:$BRANCH_NAME $image:$BUILD_DATE;
         docker push $image:latest;
@@ -75,9 +76,10 @@ prod-tag-images-in-registry:
     - docker logout
   script:
     - docker compose pull -q $BUILD_SERVICES dsm-api dsm-frontend
+    - docker pull $DSM_FRONTEND_IMAGE_URL_ROOTLESS
     # Images built in a commit tag pipeline on main are tagged "main" by build job.
     - |
-      for image in $(docker images --format '{{ .Repository }}'); do
+      for image in $(docker images --format '{{ .Repository }}') $DSM_FRONTEND_IMAGE_URL_ROOTLESS; do
         docker tag $image:${CI_COMMIT_TAG} $image:$PROD_TAG;
         docker push $image:$PROD_TAG;
       done
