@@ -80,7 +80,7 @@ services:
     volumes:
       - ./data-source-management/frontend/app:/home/node/app:rw,cached
     environment:
-      API_BASE_URL: "${DSM_API_APP_URL:-http://localhost/data-source-management/api"
+      API_BASE_URL: "${DSM_API_APP_URL:-http://localhost/data-source-management/api}"
       OIDC_CLIENT_ID: "${DSM_FRONTEND_OIDC_CLIENT_ID:-timeIO-client}"
       OIDC_IDP_URL: "${DSM_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
       OIDC_REDIRECT_URI: "${DSM_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/data-source-management/login-callback}"
