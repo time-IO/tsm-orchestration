@@ -3,10 +3,10 @@
 import sys
 import requests
 
-#Keycloak settings
+# Keycloak settings
 host = "docker"
 realm = "timeio"
-admin_user= "keycloak"
+admin_user = "keycloak"
 admin_password = "keycloak"
 
 test_username = "testuser"
@@ -15,8 +15,9 @@ test_email = "testusere2e@example.de"
 group_path = "/a:a:a:group:VO:Group1#"
 client_id = "timeIO-client"
 
+
 def get_admin_token():
-    url= f"http://{host}/keycloak/realms/master/protocol/openid-connect/token"
+    url = f"http://{host}/keycloak/realms/master/protocol/openid-connect/token"
     response = requests.post(
         url,
         data={
@@ -29,17 +30,24 @@ def get_admin_token():
     response.raise_for_status()
     return response.json()["access_token"]
 
+
 def create_user(token):
     url = f"http://{host}/keycloak/admin/realms/{realm}/users"
     payload = {
-            "username": test_username,
-            "email": test_email,
-            "emailVerified": True,
-            "firstName": "Test",
-            "lastName": "User",
-            "enabled": True,
-            "requiredActions": []
-        }
+        "username": test_username,
+        "email": test_email,
+        "emailVerified": True,
+        "firstName": "Test",
+        "lastName": "User",
+        "enabled": True,
+        "credentials": {
+            "userLabel": "Password",
+            "temporary": False,
+            "type": "password",
+            "value": test_password
+        },
+        "requiredActions": []
+    }
     response = requests.post(
         url,
         headers={"Authorization": f"Bearer {token}"},
@@ -73,19 +81,6 @@ def get_user_id(token):
         sys.exit(1)
     return users[0]["id"]
 
-def set_password(token, user_id):
-    url = f"http://{host}/keycloak/admin/realms/{realm}/users/{user_id}/reset-password"
-    response = requests.put(
-        url,
-        headers={"Authorization": f"Bearer {token}"},
-        json={
-            "type": "password",
-            "value": test_password,
-            "temporary": False
-        }
-    )
-    response.raise_for_status()
-    print(f"Password set for user {test_username}")
 
 def create_or_get_group(token):
     url = f"http://{host}/keycloak/admin/realms/{realm}/groups"
@@ -106,6 +101,7 @@ def create_or_get_group(token):
     print(f"Group {group_path} could not created or found")
     sys.exit(1)
 
+
 def add_user_to_group(token, user_id, group_id):
     url = f"http://{host}/keycloak/admin/realms/{realm}/users/{user_id}/groups/{group_id}"
     response = requests.put(
@@ -114,6 +110,7 @@ def add_user_to_group(token, user_id, group_id):
     )
     response.raise_for_status()
     print(f"Added user {test_username} to group {group_path}")
+
 
 def enable_direct_access_grants(token):
     url = f"http://{host}/keycloak/admin/realms/{realm}/clients"
@@ -144,14 +141,13 @@ def enable_direct_access_grants(token):
     update_response.raise_for_status()
     print(f"Enabled direct access grants for {client_id}")
 
+
 if __name__ == "__main__":
     token = get_admin_token()
     create_user(token)
     user_id = get_user_id(token)
-    set_password(token, user_id)
     group_id = create_or_get_group(token)
     add_user_to_group(token, user_id, group_id)
     enable_direct_access_grants(token)
     print("Success!")
     sys.exit(0)
-
