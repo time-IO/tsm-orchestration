@@ -40,12 +40,12 @@ def create_user(token):
         "firstName": "Test",
         "lastName": "User",
         "enabled": True,
-        "credentials": {
+        "credentials": [{
             "userLabel": "Password",
             "temporary": False,
             "type": "password",
             "value": test_password
-        },
+        }],
         "requiredActions": []
     }
     response = requests.post(
