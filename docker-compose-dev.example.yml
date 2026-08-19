@@ -45,15 +45,6 @@ services:
     volumes:
       - "${DEV_FRONTEND_DIR:-../tsm-frontend}:/home/appuser/app"
 
-  visualization:
-    environment:
-      - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
-      - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-grafana-client}"
-      - "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_SECRET:-pUolEnz1Ve5djx9oUpw1KBgB0YgIlUOQ}"
-      - "GF_AUTH_GENERIC_OAUTH_AUTH_URL=${VISUALIZATION_GENERIC_OAUTH_AUTH_URL:-http://localhost/keycloak/realms/demo/protocol/openid-connect/auth}"
-      - "GF_AUTH_GENERIC_OAUTH_TOKEN_URL=${VISUALIZATION_GENERIC_OAUTH_TOKEN_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/token}"
-      - "GF_AUTH_GENERIC_OAUTH_API_URL=${VISUALIZATION_GENERIC_OAUTH_API_URL:-http://keycloak:8081/keycloak/realms/demo/protocol/openid-connect/userinfo}"
-
   keycloak:
     environment:
       KC_LOG_LEVEL: "com.timeio.mqtt:DEBUG,org.keycloak:INFO"
