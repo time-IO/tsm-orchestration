@@ -19,6 +19,7 @@ db_admin_user = "postgres"
 db_admin_password = "postgres"
 
 group_path = "/a:a:a:group:VO:Group1#"
+test_observation_value = 42.0
 
 
 def log(message):
@@ -91,7 +92,7 @@ def send_test_mqtt_message(ingest):
             "loggerID": "e2e-test-logger",
             "observationNames": ["test_value"],
             "observations": {
-                time.strftime("%Y-%m-%dT%H:%M:%SZ"): [42.0]
+                time.strftime("%Y-%m-%dT%H:%M:%SZ"): [test_observation_value]
             },
         },
     }
@@ -140,7 +141,7 @@ def check_observation_exists(schema_name):
         with conn.cursor() as cur:
             cur.execute(
                 f'SELECT 1 FROM "{schema_name}".observation WHERE result_number = %s ORDER BY id DESC LIMIT 1',
-                (42,),
+                (test_observation_value,),
             )
             if cur.fetchone() is None:
                 log("Observation check failed: no matching observation found")
