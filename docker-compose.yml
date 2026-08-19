@@ -1328,7 +1328,7 @@ services:
       interval: 3s
       timeout: 2s
       retries: 30
-      start_period: 5s
+      start_period: 30s
     volumes:
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
