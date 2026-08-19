@@ -205,8 +205,6 @@ class ParserCsvRepository:
             )
 
         try:
-            self.session.delete(parser_csv)
-            self.session.delete(parser_detailed)
             self.session.delete(parser)
             self.session.commit()
             return {"ok": True}

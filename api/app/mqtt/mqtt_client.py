@@ -25,7 +25,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     logger.info(f"Connected to MQTT broker: {client.host} | port: {client.port}")
 
 
-def on_publish(client, userdata, mid, result=None, properties=None):
+def on_publish(client, userdata, mid, reason_code=None, properties=None):
     logger.info("Message with id: {} published.".format(mid))
 
 
@@ -46,6 +46,7 @@ def mk_client():
     # connects its predecessor.
     postfix = get_native_id()
     client = mqtt.Client(
+        callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
         protocol=mqtt.MQTTv5,
         client_id=f"{mqtt_config['client_id']}-{postfix}",
     )

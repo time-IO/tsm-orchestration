@@ -16,25 +16,15 @@ def sample_qc_function_payload():
                 "type": "datastream",
                 "input": {"value": ["temperature_sensor_1"]},
             },
-            {
-                "name": "gap_window",
-                "type": "offset",
-                "input": {"value": "2H"},
-            },
-            {
-                "name": "group_window",
-                "type": "offset",
-                "input": {"value": "1D"},
-            },
+            {"name": "gap_window", "type": "offset", "input": {"value": "2H"}},
+            {"name": "group_window", "type": "offset", "input": {"value": "1D"}},
         ],
     }
 
 
 @pytest.fixture
 def sample_quality_control_function_argument_create():
-    from api.app.models.quality_control_setting import (
-        QualityControlFunctionArgumentCreate,
-    )
+    from models.quality_control_setting import QualityControlFunctionArgumentCreate
 
     return QualityControlFunctionArgumentCreate(
         name="field", type="datastream", input={"value": ["ds1"]}
