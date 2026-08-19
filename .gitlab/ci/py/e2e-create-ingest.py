@@ -43,7 +43,7 @@ def get_permission_group_id(token):
     items = resp.json()["items"]
     for group in items:
         if group["name"] == "VO:Group1":
-            return group["id"], group["uuid"]
+            return group["id"]
     log("Permission group VO:Group1 not found")
     sys.exit(1)
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     token = get_user_token()
     log("Got user token")
     call_me_endpoint(token)
-    permission_group_id, permission_group_uuid = get_permission_group_id(token)
+    permission_group_id = get_permission_group_id(token)
     log(f"Using permission group id = {permission_group_id}")
     parser_id = create_csv_parser(token, permission_group_id)
     log(f"Using parser id = {parser_id}")
