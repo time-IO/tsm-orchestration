@@ -21,8 +21,8 @@ T1S27 = QcFunctionStream(
     sta_thing_id=1,
     sta_stream_id=27,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="7bc458ab-3380-4c88-90bb-598f533d6715",
     datastream_id=15,
     context_window=pd.Timedelta(days=5),
     position="N1Cts",
@@ -33,8 +33,8 @@ T1S33 = QcFunctionStream(
     sta_thing_id=1,
     sta_stream_id=33,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="7bc458ab-3380-4c88-90bb-598f533d6715",
     datastream_id=3,
     context_window=pd.Timedelta(0),
     position="P1_mb",
@@ -45,8 +45,8 @@ T1S36 = QcFunctionStream(
     sta_thing_id=1,
     sta_stream_id=36,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="7bc458ab-3380-4c88-90bb-598f533d6715",
     datastream_id=4,
     context_window=pd.Timedelta(0),
     position="P3_mb",
@@ -57,8 +57,8 @@ T2S44 = QcFunctionStream(
     sta_thing_id=2,
     sta_stream_id=44,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="f3691b96-aca1-4585-95bf-6ea4c611503c",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="bdf1d748-790a-438f-b164-d76780d2c75a",
     datastream_id=34,
     context_window=pd.Timedelta(0),
     position="TMet20",
@@ -69,8 +69,8 @@ T2S43 = QcFunctionStream(
     sta_thing_id=2,
     sta_stream_id=43,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="f3691b96-aca1-4585-95bf-6ea4c611503c",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="bdf1d748-790a-438f-b164-d76780d2c75a",
     datastream_id=24,
     context_window=pd.Timedelta(0),
     position="RecordNum",
@@ -81,8 +81,8 @@ T2S46 = QcFunctionStream(
     sta_thing_id=2,
     sta_stream_id=46,
     mutable=False,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="f3691b96-aca1-4585-95bf-6ea4c611503c",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="bdf1d748-790a-438f-b164-d76780d2c75a",
     datastream_id=36,
     context_window=pd.Timedelta(0),
     position="N01C",
@@ -93,8 +93,8 @@ NEW = QcFunctionStream(
     sta_thing_id=2,
     sta_stream_id=None,
     mutable=True,
-    schema="vo_demogroup_887a7030491444e0aee126fbc215e9f7",
-    thing_uuid="f3691b96-aca1-4585-95bf-6ea4c611503c",
+    schema="vo_group1_4f3267caab9d4338a8fb1a21f8c46742",
+    thing_uuid="bdf1d748-790a-438f-b164-d76780d2c75a",
     datastream_id=None,
     context_window=pd.Timedelta(0),
     position="NEW",
@@ -388,3 +388,32 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     # reloading the data checks that the format is right
     data = read_stream_data(local_dbapi, streams=streams)
     qc = SaQCWrapper(data)
+
+
+def test_write_performance(local_dbapi):
+    import numpy as np
+    import time
+
+    rows = 10_000
+    index = pd.date_range("2025-01-01", periods=rows, freq="s")
+    flags = np.full(rows, -np.inf)
+
+    streams = {
+        T1S27: pd.DataFrame(
+            {"data": np.random.default_rng(42).random(rows), "quality": flags},
+            index=index,
+        ),
+        T1S33: pd.DataFrame(
+            {"data": np.random.default_rng(42).random(rows), "quality": flags},
+            index=index,
+        ),
+        T1S36: pd.DataFrame(
+            {"data": np.random.default_rng(42).random(rows), "quality": flags},
+            index=index,
+        ),
+    }
+
+    t0 = time.perf_counter()
+    qc = SaQCWrapper(streams)
+    write_qc_data(dbapi=local_dbapi, qc=qc)
+    print(f"SaQC: {time.perf_counter() - t0}")
