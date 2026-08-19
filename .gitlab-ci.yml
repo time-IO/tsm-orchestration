@@ -2,6 +2,8 @@ variables:
   API_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-api"
   FRONTEND_IMAGE_URL: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend"
   FRONTEND_IMAGE_URL_ROOTLESS: "${CI_REGISTRY_IMAGE}/timeio-dsm-frontend-rootless"
+  DOCKER_IMAGE_TAG: 29-cli
+  DOCKER_SERVICE_IMAGE_TAG: 29-dind
 
 stages:
   - freeze
@@ -39,38 +41,56 @@ prettier:
   script:
     - npx prettier --check .
 
-api-test:
+unit-tests:
   stage: check
   needs: []
   image: python:3.13-slim
-  variables:
-    POSTGRES_SERVER: "api-db"
-    POSTGRES_PORT: "5432"
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "postgres"
-    POSTGRES_DB: "db_dev"
-    OIDC_WELL_KNOWN: "http://proxy/keycloak/realms/local-dev/.well-known/openid-configuration"
-    OIDC_ISSUER: "http://proxy/keycloak/realms/local-dev"
-    OIDC_AUDIENCE: "dev-client"
-    ALLOWED_VOS: "UFZ-TSM,VO"
-    ALLOWED_ORIGINS: "http://localhost"
-    MINIO_SFTP_PORT: "127.0.0.1:40022"
-    PROXY_URL: "http://localhost:80"
-    FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
-    STA_ROOT_URL: "https://tsm.ufz.de/sta/"
-    STA_VERSION: "/v1.1/"
-    MQTT_BROKER_HOST: "mqtt-broker"
-    MQTT_PORT: "1883"
-    MQTT_CLIENT_ID: "datasource_management"
-    MQTT_USER: "dsm"
-    MQTT_PASSWORD: "dsm"
-    MQTT_QOS: "2"
-    INGEST_MQTT_BROKER_URI: "localhost:1883"
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
     - pip install -r ./api/requirements.txt
   script:
-    - pytest
+    - pytest api/app/tests/unit_tests api/app/tests/validation -v -W error
+
+integration-tests:
+  stage: check
+  needs: []
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  services:
+    - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
+  variables:
+    OIDC_WELL_KNOWN: "https://example.com/.well-known/openid-configuration"
+    OIDC_ISSUER: "https://example.com"
+    OIDC_AUDIENCE: "test-audience"
+    MINIO_SFTP_PORT: "8022"
+    PROXY_URL: "http://localhost"
+    FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
+    STA_ROOT_URL: "http://localhost/sta"
+    STA_VERSION: "v1.1"
+    MQTT_BROKER_HOST: "mqtt-broker"
+    MQTT_CLIENT_ID: "test-client"
+    MQTT_USER: "test"
+    MQTT_PASSWORD: "test"
+    INGEST_MQTT_BROKER_URI: "mqtt://mqtt-broker:1883"
+  before_script:
+    - apk add --no-cache bash
+    - docker compose build api
+    - docker compose up -d --quiet-pull --wait api-db-test mqtt-broker
+    - ./api/migrate_test_db.sh
+  script:
+    - >
+      docker compose run --rm
+      --no-deps
+      -e POSTGRES_TEST_SERVER=api-db-test
+      -e POSTGRES_TEST_PORT=5432
+      -e POSTGRES_TEST_USER=postgres
+      -e POSTGRES_TEST_PASSWORD=postgres
+      -e POSTGRES_TEST_DB=db_test
+      --entrypoint bash
+      api -c "pytest tests/integration_tests/ -v -W error"
+  after_script:
+    - docker compose down -v
+  tags:
+    - "dind"
 
 npm-lint:
   stage: check
@@ -98,6 +118,8 @@ docker-build:
   needs:
     - black
     - prettier
+    - unit-tests
+    - integration-tests
     - npm-lint
     - npm-test
   image: docker

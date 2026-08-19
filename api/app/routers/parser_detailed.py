@@ -11,12 +11,12 @@ from repositories.parser_detailed import ParserDetailedRepository
 
 router = APIRouter(
     prefix="/parser-detailed",
-    tags=["ingest"],
+    tags=["parser-detailed"],
     responses={404: {"description": "Not found"}},
     dependencies=[Depends(get_current_user)],
 )
 
-entity_name = "ingest"
+entity_name = "parser-detailed"
 
 
 @router.get(
