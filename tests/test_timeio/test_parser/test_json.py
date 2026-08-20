@@ -7,7 +7,7 @@ import pytest
 
 from timeio.parser.json_parser import JsonParser
 
-# from timeio.errors import ParsingError
+from timeio.errors import ParsingError
 
 RAWDATA = """
 {
@@ -304,3 +304,96 @@ def test_unix_milliseconds_timestamp():
 
     assert df.index.equals(expected_index)
     assert df["value"].tolist() == [1, 2, 3]
+
+
+LORAWAN_DATA = """
+{
+    "deduplicationId": "9947541e-2f10-40a9-9b6f-1e51085325b5",
+    "time": "2026-08-18T11:15:56.166747+00:00",
+    "deviceInfo": {
+        "tenantId": "700c0206-97d8-475a-a65d-f5a3175298fb",
+        "deviceName": "THL 0613 ID #083 MCU 25028710",
+        "devEui": "477191d4be5a97a3"
+    },
+    "devAddr": "62cbe321",
+    "data": "AATdABEY/wGAC9YJiBQ8AAAAMwM=",
+    "object": {
+        "Firmware_version_THL": 0,
+        "Voltage": 3.03,
+        "Frame_count": 1245,
+        "Illuminance": 51,
+        "Air_temperature": 24.4,
+        "Relative_humidity": 51.8,
+        "Datetime_valid": 0,
+        "Datetime_timezone": "UTC",
+        "Datetime": "2025-01-13T23:15:11"
+    },
+    "rxInfo": [
+        {
+            "gatewayId": "024a2763d8cc605e",
+            "rssi": -99
+        }
+    ]
+}
+"""
+
+
+def test_measurement_key_extracts_nested_object():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    assert df.columns.tolist() == [
+        "Firmware_version_THL",
+        "Voltage",
+        "Frame_count",
+        "Illuminance",
+        "Air_temperature",
+        "Relative_humidity",
+        "Datetime_valid",
+        "Datetime_timezone",
+    ]
+    assert df["Voltage"].tolist() == [3.03]
+    assert df["Frame_count"].tolist() == [1245]
+
+
+def test_measurement_key_localizes_timezone():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    expected_index = pd.DatetimeIndex(["2025-01-13 23:15:11"], tz="UTC")
+    assert df.index.equals(expected_index)
+
+
+def test_missing_measurement_key_raises_parsing_error():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "does_not_exist",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+
+    with pytest.raises(ParsingError, match="Measurement key"):
+        parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+
+def test_without_measurement_key_and_timezone_keeps_root_and_naive_index():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    # unchanged behavior: no timezone configured -> naive index
+    assert df.index.tz is None
+    assert df.index.equals(pd.to_datetime(["2025-08-12 13:01:23"]))
