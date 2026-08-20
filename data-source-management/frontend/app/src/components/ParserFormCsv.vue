@@ -30,7 +30,8 @@
           />
 
           <permission-group-select
-            v-model="formData.permission_group_id"
+            v-model="permissionGroupModel"
+            :disable="disablePermissionGroup"
             :rules="[rules.REQUIRED]"
           />
 
@@ -59,7 +60,6 @@
             @update:model-value="trimHeadlines"
             label="Number of headlines to exclude"
             hint="Enter either a single number to indicate of many lines should be excluded or a comma-separated list of numbers indicating the lines which must be excluded (0-based)"
-            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
           <q-input
@@ -67,7 +67,6 @@
             class="q-mb-md"
             v-model.number="formData.footlines_to_exclude"
             label="Number of footlines to exclude"
-            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
           <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
@@ -81,7 +80,7 @@
             v-model.number="formData.header"
             label="Header row index"
             hint="Row index where header is located (0 for first row)"
-            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
+            :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
           />
 
           <!-- Timestamp Columns -->
@@ -206,6 +205,7 @@
                 color="green"
                 type="submit"
                 :loading="isLoading"
+                :disable="formData.timestamp_columns.length === 0"
                 label="Save"
                 class="full-width"
               />
@@ -219,22 +219,38 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { CsvParserCreate } from 'src/services/parser_csv/types';
+import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
-defineProps<{
-  title: string;
-  isLoading: boolean;
-  backRoute: string;
-}>();
+
+type CsvParserFormData = CsvParserUpdate & {
+  permission_group_id?: number | null;
+  timestamp_columns: CsvParserCreate['timestamp_columns'];
+  comment: string[];
+};
+
+const props = withDefaults(
+  defineProps<{
+    title: string;
+    isLoading: boolean;
+    backRoute: string;
+    disablePermissionGroup?: boolean;
+    permissionGroupId?: number | null;
+  }>(),
+  {
+    disablePermissionGroup: false,
+    permissionGroupId: null,
+  },
+);
 
 defineEmits<{
   save: [];
 }>();
 
-const formData = defineModel<CsvParserCreate>({
+const formData = defineModel<CsvParserFormData>({
   default: {
     permission_group_id: null,
     name: null,
@@ -248,6 +264,17 @@ const formData = defineModel<CsvParserCreate>({
     header: null,
     timezone: null,
     encoding: null,
+  },
+});
+
+const permissionGroupModel = computed({
+  get() {
+    return formData.value.permission_group_id ?? props.permissionGroupId;
+  },
+  set(value: number | null) {
+    if (!props.disablePermissionGroup) {
+      formData.value.permission_group_id = value;
+    }
   },
 });
 

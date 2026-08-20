@@ -196,8 +196,6 @@ class IngestExternalApiNeutronMonitorRepository:
         ing = ext.ingest
 
         try:
-            self.session.delete(entity)
-            self.session.delete(ext)
             self.session.delete(ing)
             self.session.commit()
             return {"ok": True}

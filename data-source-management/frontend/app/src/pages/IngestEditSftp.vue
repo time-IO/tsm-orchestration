@@ -6,7 +6,9 @@
     v-model="formData"
     @save="save"
     :item-permission-group="itemPermissionGroup"
+    :item-parser="itemParser"
     :item-parser-id="formData.parser_id"
+    :item-parser-type="itemParserType"
   />
 </template>
 
@@ -18,6 +20,7 @@ import type { IngestSftpUpdate } from 'src/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import IngestFormSftp from 'components/IngestFormSftp.vue';
 import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { ParserRead } from 'src/services/types';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
@@ -35,6 +38,8 @@ const formData = ref<IngestSftpUpdate>({
 const isLoading = ref(false);
 
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const itemParserType = ref<string | null>(null);
+const itemParser = ref<ParserRead | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -43,6 +48,7 @@ onMounted(async () => {
       const data = await sftpStore.dispatchGetOne(id);
 
       itemPermissionGroup.value = data.permission_group || null;
+      itemParser.value = data.parser;
 
       formData.value = {
         name: data.name || null,

@@ -32,6 +32,7 @@ const formData = ref<Partial<IngestExternalApiUbaUpdate>>({
   description: '',
   station_id: null,
   sync_enabled: false,
+  sync_interval_in_minutes: null,
 });
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
@@ -49,6 +50,7 @@ onMounted(async () => {
         description: data.description || '',
         station_id: data.station_id || null,
         sync_enabled: data.sync_enabled || false,
+        sync_interval_in_minutes: 60,
       };
     } catch {
       $q.notify({
