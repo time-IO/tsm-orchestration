@@ -130,7 +130,7 @@ unit-test-dsm-api:
   image: python:3.13-slim
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
-    - pip install -r ./api/requirements.txt
+    - pip install -r data-source-management/api/requirements.txt
   script:
     - pytest data-source-management/api/app/tests/unit_tests data-source-management/api/app/tests/validation -v -W error
   rules:
@@ -164,7 +164,7 @@ integration-test-dsm-api:
     - apk add --no-cache bash
     - docker compose build api
     - docker compose up -d --quiet-pull --wait api-db-test mqtt-broker
-    - ./api/migrate_test_db.sh
+    - ./data-source-management/api/migrate_test_db.sh
   script:
     - >
       docker compose run --rm
