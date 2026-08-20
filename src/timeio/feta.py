@@ -247,24 +247,18 @@ class Base:
 
     @staticmethod
     def _fetchall(conn: Connection, query, *params) -> list[dict[str, Any]]:
-        logger.debug("fetchall(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchall()  # type: ignore
 
     @staticmethod
     def _fetchone(conn: Connection, query, *params):
-        logger.debug("fetchone(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchone()
 
     def _cache_get(self, key):
         if self._cache:
-            hit = key in self._cache
-            logging.getLogger("feta-cache").debug(
-                "cache %s: %s", "HIT" if hit else "MISS", key
-            )
             return self._cache.get(key, None)
         return None
 
