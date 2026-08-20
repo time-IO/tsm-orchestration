@@ -57,12 +57,11 @@
                 </template>
               </q-input>
 
-              <parser-select
-                class="q-mb-md"
-                :disable="!formData.permission_group_id"
+              <parser-select-by-type
                 v-model="formData.parser_id"
-                :permission_group_id="formData.permission_group_id!"
-                :preselected_item_id="itemParserId"
+                :permission-group-id="formData.permission_group_id"
+                :disable="!formData.permission_group_id"
+                :preselected-parser="itemParser"
               />
             </div>
           </q-card-section>
@@ -180,22 +179,24 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import parserSelect from 'components/ParserSelect.vue';
-import { ref } from 'vue';
 import type {
   IngestExternalSftpCreate,
   IngestExternalSftpUpdate,
 } from 'src/services/ingest_external_sftp/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import HelpButton from 'components/HelpButton.vue';
+import { ref } from 'vue';
+import ParserSelectByType from 'components/ParserSelectByType.vue';
+
 import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { ParserRead } from 'src/services/types';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
-  itemParserId?: number | null | undefined;
+  itemParser?: ParserRead | null;
 }>();
 
 defineEmits<{

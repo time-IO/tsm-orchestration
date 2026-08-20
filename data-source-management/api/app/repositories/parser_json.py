@@ -194,8 +194,6 @@ class ParserJsonRepository:
             )
 
         try:
-            self.session.delete(parser_json)
-            self.session.delete(parser_detailed)
             self.session.delete(parser)
             self.session.commit()
             return {"ok": True}

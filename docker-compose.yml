@@ -438,9 +438,21 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
-
+  # Summary
+  # =======
+  # brief: An API for controlled access to management of data ingests and processing
+  # dir: data-source-management/api
+  # see also:
+  #  - data-source-management/README.md
+  #
+  # ===========
+  # Description
+  # For detailed description and hints for development, visit data-source-management/README.md
   dsm-api:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-api:${DSM_API_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-api:${DSM_API_IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: data-source-management/api/docker/prod/Dockerfile
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
@@ -475,20 +487,58 @@ services:
       STA_VERSION: "${DSM_API_STA_VERSION}"
 
 
+  # Summary
+  # =======
+  # brief: A user frontend to set up and manage data ingests and processing
+  # dir: data-source-management/frontend
+  # see also:
+  #  - data-source-management/README.md
+  #
+  # Description
+  # ===========
+  # For detailed description and hints for development, visit data-source-management/README.md
+  #
+  # NOTE that two services exist: dsm-frontend and dsm-frontend-rootless
+  # Latter will not be not started or built with docker compose setup by default.
+  # To build it, use `docker compose --profile build build`
   dsm-frontend:
-    image: registry.hzdr.de/ufz-tsm/data-source-management/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./data-source-management/frontend
+      dockerfile: docker/generic-image/Dockerfile
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       dsm-api:
         condition: service_started
     environment:
-       ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
-       ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
-       ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
-       ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
-       ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
-       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
-       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+      ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+
+
+  dsm-frontend-rootless:
+    profiles:
+      - build # activate profile to build
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-frontend-rootless:${DSM_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./data-source-management/frontend
+      dockerfile: docker/generic-image/Dockerfile-rootless
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      dsm-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
 
 
   # Summary
@@ -1315,7 +1365,7 @@ services:
       interval: 3s
       timeout: 2s
       retries: 30
-      start_period: 5s
+      start_period: 30s
     volumes:
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"

@@ -2,42 +2,34 @@
 
 ## Setup
 
-Build Docker Images
+Build Docker images and install node modules
 
 ```
 docker compose build
 ```
 
-Install node modules
-
-```
-docker compose run --rm -u $UID frontend npm ci
-```
-
-### Update /etc/hosts
-
-Edit your `/etc/hosts` file and add the following entry:
-
-```
-127.0.0.1       proxy
-```
-
 ## Run
 
+Run with the time.IO orchestration setup.
 ```
-docker compose up -d
+./up.sh
 ```
 
-For Qc-Settings to work on local machine also see: `Qc-Setting Form locally` section in this Readme
+For development:
+```
+./up-with-dev.sh
+```
+
+For Qc-Settings to work on local machine also see: [STA integration](#sta-integration) section in this Readme
 
 ### Frontend
 
-- visit: http://localhost
+- visit: http://localhost/data-source-management
 
 ### Api
 
-- available under http://localhost/api
-- Documentation: http://localhost/api/docs
+- available under http://localhost/data-source-management/api
+- Documentation: http://localhost/data-source-management/api/docs
 
 ## Authentication
 
@@ -202,11 +194,12 @@ docker compose run --rm frontend npx prettier --write .
 - afterward they can be used with `process.env.<KEY>`
   - e.g. if you need an example look in the `frontend/app/src/stores/authStore.ts`
 
-### Qc-Setting Form locally
+### STA integration
 
-- to be able to select a field and/or target datastream in local setup you will need to do the following:
-- create any ingest
-- update the table `database` column `username` to `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`
+- To fill the local STA endpoint with data, [devtools](https://codebase.helmholtz.cloud/ufz-tsm/tsm-dev-tools#dsm-demo-workflow) can be used.
+- However, if you wish to test with productive or other external STA data instead:
+  - Set the environment variable `STA_ROOT_URL` to the base URL of your desired endpoint (e. g. `https://tsm.ufz.de/sta/`) and restart the service.
+  - Update the column `username` in the table `database` to your desired schema/endpoint (e. g. `crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b`).
 
 ### Auth
 

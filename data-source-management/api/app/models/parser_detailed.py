@@ -68,7 +68,9 @@ class ParserDetailed(SQLModel, table=True):
         back_populates="parser_detailed", cascade_delete=True
     )
 
-    parser_json: Optional["ParserJson"] = Relationship(back_populates="parser_detailed")
+    parser_json: Optional["ParserJson"] = Relationship(
+        back_populates="parser_detailed", cascade_delete=True
+    )
 
     parser_soilcan: Optional["ParserSoilcan"] = Relationship(
         back_populates="parser_detailed", cascade_delete=True

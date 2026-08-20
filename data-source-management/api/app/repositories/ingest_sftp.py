@@ -151,7 +151,6 @@ class IngestSftpRepository:
         # workaround as cascade delete doesn't seem to work currently
         ing = entity.ingest
         try:
-            self.session.delete(entity)
             self.session.delete(ing)
             self.session.commit()
             return {"ok": True}

@@ -73,17 +73,16 @@
             />
 
             <div class="q-mt-md">
-              <q-input
-                filled
-                v-model.number="formData.sync_interval_in_minutes"
-                label="Sync Interval (in minutes) *"
-                type="number"
-                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
-              >
+              <q-field filled label="Sync Interval (in minutes) - fixed" stack-label readonly>
+                <template #control>
+                  <div class="self-center full-width no-outline">
+                    {{ formData.sync_interval_in_minutes }}
+                  </div>
+                </template>
                 <template #append>
                   <help-button termHelp="sync_interval" />
                 </template>
-              </q-input>
+              </q-field>
             </div>
           </q-card-section>
 

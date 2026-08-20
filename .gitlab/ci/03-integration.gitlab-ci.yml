@@ -67,7 +67,6 @@ combined-integration-test:
     - "build-and-push-images"
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
-    - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
     - "apk add --no-cache curl postgresql-client"
     - "docker compose up -d"
     - "sleep 20"
