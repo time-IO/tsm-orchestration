@@ -115,11 +115,10 @@ integration-test-dsm-api:
     INGEST_MQTT_BROKER_URI: "mqtt://mqtt-broker:1883"
   before_script:
     - apk add --no-cache bash
-    - docker compose build api
   script:
     - bash data-source-management/run_integration_tests.sh
   after_script:
-    - docker compose down -v
+    - bash dc-with-dev.sh down -v
   rules:
     - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
       when: never
