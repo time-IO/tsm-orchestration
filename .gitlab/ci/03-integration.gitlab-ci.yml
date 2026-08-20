@@ -115,6 +115,7 @@ integration-test-dsm-api:
     INGEST_MQTT_BROKER_URI: "mqtt://mqtt-broker:1883"
   before_script:
     - apk add --no-cache bash
+    - cp docker-compose-dev.example.yml docker-compose-dev.yml
   script:
     - bash data-source-management/run_integration_tests.sh
   after_script:
