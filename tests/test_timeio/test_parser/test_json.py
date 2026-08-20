@@ -397,3 +397,51 @@ def test_without_measurement_key_and_timezone_keeps_root_and_naive_index():
     # unchanged behavior: no timezone configured -> naive index
     assert df.index.tz is None
     assert df.index.equals(pd.to_datetime(["2025-08-12 13:01:23"]))
+
+
+def test_excluded_keys_removes_keys_from_root():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+        "excluded_keys": ["Illuminance"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+
+def test_excluded_keys_removes_keys_from_measurement_key_object():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+        "excluded_keys": ["Illuminance", "Datetime_valid"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+    assert "Datetime_valid" not in df.columns
+    assert "Voltage" in df.columns
+
+def test_excluded_keys_on_array_data():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "excluded_keys": ["Illuminance"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(ARRAYDATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+    assert df["Frame_count"].tolist() == [123, 124, 125]
+
+
+def test_without_excluded_keys_keeps_all_columns():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    assert "Frame_count" in df.columns

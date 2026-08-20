@@ -53,6 +53,45 @@
             hint="Optional: key of the nested object containing the actual measurement data (e.g. object, not &quot;object&quot;)"
           />
 
+            <!-- Excluded Keys -->
+            <div class="q-my-md">
+              <q-list
+                separator
+                v-for="(key, idx) in formData.excluded_keys"
+                :key="idx"
+                class="q-mb-sm"
+              >
+                <q-item>
+                  <q-item-section>
+                    <q-input
+                      filled
+                      v-model="formData.excluded_keys[idx]"
+                      label="Excluded key"
+                      hint="Key to exclude from the payload"
+                    />
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn
+                      dense
+                      flat
+                      icon="remove_circle"
+                      color="red"
+                      @click="removeExcludedKey(idx)"
+                    />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+
+              <div class="row q-gutter-sm items-center q-mb-sm">
+                <q-btn
+                  icon="add"
+                  label="Add excluded key"
+                  flat
+                  color="primary"
+                  @click="addExcludedKey"
+                />
+              </div>
+            </div>
 
           <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
@@ -152,6 +191,7 @@ import { rules } from 'src/utils/validation/rules';
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
   timestamp_keys: JsonParserCreate['timestamp_keys'];
+  excluded_keys: string[];
 };
 
 const props = withDefaults(
@@ -180,6 +220,8 @@ const formData = defineModel<JsonParserFormData>({
     timestamp_keys: [],
     comment: null,
     measurement_key: null,
+    excluded_keys: [],
+    timezone: null,
   },
 });
 
@@ -221,5 +263,13 @@ const measurementKey = computed({
     formData.value.measurement_key = stripQuotes(value);
   },
 });
+
+function addExcludedKey() {
+  formData.value.excluded_keys.push('');
+}
+
+function removeExcludedKey(index: number) {
+  formData.value.excluded_keys.splice(index, 1);
+}
 </script>
 <style scoped></style>

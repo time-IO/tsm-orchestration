@@ -27,6 +27,7 @@ export type JsonParserPublic = {
   permission_group: PermissionGroup;
   timezone: string | null;
   measurement_key: string  | null;
+  excluded_keys: string[] | null;
 };
 
 export type JsonParserCreate = {
@@ -37,6 +38,7 @@ export type JsonParserCreate = {
   timestamp_keys: Array<JsonParserTimestampKeyCreate>;
   timezone: string | null;
   measurement_key: string | null;
+  excluded_keys: string[] | null;
 };
 
 export type JsonParserUpdate = {
@@ -46,4 +48,5 @@ export type JsonParserUpdate = {
   timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
   timezone?: string | null;
   measurement_key?: string | null;
+  excluded_keys?: string[] | null;
 };

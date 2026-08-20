@@ -52,7 +52,7 @@ class JsonParser(PandasParser):
         clean_string = re.sub(comment_re, "", rawdata)
         return clean_string
 
-    def _json_to_df(self, rawdata: str, comment: str = None, measurement_key: str = None) -> pd.DataFrame:
+    def _json_to_df(self, rawdata: str, comment: str = None, measurement_key: str = None, excluded_keys: list[str] = None) -> pd.DataFrame:
         cleaned_data = self._clean_string(rawdata, comment) if comment else rawdata
         json_data = json.loads(cleaned_data)
 
@@ -64,6 +64,17 @@ class JsonParser(PandasParser):
                     json_data = json_data[measurement_key]
             except KeyError as e:
                 raise ParsingError(f"Measurement key {measurement_key!r} not found: {e}")
+
+        if excluded_keys:
+            if isinstance(json_data, list):
+                json_data = [
+                    {k: v for k, v in item.items() if k not in excluded_keys}
+                    for item in json_data
+                ]
+            else:
+                json_data = {
+                    k: v for k, v in json_data.items() if k not in excluded_keys
+                }
 
         return pd.json_normalize(json_data, **self.normalize_kws)
 
@@ -107,9 +118,10 @@ class JsonParser(PandasParser):
         self.logger.info(self.settings)
         comment = self.settings.get("comment")
         measurement_key = self.settings.get("measurement_key")
+        excluded_keys = self.settings.get("excluded_keys")
         timezone = self.settings.get("timezone")
         timestamp_keys = self.settings.get("timestamp_keys", {})
-        df = self._json_to_df(rawdata, comment, measurement_key)
+        df = self._json_to_df(rawdata, comment, measurement_key, excluded_keys)
         df, timestamp_keys = self.normalize_unix_timestamps(df, timestamp_keys, "json")
         try:
             df = self._set_index(df, timestamp_keys, timezone)

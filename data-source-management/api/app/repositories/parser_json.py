@@ -252,6 +252,7 @@ class ParserJsonRepository:
             timestamp_keys=entity.timestamp_keys,
             timezone=entity.timezone,
             measurement_key=entity.measurement_key,
+            excluded_keys=entity.excluded_keys,
             permission_group={
                 "id": permission_group.id,
                 "uuid": permission_group.uuid,

@@ -36,6 +36,7 @@ const formData = ref<JsonParserEditFormData>({
   comment: null,
   measurement_key: null,
   timezone: null,
+  excluded_keys: [],
 });
 const permissionGroupId = ref<number | null>(null);
 
@@ -135,6 +136,7 @@ function normalizeFormData(data: JsonParserUpdate): JsonParserEditFormData {
     })),
     comment: data.comment || null,
     measurement_key: data.measurement_key || null,
+    excluded_keys: data.excluded_keys || null,
     timezone: data.timezone || null,
   };
 }

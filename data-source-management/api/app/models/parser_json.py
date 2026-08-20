@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 import pytz
 from pydantic import field_validator
+from sqlalchemy import Column, ARRAY, String as SAString
 
 from .parser_detailed import (
     ParserDetailed,
@@ -22,6 +23,7 @@ class ParserJsonRead(ParserDetailedRead):
     timestamp_keys: list[ParserJsonTimestampKeyPublic] = []
     timezone: Optional[str] = None
     measurement_key: Optional[str] = None
+    excluded_keys: Optional[list[str]] = None
 
 class ParserJsonTimestampKeyCreate(SQLModel):
     key: str
@@ -33,6 +35,7 @@ class ParserJsonCreate(ParserDetailedCreate):
     timestamp_keys: list[ParserJsonTimestampKeyCreate]
     timezone: str
     measurement_key: Optional[str] = None
+    excluded_keys: Optional[list[str]] = None
 
 
 class ParserJsonTimestampKeyUpdate(ParserJsonTimestampKeyCreate):
@@ -44,6 +47,7 @@ class ParserJsonUpdate(ParserDetailedUpdate):
     timestamp_keys: Optional[list[ParserJsonTimestampKeyUpdate]] = None
     timezone: Optional[str] = None
     measurement_key: Optional[str] = None
+    excluded_keys: Optional[list[str]] = None
 
 
 class ParserJson(SQLModel, table=True):
@@ -58,6 +62,9 @@ class ParserJson(SQLModel, table=True):
     comment: Optional[str] = None
     timezone: Optional[str] = None
     measurement_key: Optional[str] = None
+    excluded_keys: Optional[list[str]] = Field(
+        default=None, sa_column=Column(ARRAY(SAString))
+    )
     timestamp_keys: list["ParserJsonTimestampKey"] = Relationship(
         back_populates="parser_json", cascade_delete=True
     )
