@@ -1,149 +1,47 @@
 <template>
-  <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">Edit JSON Parser</h5>
-    <div class="row">
-      <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="detailRoute" />
-      </div>
-    </div>
-
-    <q-card class="q-mb-lg" flat>
-      <q-card-section>
-        <q-form @submit.prevent="save" class="q-gutter-md">
-          <!-- Name Field -->
-          <q-input
-            filled
-            class="q-mb-md"
-            v-model="formData.name"
-            label="Name *"
-            hint="Enter a descriptive name for this parser"
-            :rules="[rules.REQUIRED]"
-          />
-
-          <!-- Description -->
-          <q-input
-            filled
-            v-model="formData.description"
-            label="Description"
-            type="textarea"
-            rows="3"
-            hint="Provide additional details about this parser"
-          />
-
-          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
-
-          <!-- Timestamp Columns -->
-          <div class="q-my-md">
-            <div class="row q-gutter-sm items-center q-mb-sm">
-              <q-btn
-                icon="add"
-                label="Add timestamp keys"
-                flat
-                color="primary"
-                @click="addTimestampKeys"
-              />
-            </div>
-
-            <q-list
-              separator
-              v-for="(ts, idx) in formData.timestamp_keys"
-              :key="idx"
-              class="q-mb-sm"
-            >
-              <q-item>
-                <q-item-section>
-                  <q-item-label>Timestamp Key {{ idx + 1 }}</q-item-label>
-                  <div class="row q-gutter-sm q-mt-xs">
-                    <q-input
-                      filled
-                      class="col"
-                      v-model="ts.key"
-                      label="Key (e.g. Datetime)"
-                      :rules="[rules.REQUIRED]"
-                    />
-                    <q-input
-                      filled
-                      class="col"
-                      v-model="ts.format"
-                      label="Timestamp format (e.g. %Y-%m-%d %H:%M:%S)"
-                      :rules="[rules.REQUIRED]"
-                    />
-                  </div>
-                </q-item-section>
-                <q-item-section side>
-                  <div class="flex items-center">
-                    <q-btn
-                      dense
-                      flat
-                      icon="remove_circle"
-                      color="red"
-                      @click="removeTimestampKeys(idx)"
-                    />
-                  </div>
-                </q-item-section>
-              </q-item>
-            </q-list>
-
-            <!-- Validation message for timestamp columns -->
-            <div
-              v-if="formData.timestamp_keys && formData.timestamp_keys.length === 0"
-              class="text-negative q-mt-xs"
-            >
-              At least one timestamp column is required
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="row q-mt-lg">
-            <q-space />
-            <div class="col-6">
-              <q-btn
-                unelevated
-                color="green"
-                type="submit"
-                :loading="isLoading"
-                :disable="!!formData.timestamp_keys && formData.timestamp_keys.length === 0"
-                label="Save"
-                class="full-width"
-              />
-            </div>
-            <q-space />
-          </div>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </q-page>
+  <parser-form-json
+    title="Edit JSON Parser"
+    :is-loading="isLoading"
+    :back-route="detailRoute"
+    :permission-group-id="permissionGroupId"
+    disable-permission-group
+    v-model="formData"
+    @save="save"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { JsonParserUpdate } from 'src/services/parser_json/types';
+import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
-import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import ParserFormJson from 'components/ParserFormJson.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
-import { rules } from 'src/utils/validation/rules';
 
-const permissionGroupStore = usePermissionGroupStore();
+type JsonParserEditFormData = JsonParserUpdate & {
+  permission_group_id?: number | null;
+  timestamp_keys: JsonParserCreate['timestamp_keys'];
+};
+
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<JsonParserUpdate>({
+const formData = ref<JsonParserEditFormData>({
   name: '',
   description: null,
   timestamp_keys: [],
   comment: null,
   timezone: null,
 });
+const permissionGroupId = ref<number | null>(null);
 
 const isLoading = ref(false);
-
-const initialFormData = ref<JsonParserUpdate | null>(null);
 const isSaving = ref(false);
+
+const initialFormData = ref<JsonParserEditFormData | null>(null);
 
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
@@ -163,6 +61,7 @@ onMounted(async () => {
       const loadedData = normalizeFormData(data);
 
       formData.value = loadedData;
+      permissionGroupId.value = data.permission_group_id;
       initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
@@ -171,16 +70,6 @@ onMounted(async () => {
       });
       await router.push('/parser');
     }
-  }
-
-  try {
-    await permissionGroupStore.dispatchGetList();
-  } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch permission groups',
-    });
   }
 });
 
@@ -235,26 +124,14 @@ async function save() {
   }
 }
 
-function addTimestampKeys() {
-  if (formData.value.timestamp_keys) {
-    formData.value.timestamp_keys.push({
-      key: null,
-      format: null,
-    });
-  }
-}
-
-function removeTimestampKeys(index: number) {
-  if (formData.value.timestamp_keys) {
-    formData.value.timestamp_keys.splice(index, 1);
-  }
-}
-
-function normalizeFormData(data: JsonParserUpdate): JsonParserUpdate {
+function normalizeFormData(data: JsonParserUpdate): JsonParserEditFormData {
   return {
     name: data.name || '',
     description: data.description || null,
-    timestamp_keys: data.timestamp_keys || [],
+    timestamp_keys: (data.timestamp_keys || []).map((timestampKey) => ({
+      key: timestampKey.key,
+      format: timestampKey.format,
+    })),
     comment: data.comment || null,
     timezone: data.timezone || null,
   };

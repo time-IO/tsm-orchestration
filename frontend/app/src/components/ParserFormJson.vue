@@ -23,7 +23,8 @@
           />
 
           <permission-group-select
-            v-model="formData.permission_group_id"
+            v-model="permissionGroupModel"
+            :disable="disablePermissionGroup"
             :rules="[rules.REQUIRED]"
           />
 
@@ -119,6 +120,7 @@
                 color="green"
                 type="submit"
                 :loading="isLoading"
+                :disable="formData.timestamp_keys.length === 0"
                 label="Save"
                 class="full-width"
               />
@@ -132,28 +134,53 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { JsonParserCreate } from 'src/services/parser_json/types.ts';
+import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
 
-defineProps<{
-  title: string;
-  isLoading: boolean;
-  backRoute: string;
-}>();
+type JsonParserFormData = JsonParserUpdate & {
+  permission_group_id?: number | null;
+  timestamp_keys: JsonParserCreate['timestamp_keys'];
+};
+
+const props = withDefaults(
+  defineProps<{
+    title: string;
+    isLoading: boolean;
+    backRoute: string;
+    disablePermissionGroup?: boolean;
+    permissionGroupId?: number | null;
+  }>(),
+  {
+    disablePermissionGroup: false,
+    permissionGroupId: null,
+  },
+);
 
 defineEmits<{
   save: [];
 }>();
 
-const formData = defineModel<JsonParserCreate>({
+const formData = defineModel<JsonParserFormData>({
   default: {
     name: null,
     permission_group_id: null,
     description: null,
     timestamp_keys: [],
     comment: null,
+  },
+});
+
+const permissionGroupModel = computed({
+  get() {
+    return formData.value.permission_group_id ?? props.permissionGroupId;
+  },
+  set(value: number | null) {
+    if (!props.disablePermissionGroup) {
+      formData.value.permission_group_id = value;
+    }
   },
 });
 
