@@ -25,6 +25,7 @@ class ParserJsonRead(ParserDetailedRead):
     measurement_key: Optional[str] = None
     excluded_keys: Optional[list[str]] = None
 
+
 class ParserJsonTimestampKeyCreate(SQLModel):
     key: str
     format: str
@@ -88,4 +89,3 @@ class ParserJsonTimestampKey(SQLModel, table=True):
     format: str
 
     parser_json: "ParserJson" = Relationship(back_populates="timestamp_keys")
-

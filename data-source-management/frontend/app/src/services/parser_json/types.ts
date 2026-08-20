@@ -26,7 +26,7 @@ export type JsonParserPublic = {
   permission_group_id: number;
   permission_group: PermissionGroup;
   timezone: string | null;
-  measurement_key: string  | null;
+  measurement_key: string | null;
   excluded_keys: string[] | null;
 };
 
