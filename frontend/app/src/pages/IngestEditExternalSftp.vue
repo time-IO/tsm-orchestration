@@ -4,7 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
-    :item-parser-id="formData.parser_id"
+    :item-parser="itemParser"
     v-model="formData"
     @save="save"
   />
@@ -18,6 +18,7 @@ import type { IngestExternalSftpUpdate } from 'src/services/ingest_external_sftp
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
+import type { ParserRead } from 'src/services/types';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();
@@ -41,6 +42,7 @@ const formData = ref<IngestExternalSftpUpdate>({
 const isLoading = ref(false);
 
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const itemParser = ref<ParserRead | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -49,6 +51,7 @@ onMounted(async () => {
       const data = await ingestExternalSftpStore.dispatchGetOne(id);
 
       itemPermissionGroup.value = data.permission_group;
+      itemParser.value = data.parser;
 
       formData.value = {
         permission_group_id: data.permission_group_id || null,
