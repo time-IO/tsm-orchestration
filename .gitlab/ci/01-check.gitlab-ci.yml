@@ -163,19 +163,8 @@ integration-test-dsm-api:
   before_script:
     - apk add --no-cache bash
     - docker compose build api
-    - docker compose up -d --quiet-pull --wait api-db-test mqtt-broker
-    - ./data-source-management/api/migrate_test_db.sh
   script:
-    - >
-      docker compose run --rm
-      --no-deps
-      -e POSTGRES_TEST_SERVER=api-db-test
-      -e POSTGRES_TEST_PORT=5432
-      -e POSTGRES_TEST_USER=postgres
-      -e POSTGRES_TEST_PASSWORD=postgres
-      -e POSTGRES_TEST_DB=db_test
-      --entrypoint bash
-      api -c "pytest data-source-management/api/app/tests/integration_tests/ -v -W error"
+    - bash data-source-management/run_integration_tests.sh
   after_script:
     - docker compose down -v
   rules:
