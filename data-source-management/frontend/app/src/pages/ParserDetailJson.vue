@@ -70,6 +70,16 @@
                   }}</q-item-label>
                 </q-item-section>
               </q-item>
+
+
+              <q-item>
+                <q-item-section>
+                  <q-item-label>Measurement Key</q-item-label>
+                  <q-item-label caption>{{
+                    item.measurement_key || 'No measurement key specified'
+                  }}</q-item-label>
+                </q-item-section>
+              </q-item>
             </div>
 
             <div class="col-md-6">

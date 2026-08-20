@@ -1,3 +1,5 @@
+from scipy.ndimage import measurements
+
 from constants import ParserType
 from models import ParserJson, ParserDetailed, Parser, ParserJsonTimestampKey
 from models.parser_json import ParserJsonCreate, ParserJsonRead, ParserJsonUpdate
@@ -249,6 +251,7 @@ class ParserJsonRepository:
             comment=entity.comment,
             timestamp_keys=entity.timestamp_keys,
             timezone=entity.timezone,
+            measurement_key=entity.measurement_key,
             permission_group={
                 "id": permission_group.id,
                 "uuid": permission_group.uuid,

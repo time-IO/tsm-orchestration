@@ -28,6 +28,7 @@ const formData = ref<JsonParserCreate>({
   timestamp_keys: [],
   comment: null,
   timezone: null,
+  measurement_key: null,
 });
 
 const isLoading = ref(false);
@@ -97,6 +98,7 @@ function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
     })),
     comment: data.comment || null,
     timezone: data.timezone || null,
+    measurement_key: data.measurement_key || null,
   };
 }
 </script>

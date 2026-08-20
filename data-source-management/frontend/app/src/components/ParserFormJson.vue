@@ -45,6 +45,14 @@
             label="Comment character (e.g. //)"
             hint="Character(s) used to indicate comment lines"
           />
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="measurementKey"
+            label="Measurement key"
+            hint="Optional: key of the nested object containing the actual measurement data (e.g. object, not &quot;object&quot;)"
+          />
+
 
           <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
@@ -140,6 +148,7 @@ import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_jso
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
 
+
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
   timestamp_keys: JsonParserCreate['timestamp_keys'];
@@ -170,6 +179,7 @@ const formData = defineModel<JsonParserFormData>({
     description: null,
     timestamp_keys: [],
     comment: null,
+    measurement_key: null,
   },
 });
 
@@ -198,5 +208,18 @@ function removeTimestampKey(index: number) {
 const showDocs = () => {
   window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
 };
+
+function stripQuotes(value: string | null): string | null {
+  if (value === null) return null;
+  const trimmed = value.trim().replace(/^['"]+|['"]+$/g, '');
+  return trimmed === '' ? null : trimmed;
+}
+
+const measurementKey = computed({
+  get: () => formData.value.measurement_key,
+  set: (value: string | null) => {
+    formData.value.measurement_key = stripQuotes(value);
+  },
+});
 </script>
 <style scoped></style>
