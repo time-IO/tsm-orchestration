@@ -26,7 +26,7 @@ const formData = ref<IngestExternalApiUbaCreate>({
   description: '',
   station_id: null,
   sync_enabled: false,
-  sync_interval_in_minutes: null,
+  sync_interval_in_minutes: 60,
 });
 const isLoading = ref(false);
 

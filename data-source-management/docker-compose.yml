@@ -8,6 +8,7 @@ services:
 
   api:
     image: time-io-datasource-management-api:dev
+    container_name: datasource-management-api-dev
     build:
       context: ./api
       dockerfile: docker/Dockerfile-Dev
@@ -143,6 +144,27 @@ services:
       timeout: 5s
       retries: 10
 
+  # ---------------------------------------------------------------------------
+  # Test database - used exclusively for integration tests.
+  # Runs on port 5435 to avoid conflicts with the dev DB on 5432.
+  # The schema is created automatically via Alembic in the test setup.
+  # ---------------------------------------------------------------------------
+  api-db-test:
+    image: "postgres:14-alpine"
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: "db_test"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - "api-data-test:/var/lib/postgresql/data/"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   proxy:
     image: nginx:1.20-alpine
     ports:
@@ -212,3 +234,4 @@ volumes:
   keycloak-data:
   api-data:
   sta-data:
+  api-data-test: # persistent volume for the test DB

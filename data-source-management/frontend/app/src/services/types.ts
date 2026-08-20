@@ -1,4 +1,6 @@
 import type { AxiosResponse } from 'axios';
+import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type { JsonParserPublic } from 'src/services/parser_json/types';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -55,4 +57,12 @@ export type ParserRead = {
   parser_type: string;
   name: string;
   id: number;
+};
+
+export type ParserSelectOption = ParserRead & {
+  delimiter?: CsvParserPublic['delimiter'];
+  timestamp_columns?: CsvParserPublic['timestamp_columns'];
+  timestamp_keys?: JsonParserPublic['timestamp_keys'];
+  type?: string;
+  header?: number | boolean | null;
 };
