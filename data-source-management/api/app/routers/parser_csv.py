@@ -62,7 +62,11 @@ def read_one(
     )
 
 
-@router.post("/validate", response_model=ParserValidationResponse, summary=f"Validate a {entity_name}")
+@router.post(
+    "/validate",
+    response_model=ParserValidationResponse,
+    summary=f"Validate a {entity_name}",
+)
 async def validate(
     settings: str = Form(...),
     file: UploadFile = File(...),
