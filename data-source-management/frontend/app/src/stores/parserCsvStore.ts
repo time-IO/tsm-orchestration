@@ -5,9 +5,9 @@ import type {
   CsvParserUpdate,
 } from 'src/services/parser_csv/types';
 import { API } from 'src/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import {createParserStore} from "stores/factoryParserStore";
 
-export const useCsvParserStore = createIngestStore<
+export const useCsvParserStore = createParserStore<
   CsvParserPublic,
   CsvParserCreate,
   CsvParserUpdate

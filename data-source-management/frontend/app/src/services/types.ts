@@ -1,5 +1,5 @@
 import type { AxiosResponse } from 'axios';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import type { CsvParserUpdate, CsvParserPublic } from 'src/services/parser_csv/types';
 import type { JsonParserPublic } from 'src/services/parser_json/types';
 
 export interface PaginatedResponse<T> {
@@ -53,6 +53,10 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
   deleteOne(id: number): Promise<AxiosResponse<void>>;
 }
 
+export interface ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate> extends IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
+  parseFile(settings: CsvParserUpdate, csvFile: File): Promise<ParserValidationResult>
+}
+
 export type ParserRead = {
   parser_type: string;
   name: string;
@@ -66,3 +70,10 @@ export type ParserSelectOption = ParserRead & {
   type?: string;
   header?: number | boolean | null;
 };
+
+export type ParserValidationResult = {
+  data: Record<string, unknown>[];
+  error: string
+  warnings: string[]
+  is_valid: boolean
+}
