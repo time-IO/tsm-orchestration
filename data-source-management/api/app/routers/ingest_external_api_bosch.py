@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest_external_api_bosch,
@@ -84,7 +85,7 @@ def create(
     entity = repo.create(
         payload,
         extra_data,
-        permission_group_ids_of_user=current_user.permission_group_ids,
+        access_scope=AccessScope.from_user(current_user),
     )
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
@@ -106,7 +107,7 @@ def update(
     ),
 ):
     entity = repo.update(
-        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
+        id, payload, access_scope=AccessScope.from_user(current_user)
     )
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)

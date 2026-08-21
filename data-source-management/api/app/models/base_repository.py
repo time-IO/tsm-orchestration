@@ -16,6 +16,7 @@ from sorting import apply_sort_list
 from config import settings
 from mqtt import publish_frontend_thing_update
 from sqlalchemy.orm import joinedload
+from access_scope import AccessScope
 
 T = TypeVar("T", bound=SQLModel)
 
@@ -220,10 +221,20 @@ class DatabaseRepository(BaseRepository):
         return self.session.exec(statement).first()
 
     def create(
-        self, permission_group: PermissionGroup, permission_group_ids: list[int]
+        self,
+        permission_group: PermissionGroup,
+        permission_group_ids: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ):
 
-        self.check_payload_permission_group(permission_group.id, permission_group_ids)
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if not access_scope.can_access_permission_group(permission_group.id):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Permission denied: user does not belong to that permission group.",
+            )
 
         try:
             database = Database()
