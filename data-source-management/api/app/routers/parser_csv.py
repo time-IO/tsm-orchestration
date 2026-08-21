@@ -6,6 +6,7 @@ from dependencies import (
     get_current_user,
     get_repo_parser_csv,
 )
+from models.parser import ParserValidationResponse
 from models.parser_csv import (
     ParserCsvCreate,
     ParserCsvRead,
@@ -13,6 +14,8 @@ from models.parser_csv import (
 )
 from models import User
 from repositories.parser_csv import ParserCsvRepository
+from services.validate_parser import validate_csv_parser
+from fastapi import File, Form, UploadFile
 
 router = APIRouter(
     prefix="/parser/csv",
@@ -57,6 +60,23 @@ def read_one(
             id, permission_group_ids_of_user=current_user.permission_group_ids
         )
     )
+
+
+@router.post("/validate", response_model=ParserValidationResponse, summary=f"Validate a {entity_name}")
+async def validate(
+    settings: str = Form(...),
+    file: UploadFile = File(...),
+) -> ParserValidationResponse:
+    parser_settings = ParserCsvUpdate.model_validate_json(settings)
+
+    raw_data = (await file.read()).decode(parser_settings.encoding)
+
+    response = validate_csv_parser(
+        settings=parser_settings,
+        raw_data=raw_data,
+    )
+
+    return response
 
 
 @router.post("/", response_model=ParserCsvRead, summary=f"Create one {entity_name}")
