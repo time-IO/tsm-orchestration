@@ -140,16 +140,10 @@ function normalizeFormData(data: CsvParserUpdate): CsvParserEditFormData {
       data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
         ? data.headlines_to_exclude
         : null,
-    footlines_to_exclude:
-      data.footlines_to_exclude !== null && data.footlines_to_exclude !== undefined
-        ? data.footlines_to_exclude
-        : null,
+    footlines_to_exclude: !!data.footlines_to_exclude || data.footlines_to_exclude === 0 ? data.footlines_to_exclude : null,
     pandas_read_csv: data.pandas_read_csv || null,
-    timestamp_columns: (data.timestamp_columns || []).map((column) => ({
-      column: column.column,
-      timestamp_format: column.timestamp_format,
-    })),
-    header: data.header !== null && data.header !== undefined ? data.header : null,
+    timestamp_columns: data.timestamp_columns || [],
+    header: !!data.header || data.header === 0 ? data.header : null,
     comment: [...(data.comment || [])],
     timezone: data.timezone || null,
     encoding: data.encoding || null,

@@ -198,8 +198,22 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
-            <q-space />
-            <div class="col-6">
+            <q-space/>
+
+            <div class="col-3">
+              <q-btn
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Validate CSV"
+                class="full-width"
+                @click="showValidationDialog = true"
+              />
+            </div>
+
+            <q-space/>
+
+            <div class="col-3">
               <q-btn
                 unelevated
                 color="green"
@@ -215,16 +229,23 @@
         </q-form>
       </q-card-section>
     </q-card>
+    <parser-validate-csv
+      v-model="showValidationDialog"
+      :form-data="formData"
+      :validate-csv="csvParserStore.dispatchParseFile"
+    />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
+import {useCsvParserStore} from "stores/parserCsvStore";
+import ParserValidateCsv from "components/ParserValidateCsv.vue";
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
@@ -250,6 +271,8 @@ defineEmits<{
   save: [];
 }>();
 
+const csvParserStore = useCsvParserStore();
+
 const formData = defineModel<CsvParserFormData>({
   default: {
     permission_group_id: null,
@@ -266,6 +289,8 @@ const formData = defineModel<CsvParserFormData>({
     encoding: null,
   },
 });
+
+const showValidationDialog = ref(false);
 
 const permissionGroupModel = computed({
   get() {
