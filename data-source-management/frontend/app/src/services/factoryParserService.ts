@@ -11,7 +11,7 @@ export function createParserApiService<TPublic, TCreate, TUpdate>(apiPath: strin
     payload.append('file', csvFile);
 
     try {
-      const result = await axiosInstance.post<CsvParserValidationResult>(`${apiPath}validate`, payload)
+      const result = await axiosInstance.post<CsvParserValidationResult>(`${apiPath}parse`, payload)
       return result.data
     } catch {
       return {
