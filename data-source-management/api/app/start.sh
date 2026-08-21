@@ -9,7 +9,7 @@ LOG_LEVEL="${LOG_LEVEL:-info}"
 ## convert log level to lowercase
 LOG_LEVEL="${LOG_LEVEL,,}"
 
-alembic upgrade head
+alembic -c /app/alembic.ini upgrade head
 
 if [ "$FASTAPI_ENV" = "dev" ]; then
 	exec uvicorn main:app --host "$FASTAPI_HOST" --port "$FASTAPI_PORT" --reload --log-level "$LOG_LEVEL" --log-config /app/logging.json
