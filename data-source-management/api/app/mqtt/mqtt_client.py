@@ -95,7 +95,11 @@ def publish_message(msg: dict, topic: str, success_log: str):
 
 
 def publish_trigger_quality_control(
-    permission_group_uuid, qc_settings_name, start_date, end_date, topic="data_parsed"
+    permission_group_uuid,
+    qc_settings_name,
+    start_date,
+    end_date,
+    topic="run_qc_triggered",
 ):
     msg = create_sync_quality_control(
         permission_group_uuid, qc_settings_name, start_date, end_date
