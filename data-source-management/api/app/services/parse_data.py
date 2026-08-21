@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from models.parser_detailed import ParserDetailedUpdate
-from parser import PandasParser
+from timeio.parser import PandasParser
 from timeio.errors import ParsingWarning
 from models.parser import ParsedDataResponse
 from models.parser_csv import ParserCsvCreate, ParserCsvUpdate
