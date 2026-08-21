@@ -54,7 +54,7 @@ class Parser(SQLModel, table=True):
         return infos
 
 
-class ParserValidationResponse(SQLModel):
+class ParsedDataResponse(SQLModel):
     data: list[dict]
     error: str
     is_valid: bool
