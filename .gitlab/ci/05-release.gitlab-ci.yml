@@ -17,6 +17,7 @@ stage-tag-images-in-registry:
         - configdb_updater/**/*
         - init/**/*
         - tomcat/**/*
+        - data-source-management/**/*
       when: always
     # Run manually if pipeline is triggered by a push on main
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
