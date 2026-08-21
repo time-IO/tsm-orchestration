@@ -32,7 +32,8 @@ RUN mkdir /app && \
 
 # Copy application as appuser
 COPY --chown=${UID}:${UID} ./data-source-management/api/app /app
-RUN chmod 755 /app/start.sh
+RUN test -f /app/alembic.ini && grep -q "^script_location" /app/alembic.ini && \
+    chmod 755 /app/start.sh
 
 # Copy external timeio library
 COPY --chown=${UID}:${UID} ./src/timeio /app/timeio
