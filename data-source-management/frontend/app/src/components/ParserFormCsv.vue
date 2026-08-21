@@ -204,7 +204,7 @@
                 unelevated
                 color="primary"
                 icon="fact_check"
-                label="Validate CSV"
+                label="Test parser with file"
                 class="full-width"
                 @click="showValidationDialog = true"
               />
