@@ -2,15 +2,15 @@
   <q-dialog v-model="isOpen">
     <q-card style="width: 1000px; max-width: 90vw">
       <q-card-section>
-        <div class="text-h6">Validate CSV parser</div>
+        <div class="text-h6">Validate {{type.toUpperCase()}} parser</div>
       </q-card-section>
 
       <q-card-section>
         <q-file
           v-model="file"
           filled
-          label="CSV file"
-          accept=".csv,text/csv"
+          :label="`${type.toUpperCase()} file`"
+          :accept="`.${type},text/${type}`"
           clearable
           :disable="isValidating"
           @update:model-value="resetResult"
@@ -108,16 +108,19 @@
 
 <script setup lang="ts">
 import {computed, ref} from 'vue';
-import type {CsvParserUpdate, CsvParserValidationResult} from 'src/services/parser_csv/types';
+import type {CsvParserUpdate} from 'src/services/parser_csv/types';
 import type {QTableColumn} from "quasar";
+import {JsonParserUpdate} from "src/services/parser_json/types";
+import {ParsingResult} from "src/services/types";
 
 const isOpen = defineModel<boolean>({
   default: false,
 });
 
 const props = defineProps<{
-  formData: CsvParserUpdate;
-  validateCsv: (settings: CsvParserUpdate, file: File) => Promise<CsvParserValidationResult>;
+  formData: CsvParserUpdate | JsonParserUpdate;
+  parseAction: (settings: CsvParserUpdate | JsonParserUpdate, file: File) => Promise<ParsingResult>;
+  type: "csv" | "json" // TODO: use type to access store actions directly from this component?
 }>();
 
 const file = ref<File | null>(null);
@@ -183,7 +186,7 @@ async function validate() {
   validationWarnings.value = [];
 
   try {
-    const result: CsvParserValidationResult = await props.validateCsv(
+    const result: ParsingResult = await props.parseAction(
       props.formData,
       file.value,
     );

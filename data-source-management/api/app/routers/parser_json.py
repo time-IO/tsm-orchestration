@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Form
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from models import User
 from models.filters import BaseFilter
 from dependencies import get_current_user, get_repo_parser_json
+from models.parser import ParsedDataResponse
 from models.parser_json import (
     ParserJsonCreate,
     ParserJsonRead,
@@ -11,6 +12,8 @@ from models.parser_json import (
 )
 
 from repositories.parser_json import ParserJsonRepository
+from services.parse_data import parse_json_data
+from fastapi import File, Form, UploadFile
 
 router = APIRouter(
     prefix="/parser/json",
@@ -55,6 +58,27 @@ def read_one(
             id, permission_group_ids_of_user=current_user.permission_group_ids
         )
     )
+
+
+@router.post(
+    "/parse",
+    response_model=ParsedDataResponse,
+    summary=f"Parse a file with a given {entity_name}",
+)
+async def validate(
+    settings: str = Form(...),
+    file: UploadFile = File(...),
+) -> ParsedDataResponse:
+    parser_settings = ParserJsonUpdate.model_validate_json(settings)
+
+    raw_data = (await file.read()).decode("utf-8") # TODO assume utf-8?
+
+    response = parse_json_data(
+        settings=parser_settings,
+        raw_data=raw_data,
+    )
+
+    return response
 
 
 @router.post("/", response_model=ParserJsonRead, summary=f"Create one {entity_name}")

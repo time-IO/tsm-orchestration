@@ -54,7 +54,7 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
 }
 
 export interface ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate> extends IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
-  parseFile(settings: CsvParserUpdate, csvFile: File): Promise<ParserValidationResult>
+  parseFile(settings: CsvParserUpdate, csvFile: File): Promise<ParsingResult>
 }
 
 export type ParserRead = {
@@ -71,7 +71,7 @@ export type ParserSelectOption = ParserRead & {
   header?: number | boolean | null;
 };
 
-export type ParserValidationResult = {
+export type ParsingResult = {
   data: Record<string, unknown>[];
   error: string
   warnings: string[]

@@ -1,5 +1,5 @@
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type {ParserValidationResult} from "src/services/types";
+import type {ParsingResult} from "src/services/types";
 
 export type CsvParserTimestampColumnCreate = {
   column: number | null;
@@ -64,4 +64,4 @@ export type CsvParserUpdate = {
   encoding?: string | null;
 };
 
-export type CsvParserValidationResult = ParserValidationResult
+export type CsvParsingResult = ParsingResult

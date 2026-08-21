@@ -199,7 +199,6 @@
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space/>
-
             <div class="col-3">
               <q-btn
                 unelevated
@@ -210,9 +209,7 @@
                 @click="showValidationDialog = true"
               />
             </div>
-
             <q-space/>
-
             <div class="col-3">
               <q-btn
                 unelevated
@@ -229,10 +226,11 @@
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-validate-csv
+    <parser-parse-file
       v-model="showValidationDialog"
       :form-data="formData"
-      :validate-csv="csvParserStore.dispatchParseFile"
+      :parse-action="csvParserStore.dispatchParseFile"
+      type="csv"
     />
   </q-page>
 </template>
@@ -245,7 +243,7 @@ import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
 import {useCsvParserStore} from "stores/parserCsvStore";
-import ParserValidateCsv from "components/ParserValidateCsv.vue";
+import ParserParseFile from "components/ParserParseFile.vue";
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;

@@ -113,6 +113,17 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
+            <q-space/>
+            <div class="col-3">
+              <q-btn
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Validate CSV"
+                class="full-width"
+                @click="showValidationDialog = true"
+              />
+            </div>
             <q-space />
             <div class="col-6">
               <q-btn
@@ -130,15 +141,23 @@
         </q-form>
       </q-card-section>
     </q-card>
+    <parser-parse-file
+      v-model="showValidationDialog"
+      :form-data="formData"
+      :parse-action="jsonParserStore.dispatchParseFile"
+      type="json"
+    />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import {computed, ref} from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
+import ParserParseFile from "components/ParserParseFile.vue";
+import {useJsonParserStore} from "stores/parserJsonStore";
 
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
@@ -163,6 +182,8 @@ defineEmits<{
   save: [];
 }>();
 
+const jsonParserStore = useJsonParserStore()
+
 const formData = defineModel<JsonParserFormData>({
   default: {
     name: null,
@@ -172,6 +193,8 @@ const formData = defineModel<JsonParserFormData>({
     comment: null,
   },
 });
+
+const showValidationDialog = ref(false);
 
 const permissionGroupModel = computed({
   get() {

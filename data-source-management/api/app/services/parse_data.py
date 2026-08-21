@@ -1,20 +1,22 @@
 import warnings
 
 import logging
-from typing import Any
 
-from models.parser_detailed import ParserDetailedUpdate
-from timeio.parser import PandasParser
+from models.parser_json import ParserJsonUpdate
+from timeio.parser import PandasParser, JsonParser, CsvParser
 from timeio.errors import ParsingWarning
 from models.parser import ParsedDataResponse
-from models.parser_csv import ParserCsvCreate, ParserCsvUpdate
-
-from timeio.parser import CsvParser
+from models.parser_csv import ParserCsvUpdate
 
 logger = logging.getLogger("app.services.trigger_ext_api")
 
+
 def parse_csv_data(settings: ParserCsvUpdate, raw_data: str) -> ParsedDataResponse:
     return parse_data_with_parser(get_csv_parser_by_settings(settings), raw_data)
+
+def parse_json_data(settings: ParserJsonUpdate, raw_data: str) -> ParsedDataResponse:
+    return parse_data_with_parser(get_json_parser_by_settings(settings), raw_data)
+
 
 def get_csv_parser_by_settings(
         settings: ParserCsvUpdate
@@ -36,7 +38,19 @@ def get_csv_parser_by_settings(
     logger.debug("Translated settings for CSV parser", translated_settings)
     return CsvParser(translated_settings)
 
+def get_json_parser_by_settings(
+        settings: ParserJsonUpdate
+) -> JsonParser:
+    translated_settings = {
+        "comment": settings.comment,
+        "timestamp_keys": settings.timestamp_keys,  # TODO: translate correctly
+    }
+    logger.debug("Translated settings for JSON parser", translated_settings)
+    return JsonParser(translated_settings)
+
+
 def parse_data_with_parser(parser: PandasParser, raw_data: str):
+    logger.debug("Parsing data with parser", parser)
     with warnings.catch_warnings(record=True) as caught_warnings:
         warnings.simplefilter("always", ParsingWarning)
 

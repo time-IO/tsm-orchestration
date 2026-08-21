@@ -7,7 +7,7 @@ import type {
   QTableRequestProp,
   QTableRequestPropPagination,
 } from 'src/services/types';
-import type {CsvParserUpdate, CsvParserValidationResult} from "src/services/parser_csv/types";
+import type {CsvParserUpdate, CsvParsingResult} from "src/services/parser_csv/types";
 
 // TODO: refactor store factories
 export function createParserStore<TPublic, TPayloadCreate, TPayloadUpdate>(
@@ -76,7 +76,7 @@ export function createParserStore<TPublic, TPayloadCreate, TPayloadUpdate>(
       async dispatchDelete(id: number): Promise<void> {
         await apiService.deleteOne(id);
       },
-      async dispatchParseFile(settings: CsvParserUpdate, csvFile: File): Promise<CsvParserValidationResult> {
+      async dispatchParseFile(settings: CsvParserUpdate, csvFile: File): Promise<CsvParsingResult> {
         return await apiService.parseFile(settings, csvFile);
       }
     },
