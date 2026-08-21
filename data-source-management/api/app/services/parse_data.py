@@ -43,7 +43,10 @@ def get_json_parser_by_settings(
 ) -> JsonParser:
     translated_settings = {
         "comment": settings.comment,
-        "timestamp_keys": settings.timestamp_keys,  # TODO: translate correctly
+        "timestamp_keys": [
+            {"key": x.key, "format": x.format}
+            for x in settings.timestamp_keys
+        ],
     }
     logger.debug("Translated settings for JSON parser", translated_settings)
     return JsonParser(translated_settings)
