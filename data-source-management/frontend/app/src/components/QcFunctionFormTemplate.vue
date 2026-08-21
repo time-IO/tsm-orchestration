@@ -1,0 +1,40 @@
+<template>
+  <q-form @submit.prevent="submitForm">
+    <q-card>
+      <q-card-section>
+        <q-item>
+          <q-item-section class="text-h5"> {{ functionTitle }} </q-item-section>
+          <q-item-section side>
+            <q-icon name="close" class="cursor-pointer" @click="removeForm" />
+          </q-item-section>
+        </q-item>
+      </q-card-section>
+
+      <q-card-section>
+        <slot></slot>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn color="green" label="Add" type="submit" />
+      </q-card-actions>
+    </q-card>
+  </q-form>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  functionTitle: string;
+}>();
+
+const emit = defineEmits(['submit', 'remove']);
+
+const submitForm = () => {
+  emit('submit');
+};
+
+const removeForm = () => {
+  emit('remove');
+};
+</script>
+
+<style scoped></style>
