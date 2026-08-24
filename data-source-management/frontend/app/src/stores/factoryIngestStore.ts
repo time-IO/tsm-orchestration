@@ -18,6 +18,7 @@ export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
       pagination: defaultPagination,
       filters: {
         name: undefined,
+        uuid: undefined,
         permission_group_id: undefined,
         date_from: undefined,
         date_to: undefined,

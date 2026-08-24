@@ -19,6 +19,9 @@ export function createIngestApiService<TPublic, TCreate, TUpdate>(apiPath: strin
     if (filters.name !== undefined && filters.name !== null) {
       params['name[ilike]'] = `%${filters.name}%`;
     }
+    if (filters.uuid !== undefined && filters.uuid !== null) {
+      params['uuid[ilike]'] = `%${filters.uuid}%`;
+    }
     if (filters.permission_group_id !== undefined && filters.permission_group_id !== null) {
       params['permission_group_id[eq]'] = filters.permission_group_id;
     }
