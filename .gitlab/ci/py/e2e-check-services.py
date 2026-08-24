@@ -14,12 +14,16 @@ group_uuid = os.environ["GROUP_UUID"]
 db_admin_user = "postgres"
 db_admin_password = "postgres"
 
-fernet_secret = os.environ.get("FERNET_ENCRYPTION_SECRET",  "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B=")
+fernet_secret = os.environ.get(
+    "FERNET_ENCRYPTION_SECRET", "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
+)
+
 
 def log(message):
     print(message, file=sys.stderr)
 
-#Grafana
+
+# Grafana
 def check_grafana_dashboard():
     auth = ("grafana", "grafana")
 
@@ -29,21 +33,21 @@ def check_grafana_dashboard():
         log(f"Grafana dashboard check failed: {response.status_code}")
         sys.exit(1)
 
-    #folders
+    # folders
     url = f"http://{host}/visualization/api/folders/{group_uuid}"
     response = requests.get(url, auth=auth)
     if response.status_code != 200:
         log(f"Grafana folder check failed: {response.status_code}")
         sys.exit(1)
 
-    #datasource
+    # datasource
     url = f"http://{host}/visualization/api/datasources/uid/{group_uuid}"
     response = requests.get(url, auth=auth)
     if response.status_code != 200:
         log(f"Grafana datasource check failed: {response.status_code}")
         sys.exit(1)
 
-    #teams
+    # teams
     url = f"http://{host}/visualization/api/teams/search"
     response = requests.get(url, params={"uid": group_uuid}, auth=auth)
     response.raise_for_status()
@@ -53,7 +57,8 @@ def check_grafana_dashboard():
 
     log("Grafana dashboard, folder, datasource and team: OK")
 
-#DB-Query
+
+# DB-Query
 def get_db_connection():
     return psycopg.connect(
         host=host,
@@ -63,9 +68,11 @@ def get_db_connection():
         dbname="postgres",
     )
 
+
 def decrypt_password(encrypted_password):
     f = Fernet(fernet_secret)
     return f.decrypt(encrypted_password.encode()).decode()
+
 
 def get_database_credentials(conn):
     with conn.cursor() as cur:
@@ -85,6 +92,7 @@ def get_database_credentials(conn):
         username, encrypted_password = row
         password = decrypt_password(encrypted_password)
         return username, password
+
 
 def check_database():
     conn = get_db_connection()
@@ -123,6 +131,7 @@ def check_database():
 
     return username
 
+
 def check_frost(db_username):
     url = f"http://{host}/sta/{db_username}/"
     response = requests.head(url)
@@ -131,13 +140,26 @@ def check_frost(db_username):
         sys.exit(1)
     log("FROST check: OK")
 
+
 def check_minio():
     bucket_username = os.environ["BUCKET_USERNAME"]
     bucket_password = os.environ["BUCKET_PASSWORD"]
     url = f"ftp://{host}:40021"
     result = subprocess.run(
-        ["curl", "-u", f"{bucket_username}:{bucket_password}", url, "-I", "-s", "-o", "/dev/null", "-w", "%{http_code}", ],
-        capture_output=True,text=True
+        [
+            "curl",
+            "-u",
+            f"{bucket_username}:{bucket_password}",
+            url,
+            "-I",
+            "-s",
+            "-o",
+            "/dev/null",
+            "-w",
+            "%{http_code}",
+        ],
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
         log(f"MinIO check failed: {result.stderr}")

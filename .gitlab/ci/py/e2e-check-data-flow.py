@@ -8,7 +8,6 @@ import psycopg
 import paho.mqtt.publish as publish
 
 
-
 host = "docker"
 realm = "timeio"
 test_username = "testuser"
@@ -25,6 +24,7 @@ test_observation_value = 42.0
 def log(message):
     print(message, file=sys.stderr)
 
+
 def get_user_token():
     url = f"http://{host}/keycloak/realms/{realm}/protocol/openid-connect/token"
     resp = requests.post(
@@ -39,6 +39,7 @@ def get_user_token():
     )
     resp.raise_for_status()
     return resp.json()["access_token"]
+
 
 def call_me_endpoint(token):
     url = f"http://{host}/data-source-management/api/me/"
@@ -58,6 +59,7 @@ def get_permission_group_id(token):
     log("Permission group VO:Group1 not found")
     sys.exit(1)
 
+
 def get_mqtt_parser_id(token):
     url = f"http://{host}/data-source-management/api/parser/mqtt/"
     resp = requests.get(url, headers={"Authorization": f"Bearer {token}"})
@@ -69,9 +71,10 @@ def get_mqtt_parser_id(token):
     log("Parser campbell_cr6 not found")
     sys.exit(1)
 
+
 def create_mqtt_ingest(token, permission_group_id, parser_id):
     url = f"http://{host}/data-source-management/api/ingest/mqtt/"
-    ingest_name =f"e2e_test_dataflow-{int(time.time())}"
+    ingest_name = f"e2e_test_dataflow-{int(time.time())}"
     resp = requests.post(
         url,
         headers={"Authorization": f"Bearer {token}"},
@@ -79,10 +82,11 @@ def create_mqtt_ingest(token, permission_group_id, parser_id):
             "name": ingest_name,
             "permission_group_id": permission_group_id,
             "parser_id": parser_id,
-        }
+        },
     )
     resp.raise_for_status()
     return resp.json()
+
 
 def send_test_mqtt_message(ingest):
     message = {
@@ -106,6 +110,7 @@ def send_test_mqtt_message(ingest):
     )
     log(f"Sent test MQTT message to topic {ingest['topic']}")
 
+
 def get_schema_name(permission_group_id):
     conn = psycopg.connect(
         host=host,
@@ -122,7 +127,9 @@ def get_schema_name(permission_group_id):
             )
             row = cur.fetchone()
             if row is None:
-                log(f"No database entry found for permission group {permission_group_id}")
+                log(
+                    f"No database entry found for permission group {permission_group_id}"
+                )
                 sys.exit(1)
             return row[0]
     finally:
@@ -174,5 +181,3 @@ if __name__ == "__main__":
     check_observation_exists(schema_name)
 
     log("All data flow checks passed")
-
-

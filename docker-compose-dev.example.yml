@@ -54,7 +54,7 @@ services:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
 
   dsm-api:
-    image: timeio-dsm-api-local:dev
+#    image: timeio-dsm-api-local:dev
     build:
       context: .
       dockerfile: ./data-source-management/api/docker/Dockerfile-Dev
@@ -63,8 +63,29 @@ services:
       - ./data-source-management/api/app:/app:rw
       - ./src/timeio:/app/timeio:rw
 
+  dsm-api-test-db:
+    profiles:
+      - test
+    image: "postgres:14-alpine"
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: db_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - dsm-api-data-test:/var/lib/postgresql/data/
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   dsm-frontend:
-    image: timeio-dsm-frontend-local:dev
+#    image: timeio-dsm-frontend-local:dev
     build:
       context: ./data-source-management/frontend
       dockerfile: docker/Dockerfile-Dev
@@ -100,4 +121,5 @@ services:
 volumes:
   keycloak-data:
   npm:
+  dsm-api-data-test:
 

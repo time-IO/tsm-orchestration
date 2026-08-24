@@ -410,6 +410,7 @@ def test_excluded_keys_removes_keys_from_root():
 
     assert "Illuminance" not in df.columns
 
+
 def test_excluded_keys_removes_keys_from_measurement_key_object():
     settings = {
         "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
@@ -423,6 +424,7 @@ def test_excluded_keys_removes_keys_from_measurement_key_object():
     assert "Illuminance" not in df.columns
     assert "Datetime_valid" not in df.columns
     assert "Voltage" in df.columns
+
 
 def test_excluded_keys_on_array_data():
     settings = {

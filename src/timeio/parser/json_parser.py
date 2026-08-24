@@ -52,18 +52,26 @@ class JsonParser(PandasParser):
         clean_string = re.sub(comment_re, "", rawdata)
         return clean_string
 
-    def _json_to_df(self, rawdata: str, comment: str = None, measurement_key: str = None, excluded_keys: list[str] = None) -> pd.DataFrame:
+    def _json_to_df(
+        self,
+        rawdata: str,
+        comment: str = None,
+        measurement_key: str = None,
+        excluded_keys: list[str] = None,
+    ) -> pd.DataFrame:
         cleaned_data = self._clean_string(rawdata, comment) if comment else rawdata
         json_data = json.loads(cleaned_data)
 
         if measurement_key is not None:
             try:
                 if isinstance(json_data, list):
-                    json_data=[item[measurement_key] for item in json_data]
+                    json_data = [item[measurement_key] for item in json_data]
                 else:
                     json_data = json_data[measurement_key]
             except KeyError as e:
-                raise ParsingError(f"Measurement key {measurement_key!r} not found: {e}")
+                raise ParsingError(
+                    f"Measurement key {measurement_key!r} not found: {e}"
+                )
 
         if excluded_keys:
             if isinstance(json_data, list):
@@ -79,7 +87,9 @@ class JsonParser(PandasParser):
         return pd.json_normalize(json_data, **self.normalize_kws)
 
     @staticmethod
-    def _set_index(df: pd.DataFrame, timestamp_keys: dict, timezone: str = None) -> pd.DataFrame:
+    def _set_index(
+        df: pd.DataFrame, timestamp_keys: dict, timezone: str = None
+    ) -> pd.DataFrame:
         date_keys = [d["key"] for d in timestamp_keys]
         date_format = " ".join([d["format"] for d in timestamp_keys])
 
