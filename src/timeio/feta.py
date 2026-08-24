@@ -4,6 +4,7 @@ import logging
 import atexit
 import warnings
 from typing import Any, TypedDict
+from timeio.parser import soilcan_parser
 
 try:
     from typing import Self
@@ -16,6 +17,7 @@ from psycopg.rows import dict_row
 import pandas as pd
 
 from timeio.typehints import JsonObjectT, TimestampT
+
 
 logger = logging.getLogger("feta")
 
@@ -575,6 +577,9 @@ class FileParser(Base, FromUUIDMixin):
             return self._get_csv_params()
         if self.file_parser_type.name == "json":
             return self._get_json_params()
+        if self.file_parser_type.name == "soilcan":
+            return self._get_soilcan_params()
+
 
     def _get_csv_params(self):
         ts_cols = self._get_csv_ts_cols()
