@@ -27,6 +27,20 @@
               dense
             />
           </div>
+                    <div class="col-3">
+            <q-select
+              class="q-mb-sm"
+              label="Uses function(s)"
+              v-model="functions"
+              :options="functionOptions"
+              multiple
+              clearable
+              use-chips
+              dense
+              emit-value
+              map-options
+            />
+          </div>
         </div>
         <div class="row q-gutter-x-sm">
           <div class="col-3 q-mr-sm">
@@ -68,8 +82,27 @@ const uuid = defineModel<string | undefined>('uuid', { default: undefined });
 const permission_group_id = defineModel<number | undefined>('permission_group_id', {
   default: undefined,
 });
+const functions = defineModel<string[] | undefined>('functions', { default: undefined });
 const date_from = defineModel<string | undefined>('date_from', { default: undefined });
 const date_to = defineModel<string | undefined>('date_to', { default: undefined });
+
+const functionOptions = [
+  'flagPlateau',
+  'flagIsolated',
+  'flagJumps',
+  'flagOffset',
+  'flagRange',
+  'flagAll',
+  'flagUniLOF',
+  'flagZScore',
+  'flagByScatterLowpass',
+  'flagGeneric',
+  'processGeneric',
+  'propagateFlags',
+  'renameField',
+  'rolling',
+  'transferFlags',
+];
 
 const emit = defineEmits(['applyFilters']);
 
@@ -81,6 +114,7 @@ function resetFilters() {
   name.value = undefined;
   uuid.value = undefined;
   permission_group_id.value = undefined;
+  functions.value = undefined;
   date_from.value = undefined;
   date_to.value = undefined;
   emit('applyFilters');

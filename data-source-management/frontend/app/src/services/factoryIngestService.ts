@@ -31,6 +31,9 @@ export function createIngestApiService<TPublic, TCreate, TUpdate>(apiPath: strin
     if (filters.date_to !== undefined && filters.date_to !== null) {
       params['created_at[le]'] = filters.date_to;
     }
+    if (filters.functions !== undefined && filters.functions !== null && filters.functions.length > 0) {
+      params['functions[overlap]'] = filters.functions.join(',');
+    }
 
     return params;
   }

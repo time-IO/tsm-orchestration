@@ -22,6 +22,7 @@ export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
         permission_group_id: undefined,
         date_from: undefined,
         date_to: undefined,
+        functions: undefined,
       } as DefaultFilter,
       loading: false,
     }),

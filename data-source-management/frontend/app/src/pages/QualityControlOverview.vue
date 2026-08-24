@@ -6,6 +6,7 @@
       v-model:name="store.filters.name"
       v-model:uuid="store.filters.uuid"
       v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:functions="store.filters.functions"
       v-model:date_from="store.filters.date_from"
       v-model:date_to="store.filters.date_to"
       @apply-filters="store.applyFilters"
