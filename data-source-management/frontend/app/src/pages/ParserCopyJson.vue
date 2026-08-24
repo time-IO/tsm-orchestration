@@ -12,31 +12,26 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type {JsonParserCreate, JsonParserPublic} from 'src/services/parser_json/types';
+import type {JsonParserCreate, JsonParserPublic, JsonParserUpdate} from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
-import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
+
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<JsonParserFormData>({
-  name: '',
-  permission_group_id: null,
-  description: null,
-  timestamp_keys: [],
-  comment: null,
-  timezone: null,
-  measurement_key: null,
-  excluded_keys: [],
-});
+type JsonParserFormData = JsonParserUpdate & {
+  permission_group_id?: number | null;
+  timestamp_keys: JsonParserCreate['timestamp_keys'];
+  excluded_keys: string[];
+};
 
 const isLoading = ref(false);
 
-const initialFormData = ref<JsonParserFormData | null>(null);
+const initialFormData = ref<JsonParserUpdate | null>(null);
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
@@ -127,10 +122,9 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: JsonParserFormData | JsonParserPublic): JsonParserFormData {
+function normalizeFormData(data: JsonParserUpdate): JsonParserUpdate {
   return {
     name: data.name || '',
-    permission_group_id: data.permission_group_id ?? null,
     description: data.description || null,
     timestamp_keys: data.timestamp_keys || [],
     comment: data.comment || null,
