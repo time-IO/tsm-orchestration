@@ -254,10 +254,10 @@ class QualityControlSettingRepository(BaseRepository):
         super().__init__(model=QualityControlSetting, session=session)
 
     def find_allowed_all(
-            self,
-            permission_group_ids: list[int],
-            sort_by: Optional[str] = None,
-            filters: FilterSet | None = None,
+        self,
+        permission_group_ids: list[int],
+        sort_by: Optional[str] = None,
+        filters: FilterSet | None = None,
     ) -> List[T]:
         statement = (
             select(self.model)

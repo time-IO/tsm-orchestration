@@ -27,7 +27,7 @@
               dense
             />
           </div>
-                    <div class="col-3">
+          <div class="col-3">
             <q-select
               class="q-mb-sm"
               label="Uses function(s)"
@@ -71,7 +71,6 @@
     </q-expansion-item>
   </q-list>
 </template>
-
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
