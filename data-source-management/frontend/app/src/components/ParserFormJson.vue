@@ -183,15 +183,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
-
-type JsonParserFormData = JsonParserUpdate & {
-  permission_group_id?: number | null;
-  timestamp_keys: JsonParserCreate['timestamp_keys'];
-  excluded_keys: string[];
-};
+import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
 
 const props = withDefaults(
   defineProps<{

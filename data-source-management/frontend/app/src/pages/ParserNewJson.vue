@@ -12,16 +12,17 @@
 import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { JsonParserCreate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
+import type {JsonParserCreate} from 'src/services/parser_json/types';
 import ParserFormJson from 'components/ParserFormJson.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
-const formData = ref<JsonParserCreate>({
+const formData = ref<JsonParserFormData>({
   name: '',
   permission_group_id: null,
   description: null,
@@ -34,7 +35,7 @@ const formData = ref<JsonParserCreate>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<JsonParserCreate>(normalizeFormData(formData.value));
+const initialFormData = ref<JsonParserFormData>(normalizeFormData(formData.value));
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
@@ -47,8 +48,17 @@ useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 async function save() {
   try {
-    const data: JsonParserCreate = normalizeFormData(formData.value);
-
+    const formValues = normalizeFormData(formData.value);
+    const data: JsonParserCreate = {
+      name: formValues.name ?? '',
+      permission_group_id: formValues.permission_group_id ?? null,
+      description: formValues.description ?? null,
+      comment: formValues.comment ?? null,
+      timestamp_keys: formValues.timestamp_keys,
+      timezone: formValues.timezone ?? '',
+      measurement_key: formValues.measurement_key ?? null,
+      excluded_keys: formValues.excluded_keys,
+    };
     isLoading.value = true;
     isSaving.value = true;
 
@@ -88,9 +98,9 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
+function normalizeFormData(data: JsonParserFormData): JsonParserFormData {
   return {
-    permission_group_id: data.permission_group_id,
+    permission_group_id: data.permission_group_id ?? null,
     name: data.name || '',
     description: data.description || null,
     timestamp_keys: (data.timestamp_keys || []).map((timestampKey) => ({
@@ -100,7 +110,7 @@ function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
     comment: data.comment || null,
     timezone: data.timezone || null,
     measurement_key: data.measurement_key || null,
-    excluded_keys: data.excluded_keys || null,
+    excluded_keys: data.excluded_keys || [],
   };
 }
 </script>

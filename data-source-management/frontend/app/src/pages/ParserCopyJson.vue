@@ -12,17 +12,18 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { JsonParserCreate } from 'src/services/parser_json/types';
+import type {JsonParserCreate, JsonParserPublic} from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<JsonParserCreate>({
+const formData = ref<JsonParserFormData>({
   name: '',
   permission_group_id: null,
   description: null,
@@ -35,7 +36,7 @@ const formData = ref<JsonParserCreate>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<JsonParserCreate | null>(null);
+const initialFormData = ref<JsonParserFormData | null>(null);
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
@@ -79,7 +80,17 @@ const detailRoute = computed(() => {
 
 async function save() {
   try {
-    const data: JsonParserCreate = normalizeFormData(formData.value);
+    const formValues = normalizeFormData(formData.value);
+    const data: JsonParserCreate = {
+      name: formValues.name ?? '',
+      permission_group_id: formValues.permission_group_id ?? null,
+      description: formValues.description ?? null,
+      comment: formValues.comment ?? null,
+      timestamp_keys: formValues.timestamp_keys,
+      timezone: formValues.timezone ?? '',
+      measurement_key: formValues.measurement_key ?? null,
+      excluded_keys: formValues.excluded_keys,
+    };
 
     isLoading.value = true;
     isSaving.value = true;
@@ -116,16 +127,16 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
+function normalizeFormData(data: JsonParserFormData | JsonParserPublic): JsonParserFormData {
   return {
-    permission_group_id: data.permission_group_id,
     name: data.name || '',
+    permission_group_id: data.permission_group_id ?? null,
     description: data.description || null,
     timestamp_keys: data.timestamp_keys || [],
     comment: data.comment || null,
     timezone: data.timezone || null,
     measurement_key: data.measurement_key || null,
-    excluded_keys: data.excluded_keys || null,
+    excluded_keys: data.excluded_keys || [],
   };
 }
 </script>
