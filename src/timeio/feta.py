@@ -5,7 +5,6 @@ import atexit
 import warnings
 from typing import Any, TypedDict
 
-
 try:
     from typing import Self
 except ImportError:
