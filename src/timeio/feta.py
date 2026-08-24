@@ -580,7 +580,6 @@ class FileParser(Base, FromUUIDMixin):
         if self.file_parser_type.name == "soilcan":
             return self._get_soilcan_params()
 
-
     def _get_csv_params(self):
         ts_cols = self._get_csv_ts_cols()
         query = f"select * from {self._schema}.parser_csv where parser_id = %s"
