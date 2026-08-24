@@ -196,27 +196,23 @@ def cleanup_ingest(base_data):
     yield
     with Session(engine) as session:
         session.exec(
-            text(
-                """
+            text("""
                 DELETE FROM ingest_external_api_neutron_monitor
                 WHERE ingest_id IN (
                     SELECT id FROM ingest
                     WHERE permission_group_id = :pg_id
                 )
-            """
-            ),
+            """),
             params={"pg_id": base_data["permission_group_id"]},
         )
         session.exec(
-            text(
-                """
+            text("""
                 DELETE FROM ingest_external_api
                 WHERE ingest_id IN (
                     SELECT id FROM ingest
                     WHERE permission_group_id = :pg_id
                 )
-            """
-            ),
+            """),
             params={"pg_id": base_data["permission_group_id"]},
         )
         session.exec(
@@ -232,13 +228,11 @@ def cleanup_parser(base_data):
     with Session(engine) as session:
         # Collect parser IDs belonging to test permission group before deleting
         parser_ids = session.exec(
-            text(
-                """
+            text("""
                 SELECT parser_id FROM parser_detailed
                 WHERE permission_group_id = :pg_id
                 AND parser_id != :base_parser_id
-            """
-            ),
+            """),
             params={
                 "pg_id": base_data["permission_group_id"],
                 "base_parser_id": base_data["parser_id"],
@@ -277,28 +271,24 @@ def cleanup_qc(base_data):
     yield
     with Session(engine) as session:
         session.exec(
-            text(
-                """
+            text("""
                 DELETE FROM quality_control_function_argument
                 WHERE quality_control_function_id IN (
                     SELECT qcf.id FROM quality_control_function qcf
                     JOIN quality_control_setting qcs ON qcs.id = qcf.quality_control_setting_id
                     WHERE qcs.permission_group_id = :pg_id
                 )
-            """
-            ),
+            """),
             params={"pg_id": base_data["permission_group_id"]},
         )
         session.exec(
-            text(
-                """
+            text("""
                 DELETE FROM quality_control_function
                 WHERE quality_control_setting_id IN (
                     SELECT id FROM quality_control_setting
                     WHERE permission_group_id = :pg_id
                 )
-            """
-            ),
+            """),
             params={"pg_id": base_data["permission_group_id"]},
         )
         session.exec(
