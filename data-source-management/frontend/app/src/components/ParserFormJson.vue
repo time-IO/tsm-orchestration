@@ -57,7 +57,7 @@
           <div class="q-my-md">
             <q-list
               separator
-              v-for="(key, idx) in formData.excluded_keys"
+              v-for="(key, idx) in formData.excluded_keys ?? []"
               :key="idx"
               class="q-mb-sm"
             >
@@ -65,7 +65,7 @@
                 <q-item-section>
                   <q-input
                     filled
-                    v-model="formData.excluded_keys[idx]"
+                    v-model="formData.excluded_keys![idx]"
                     label="Excluded key"
                     hint="Key to exclude from the payload"
                   />
@@ -183,9 +183,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
-import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
+
+
+type JsonParserFormData = JsonParserUpdate & {
+  permission_group_id?: number | null;
+  timestamp_keys: JsonParserCreate['timestamp_keys'];
+};
 
 const props = withDefaults(
   defineProps<{
@@ -258,11 +264,14 @@ const measurementKey = computed({
 });
 
 function addExcludedKey() {
+  if (!formData.value.excluded_keys) {
+    formData.value.excluded_keys = [];
+  }
   formData.value.excluded_keys.push('');
 }
 
 function removeExcludedKey(index: number) {
-  formData.value.excluded_keys.splice(index, 1);
+  formData.value.excluded_keys?.splice(index, 1);
 }
 </script>
 <style scoped></style>
