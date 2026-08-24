@@ -18,7 +18,6 @@ import pandas as pd
 
 from timeio.typehints import JsonObjectT, TimestampT
 
-
 logger = logging.getLogger("feta")
 
 """
