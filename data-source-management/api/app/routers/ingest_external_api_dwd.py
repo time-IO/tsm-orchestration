@@ -78,7 +78,7 @@ def create(
     entity = repo.create(
         payload,
         extra_data,
-        permission_group_ids_of_user=current_user.permission_group_ids,
+        access_scope=AccessScope.from_user(current_user),
     )
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
@@ -97,9 +97,7 @@ def update(
     current_user: User = Depends(get_current_user),
     repo: IngestExternalApiDwdRepository = Depends(get_repo_ingest_external_api_dwd),
 ):
-    entity = repo.update(
-        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
 

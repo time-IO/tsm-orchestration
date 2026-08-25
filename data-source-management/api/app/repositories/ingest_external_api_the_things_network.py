@@ -89,11 +89,18 @@ class IngestExternalApiTheThingsNetworkRepository:
         return apply_sort_list(flatt_list, sort_by) if sort_by else flatt_list
 
     def create(
-        self, payload, extra_data, permission_group_ids_of_user: list[int]
+        self,
+        payload,
+        extra_data,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> IngestExternalApiTheThingsNetwork:
 
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -137,15 +144,19 @@ class IngestExternalApiTheThingsNetworkRepository:
         self,
         ingest_id: int,
         payload: IngestExternalApiTheThingsNetworkUpdate,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> IngestExternalApiTheThingsNetwork:
 
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
         if payload.permission_group_id is not None:
-            RepositoryValidator.check_payload_permission_group(
-                payload.permission_group_id, permission_group_ids_of_user
+            RepositoryValidator.check_payload_access_scope(
+                payload.permission_group_id, access_scope
             )
 
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         ingest = entity.external_api.ingest
 

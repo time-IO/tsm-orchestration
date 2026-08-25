@@ -1,6 +1,8 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import HTTPException
 
 from access_scope import AccessScope
 from dependencies import (
@@ -65,6 +67,11 @@ PROVIDER_CASES = (
     (ingest_external_api_tsystems, IngestExternalApiTSystemsRepository),
     (ingest_external_api_uba, IngestExternalApiUbaRepository),
 )
+REPOSITORY_CLASSES = tuple(repository_class for _, repository_class in PROVIDER_CASES)
+
+
+class StopAfterAuthorization(Exception):
+    pass
 
 
 @pytest.mark.parametrize(("path", "dependency"), LIST_CASES)
@@ -93,6 +100,36 @@ def test_read_one_passes_superuser_access_scope(
     router_module.read_one(id=1, current_user=mock_user, repo=repo)
 
     access_scope = repo.find_one.call_args.kwargs["access_scope"]
+    assert access_scope.is_superuser is True
+
+
+@pytest.mark.parametrize(("router_module", "repository_class"), PROVIDER_CASES)
+def test_create_passes_superuser_access_scope(
+    router_module, repository_class, mock_user, monkeypatch
+):
+    mock_user.is_superuser = True
+    repo = MagicMock(spec=repository_class)
+    repo.create.return_value = object()
+    monkeypatch.setattr(router_module, "publish_frontend_thing_update", MagicMock())
+
+    router_module.create(payload=object(), current_user=mock_user, repo=repo)
+
+    access_scope = repo.create.call_args.kwargs["access_scope"]
+    assert access_scope.is_superuser is True
+
+
+@pytest.mark.parametrize(("router_module", "repository_class"), PROVIDER_CASES)
+def test_update_passes_superuser_access_scope(
+    router_module, repository_class, mock_user, monkeypatch
+):
+    mock_user.is_superuser = True
+    repo = MagicMock(spec=repository_class)
+    repo.update.return_value = object()
+    monkeypatch.setattr(router_module, "publish_frontend_thing_update", MagicMock())
+
+    router_module.update(id=1, payload=object(), current_user=mock_user, repo=repo)
+
+    access_scope = repo.update.call_args.kwargs["access_scope"]
     assert access_scope.is_superuser is True
 
 
@@ -142,3 +179,48 @@ def test_find_all_keeps_positional_permission_group_filter(
 
     statement = session.exec.call_args.args[0]
     assert statement.whereclause is not None
+
+
+@pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
+def test_create_accepts_superuser_permission_group(repository_class):
+    repo = repository_class(MagicMock())
+    repo.check_for_existing_name_create = MagicMock(side_effect=StopAfterAuthorization)
+    payload = SimpleNamespace(permission_group_id=999, name="test")
+
+    with pytest.raises(StopAfterAuthorization):
+        repo.create(payload, {}, access_scope=AccessScope([], is_superuser=True))
+
+
+@pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
+def test_update_accepts_superuser_permission_group(repository_class):
+    repo = repository_class(MagicMock())
+    repo.find_one = MagicMock(side_effect=StopAfterAuthorization)
+    payload = SimpleNamespace(permission_group_id=999)
+    access_scope = AccessScope([], is_superuser=True)
+
+    with pytest.raises(StopAfterAuthorization):
+        repo.update(1, payload, access_scope=access_scope)
+
+    repo.find_one.assert_called_once_with(1, access_scope=access_scope)
+
+
+@pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
+def test_create_keeps_legacy_permission_group_check(repository_class):
+    repo = repository_class(MagicMock())
+    payload = SimpleNamespace(permission_group_id=999, name="test")
+
+    with pytest.raises(HTTPException) as exc_info:
+        repo.create(payload, {}, [1])
+
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
+def test_update_keeps_legacy_permission_group_check(repository_class):
+    repo = repository_class(MagicMock())
+    payload = SimpleNamespace(permission_group_id=999)
+
+    with pytest.raises(HTTPException) as exc_info:
+        repo.update(1, payload, [1])
+
+    assert exc_info.value.status_code == 403
