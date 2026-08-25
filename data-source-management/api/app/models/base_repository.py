@@ -185,11 +185,22 @@ class PermissionGroupRepository(BaseRepository):
     def __init__(self, session: Session):
         super().__init__(model=PermissionGroup, session=session)
 
-    def find_allowed_one(self, id: int, permission_group_ids: list[int]) -> T:
-        statement = select(self.model).where(
-            self.model.id == id,
-            self.model.id.in_(permission_group_ids),
-        )
+    def find_allowed_one(
+        self,
+        id: int,
+        permission_group_ids: list[int] | None = None,
+        access_scope: AccessScope | None = None,
+    ) -> T:
+        statement = select(self.model).where(self.model.id == id)
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.id.in_(access_scope.permission_group_ids)
+            )
+
         entity = self.session.exec(statement).first()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -197,11 +208,20 @@ class PermissionGroupRepository(BaseRepository):
 
     def find_allowed_all(
         self,
-        permission_group_ids: list[int],
+        permission_group_ids: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: FilterSet | None = None,
+        access_scope: AccessScope | None = None,
     ) -> List[T]:
-        statement = select(self.model).where(self.model.id.in_(permission_group_ids))
+        statement = select(self.model)
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.id.in_(access_scope.permission_group_ids)
+            )
 
         if filters:
             statement = apply_filters(statement, filters)
