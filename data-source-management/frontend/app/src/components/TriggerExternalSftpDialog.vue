@@ -11,9 +11,9 @@
         <div class="row q-mb-md">
           <div class="col-md-auto">
             <q-banner dense rounded>
-              Optionally provide a date range (by file modification time) to restrict the
-              external SFTP synchronisation. Leave a field empty to omit that bound; leave
-              both empty to sync all files.
+              Optionally provide a date range (by file modification time) to restrict the external
+              SFTP synchronisation. Leave a field empty to omit that bound; leave both empty to sync
+              all files.
             </q-banner>
           </div>
         </div>

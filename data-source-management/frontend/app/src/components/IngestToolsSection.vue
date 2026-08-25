@@ -53,12 +53,7 @@
       </div>
 
       <div v-if="triggerType" class="col-12 col-md-6">
-        <q-card
-          flat
-          bordered
-          class="full-height cursor-pointer column"
-          @click="triggerOpen = true"
-        >
+        <q-card flat bordered class="full-height cursor-pointer column" @click="triggerOpen = true">
           <q-card-section class="col row items-center no-wrap q-pa-md">
             <q-avatar rounded size="2.5rem" color="primary" text-color="white" icon="sync" />
             <div class="q-ml-md">
@@ -73,11 +68,7 @@
           v-model="triggerOpen"
           :ids_to_trigger="[ingestId]"
         />
-        <trigger-external-sftp-dialog
-          v-else
-          v-model="triggerOpen"
-          :ingest_id="ingestId"
-        />
+        <trigger-external-sftp-dialog v-else v-model="triggerOpen" :ingest_id="ingestId" />
       </div>
     </q-card-section>
   </q-card>
