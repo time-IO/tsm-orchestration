@@ -17,6 +17,7 @@ from config import settings
 from mqtt import publish_frontend_thing_update
 from sqlalchemy.orm import joinedload
 from access_scope import AccessScope
+from validation.repository_validator import RepositoryValidator
 
 T = TypeVar("T", bound=SQLModel)
 
@@ -284,27 +285,62 @@ class QualityControlSettingRepository(BaseRepository):
     def __init__(self, session: Session):
         super().__init__(model=QualityControlSetting, session=session)
 
+    def find_allowed_one(
+        self,
+        id: int,
+        permission_group_ids: list[int] | None = None,
+        access_scope: AccessScope | None = None,
+    ) -> T:
+        statement = select(self.model).where(self.model.id == id)
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.permission_group_id.in_(access_scope.permission_group_ids)
+            )
+
+        entity = self.session.exec(statement).first()
+        if not entity:
+            raise HTTPException(status_code=404, detail="Not found")
+        return entity
+
     def find_allowed_all(
         self,
-        permission_group_ids: list[int],
+        permission_group_ids: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: FilterSet | None = None,
+        access_scope: AccessScope | None = None,
     ) -> List[T]:
-        statement = (
-            select(self.model)
-            .where(self.model.permission_group_id.in_(permission_group_ids))
-            .options(joinedload(self.model.user))
-        )
+        statement = select(self.model).options(joinedload(self.model.user))
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.permission_group_id.in_(access_scope.permission_group_ids)
+            )
+
         if filters:
             statement = apply_filters(statement, filters)
         items = self.session.exec(statement).unique().all()
         return apply_sort_list(items, sort_by) if sort_by else items
 
     def create_allowed(
-        self, payload, extra_data, permission_group_ids, ingest_type_info=None
+        self,
+        payload,
+        extra_data,
+        permission_group_ids=None,
+        ingest_type_info=None,
+        access_scope: AccessScope | None = None,
     ):
-        self.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name(payload.name, payload.permission_group_id)
@@ -352,14 +388,27 @@ class QualityControlSettingRepository(BaseRepository):
             raise HTTPException(status_code=400, detail=f"Failed to create.")
 
     def update_allowed(
-        self, id: int, payload, permission_group_ids, ingest_type_info=None
+        self,
+        id: int,
+        payload,
+        permission_group_ids=None,
+        ingest_type_info=None,
+        access_scope: AccessScope | None = None,
     ):
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids or [])
+
+        if payload.permission_group_id is not None:
+            RepositoryValidator.check_payload_access_scope(
+                payload.permission_group_id, access_scope
+            )
+
         try:
             update_payload = payload.model_dump(
                 exclude_unset=True, exclude={"quality_control_functions"}
             )
 
-            entity = self.find_allowed_one(id, permission_group_ids)
+            entity = self.find_allowed_one(id, access_scope=access_scope)
 
             if not entity:
                 raise HTTPException(status_code=404, detail="Not found")
