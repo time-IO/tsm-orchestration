@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+from access_scope import AccessScope
 
 from models.filters import BaseFilter
 from fastapi_filters.ext.sqlalchemy import apply_filters
@@ -19,18 +20,31 @@ class ParserCsvRepository:
         self.model = ParserCsv
         self.session = session
 
-    def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> ParserCsv:
+    def find_one(
+        self,
+        id: int,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
+    ) -> ParserCsv:
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
-            .where(
-                self.model.parser_id == id,
-                ParserDetailed.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.parser_id == id)
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -38,19 +52,29 @@ class ParserCsvRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
+        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
             .join(ParserDetailed.parser)
-            .where(ParserDetailed.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
 
         if filters:
             statement = apply_filters(statement, filters)
@@ -63,11 +87,15 @@ class ParserCsvRepository:
         self,
         payload: ParserCsvCreate,
         extra_data,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ):
 
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -120,14 +148,19 @@ class ParserCsvRepository:
         self,
         parser_id: int,
         payload: ParserCsvUpdate,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> ParserCsv:
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        parser_csv = self.find_one(parser_id, access_scope=access_scope)
 
         self.update_timestamp_columns(payload, parser_id)
 
         data = payload.model_dump(exclude={"timestamp_columns"}, exclude_unset=True)
 
-        parser_csv = self.find_one(parser_id, permission_group_ids_of_user)
         parser_detailed = parser_csv.parser_detailed
         if "name" in payload:
             self.check_for_existing_name_update(

@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+from access_scope import AccessScope
 
 from models.filters import BaseFilter
 from fastapi_filters.ext.sqlalchemy import apply_filters
@@ -19,18 +20,31 @@ class ParserJsonRepository:
         self.model = ParserJson
         self.session = session
 
-    def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> ParserJson:
+    def find_one(
+        self,
+        id: int,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
+    ) -> ParserJson:
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
-            .where(
-                self.model.parser_id == id,
-                ParserDetailed.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.parser_id == id)
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -38,19 +52,30 @@ class ParserJsonRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
+        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
             .join(ParserDetailed.parser)
-            .where(ParserDetailed.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         if filters:
             statement = apply_filters(statement, filters)
 
@@ -62,10 +87,14 @@ class ParserJsonRepository:
         self,
         payload: ParserJsonCreate,
         extra_data: dict,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ):
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -115,14 +144,19 @@ class ParserJsonRepository:
         self,
         parser_id: int,
         payload: ParserJsonUpdate,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> ParserJson:
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        parser_json = self.find_one(parser_id, access_scope=access_scope)
 
         self.update_timestamp_keys(payload, parser_id)
 
         data = payload.model_dump(exclude={"timestamp_keys"}, exclude_unset=True)
 
-        parser_json = self.find_one(parser_id, permission_group_ids_of_user)
         parser_detailed = parser_json.parser_detailed
 
         if "name" in payload:
