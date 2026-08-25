@@ -3,7 +3,7 @@ stages:
   - "check"
   - "build"
   - "integration"
-  #- "end-to-end"
+  - "end-to-end"
   - "release"
   - "scan"
   - "notify"
@@ -27,7 +27,7 @@ variables:
   DOCKER_IMAGE_TAG: 29-cli
   DOCKER_SERVICE_IMAGE_TAG: 29.6.2-dind
   TRIVY_VERSION: 0.69.3
-  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater"
+  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater dsm-api dsm-frontend dsm-frontend-rootless"
 
 services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"
