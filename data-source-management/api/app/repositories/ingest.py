@@ -19,16 +19,26 @@ class IngestRepository:
         self.model = Ingest
         self.session = session
 
-    def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> Ingest:
+    def find_one(
+        self,
+        id: int,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
+    ) -> Ingest:
         statement = (
             select(self.model)
-            .where(
-                self.model.id == id,
-                self.model.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.id == id)
             .options(joinedload(self.model.permission_group))
             .options(joinedload(self.model.user))
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
