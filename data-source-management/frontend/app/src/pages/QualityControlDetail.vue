@@ -94,15 +94,15 @@
 
           <q-tab-panel name="functions">
             <q-card-section>
-                  <q-input
-                    class="q-mb-md"
-                    filled
-                    dense
-                    clearable
-                    v-model="functionSearch"
-                    label="Search by label or name"
-                    debounce="200"
-                  />
+              <q-input
+                class="q-mb-md"
+                filled
+                dense
+                clearable
+                v-model="functionSearch"
+                label="Search by label or name"
+                debounce="200"
+              />
               <div class="row items-center justify-end q-mb-sm">
                 <q-btn
                   flat
@@ -254,8 +254,6 @@ const filteredFunctions = computed(() => {
     (f) => f.label?.toLowerCase().includes(query) || f.name.toLowerCase().includes(query),
   );
 });
-
-
 </script>
 
 <style scoped></style>
