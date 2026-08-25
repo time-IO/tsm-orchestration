@@ -10,6 +10,7 @@ from models.parser_detailed import ParserDetailedRead
 from fastapi_filters import FilterOperator
 from sqlalchemy import cast, String
 from sorting import apply_sort_list
+from access_scope import AccessScope
 
 
 class ParserDetailedRepository:
@@ -18,16 +19,24 @@ class ParserDetailedRepository:
         self.session = session
 
     def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
+        self,
+        id: int,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> ParserDetailed:
         statement = (
             select(self.model)
-            .where(
-                self.model.parser_id == id,
-                self.model.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.parser_id == id)
             .options(joinedload(self.model.parser).joinedload(Parser.ingest))
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.permission_group_id.in_(access_scope.permission_group_ids)
+            )
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
