@@ -618,6 +618,7 @@ class FileParser(Base, FromUUIDMixin):
         query = f"""select "key", "format" from {self._schema}.parser_json_timestamp_key where parser_json_id = %s"""
         return self._fetchall(self._conn, query, self.id)
 
+
 class MQTT(Base):
     _schema = SCHEMA
     _table_name = "ingest_mqtt"
