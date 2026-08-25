@@ -453,6 +453,8 @@ services:
     build:
       context: .
       dockerfile: data-source-management/api/docker/prod/Dockerfile
+      args:
+        UID: "${UID:-1000}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
