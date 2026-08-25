@@ -18,4 +18,4 @@ DC="${SCRIPT_DIR}/../dc-with-dev.sh"
     -e POSTGRES_DB=db_test \
     --entrypoint /bin/sh \
     dsm-api \
-    -c 'alembic upgrade head'
+    -c 'alembic -c /app/alembic.ini upgrade head'
