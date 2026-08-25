@@ -43,7 +43,11 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
+        )
     )
 
 
@@ -61,9 +65,7 @@ def read_one(
     ),
 ):
     return repo.to_flat(
-        repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
 
 
@@ -106,9 +108,7 @@ def update(
         get_repo_ingest_external_api_bosch
     ),
 ):
-    entity = repo.update(
-        id, payload, access_scope=AccessScope.from_user(current_user)
-    )
+    entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
 
