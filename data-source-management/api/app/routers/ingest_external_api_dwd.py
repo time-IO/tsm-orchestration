@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest_external_api_dwd,
@@ -39,7 +40,11 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
+        )
     )
 
 
@@ -53,9 +58,7 @@ def read_one(
     repo: IngestExternalApiDwdRepository = Depends(get_repo_ingest_external_api_dwd),
 ):
     return repo.to_flat(
-        repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
 
 

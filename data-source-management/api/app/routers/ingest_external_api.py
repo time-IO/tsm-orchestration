@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest_external_api,
@@ -35,5 +36,9 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
+        )
     )

@@ -9,6 +9,7 @@ from sqlmodel import Session, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
+from access_scope import AccessScope
 
 from models.filters import IngestExternalApiFilter
 from sorting import apply_sort_list
@@ -23,7 +24,10 @@ class IngestExternalApiUbaRepository:
         self.session = session
 
     def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
+        self,
+        id: int,
+        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope | None = None,
     ) -> IngestExternalApiUba:
 
         statement = (
@@ -31,13 +35,20 @@ class IngestExternalApiUbaRepository:
             .join(self.model.external_api)
             .join(IngestExternalApi.ingest)
             .where(self.model.ingest_id == id)
-            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.external_api)
                 .joinedload(IngestExternalApi.ingest)
                 .joinedload(Ingest.permission_group)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
@@ -46,21 +57,29 @@ class IngestExternalApiUbaRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: Optional[IngestExternalApiFilter] = None,
+        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.external_api)
             .join(IngestExternalApi.ingest)
-            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.external_api)
                 .joinedload(IngestExternalApi.ingest)
                 .joinedload(Ingest.permission_group)
             )
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         if filters:
             statement = apply_filters(statement, filters)
