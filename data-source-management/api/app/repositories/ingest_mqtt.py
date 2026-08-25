@@ -230,7 +230,6 @@ class IngestMqttRepository:
         if existing:
             raise HTTPException(status_code=400, detail="This username already exists.")
 
-
     @staticmethod
     def to_flat(entity: IngestMqtt) -> IngestMqttRead:
         ing = entity.ingest
