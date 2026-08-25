@@ -83,7 +83,13 @@ class SyncExtSftpManager(AbstractHandler):
             journal.error(msg, thing.uuid)
             logger.error(msg)
             return
-        sync(source, target, thing.uuid)
+        sync(
+            source,
+            target,
+            thing.uuid,
+            datetime_from=content.get("datetime_from"),
+            datetime_to=content.get("datetime_to"),
+        )
         source.close()
 
 

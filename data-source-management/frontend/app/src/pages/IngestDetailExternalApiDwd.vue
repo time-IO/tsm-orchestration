@@ -99,22 +99,6 @@
                     </q-item-label>
                   </q-item-section>
                 </q-item>
-
-                <q-item>
-                  <q-item-section>
-                    <q-item-label>Trigger External api</q-item-label>
-                    <div>
-                      <q-btn
-                        class="q-mt-sm"
-                        rounded
-                        size="sm"
-                        label="Go!"
-                        @click="openTriggerDialog"
-                        text-color="primary"
-                      />
-                    </div>
-                  </q-item-section>
-                </q-item>
               </q-list>
             </div>
           </div>
@@ -131,7 +115,7 @@
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" />
+      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" trigger-type="external-api" />
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -149,12 +133,6 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-    <trigger-external-api-dialog
-      v-if="item !== null"
-      v-model="showTriggerDialog"
-      :ids_to_trigger="[item.id]"
-    />
   </q-page>
 </template>
 
@@ -164,7 +142,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
 import type { IngestExternalApiDwdPublic } from 'src/services/ingest_external_api_dwd/types';
-import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import CopyBtn from 'components/CopyBtn.vue';
 import IngestToolsSection from 'components/IngestToolsSection.vue';
 
@@ -176,7 +153,6 @@ const store = useIngestExternalApiDwdStore();
 const item = ref<IngestExternalApiDwdPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
-const showTriggerDialog = ref(false);
 
 const backUrl = '/ingest';
 
@@ -220,9 +196,6 @@ const formatDate = (dateString: string) => {
 // const openDeleteDialog = () => {
 //   deleteDialog.value = true;
 // };
-const openTriggerDialog = () => {
-  showTriggerDialog.value = true;
-};
 const deleteItem = async () => {
   if (!item.value) {
     return;

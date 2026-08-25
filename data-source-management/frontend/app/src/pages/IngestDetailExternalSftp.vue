@@ -208,6 +208,7 @@
         :ingest-id="item.id"
         :service="API.ingestExternalSftpStorage"
         :bucket-name="item.bucket_username"
+        trigger-type="external-sftp"
       />
     </div>
 

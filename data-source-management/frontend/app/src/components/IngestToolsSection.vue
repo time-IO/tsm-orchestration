@@ -5,7 +5,7 @@
     <q-separator />
 
     <q-card-section class="row q-col-gutter-md items-stretch">
-      <div v-if="visualizationUrl" :class="service ? 'col-12 col-md-6' : 'col-12'">
+      <div v-if="visualizationUrl" :class="service || triggerType ? 'col-12 col-md-6' : 'col-12'">
         <q-card flat bordered class="full-height cursor-pointer column" @click="openGrafana">
           <q-card-section class="col row items-center no-wrap q-pa-md">
             <q-avatar rounded size="2.5rem" color="grey-9">
@@ -51,6 +51,34 @@
           :bucket-name="bucketName"
         />
       </div>
+
+      <div v-if="triggerType" class="col-12 col-md-6">
+        <q-card
+          flat
+          bordered
+          class="full-height cursor-pointer column"
+          @click="triggerOpen = true"
+        >
+          <q-card-section class="col row items-center no-wrap q-pa-md">
+            <q-avatar rounded size="2.5rem" color="primary" text-color="white" icon="sync" />
+            <div class="q-ml-md">
+              <div class="text-subtitle2 text-weight-medium">Trigger Sync</div>
+              <div class="text-caption text-grey-7">{{ triggerDescription }}</div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <trigger-external-api-dialog
+          v-if="triggerType === 'external-api'"
+          v-model="triggerOpen"
+          :ids_to_trigger="[ingestId]"
+        />
+        <trigger-external-sftp-dialog
+          v-else
+          v-model="triggerOpen"
+          :ingest_id="ingestId"
+        />
+      </div>
     </q-card-section>
   </q-card>
 </template>
@@ -60,15 +88,25 @@ import { computed, ref } from 'vue';
 import type { IngestStorageService } from 'src/services/factoryIngestStorageService';
 import { publicAsset } from 'src/utils/public_asset';
 import S3ExplorerDialog from 'components/S3ExplorerDialog.vue';
+import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
+import TriggerExternalSftpDialog from 'components/TriggerExternalSftpDialog.vue';
 
-const { uuid } = defineProps<{
+const { uuid, triggerType } = defineProps<{
   uuid?: string | null;
   ingestId: number;
   service?: IngestStorageService | undefined;
   bucketName?: string | undefined;
+  triggerType?: 'external-api' | 'external-sftp';
 }>();
 
 const explorerOpen = ref(false);
+const triggerOpen = ref(false);
+
+const triggerDescription = computed(() =>
+  triggerType === 'external-sftp'
+    ? "Manually (re)synchronise files from the external SFTP storage into this ingest's internal S3 bucket for a chosen time range."
+    : "Manually (re)synchronise this ingest's historic data for a chosen time range.",
+);
 const grafanaLogo = publicAsset('icons/grafana_icon.png');
 
 const visualizationUrl = computed(() =>
