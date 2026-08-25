@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from sqlalchemy import cast, String
 from fastapi_filters import FilterOperator
 
+from access_scope import AccessScope
 from models.ingest import IngestWithApiInfoRead
 from sorting import apply_sort_list
 
@@ -36,17 +37,25 @@ class IngestRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        permission_group_ids_of_user: list[int] | None = None,
         sort_by: Optional[str] = None,
         filters: Optional[IngestFilter] = None,
+        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
-            .where(self.model.permission_group_id.in_(permission_group_ids_of_user))
             .options(joinedload(self.model.external_api_detail))
             .options(joinedload(self.model.permission_group))
             .options(joinedload(self.model.user))
         )
+
+        if access_scope is None:
+            access_scope = AccessScope(permission_group_ids_of_user or [])
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                self.model.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         if filters:
             if filters.uuid and FilterOperator.ilike in filters.uuid:
