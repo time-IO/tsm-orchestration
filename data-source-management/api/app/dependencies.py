@@ -54,7 +54,7 @@ def get_session():
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     session=Depends(get_session),
-)->User:
+) -> User:
     if not credentials:
         logger.warning("Authentication failed: missing Authorization header")
         raise HTTPException(status_code=401, detail="Missing Authorization header")
@@ -78,7 +78,7 @@ def get_current_user(
     return user
 
 
-def get_or_create_user(*, session, claims: dict, access_token: str)->User:
+def get_or_create_user(*, session, claims: dict, access_token: str) -> User:
     try:
         external_id = claims["sub"]
 
