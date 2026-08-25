@@ -137,6 +137,7 @@ function normalizeFormData(data: QualityControlSettingCreate): QualityControlSet
     permission_group_id: data.permission_group_id || null,
     quality_control_functions: (data.quality_control_functions || []).map((func) => ({
       name: func.name,
+      label: func.label,
       quality_control_function_arguments: (func.quality_control_function_arguments || []).map(
         (arg) => ({
           name: arg.name,

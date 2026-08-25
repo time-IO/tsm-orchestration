@@ -160,6 +160,14 @@
 
     <q-dialog v-model="functionFormDialog" @hide="handleRemove" no-backdrop-dismiss>
       <q-card style="min-width: 50vw; max-width: 100vw">
+        <q-card-section>
+            <q-input
+              filled
+              v-model="functionLabel"
+              label="Label (optional)"
+              hint="A specific name to help you find this function later"
+            />
+        </q-card-section>
         <q-form>
           <component
             :is="currentFunctionFormComponent"
@@ -219,6 +227,8 @@ defineProps<{
 
 const emit = defineEmits(['save']);
 
+const functionLabel = ref<string | undefined>(undefined);
+
 const step = ref(1);
 const functionDialog = ref(false);
 const submitDialog = ref(false);
@@ -248,6 +258,7 @@ function handleEditFunction(index: number) {
   if (!func) return;
   editingIndex.value = index;
   selectedFunctionName.value = func.name;
+  functionLabel.value = func.label ?? undefined;
   functionFormDialog.value = true;
 }
 
@@ -319,6 +330,7 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     // Edit mode: replace existing function
     formData.value.quality_control_functions![editingIndex.value] = {
       name: selectedFunctionName.value,
+      label: functionLabel.value,
       quality_control_function_arguments: submittedData,
     };
     editingIndex.value = null;
@@ -326,10 +338,12 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     // Add mode: attach new function
     formData.value.quality_control_functions!.push({
       name: selectedFunctionName.value,
+      label: functionLabel.value,
       quality_control_function_arguments: submittedData,
     });
   }
   selectedFunctionName.value = null;
+  functionLabel.value = undefined;
   functionFormDialog.value = false;
 }
 
@@ -363,6 +377,7 @@ function handleRemoveDatastream({
 function selectFunction(item: FunctionOption) {
   functionDialog.value = false;
   selectedFunctionName.value = item.label;
+  functionLabel.value = undefined;
   functionFormDialog.value = true;
 }
 
