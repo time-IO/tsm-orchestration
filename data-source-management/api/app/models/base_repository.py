@@ -275,11 +275,7 @@ class QualityControlSettingRepository(BaseRepository):
                     subquery = select(
                         QualityControlFunction.quality_control_setting_id
                     ).where(QualityControlFunction.name.in_(names))
-
-                    if op in ("overlap", "in", "eq"):
-                        statement = statement.where(self.model.id.in_(subquery))
-                    elif op in ("not_overlap", "not_in", "ne"):
-                        statement = statement.where(self.model.id.not_in(subquery))
+                    statement = statement.where(self.model.id.in_(subquery))
 
             if filter_values:
                 statement = apply_filters(statement, filter_values)
