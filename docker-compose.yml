@@ -204,9 +204,6 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
-      # same MQTT auth used by legacy (django) frontend and new frontend
-      FRONTEND_MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      FRONTEND_MQTT_PASS: "${THING_MANAGEMENT_MQTT_PASS}"
     ports:
       - "${MQTT_PORT}:1883"
       - "${MQTT_PORT_SECURE}:8883"
@@ -453,6 +450,8 @@ services:
     build:
       context: .
       dockerfile: data-source-management/api/docker/prod/Dockerfile
+      args:
+        UID: "${UID:-1000}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
@@ -543,79 +542,6 @@ services:
 
   # Summary
   # =======
-  # brief: A user frontend to add things groups parser etc.
-  # dir:
-  # see also:
-  #
-  # Description
-  # ===========
-  # TODO
-  frontend:
-    image: "registry.hzdr.de/ufz-tsm/tsm-frontend/tsm-frontend:${THING_MANAGEMENT_LEGACY_IMAGE_TAG}"
-    restart: "${SERVICE_RESTART_POLICY}"
-    command: >
-      bash -c "python3 manage.py migrate
-      && python3 manage.py loaddata admin_interface_theme_foundation.json
-      && python3 manage.py loaddata ufz_theme.json
-      && python3 manage.py loaddata nm_station.json
-      && python3 manage.py createsuperuser --noinput
-      || echo 'Superuser already created'
-      && python3 manage.py collectstatic --noinput
-      && gunicorn main.wsgi:application --bind 0.0.0.0:8000 -w 6"
-    user: appuser
-    volumes:
-      - frontend-statics:/home/appuser/app/static
-      - sftp-private-keys:/home/appuser/app/sftp-private-keys
-      - ./frontend/user.json:/home/appuser/app/tsm/fixtures/user.json
-      - ./frontend/thing.json:/home/appuser/app/tsm/fixtures/thing.json
-      - ./frontend/nm_station.json:/home/appuser/app/tsm/fixtures/nm_station.json
-    entrypoint: ""
-    # ports:
-    #   - "127.0.0.1:8000:8000"
-    environment:
-      POSTGRES_HOST: "${THING_MANAGEMENT_LEGACY_DATABASE_HOST}"
-      POSTGRES_NAME: "${THING_MANAGEMENT_LEGACY_DATABASE_DB_NAME}"
-      POSTGRES_USER: "${THING_MANAGEMENT_LEGACY_DATABASE_USER}"
-      POSTGRES_PASSWORD: "${THING_MANAGEMENT_LEGACY_DATABASE_PASS}"
-      PUBLISH_THING_TO_BROKER: True
-      CREATEDB_POSTGRES_HOST: "${DATABASE_ADMIN_HOST}"
-      CREATEDB_POSTGRES_DATABASE: "${DATABASE_ADMIN_DB_NAME}"
-      MQTT_BROKER_HOST: "${THING_MANAGEMENT_MQTT_HOST}"
-      MQTT_USER: "${THING_MANAGEMENT_MQTT_USER}"
-      MQTT_PASSWORD: "${THING_MANAGEMENT_MQTT_PASS}"
-      MQTT_CLIENT_ID: frontend
-      DJANGO_SUPERUSER_USERNAME: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_USERNAME}"
-      DJANGO_SUPERUSER_PASSWORD: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_PASSWORD}"
-      DJANGO_SUPERUSER_EMAIL: "${THING_MANAGEMENT_LEGACY_DJANGO_SUPERUSER_EMAIL}"
-      DJANGO_SECRET_KEY: "${THING_MANAGEMENT_LEGACY_DJANGO_SECRET_KEY}"
-      DJANGO_DEBUG: "${THING_MANAGEMENT_LEGACY_DJANGO_DEBUG}"
-      DJANGO_TRUSTED_ORIGINS: "${THING_MANAGEMENT_LEGACY_DJANGO_TRUSTED_ORIGINS}"
-      DJANGO_BASE_PATH: "${THING_MANAGEMENT_LEGACY_DJANGO_BASE_PATH}"
-      DJANGO_ALLOWED_HOSTS: "${THING_MANAGEMENT_LEGACY_DJANGO_ALLOWED_HOSTS}"
-      POSTGRES_SSLMODE: "${THING_MANAGEMENT_LEGACY_DJANGO_POSTGRES_SSLMODE}"
-      DJANGO_HELMHOLTZ_CLIENT_ID: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_ID}"
-      DJANGO_HELMHOLTZ_CLIENT_SECRET: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_CLIENT_SECRET}"
-      DJANGO_HELMHOLTZ_AAI_CONF_URL: "${THING_MANAGEMENT_LEGACY_DJANGO_HELMHOLTZ_AAI_CONF_URL}"
-      MINIO_FTP_PORT: "${OBJECT_STORAGE_FTP_PORT}"
-      MINIO_SFTP_PORT: "${OBJECT_STORAGE_SFTP_PORT}"
-      PROXY_URL: "${PROXY_URL}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
-      STA_ROOT_URL: "${THING_MANAGEMENT_LEGACY_STA_ROOT_URL}"
-      QAQC_SETTING_SAQC_VERSION: "${THING_MANAGEMENT_LEGACY_QAQC_SETTING_SAQC_VERSION}"
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-      worker-configdb-updater:
-        condition: service_started
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-
-  # Summary
-  # =======
   # brief: Make services accessible on single address  (eg. tsm.ufz.de)
   # dir: nginx
   # see also: ./nginx/*.conf
@@ -623,7 +549,6 @@ services:
   # Description
   # ===========
   # This maps service endpoints to a path on a main URL, mainly
-  #  - the service  frontend       to  URL/frontend
   #  - the service  object-storage to  URL/object-storage
   #  - the service  visualization  to  URL/visualization
   #  - the service  frost          to  URL/sta
@@ -637,15 +562,12 @@ services:
       - "${PROXY_TLS_PORT_MAPPING}"
       - "${PROXY_MINIO_PORT_MAPPING}"
     volumes:
-      - frontend-statics:/home/appuser/app/static
       - ./nginx/html:/usr/share/nginx/html
       - "./nginx/${PROXY_SITE_CONFIG_FILE}:/etc/nginx/conf.d/default.conf:ro"
       - ./nginx/locations:/etc/nginx/locations:ro
       - "${PROXY_TLS_CERT_PATH}:/etc/ssl/public.crt:ro"
       - "${PROXY_TLS_KEY_PATH}:/etc/ssl/private.key:ro"
     depends_on:
-      frontend:
-        condition: service_started
       dsm-frontend:
         condition: service_started
       visualization:
@@ -666,46 +588,6 @@ services:
     logging:
       options:
         max-size: "${PROXY_MAX_LOG_FILE_SIZE}"
-        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
-
-  # =================================================================
-  # SETUP worker (topic: configdb_update)
-  # =================================================================
-
-  # fills and updates the config-db from setup mqtt-messages
-  # (e.g. topic: frontend-thing-update)
-  worker-configdb-updater:
-    image: "${TIMEIO_IMAGE_REGISTRY}/configdb-updater:${TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG}"
-    build:
-      context: .
-      dockerfile: configdb_updater/Dockerfile
-      args:
-        UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${CONFIGDB_UPDATER_PYTHON_BASE_IMAGE_TAG}"
-    restart: "${SERVICE_WORKER_RESTART_POLICY}"
-    depends_on:
-      mqtt-broker:
-        condition: service_healthy
-    environment:
-      LOG_LEVEL: "${LOG_LEVEL}"
-      MQTT_BROKER_HOST: mqtt-broker
-      MQTT_BROKER_PORT: 1883
-      MQTT_USER: "${MQTT_USER}"
-      MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: configdb-updater
-      MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
-      MQTT_SUBSCRIBE_QOS: "${MQTT_QOS}"
-      MQTT_PUBLISH_TOPIC: "${TOPIC_CONFIG_DB_UPDATE}"
-      MQTT_PUBLISH_QOS: "${MQTT_QOS}"
-      CONFIGDB_CONNECTION_INITIAL_TIMEOUT: 10
-      CONFIGDB_DSN: "${DATABASE_ADMIN_DSN}"
-      RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
-      RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
-    entrypoint: ["./worker_launcher.sh", "python3", "run_configdb_updater.py"]
-    logging:
-      options:
-        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
 
@@ -1010,7 +892,7 @@ services:
       GRAFANA_URL: "${VISUALIZATION_URL}"
       GRAFANA_USER: "${VISUALIZATION_USER}"
       GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
-      ALLOWED_VOS: "${THING_MANAGEMENT_LEGACY_ALLOWED_VOS}"
+      ALLOWED_VOS: "${DSM_API_ALLOWED_VOS}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
       JOURNALING: "${JOURNALING}"
@@ -1255,37 +1137,19 @@ services:
     mem_limit: 4g
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
-      CREATEDB_POSTGRES_USER: "${CRON_DATABASE_ADMIN_USER}"
-      CREATEDB_POSTGRES_PASSWORD: "${CRON_DATABASE_ADMIN_PASSWORD}"
-      CREATEDB_POSTGRES_HOST: "${CRON_DATABASE_ADMIN_HOST}"
-      CREATEDB_POSTGRES_DATABASE: "${CRON_DATABASE_ADMIN_DB_NAME}"
-      SMS_ACCESS_TYPE: "${CRON_SMS_ACCESS_TYPE}"
-      SMS_API_URL: "${CRON_SMS_API_URL}"
-      SMS_API_TOKEN: "${CRON_SMS_API_TOKEN}"
-      CV_ACCESS_TYPE: "${CRON_CV_ACCESS_TYPE}"
-      CV_API_URL: "${CRON_CV_API_URL}"
       # The following is needed for sftp sync jobs
       LOG_LEVEL: "${LOG_LEVEL}"
-      MINIO_URL: "${OBJECT_STORAGE_HOST}"
-      MINIO_USER: "${OBJECT_STORAGE_ROOT_USER}"
-      MINIO_PASSWORD: "${OBJECT_STORAGE_ROOT_PASSWORD}"
-      MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
-      DSMDB_DSN: "${DSMDB_DSN}"
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
       MQTT_CLIENT_ID: cron-scheduler
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
-      FERNET_ENCRYPTION_SECRET: "${FERNET_ENCRYPTION_SECRET}"
       JOURNALING: "${JOURNALING}"
       API_SYNC_TOPIC: sync_ext_apis
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
       MQTT_MONITORING_TOPIC: monitor_mqtt
-      DB_NAME: "${DATABASE_ADMIN_DB_NAME}"
-      DB_HOST: "${DATABASE_ADMIN_HOST}"
-      DATABASE_DSN: "${DATABASE_ADMIN_DSN}"
     depends_on:
       init:
         condition: service_completed_successfully
@@ -1296,8 +1160,6 @@ services:
       retries: 5
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - ./src:/scripts:ro
-      - sftp-private-keys:/sftp-private-keys:ro
     logging:
       options:
         max-size: "${CRON_SCHEDULER_MAX_LOG_FILE_SIZE}"
@@ -1411,8 +1273,6 @@ services:
 
 
 volumes:
-  frontend-statics:
-  sftp-private-keys:
   tomcat-context:
   database:
   visualization:
