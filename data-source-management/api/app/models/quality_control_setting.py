@@ -51,15 +51,18 @@ class QualityControlFunctionBase(SQLModel):
         foreign_key="quality_control_setting.id", ondelete="CASCADE"
     )
     name: str
+    position: int = Field(default=0)
 
 
 class QualityControlFunctionCreate(SQLModel):
     name: str
+    position: int = 0
     quality_control_function_arguments: list[QualityControlFunctionArgumentCreate]
 
 
 class QualityControlFunctionUpdate(SQLModel):
     name: str | None = None
+    position: int | None = None
     quality_control_function_arguments: (
         list[QualityControlFunctionArgumentUpdate] | None
     ) = None
@@ -68,6 +71,7 @@ class QualityControlFunctionUpdate(SQLModel):
 class QualityControlFunctionPublic(SQLModel):
     id: int
     name: str
+    position: int
     quality_control_function_arguments: list[QualityControlFunctionArgumentPublic]
 
 
