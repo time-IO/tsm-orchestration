@@ -2,7 +2,7 @@
 
 psycopg[binary]~=3.2.10
 psycopg-pool~=3.2.6
-click~=8.3.0
+click~=8.4.2
 pwgen==0.8.2.post0
 paho-mqtt==2.1.0
 PyYAML~=6.0.3
@@ -10,7 +10,7 @@ grafana-client~=5.0.1
 requests~=2.32.3
 python-crontab==3.3.0
 croniter~=6.0.0
-pandas~=2.3.2
+pandas~=3.0.5
 saqc==2.10.0
 cryptography>=46.0.1
 typing-extensions>=4.15.0
