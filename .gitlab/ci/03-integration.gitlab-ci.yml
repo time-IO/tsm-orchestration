@@ -7,7 +7,7 @@ docker-service-test:
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
     - "apk add --no-cache bash"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "docker compose logs init"
     - "sleep 20"
   script:
@@ -42,7 +42,7 @@ mqtt-service-test:
     - "python3 -m pip install --upgrade pip"
     - "export PAHO_MQTT=$(grep 'paho-mqtt' src/requirements.txt)"
     - "python3 -m pip install $PAHO_MQTT"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "sleep 20"
   script:
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
@@ -67,9 +67,8 @@ combined-integration-test:
     - "build-and-push-images"
   before_script:
     # As job has `needs` dependency to the build job, we can use the .env defined there
-    - "export DJANGO_TRUSTED_ORIGINS='http://docker:80 http://docker'"
     - "apk add --no-cache curl postgresql-client"
-    - "docker compose up -d --quiet-pull"
+    - "docker compose up -d"
     - "sleep 20"
   script:
     - "echo 'testing object storage integration...'"
@@ -94,3 +93,40 @@ combined-integration-test:
       when: on_success
   tags:
     - "dind"
+
+integration-test-dsm-api:
+  stage: "integration"
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  needs:
+    - "build-and-push-images"
+  variables:
+    OIDC_WELL_KNOWN: "https://example.com/.well-known/openid-configuration"
+    OIDC_ISSUER: "https://example.com"
+    OIDC_AUDIENCE: "test-audience"
+    MINIO_SFTP_PORT: "8022"
+    PROXY_URL: "http://localhost"
+    FERNET_ENCRYPTION_SECRET: "CKoB---DEFAULT-DUMMY-SECRET---0exKVH0QDLy1B="
+    STA_ROOT_URL: "http://localhost/sta"
+    STA_VERSION: "v1.1"
+    MQTT_BROKER_HOST: "mqtt-broker"
+    MQTT_CLIENT_ID: "test-client"
+    MQTT_USER: "test"
+    MQTT_PASSWORD: "test"
+    INGEST_MQTT_BROKER_URI: "mqtt://mqtt-broker:1883"
+  before_script:
+    - apk add --no-cache bash
+    - cp docker-compose-dev.example.yml docker-compose-dev.yml
+  script:
+    - bash data-source-management/run_integration_tests.sh
+  after_script:
+    - bash dc-with-dev.sh down -v
+  rules:
+    - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: always
+    - changes:
+        - data-source-management/api/**/*
+  tags:
+    - "dind"
+

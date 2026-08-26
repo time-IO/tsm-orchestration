@@ -22,10 +22,47 @@ from timeio.errors import ParsingError
 
 class PandasParser(AbcParser):
     def __init__(self, settings: dict[str, Any]):
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__qualname__)
         self.settings = settings
-        name = self.__class__.__name__
-        self.logger.debug(f"parser settings in use with {name}: {self.settings}")
+        self.logger.debug(
+            f"parser settings in use with {self.__class__.__name__}: {self.settings}"
+        )
+
+    @staticmethod
+    def normalize_unix_timestamps(
+        df: pd.DataFrame,
+        timestamps: list[dict[str, Any]],
+        parser_type: str,
+        new_format="%Y-%m-%dT%H:%M:%S%z",
+    ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+
+        timestamps = [ts.copy() for ts in timestamps]
+        unit_map = {
+            "UNIX_S": "s",
+            "UNIX_MS": "ms",
+        }
+        for ts in timestamps:
+            timestamp_format = ts["format"]
+            if timestamp_format not in unit_map.keys():
+                continue
+
+            if parser_type == "csv":
+                field = df.columns[ts["column"]]
+            elif parser_type == "json":
+                field = ts["key"]
+
+            unit = unit_map[timestamp_format]
+
+            df[field] = pd.to_datetime(
+                df[field],
+                unit=unit,
+                utc=True,
+            ).dt.strftime(new_format)
+
+            ts["format"] = new_format
+
+        return df, timestamps
 
     @abstractmethod
     def do_parse(
@@ -37,6 +74,8 @@ class PandasParser(AbcParser):
         self, data: pd.DataFrame, origin: str, parser_uuid: str | None = None
     ) -> list[ObservationPayloadT]:
         observations = []
+
+        data = data.copy()
 
         data.index.name = "result_time"
         data.index = data.index.map(lambda ts: ts.isoformat())
@@ -52,7 +91,9 @@ class PandasParser(AbcParser):
             elif pd.api.types.is_bool_dtype(chunk):
                 chunk.name = "result_bool"
                 result_type = ObservationResultType.Bool
-            elif pd.api.types.is_object_dtype(chunk):
+            elif pd.api.types.is_object_dtype(chunk) or pd.api.types.is_string_dtype(
+                chunk
+            ):
                 # we need to handle object columns with special care
 
                 # try to seperate out numerical values to account for data (transmission) errors

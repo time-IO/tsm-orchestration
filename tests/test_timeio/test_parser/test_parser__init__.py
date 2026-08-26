@@ -11,8 +11,9 @@ from timeio.parser import (
     YdocMl417Parser,
     ChirpStackGenericParser,
     AbcParser,
-    _default_settings,
 )
+from timeio.parser.csv_parser import DEFAULT_SETTINGS as CSV_DEFAULT_SETTINGS
+from timeio.parser.json_parser import DEFAULT_SETTINGS as JSON_DEFAULT_SETTINGS
 
 
 @pytest.mark.parametrize(
@@ -38,10 +39,6 @@ def test__get_parser__type(parser_type, expected_type, expected_attrs):
 def test__get_parser__unknown_type():
     with pytest.raises(NotImplementedError, match="parser .* not known$"):
         get_parser("NonExistentType", {})
-
-
-CSV_DEFAULT_SETTINGS = _default_settings[CsvParser]
-JSON_DEFAULT_SETTINGS = _default_settings[JsonParser]
 
 
 @pytest.mark.parametrize(
