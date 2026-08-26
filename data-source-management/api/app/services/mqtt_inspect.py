@@ -44,7 +44,11 @@ class MqttSubscriber:
         # Identifiable per-ingest client id, unique per session so concurrent
         # viewers of the same ingest don't evict each other on the broker.
         client_id = f"dsm-mqtt-inspect-{self.username}-{uuid.uuid4().hex[:8]}"
-        client = mqtt.Client(protocol=mqtt.MQTTv5, client_id=client_id)
+        client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            protocol=mqtt.MQTTv5,
+            client_id=client_id,
+        )
         client.username_pw_set(self.username, self.password)
         client.on_connect = self._on_connect
         client.on_message = self._on_message

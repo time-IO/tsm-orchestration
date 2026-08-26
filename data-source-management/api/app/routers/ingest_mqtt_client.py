@@ -21,6 +21,23 @@ MAX_SESSIONS = 100
 _active_sessions = 0
 
 
+def _authorize(token: str, ingest_id: int) -> SimpleNamespace:
+    """Blocking auth + authorization; returns the fields the subscriber needs.
+
+    Runs in a worker thread (see ``live``) so it never blocks the event loop.
+    Raises OIDCError / HTTPException on auth or lookup failure. The SQLModel
+    ``Session`` is opened, used and closed entirely within this single thread.
+    """
+    with Session(engine) as session:
+        user = authenticate_token(token, session)
+        entity = IngestMqttRepository(session).find_one(
+            ingest_id, permission_group_ids_of_user=user.permission_group_ids
+        )
+        return SimpleNamespace(
+            username=entity.username, password=entity.password, topic=entity.topic
+        )
+
+
 @router.websocket("/{id}/live")
 async def live(websocket: WebSocket, id: int):
     """Live MQTT inspection: stream messages for one ingest and publish test messages.
@@ -56,28 +73,21 @@ async def live(websocket: WebSocket, id: int):
         await websocket.close(code=1008)
         return
 
-    # 2) authenticate + authorize, and copy the fields we need out of the session
-    with Session(engine) as session:
-        try:
-            user = authenticate_token(first["token"], session)
-        except (OIDCError, HTTPException):
-            await websocket.close(code=1008)
-            return
-        except Exception:
-            logger.exception("MQTT live: authentication error")
-            await websocket.close(code=1011)
-            return
-        try:
-            entity = IngestMqttRepository(session).find_one(
-                id, permission_group_ids_of_user=user.permission_group_ids
-            )
-        except Exception:
+    # 2) authenticate + authorize off the event loop (DB + OIDC are blocking)
+    try:
+        ent = await asyncio.to_thread(_authorize, first["token"], id)
+    except OIDCError:
+        await websocket.close(code=1008)
+        return
+    except HTTPException as exc:
+        if exc.status_code == 404:
             await websocket.send_json({"type": "error", "detail": "Ingest not found."})
-            await websocket.close(code=1008)
-            return
-        ent = SimpleNamespace(
-            username=entity.username, password=entity.password, topic=entity.topic
-        )
+        await websocket.close(code=1008)
+        return
+    except Exception:
+        logger.exception("MQTT live: authorization error")
+        await websocket.close(code=1011)
+        return
 
     if _active_sessions >= MAX_SESSIONS:
         await websocket.send_json(
@@ -97,7 +107,7 @@ async def live(websocket: WebSocket, id: int):
         queue=queue,
     )
     try:
-        sub.start()
+        await asyncio.to_thread(sub.start)
     except Exception:
         logger.exception("MQTT live: failed to connect subscriber")
         await websocket.send_json(
