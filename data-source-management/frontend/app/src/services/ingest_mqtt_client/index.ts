@@ -77,9 +77,7 @@ export class MqttLiveConnection {
   }
 
   publish(topicSuffix: string, payload: string, qos: number): void {
-    this.ws?.send(
-      JSON.stringify({ action: 'publish', topic_suffix: topicSuffix, payload, qos }),
-    );
+    this.ws?.send(JSON.stringify({ action: 'publish', topic_suffix: topicSuffix, payload, qos }));
   }
 
   close(): void {
