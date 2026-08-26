@@ -1,16 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
     <h5>Overview of Quality Control Settings</h5>
-    <qc-setting-overview-filter
-      class="q-mt-md q-mb-md"
-      v-model:name="store.filters.name"
-      v-model:uuid="store.filters.uuid"
-      v-model:permission_group_id="store.filters.permission_group_id"
-      v-model:functions="store.filters.functions"
-      v-model:date_from="store.filters.date_from"
-      v-model:date_to="store.filters.date_to"
-      @apply-filters="store.applyFilters"
-    />
     <q-card-actions class="q-pa-none">
       <q-space> </q-space>
       <q-btn color="green" :label="t('newSetting')" to="/quality-control/new" />
@@ -30,6 +20,17 @@
         >
       </q-btn>
     </q-card-actions>
+
+    <qc-setting-overview-filter
+      class="q-mt-md q-mb-md"
+      v-model:name="store.filters.name"
+      v-model:uuid="store.filters.uuid"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:functions="store.filters.functions"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
 
     <trigger-quality-control-settings-dialog
       v-model="showTriggerDialog"
