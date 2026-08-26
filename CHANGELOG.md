@@ -18,6 +18,7 @@
 - JSON-Parser integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/662))
 - UBA-Api ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/678))
 - DB-API queries to onl select observations for a given thing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/timeio-db-api/-/merge_requests/23))
+- MQTT-Questa Migration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/265))
 ### Changed
 - Moved data-source-management to tsm-orchestration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/663))
 - Upgrade SaQC to 2.10 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/679))
