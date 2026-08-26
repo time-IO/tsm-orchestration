@@ -108,7 +108,7 @@ npm-test:
 
 pytest-timeio:
   stage: check
-  image: python:3.11
+  image: python:3.13
   before_script:
     - pip install -r src/requirements.txt
     - pip install pytest
@@ -143,7 +143,7 @@ unit-test-dsm-api:
 
 check-release-env-file:
   stage: check
-  image: python:3.11-slim
+  image: python:3.13-slim
   before_script:
     - pip install dotenv click
   script:

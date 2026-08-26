@@ -85,8 +85,8 @@
       class="q-mb-md"
       filled
       v-model="formData.p"
-      label="p (enter a floating point number)"
-      :rules="[rules.FLOAT, ruleFactories.MIN(1)]"
+      label="p (enter a integer number)"
+      :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
     />
 
@@ -288,7 +288,7 @@ const formDataWithTypes = computed(() => {
   const pObject = {
     name: 'p',
     input: { value: formData.value.p },
-    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+    type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
 
   const densityObject = {
