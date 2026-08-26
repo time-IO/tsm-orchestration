@@ -117,12 +117,12 @@ def test_delete_passes_access_scope_to_find_allowed_one():
     session.commit.assert_called_once_with()
 
 
-def test_find_allowed_all_keeps_legacy_permission_group_filter():
+def test_find_allowed_all_filters_by_access_scope():
     session = MagicMock()
     session.exec.return_value.unique.return_value.all.return_value = []
     repo = QualityControlSettingRepository(session)
 
-    repo.find_allowed_all([1])
+    repo.find_allowed_all(access_scope=AccessScope([1]))
 
     statement = session.exec.call_args.args[0]
     assert statement.whereclause is not None
@@ -139,12 +139,12 @@ def test_create_accepts_superuser_permission_group():
         )
 
 
-def test_create_keeps_legacy_permission_group_check():
+def test_create_checks_access_scope_permission_groups():
     repo = QualityControlSettingRepository(MagicMock())
     payload = SimpleNamespace(permission_group_id=999, name="test")
 
     with pytest.raises(HTTPException) as exc_info:
-        repo.create_allowed(payload, {}, [1])
+        repo.create_allowed(payload, {}, access_scope=AccessScope([1]))
 
     assert exc_info.value.status_code == 403
 
@@ -164,12 +164,12 @@ def test_update_passes_superuser_scope_to_find_allowed_one():
     repo.find_allowed_one.assert_called_once_with(1, access_scope=access_scope)
 
 
-def test_update_keeps_legacy_target_permission_group_check():
+def test_update_checks_access_scope_permission_groups():
     repo = QualityControlSettingRepository(MagicMock())
     payload = MagicMock()
     payload.permission_group_id = 999
 
     with pytest.raises(HTTPException) as exc_info:
-        repo.update_allowed(1, payload, [1])
+        repo.update_allowed(1, payload, access_scope=AccessScope([1]))
 
     assert exc_info.value.status_code == 403

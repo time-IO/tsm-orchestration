@@ -189,13 +189,9 @@ class PermissionGroupRepository(BaseRepository):
     def find_allowed_one(
         self,
         id: int,
-        permission_group_ids: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> T:
         statement = select(self.model).where(self.model.id == id)
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -209,15 +205,11 @@ class PermissionGroupRepository(BaseRepository):
 
     def find_allowed_all(
         self,
-        permission_group_ids: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: FilterSet | None = None,
-        access_scope: AccessScope | None = None,
     ) -> List[T]:
         statement = select(self.model)
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -244,13 +236,8 @@ class DatabaseRepository(BaseRepository):
     def create(
         self,
         permission_group: PermissionGroup,
-        permission_group_ids: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ):
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
-
         if not access_scope.can_access_permission_group(permission_group.id):
             raise HTTPException(
                 status_code=403,
@@ -310,15 +297,11 @@ class QualityControlSettingRepository(BaseRepository):
 
     def find_allowed_all(
         self,
-        permission_group_ids: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: FilterSet | None = None,
-        access_scope: AccessScope | None = None,
     ) -> List[T]:
         statement = select(self.model).options(joinedload(self.model.user))
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -347,13 +330,9 @@ class QualityControlSettingRepository(BaseRepository):
         self,
         payload,
         extra_data,
-        permission_group_ids=None,
+        access_scope: AccessScope,
         ingest_type_info=None,
-        access_scope: AccessScope | None = None,
     ):
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
-
         RepositoryValidator.check_payload_access_scope(
             payload.permission_group_id, access_scope
         )
@@ -406,13 +385,9 @@ class QualityControlSettingRepository(BaseRepository):
         self,
         id: int,
         payload,
-        permission_group_ids=None,
+        access_scope: AccessScope,
         ingest_type_info=None,
-        access_scope: AccessScope | None = None,
     ):
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
-
         if payload.permission_group_id is not None:
             RepositoryValidator.check_payload_access_scope(
                 payload.permission_group_id, access_scope
