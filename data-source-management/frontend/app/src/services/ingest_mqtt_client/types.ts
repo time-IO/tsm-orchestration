@@ -2,7 +2,6 @@ export type MqttLiveMessage = {
   topic: string;
   payload: string;
   qos: number;
-  retain: boolean;
   received_at: string;
 };
 

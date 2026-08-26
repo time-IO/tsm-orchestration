@@ -219,7 +219,7 @@ function doPublish() {
   if (status.value !== 'connected' || !conn) {
     return;
   }
-  conn.publish(publishSuffix.value, publishPayload.value, publishQos.value, false);
+  conn.publish(publishSuffix.value, publishPayload.value, publishQos.value);
 }
 </script>
 

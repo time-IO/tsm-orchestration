@@ -44,9 +44,9 @@ async def live(websocket: WebSocket, id: int):
 
     Protocol (JSON):
       client -> server: {"action": "auth", "token": "<access token>"}   (must be first)
-                        {"action": "publish", "topic_suffix", "payload", "qos", "retain"}
+                        {"action": "publish", "topic_suffix", "payload", "qos"}
       server -> client: {"type": "connected", "topic"}
-                        {"type": "message", "topic", "payload", "qos", "retain", "received_at"}
+                        {"type": "message", "topic", "payload", "qos", "received_at"}
                         {"type": "published", "topic"}
                         {"type": "dropped", "count"}
                         {"type": "error", "detail"}
@@ -137,7 +137,6 @@ async def live(websocket: WebSocket, id: int):
                         data.get("topic_suffix", ""),
                         str(data.get("payload", "")),
                         int(data.get("qos", 0) or 0),
-                        bool(data.get("retain", False)),
                     )
                     await websocket.send_json({"type": "published", "topic": topic})
                 except Exception:

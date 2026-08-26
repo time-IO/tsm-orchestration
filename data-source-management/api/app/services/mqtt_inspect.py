@@ -70,7 +70,6 @@ class MqttSubscriber:
             "topic": msg.topic,
             "payload": payload,
             "qos": msg.qos,
-            "retain": bool(msg.retain),
             "received_at": _now_iso(),
         }
         # on_message runs in paho's network thread; hop to the event loop thread.
@@ -88,14 +87,14 @@ class MqttSubscriber:
             except (asyncio.QueueEmpty, asyncio.QueueFull):
                 pass
 
-    def publish(self, topic_suffix: str, payload: str, qos: int, retain: bool) -> str:
+    def publish(self, topic_suffix: str, payload: str, qos: int) -> str:
         if self._client is None:
             raise RuntimeError("subscriber not started")
         suffix = (topic_suffix or "").strip().strip("/")
         topic = self.topic if not suffix else f"{self.topic}/{suffix}"
         if qos not in (0, 1, 2):
             qos = 0
-        self._client.publish(topic, payload, qos=qos, retain=bool(retain))
+        self._client.publish(topic, payload, qos=qos)
         return topic
 
     def stop(self) -> None:
