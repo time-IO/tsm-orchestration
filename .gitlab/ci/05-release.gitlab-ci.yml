@@ -14,7 +14,6 @@ stage-tag-images-in-registry:
         - .env.example
         - src/**/*
         - dispatcher/**/*
-        - configdb_updater/**/*
         - init/**/*
         - tomcat/**/*
         - data-source-management/**/*
@@ -36,7 +35,6 @@ stage-tag-images-in-registry:
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$BRANCH_NAME" >> .env
-      echo "TIMEIO_CONFIGDB_UPDATER_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "DSM_FRONTEND_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "DSM_API_IMAGE_TAG=$BRANCH_NAME" >> .env
     - export BUILD_DATE=$(echo -n $(date -u +%Y-%m-%d-%H%M%S))
