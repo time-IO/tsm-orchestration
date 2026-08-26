@@ -91,7 +91,9 @@ class PandasParser(AbcParser):
             elif pd.api.types.is_bool_dtype(chunk):
                 chunk.name = "result_bool"
                 result_type = ObservationResultType.Bool
-            elif pd.api.types.is_object_dtype(chunk):
+            elif pd.api.types.is_object_dtype(chunk) or pd.api.types.is_string_dtype(
+                chunk
+            ):
                 # we need to handle object columns with special care
 
                 # try to seperate out numerical values to account for data (transmission) errors
