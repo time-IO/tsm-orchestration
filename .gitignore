@@ -2,6 +2,7 @@
 env.*
 venv
 .idea
+.vscode
 data/
 !.env.example
 !data/minio/vol0/.gitkeep
