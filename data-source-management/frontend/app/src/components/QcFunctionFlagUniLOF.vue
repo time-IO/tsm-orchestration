@@ -62,10 +62,10 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input="formData.corruption"
+      v-model:input.number="formData.corruption"
       v-model:current_type="current_corruption_type"
-      :rules_float="[ruleFactories.RANGE(0, 1)]"
-      :rules_int="[ruleFactories.MIN(0)]"
+      :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint_float="Portion of data considered anomalous."
       hint_int="Count of data considered anomalous."
     />
