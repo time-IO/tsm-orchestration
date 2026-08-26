@@ -115,6 +115,20 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
         raise HTTPException(status_code=500, detail="Failed to get or create user")
 
 
+def authenticate_token(token: str, session) -> User:
+    """Authenticate a raw access token without request/header context.
+
+    Used by the WebSocket MQTT client, where the browser cannot send an
+    Authorization header, so the token arrives in the first WS message instead.
+    Mirrors the validation done in ``get_current_user``.
+    """
+    claims = oidc.authenticate(access_token=token)
+    user = get_or_create_user(session=session, claims=claims, access_token=token)
+    if not user.is_active:
+        raise OIDCError("User disabled")
+    return user
+
+
 def sync_permission_groups(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     session=Depends(get_session),
