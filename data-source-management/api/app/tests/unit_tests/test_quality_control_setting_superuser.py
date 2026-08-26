@@ -70,6 +70,17 @@ def test_update_passes_superuser_access_scope(mock_user, monkeypatch):
     assert access_scope.is_superuser is True
 
 
+def test_delete_passes_superuser_access_scope(mock_user):
+    mock_user.is_superuser = True
+    repo = MagicMock(spec=QualityControlSettingRepository)
+    repo.delete_allowed.return_value = {"ok": True}
+
+    quality_control_setting.delete(id=1, current_user=mock_user, repo=repo)
+
+    access_scope = repo.delete_allowed.call_args.kwargs["access_scope"]
+    assert access_scope.is_superuser is True
+
+
 def test_find_allowed_all_does_not_filter_superuser_by_permission_group():
     session = MagicMock()
     session.exec.return_value.unique.return_value.all.return_value = []
@@ -90,6 +101,20 @@ def test_find_allowed_one_does_not_filter_superuser_by_permission_group():
 
     statement = session.exec.call_args.args[0]
     assert "permission_group_id IN" not in str(statement)
+
+
+def test_delete_passes_access_scope_to_find_allowed_one():
+    session = MagicMock()
+    repo = QualityControlSettingRepository(session)
+    entity = object()
+    repo.find_allowed_one = MagicMock(return_value=entity)
+    access_scope = AccessScope([], is_superuser=True)
+
+    assert repo.delete_allowed(1, access_scope) == {"ok": True}
+
+    repo.find_allowed_one.assert_called_once_with(1, access_scope=access_scope)
+    session.delete.assert_called_once_with(entity)
+    session.commit.assert_called_once_with()
 
 
 def test_find_allowed_all_keeps_legacy_permission_group_filter():

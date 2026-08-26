@@ -141,4 +141,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
 ):
-    return repo.delete_allowed(id, current_user.permission_group_ids)
+    return repo.delete_allowed(id, access_scope=AccessScope.from_user(current_user))

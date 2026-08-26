@@ -288,13 +288,9 @@ class QualityControlSettingRepository(BaseRepository):
     def find_allowed_one(
         self,
         id: int,
-        permission_group_ids: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> T:
         statement = select(self.model).where(self.model.id == id)
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -305,6 +301,12 @@ class QualityControlSettingRepository(BaseRepository):
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
         return entity
+
+    def delete_allowed(self, id: int, access_scope: AccessScope):
+        entity = self.find_allowed_one(id, access_scope=access_scope)
+        self.session.delete(entity)
+        self.session.commit()
+        return {"ok": True}
 
     def find_allowed_all(
         self,
