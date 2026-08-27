@@ -6,7 +6,7 @@
     @show="onOpen"
     @hide="onHide"
   >
-    <q-card class="q-pa-sm column no-wrap" style="width: 90vw; max-width: 60rem; max-height: 88vh">
+    <q-card class="q-pa-sm column no-wrap" style="width: 60vw; max-width: 80vw; max-height: 80vh">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">MQTT Client</div>
         <q-badge :color="statusColor" class="q-ml-md" :label="statusLabel" text-color="white" />
@@ -209,10 +209,9 @@ function doPublish() {
 
 <style scoped>
 .mqtt-payload {
-  max-width: 50ch;
+  max-width: 20vw;
   white-space: pre-wrap;
   word-break: break-all;
   font-family: monospace;
-  font-size: 0.75rem;
 }
 </style>
