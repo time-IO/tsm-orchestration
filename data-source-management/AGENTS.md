@@ -25,24 +25,24 @@ docker compose up -d
 ### Frontend (`frontend/app/`)
 
 ```bash
-npm run lint      # ESLint
-npm run lint:ts   # vue-tsc --noEmit
-npm run lint:all  # lint && lint:ts
-npm run format    # prettier --write
-npm run dev       # quasar dev
+./dc-with-dev.sh run --rm -u $UID dsm-frontend npm run lint      # ESLint
+./dc-with-dev.sh run --rm -u $UID dsm-frontend npm run lint:ts   # vue-tsc --noEmit
+./dc-with-dev.sh run --rm -u $UID dsm-frontend npm run lint:all  # lint && lint:ts
+./dc-with-dev.sh run --rm -u $UID dsm-frontend npm run format    # prettier --write
+./dc-with-dev.sh run --rm -u $UID dsm-frontend npm run dev       # quasar dev
 ```
 
 ### API
 
 ```bash
 # Format Python with black
-docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
+docker run --rm --volume $(pwd)/data-source-management/api/app:/src --workdir /src pyfound/black:latest_release black .
 
 # Create Alembic migration (runs via docker compose)
 ./api/create_alembic_migration.sh <slug>
 
 # Run tests
-docker compose run --rm -u $UID --entrypoint "" api pytest
+./dc-with-dev.sh run --rm -u $UID --entrypoint "" dsm-api pytest
 ```
 
 ### CI Pipeline (.gitlab-ci.yml)
