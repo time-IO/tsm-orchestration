@@ -1146,6 +1146,9 @@ services:
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       JOURNALING: "${JOURNALING}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
+      DSMDB_DSN: "${DSMDB_DSN}"
       API_SYNC_TOPIC: sync_ext_apis
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
