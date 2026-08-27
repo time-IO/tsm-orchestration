@@ -4,7 +4,6 @@ type ServerFrame = {
   type?: string;
   topic?: string;
   payload?: string;
-  qos?: number;
   received_at?: string;
   detail?: string;
   count?: number;
@@ -56,7 +55,6 @@ export class MqttLiveConnection {
           this.handlers.onMessage?.({
             topic: frame.topic ?? '',
             payload: frame.payload ?? '',
-            qos: frame.qos ?? 0,
             received_at: frame.received_at ?? '',
           });
           break;
@@ -76,8 +74,8 @@ export class MqttLiveConnection {
     ws.onclose = () => this.handlers.onClose?.();
   }
 
-  publish(topicSuffix: string, payload: string, qos: number): void {
-    this.ws?.send(JSON.stringify({ action: 'publish', topic_suffix: topicSuffix, payload, qos }));
+  publish(topicSuffix: string, payload: string): void {
+    this.ws?.send(JSON.stringify({ action: 'publish', topic_suffix: topicSuffix, payload }));
   }
 
   close(): void {

@@ -6,7 +6,7 @@ paho client that connects to the broker as the ingest's own MQTT user, subscribe
 messages to an ``asyncio.Queue`` that the WebSocket handler drains. Because every
 session has its own client (with an identifiable, unique client id), any number of
 users can watch the same ingest at once; the broker fans messages out to all of
-them. Publishing (QoS 0/1/2) reuses the same client.
+them. Publishing (also QoS 0) reuses the same client.
 """
 
 import asyncio
@@ -69,7 +69,6 @@ class MqttSubscriber:
             "type": "message",
             "topic": msg.topic,
             "payload": payload,
-            "qos": msg.qos,
             "received_at": _now_iso(),
         }
         # on_message runs in paho's network thread; hop to the event loop thread.
@@ -87,14 +86,12 @@ class MqttSubscriber:
             except (asyncio.QueueEmpty, asyncio.QueueFull):
                 pass
 
-    def publish(self, topic_suffix: str, payload: str, qos: int) -> str:
+    def publish(self, topic_suffix: str, payload: str) -> str:
         if self._client is None:
             raise RuntimeError("subscriber not started")
         suffix = (topic_suffix or "").strip().strip("/")
         topic = self.topic if not suffix else f"{self.topic}/{suffix}"
-        if qos not in (0, 1, 2):
-            qos = 0
-        self._client.publish(topic, payload, qos=qos)
+        self._client.publish(topic, payload, qos=0)
         return topic
 
     def stop(self) -> None:

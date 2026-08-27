@@ -1,7 +1,6 @@
 export type MqttLiveMessage = {
   topic: string;
   payload: string;
-  qos: number;
   received_at: string;
 };
 

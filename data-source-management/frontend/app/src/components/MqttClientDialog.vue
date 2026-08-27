@@ -6,7 +6,7 @@
     @show="onOpen"
     @hide="onHide"
   >
-    <q-card class="q-pa-sm column no-wrap" style="width: 960px; max-width: 96vw; max-height: 88vh">
+    <q-card class="q-pa-sm column no-wrap" style="width: 90vw; max-width: 60rem; max-height: 88vh">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">MQTT Client</div>
         <q-badge :color="statusColor" class="q-ml-md" :label="statusLabel" text-color="white" />
@@ -76,21 +76,7 @@
             />
           </div>
         </div>
-        <div class="row items-center q-gutter-md q-mt-sm">
-          <div class="row items-center">
-            <span class="text-caption text-grey-7 q-mr-sm">QoS</span>
-            <q-btn-toggle
-              v-model="publishQos"
-              dense
-              unelevated
-              toggle-color="primary"
-              :options="[
-                { label: '0', value: 0 },
-                { label: '1', value: 1 },
-                { label: '2', value: 2 },
-              ]"
-            />
-          </div>
+        <div class="row items-center q-mt-sm">
           <q-space />
           <q-btn
             color="primary"
@@ -130,7 +116,6 @@ const dropped = ref(0);
 const status = ref<'connecting' | 'connected' | 'closed' | 'error'>('closed');
 const publishSuffix = ref('');
 const publishPayload = ref('');
-const publishQos = ref(0);
 
 let conn: MqttLiveConnection | null = null;
 let seq = 0;
@@ -138,7 +123,6 @@ let seq = 0;
 const columns: QTableColumn<Row>[] = [
   { name: 'time', label: 'Received', field: 'time', align: 'left' },
   { name: 'topic', label: 'Topic', field: 'topic', align: 'left' },
-  { name: 'qos', label: 'QoS', field: 'qos', align: 'center' },
   { name: 'payload', label: 'Payload', field: 'payload', align: 'left' },
 ];
 
@@ -219,16 +203,16 @@ function doPublish() {
   if (status.value !== 'connected' || !conn) {
     return;
   }
-  conn.publish(publishSuffix.value, publishPayload.value, publishQos.value);
+  conn.publish(publishSuffix.value, publishPayload.value);
 }
 </script>
 
 <style scoped>
 .mqtt-payload {
-  max-width: 360px;
+  max-width: 50ch;
   white-space: pre-wrap;
   word-break: break-all;
   font-family: monospace;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 </style>
