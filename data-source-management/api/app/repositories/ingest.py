@@ -43,10 +43,9 @@ class IngestRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[IngestFilter] = None,
-        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
@@ -54,9 +53,6 @@ class IngestRepository:
             .options(joinedload(self.model.permission_group))
             .options(joinedload(self.model.user))
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(

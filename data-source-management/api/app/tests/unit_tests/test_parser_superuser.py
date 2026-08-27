@@ -112,14 +112,14 @@ def test_find_one_does_not_filter_superuser_by_permission_group(repository_class
 
 
 @pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
-def test_find_all_keeps_legacy_permission_group_filter(repository_class):
+def test_find_all_keeps_permission_group_filter(repository_class):
     session = MagicMock()
     session.exec.return_value.unique.return_value.scalars.return_value.all.return_value = (
         []
     )
     repo = repository_class(session)
 
-    repo.find_all([1])
+    repo.find_all(AccessScope([1]))
 
     statement = session.exec.call_args.args[0]
     assert statement.whereclause is not None
@@ -136,12 +136,12 @@ def test_create_accepts_superuser_permission_group(repository_class):
 
 
 @pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
-def test_create_keeps_legacy_permission_group_check(repository_class):
+def test_create_keeps_permission_group_check(repository_class):
     repo = repository_class(MagicMock())
     payload = SimpleNamespace(permission_group_id=999, name="test")
 
     with pytest.raises(HTTPException) as exc_info:
-        repo.create(payload, {}, [1])
+        repo.create(payload, {}, AccessScope([1]))
 
     assert exc_info.value.status_code == 403
 
@@ -163,7 +163,7 @@ def test_update_passes_superuser_scope_to_find_one(repository_class):
 
 
 @pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
-def test_update_keeps_legacy_permission_group_scope(repository_class):
+def test_update_keeps_permission_group_scope(repository_class):
     repo = repository_class(MagicMock())
     repo.find_one = MagicMock(side_effect=StopAfterAuthorization)
     payload = MagicMock()
@@ -172,7 +172,7 @@ def test_update_keeps_legacy_permission_group_scope(repository_class):
     payload.model_dump.return_value = {}
 
     with pytest.raises(StopAfterAuthorization):
-        repo.update(1, payload, [1])
+        repo.update(1, payload, AccessScope([1]))
 
     access_scope = repo.find_one.call_args.kwargs["access_scope"]
     assert access_scope == AccessScope([1])
@@ -190,6 +190,6 @@ def test_update_checks_access_before_updating_timestamps(
     setattr(repo, timestamp_update_method, update_timestamps)
 
     with pytest.raises(StopAfterAuthorization):
-        repo.update(1, MagicMock(), [1])
+        repo.update(1, MagicMock(), AccessScope([1]))
 
     update_timestamps.assert_not_called()

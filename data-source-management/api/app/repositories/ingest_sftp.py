@@ -25,8 +25,7 @@ class IngestSftpRepository:
     def find_one(
         self,
         id: int,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestSftp:
         statement = (
             select(self.model)
@@ -34,9 +33,6 @@ class IngestSftpRepository:
             .where(self.model.ingest_id == id)
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -50,19 +46,15 @@ class IngestSftpRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[IngestFilter] = None,
-        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.ingest)
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -80,12 +72,8 @@ class IngestSftpRepository:
         self,
         payload: IngestSftpCreate,
         extra_data,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestSftp:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         RepositoryValidator.check_payload_access_scope(
             payload.permission_group_id, access_scope
@@ -120,12 +108,8 @@ class IngestSftpRepository:
         self,
         ingest_id: int,
         payload: IngestSftpUpdate,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestSftp:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if payload.permission_group_id is not None:
             RepositoryValidator.check_payload_access_scope(
@@ -174,8 +158,8 @@ class IngestSftpRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         # workaround as cascade delete doesn't seem to work currently
         ing = entity.ingest

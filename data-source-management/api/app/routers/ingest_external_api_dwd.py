@@ -109,6 +109,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: IngestExternalApiDwdRepository = Depends(get_repo_ingest_external_api_dwd),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

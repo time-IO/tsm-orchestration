@@ -23,8 +23,7 @@ class ParserCsvRepository:
     def find_one(
         self,
         id: int,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> ParserCsv:
         statement = (
             select(self.model)
@@ -34,9 +33,6 @@ class ParserCsvRepository:
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -52,10 +48,9 @@ class ParserCsvRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
-        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
@@ -65,9 +60,6 @@ class ParserCsvRepository:
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -87,12 +79,8 @@ class ParserCsvRepository:
         self,
         payload: ParserCsvCreate,
         extra_data,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ):
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         RepositoryValidator.check_payload_access_scope(
             payload.permission_group_id, access_scope
@@ -148,12 +136,8 @@ class ParserCsvRepository:
         self,
         parser_id: int,
         payload: ParserCsvUpdate,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> ParserCsv:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         parser_csv = self.find_one(parser_id, access_scope=access_scope)
 
@@ -224,8 +208,8 @@ class ParserCsvRepository:
                     detail=f"Failed to update timestamp columns: {str(e)}",
                 )
 
-    def delete(self, parser_id: int, permission_group_ids_of_user: list[int]):
-        parser_csv = self.find_one(parser_id, permission_group_ids_of_user)
+    def delete(self, parser_id: int, access_scope: AccessScope):
+        parser_csv = self.find_one(parser_id, access_scope=access_scope)
 
         # workaround as cascade delete doesn't seem to work currently
         parser_detailed = parser_csv.parser_detailed

@@ -146,6 +146,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: IngestMqttRepository = Depends(get_repo_ingest_mqtt),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

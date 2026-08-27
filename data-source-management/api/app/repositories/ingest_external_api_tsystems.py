@@ -26,8 +26,7 @@ class IngestExternalApiTSystemsRepository:
     def find_one(
         self,
         id: int,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestExternalApiTSystems:
 
         statement = (
@@ -42,9 +41,6 @@ class IngestExternalApiTSystemsRepository:
             )
         )
 
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
-
         if not access_scope.is_superuser:
             statement = statement.where(
                 Ingest.permission_group_id.in_(access_scope.permission_group_ids)
@@ -57,10 +53,9 @@ class IngestExternalApiTSystemsRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[IngestExternalApiFilter] = None,
-        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
@@ -72,9 +67,6 @@ class IngestExternalApiTSystemsRepository:
                 .joinedload(Ingest.permission_group)
             )
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -92,12 +84,8 @@ class IngestExternalApiTSystemsRepository:
         self,
         payload,
         extra_data,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestExternalApiTSystems:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         RepositoryValidator.check_payload_access_scope(
             payload.permission_group_id, access_scope
@@ -145,12 +133,8 @@ class IngestExternalApiTSystemsRepository:
         self,
         ingest_id: int,
         payload: IngestExternalApiTSystemsUpdate,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> IngestExternalApiTSystems:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if payload.permission_group_id is not None:
             RepositoryValidator.check_payload_access_scope(
@@ -219,8 +203,8 @@ class IngestExternalApiTSystemsRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         # workaround as cascade delete doesn't seem to work currently
         ext = entity.external_api

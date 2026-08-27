@@ -27,8 +27,7 @@ class ParserSoilcanRepository:
     def find_one(
         self,
         id: int,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> ParserSoilcan:
         statement = (
             select(self.model)
@@ -38,9 +37,6 @@ class ParserSoilcanRepository:
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -56,10 +52,9 @@ class ParserSoilcanRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int] | None = None,
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
-        access_scope: AccessScope | None = None,
     ):
         statement = (
             select(self.model)
@@ -69,9 +64,6 @@ class ParserSoilcanRepository:
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -91,12 +83,8 @@ class ParserSoilcanRepository:
         self,
         payload: ParserSoilcanCreate,
         extra_data: dict,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ):
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
-
         RepositoryValidator.check_payload_access_scope(
             payload.permission_group_id, access_scope
         )
@@ -136,12 +124,8 @@ class ParserSoilcanRepository:
         self,
         parser_id: int,
         payload: ParserSoilcanUpdate,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> ParserSoilcan:
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         data = payload.model_dump(exclude_unset=True)
 
@@ -172,8 +156,8 @@ class ParserSoilcanRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def delete(self, parser_id: int, permission_group_ids_of_user: list[int]):
-        parser_soilcan = self.find_one(parser_id, permission_group_ids_of_user)
+    def delete(self, parser_id: int, access_scope: AccessScope):
+        parser_soilcan = self.find_one(parser_id, access_scope=access_scope)
 
         parser_detailed = parser_soilcan.parser_detailed
         parser = parser_detailed.parser
