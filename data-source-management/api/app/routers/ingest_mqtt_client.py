@@ -31,7 +31,7 @@ def _authorize(token: str, ingest_id: int) -> SimpleNamespace:
     with Session(engine) as session:
         user = authenticate_token(token, session)
         entity = IngestMqttRepository(session).find_one(
-            ingest_id, permission_group_ids_of_user=user.permission_group_ids
+            ingest_id, access_scope=user.access_scope
         )
         return SimpleNamespace(
             username=entity.username, password=entity.password, topic=entity.topic
