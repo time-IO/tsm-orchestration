@@ -302,13 +302,16 @@ class QualityControlSettingRepository(BaseRepository):
 
             quality_control_setting_id_data = {"quality_control_setting_id": entity.id}
 
-            for position, function_payload in enumerate(payload.quality_control_functions):
+            for position, function_payload in enumerate(
+                payload.quality_control_functions
+            ):
 
                 function_data = function_payload.model_dump(
                     exclude={"quality_control_function_arguments"}
                 )
                 db_function = QualityControlFunction.model_validate(
-                    function_data,  update={**quality_control_setting_id_data, "position": position},
+                    function_data,
+                    update={**quality_control_setting_id_data, "position": position},
                 )
 
                 self.session.add(db_function)
@@ -368,12 +371,18 @@ class QualityControlSettingRepository(BaseRepository):
                         self.session.delete(func)
 
                     # Create new functions with arguments
-                    for position, func_payload in enumerate(payload.quality_control_functions):
+                    for position, func_payload in enumerate(
+                        payload.quality_control_functions
+                    ):
                         func_data = func_payload.model_dump(
                             exclude={"quality_control_function_arguments"}
                         )
                         db_function = QualityControlFunction.model_validate(
-                            func_data,  update={"quality_control_setting_id": id, "position": position},
+                            func_data,
+                            update={
+                                "quality_control_setting_id": id,
+                                "position": position,
+                            },
                         )
                         self.session.add(db_function)
                         self.session.flush()

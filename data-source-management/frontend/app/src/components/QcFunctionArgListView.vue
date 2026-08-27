@@ -37,18 +37,14 @@
                   <span class="text-blue-9 q-mx-xs"> | </span>
                   Target: {{ getAlias(item, 'target', getAlias(item, 'field')).join(', ') }}
                 </template>
-                <span
-                  v-if="nonDatastreamArgs(item).length > 0"
-                  class="text-blue-9 q-mx-xs"
-                >
+                <span v-if="nonDatastreamArgs(item).length > 0" class="text-blue-9 q-mx-xs">
                   |
                 </span>
                 {{
                   nonDatastreamArgs(item)
-                  .map((a) => `${a.name}: ${a.input.value}`)
-                  .join(' | ')
+                    .map((a) => `${a.name}: ${a.input.value}`)
+                    .join(' | ')
                 }}
-
               </div>
             </q-item-section>
             <q-space />
@@ -123,9 +119,7 @@ type FunctionWithClientId = (
 
 type QcFunctionArgument =
   | QualityControlFunctionArgumentCreate
-  | QualityControlFunctionArgumentPublic
-
-
+  | QualityControlFunctionArgumentPublic;
 
 const props = defineProps<{
   removable?: boolean;
@@ -136,13 +130,7 @@ const props = defineProps<{
     | QualityControlFunctionUpdate[];
 }>();
 
-const emit = defineEmits([
-  'remove',
-  'remove-datastream',
-  'add-datastream',
-  'edit',
-  'reorder',
-]);
+const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream', 'edit', 'reorder']);
 
 // vuedraggable needs a stable, unique key per item to correctly track
 // elements while dragging. Real entities have a numeric `id`; functions
@@ -204,7 +192,9 @@ function editFunction(index: number) {
 }
 
 function nonDatastreamArgs(item: FunctionWithClientId) {
-  return item.quality_control_function_arguments.filter((a: QcFunctionArgument) => !isDatastreamType(a));
+  return item.quality_control_function_arguments.filter(
+    (a: QcFunctionArgument) => !isDatastreamType(a),
+  );
 }
 </script>
 

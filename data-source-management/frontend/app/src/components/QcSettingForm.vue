@@ -70,7 +70,7 @@
 
         <div class="row">
           <div class="col-12">
-            <div class="row items-center justify-between  q-mb-sm">
+            <div class="row items-center justify-between q-mb-sm">
               <div class="text-caption text-grey-7">
                 <q-icon name="drag_indicator" size="1.2em" class="q-mr-xs" />
                 Drag functions by their handle to reorder — this determines execution order.

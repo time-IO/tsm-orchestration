@@ -30,7 +30,7 @@ export type QualityControlFunctionCreate = {
 
 export type QualityControlFunctionUpdate = {
   name: string;
-  _clientId?:string;
+  _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentUpdate[];
 };
 

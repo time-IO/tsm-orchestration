@@ -137,7 +137,9 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
     quality_control_functions: list[QualityControlFunction] = Relationship(
-        back_populates="quality_control_setting", cascade_delete=True,  sa_relationship_kwargs={"order_by": "QualityControlFunction.position"},
+        back_populates="quality_control_setting",
+        cascade_delete=True,
+        sa_relationship_kwargs={"order_by": "QualityControlFunction.position"},
     )
     permission_group: "PermissionGroup" = Relationship(
         back_populates="quality_control_setting"
