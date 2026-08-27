@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from dependencies import get_current_user, get_repo_parser_detailed
 
 from fastapi_pagination import Page
@@ -32,7 +33,7 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(AccessScope.from_user(current_user), sort_by, filters=filters)
     )
 
 
@@ -43,6 +44,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: ParserDetailedRepository = Depends(get_repo_parser_detailed),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

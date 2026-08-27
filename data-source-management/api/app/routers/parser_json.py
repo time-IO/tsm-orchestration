@@ -11,6 +11,7 @@ from models.parser_json import (
 )
 
 from repositories.parser_json import ParserJsonRepository
+from access_scope import AccessScope
 
 router = APIRouter(
     prefix="/parser/json",
@@ -37,8 +38,8 @@ def read_list(
     return paginate(
         repo.find_all(
             sort_by=sort_by,
-            permission_group_ids_of_user=current_user.permission_group_ids,
             filters=filters,
+            access_scope=AccessScope.from_user(current_user),
         )
     )
 
@@ -51,9 +52,7 @@ def read_one(
     repo: ParserJsonRepository = Depends(get_repo_parser_json),
 ):
     return repo.to_flat(
-        repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
 
 
@@ -66,7 +65,9 @@ def create(
 ):
     extra_data = {"created_by_id": current_user.id}
     return repo.to_flat(
-        repo.create(payload, extra_data, current_user.permission_group_ids)
+        repo.create(
+            payload, extra_data, access_scope=AccessScope.from_user(current_user)
+        )
     )
 
 
@@ -80,9 +81,7 @@ def update(
     repo: ParserJsonRepository = Depends(get_repo_parser_json),
     current_user: User = Depends(get_current_user),
 ):
-    entity = repo.update(
-        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))
     return repo.to_flat(entity)
 
 
@@ -93,6 +92,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: ParserJsonRepository = Depends(get_repo_parser_json),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))
