@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 import httpx
+from access_scope import AccessScope
 from config import settings
 from dependencies import get_current_user, get_repo_database
 from models import User
@@ -25,7 +26,9 @@ async def redirect_query(
             status_code=422, detail="No permission_group_id was provided"
         )
 
-    if permission_group_id not in current_user.permission_group_ids:
+    if not AccessScope.from_user(current_user).can_access_permission_group(
+        permission_group_id
+    ):
         raise HTTPException(
             status_code=403,
             detail="Access denied for current_user to this permission_group.",

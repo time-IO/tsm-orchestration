@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from dependencies import get_current_user, get_repo_permission_group
 from models.filters import PermissionGroupFilter
 from models.permission_group import PermissionGroup
@@ -28,7 +29,9 @@ def read_list(
 ):
     return paginate(
         repo.find_allowed_all(
-            current_user.permission_group_ids, sort_by, filters=filters
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
         )
     )
 
@@ -40,4 +43,4 @@ def read_one(
     current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_permission_group),
 ):
-    return repo.find_allowed_one(id, current_user.permission_group_ids)
+    return repo.find_allowed_one(id, access_scope=AccessScope.from_user(current_user))
