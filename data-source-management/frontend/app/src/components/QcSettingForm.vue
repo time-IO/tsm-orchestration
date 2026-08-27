@@ -89,6 +89,7 @@
               @remove-datastream="handleRemoveDatastream"
               @add-datastream="handleAddDatastream"
               @edit="handleEditFunction"
+              @reorder="handleReorder"
             />
           </div>
         </div>
