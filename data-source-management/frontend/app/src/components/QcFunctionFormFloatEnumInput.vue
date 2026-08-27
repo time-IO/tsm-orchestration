@@ -1,7 +1,7 @@
 <template>
   <q-input
     v-if="current_type === POSSIBLE_QC_FUNCTION_TYPES.FLOAT"
-    v-model="input"
+    v-model.number="input"
     filled
     :label="`${label} (enter a floating point number)`"
     :rules="rules_float"

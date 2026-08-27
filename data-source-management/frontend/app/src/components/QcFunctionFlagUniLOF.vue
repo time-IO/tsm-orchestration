@@ -30,7 +30,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.n"
+      v-model.number="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Number of periods to include in LOF calculation."
@@ -84,7 +84,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.p"
+      v-model.number="formData.p"
       label="p (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
