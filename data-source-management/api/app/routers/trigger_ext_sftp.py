@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest,
@@ -40,4 +41,5 @@ def trigger_sftp(
         payload=payload,
         allowed_permission_group_ids=current_user.permission_group_ids,
         repo_ingest=repo,
+        access_scope=AccessScope.from_user(current_user),
     )
