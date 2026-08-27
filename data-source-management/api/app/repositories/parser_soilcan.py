@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+from access_scope import AccessScope
 
 from models.filters import BaseFilter
 from fastapi_filters.ext.sqlalchemy import apply_filters
@@ -24,19 +25,26 @@ class ParserSoilcanRepository:
         self.session = session
 
     def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
+        self,
+        id: int,
+        access_scope: AccessScope,
     ) -> ParserSoilcan:
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
-            .where(
-                self.model.parser_id == id,
-                ParserDetailed.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.parser_id == id)
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -44,7 +52,7 @@ class ParserSoilcanRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
     ):
@@ -52,11 +60,18 @@ class ParserSoilcanRepository:
             select(self.model)
             .join(self.model.parser_detailed)
             .join(ParserDetailed.parser)
-            .where(ParserDetailed.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         if filters:
             statement = apply_filters(statement, filters)
 
@@ -68,10 +83,10 @@ class ParserSoilcanRepository:
         self,
         payload: ParserSoilcanCreate,
         extra_data: dict,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ):
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -109,12 +124,12 @@ class ParserSoilcanRepository:
         self,
         parser_id: int,
         payload: ParserSoilcanUpdate,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ) -> ParserSoilcan:
 
         data = payload.model_dump(exclude_unset=True)
 
-        parser_soilcan = self.find_one(parser_id, permission_group_ids_of_user)
+        parser_soilcan = self.find_one(parser_id, access_scope=access_scope)
         parser_detailed = parser_soilcan.parser_detailed
 
         self.check_for_existing_name_update(
@@ -141,8 +156,8 @@ class ParserSoilcanRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def delete(self, parser_id: int, permission_group_ids_of_user: list[int]):
-        parser_soilcan = self.find_one(parser_id, permission_group_ids_of_user)
+    def delete(self, parser_id: int, access_scope: AccessScope):
+        parser_soilcan = self.find_one(parser_id, access_scope=access_scope)
 
         parser_detailed = parser_soilcan.parser_detailed
         parser = parser_detailed.parser

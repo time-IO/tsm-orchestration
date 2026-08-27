@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+from access_scope import AccessScope
 
 from models.filters import BaseFilter
 from fastapi_filters.ext.sqlalchemy import apply_filters
@@ -19,18 +20,27 @@ class ParserCsvRepository:
         self.model = ParserCsv
         self.session = session
 
-    def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> ParserCsv:
+    def find_one(
+        self,
+        id: int,
+        access_scope: AccessScope,
+    ) -> ParserCsv:
         statement = (
             select(self.model)
             .join(self.model.parser_detailed)
-            .where(
-                self.model.parser_id == id,
-                ParserDetailed.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.parser_id == id)
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
+
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
@@ -38,7 +48,7 @@ class ParserCsvRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[BaseFilter] = None,
     ):
@@ -46,11 +56,17 @@ class ParserCsvRepository:
             select(self.model)
             .join(self.model.parser_detailed)
             .join(ParserDetailed.parser)
-            .where(ParserDetailed.permission_group_id.in_(permission_group_ids_of_user))
             .options(
                 joinedload(self.model.parser_detailed).joinedload(ParserDetailed.parser)
             )
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                ParserDetailed.permission_group_id.in_(
+                    access_scope.permission_group_ids
+                )
+            )
 
         if filters:
             statement = apply_filters(statement, filters)
@@ -63,11 +79,11 @@ class ParserCsvRepository:
         self,
         payload: ParserCsvCreate,
         extra_data,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ):
 
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -120,14 +136,15 @@ class ParserCsvRepository:
         self,
         parser_id: int,
         payload: ParserCsvUpdate,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ) -> ParserCsv:
+
+        parser_csv = self.find_one(parser_id, access_scope=access_scope)
 
         self.update_timestamp_columns(payload, parser_id)
 
         data = payload.model_dump(exclude={"timestamp_columns"}, exclude_unset=True)
 
-        parser_csv = self.find_one(parser_id, permission_group_ids_of_user)
         parser_detailed = parser_csv.parser_detailed
         if "name" in payload:
             self.check_for_existing_name_update(
@@ -191,8 +208,8 @@ class ParserCsvRepository:
                     detail=f"Failed to update timestamp columns: {str(e)}",
                 )
 
-    def delete(self, parser_id: int, permission_group_ids_of_user: list[int]):
-        parser_csv = self.find_one(parser_id, permission_group_ids_of_user)
+    def delete(self, parser_id: int, access_scope: AccessScope):
+        parser_csv = self.find_one(parser_id, access_scope=access_scope)
 
         # workaround as cascade delete doesn't seem to work currently
         parser_detailed = parser_csv.parser_detailed

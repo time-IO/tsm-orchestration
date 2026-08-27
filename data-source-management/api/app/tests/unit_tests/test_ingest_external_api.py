@@ -46,19 +46,17 @@ def test_read_list_passes_sort_by(client, override_repo):
 
     client.get("/ingest/external-api/?sort_by=name:asc")
 
-    args, kwargs = repo.find_all.call_args
-    # find_all(permission_group_ids, sort_by, filters=filters)
-    assert args[1] == "name:asc"
+    assert repo.find_all.call_args.kwargs["sort_by"] == "name:asc"
 
 
-def test_read_list_passes_permission_group_ids(client, override_repo, mock_user):
+def test_read_list_passes_access_scope(client, override_repo, mock_user):
     repo = override_repo(get_repo_ingest_external_api)
     repo.find_all.return_value = []
 
     client.get("/ingest/external-api/")
 
-    args, kwargs = repo.find_all.call_args
-    assert args[0] == mock_user.permission_group_ids
+    access_scope = repo.find_all.call_args.kwargs["access_scope"]
+    assert access_scope.permission_group_ids == mock_user.permission_group_ids
 
 
 def test_read_list_unauthenticated(client_no_auth):
