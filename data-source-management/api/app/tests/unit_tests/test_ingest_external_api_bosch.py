@@ -11,10 +11,14 @@ Differences from the plain list router:
   is already neutralized globally in the client fixture.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi import HTTPException
 
+from access_scope import AccessScope
 from dependencies import get_repo_ingest_external_api_bosch
+from repositories.ingest_external_api_bosch import IngestExternalApiBoschRepository
 
 ROUTER_MODULE = "routers.ingest_external_api_bosch"
 BASE_PATH = "/ingest/external-api/bosch"
@@ -41,6 +45,36 @@ def _bosch_dict(make_ingest_dict, **overrides):
 
 
 # ---------------------------------------------------------------------------
+# read_list
+# ---------------------------------------------------------------------------
+
+
+def test_read_list_passes_superuser_access_scope(client, mock_user, override_repo):
+    mock_user.is_superuser = True
+    repo = override_repo(get_repo_ingest_external_api_bosch)
+    repo.find_all.return_value = []
+
+    response = client.get(f"{BASE_PATH}/")
+
+    assert response.status_code == 200
+    access_scope = repo.find_all.call_args.kwargs["access_scope"]
+    assert access_scope.is_superuser is True
+
+
+def test_find_all_does_not_filter_superuser_by_permission_group():
+    session = MagicMock()
+    session.exec.return_value.unique.return_value.scalars.return_value.all.return_value = (
+        []
+    )
+    repo = IngestExternalApiBoschRepository(session)
+
+    repo.find_all(access_scope=AccessScope([], is_superuser=True))
+
+    statement = session.exec.call_args.args[0]
+    assert statement.whereclause is None
+
+
+# ---------------------------------------------------------------------------
 # read_one
 # ---------------------------------------------------------------------------
 
@@ -64,6 +98,21 @@ def test_read_one_not_found(client, override_repo):
     response = client.get(f"{BASE_PATH}/999")
 
     assert response.status_code == 404
+
+
+def test_read_one_passes_superuser_access_scope(
+    client, mock_user, override_repo, make_ingest_dict
+):
+    mock_user.is_superuser = True
+    repo = override_repo(get_repo_ingest_external_api_bosch)
+    repo.find_one.return_value = object()
+    repo.to_flat.return_value = _bosch_dict(make_ingest_dict)
+
+    response = client.get(f"{BASE_PATH}/1")
+
+    assert response.status_code == 200
+    access_scope = repo.find_one.call_args.kwargs["access_scope"]
+    assert access_scope.is_superuser is True
 
 
 # ---------------------------------------------------------------------------

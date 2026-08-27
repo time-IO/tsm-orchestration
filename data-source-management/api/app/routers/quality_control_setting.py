@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_quality_control_setting,
@@ -40,7 +41,9 @@ def read_list(
 ):
     return paginate(
         repo.find_allowed_all(
-            current_user.permission_group_ids, sort_by, filters=filters
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
         ),
     )
 
@@ -56,7 +59,7 @@ def read_one(
     current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_quality_control_setting),
 ):
-    return repo.find_allowed_one(id, current_user.permission_group_ids)
+    return repo.find_allowed_one(id, access_scope=AccessScope.from_user(current_user))
 
 
 @router.post(
@@ -83,7 +86,11 @@ def create(
         )
 
     extra_data = {"created_by_id": current_user.id}
-    entity = repo.create_allowed(payload, extra_data, current_user.permission_group_ids)
+    entity = repo.create_allowed(
+        payload,
+        extra_data,
+        access_scope=AccessScope.from_user(current_user),
+    )
     publish_qaqc_settings_update(entity)
 
     return entity
@@ -117,7 +124,11 @@ def update(
                 },
             )
 
-    updated = repo.update_allowed(id, payload, current_user.permission_group_ids)
+    updated = repo.update_allowed(
+        id,
+        payload,
+        access_scope=AccessScope.from_user(current_user),
+    )
     publish_qaqc_settings_update(updated)
 
     return updated
@@ -130,4 +141,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: QualityControlSettingRepository = Depends(get_repo_quality_control_setting),
 ):
-    return repo.delete_allowed(id, current_user.permission_group_ids)
+    return repo.delete_allowed(id, access_scope=AccessScope.from_user(current_user))
