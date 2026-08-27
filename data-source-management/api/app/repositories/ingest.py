@@ -22,8 +22,7 @@ class IngestRepository:
     def find_one(
         self,
         id: int,
-        permission_group_ids_of_user: list[int] | None = None,
-        access_scope: AccessScope | None = None,
+        access_scope: AccessScope,
     ) -> Ingest:
         statement = (
             select(self.model)
@@ -31,9 +30,6 @@ class IngestRepository:
             .options(joinedload(self.model.permission_group))
             .options(joinedload(self.model.user))
         )
-
-        if access_scope is None:
-            access_scope = AccessScope(permission_group_ids_of_user or [])
 
         if not access_scope.is_superuser:
             statement = statement.where(
@@ -81,8 +77,8 @@ class IngestRepository:
         flatt_list = [self.to_flat(item) for item in results]
         return apply_sort_list(flatt_list, sort_by) if sort_by else flatt_list
 
-    def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         try:
             self.session.delete(entity)

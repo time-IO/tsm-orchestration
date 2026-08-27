@@ -62,6 +62,4 @@ def delete(
     logger.debug(
         "Delete ingest requested by user_id=%s ingest_id=%s", current_user.id, id
     )
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

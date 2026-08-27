@@ -203,14 +203,14 @@ def test_ingest_find_one_does_not_filter_superuser_by_permission_group():
     assert "permission_group_id IN" not in str(statement)
 
 
-def test_ingest_find_one_keeps_legacy_permission_group_filter():
+def test_ingest_find_one_filters_by_permission_group_for_regular_user():
     session = MagicMock()
     session.exec.return_value.unique.return_value.scalar_one_or_none.return_value = (
         object()
     )
     repo = IngestRepository(session)
 
-    repo.find_one(1, [1])
+    repo.find_one(1, access_scope=AccessScope([1]))
 
     statement = session.exec.call_args.args[0]
     assert "permission_group_id IN" in str(statement)
