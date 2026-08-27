@@ -6,6 +6,8 @@ FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
 ARG BUILD_DATE
 ARG VCS_REF
 ARG SUPERCRONIC_VERSION=0.2.33
+ARG UID=1000
+ARG USER=tsm
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO Cron-Scheduler Image" \
@@ -19,9 +21,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
-COPY src/requirements.txt .
-COPY cron/supercronic-entrypoint.sh .
-COPY cron/supercronic-health.sh .
+COPY --chown=${UID}:${UID} src /scripts
+COPY --chown=${UID}:${UID} cron/supercronic-entrypoint.sh .
+COPY --chown=${UID}:${UID} cron/supercronic-health.sh .
 
 RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPERCRONIC_VERSION}/supercronic-linux-amd64 \
     && chmod 755 supercronic-linux-amd64 \
@@ -30,11 +32,8 @@ RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v${SUPE
     && chmod 755 /supercronic-health.sh
 
 RUN python3 -m venv /opt/venv
-RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN /opt/venv/bin/pip install --no-cache-dir -r /scripts/requirements.txt
 ENV PATH="/opt/venv/bin:$PATH"
-
-ARG UID=1000
-ARG USER=tsm
 
 RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER}
 
