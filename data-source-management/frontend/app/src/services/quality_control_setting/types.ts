@@ -24,11 +24,13 @@ export type QualityControlFunctionPublic = {
 
 export type QualityControlFunctionCreate = {
   name: string;
+  _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentCreate[];
 };
 
 export type QualityControlFunctionUpdate = {
   name: string;
+  _clientId?:string;
   quality_control_function_arguments: QualityControlFunctionArgumentUpdate[];
 };
 
