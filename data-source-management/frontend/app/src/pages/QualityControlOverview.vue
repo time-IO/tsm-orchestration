@@ -21,6 +21,17 @@
       </q-btn>
     </q-card-actions>
 
+    <qc-setting-overview-filter
+      class="q-mt-md q-mb-md"
+      v-model:name="store.filters.name"
+      v-model:uuid="store.filters.uuid"
+      v-model:permission_group_id="store.filters.permission_group_id"
+      v-model:functions="store.filters.functions"
+      v-model:date_from="store.filters.date_from"
+      v-model:date_to="store.filters.date_to"
+      @apply-filters="store.applyFilters"
+    />
+
     <trigger-quality-control-settings-dialog
       v-model="showTriggerDialog"
       :ids_to_trigger="selectedIds"
@@ -206,6 +217,7 @@ import { computed, onMounted, ref } from 'vue';
 import TriggerQualityControlSettingsDialog from 'components/TriggerQualityControlSettingsDialog.vue';
 import type { QualityControlSettingPublic } from 'src/services/quality_control_setting/types';
 import { useQuasar } from 'quasar';
+import QcSettingOverviewFilter from 'components/QCSettingOverviewFilter.vue';
 
 const { t } = useI18n();
 const $q = useQuasar();

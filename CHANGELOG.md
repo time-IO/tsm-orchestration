@@ -7,6 +7,24 @@
 ### Changed
 ### Removed
 
+## [2026-08-26]
+### Added
+- Support for unix timestamps ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/650))
+- QC-Settings filter ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/670))
+- Soilcan Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/252))
+- `dfilter` parameter for QC-Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/256))
+- Parser type selection ([Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/266), [Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/270))
+### Fixed
+- JSON-Parser integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/662))
+- UBA-Api ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/678))
+- DB-API queries to onl select observations for a given thing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/timeio-db-api/-/merge_requests/23))
+- MQTT-Questa Migration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/265))
+### Changed
+- Moved data-source-management to tsm-orchestration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/663))
+- Upgrade SaQC to 2.10 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/679))
+### Removed
+- Django Frontend and configdb-updater ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/654))
+
 ## [2026-07-24]
 ### Added
 - QC Function `flagGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/253))

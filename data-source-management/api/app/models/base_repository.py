@@ -264,8 +264,22 @@ class QualityControlSettingRepository(BaseRepository):
             .where(self.model.permission_group_id.in_(permission_group_ids))
             .options(joinedload(self.model.user))
         )
+
         if filters:
-            statement = apply_filters(statement, filters)
+            filter_values = dict(filters.filter_values)
+            functions_ops = filter_values.pop("functions", None)
+
+            if functions_ops:
+                for op, val in functions_ops.items():
+                    names = val if isinstance(val, (list, tuple, set)) else [val]
+                    subquery = select(
+                        QualityControlFunction.quality_control_setting_id
+                    ).where(QualityControlFunction.name.in_(names))
+                    statement = statement.where(self.model.id.in_(subquery))
+
+            if filter_values:
+                statement = apply_filters(statement, filter_values)
+
         items = self.session.exec(statement).unique().all()
         return apply_sort_list(items, sort_by) if sort_by else items
 

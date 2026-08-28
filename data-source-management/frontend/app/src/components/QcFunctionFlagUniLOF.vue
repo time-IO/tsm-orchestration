@@ -62,10 +62,10 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input="formData.corruption"
+      v-model:input.number="formData.corruption"
       v-model:current_type="current_corruption_type"
-      :rules_float="[ruleFactories.RANGE(0, 1)]"
-      :rules_int="[ruleFactories.MIN(0)]"
+      :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint_float="Portion of data considered anomalous."
       hint_int="Count of data considered anomalous."
     />
@@ -85,8 +85,8 @@
       class="q-mb-md"
       filled
       v-model="formData.p"
-      label="p (enter a floating point number)"
-      :rules="[rules.FLOAT, ruleFactories.MIN(1)]"
+      label="p (enter a integer number)"
+      :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
     />
 
@@ -289,7 +289,7 @@ const formDataWithTypes = computed(() => {
   const pObject = {
     name: 'p',
     input: { value: formData.value.p },
-    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+    type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
 
   const densityObject = {

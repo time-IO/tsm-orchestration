@@ -18,8 +18,11 @@ except ImportError:
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
 
-# used to identify which function calls are allowed to overwrite a `target`
+# used to identify which function calls are allowed to overwrite a `target`,
+# TODO: use the new SaQC function mode variable to infer programmatically
 PROCESSING_FUNCTIONS = {"processGeneric", "rolling"}
+
+saqc.options.field_target = "append"
 
 
 class STAMPLATEScheme(saqc.FloatScheme):
