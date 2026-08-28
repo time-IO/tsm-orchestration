@@ -38,7 +38,7 @@ class PandasParser(AbcParser):
 
         timestamps = [ts.copy() for ts in timestamps]
         unit_map = {
-            "UNIX_S":  ("s", "%Y-%m-%dT%H:%M:%S%z"),
+            "UNIX_S": ("s", "%Y-%m-%dT%H:%M:%S%z"),
             "UNIX_MS": ("ms", "%Y-%m-%dT%H:%M:%S.%f%z"),
         }
         for ts in timestamps:
