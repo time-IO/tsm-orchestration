@@ -82,7 +82,7 @@ services:
       retries: 10
 
   dsm-frontend:
-#    image: timeio-dsm-frontend-local:dev
+    image: timeio-dsm-frontend-local:dev
     build:
       context: ./data-source-management/frontend
       dockerfile: docker/Dockerfile-Dev
