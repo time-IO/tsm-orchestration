@@ -6,6 +6,7 @@ import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_ext
 import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
 import ingestExternalApiSensotoController from 'src/services/ingest_external_api_sensoto';
 import ingestMqttController from 'src/services/ingest_mqtt';
+import ingestJournalController from 'src/services/ingest_journal';
 import ingestSftpController from 'src/services/ingest_sftp';
 import ingestSftpStorageController from 'src/services/ingest_sftp_storage';
 import ingestExternalSftpController from 'src/services/ingest_external_sftp';
@@ -40,6 +41,7 @@ export const API = {
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiSensoto: ingestExternalApiSensotoController,
   ingestMqtt: ingestMqttController,
+  ingestJournal: ingestJournalController,
   ingestSftp: ingestSftpController,
   ingestSftpStorage: ingestSftpStorageController,
   ingestExternalSftp: ingestExternalSftpController,

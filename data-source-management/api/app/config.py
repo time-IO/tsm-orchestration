@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     MQTT_PASSWORD: str
     MQTT_QOS: int = 2
     INGEST_MQTT_BROKER_URI: str
+    DB_API_BASE_URL: str = ""
+    DB_API_AUTH_TOKEN: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property

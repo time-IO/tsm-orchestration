@@ -484,6 +484,8 @@ services:
       S3_REGION: "${DSM_S3_REGION}"
       STA_ROOT_URL: "${DSM_API_STA_ROOT_URL}"
       STA_VERSION: "${DSM_API_STA_VERSION}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
 
 
   # Summary
