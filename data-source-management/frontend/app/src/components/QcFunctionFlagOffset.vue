@@ -1,5 +1,5 @@
 <template>
-  <qc-function-form-template function-title="flagJumps" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template function-title="flagJumps" v-model:label="label" @submit="submitForm" @remove="removeForm">
     <!-- field        -->
 
     <div class="q-mb-md">
@@ -114,6 +114,8 @@ const formData = ref({
   flag: 255.0 as number | null,
   dfilter: 0 as number | null,
 });
+
+const label = defineModel<string | undefined>('label');
 
 function loadInitialData() {
   if (!props.initialData) return;

@@ -160,20 +160,13 @@
 
     <q-dialog v-model="functionFormDialog" @hide="handleRemove" no-backdrop-dismiss>
       <q-card style="min-width: 50vw; max-width: 100vw">
-        <q-card-section>
-          <q-input
-            filled
-            v-model="functionLabel"
-            label="Label (optional)"
-            hint="A specific name to help you find this function later"
-          />
-        </q-card-section>
         <q-form>
           <component
             :is="currentFunctionFormComponent"
             v-if="currentFunctionFormComponent && formData.permission_group_id"
             :permission_group_id="formData.permission_group_id"
             :initial-data="editingFunction?.quality_control_function_arguments"
+            v-model:label="functionLabel"
             @submit="handleFunctionFormSubmit"
             @remove="handleRemove"
           />

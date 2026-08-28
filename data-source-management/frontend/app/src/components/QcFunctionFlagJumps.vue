@@ -1,5 +1,5 @@
 <template>
-  <qc-function-form-template function-title="flagJumps" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template function-title="flagJumps" v-model:label="label" @submit="submitForm" @remove="removeForm">
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -91,6 +91,8 @@ const props = defineProps<{
   permission_group_id: number;
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
+
+const label = defineModel<string | undefined>('label');
 
 const formData = ref({
   field: [] as Datastream[],

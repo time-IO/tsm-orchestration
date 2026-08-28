@@ -1,5 +1,5 @@
 <template>
-  <qc-function-form-template function-title="flagZScore" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template function-title="flagZScore" v-model:label="label" @submit="submitForm" @remove="removeForm">
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -124,12 +124,14 @@ import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInpu
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
+import QcFunctionFormTemplate from "components/QcFunctionFormTemplate.vue";
 
 const props = defineProps<{
   permission_group_id: number;
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 const current_window_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 

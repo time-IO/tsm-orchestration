@@ -1,5 +1,5 @@
 <template>
-  <qc-function-form-template function-title="flagPlateau" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template function-title="flagPlateau" v-model:label="label" @submit="submitForm" @remove="removeForm">
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -121,6 +121,8 @@ const formData = ref({
   flag: 255.0 as number | null,
   dfilter: 0 as number | null,
 });
+
+const label = defineModel<string | undefined>('label');
 
 function loadInitialData() {
   if (!props.initialData) return;
