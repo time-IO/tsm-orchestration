@@ -4,7 +4,6 @@ import logging
 import atexit
 import warnings
 from typing import Any, TypedDict
-from timeio.parser import soilcan_parser
 
 try:
     from typing import Self
