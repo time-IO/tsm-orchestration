@@ -51,7 +51,7 @@ services:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
 
   dsm-api:
-#    image: timeio-dsm-api-local:dev
+    image: timeio-dsm-api-local:dev
     build:
       context: .
       dockerfile: ./data-source-management/api/docker/Dockerfile-Dev
