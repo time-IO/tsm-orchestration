@@ -8,7 +8,12 @@ from fastapi import HTTPException
 from access_scope import AccessScope
 from models import TriggerQualityControl, TriggerSyncExtApiBase, TriggerSyncExtSftpBase
 from repositories.ingest import IngestRepository
-from routers import sta_proxy, trigger_ext_api, trigger_ext_sftp, trigger_quality_control
+from routers import (
+    sta_proxy,
+    trigger_ext_api,
+    trigger_ext_sftp,
+    trigger_quality_control,
+)
 from services import trigger_ext_api as trigger_ext_api_service_module
 from services import trigger_ext_sftp as trigger_ext_sftp_service_module
 from services import trigger_quality_control as trigger_quality_control_service_module
@@ -153,7 +158,9 @@ def test_external_sftp_trigger_router_passes_superuser_access_scope(monkeypatch)
     assert access_scope.is_superuser is True
 
 
-def test_external_sftp_trigger_service_passes_superuser_scope_to_repository(monkeypatch):
+def test_external_sftp_trigger_service_passes_superuser_scope_to_repository(
+    monkeypatch,
+):
     payload = TriggerSyncExtSftpBase(
         ingest_id=1, start_date="2026-01-01", end_date="2026-01-02"
     )
