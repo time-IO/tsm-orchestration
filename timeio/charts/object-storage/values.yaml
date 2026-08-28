@@ -3,10 +3,14 @@ replicaCount: 1
 enabled: true
 
 image:
-  repository: "minio/minio"
-  tag: "RELEASE.2025-09-07T16-13-09Z"
+  repository: "docker.io/pgsty/silo"
+  tag: "RELEASE.2026-08-06T00-00-00Z"
+  digest: "sha256:29a498b24669cae1fed11c1a2fb2b3d73c68829a0a9c0b14e71b386671d38fac"
   pullPolicy: Always
 name: object-storage
+
+command:
+  executable: "silo"
 
 securityContext:
   allowPrivilegeEscalation: False
