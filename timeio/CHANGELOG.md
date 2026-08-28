@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-08-28
+
+- Replaced the default object-storage runtime with pinned
+  `docker.io/pgsty/silo:RELEASE.2026-08-06T00-00-00Z@sha256:29a498b24669cae1fed11c1a2fb2b3d73c68829a0a9c0b14e71b386671d38fac`
+  and switched the server executable to `silo` while preserving the
+  MinIO-compatible S3, Console, MQTT, FTP/FTPS, SFTP, and data-path settings.
 - Added disabled-by-default MinIO FTP/SFTP chart values for protocol command
   flags, Service ports, passive FTP ports, and cert/key Secret mounts.
 
