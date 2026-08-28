@@ -72,7 +72,13 @@
       <div :class="toolClass('journal')">
         <q-card flat bordered class="full-height cursor-pointer column" @click="journalOpen = true">
           <q-card-section class="col row items-center no-wrap q-pa-md">
-            <q-avatar rounded size="2.5rem" color="deep-purple" text-color="white" icon="receipt_long" />
+            <q-avatar
+              rounded
+              size="2.5rem"
+              color="deep-purple"
+              text-color="white"
+              icon="receipt_long"
+            />
             <div class="q-ml-md">
               <div class="text-subtitle2 text-weight-medium">Journal</div>
               <div class="text-caption text-grey-7">
