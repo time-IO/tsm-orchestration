@@ -1,5 +1,20 @@
 ---
 
+playwright-static:
+  stage: "check"
+  image: "node:24-alpine"
+  needs: []
+  before_script:
+    - "cd tests/playwright"
+    - "npm ci --ignore-scripts"
+  script:
+    - "npm run check:static"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event'"
+      when: on_success
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: on_success
+
 playwright-smoke:
   stage: "end-to-end"
   image: "mcr.microsoft.com/playwright:v1.62.0-noble"
@@ -9,8 +24,9 @@ playwright-smoke:
     TIMEIO_FRONTEND_PATH: "/data-source-management/"
   before_script:
     - "cd tests/playwright"
-    - "npm ci"
+    - "npm ci --ignore-scripts"
   script:
+    - "node scripts/check-stage-connectivity.mjs"
     - "npm run test:smoke"
   artifacts:
     when: always

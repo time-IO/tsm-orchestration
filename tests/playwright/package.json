@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check:scripts": "node --check scripts/write-generated-env.mjs && node --check scripts/manual-login-handoff.mjs && node --check scripts/check-stage-connectivity.mjs",
+    "check:static": "npm run check:scripts && npm run test:list",
     "env:generated": "node scripts/write-generated-env.mjs",
     "manual:login": "node scripts/manual-login-handoff.mjs",
     "test": "playwright test",
     "test:auth": "playwright test --grep @auth",
     "test:headed": "playwright test --headed",
+    "test:list": "playwright test --list --reporter=list",
     "test:smoke": "playwright test --grep @smoke",
     "trace": "playwright show-trace"
   },
