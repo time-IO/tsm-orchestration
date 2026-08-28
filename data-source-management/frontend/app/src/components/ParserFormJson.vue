@@ -48,7 +48,7 @@
           <q-input
             filled
             class="q-mb-md"
-            v-model="measurementKey"
+            v-model="formData.measurement_key"
             label="Measurement key"
             hint='Optional: key of the nested object containing the actual measurement data (e.g. object, not "object")'
           />
@@ -248,19 +248,6 @@ function removeTimestampKey(index: number) {
 const showDocs = () => {
   window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
 };
-
-function stripQuotes(value: string | null): string | null {
-  if (value === null) return null;
-  const trimmed = value.trim().replace(/^['"]+|['"]+$/g, '');
-  return trimmed === '' ? null : trimmed;
-}
-
-const measurementKey = computed({
-  get: () => formData.value.measurement_key,
-  set: (value: string | null) => {
-    formData.value.measurement_key = stripQuotes(value);
-  },
-});
 
 function addExcludedKey() {
   if (!formData.value.excluded_keys) {
