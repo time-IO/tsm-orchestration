@@ -78,7 +78,9 @@ def test_get_journal_success(client, override_repo, db_api_configured, patch_htt
     assert call["headers"]["Authorization"] == "Bearer test-token"
 
 
-def test_get_journal_default_limit(client, override_repo, db_api_configured, patch_httpx):
+def test_get_journal_default_limit(
+    client, override_repo, db_api_configured, patch_httpx
+):
     repo = override_repo(get_repo_ingest)
     repo.find_one.return_value = SimpleNamespace(uuid=INGEST_UUID)
 
