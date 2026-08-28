@@ -12,7 +12,6 @@ fi
 if [ ! -f "/tmp/mosquitto/auth/mosquitto.passwd" ]; then
   echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd &&
   echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd
-  echo `echo -n "$FRONTEND_MQTT_USER:" && /mosquitto/pw -p "$FRONTEND_MQTT_PASS"` >> /tmp/mosquitto/auth/mosquitto.passwd
 fi
 
 # always update acl file
@@ -28,9 +27,6 @@ fi
   echo "user $MQTT_INGEST_USER"
   echo "topic read mqtt_ingest/#"
   echo "topic readwrite health/#"
-  echo ""
-  echo "user $FRONTEND_MQTT_USER"
-  echo "topic readwrite #"
 } >/tmp/mosquitto/auth/mosquitto.acl
 
 if [ ! -d "/var/lib/mosquitto/tls" ]

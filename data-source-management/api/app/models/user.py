@@ -1,6 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
+from access_scope import AccessScope
 
 if TYPE_CHECKING:
     from .ingest import Ingest
@@ -56,3 +57,7 @@ class User(SQLModel, table=True):
     @property
     def permission_group_ids(self) -> list[int]:
         return [pg.id for pg in self.permission_groups]
+
+    @property
+    def access_scope(self) -> AccessScope:
+        return AccessScope.from_user(self)

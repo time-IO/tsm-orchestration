@@ -14,6 +14,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
+from access_scope import AccessScope
 from dependencies import get_current_user
 from models import User
 from services import s3_storage
@@ -38,9 +39,7 @@ def build_s3_storage_router(
     )
 
     def _access(id: int, current_user: User, repo) -> BucketAccess:
-        entity = repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        entity = repo.find_one(id, access_scope=AccessScope.from_user(current_user))
         return extract_access(entity)
 
     @router.get("/{id}/files", summary="List files in the ingest bucket")
