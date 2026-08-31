@@ -1,7 +1,7 @@
 import type { AxiosResponse } from 'axios';
 import type {CsvParserUpdate, CsvParserPublic, CsvParserCreate} from 'src/services/parser_csv/types';
 import type {JsonParserCreate, JsonParserPublic, JsonParserUpdate} from 'src/services/parser_json/types';
-import {SoilcanParserCreate, SoilcanParserPublic, SoilcanParserUpdate} from "src/services/parser_soilcan/types";
+import type {SoilcanParserCreate, SoilcanParserPublic, SoilcanParserUpdate} from "src/services/parser_soilcan/types";
 
 export interface PaginatedResponse<T> {
   items: T[];

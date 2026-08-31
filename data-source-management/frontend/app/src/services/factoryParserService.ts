@@ -1,11 +1,10 @@
 import {axiosInstance} from 'boot/axios';
-import type {CsvParserUpdate} from "src/services/parser_csv/types";
 import {createIngestApiService} from "src/services/factoryIngestService";
-import type {ParsingResult} from "src/services/types";
+import type {ParserPayloadCreate, ParserPayloadPublic, ParserPayloadUpdate, ParsingResult} from "src/services/types";
 
-export function createParserApiService<TPublic, TCreate, TUpdate>(apiPath: string) {
+export function createParserApiService<TPublic extends ParserPayloadPublic, TCreate extends ParserPayloadCreate, TUpdate extends ParserPayloadUpdate>(apiPath: string) {
 
-  async function parseFile(settings: CsvParserUpdate, csvFile: File): Promise<ParsingResult> {
+  async function parseFile(settings: TUpdate, csvFile: File): Promise<ParsingResult> {
     const payload = new FormData();
 
     payload.append('settings', JSON.stringify(settings));

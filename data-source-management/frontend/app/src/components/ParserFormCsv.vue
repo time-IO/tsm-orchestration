@@ -241,7 +241,6 @@ import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import {ruleFactories, rules} from 'src/utils/validation/rules';
 import ParserParseFileCsv from "components/ParserParseFileCsv.vue";
-import ParserParseFile from "components/ParserParseFile.vue";
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
