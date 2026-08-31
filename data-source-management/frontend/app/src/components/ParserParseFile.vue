@@ -158,6 +158,8 @@ function formatValue(value: unknown): string {
   }
 
   if (typeof value !== 'string') {
+    // TODO
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return String(value);
   }
 
