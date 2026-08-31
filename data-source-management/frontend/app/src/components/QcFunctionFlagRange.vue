@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagRange" v-model:label="label" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagRange"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
