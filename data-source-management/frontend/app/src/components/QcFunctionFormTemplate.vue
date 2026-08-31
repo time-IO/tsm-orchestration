@@ -11,6 +11,15 @@
       </q-card-section>
 
       <q-card-section>
+        <q-input
+          filled
+          v-model="label"
+          label="Label (optional)"
+          hint="A specific name to help you find this function later"
+        />
+      </q-card-section>
+
+      <q-card-section>
         <slot></slot>
       </q-card-section>
 
@@ -25,6 +34,8 @@
 defineProps<{
   functionTitle: string;
 }>();
+
+const label = defineModel<string | undefined>('label');
 
 const emit = defineEmits(['submit', 'remove']);
 
