@@ -3,7 +3,7 @@
     <h5 class="q-mb-none">{{ title }}</h5>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute"/>
       </div>
     </div>
 
@@ -12,7 +12,7 @@
       <a
         href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/TimeIO-Frontend#csv-parser"
         target="_blank"
-        >here</a
+      >here</a
       >.
     </div>
 
@@ -69,9 +69,9 @@
             label="Number of footlines to exclude"
           />
 
-          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]"/>
 
-          <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]" />
+          <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]"/>
 
           <!-- Header Field -->
           <q-input
@@ -221,28 +221,26 @@
                 class="full-width"
               />
             </div>
-            <q-space />
+            <q-space/>
           </div>
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-file
+    <parser-parse-file-csv
       v-model="showValidationDialog"
       :form-data="formData"
-      :parse-action="csvParserStore.dispatchParseFile"
-      type="csv"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {computed, ref} from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
+import type {CsvParserCreate, CsvParserUpdate} from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
-import {useCsvParserStore} from "stores/parserCsvStore";
+import {ruleFactories, rules} from 'src/utils/validation/rules';
+import ParserParseFileCsv from "components/ParserParseFileCsv.vue";
 import ParserParseFile from "components/ParserParseFile.vue";
 
 type CsvParserFormData = CsvParserUpdate & {
@@ -268,8 +266,6 @@ const props = withDefaults(
 defineEmits<{
   save: [];
 }>();
-
-const csvParserStore = useCsvParserStore();
 
 const formData = defineModel<CsvParserFormData>({
   default: {

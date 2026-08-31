@@ -141,11 +141,9 @@
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-file
+    <parser-parse-file-json
       v-model="showValidationDialog"
       :form-data="formData"
-      :parse-action="jsonParserStore.dispatchParseFile"
-      type="json"
     />
   </q-page>
 </template>
@@ -156,8 +154,7 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
-import ParserParseFile from "components/ParserParseFile.vue";
-import {useJsonParserStore} from "stores/parserJsonStore";
+import ParserParseFileJson from "components/ParserParseFileJson.vue";
 
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
@@ -181,8 +178,6 @@ const props = withDefaults(
 defineEmits<{
   save: [];
 }>();
-
-const jsonParserStore = useJsonParserStore()
 
 const formData = defineModel<JsonParserFormData>({
   default: {

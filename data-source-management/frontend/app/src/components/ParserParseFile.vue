@@ -2,15 +2,15 @@
   <q-dialog v-model="isOpen">
     <q-card style="width: 1000px; max-width: 90vw">
       <q-card-section>
-        <div class="text-h6">Validate {{type.toUpperCase()}} parser</div>
+        <div class="text-h6">Validate {{ parserType }} parser</div>
       </q-card-section>
 
       <q-card-section>
         <q-file
           v-model="file"
           filled
-          :label="`${type.toUpperCase()} file`"
-          :accept="`.${type},text/${type}`"
+          :label="`${allowedFileTypeName} file`"
+          :accept="allowedFileType"
           clearable
           :disable="isValidating"
           @update:model-value="resetResult"
@@ -106,21 +106,26 @@
   </q-dialog>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends ParserPayloadUpdate">
 import {computed, ref} from 'vue';
-import type {CsvParserUpdate} from 'src/services/parser_csv/types';
 import type {QTableColumn} from "quasar";
-import {JsonParserUpdate} from "src/services/parser_json/types";
-import {ParsingResult} from "src/services/types";
+import type {ParserPayloadUpdate, ParsingResult} from "src/services/types";
+
+type ParseAction<T> = (
+  settings: T,
+  file: File,
+) => Promise<ParsingResult>;
 
 const isOpen = defineModel<boolean>({
   default: false,
 });
 
 const props = defineProps<{
-  formData: CsvParserUpdate | JsonParserUpdate;
-  parseAction: (settings: CsvParserUpdate | JsonParserUpdate, file: File) => Promise<ParsingResult>;
-  type: "csv" | "json" // TODO: use type to access store actions directly from this component?
+  formData: T;
+  parseAction: ParseAction<T>;
+  allowedFileType: string
+  allowedFileTypeName: string
+  parserType: string
 }>();
 
 const file = ref<File | null>(null);
@@ -132,11 +137,13 @@ const validationWarnings = ref<string[]>([]);
 const validationResult = ref<boolean | null>(null);
 
 const tableColumns = computed<QTableColumn[]>(() => {
-  if (!validationData.value.length) {
+  const firstRow = validationData.value[0];
+
+  if (!firstRow) {
     return [];
   }
 
-  return Object.keys(validationData.value[0]).map((key) => ({
+  return Object.keys(firstRow).map((key) => ({
     name: key,
     label: key,
     field: key,
