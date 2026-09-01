@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">{{ title }}</h5>
-    <div class="row">
+    <div class="row q-mb-lg">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
+        <q-btn label="back" icon="chevron_left" :to="backRoute"/>
       </div>
     </div>
 
@@ -11,7 +11,7 @@
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
-        <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" ref="formRef">
           <!-- Name Field -->
           <q-input
             filled
@@ -46,7 +46,7 @@
             hint="Character(s) used to indicate comment lines"
           />
 
-          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]"/>
 
           <!-- Timestamp Keys -->
           <div class="q-my-md">
@@ -117,17 +117,6 @@
             <div class="col-3">
               <q-btn
                 unelevated
-                color="primary"
-                icon="fact_check"
-                label="Test parser with file"
-                class="full-width"
-                @click="showValidationDialog = true"
-              />
-            </div>
-            <q-space />
-            <div class="col-6">
-              <q-btn
-                unelevated
                 color="green"
                 type="submit"
                 :loading="isLoading"
@@ -136,25 +125,37 @@
                 class="full-width"
               />
             </div>
-            <q-space />
+            <q-space/>
+            <div class="col-3">
+              <q-btn
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Test parser"
+                class="full-width"
+                @click="showValidationDialog = true"
+              />
+            </div>
+            <q-space/>
           </div>
         </q-form>
       </q-card-section>
     </q-card>
     <parser-parse-file-json
       v-model="showValidationDialog"
-      :form-data="formData"
+      :form-data="validFormData"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, ref, toRaw, watch} from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
+import type {JsonParserCreate, JsonParserUpdate} from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import { rules } from 'src/utils/validation/rules';
+import {rules} from 'src/utils/validation/rules';
 import ParserParseFileJson from "components/ParserParseFileJson.vue";
+import {QForm} from "quasar";
 
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
@@ -188,6 +189,20 @@ const formData = defineModel<JsonParserFormData>({
     comment: null,
   },
 });
+
+const formRef = ref<QForm | null>(null);
+const validFormData = ref(structuredClone(toRaw(formData.value)));
+
+watch(
+  formData,
+  async () => {
+    const valid = await formRef.value?.validate(false) ?? false;
+    if (valid) {
+      validFormData.value = structuredClone(toRaw(formData.value));
+    }
+  },
+  {deep: true},
+);
 
 const showValidationDialog = ref(false);
 

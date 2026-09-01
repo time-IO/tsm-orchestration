@@ -18,7 +18,7 @@
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
-        <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" ref="formRef">
           <!-- Name Field -->
           <q-input
             filled
@@ -199,18 +199,7 @@
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space/>
-            <div class="col-3">
-              <q-btn
-                unelevated
-                color="primary"
-                icon="fact_check"
-                label="Test parser with file"
-                class="full-width"
-                @click="showValidationDialog = true"
-              />
-            </div>
-            <q-space/>
-            <div class="col-3">
+            <div class="col-5">
               <q-btn
                 unelevated
                 color="green"
@@ -222,25 +211,48 @@
               />
             </div>
             <q-space/>
+            <div class="col-5">
+              <q-btn
+                v-if="!showValidationDialog"
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Test parser"
+                class="full-width"
+                @click="showValidationDialog = true"
+              />
+              <q-btn
+                v-else
+                unelevated
+                outline
+                color="primary"
+                icon="close"
+                label="Close parser testing"
+                class="full-width"
+                @click="showValidationDialog = false"
+              />
+            </div>
+            <q-space/>
           </div>
         </q-form>
       </q-card-section>
     </q-card>
     <parser-parse-file-csv
       v-model="showValidationDialog"
-      :form-data="formData"
+      :form-data="validFormData"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, ref, toRaw, watch} from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type {CsvParserCreate, CsvParserUpdate} from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import {ruleFactories, rules} from 'src/utils/validation/rules';
 import ParserParseFileCsv from "components/ParserParseFileCsv.vue";
+import {QForm} from "quasar";
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
@@ -282,6 +294,20 @@ const formData = defineModel<CsvParserFormData>({
     encoding: null,
   },
 });
+
+const formRef = ref<QForm | null>(null);
+const validFormData = ref(structuredClone(toRaw(formData.value)));
+
+watch(
+  formData,
+  async () => {
+    const valid = await formRef.value?.validate(false) ?? false;
+    if (valid) {
+      validFormData.value = structuredClone(toRaw(formData.value));
+    }
+  },
+  {deep: true},
+);
 
 const showValidationDialog = ref(false);
 
