@@ -35,7 +35,6 @@ def get_csv_parser_by_settings(
         "comment": settings.comment,
         "header": settings.header,
     }
-    logger.debug("Translated settings for CSV parser", translated_settings)
     return CsvParser(translated_settings)
 
 def get_json_parser_by_settings(
@@ -48,12 +47,10 @@ def get_json_parser_by_settings(
             for x in settings.timestamp_keys
         ],
     }
-    logger.debug("Translated settings for JSON parser", translated_settings)
     return JsonParser(translated_settings)
 
 
 def parse_data_with_parser(parser: PandasParser, raw_data: str):
-    logger.debug("Parsing data with parser", parser)
     with warnings.catch_warnings(record=True) as caught_warnings:
         warnings.simplefilter("always", ParsingWarning)
 
@@ -71,7 +68,7 @@ def parse_data_with_parser(parser: PandasParser, raw_data: str):
         print(df)
 
     return ParsedDataResponse(
-        data=df.to_dict(orient="records"),
+        data=df.reset_index().to_dict(orient="records"),
         error="",
         is_valid=True,
         warnings=[str(w.message) for w in caught_warnings],
