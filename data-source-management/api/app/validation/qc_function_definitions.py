@@ -8,7 +8,7 @@ Reusable argument definitions and constraint data for QC functions.
 FIELD_DESCRIPTOR = "field"
 TARGET_DESCRIPTOR = "target"
 
-OFFSET_REGEX = r"^(\d+)?(Y|YS|A|AS|Q|QS|M|MS|W(-MON|-TUE|-WED|-THU|-FRI|-SAT|-SUN)?|SM|SMS|D|B|C|BM|BMS|BQ|BQS|BY|BYS|CBM|CBMS|CQ|CQS|H|T|min|S|L|ms|U|us|N)$"
+OFFSET_REGEX = r"^(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
 
 OFFSET_TYPE = {"type": "offset", "constraint": {"regex": OFFSET_REGEX}}
 
