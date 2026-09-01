@@ -69,8 +69,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
+      const user = await userManager.getUser();
       this.clearStoredUserAndInfo();
-      return userManager.signoutRedirect();
+      await userManager.removeUser();
+      return user?.id_token
+        ? userManager.signoutRedirect({ id_token_hint: user.id_token })
+        : userManager.signoutRedirect();
     },
 
     bindOidcEvents() {

@@ -96,7 +96,7 @@ services:
       OIDC_IDP_URL: "${DSM_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
       OIDC_REDIRECT_URI: "${DSM_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/data-source-management/login-callback}"
       OIDC_SCOPE: "${DSM_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
-      OIDC_POST_LOGOUT_REDIRECT_URI: "${DSM_FRONTEND_APP_URL:-http://localhost/data-source-management}"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "${DSM_FRONTEND_APP_URL:-http://localhost/data-source-management}/"
       BASE_URL: "${DSM_FRONTEND_RELATIVE_PATH:-/data-source-management/}"
     command: "quasar dev"
 
@@ -119,4 +119,3 @@ volumes:
   keycloak-data:
   npm:
   dsm-api-data-test:
-

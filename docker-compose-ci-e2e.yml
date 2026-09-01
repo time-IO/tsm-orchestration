@@ -1,0 +1,49 @@
+---
+# CI end-to-end overlay for the Playwright login regression test.
+#
+# Purpose: stand up the full local stack from production images (the tags the
+# build job pushes) but with a Keycloak realm that carries local password users,
+# then run the browser login flow against it entirely inside the compose network.
+#
+# It differs from docker-compose-dev.example.yml on purpose: that overlay is for
+# a human developer (source mounts, `quasar dev`, dev images). This one changes
+# as little as possible on top of the base stack:
+#   1. import the dev realm so `user1` (and friends) can log in with a password;
+#   2. add a one-shot `playwright` service that drives the login flow.
+#
+# The whole stack must agree on ONE hostname so the OIDC redirect chain resolves
+# on the compose network. We use `proxy` (the nginx service name) everywhere; the
+# CI job exports PROXY_URL / the two hard-coded localhost OIDC vars accordingly
+# before `docker compose up`. See .gitlab/ci/04-playwright.gitlab-ci.yml.
+services:
+  keycloak:
+    # Override the base realm import (production/AAI-only) with the dev realm,
+    # which additionally seeds local password users. Same container target path,
+    # so this mount wins over the base one — the same trick the dev overlay uses.
+    volumes:
+      - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+
+  playwright:
+    image: "mcr.microsoft.com/playwright:v1.62.0-noble"
+    # Only run once the front door and the IdP are actually serving.
+    depends_on:
+      proxy:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      # Everything resolves via docker DNS on the compose network.
+      TIMEIO_BASE_URL: "http://proxy"
+      TIMEIO_FRONTEND_PATH: "/data-source-management/"
+      # Local dev-realm credentials. Not a secret: they seed a throwaway realm
+      # and the hash already lives in git (keycloak-init-dev.template.json).
+      TIMEIO_USERNAME: "user1"
+      TIMEIO_PASSWORD: "password"
+      CI: "true"
+    volumes:
+      - "./tests/playwright:/work"
+    working_dir: /work
+    command:
+      - "sh"
+      - "-c"
+      - "npm ci --ignore-scripts && npx playwright test --grep @auth"

@@ -5,6 +5,7 @@ dotenv.config({ quiet: true });
 
 const baseURL =
   process.env.TIMEIO_BASE_URL ?? "https://timeio.web-intern-stage.app.ufz.de";
+const browserHostResolverRules = process.env.TIMEIO_BROWSER_HOST_RESOLVER_RULES;
 
 export default defineConfig({
   testDir: "./specs",
@@ -14,6 +15,9 @@ export default defineConfig({
   },
   use: {
     baseURL,
+    launchOptions: browserHostResolverRules
+      ? { args: [`--host-resolver-rules=${browserHostResolverRules}`] }
+      : undefined,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

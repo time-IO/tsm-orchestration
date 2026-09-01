@@ -41,3 +41,56 @@ playwright-smoke:
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: manual
       allow_failure: true
+
+# Login regression test against a fully local stack: production images from the
+# build job, but with a Keycloak realm that carries local password users, so the
+# whole OIDC auth-code flow (frontend -> Keycloak login -> callback -> logout) is
+# exercised without touching any deployed environment. Unlike playwright-smoke it
+# needs no network access to UFZ-internal hosts, so it runs on the shared dind
+# runners like the other integration jobs.
+#
+# The stack is pinned to a single hostname (`proxy`, the nginx service name) so
+# the redirect chain resolves on the compose network; we override PROXY_URL and
+# the two .env vars that are otherwise hard-coded to http://localhost.
+playwright-login:
+  stage: "end-to-end"
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  needs:
+    - "build-and-push-images"
+  before_script:
+    - "apk add --no-cache bash"
+    # Log in to the container registry so docker compose can pull branch-specific images.
+    - "export REGISTRY=$(grep TIMEIO_IMAGE_REGISTRY .env | cut -d'=' -f2)"
+    - "echo $CI_REGISTRY_PASSWORD | docker login $REGISTRY -u $CI_REGISTRY_USER --password-stdin"
+    # Make every URL in the stack agree on the `proxy` hostname (see above).
+    - |
+      {
+        echo "PROXY_URL=http://proxy"
+        echo "DSM_FRONTEND_OIDC_IDP_URL=http://proxy/keycloak/realms/timeio"
+        echo "DSM_FRONTEND_OIDC_REDIRECT_URI=http://proxy/data-source-management/login-callback"
+      } >> .env
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml up -d --quiet-pull --wait --wait-timeout 300 proxy keycloak dsm-frontend dsm-api"
+  script:
+    # depends_on (proxy/keycloak healthy) gates the run; the exit code is the test result.
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml run --rm playwright"
+  after_script:
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml logs --no-color keycloak proxy dsm-frontend dsm-api > tests/playwright/compose-logs.txt 2>&1 || true"
+    - "docker logout || true"
+  artifacts:
+    when: always
+    paths:
+      - "tests/playwright/playwright-report/"
+      - "tests/playwright/test-results/"
+      - "tests/playwright/compose-logs.txt"
+    expire_in: 14 days
+  rules:
+    # Mirror the integration jobs: needs the build job's images + .env, which are
+    # produced only on branch pushes and tags — never on MR or main.
+    - if: "$CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED"
+      when: on_success
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: on_success
+  tags:
+    - "dind"
