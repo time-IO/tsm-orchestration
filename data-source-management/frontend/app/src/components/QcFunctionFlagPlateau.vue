@@ -57,7 +57,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_jump"
+      v-model.number="formData.min_jump"
       label="min_jump (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       hint="Minimum difference from preceding/succeeding periods."
