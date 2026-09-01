@@ -22,7 +22,7 @@
 import type { ValidationRule } from 'quasar';
 import { showContextDocumentation } from 'src/utils/quality_control_utils';
 
-const model = defineModel<number | null>({ default: null });
+const model = defineModel<number | string | null>({ default: null });
 
 defineProps<{
   rules: Array<ValidationRule>;
