@@ -4,10 +4,10 @@
       <q-card-section>
         <q-item>
           <q-item-section class="text-h5">
-            <span>{{ functionTitle }}</span>
-          </q-item-section>
-          <q-item-section side>
-            <saqc-info-icon :label="functionTitle" />
+            <div class="row items-center no-wrap">
+              <span>{{ functionTitle }}</span>
+              <saqc-info-icon color="grey" class="q-ml-sm" :label="functionTitle" />
+            </div>
           </q-item-section>
 
           <q-item-section side>
