@@ -73,4 +73,4 @@ export type CsvParserParse = {
   comment?: string[];
   timezone?: string | null;
   encoding?: string | null;
-}
+};

@@ -9,14 +9,7 @@
   >
     <div class="validation-sidebar__inner column no-wrap fit">
       <div class="row items-center justify-end q-pt-md q-pr-md">
-        <q-btn
-          flat
-          round
-          dense
-          :ripple="false"
-          icon="close"
-          @click="isOpen = false"
-        />
+        <q-btn flat round dense :ripple="false" icon="close" @click="isOpen = false" />
       </div>
       <div class="col column no-wrap q-px-md q-pb-md validation-sidebar__body">
         <div class="text-caption text-grey q-mb-sm">
@@ -35,7 +28,7 @@
               @update:model-value="handleFileChange"
             >
               <template #prepend>
-                <q-icon name="upload_file"/>
+                <q-icon name="upload_file" />
               </template>
             </q-file>
           </div>
@@ -61,11 +54,11 @@
           v-if="validationResult === false"
           class="bg-negative text-white q-mt-lg"
           :class="{
-            'validation-table--stale': haveSettingsChanged
+            'validation-table--stale': haveSettingsChanged,
           }"
         >
           <template #avatar>
-            <q-icon name="error"/>
+            <q-icon name="error" />
           </template>
           Parsing failed: {{ validationError }}
         </q-banner>
@@ -73,21 +66,15 @@
           v-if="validationResult === true && validationWarnings.length > 0"
           class="bg-warning text-black q-mt-lg"
           :class="{
-            'validation-table--stale': haveSettingsChanged
+            'validation-table--stale': haveSettingsChanged,
           }"
         >
           <template #avatar>
-            <q-icon name="warning"/>
+            <q-icon name="warning" />
           </template>
-          <div class="text-weight-bold q-mt-sm">
-            Parsing finished with warnings
-          </div>
+          <div class="text-weight-bold q-mt-sm">Parsing finished with warnings</div>
           <ul>
-            <li
-              v-for="(warning, index) in validationWarnings"
-              :key="index"
-              class="q-mt-sm"
-            >
+            <li v-for="(warning, index) in validationWarnings" :key="index" class="q-mt-sm">
               {{ warning }}
             </li>
           </ul>
@@ -96,11 +83,11 @@
           v-if="validationResult === true && validationData.length"
           class="bg-positive text-white q-mt-lg"
           :class="{
-            'validation-table--stale': haveSettingsChanged
+            'validation-table--stale': haveSettingsChanged,
           }"
         >
           <template #avatar>
-            <q-icon name="check_circle"/>
+            <q-icon name="check_circle" />
           </template>
           Parsing succeeded.
         </q-banner>
@@ -108,7 +95,7 @@
           v-if="validationResult === true && validationData.length"
           class="col q-mt-lg validation-sidebar__table-wrap"
           :class="{
-            'validation-table--stale': haveSettingsChanged
+            'validation-table--stale': haveSettingsChanged,
           }"
         >
           <q-table
@@ -128,29 +115,24 @@
   </q-drawer>
 </template>
 <script setup lang="ts" generic="T extends ParserPayloadParse">
-import {computed, ref, toRaw, watch} from 'vue';
-import {useQuasar} from 'quasar';
-import type {QTableColumn} from "quasar";
-import type {ParserPayloadParse, ParsingResult} from "src/services/types";
+import { computed, ref, toRaw, watch } from 'vue';
+import { useQuasar } from 'quasar';
+import type { QTableColumn } from 'quasar';
+import type { ParserPayloadParse, ParsingResult } from 'src/services/types';
 const $q = useQuasar();
-type ParseAction<T> = (
-  settings: T,
-  file: File,
-) => Promise<ParsingResult>;
+type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
 const isOpen = defineModel<boolean>({
   default: false,
 });
 const props = defineProps<{
   parsingSettings: T;
   parseAction: ParseAction<T>;
-  allowedFileType: string
-  allowedFileTypeName: string
-  parserType: string
+  allowedFileType: string;
+  allowedFileTypeName: string;
+  parserType: string;
 }>();
 const breakpoint = computed(() => $q.screen.sizes.md);
-const width = computed(
-  () => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4),
-);
+const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
 const file = ref<File | null>(null);
 const isFileLoading = ref(false);
 const isValidating = ref(false);
@@ -188,10 +170,7 @@ const haveSettingsChanged = computed(() => {
   if (!lastValidatedSettings.value) {
     return false;
   }
-  return !settingsAreEqual(
-    props.parsingSettings,
-    lastValidatedSettings.value,
-  );
+  return !settingsAreEqual(props.parsingSettings, lastValidatedSettings.value);
 });
 watch(
   () => props.parsingSettings,
@@ -208,7 +187,7 @@ watch(
       }
     }, 1000);
   },
-  {deep: true},
+  { deep: true },
 );
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) {
@@ -255,10 +234,7 @@ async function validate() {
   }
   isValidating.value = true;
   try {
-    const result: ParsingResult = await props.parseAction(
-      props.parsingSettings,
-      file.value,
-    );
+    const result: ParsingResult = await props.parseAction(props.parsingSettings, file.value);
     validationResult.value = result.is_valid;
     validationData.value = result.data;
     validationError.value = result.error;
@@ -277,10 +253,7 @@ async function validate() {
 }
 function filesAreEqual(a: File, b: File): boolean {
   return (
-    a.name === b.name &&
-    a.size === b.size &&
-    a.lastModified === b.lastModified &&
-    a.type === b.type
+    a.name === b.name && a.size === b.size && a.lastModified === b.lastModified && a.type === b.type
   );
 }
 function settingsAreEqual(a: T, b: T): boolean {

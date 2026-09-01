@@ -9,11 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import type {CsvParserParse, CsvParserUpdate} from "src/services/parser_csv/types";
-import {useCsvParserStore} from "stores/parserCsvStore";
-import ParserParseDrawer from "components/ParserParseDrawer.vue";
-import type { ComputedRef} from "vue";
-import {computed, toRaw} from "vue";
+import type { CsvParserParse, CsvParserUpdate } from 'src/services/parser_csv/types';
+import { useCsvParserStore } from 'stores/parserCsvStore';
+import ParserParseDrawer from 'components/ParserParseDrawer.vue';
+import type { ComputedRef } from 'vue';
+import { computed, toRaw } from 'vue';
 
 const props = defineProps<{
   formData: CsvParserUpdate;

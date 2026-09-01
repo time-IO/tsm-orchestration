@@ -3,13 +3,23 @@ import { markRaw } from 'vue';
 import { defaultPagination } from 'src/utils/pagination_utils';
 import type {
   DefaultFilter,
-  ParserApiService, ParserPayloadCreate, ParserPayloadParse, ParserPayloadPublic, ParserPayloadUpdate, ParsingResult,
+  ParserApiService,
+  ParserPayloadCreate,
+  ParserPayloadParse,
+  ParserPayloadPublic,
+  ParserPayloadUpdate,
+  ParsingResult,
   QTableRequestProp,
   QTableRequestPropPagination,
 } from 'src/services/types';
 
 // TODO: refactor store factories
-export function createParserStore<TPublic extends ParserPayloadPublic, TPayloadCreate extends ParserPayloadCreate, TPayloadUpdate extends ParserPayloadUpdate, TPayloadParse extends ParserPayloadParse>(
+export function createParserStore<
+  TPublic extends ParserPayloadPublic,
+  TPayloadCreate extends ParserPayloadCreate,
+  TPayloadUpdate extends ParserPayloadUpdate,
+  TPayloadParse extends ParserPayloadParse,
+>(
   storeId: string,
   apiService: ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate, TPayloadParse>,
 ) {
@@ -77,7 +87,7 @@ export function createParserStore<TPublic extends ParserPayloadPublic, TPayloadC
       },
       async dispatchParseFile(settings: TPayloadParse, csvFile: File): Promise<ParsingResult> {
         return await apiService.parseFile(settings, csvFile);
-      }
+      },
     },
   });
 }

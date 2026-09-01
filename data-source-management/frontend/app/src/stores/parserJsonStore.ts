@@ -1,11 +1,12 @@
 import { acceptHMRUpdate } from 'pinia';
 import type {
-  JsonParserCreate, JsonParserParse,
+  JsonParserCreate,
+  JsonParserParse,
   JsonParserPublic,
   JsonParserUpdate,
 } from 'src/services/parser_json/types';
 import { API } from 'src/services';
-import {createParserStore} from "stores/factoryParserStore";
+import { createParserStore } from 'stores/factoryParserStore';
 
 export const useJsonParserStore = createParserStore<
   JsonParserPublic,

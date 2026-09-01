@@ -3,7 +3,7 @@
     <h5 class="q-mb-none">{{ title }}</h5>
     <div class="row q-mb-lg">
       <div class="col">
-        <q-btn label="back" icon="chevron_left" :to="backRoute"/>
+        <q-btn label="back" icon="chevron_left" :to="backRoute" />
       </div>
     </div>
 
@@ -46,7 +46,7 @@
             hint="Character(s) used to indicate comment lines"
           />
 
-          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]"/>
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
           <!-- Timestamp Keys -->
           <div class="q-my-md">
@@ -113,7 +113,7 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
-            <q-space/>
+            <q-space />
             <div class="col-5">
               <q-btn
                 unelevated
@@ -125,7 +125,7 @@
                 class="full-width"
               />
             </div>
-            <q-space/>
+            <q-space />
             <div class="col-5">
               <q-btn
                 v-if="!showValidationDialog"
@@ -148,26 +148,23 @@
                 @click="showValidationDialog = false"
               />
             </div>
-            <q-space/>
+            <q-space />
           </div>
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-file-json
-      v-model="showValidationDialog"
-      :form-data="validFormData"
-    />
+    <parser-parse-file-json v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRaw, watch} from 'vue';
+import { computed, ref, toRaw, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type {JsonParserCreate, JsonParserUpdate} from 'src/services/parser_json/types.ts';
+import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import {rules} from 'src/utils/validation/rules';
-import ParserParseFileJson from "components/ParserParseFileJson.vue";
-import {QForm} from "quasar";
+import { rules } from 'src/utils/validation/rules';
+import ParserParseFileJson from 'components/ParserParseFileJson.vue';
+import { QForm } from 'quasar';
 
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
@@ -208,9 +205,7 @@ const showValidationDialog = ref(false);
 
 const areRequiredFieldsFilled = computed(() => {
   return (
-    !!formData.value.name &&
-    !!formData.value.timezone &&
-    formData.value.timestamp_keys.length > 0
+    !!formData.value.name && !!formData.value.timezone && formData.value.timestamp_keys.length > 0
   );
 });
 
@@ -218,13 +213,13 @@ watch(
   formData,
   async () => {
     if (areRequiredFieldsFilled.value) {
-      const valid = await formRef.value?.validate(false) ?? false;
+      const valid = (await formRef.value?.validate(false)) ?? false;
       if (valid) {
         validFormData.value = structuredClone(toRaw(formData.value));
       }
     }
   },
-  {deep: true},
+  { deep: true },
 );
 
 const permissionGroupModel = computed({

@@ -3,7 +3,7 @@
     <h5 class="q-mb-none">{{ title }}</h5>
     <div class="row">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute"/>
+        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
       </div>
     </div>
 
@@ -12,7 +12,7 @@
       <a
         href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/TimeIO-Frontend#csv-parser"
         target="_blank"
-      >here</a
+        >here</a
       >.
     </div>
 
@@ -69,9 +69,9 @@
             label="Number of footlines to exclude"
           />
 
-          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]"/>
+          <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
-          <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]"/>
+          <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]" />
 
           <!-- Header Field -->
           <q-input
@@ -198,7 +198,7 @@
 
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
-            <q-space/>
+            <q-space />
             <div class="col-5">
               <q-btn
                 unelevated
@@ -210,7 +210,7 @@
                 class="full-width"
               />
             </div>
-            <q-space/>
+            <q-space />
             <div class="col-5">
               <q-btn
                 v-if="!showValidationDialog"
@@ -233,27 +233,24 @@
                 @click="showValidationDialog = false"
               />
             </div>
-            <q-space/>
+            <q-space />
           </div>
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-file-csv
-      v-model="showValidationDialog"
-      :form-data="validFormData"
-    />
+    <parser-parse-file-csv v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRaw, watch} from 'vue';
+import { computed, ref, toRaw, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type {CsvParserCreate, CsvParserUpdate} from 'src/services/parser_csv/types';
+import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import {ruleFactories, rules} from 'src/utils/validation/rules';
-import ParserParseFileCsv from "components/ParserParseFileCsv.vue";
-import {QForm} from "quasar";
+import { ruleFactories, rules } from 'src/utils/validation/rules';
+import ParserParseFileCsv from 'components/ParserParseFileCsv.vue';
+import { QForm } from 'quasar';
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
@@ -314,13 +311,13 @@ watch(
   formData,
   async () => {
     if (areRequiredFieldsFilled.value) {
-      const valid = await formRef.value?.validate(false) ?? false;
+      const valid = (await formRef.value?.validate(false)) ?? false;
       if (valid) {
         validFormData.value = structuredClone(toRaw(formData.value));
       }
     }
   },
-  {deep: true},
+  { deep: true },
 );
 
 const permissionGroupModel = computed({

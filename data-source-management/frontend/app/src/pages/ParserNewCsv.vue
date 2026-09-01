@@ -103,7 +103,10 @@ function normalizeFormData(data: CsvParserCreate): CsvParserCreate {
       data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
         ? data.headlines_to_exclude
         : null,
-    footlines_to_exclude: !!data.footlines_to_exclude || data.footlines_to_exclude === 0 ? data.footlines_to_exclude : null,
+    footlines_to_exclude:
+      !!data.footlines_to_exclude || data.footlines_to_exclude === 0
+        ? data.footlines_to_exclude
+        : null,
     pandas_read_csv: data.pandas_read_csv || null,
     timestamp_columns: (data.timestamp_columns || []).map((column) => ({
       column: column.column,
