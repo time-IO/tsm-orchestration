@@ -3,7 +3,7 @@
     <h5>{{ title }}</h5>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl"/>
       </div>
     </div>
     <q-stepper ref="stepper" v-model="step" header-nav>
@@ -33,7 +33,13 @@
             label="Context Window *"
             hint="Enter a Context Window for this QC Setting"
             :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
-          />
+          >
+            <template v-slot:append>
+              <q-btn round flat icon="help_outline" @click="showContextDocumentation">
+                <q-tooltip>View Pandas Docs for information on available aliases</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
           <!-- Description -->
           <q-input
             filled
@@ -105,7 +111,7 @@
               label="Back"
               @click="decreaseStep"
             />
-            <q-space />
+            <q-space/>
             <q-btn
               v-if="step < 2"
               label="Continue"
@@ -130,7 +136,7 @@
       </template>
     </q-stepper>
 
-    <qc-setting-function-selection-dialog v-model="functionDialog" @select="selectFunction" />
+    <qc-setting-function-selection-dialog v-model="functionDialog" @select="selectFunction"/>
 
     <q-dialog v-model="submitDialog">
       <q-card class="full-width">
@@ -138,9 +144,9 @@
           <div class="text-h6">Submit Quality Control Settings</div>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to submit? </q-card-section>
+        <q-card-section> Are you sure you want to submit?</q-card-section>
 
-        <q-separator />
+        <q-separator/>
 
         <q-card-actions>
           <q-btn flat @click="closeSubmitDialog()">Cancel</q-btn>
@@ -178,27 +184,27 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import { QForm } from 'quasar';
+import {QForm} from 'quasar';
 import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
 import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
 import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
-import { computed, type Ref, ref } from 'vue';
+import {computed, type Ref, ref} from 'vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
   QualityControlSettingCreate,
   QualityControlSettingUpdate,
 } from 'src/services/quality_control_setting/types';
-import type { FunctionOption } from 'src/utils/quality_control_utils';
+import type {FunctionOption} from 'src/utils/quality_control_utils';
 import {
   getQcFunctionComponent,
   type QcFunctionName,
 } from 'src/utils/quality_control_function_utils';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { Datastream } from 'src/services/sta/types';
-import { isDatastreamType } from 'src/utils/quality_control_utils';
-import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type {PermissionGroup} from 'src/services/permission_group/types';
+import type {Datastream} from 'src/services/sta/types';
+import {isDatastreamType, showContextDocumentation} from 'src/utils/quality_control_utils';
+import {FUNCTIONS_WITH_REQUIRED_TARGET} from 'src/utils/quality_control_utils';
+import {ruleFactories, rules} from 'src/utils/validation/rules';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
   default: {
@@ -284,7 +290,7 @@ const hasValidDatastreams = computed(() => {
 
 const expandAllFunctions = ref(false);
 
-function handleAddDatastream({ funcIndex, argIndex }: { funcIndex: number; argIndex: number }) {
+function handleAddDatastream({funcIndex, argIndex}: { funcIndex: number; argIndex: number }) {
   addDatastreamFuncIndex.value = funcIndex;
   addDatastreamArgIndex.value = argIndex;
   addDatastreamDialog.value = true;
@@ -312,7 +318,8 @@ function validateBaseFormAndGoToNextStep() {
           // at least one invalid value
         }
       })
-      .catch(() => {});
+      .catch(() => {
+      });
   }
 }
 
@@ -355,10 +362,10 @@ function removeDatastream(funcIndex: number, argIndex: number, datastream: Datas
 }
 
 function handleRemoveDatastream({
-  funcIndex,
-  argIndex,
-  datastream,
-}: {
+                                  funcIndex,
+                                  argIndex,
+                                  datastream,
+                                }: {
   funcIndex: number;
   argIndex: number;
   datastream: Datastream;
