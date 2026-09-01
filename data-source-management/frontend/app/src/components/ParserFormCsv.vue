@@ -205,7 +205,7 @@
                 color="green"
                 type="submit"
                 :loading="isLoading"
-                :disable="formData.timestamp_columns.length === 0"
+                :disable="!areRequiredFieldsFilled"
                 label="Save"
                 class="full-width"
               />
@@ -220,6 +220,7 @@
                 label="Test parser"
                 class="full-width"
                 @click="showValidationDialog = true"
+                :disable="!areRequiredFieldsFilled"
               />
               <q-btn
                 v-else
@@ -297,19 +298,30 @@ const formData = defineModel<CsvParserFormData>({
 
 const formRef = ref<QForm | null>(null);
 const validFormData = ref(structuredClone(toRaw(formData.value)));
+const showValidationDialog = ref(false);
+
+const areRequiredFieldsFilled = computed(() => {
+  return (
+    !!formData.value.name &&
+    !!formData.value.delimiter &&
+    !!formData.value.timezone &&
+    !!formData.value.encoding &&
+    formData.value.timestamp_columns.length > 0
+  );
+});
 
 watch(
   formData,
   async () => {
-    const valid = await formRef.value?.validate(false) ?? false;
-    if (valid) {
-      validFormData.value = structuredClone(toRaw(formData.value));
+    if (areRequiredFieldsFilled.value) {
+      const valid = await formRef.value?.validate(false) ?? false;
+      if (valid) {
+        validFormData.value = structuredClone(toRaw(formData.value));
+      }
     }
   },
   {deep: true},
 );
-
-const showValidationDialog = ref(false);
 
 const permissionGroupModel = computed({
   get() {

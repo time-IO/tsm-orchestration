@@ -98,4 +98,5 @@ class JsonParser(PandasParser):
             raise ParsingError(f"Timestamp path error: {e}")
         self._start_date = df.index[0]
         self._end_date = df.index[-1]
+        self.logger.log("df", df)
         return df

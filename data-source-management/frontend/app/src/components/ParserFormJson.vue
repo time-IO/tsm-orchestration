@@ -114,26 +114,38 @@
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space/>
-            <div class="col-3">
+            <div class="col-5">
               <q-btn
                 unelevated
                 color="green"
                 type="submit"
                 :loading="isLoading"
-                :disable="formData.timestamp_keys.length === 0"
+                :disable="!areRequiredFieldsFilled"
                 label="Save"
                 class="full-width"
               />
             </div>
             <q-space/>
-            <div class="col-3">
+            <div class="col-5">
               <q-btn
+                v-if="!showValidationDialog"
                 unelevated
                 color="primary"
                 icon="fact_check"
                 label="Test parser"
                 class="full-width"
                 @click="showValidationDialog = true"
+                :disable="!areRequiredFieldsFilled"
+              />
+              <q-btn
+                v-else
+                unelevated
+                outline
+                color="primary"
+                icon="close"
+                label="Close parser testing"
+                class="full-width"
+                @click="showValidationDialog = false"
               />
             </div>
             <q-space/>
@@ -192,19 +204,28 @@ const formData = defineModel<JsonParserFormData>({
 
 const formRef = ref<QForm | null>(null);
 const validFormData = ref(structuredClone(toRaw(formData.value)));
+const showValidationDialog = ref(false);
+
+const areRequiredFieldsFilled = computed(() => {
+  return (
+    !!formData.value.name &&
+    !!formData.value.timezone &&
+    formData.value.timestamp_keys.length > 0
+  );
+});
 
 watch(
   formData,
   async () => {
-    const valid = await formRef.value?.validate(false) ?? false;
-    if (valid) {
-      validFormData.value = structuredClone(toRaw(formData.value));
+    if (areRequiredFieldsFilled.value) {
+      const valid = await formRef.value?.validate(false) ?? false;
+      if (valid) {
+        validFormData.value = structuredClone(toRaw(formData.value));
+      }
     }
   },
   {deep: true},
 );
-
-const showValidationDialog = ref(false);
 
 const permissionGroupModel = computed({
   get() {
