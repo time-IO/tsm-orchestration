@@ -33,3 +33,8 @@ export function showContextDocumentation(): void {
     '_blank',
   );
 }
+
+export function openSaqcDocuForFunction(functionName: string): void {
+  const url = `https://rdm-software.pages.ufz.de/saqc/_api/saqc.SaQC.html#saqc.SaQC.${functionName}`;
+  window.open(url, '_blank');
+}
