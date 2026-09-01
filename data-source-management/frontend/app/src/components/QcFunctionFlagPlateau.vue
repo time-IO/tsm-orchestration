@@ -81,7 +81,7 @@
       filled
       v-model.number="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[ruleFactories.MIN(0)]"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Flag assigned to values identified by this function."
     />
 
