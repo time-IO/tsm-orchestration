@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from access_scope import AccessScope
 from dependencies import (
     get_current_user,
-    get_repo_ingest,
+    get_repo_ingest_external_sftp,
 )
 from models import TriggerSyncExtSftpBase, TriggerSyncExtSftpResponse, User
 import logging
@@ -28,7 +28,7 @@ router = APIRouter(
 def trigger_sftp(
     current_user: CurrentUser,
     payload: TriggerSyncExtSftpBase,
-    repo=Depends(get_repo_ingest),
+    repo=Depends(get_repo_ingest_external_sftp),
 ):
     logger.debug(
         "Trigger external SFTP sync requested by user_id=%s for ingest_id=%s range=%s..%s",
@@ -39,7 +39,6 @@ def trigger_sftp(
     )
     return trigger_external_sftp_service(
         payload=payload,
-        allowed_permission_group_ids=current_user.permission_group_ids,
-        repo_ingest=repo,
+        repo_ext_sftp=repo,
         access_scope=AccessScope.from_user(current_user),
     )

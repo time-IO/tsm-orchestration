@@ -165,37 +165,22 @@ def test_external_sftp_trigger_service_passes_superuser_scope_to_repository(
         ingest_id=1, start_date="2026-01-01", end_date="2026-01-02"
     )
     repo = MagicMock()
-    repo.find_one.return_value = SimpleNamespace(uuid="ingest-uuid")
+    repo.find_one.return_value = SimpleNamespace(
+        ingest=SimpleNamespace(uuid="ingest-uuid")
+    )
     monkeypatch.setattr(
         trigger_ext_sftp_service_module, "publish_trigger_ext_sftp", MagicMock()
     )
 
     result = trigger_ext_sftp_service_module.trigger_external_sftp_service(
         payload=payload,
-        allowed_permission_group_ids=[],
-        repo_ingest=repo,
+        repo_ext_sftp=repo,
         access_scope=AccessScope([], is_superuser=True),
     )
 
     assert result == {"triggered_ingest": 1}
     access_scope = repo.find_one.call_args.kwargs["access_scope"]
     assert access_scope.is_superuser is True
-
-
-def test_external_sftp_trigger_service_keeps_legacy_permission_groups(monkeypatch):
-    payload = TriggerSyncExtSftpBase(
-        ingest_id=1, start_date="2026-01-01", end_date="2026-01-02"
-    )
-    repo = MagicMock()
-    repo.find_one.return_value = SimpleNamespace(uuid="ingest-uuid")
-    monkeypatch.setattr(
-        trigger_ext_sftp_service_module, "publish_trigger_ext_sftp", MagicMock()
-    )
-
-    trigger_ext_sftp_service_module.trigger_external_sftp_service(payload, [1], repo)
-
-    access_scope = repo.find_one.call_args.kwargs["access_scope"]
-    assert access_scope == AccessScope([1])
 
 
 def test_quality_control_trigger_service_passes_superuser_scope(monkeypatch):

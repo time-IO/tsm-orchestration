@@ -40,7 +40,8 @@
         <q-space />
         <q-btn
           label="Synchronise"
-          :disable="!!validationError"
+          :disable="!!validationError || submitting"
+          :loading="submitting"
           @click="triggerSftp"
           color="primary"
         >
@@ -68,6 +69,7 @@ const $q = useQuasar();
 
 const beginDate = ref<string | undefined>('');
 const endDate = ref<string | undefined>('');
+const submitting = ref(false);
 
 const emit = defineEmits(['success']);
 const dateFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
@@ -90,13 +92,14 @@ const validationError = computed(() => {
 });
 
 async function triggerSftp() {
-  if (validationError.value) return;
+  if (validationError.value || submitting.value) return;
 
   const data: TriggerSyncExtSftpBase = {
     ingest_id,
     ...(beginDate.value ? { start_date: beginDate.value } : {}),
     ...(endDate.value ? { end_date: endDate.value } : {}),
   };
+  submitting.value = true;
   try {
     await store.dispatchTriggerSftp(data);
     $q.notify({
@@ -112,6 +115,7 @@ async function triggerSftp() {
       message: 'Failed to trigger external SFTP sync.',
     });
   } finally {
+    submitting.value = false;
     showDialog.value = false;
   }
 }
