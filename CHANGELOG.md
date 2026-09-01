@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 ### Added
+- Added link to saqc documentation in the header of a selected saqc function([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/690))
 ### Fixed
 ### Changed
 - Updated link to pandas documentation and added help icon to context window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/689))
