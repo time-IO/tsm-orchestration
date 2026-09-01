@@ -1,6 +1,6 @@
 <template>
   <qc-function-form-template
-    function-title="flagJumps"
+    function-title="flagOffset"
     v-model:label="label"
     @submit="submitForm"
     @remove="removeForm"
