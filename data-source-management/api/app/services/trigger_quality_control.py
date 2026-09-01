@@ -1,4 +1,5 @@
 import logging
+from access_scope import AccessScope
 from fastapi import HTTPException
 from models import (
     BaseRepository,
@@ -13,7 +14,11 @@ def trigger_quality_control_service(
     payload: TriggerQualityControl,
     allowed_permission_group_ids: list[int],
     repo_quality_control: BaseRepository,
+    access_scope: AccessScope | None = None,
 ) -> dict:
+    if access_scope is None:
+        access_scope = AccessScope(allowed_permission_group_ids)
+
     logger.debug(
         "Trigger quality-control service started for ids=%s",
         payload.quality_control_setting_ids,
@@ -22,7 +27,7 @@ def trigger_quality_control_service(
     for identifier in set(payload.quality_control_setting_ids):
         try:
             qc_setting = repo_quality_control.find_allowed_one(
-                identifier, allowed_permission_group_ids
+                identifier, access_scope=access_scope
             )
         except HTTPException:
             logger.debug(

@@ -13,6 +13,7 @@ from models import (
     QualityControlSettingRepository,
 )
 import logging
+from access_scope import AccessScope
 
 from repositories.ingest import IngestRepository
 from repositories.ingest_external_api import IngestExternalApiRepository
@@ -53,7 +54,7 @@ def get_session():
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     session=Depends(get_session),
-):
+) -> User:
     if not credentials:
         logger.warning("Authentication failed: missing Authorization header")
         raise HTTPException(status_code=401, detail="Missing Authorization header")
@@ -77,7 +78,7 @@ def get_current_user(
     return user
 
 
-def get_or_create_user(*, session, claims: dict, access_token: str):
+def get_or_create_user(*, session, claims: dict, access_token: str) -> User:
     try:
         external_id = claims["sub"]
 
@@ -113,6 +114,20 @@ def get_or_create_user(*, session, claims: dict, access_token: str):
         session.rollback()
         # Optionally log or re-raise, depending on your error handling strategy
         raise HTTPException(status_code=500, detail="Failed to get or create user")
+
+
+def authenticate_token(token: str, session) -> User:
+    """Authenticate a raw access token without request/header context.
+
+    Used by the WebSocket MQTT client, where the browser cannot send an
+    Authorization header, so the token arrives in the first WS message instead.
+    Mirrors the validation done in ``get_current_user``.
+    """
+    claims = oidc.authenticate(access_token=token)
+    user = get_or_create_user(session=session, claims=claims, access_token=token)
+    if not user.is_active:
+        raise OIDCError("User disabled")
+    return user
 
 
 def sync_permission_groups(
@@ -289,4 +304,6 @@ async def create_database_if_not_exists(
         logger.debug(
             f"Creating database entity for permission_group_id={permission_group_id}"
         )
-        database_repo.create(permission_group, current_user.permission_group_ids)
+        database_repo.create(
+            permission_group, access_scope=AccessScope.from_user(current_user)
+        )

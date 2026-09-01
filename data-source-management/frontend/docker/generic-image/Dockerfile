@@ -18,7 +18,8 @@ COPY ./docker/generic-image/default.conf /etc/nginx/conf.d/default.conf
 
 COPY ./docker/generic-image/entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh \
+  && chown -R nginx:nginx /usr/share/nginx/html
 
 EXPOSE 80
 ENTRYPOINT ["/entrypoint.sh"]

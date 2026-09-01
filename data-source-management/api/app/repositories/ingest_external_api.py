@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from sqlalchemy import cast, String
 from fastapi_filters import FilterOperator
 
+from access_scope import AccessScope
 from models.ingest_external_api import IngestExternalApiRead
 from sorting import apply_sort_list
 
@@ -18,18 +19,18 @@ class IngestExternalApiRepository:
         self.model = IngestExternalApi
         self.session = session
 
-    def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
-    ) -> IngestExternalApi:
+    def find_one(self, id: int, access_scope: AccessScope) -> IngestExternalApi:
         statement = (
             select(self.model)
             .join(self.model.ingest)
-            .where(
-                self.model.ingest_id == id,
-                Ingest.permission_group_id.in_(permission_group_ids_of_user),
-            )
+            .where(self.model.ingest_id == id)
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
@@ -38,16 +39,20 @@ class IngestExternalApiRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[IngestExternalApiFilter] = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.ingest)
-            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         if filters:
             if filters.uuid and FilterOperator.ilike in filters.uuid:
@@ -60,8 +65,8 @@ class IngestExternalApiRepository:
         flatt_list = [self.to_flat(item) for item in results]
         return apply_sort_list(flatt_list, sort_by) if sort_by else flatt_list
 
-    def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         try:
             self.session.delete(entity)

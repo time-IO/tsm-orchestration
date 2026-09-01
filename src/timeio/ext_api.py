@@ -394,7 +394,7 @@ class UbaApiSyncer(ExtApiSyncer):
         dt_cet = dt.replace(tzinfo=ZoneInfo("CET"))
         dt_utc = dt_cet.astimezone(timezone.utc)
 
-        return dt_utc
+        return dt_utc.isoformat()
 
     def parse_measure_data(self, measure_data: list, station_id: str) -> list:
         """Creates POST body from combined uba measures data"""

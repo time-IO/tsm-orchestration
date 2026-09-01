@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagUniLOF" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagUniLOF"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -30,7 +35,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.n"
+      v-model.number="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Number of periods to include in LOF calculation."
@@ -62,10 +67,10 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input="formData.corruption"
+      v-model:input.number="formData.corruption"
       v-model:current_type="current_corruption_type"
-      :rules_float="[ruleFactories.RANGE(0, 1)]"
-      :rules_int="[ruleFactories.MIN(0)]"
+      :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint_float="Portion of data considered anomalous."
       hint_int="Count of data considered anomalous."
     />
@@ -84,9 +89,9 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.p"
-      label="p (enter a floating point number)"
-      :rules="[rules.FLOAT, ruleFactories.MIN(1)]"
+      v-model.number="formData.p"
+      label="p (enter a integer number)"
+      :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
     />
 
@@ -175,6 +180,7 @@ const props = defineProps<{
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 
 const current_thresh_type = ref(POSSIBLE_QC_FUNCTION_TYPES.ENUM);
@@ -288,7 +294,7 @@ const formDataWithTypes = computed(() => {
   const pObject = {
     name: 'p',
     input: { value: formData.value.p },
-    type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
+    type: POSSIBLE_QC_FUNCTION_TYPES.INT,
   };
 
   const densityObject = {

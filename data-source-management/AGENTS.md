@@ -1,103 +1,41 @@
-# AGENTS.md
+# Data Source Management Instructions
 
-## Repository Structure
+These commands assume the orchestration repository root as the working directory and require `docker-compose-dev.yml`; create it from `docker-compose-dev.example.yml` if absent.
 
-- `api/` - FastAPI backend (Python). Entry point: `api/app/main.py`
-- `frontend/` - Quasar/Vue 3 SPA (TypeScript). Config: `frontend/app/quasar.config.ts`
-- `docker-compose.yml` - Full stack (API, frontend, Keycloak, PostgreSQL, MQTT, nginx proxy)
-
-## Development Setup
+## Focused Verification
 
 ```bash
-docker compose build
-docker compose run --rm -u $UID frontend npm ci  # install frontend deps
-# Edit /etc/hosts: add "127.0.0.1 proxy"
-docker compose up -d
+# Frontend: ESLint, vue-tsc, then a production build
+./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm run lint:all
+./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm run build
+
+# API checks that do not collect DB-backed integration tests
+./dc-with-dev.sh run --rm -u "$UID" --entrypoint "" dsm-api \
+  pytest tests/unit_tests tests/validation
+
+# Integration script provisions/migrates its test DB; arguments pass to pytest
+./data-source-management/run_integration_tests.sh
+./data-source-management/run_integration_tests.sh -k 'focused_expression'
 ```
 
-- Frontend: http://localhost
-- API: http://localhost/api (docs at http://localhost/api/docs)
-- Keycloak: http://localhost/keycloak
-- Dozzle logs: http://localhost/dozzle
+- Frontend `npm test` deliberately exits successfully without running tests. `npm run format` writes files; it is not a check.
+- Plain API `pytest` also collects `tests/integration_tests/`; do not use it as a unit-only shortcut.
+- The integration script always stops and removes `dsm-api-test-db` on exit, even if that container existed before the run. Integration create/update paths also publish to MQTT.
 
-## Commands
-
-### Frontend (`frontend/app/`)
+## Alembic
 
 ```bash
-npm run lint      # ESLint
-npm run lint:ts   # vue-tsc --noEmit
-npm run lint:all  # lint && lint:ts
-npm run format    # prettier --write
-npm run dev       # quasar dev
+./data-source-management/api/create_alembic_migration.sh <slug>
 ```
 
-### API
+- Autogeneration uses the database configured for `dsm-api`, which must be reachable and current. Every API startup runs `alembic upgrade head` before Uvicorn and fails if migration fails.
+- Import new SQLModel tables from `api/app/models/__init__.py`; Alembic targets global `SQLModel.metadata` and otherwise misses them.
+- Inspect both `upgrade` and `downgrade` in every generated revision. Parser/API/ingest subtype additions also require updating model check constraints and `api/app/constants.py`; generated constraint changes commonly need hand edits.
 
-```bash
-# Format Python with black
-docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
+## Environment and API Conventions
 
-# Create Alembic migration (runs via docker compose)
-./api/create_alembic_migration.sh <slug>
-
-# Run tests
-docker compose run --rm -u $UID --entrypoint "" api pytest
-```
-
-### CI Pipeline (.gitlab-ci.yml)
-
-Order: `freeze → check (black, npm-lint, npm-test) → build → release`
-
-- `npm-test` currently exits 0 with no actual tests
-- Black check: `black --check api/app/`
-
-## Environment Variables
-
-**API** (`api/app/config.py` > `Settings` class): define in `Settings`, use via `settings` instance.
-
-**Frontend** (`frontend/app/quasar.config.ts` > `build.env`): use `process.env.<KEY>` at runtime.
-
-**Important:** Frontend env vars use placeholder pattern for runtime substitution:
-
-```typescript
-const ENV_API_BASE_URL =
-  process.env.API_BASE_URL || "ENV_API_BASE_URL_PLACEHOLDER";
-```
-
-During build, missing vars become `<KEY>_PLACEHOLDER` strings. The generic frontend image's entrypoint replaces these at container startup.
-
-## Database Migrations
-
-- Tool: Alembic (scripts in `api/app/alembic/versions/`)
-- Naming: `YYYYmmdd_HHMMSS_<slug>.py`
-- API startup (`api/app/start.sh`) runs `alembic upgrade head` automatically
-- Black formatting applied to migrations via alembic.ini post-write hook
-
-## Auth Architecture
-
-- Frontend authenticates via OIDC/PKCE against Keycloak
-- Access token sent as Bearer to API
-- API validates token signature by fetching keys from IDP
-- Users auto-created from IDP userinfo if not in DB
-- Permission groups from `eduperson_entitlement` claim
-
-**Permission group entitlement format:** `a:a:a:group:<VO Name>:<Group Name>#`
-
-- VO names must be in `ALLOWED_VOS` env var (comma-separated)
-
-## API Router Order
-
-Router inclusion order in `api/app/main.py` defines OpenAPI doc order. Edit imports and `app.include_router()` calls together.
-
-## Model/Repository Pattern
-
-- Models in `api/app/models/`
-- Filters in `api/app/models/filters/`
-- Routers in `api/app/routers/`
-- Services in `api/app/services/`
-
-## Testing
-
-- No frontend tests configured (`npm test` is a placeholder)
-- Backend tests run via: `docker compose run --rm -u $UID --entrypoint "" api pytest`
+- Add API settings to `api/app/config.py::Settings` and consume the module-level `settings`; settings and the database engine are initialized at import time, so tests must install environment overrides before importing app modules.
+- A frontend environment variable needs both a fallback/build mapping in `frontend/app/quasar.config.ts` and its placeholder in `frontend/docker/generic-image/entrypoint.sh`.
+- Generic frontend images receive placeholder names such as `ENV_API_BASE_URL_PLACEHOLDER`; original names such as `API_BASE_URL` are build/dev inputs. An unset runtime placeholder is replaced with an empty string.
+- Router inclusion order in `api/app/main.py` controls OpenAPI section order; keep router imports and `app.include_router()` calls aligned.
+- Permission groups come from `eduperson_entitlement` values shaped as `a:a:a:group:<VO Name>:<Group Name>#`; accepted VO names are restricted by `ALLOWED_VOS`.

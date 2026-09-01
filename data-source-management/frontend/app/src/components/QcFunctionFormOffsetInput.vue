@@ -8,7 +8,7 @@
     v-bind="$attrs"
   >
     <template v-slot:append>
-      <q-btn round flat icon="help_outline" @click="showDocs">
+      <q-btn round flat icon="help_outline" @click="showContextDocumentation">
         <q-tooltip> View Pandas Docs for information on available offset aliases </q-tooltip>
       </q-btn>
     </template>
@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
+import { showContextDocumentation } from 'src/utils/quality_control_utils';
 
 const model = defineModel<number | null>({ default: null });
 
@@ -28,13 +29,6 @@ defineProps<{
   label: string;
   hint: string;
 }>();
-
-const showDocs = () => {
-  window.open(
-    'https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases',
-    '_blank',
-  );
-};
 </script>
 
 <style scoped></style>

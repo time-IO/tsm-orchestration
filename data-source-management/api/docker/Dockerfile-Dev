@@ -28,6 +28,7 @@ COPY ./data-source-management/api/app /app
 COPY ./src/timeio /app/timeio
 
 RUN chown -R appuser /app && \
+    test -f /app/alembic.ini && grep -q "^script_location" /app/alembic.ini && \
     chmod 755 /app/start.sh
 
 WORKDIR /app

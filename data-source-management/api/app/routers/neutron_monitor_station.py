@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
 from dependencies import get_current_user, get_repo_neutron_monitor_station
-from models import User
 from models.neutron_monitor_station import NeutronMonitorStation
 
 router = APIRouter(
@@ -33,7 +32,6 @@ def read_list(
 def read_one(
     *,
     id: int,
-    current_user: User = Depends(get_current_user),
     repo=Depends(get_repo_neutron_monitor_station),
 ):
-    return repo.find_one(id, current_user.permission_group_ids)
+    return repo.find_one(id)

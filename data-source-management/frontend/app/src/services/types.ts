@@ -38,6 +38,7 @@ export type DefaultFilter = {
   date_from: string | undefined;
   date_to: string | undefined;
   uuid: string | undefined;
+  functions?: string[] | undefined;
 };
 
 export type IngestFilter = DefaultFilter & {
