@@ -1,9 +1,5 @@
 <template>
-  <q-icon
-    name="info"
-    class="cursor-pointer"
-    @click.stop="openSaqcDocuForFunction(label)"
-  >
+  <q-icon name="info" class="cursor-pointer" @click.stop="openSaqcDocuForFunction(label)">
     <q-tooltip>Open SaQC Documentation</q-tooltip>
   </q-icon>
 </template>

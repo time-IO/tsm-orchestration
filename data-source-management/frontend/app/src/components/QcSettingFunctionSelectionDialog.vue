@@ -36,7 +36,7 @@
             </q-item-section>
 
             <q-item-section side>
-              <saqc-info-icon :label="item.label"/>
+              <saqc-info-icon :label="item.label" />
             </q-item-section>
           </q-item>
         </q-list>
@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import type { FunctionOption } from 'src/utils/quality_control_utils';
-import SaqcInfoIcon from "components/SaqcInfoIcon.vue";
+import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 

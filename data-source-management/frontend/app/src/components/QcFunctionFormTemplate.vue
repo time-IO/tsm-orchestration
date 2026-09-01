@@ -7,11 +7,11 @@
             <span>{{ functionTitle }}</span>
           </q-item-section>
           <q-item-section side>
-            <saqc-info-icon :label="functionTitle"/>
+            <saqc-info-icon :label="functionTitle" />
           </q-item-section>
 
           <q-item-section side>
-            <q-icon name="close" class="cursor-pointer" @click="removeForm"/>
+            <q-icon name="close" class="cursor-pointer" @click="removeForm" />
           </q-item-section>
         </q-item>
       </q-card-section>
@@ -30,14 +30,14 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn color="green" label="Add" type="submit"/>
+        <q-btn color="green" label="Add" type="submit" />
       </q-card-actions>
     </q-card>
   </q-form>
 </template>
 
 <script setup lang="ts">
-import SaqcInfoIcon from "components/SaqcInfoIcon.vue";
+import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
 
 defineProps<{
   functionTitle: string;
