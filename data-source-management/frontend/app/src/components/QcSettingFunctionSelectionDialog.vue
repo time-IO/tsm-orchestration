@@ -36,13 +36,7 @@
             </q-item-section>
 
             <q-item-section side>
-              <q-icon
-                name="info"
-                class="cursor-pointer"
-                @click.stop="openSaqcDocuForFunction(item.label)"
-              >
-                <q-tooltip> Open SaQC Documentation </q-tooltip>
-              </q-icon>
+              <saqc-info-icon :label="item.label" />
             </q-item-section>
           </q-item>
         </q-list>
@@ -53,6 +47,7 @@
 
 <script setup lang="ts">
 import type { FunctionOption } from 'src/utils/quality_control_utils';
+import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 
@@ -117,11 +112,6 @@ const functionOptions: FunctionOption[] = [
 
 function emitSelectFunction(item: FunctionOption) {
   emit('select', item);
-}
-
-function openSaqcDocuForFunction(functionName: string) {
-  const url = `https://rdm-software.pages.ufz.de/saqc/_api/saqc.SaQC.html#saqc.SaQC.${functionName}`;
-  window.open(url, '_blank');
 }
 </script>
 
