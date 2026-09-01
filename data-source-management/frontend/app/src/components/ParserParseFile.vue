@@ -127,11 +127,11 @@
     </div>
   </q-drawer>
 </template>
-<script setup lang="ts" generic="T extends ParserPayloadUpdate">
+<script setup lang="ts" generic="T extends ParserPayloadParse">
 import {computed, ref, toRaw, watch} from 'vue';
 import {useQuasar} from 'quasar';
 import type {QTableColumn} from "quasar";
-import type {ParserPayloadUpdate, ParsingResult} from "src/services/types";
+import type {ParserPayloadParse, ParsingResult} from "src/services/types";
 const $q = useQuasar();
 type ParseAction<T> = (
   settings: T,
@@ -141,7 +141,7 @@ const isOpen = defineModel<boolean>({
   default: false,
 });
 const props = defineProps<{
-  formData: T;
+  parsingSettings: T;
   parseAction: ParseAction<T>;
   allowedFileType: string
   allowedFileTypeName: string
@@ -181,7 +181,7 @@ const isAlreadyValidated = computed(() => {
   }
   return (
     filesAreEqual(file.value, lastValidatedFile.value) &&
-    settingsAreEqual(props.formData, lastValidatedSettings.value)
+    settingsAreEqual(props.parsingSettings, lastValidatedSettings.value)
   );
 });
 const haveSettingsChanged = computed(() => {
@@ -189,12 +189,12 @@ const haveSettingsChanged = computed(() => {
     return false;
   }
   return !settingsAreEqual(
-    props.formData,
+    props.parsingSettings,
     lastValidatedSettings.value,
   );
 });
 watch(
-  () => props.formData,
+  () => props.parsingSettings,
   () => {
     if (!autoValidate.value || !file.value || isValidating.value) {
       return;
@@ -256,16 +256,17 @@ async function validate() {
   isValidating.value = true;
   try {
     const result: ParsingResult = await props.parseAction(
-      props.formData,
+      props.parsingSettings,
       file.value,
     );
     validationResult.value = result.is_valid;
     validationData.value = result.data;
     validationError.value = result.error;
     validationWarnings.value = result.warnings;
-    lastValidatedSettings.value = structuredClone(toRaw(props.formData));
+    lastValidatedSettings.value = structuredClone(toRaw(props.parsingSettings));
     lastValidatedFile.value = file.value;
-  } catch {
+  } catch (e) {
+    console.error('Validation failed', e);
     validationResult.value = null;
     validationData.value = [];
     validationError.value = 'Error';

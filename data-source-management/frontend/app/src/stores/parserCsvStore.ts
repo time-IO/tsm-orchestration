@@ -1,6 +1,6 @@
 import { acceptHMRUpdate } from 'pinia';
 import type {
-  CsvParserCreate,
+  CsvParserCreate, CsvParserParse,
   CsvParserPublic,
   CsvParserUpdate,
 } from 'src/services/parser_csv/types';
@@ -10,7 +10,8 @@ import {createParserStore} from "stores/factoryParserStore";
 export const useCsvParserStore = createParserStore<
   CsvParserPublic,
   CsvParserCreate,
-  CsvParserUpdate
+  CsvParserUpdate,
+  CsvParserParse
 >('csvParserStore', API.csvParser);
 
 if (import.meta.hot) {

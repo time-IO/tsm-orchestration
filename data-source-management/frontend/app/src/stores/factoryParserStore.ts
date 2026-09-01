@@ -3,16 +3,15 @@ import { markRaw } from 'vue';
 import { defaultPagination } from 'src/utils/pagination_utils';
 import type {
   DefaultFilter,
-  ParserApiService, ParserPayloadCreate, ParserPayloadPublic, ParserPayloadUpdate,
+  ParserApiService, ParserPayloadCreate, ParserPayloadParse, ParserPayloadPublic, ParserPayloadUpdate, ParsingResult,
   QTableRequestProp,
   QTableRequestPropPagination,
 } from 'src/services/types';
-import type {CsvParsingResult} from "src/services/parser_csv/types";
 
 // TODO: refactor store factories
-export function createParserStore<TPublic extends ParserPayloadPublic, TPayloadCreate extends ParserPayloadCreate, TPayloadUpdate extends ParserPayloadUpdate>(
+export function createParserStore<TPublic extends ParserPayloadPublic, TPayloadCreate extends ParserPayloadCreate, TPayloadUpdate extends ParserPayloadUpdate, TPayloadParse extends ParserPayloadParse>(
   storeId: string,
-  apiService: ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate>,
+  apiService: ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate, TPayloadParse>,
 ) {
   return defineStore(storeId, {
     state: () => ({
@@ -76,7 +75,7 @@ export function createParserStore<TPublic extends ParserPayloadPublic, TPayloadC
       async dispatchDelete(id: number): Promise<void> {
         await apiService.deleteOne(id);
       },
-      async dispatchParseFile(settings: TPayloadUpdate, csvFile: File): Promise<CsvParsingResult> {
+      async dispatchParseFile(settings: TPayloadParse, csvFile: File): Promise<ParsingResult> {
         return await apiService.parseFile(settings, csvFile);
       }
     },

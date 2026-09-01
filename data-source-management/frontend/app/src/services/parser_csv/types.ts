@@ -1,5 +1,4 @@
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type {ParsingResult} from "src/services/types";
 
 export type CsvParserTimestampColumnCreate = {
   column: number | null;
@@ -64,4 +63,14 @@ export type CsvParserUpdate = {
   encoding?: string | null;
 };
 
-export type CsvParsingResult = ParsingResult
+export type CsvParserParse = {
+  delimiter?: string | null;
+  headlines_to_exclude?: string | null;
+  footlines_to_exclude?: number | null;
+  pandas_read_csv?: string | null;
+  timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
+  header?: number | null;
+  comment?: string[];
+  timezone?: string | null;
+  encoding?: string | null;
+}

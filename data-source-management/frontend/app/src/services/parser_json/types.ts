@@ -1,5 +1,4 @@
 import type { PermissionGroup } from 'src/services/permission_group/types';
-import type {ParsingResult} from "src/services/types";
 
 export type JsonParserTimestampKeyCreate = {
   key: string | null;
@@ -46,4 +45,8 @@ export type JsonParserUpdate = {
   timezone: string | null;
 };
 
-export type JsonParsingResult = ParsingResult
+export type JsonParserParse = {
+  comment?: string | null;
+  timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
+  timezone: string | null;
+};
