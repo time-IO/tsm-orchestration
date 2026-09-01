@@ -33,7 +33,13 @@
             label="Context Window *"
             hint="Enter a Context Window for this QC Setting"
             :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
-          />
+          >
+            <template v-slot:append>
+              <q-btn round flat icon="help_outline" @click="showContextDocumentation">
+                <q-tooltip>View Pandas Docs for information on available aliases</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
           <!-- Description -->
           <q-input
             filled
@@ -138,7 +144,7 @@
           <div class="text-h6">Submit Quality Control Settings</div>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to submit? </q-card-section>
+        <q-card-section> Are you sure you want to submit?</q-card-section>
 
         <q-separator />
 
@@ -196,7 +202,7 @@ import {
 } from 'src/utils/quality_control_function_utils';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { Datastream } from 'src/services/sta/types';
-import { isDatastreamType } from 'src/utils/quality_control_utils';
+import { isDatastreamType, showContextDocumentation } from 'src/utils/quality_control_utils';
 import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
 

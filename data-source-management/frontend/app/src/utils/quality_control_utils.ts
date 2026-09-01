@@ -26,3 +26,10 @@ export interface FunctionOption {
   label: string;
   description: string;
 }
+
+export function showContextDocumentation(): void {
+  window.open(
+    'https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#period-aliases',
+    '_blank',
+  );
+}
