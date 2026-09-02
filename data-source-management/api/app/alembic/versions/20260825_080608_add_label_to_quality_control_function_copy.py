@@ -1,6 +1,6 @@
 """add_label_to_quality_control_function
 
-Revision ID: 5f1bce7c9a83
+Revision ID: 5f1bce7c9a84
 Revises: 2987dd5f50bc
 Create Date: 2026-08-25 08:06:08.669546
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 import sqlmodel
 
 # revision identifiers, used by Alembic.
-revision: str = "5f1bce7c9a83"
+revision: str = "5f1bce7c9a84"
 down_revision: Union[str, Sequence[str], None] = "2987dd5f50bc"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
