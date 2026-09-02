@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Detect a diverged Alembic migration history between this branch and main.
 #
@@ -16,6 +16,10 @@
 # migration's down_revision at main's current head before it can be merged.
 
 set -euo pipefail
+
+# Run from the repository root so the paths below are independent of the
+# caller's current working directory.
+cd "$(git rev-parse --show-toplevel)"
 
 ALEMBIC_DIR="data-source-management/api/app/alembic/versions"
 MAIN_BRANCH="${CI_DEFAULT_BRANCH:-main}"
