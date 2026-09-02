@@ -4,9 +4,11 @@
 ## [Unreleased]
 ### Added
 - Added link to saqc documentation in the header of a selected saqc function([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/690))
+- Trigger to (re)sync an external SFTP ingest with an optional date range ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
 ### Fixed
 ### Changed
 - Updated link to pandas documentation and added help icon to context window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/689))
+- Moved external API trigger into the ingest tools section ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
 ### Removed
 
 ## [2026-08-26]
