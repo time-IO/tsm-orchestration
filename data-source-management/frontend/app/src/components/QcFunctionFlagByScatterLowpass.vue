@@ -43,7 +43,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.thresh"
+      v-model.number="formData.thresh"
       label="thresh * (enter a floating point number)"
       :rules="[rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Threshold for chunk deviation."
@@ -70,7 +70,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.sub_thresh"
+      v-model.number="formData.sub_thresh"
       label="sub_thresh (enter a floating point number)"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       hint="Threshold for sub-chunk deviation."
@@ -79,7 +79,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_periods"
+      v-model.number="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum points required in a chunk."
