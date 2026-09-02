@@ -38,7 +38,7 @@ class ConstraintViolation(Exception):
 class OffsetRegex:
     """Regex patterns for offset validation."""
 
-    PATTERN = r"^(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
+    PATTERN = r"^(?!$)(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
     _compiled = re.compile(PATTERN)
 
     @classmethod
