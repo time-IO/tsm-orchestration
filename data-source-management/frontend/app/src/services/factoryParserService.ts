@@ -6,6 +6,8 @@ import type {
   ParserPayloadUpdate,
   ParsingResult,
 } from 'src/services/types';
+import type { AxiosError } from 'axios';
+import { getErrorTextByAxiosError } from 'src/utils/axios_utils';
 
 export function createParserApiService<
   TPublic extends ParserPayloadPublic,
@@ -22,10 +24,10 @@ export function createParserApiService<
     try {
       const result = await axiosInstance.post<ParsingResult>(`${apiPath}parse`, payload);
       return result.data;
-    } catch {
+    } catch (e) {
       return {
         data: [],
-        error: 'An error occurred trying to parse the file content',
+        error: getErrorTextByAxiosError(e as AxiosError, 'parse'),
         warnings: [],
         is_valid: false,
       };

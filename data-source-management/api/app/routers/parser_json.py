@@ -3,7 +3,7 @@ from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from models import User
 from models.filters import BaseFilter
-from dependencies import get_current_user, get_repo_parser_json
+from dependencies import get_current_user, get_repo_parser_json, max_file_size
 from models.parser import ParsedDataResponse
 from models.parser_json import (
     ParserJsonCreate,
@@ -66,7 +66,7 @@ def read_one(
 )
 async def validate(
     settings: str = Form(...),
-    file: UploadFile = File(...),
+    file: UploadFile = Depends(max_file_size(1024 * 1024)),
 ) -> ParsedDataResponse:
     parser_settings = ParserJsonUpdate.model_validate_json(settings)
 

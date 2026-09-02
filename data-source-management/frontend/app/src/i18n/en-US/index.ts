@@ -64,4 +64,20 @@ export default {
       timeLast: 'last {time}',
     },
   },
+  axios: {
+    errors: {
+      413: {
+        default: 'Content too large.',
+        parse: 'The selected file cannot be used for validation because it is too large.'
+      },
+      429: {
+        default: 'Rate limit exceeded.',
+      },
+      500: {
+        default: 'An internal server error occurred.',
+        parse: 'An error occurred trying to parse the file content.',
+      },
+      unknown: 'An error occurred.',
+    },
+  },
 };

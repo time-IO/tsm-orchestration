@@ -26,6 +26,12 @@
               :disable="isValidating"
               :loading="isFileLoading"
               @update:model-value="handleFileChange"
+              :max-file-size="1024 * 1024"
+              :max-files="1"
+              @rejected="wasFileRejected = true"
+              :error="wasFileRejected"
+              error-message="File type is invalid or file is too large"
+              hint="Maximum allowed size is 1MB."
             >
               <template #prepend>
                 <q-icon name="upload_file" />
@@ -119,6 +125,7 @@ import { computed, ref, toRaw, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import type { QTableColumn } from 'quasar';
 import type { ParserPayloadParse, ParsingResult } from 'src/services/types';
+
 const $q = useQuasar();
 type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
 const isOpen = defineModel<boolean>({
@@ -133,8 +140,11 @@ const props = defineProps<{
 }>();
 const breakpoint = computed(() => $q.screen.sizes.md);
 const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
+
 const file = ref<File | null>(null);
 const isFileLoading = ref(false);
+const wasFileRejected = ref(false);
+
 const isValidating = ref(false);
 const validationData = ref<Record<string, unknown>[]>([]);
 const validationError = ref('');
@@ -142,7 +152,9 @@ const validationWarnings = ref<string[]>([]);
 const validationResult = ref<boolean | null>(null);
 const lastValidatedSettings = ref<T | null>(null);
 const lastValidatedFile = ref<File | null>(null);
+
 const autoValidate = ref(true);
+
 let autoValidateTimeout: ReturnType<typeof setTimeout> | null = null;
 const tableColumns = computed<QTableColumn[]>(() => {
   const firstRow = validationData.value[0];
@@ -189,6 +201,7 @@ watch(
   },
   { deep: true },
 );
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) {
     return '';
@@ -206,12 +219,15 @@ function formatValue(value: unknown): string {
   }
   return value;
 }
+
 // TODO: move to utils
 function isIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
 }
+
 function handleFileChange(newFile: File | null) {
   isFileLoading.value = true;
+  wasFileRejected.value = false;
   file.value = newFile;
   resetResult();
   if (!newFile) {
@@ -222,40 +238,35 @@ function handleFileChange(newFile: File | null) {
     isFileLoading.value = false;
   }, 150);
 }
+
 function resetResult() {
   validationResult.value = null;
   validationData.value = [];
   validationError.value = '';
   validationWarnings.value = [];
 }
+
 async function validate() {
   if (!file.value) {
     return;
   }
   isValidating.value = true;
-  try {
-    const result: ParsingResult = await props.parseAction(props.parsingSettings, file.value);
-    validationResult.value = result.is_valid;
-    validationData.value = result.data;
-    validationError.value = result.error;
-    validationWarnings.value = result.warnings;
-    lastValidatedSettings.value = structuredClone(toRaw(props.parsingSettings));
-    lastValidatedFile.value = file.value;
-  } catch (e) {
-    console.error('Validation failed', e);
-    validationResult.value = null;
-    validationData.value = [];
-    validationError.value = 'Error';
-    validationWarnings.value = [];
-  } finally {
-    isValidating.value = false;
-  }
+  const result: ParsingResult = await props.parseAction(props.parsingSettings, file.value);
+  validationResult.value = result.is_valid;
+  validationData.value = result.data;
+  validationError.value = result.error;
+  validationWarnings.value = result.warnings;
+  lastValidatedSettings.value = structuredClone(toRaw(props.parsingSettings));
+  lastValidatedFile.value = file.value;
+  isValidating.value = false;
 }
+
 function filesAreEqual(a: File, b: File): boolean {
   return (
     a.name === b.name && a.size === b.size && a.lastModified === b.lastModified && a.type === b.type
   );
 }
+
 function settingsAreEqual(a: T, b: T): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }

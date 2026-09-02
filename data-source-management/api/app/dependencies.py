@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, File, status, UploadFile
 from sqlmodel import Session, create_engine, select
 from config import settings
 from auth import oidc, OIDCError
@@ -191,6 +191,20 @@ def sync_permission_groups(
             status_code=500, detail=f"Failed to sync permission groups: {str(e)}"
         )
 
+def max_file_size(max_bytes: int):
+    async def _validate(file: UploadFile = File(...)) -> UploadFile:
+        chunk_size = 1024 * 1024
+        size = 0
+        while chunk := await file.read(chunk_size):
+            size += len(chunk)
+            if size > max_bytes:
+                raise HTTPException(
+                    status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                    detail=f"File too large. Max allowed size is {max_bytes} bytes.",
+                )
+        await file.seek(0)
+        return file
+    return _validate
 
 def get_repo_ingest(session=Depends(get_session)):
     return IngestRepository(session)
