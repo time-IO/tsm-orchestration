@@ -11,6 +11,7 @@ import paho.mqtt.client as mqtt
 from config import settings
 from .generate_mqtt_messages import (
     create_sync_ext_api_msg,
+    create_sync_ext_sftp_msg,
     create_sync_quality_control,
     create_frontend_thing_update,
     create_qc_settings_msg,
@@ -119,6 +120,17 @@ def publish_trigger_ext_api(
         msg,
         topic,
         f"External API sync for ingest '{ingest_uuid}' published on '{topic}'",
+    )
+
+
+def publish_trigger_ext_sftp(
+    ingest_uuid, datetime_from, datetime_to, topic="sync_ext_sftp"
+):
+    msg = create_sync_ext_sftp_msg(ingest_uuid, datetime_from, datetime_to)
+    publish_message(
+        msg,
+        topic,
+        f"External SFTP sync for ingest '{ingest_uuid}' published on '{topic}'",
     )
 
 

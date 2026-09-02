@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagUniLOF" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagUniLOF"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -175,6 +180,7 @@ const props = defineProps<{
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 
 const current_thresh_type = ref(POSSIBLE_QC_FUNCTION_TYPES.ENUM);
