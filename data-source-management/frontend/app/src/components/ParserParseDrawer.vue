@@ -1,6 +1,6 @@
 <template>
   <q-drawer
-    v-model="isOpen"
+    v-model="drawerIsOpen"
     side="right"
     :width="width"
     :breakpoint="breakpoint"
@@ -9,7 +9,7 @@
   >
     <div class="validation-sidebar__inner column no-wrap fit">
       <div class="row items-center justify-end q-pt-md q-pr-md">
-        <q-btn flat round dense :ripple="false" icon="close" @click="isOpen = false" />
+        <q-btn flat round dense :ripple="false" icon="close" @click="drawerIsOpen = false" />
       </div>
       <div class="col column no-wrap q-px-md q-pb-md validation-sidebar__body">
         <div class="text-caption text-grey q-mb-sm">
@@ -24,7 +24,6 @@
               :accept="allowedFileType"
               clearable
               :disable="isValidating"
-              :loading="isFileLoading"
               @update:model-value="handleFileChange"
               :max-file-size="1024 * 1024"
               :max-files="1"
@@ -43,21 +42,22 @@
               class="full-height"
               unelevated
               color="primary"
-              label="Validate"
-              icon="check"
+              :label="isAlreadyValidated ? 'Validated' : 'Validate'"
               :loading="isValidating"
               :disable="!file || isAlreadyValidated"
               @click="validate"
             />
           </div>
         </div>
+
         <q-checkbox
           v-model="autoValidate"
           class="q-mt-md q-mb-mt"
           label="Auto-parse when valid changes detected"
         />
+
         <q-banner
-          v-if="validationResult === false"
+          v-if="!parsingResult.is_valid"
           class="bg-negative text-white q-mt-lg"
           :class="{
             'validation-table--stale': haveSettingsChanged,
@@ -66,10 +66,10 @@
           <template #avatar>
             <q-icon name="error" />
           </template>
-          Parsing failed: {{ validationError }}
+          Parsing failed: {{ parsingResult.error }}
         </q-banner>
         <q-banner
-          v-if="validationResult === true && validationWarnings.length > 0"
+          v-if="parsingResult.is_valid && parsingResult.warnings.length > 0"
           class="bg-warning text-black q-mt-lg"
           :class="{
             'validation-table--stale': haveSettingsChanged,
@@ -80,13 +80,13 @@
           </template>
           <div class="text-weight-bold q-mt-sm">Parsing finished with warnings</div>
           <ul>
-            <li v-for="(warning, index) in validationWarnings" :key="index" class="q-mt-sm">
+            <li v-for="(warning, index) in parsingResult.warnings" :key="index" class="q-mt-sm">
               {{ warning }}
             </li>
           </ul>
         </q-banner>
         <q-banner
-          v-if="validationResult === true && validationData.length"
+          v-if="parsingResult.is_valid && parsingResult?.data.length"
           class="bg-positive text-white q-mt-lg"
           :class="{
             'validation-table--stale': haveSettingsChanged,
@@ -97,8 +97,9 @@
           </template>
           Parsing succeeded.
         </q-banner>
+
         <div
-          v-if="validationResult === true && validationData.length"
+          v-if="parsingResult.is_valid && parsingResult?.data.length"
           class="col q-mt-lg validation-sidebar__table-wrap"
           :class="{
             'validation-table--stale': haveSettingsChanged,
@@ -107,7 +108,8 @@
           <q-table
             flat
             bordered
-            :rows="validationData"
+            dense
+            :rows="parsingResult?.data"
             :columns="tableColumns"
             row-key="__row"
             :pagination="{ rowsPerPage: 10 }"
@@ -125,10 +127,14 @@ import { computed, ref, toRaw, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import type { QTableColumn } from 'quasar';
 import type { ParserPayloadParse, ParsingResult } from 'src/services/types';
+import { fileMetadataIsEqual } from 'src/utils/file_utils';
+import { unknownToString } from 'src/utils/string_utils';
 
 const $q = useQuasar();
+
 type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
-const isOpen = defineModel<boolean>({
+
+const drawerIsOpen = defineModel<boolean>({
   default: false,
 });
 const props = defineProps<{
@@ -138,26 +144,29 @@ const props = defineProps<{
   allowedFileTypeName: string;
   parserType: string;
 }>();
+
 const breakpoint = computed(() => $q.screen.sizes.md);
 const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
 
 const file = ref<File | null>(null);
-const isFileLoading = ref(false);
 const wasFileRejected = ref(false);
 
 const isValidating = ref(false);
-const validationData = ref<Record<string, unknown>[]>([]);
-const validationError = ref('');
-const validationWarnings = ref<string[]>([]);
-const validationResult = ref<boolean | null>(null);
+const parsingResult = ref<ParsingResult>({
+  is_valid: true,
+  data: [],
+  warnings: [],
+  error: '',
+});
+
 const lastValidatedSettings = ref<T | null>(null);
 const lastValidatedFile = ref<File | null>(null);
 
-const autoValidate = ref(true);
-
+const autoValidate = ref(false);
 let autoValidateTimeout: ReturnType<typeof setTimeout> | null = null;
+
 const tableColumns = computed<QTableColumn[]>(() => {
-  const firstRow = validationData.value[0];
+  const firstRow = parsingResult.value?.data[0];
   if (!firstRow) {
     return [];
   }
@@ -166,24 +175,27 @@ const tableColumns = computed<QTableColumn[]>(() => {
     label: key,
     field: key,
     align: 'left',
-    format: (value: unknown) => formatValue(value),
+    format: (value: unknown) => unknownToString(value),
   }));
 });
+
 const isAlreadyValidated = computed(() => {
   if (!file.value || !lastValidatedFile.value || !lastValidatedSettings.value) {
     return false;
   }
   return (
-    filesAreEqual(file.value, lastValidatedFile.value) &&
+    fileMetadataIsEqual(file.value, lastValidatedFile.value) &&
     settingsAreEqual(props.parsingSettings, lastValidatedSettings.value)
   );
 });
+
 const haveSettingsChanged = computed(() => {
   if (!lastValidatedSettings.value) {
     return false;
   }
   return !settingsAreEqual(props.parsingSettings, lastValidatedSettings.value);
 });
+
 watch(
   () => props.parsingSettings,
   () => {
@@ -202,48 +214,22 @@ watch(
   { deep: true },
 );
 
-function formatValue(value: unknown): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  if (typeof value !== 'string') {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    return String(value);
-  }
-  const date = new Date(value);
-  if (!Number.isNaN(date.getTime()) && isIsoDate(value)) {
-    return new Intl.DateTimeFormat('de-DE', {
-      dateStyle: 'medium',
-      timeStyle: 'medium',
-    }).format(date);
-  }
-  return value;
-}
-
-// TODO: move to utils
-function isIsoDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
-}
-
 function handleFileChange(newFile: File | null) {
-  isFileLoading.value = true;
   wasFileRejected.value = false;
   file.value = newFile;
   resetResult();
+
   if (!newFile) {
     lastValidatedFile.value = null;
     lastValidatedSettings.value = null;
   }
-  setTimeout(() => {
-    isFileLoading.value = false;
-  }, 150);
 }
 
 function resetResult() {
-  validationResult.value = null;
-  validationData.value = [];
-  validationError.value = '';
-  validationWarnings.value = [];
+  parsingResult.value.is_valid = true;
+  parsingResult.value.data = [];
+  parsingResult.value.error = '';
+  parsingResult.value.warnings = [];
 }
 
 async function validate() {
@@ -251,20 +237,12 @@ async function validate() {
     return;
   }
   isValidating.value = true;
-  const result: ParsingResult = await props.parseAction(props.parsingSettings, file.value);
-  validationResult.value = result.is_valid;
-  validationData.value = result.data;
-  validationError.value = result.error;
-  validationWarnings.value = result.warnings;
+
+  parsingResult.value = await props.parseAction(props.parsingSettings, file.value);
+
   lastValidatedSettings.value = structuredClone(toRaw(props.parsingSettings));
   lastValidatedFile.value = file.value;
   isValidating.value = false;
-}
-
-function filesAreEqual(a: File, b: File): boolean {
-  return (
-    a.name === b.name && a.size === b.size && a.lastModified === b.lastModified && a.type === b.type
-  );
 }
 
 function settingsAreEqual(a: T, b: T): boolean {

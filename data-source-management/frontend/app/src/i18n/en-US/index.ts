@@ -68,7 +68,7 @@ export default {
     errors: {
       413: {
         default: 'Content too large.',
-        parse: 'The selected file cannot be used for validation because it is too large.'
+        parse: 'The selected file cannot be used for validation because it is too large.',
       },
       429: {
         default: 'Rate limit exceeded.',

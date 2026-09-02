@@ -2,6 +2,7 @@ import {
   contextWindowRegex,
   datastreamAliasRegex,
   httpsUrlRegex,
+  isoDateRegex,
 } from 'src/utils/validation/regex';
 
 /**
@@ -19,10 +20,17 @@ export function isContextWindow(val: string): boolean {
 }
 
 /**
- * Checks if a value matches the context window regex.
+ * Checks if a value matches the https url regex.
  */
 export function isHttpsUrl(val: string): boolean {
   return String(val).match(httpsUrlRegex) !== null;
+}
+
+/**
+ * Checks if a value is a valid ISO date.
+ */
+export function isIsoDate(val: string): boolean {
+  return String(val).match(isoDateRegex) !== null;
 }
 
 /**

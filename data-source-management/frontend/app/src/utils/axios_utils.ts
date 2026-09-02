@@ -13,10 +13,7 @@ import type { AxiosError } from 'axios';
  * @param keyword - The keyword identifying the specific message, e.g. "user", "token".
  * @returns {string} The localized, resolved error message.
  */
-export function getErrorTextByStatusCode(
-  code?: number | null,
-  keyword?: string | null,
-): string {
+export function getErrorTextByStatusCode(code?: number | null, keyword?: string | null): string {
   const tPath = 'axios.errors';
 
   const specificKey = `${tPath}.${code ?? ''}.${keyword?.trim().toLowerCase() ?? 'default'}`;
