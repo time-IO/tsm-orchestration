@@ -52,22 +52,6 @@ class ParserCsvCreate(ParserDetailedCreate):
     header: Optional[int] = None
     timestamp_columns: list[ParserCsvTimestampColumnCreate]
 
-    @field_validator("pandas_read_csv", mode="before")
-    @classmethod
-    def validate_read_csv(cls, value):
-        if value is None:
-            return None
-
-        if isinstance(value, str):
-            value = value.strip()
-
-            if not value:
-                return None
-
-            return json.loads(value)
-
-        return value
-
 
 class ParserCsvTimestampColumnUpdate(ParserCsvTimestampColumnCreate):
     pass
@@ -83,22 +67,6 @@ class ParserCsvUpdate(ParserDetailedUpdate):
     comment: Optional[list[str]] = None
     header: Optional[int] = None
     timestamp_columns: Optional[list[ParserCsvTimestampColumnUpdate]] = None
-
-    @field_validator("pandas_read_csv", mode="before")
-    @classmethod
-    def validate_read_csv(cls, value):
-        if value is None:
-            return None
-
-        if isinstance(value, str):
-            value = value.strip()
-
-            if not value:
-                return None
-
-            return json.loads(value)
-
-        return value
 
 
 class ParserCsv(SQLModel, table=True):
