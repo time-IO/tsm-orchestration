@@ -44,7 +44,7 @@
     <!--thresh-->
     <qc-function-form-float-enum-input
       class="q-mb-md"
-      v-model:input="formData.thresh"
+      v-model:input.number="formData.thresh"
       v-model:current_type="current_thresh_type"
       label="thresh"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -97,7 +97,7 @@
 
     <!--density-->
     <qc-function-form-float-enum-input
-      v-model:input="formData.density"
+      v-model:input.number="formData.density"
       v-model:current_type="current_density_type"
       label="density"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -136,7 +136,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_offset"
+      v-model.number="formData.min_offset"
       label="min_offset (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum value jump before and after clusters to flag."
