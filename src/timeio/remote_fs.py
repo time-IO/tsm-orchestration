@@ -301,7 +301,8 @@ class FtpFS(RemoteFS):
 
         lines = []
 
-        self.client.retrlines("LIST", lines.append)
+        list_path = f"LIST {path}" if path else "LIST"
+        self.client.retrlines(list_path, lines.append)
 
         for line in lines:
 
