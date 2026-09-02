@@ -70,7 +70,7 @@ async def validate(
 ) -> ParsedDataResponse:
     parser_settings = ParserJsonUpdate.model_validate_json(settings)
 
-    raw_data = (await file.read()).decode("utf-8") # TODO assume utf-8?
+    raw_data = (await file.read()).decode("utf-8")  # TODO assume utf-8?
 
     response = parse_json_data(
         settings=parser_settings,

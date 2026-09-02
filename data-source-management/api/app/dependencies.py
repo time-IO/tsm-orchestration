@@ -191,6 +191,7 @@ def sync_permission_groups(
             status_code=500, detail=f"Failed to sync permission groups: {str(e)}"
         )
 
+
 def max_file_size(max_bytes: int):
     async def _validate(file: UploadFile = File(...)) -> UploadFile:
         chunk_size = 1024 * 1024
@@ -204,7 +205,9 @@ def max_file_size(max_bytes: int):
                 )
         await file.seek(0)
         return file
+
     return _validate
+
 
 def get_repo_ingest(session=Depends(get_session)):
     return IngestRepository(session)

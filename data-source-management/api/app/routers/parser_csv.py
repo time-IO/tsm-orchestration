@@ -4,7 +4,8 @@ from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from models.filters import BaseFilter
 from dependencies import (
     get_current_user,
-    get_repo_parser_csv, max_file_size,
+    get_repo_parser_csv,
+    max_file_size,
 )
 from models.parser import ParsedDataResponse
 from models.parser_csv import (
@@ -72,7 +73,7 @@ async def validate(
 ) -> ParsedDataResponse:
     parser_settings = ParserCsvUpdate.model_validate_json(settings)
 
-    raw_data = (await file.read()).decode(parser_settings.encoding or 'UTF-8')
+    raw_data = (await file.read()).decode(parser_settings.encoding or "UTF-8")
 
     response = parse_csv_data(
         settings=parser_settings,
