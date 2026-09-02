@@ -208,7 +208,7 @@ class TestTypeValidatorValidateOffset:
     )
     def test_valid_offset_strings(self, value):
         constraint = {
-            "regex": r"^(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
+            "regex": r"^(?!$)(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
         }
         assert TypeValidator.validate_offset(value, constraint) is True
 
