@@ -100,7 +100,7 @@
 
         <div
           v-if="parsingResult.is_valid && parsingResult?.data.length"
-          class="col q-mt-lg validation-sidebar__table-wrap"
+          class="q-mt-lg validation-sidebar__table-wrap"
           :class="{
             'validation-table--stale': haveSettingsChanged,
           }"
@@ -259,9 +259,13 @@ function settingsAreEqual(a: T, b: T): boolean {
 }
 
 .validation-sidebar__table-wrap {
-  overflow: auto;
+  overflow: hidden;
   min-height: 0;
-  padding-bottom: 10vh;
+  flex: 0 1 auto;
+}
+
+.validation-sidebar__table-wrap :deep(.q-table__container) {
+  max-height: 100%;
 }
 
 .validation-table--stale {
