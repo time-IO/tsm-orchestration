@@ -1,8 +1,8 @@
 """add_measurement_key_and_excluded_key_to_parser_json
 
 Revision ID: d404a0156749
-Revises: 2987dd5f50bc
-Create Date: 2026-08-19 13:11:13.793058
+Revises: 5f1bce7c9a83
+Create Date: 2026-09-02 12:11:13.793058
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel
 
 # revision identifiers, used by Alembic.
 revision: str = "d404a0156749"
-down_revision: Union[str, Sequence[str], None] = "2987dd5f50bc"
+down_revision: Union[str, Sequence[str], None] = "5f1bce7c9a83"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
