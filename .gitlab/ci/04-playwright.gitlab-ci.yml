@@ -14,6 +14,8 @@ playwright-static:
       when: on_success
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: on_success
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
 
 playwright-smoke:
   stage: "end-to-end"
