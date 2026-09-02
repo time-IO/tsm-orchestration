@@ -131,7 +131,7 @@ unit-test-dsm-api:
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
     - pip install -r data-source-management/api/requirements.txt
-    - cp src/timeio data-source-management/api/app/timeio
+    - cp -r src/timeio data-source-management/api/app/timeio
       # maybe run the tests in the backend container instead after installing testing tools?
   script:
     - pytest data-source-management/api/app/tests/unit_tests data-source-management/api/app/tests/validation -v -W error
