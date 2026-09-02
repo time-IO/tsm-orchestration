@@ -121,6 +121,9 @@ class QcHandler(AbstractHandler):
                 qc_funcs = filter_qc_functions(qc_funcs, thing.id)
             logger.info(f"COLLECTED TESTS: {qc_funcs}")
 
+            N = len(qc_funcs)
+            things = get_qc_things(qc_funcs)
+
             # load data
             streams = list(set(sum([f.streams for f in qc_funcs], [])))
             start_date = pd.Timestamp(content["start_date"])
@@ -128,11 +131,12 @@ class QcHandler(AbstractHandler):
             data = read_stream_data(self.dbapi, streams, start_date, end_date)
             for k, v in data.items():
                 if v.empty:
-                    logger.warning(f"no data found for stream: {k}")
+                    msg = f"no data found for stream: {k}"
+                    logger.warning(msg)
+                    for uuid in things:
+                        journal.warning(msg, uuid)
 
             # execute QC functions
-            N = len(qc_funcs)
-            things = get_qc_things(qc_funcs)
             qc = SaQCWrapper(data)
             for i, func in enumerate(qc_funcs, start=1):
                 logger.info("Test %s of %s: %s", i, N, func)

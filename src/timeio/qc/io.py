@@ -8,7 +8,6 @@ import typing
 import json
 from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 
 from timeio.common import ObservationResultType, get_result_field_name
@@ -176,13 +175,16 @@ def read_stream_data(
             )
 
             df = pd.DataFrame(data["observations"])
-            df = df[df.result_type == 0]
-            out[stream] = pd.DataFrame(
-                data={
-                    "data": df.result_number.to_numpy(),
-                    "quality": df.result_quality.to_numpy().astype(object),
-                },
-                index=pd.to_datetime(df["result_time"]),
-            ).sort_index()
-
+            if not df.empty:
+                df = df[df.result_type == 0]
+                data = pd.DataFrame(
+                    data={
+                        "data": df.result_number.to_numpy(),
+                        "quality": df.result_quality.to_numpy().astype(object),
+                    },
+                    index=pd.to_datetime(df["result_time"], utc=True),
+                ).sort_index()
+            else:
+                data = pd.DataFrame(columns=["data", "quality"])
+            out[stream] = data
     return out

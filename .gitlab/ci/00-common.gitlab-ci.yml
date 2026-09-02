@@ -3,7 +3,7 @@ stages:
   - "check"
   - "build"
   - "integration"
-  #- "end-to-end"
+  - "end-to-end"
   - "release"
   - "scan"
   - "notify"
@@ -11,6 +11,7 @@ stages:
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
+  COMPOSE_PARALLEL_LIMIT: 1
   # ports mapped to 127.0.0.1 will not be reachable from inside docker network
   # need to define PORT Variables here to overwrite ENVVARs from .env
   DATABASE_PORT: 5432
@@ -26,7 +27,7 @@ variables:
   DOCKER_IMAGE_TAG: 29-cli
   DOCKER_SERVICE_IMAGE_TAG: 29-dind
   TRIVY_VERSION: 0.69.3
-  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup worker-configdb-updater"
+  BUILD_SERVICES: "init cron-scheduler frost worker-thing-setup dsm-api dsm-frontend dsm-frontend-rootless"
 
 services:
   - "docker:${DOCKER_SERVICE_IMAGE_TAG}"

@@ -3,7 +3,59 @@
 
 ## [Unreleased]
 ### Added
+- Added link to saqc documentation in the header of a selected saqc function([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/690))
+- Trigger to (re)sync an external SFTP ingest with an optional date range ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
 ### Fixed
+### Changed
+- Updated link to pandas documentation and added help icon to context window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/689))
+- Moved external API trigger into the ingest tools section ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
+### Removed
+
+## [2026-08-26]
+### Added
+- Support for unix timestamps ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/650))
+- QC-Settings filter ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/670))
+- Soilcan Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/252))
+- `dfilter` parameter for QC-Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/256))
+- Parser type selection ([Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/266), [Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/270))
+### Fixed
+- JSON-Parser integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/662))
+- UBA-Api ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/678))
+- DB-API queries to onl select observations for a given thing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/timeio-db-api/-/merge_requests/23))
+- MQTT-Questa Migration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/265))
+### Changed
+- Moved data-source-management to tsm-orchestration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/663))
+- Upgrade SaQC to 2.10 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/679))
+### Removed
+- Django Frontend and configdb-updater ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/654))
+
+## [2026-07-24]
+### Added
+- QC Function `flagGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/253))
+### Fixed
+- Failing QC ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/652))
+- External APIs skipping falsy values ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/651))
+### Changed
+- Removed parameter `flag` from QC-Function `processGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/254))
+### Removed
+
+## [2026-07-21]
+### Added
+- Json-Parser timezone settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/219))
+- Bucket Credentials for external SFTP ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/222))
+- Sync Interval for external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/213))
+- Questa MQTT Parser (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/230)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/603)))
+- CSV-Parser encoding type `ANSI` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/234))
+- External API Sensoto ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/210))
+- Optional MQTT-Ingest username ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/239))
+- S3-Explorer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/241))
+- Parameter `flag` to all QC Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/226))
+- QC-Function `processGeneric` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/199))
+### Fixed
+- TSystems-API parameters ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/634))
+- Failing QC due to incomplete `data_parsed` message ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/635))
+- External APIs timezone handling (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/646)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/647)))
+- TTN 0-value bug ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/649))
 ### Changed
 ### Removed
 

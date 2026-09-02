@@ -1,0 +1,69 @@
+import { API } from 'src/services';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import type {
+  IngestExternalApiFilter,
+  QTableRequestProp,
+  QTableRequestPropPagination,
+} from 'src/services/types';
+import { defaultPagination } from 'src/utils/pagination_utils';
+import type { IngestExternalApiRead } from 'src/services/ingest_external_api/types';
+
+export const useIngestExternalApiStore = defineStore('ingestExternalApiStore', {
+  state: () => ({
+    rows: [] as IngestExternalApiRead[],
+    pagination: defaultPagination,
+    filters: {
+      name: undefined,
+      uuid: undefined,
+      ingest_type: undefined,
+      permission_group_id: undefined,
+      date_from: undefined,
+      date_to: undefined,
+      api_type: undefined,
+    } as IngestExternalApiFilter,
+    loading: false,
+  }),
+
+  getters: {},
+
+  actions: {
+    setPagination(pagination: Partial<QTableRequestPropPagination>) {
+      this.pagination = { ...this.pagination, ...pagination };
+    },
+    resetPage() {
+      this.pagination.page = 1;
+    },
+    async applyFilters() {
+      this.resetPage();
+      await this.dispatchGetList();
+    },
+    async onRequest(props: QTableRequestProp) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination;
+
+      this.setPagination({
+        page,
+        rowsPerPage,
+        sortBy,
+        descending,
+      });
+
+      await this.dispatchGetList();
+    },
+    async dispatchGetList() {
+      try {
+        this.loading = true;
+        const response = await API.ingestExternalApi.getList(this.pagination, this.filters);
+        this.rows = response.data.items;
+        this.pagination.rowsPerPage = response.data.size;
+        this.pagination.page = response.data.page;
+        this.pagination.rowsNumber = response.data.total;
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+});
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useIngestExternalApiStore, import.meta.hot));
+}

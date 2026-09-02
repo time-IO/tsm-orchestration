@@ -2,12 +2,11 @@
 
 import warnings
 
-import ast
 import numpy as np
 import pandas as pd
 
 import saqc
-from saqc.parsing.visitor import ConfigFunctionParser
+from saqc.funcs.generic import compileGeneric
 
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream
 
@@ -18,6 +17,12 @@ except ImportError:
 
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
+
+# used to identify which function calls are allowed to overwrite a `target`,
+# TODO: use the new SaQC function mode variable to infer programmatically
+PROCESSING_FUNCTIONS = {"processGeneric", "rolling"}
+
+saqc.options.field_target = "append"
 
 
 class STAMPLATEScheme(saqc.FloatScheme):
@@ -141,32 +146,20 @@ class SaQCWrapper:
             self._streams[stream.alias] = stream
 
         saqc_func = getattr(self._qc, func.func_name)
-        if func.func_name == "flagRange":
-            # NOTE: needed to work around a SaQC-Bug,
-            #       that will be fixed in the next release
-            # TODO: remove entire block after the bug is fixed
-            for f in func.field_names:
-                self._qc = saqc_func(field=f, target=func.target_names, **func.params)
-            return
 
         if func.func_name.endswith("Generic"):
-            # NOTE:
-            # The generic function parser is not as well exposed in
-            # SaQC as is could be, that's why we need to go the extra
-            # mile and built a valid saqc config-file function
-            func_string = f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
-            tree = ast.parse(func_string, mode="eval").body
-            _, kwargs = ConfigFunctionParser().parse(tree)
-            func.params["func"] = kwargs["func"]
+            func.params["func"] = compileGeneric(func.params.pop("function"))
+
         self._qc = saqc_func(
             field=func.field_names, target=func.target_names, **func.params
         )
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
         if stream in self._input_data:
-            return not self._qc._data[stream.alias].equals(
-                self._input_data[stream]["data"]
-            )
+            called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
+            for func_name in called_qc_funcs:
+                if func_name in PROCESSING_FUNCTIONS:
+                    return True
         return False
 
     def index_is_modified(self, stream: QcFunctionStream) -> bool:

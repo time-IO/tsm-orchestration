@@ -5,6 +5,8 @@ import atexit
 import warnings
 from typing import Any, TypedDict
 
+from timeio.parser import soilcan_parser
+
 try:
     from typing import Self
 except ImportError:
@@ -246,24 +248,18 @@ class Base:
 
     @staticmethod
     def _fetchall(conn: Connection, query, *params) -> list[dict[str, Any]]:
-        logger.debug("fetchall(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchall()  # type: ignore
 
     @staticmethod
     def _fetchone(conn: Connection, query, *params):
-        logger.debug("fetchone(%s, %s)", query, params)
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(query, params)
             return cur.fetchone()
 
     def _cache_get(self, key):
         if self._cache:
-            hit = key in self._cache
-            logging.getLogger("feta-cache").debug(
-                "cache %s: %s", "HIT" if hit else "MISS", key
-            )
             return self._cache.get(key, None)
         return None
 
@@ -579,11 +575,13 @@ class FileParser(Base, FromUUIDMixin):
             return self._get_mqtt_params()
         if self.file_parser_type.name == "csv":
             return self._get_csv_params()
-        if self.file_parser_type == "json":
+        if self.file_parser_type.name == "json":
             return self._get_json_params()
+        if self.file_parser_type.name == "soilcan":
+            return self._get_soilcan_params()
 
     def _get_csv_params(self):
-        ts_cols = self._get_ts_cols()
+        ts_cols = self._get_csv_ts_cols()
         query = f"select * from {self._schema}.parser_csv where parser_id = %s"
         row = self._fetchone(self._conn, query, self.id)
         if not row:
@@ -593,13 +591,31 @@ class FileParser(Base, FromUUIDMixin):
         return params
 
     def _get_json_params(self):
-        return {}
+        ts_cols = self._get_json_ts_cols()
+        query = f"select * from {self._schema}.parser_json where parser_id = %s"
+        row = self._fetchone(self._conn, query, self.id)
+        if not row:
+            return {}
+        params = {k: v for k, v in row.items() if k != "parser_id"}
+        params["timestamp_keys"] = ts_cols
+        return params
 
     def _get_mqtt_params(self):
         return {}
 
-    def _get_ts_cols(self):
+    def _get_soilcan_params(self):
+        query = f"select * from {self._schema}.parser_soilcan where parser_id = %s"
+        row = self._fetchone(self._conn, query, self.id)
+        if not row:
+            return {}
+        return {k: v for k, v in row.items() if k != "parser_id"}
+
+    def _get_csv_ts_cols(self):
         query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
+        return self._fetchall(self._conn, query, self.id)
+
+    def _get_json_ts_cols(self):
+        query = f"""select "key", "format" from {self._schema}.parser_json_timestamp_key where parser_json_id = %s"""
         return self._fetchall(self._conn, query, self.id)
 
 
@@ -734,7 +750,7 @@ class QAQCTest(Base):
             """
             SELECT DISTINCT
                 l.datasource_id as schema,
-                thing_id as thing_uuid,
+                thing_id as thing_uuid
             FROM
               sms_device_mount_action m
               JOIN sms_configuration c on c.id = m.configuration_id
@@ -752,30 +768,31 @@ class QAQCTest(Base):
             "mutable": True,
             "begin_date": None,
             "end_date": None,
+            "datastream_id": None,
         }
 
     def get_streams(self) -> list[QcStreamT]:
         out = []
-        for stream in self.streams:
-            for i in stream["input"]["value"]:
+        for stream_info in self.streams:
+            stream = {}
+            for i in stream_info["input"]["value"]:
                 stream["sta_stream_id"] = i["@iot.id"]
                 stream["sta_thing_id"] = i["Thing"]["@iot.id"]
                 stream["alias"] = i["alias"]
-                stream["arg_name"] = stream.pop("name")
-                del stream["input"]
-            if stream["sta_stream_id"] is None:
-                meta = self._get_new_stream(stream)
-            else:
-                meta = self._get_existing_stream(stream)
-            out.append(
-                stream
-                | meta
-                | {
-                    "context_window": self._parse_context_window(
-                        self.qaqc.context_window
-                    )
-                }
-            )
+                stream["arg_name"] = stream_info["name"]
+                if stream["sta_stream_id"] is None:
+                    meta = self._get_new_stream(stream)
+                else:
+                    meta = self._get_existing_stream(stream)
+                out.append(
+                    stream
+                    | meta
+                    | {
+                        "context_window": self._parse_context_window(
+                            self.qaqc.context_window
+                        )
+                    }
+                )
         return out
 
 
