@@ -395,6 +395,8 @@ class FtpFS(RemoteFS):
 
 def sync(src: RemoteFS, trg: RemoteFS, thing_id: str, scheme: str):
     """Sync two remote filesystems."""
+
+
 def _to_epoch(value: str | None) -> float | None:
     """Parse a 'YYYY-MM-DD HH:MM:SS' UTC datetime string to epoch seconds."""
     if not value:
@@ -406,6 +408,7 @@ def sync(
     src: RemoteFS,
     trg: RemoteFS,
     thing_id: str,
+    scheme,
     datetime_from: str | None = None,
     datetime_to: str | None = None,
 ):

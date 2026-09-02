@@ -96,10 +96,10 @@ class SyncExtSftpManager(AbstractHandler):
             source,
             target,
             thing.uuid,
+            scheme,
             datetime_from=content.get("datetime_from"),
             datetime_to=content.get("datetime_to"),
         )
-        sync(source, target, thing.uuid, scheme)
         source.close()
 
 
