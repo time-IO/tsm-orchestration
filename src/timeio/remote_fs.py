@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import io
 import abc
 import logging
 import os
@@ -391,10 +392,6 @@ class FtpFS(RemoteFS):
 
     def close(self):
         self.client.quit()
-
-
-def sync(src: RemoteFS, trg: RemoteFS, thing_id: str, scheme: str):
-    """Sync two remote filesystems."""
 
 
 def _to_epoch(value: str | None) -> float | None:
