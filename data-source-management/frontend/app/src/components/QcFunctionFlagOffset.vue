@@ -1,6 +1,6 @@
 <template>
   <qc-function-form-template
-    function-title="flagJumps"
+    function-title="flagOffset"
     v-model:label="label"
     @submit="submitForm"
     @remove="removeForm"
@@ -36,7 +36,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.tolerance"
+      v-model.number="formData.tolerance"
       label="tolerance * (enter a floating point number)"
       :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Maximum allowed difference between preceding and succeeding values."
@@ -55,7 +55,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.thresh"
+      v-model.number="formData.thresh"
       label="thresh (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       hint="Minimum absolute difference to consider a sequence as an offset."
