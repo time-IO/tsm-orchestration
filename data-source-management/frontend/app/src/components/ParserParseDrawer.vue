@@ -25,12 +25,12 @@
               clearable
               :disable="isValidating"
               @update:model-value="handleFileChange"
-              :max-file-size="1024 * 1024"
+              :max-file-size="1024 * 1024 * 10"
               :max-files="1"
               @rejected="wasFileRejected = true"
               :error="wasFileRejected"
               error-message="File type is invalid or file is too large"
-              hint="Maximum allowed size is 1MB."
+              hint="Maximum allowed size is 10 MB."
             >
               <template #prepend>
                 <q-icon name="upload_file" />

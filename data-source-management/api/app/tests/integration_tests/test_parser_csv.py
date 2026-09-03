@@ -94,8 +94,8 @@ def test_read_not_found(client):
 
 def test_validate_parser(client, base_data):
     settings = _csv_payload(base_data)
-    byte_size_slightly_less_than_one_megabyte = 1024 * 1024 - 100
-    upload_file = make_csv_upload_file(byte_size_slightly_less_than_one_megabyte)
+    byte_size_slightly_less_than_ten_megabyte = 1024 * 1024 * 10 - 100
+    upload_file = make_csv_upload_file(byte_size_slightly_less_than_ten_megabyte)
     response = client.post(
         f"{BASE_PATH}/parse",
         data={"settings": json.dumps(settings)},
@@ -107,8 +107,8 @@ def test_validate_parser(client, base_data):
 
 def test_validate_parser_content_too_large(client, base_data):
     settings = _csv_payload(base_data)
-    byte_size_slightly_more_than_one_megabyte = 1024 * 1024 + 100
-    upload_file = make_csv_upload_file(byte_size_slightly_more_than_one_megabyte)
+    byte_size_slightly_more_than_ten_megabyte = 1024 * 1024 * 10 + 100
+    upload_file = make_csv_upload_file(byte_size_slightly_more_than_ten_megabyte)
     response = client.post(
         f"{BASE_PATH}/parse",
         data={"settings": json.dumps(settings)},

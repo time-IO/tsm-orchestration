@@ -69,7 +69,7 @@ def read_one(
 )
 async def validate(
     settings: str = Form(...),
-    file: UploadFile = Depends(max_file_size(1024 * 1024)),
+    file: UploadFile = Depends(max_file_size(1024 * 1024 * 10)),
 ) -> ParsedDataResponse:
     parser_settings = ParserCsvParse.model_validate_json(settings)
 
