@@ -200,7 +200,7 @@
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-file-json v-model="showValidationDialog" :form-data="validFormData" />
+    <parser-parse-json v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
@@ -210,7 +210,7 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
-import ParserParseFileJson from 'components/ParserParseFileJson.vue';
+import ParserParseJson from 'components/ParserParseJson.vue';
 import { QForm } from 'quasar';
 
 type JsonParserFormData = JsonParserUpdate & {
