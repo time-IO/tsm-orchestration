@@ -864,19 +864,33 @@ class S3Store(Base):
     username = user
     bucket_name = bucket
 
+
 class ExtMQTT(Base):
     _schema = SCHEMA
     _table_name = "ingest_external_mqtt"
     id: int = _prop(lambda self: self._attrs["ingest_id"])
-    external_mqtt_address: str = _prop(lambda self: self._attrs["external_mqtt_address"])
+    external_mqtt_address: str = _prop(
+        lambda self: self._attrs["external_mqtt_address"]
+    )
     external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
-    external_mqtt_username: str = _prop(lambda self: self._attrs["external_mqtt_username"])
-    external_mqtt_password: str = _prop(lambda self: self._attrs["external_mqtt_password"])
-    external_mqtt_ca_cert: str = _prop(lambda self: self._attrs["external_mqtt_ca_cert"])
-    external_mqtt_client_cert: str = _prop(lambda self: self._attrs["external_mqtt_client_cert"])
-    external_mqtt_client_key: str = _prop(lambda self: self._attrs["external_mqtt_client_key"])
+    external_mqtt_username: str = _prop(
+        lambda self: self._attrs["external_mqtt_username"]
+    )
+    external_mqtt_password: str = _prop(
+        lambda self: self._attrs["external_mqtt_password"]
+    )
+    external_mqtt_ca_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_ca_cert"]
+    )
+    external_mqtt_client_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_cert"]
+    )
+    external_mqtt_client_key: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_key"]
+    )
     external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
+
 
 class HTTP(Base):
     _schema = SCHEMA
@@ -886,6 +900,7 @@ class HTTP(Base):
     file_type: str = _prop(lambda self: self._attrs["file_type"])
     api_key: str = _prop(lambda self: self._attrs["api_key"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
+
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
     _schema = SCHEMA

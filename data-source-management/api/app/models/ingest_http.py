@@ -34,9 +34,7 @@ class IngestHttp(SQLModel, table=True):
 
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: str = Field(
-        sa_column=Column("api_key", EncryptedType, nullable=False)
-    )
+    api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
     enabled: bool = False
 
     ingest: Ingest = Relationship(back_populates="ingest_http_detail")

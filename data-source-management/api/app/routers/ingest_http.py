@@ -46,9 +46,7 @@ def read_list(
     )
 
 
-@router.get(
-    "/{id}", response_model=IngestHttpRead, summary=f"Get one {entity_name}"
-)
+@router.get("/{id}", response_model=IngestHttpRead, summary=f"Get one {entity_name}")
 def read_one(
     *,
     id: int,

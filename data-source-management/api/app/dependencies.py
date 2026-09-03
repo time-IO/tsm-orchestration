@@ -237,14 +237,18 @@ def get_repo_ingest_external_sftp(session=Depends(get_session)):
 def get_repo_ingest_mqtt(session=Depends(get_session)):
     return IngestMqttRepository(session)
 
+
 def get_repo_ingest_sftp(session=Depends(get_session)):
     return IngestSftpRepository(session)
+
 
 def get_repo_ingest_external_mqtt(session=Depends(get_session)):
     return IngestExternalMqttRepository(session)
 
+
 def get_repo_ingest_http(session=Depends(get_session)):
     return IngestHttpRepository(session)
+
 
 def get_repo_parser_detailed(session=Depends(get_session)):
     return ParserDetailedRepository(session)

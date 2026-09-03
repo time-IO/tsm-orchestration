@@ -25,9 +25,7 @@ class IngestHttpRepository:
         self.model = IngestHttp
         self.session = session
 
-    def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
-    ) -> IngestHttp:
+    def find_one(self, id: int, permission_group_ids_of_user: list[int]) -> IngestHttp:
         statement = (
             select(self.model)
             .join(self.model.ingest)
@@ -84,9 +82,7 @@ class IngestHttpRepository:
 
             extra_data["ingest_id"] = ingest.id
 
-            ingest_http = IngestHttp.model_validate(
-                payload, update=extra_data
-            )
+            ingest_http = IngestHttp.model_validate(payload, update=extra_data)
 
             self.session.add(ingest_http)
 

@@ -30,7 +30,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
 
         # Only act for "Bento"-Ingests
-        if thing.ingest_type  in ("ExtMQTT", "HTTP"):
+        if thing.ingest_type in ("ExtMQTT", "HTTP"):
             # Unlikely
             ingest = thing.http if thing.ingest_type == "HTTP" else thing.ext_mqtt
             if ingest is None:
@@ -147,6 +147,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
         return stream_config
+
     # fmt: on
 
     def create_or_update_stream(self, stream_config, thing: Thing):
@@ -160,20 +161,18 @@ class CreateThingInBentoHandler(AbstractHandler):
             if response.status_code == 200:
                 # Stream exists, update it
                 logger.info(f"Updating existing stream: {thing.uuid}")
-                response = requests.put(url,
-                                        json=stream_config,
-                                        timeout=30)
+                response = requests.put(url, json=stream_config, timeout=30)
             else:
                 # Stream doesn't exist, create it
                 logger.info(f"Creating new stream: {thing.uuid}")
-                response = requests.post(url,
-                                         json=stream_config,
-                                         timeout=30)
+                response = requests.post(url, json=stream_config, timeout=30)
 
             if response.ok:
                 logger.info(f"Successfully configured stream: {thing.uuid}")
             else:
-                logger.error(f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}"
+                )
 
         except Exception as e:
             logger.error(f"Error configuring Bento stream: {e}")
@@ -202,6 +201,7 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         except Exception as e:
             logger.error(f"Error disabling Bento stream {thing.uuid}: {e}")
+
 
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
