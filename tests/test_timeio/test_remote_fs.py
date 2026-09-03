@@ -62,7 +62,7 @@ def test_sync_without_range_copies_all():
 
 def test_sync_with_lower_bound_only():
     src, trg = _make_source(), FakeFS()
-    sync(src, trg, "thing-uuid", "sftp",datetime_from="2021-01-01 00:00:00")
+    sync(src, trg, "thing-uuid", "sftp", datetime_from="2021-01-01 00:00:00")
     assert set(trg.files) == {"mid.txt", "new.txt"}
 
 
