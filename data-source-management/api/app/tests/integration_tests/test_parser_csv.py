@@ -9,12 +9,12 @@ itself. This tests the full stack: router -> repository -> database.
 import json
 
 import pytest
-from sqlmodel import Session, text
+from sqlmodel import Session
 from main import app
 from dependencies import engine, get_current_user
 from models import User
-from tests.utils.upload_files import make_csv_upload_file, as_multipart_file
-from tests.utils.user_proxy import UserProxy
+from ..utils.upload_files import make_csv_upload_file, as_multipart_file
+from ..utils.user_proxy import UserProxy
 
 BASE_PATH = "/parser/csv"
 

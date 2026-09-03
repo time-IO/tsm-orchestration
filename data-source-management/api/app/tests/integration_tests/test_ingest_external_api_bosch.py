@@ -8,9 +8,9 @@ itself. This tests the full stack: router -> repository -> database.
 
 import pytest
 from main import app
-from sqlmodel import Session, text
+from sqlmodel import Session
 from dependencies import engine, get_current_user
-from tests.utils.user_proxy import UserProxy
+from ..utils.user_proxy import UserProxy
 from models import User
 
 BASE_PATH = "/ingest/external-api/bosch"

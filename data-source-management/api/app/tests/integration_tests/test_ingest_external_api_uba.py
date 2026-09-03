@@ -7,10 +7,10 @@ itself. This tests the full stack: router -> repository -> database.
 """
 
 import pytest
-from sqlmodel import Session, text
+from sqlmodel import Session
 from main import app
 from dependencies import engine, get_current_user
-from tests.utils.user_proxy import UserProxy
+from ..utils.user_proxy import UserProxy
 from models import User
 
 BASE_PATH = "/ingest/external-api/uba"

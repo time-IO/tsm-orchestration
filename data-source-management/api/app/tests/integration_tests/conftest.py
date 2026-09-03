@@ -9,7 +9,7 @@ os.environ["POSTGRES_DB"] = os.environ.get("POSTGRES_TEST_DB", "db_test")
 os.environ["POSTGRES_USER"] = os.environ.get("POSTGRES_TEST_USER", "postgres")
 os.environ["POSTGRES_PASSWORD"] = os.environ.get("POSTGRES_TEST_PASSWORD", "postgres")
 
-from tests.utils.test_env import setup_test_env
+from ..utils.test_env import setup_test_env
 
 setup_test_env()
 import uuid
@@ -23,7 +23,7 @@ from models.database import Database
 
 from main import app
 from dependencies import engine, get_current_user
-from tests.utils.user_proxy import UserProxy
+from ..utils.user_proxy import UserProxy
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -1,4 +1,4 @@
-from tests.utils.test_env import setup_test_env
+from ..utils.test_env import setup_test_env
 
 setup_test_env()
 import pytest

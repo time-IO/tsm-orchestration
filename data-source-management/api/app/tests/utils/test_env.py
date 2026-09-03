@@ -5,7 +5,7 @@ time, so env vars must be set first.
 
 Usage in conftest.py:
 
-    from tests.utils import setup_test_env
+    from ..utils import setup_test_env
     setup_test_env()
 
     from main import app  # noqa: E402 - intentional late import

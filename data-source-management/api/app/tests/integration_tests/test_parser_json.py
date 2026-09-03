@@ -12,9 +12,9 @@ import pytest
 from sqlmodel import Session
 from main import app
 from dependencies import engine, get_current_user
-from tests.utils.user_proxy import UserProxy
-from tests.utils.upload_files import make_json_upload_file, as_multipart_file
 from models import User
+from ..utils.user_proxy import UserProxy
+from ..utils.upload_files import make_json_upload_file, as_multipart_file
 
 BASE_PATH = "/parser/json"
 
