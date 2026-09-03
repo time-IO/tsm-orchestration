@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 ### Added
+- Parser settings (CSV, JSON) can be validated/tested by uploading a file and viewing the parsing result immediately ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/668))
 ### Fixed
 ### Changed
 ### Removed
