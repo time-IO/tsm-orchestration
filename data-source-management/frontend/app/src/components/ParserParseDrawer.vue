@@ -200,20 +200,25 @@ const haveSettingsChanged = computed(() => {
 watch(
   () => props.parsingSettings,
   () => {
-    if (!autoValidate.value || !file.value || isValidating.value) {
+    if (!autoValidate.value || !file.value) {
       return;
     }
     if (autoValidateTimeout) {
       clearTimeout(autoValidateTimeout);
     }
     autoValidateTimeout = setTimeout(() => {
-      if (autoValidate.value && file.value && haveSettingsChanged.value) {
-        void validate();
-      }
+      triggerAutoValidateIfDue();
     }, 1000);
   },
   { deep: true },
 );
+
+function triggerAutoValidateIfDue() {
+  if (!autoValidate.value || !file.value || isValidating.value || !haveSettingsChanged.value) {
+    return;
+  }
+  void validate();
+}
 
 function handleFileChange(newFile: File | null) {
   wasFileRejected.value = false;
@@ -239,11 +244,16 @@ async function validate() {
   }
   isValidating.value = true;
 
-  parsingResult.value = await props.parseAction(props.parsingSettings, file.value);
+  const settingsForThisRequest = structuredClone(toRaw(props.parsingSettings));
+  const fileForThisRequest = file.value;
 
-  lastValidatedSettings.value = structuredClone(toRaw(props.parsingSettings));
-  lastValidatedFile.value = file.value;
+  parsingResult.value = await props.parseAction(settingsForThisRequest, fileForThisRequest);
+
+  lastValidatedSettings.value = settingsForThisRequest;
+  lastValidatedFile.value = fileForThisRequest;
   isValidating.value = false;
+
+  triggerAutoValidateIfDue();
 }
 
 function settingsAreEqual(a: T, b: T): boolean {

@@ -26,7 +26,7 @@ const parsingSettings: ComputedRef<JsonParserParse> = computed(() => {
     comment: toRaw(props.formData.comment) ?? null,
     timezone: toRaw(props.formData.timezone) ?? null,
     measurement_key: toRaw(props.formData.measurement_key) ?? null,
-    excluded_keys: toRaw(props.formData.excluded_keys) ?? []
+    excluded_keys: toRaw(props.formData.excluded_keys) ?? [],
   };
 });
 
