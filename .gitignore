@@ -20,3 +20,5 @@ cron/crontab.txt
 **/__pycache__
 keycloak/mqtt-notifier/target
 migrations/worker_file_ingest/datastream_mapping
+reset_keycloak_realm.sh
+data-source-management/api/migrate_test_db.sh

@@ -6,6 +6,7 @@ import logging
 import os
 import stat
 import time
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 from typing import IO, Any
 from contextlib import contextmanager
@@ -258,8 +259,29 @@ class FtpFS(RemoteFS):
         self.connection.close()
 
 
-def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
-    """Sync two remote filesystems."""
+def _to_epoch(value: str | None) -> float | None:
+    """Parse a 'YYYY-MM-DD HH:MM:SS' UTC datetime string to epoch seconds."""
+    if not value:
+        return None
+    return datetime.fromisoformat(value).replace(tzinfo=timezone.utc).timestamp()
+
+
+def sync(
+    src: RemoteFS,
+    trg: RemoteFS,
+    thing_id: str,
+    datetime_from: str | None = None,
+    datetime_to: str | None = None,
+):
+    """Sync two remote filesystems.
+
+    If ``datetime_from`` and/or ``datetime_to`` (UTC) are given, only files whose
+    modification time (``mtime``) falls within the bound(s) are considered. Each
+    bound is optional and applied independently; omitting both syncs everything.
+    """
+
+    from_ts = _to_epoch(datetime_from)
+    to_ts = _to_epoch(datetime_to)
 
     path = None
     try:
@@ -272,6 +294,14 @@ def sync(src: RemoteFS, trg: RemoteFS, thing_id: str):
             if src.is_dir(path):
                 if not trg.exist(path):
                     trg.mkdir(path)
+                continue
+
+            # restrict to the requested mtime range
+            mtime = src.last_modified(path)
+            if (from_ts is not None and mtime < from_ts) or (
+                to_ts is not None and mtime > to_ts
+            ):
+                logger.debug(f"SKIPPING (mtime out of range): {path}")
                 continue
 
             # regular files
