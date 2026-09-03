@@ -97,14 +97,12 @@
                 label="API Key"
                 :type="isApiKeyPwd ? 'password' : 'text'"
               >
-                <template v-slot:append>
+                <template #append>
                   <q-icon
                     :name="isApiKeyPwd ? 'visibility_off' : 'visibility'"
                     class="cursor-pointer"
                     @click="isApiKeyPwd = !isApiKeyPwd"
                   />
-                </template>
-                <template #append>
                   <help-button
                     titleHelp="API Key"
                     textHelp="An optional API key for authenticating incoming HTTP requests."
