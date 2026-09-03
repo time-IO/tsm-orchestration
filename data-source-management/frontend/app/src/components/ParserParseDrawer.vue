@@ -52,6 +52,7 @@
 
         <q-checkbox
           v-model="autoValidate"
+          v-if="$q.screen.width >= breakpoint"
           class="q-mt-md q-mb-mt"
           label="Auto-parse when valid changes detected"
         />
