@@ -5,6 +5,7 @@ dotenv.config({ quiet: true });
 
 const baseURL =
   process.env.TIMEIO_BASE_URL ?? "https://timeio.web-intern-stage.app.ufz.de";
+const controlledAuthCi = process.env.TIMEIO_CONTROLLED_AUTH_CI === "true";
 
 export default defineConfig({
   testDir: "./specs",
@@ -14,11 +15,13 @@ export default defineConfig({
   },
   use: {
     baseURL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    trace: controlledAuthCi ? "off" : "retain-on-failure",
+    screenshot: controlledAuthCi ? "off" : "only-on-failure",
+    video: controlledAuthCi ? "off" : "retain-on-failure",
   },
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: controlledAuthCi
+    ? [["list"]]
+    : [["list"], ["html", { open: "never" }]],
   projects: [
     {
       name: "chromium",

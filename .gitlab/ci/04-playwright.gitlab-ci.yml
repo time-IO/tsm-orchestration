@@ -44,3 +44,33 @@ playwright-smoke:
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: manual
       allow_failure: true
+
+
+# Exercise the browser OIDC login/logout flow against a fully local stack.
+# The build job supplies branch-specific application images; the Compose
+# overlay replaces only the Keycloak realm with the controlled development
+# realm. All traffic stays on the Compose network.
+playwright-login:
+  stage: "end-to-end"
+  image: "docker:${DOCKER_IMAGE_TAG}"
+  needs:
+    - "build-and-push-images"
+  before_script:
+    - "apk add --no-cache bash"
+    - "export REGISTRY=$(grep TIMEIO_IMAGE_REGISTRY .env | cut -d'=' -f2)"
+    - "echo $CI_REGISTRY_PASSWORD | docker login $REGISTRY -u $CI_REGISTRY_USER --password-stdin"
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml up -d --quiet-pull --wait --wait-timeout 300 proxy keycloak dsm-frontend dsm-api"
+  script:
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml run --rm playwright"
+  after_script:
+    - "docker compose -f docker-compose.yml -f docker-compose-ci-e2e.yml down --volumes --remove-orphans || true"
+    - "docker logout || true"
+  rules:
+    # Match current Playwright policy: branch pushes only. In particular, do
+    # not create a partial MR pipeline or execute against main.
+    - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: always
+  tags:
+    - "dind"
