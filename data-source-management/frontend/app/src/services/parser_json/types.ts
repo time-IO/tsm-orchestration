@@ -55,4 +55,6 @@ export type JsonParserParse = {
   comment?: string | null;
   timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
   timezone: string | null;
+  measurement_key?: string | null;
+  excluded_keys?: string[] | null;
 };
