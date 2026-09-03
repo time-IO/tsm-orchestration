@@ -65,4 +65,6 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
+  ingestHttp: ingestHttpController,
+  ingestExternalMqtt: ingestExternalMqttController,
 };
