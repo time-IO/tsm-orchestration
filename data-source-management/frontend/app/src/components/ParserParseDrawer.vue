@@ -34,7 +34,10 @@
           label="Auto-parse when valid changes detected"
         />
 
-        <parser-parse-banner :parsing-result="parsingResult" :have-settings-changed="haveSettingsChanged" />
+        <parser-parse-banner
+          :parsing-result="parsingResult"
+          :have-settings-changed="haveSettingsChanged"
+        />
 
         <parser-parse-result-table
           v-if="parsingResult.is_valid && parsingResult.data.length"
