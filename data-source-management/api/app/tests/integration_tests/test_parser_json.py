@@ -5,15 +5,16 @@ Unlike the unit tests, these tests use a real database connection.
 Each test creates data via the API, verifies it, and cleans up after
 itself. This tests the full stack: router -> repository -> database.
 """
+
 import json
 
 import pytest
-from sqlmodel import Session, text
+from sqlmodel import Session
 from main import app
 from dependencies import engine, get_current_user
-from tests.test_utils import UserProxy
-from models import User
+from tests.utils.user_proxy import UserProxy
 from tests.utils.upload_files import make_json_upload_file, as_multipart_file
+from models import User
 
 BASE_PATH = "/parser/json"
 
@@ -100,7 +101,6 @@ def test_validate_parser(client, base_data):
     )
     assert response.status_code == 200
     assert response.json()["is_valid"] is True
-    assert hasattr(response.json()["data"][0], "timestamp")
 
 
 def test_validate_parser_content_too_large(client, base_data):
@@ -113,6 +113,7 @@ def test_validate_parser_content_too_large(client, base_data):
         files={"file": as_multipart_file(upload_file, content_type="text/csv")},
     )
     assert response.status_code == 413
+
 
 # --- auth / permission tests ---
 

@@ -11,7 +11,7 @@ import pytest
 from main import app
 from sqlmodel import Session, text
 from dependencies import engine, get_current_user
-from tests.test_utils import UserProxy
+from tests.utils.user_proxy import UserProxy
 from models import User
 
 BASE_PATH = "/ingest/external-api/neutron-monitor"

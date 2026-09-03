@@ -5,6 +5,7 @@ Unlike the unit tests, these tests use a real database connection.
 Each test creates data via the API, verifies it, and cleans up after
 itself. This tests the full stack: router -> repository -> database.
 """
+
 import json
 
 import pytest
@@ -13,8 +14,7 @@ from main import app
 from dependencies import engine, get_current_user
 from models import User
 from tests.utils.upload_files import make_csv_upload_file, as_multipart_file
-
-from tests.test_utils import UserProxy
+from tests.utils.user_proxy import UserProxy
 
 BASE_PATH = "/parser/csv"
 
