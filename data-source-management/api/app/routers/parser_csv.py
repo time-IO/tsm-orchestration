@@ -11,7 +11,8 @@ from models.parser import ParsedDataResponse
 from models.parser_csv import (
     ParserCsvCreate,
     ParserCsvRead,
-    ParserCsvUpdate, ParserCsvParse,
+    ParserCsvUpdate,
+    ParserCsvParse,
 )
 from models import User
 from repositories.parser_csv import ParserCsvRepository
