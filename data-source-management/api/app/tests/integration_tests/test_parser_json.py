@@ -5,6 +5,7 @@ Unlike the unit tests, these tests use a real database connection.
 Each test creates data via the API, verifies it, and cleans up after
 itself. This tests the full stack: router -> repository -> database.
 """
+import json
 
 import pytest
 from sqlmodel import Session, text
@@ -12,6 +13,7 @@ from main import app
 from dependencies import engine, get_current_user
 from tests.test_utils import UserProxy
 from models import User
+from tests.utils.upload_files import make_json_upload_file, as_multipart_file
 
 BASE_PATH = "/parser/json"
 
@@ -86,6 +88,31 @@ def test_read_not_found(client):
     response = client.get(f"{BASE_PATH}/99999")
     assert response.status_code == 404
 
+
+def test_validate_parser(client, base_data):
+    settings = _json_payload(base_data)
+    byte_size_slightly_less_than_one_megabyte = 1024 * 1024 - 100
+    upload_file = make_json_upload_file(byte_size_slightly_less_than_one_megabyte)
+    response = client.post(
+        f"{BASE_PATH}/parse",
+        data={"settings": json.dumps(settings)},
+        files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+    )
+    assert response.status_code == 200
+    assert response.json()["is_valid"] is True
+    assert hasattr(response.json()["data"][0], "timestamp")
+
+
+def test_validate_parser_content_too_large(client, base_data):
+    settings = _json_payload(base_data)
+    byte_size_slightly_more_than_one_megabyte = 1024 * 1024 + 100
+    upload_file = make_json_upload_file(byte_size_slightly_more_than_one_megabyte)
+    response = client.post(
+        f"{BASE_PATH}/parse",
+        data={"settings": json.dumps(settings)},
+        files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+    )
+    assert response.status_code == 413
 
 # --- auth / permission tests ---
 

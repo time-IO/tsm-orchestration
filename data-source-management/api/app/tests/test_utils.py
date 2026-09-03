@@ -12,9 +12,20 @@ Usage in conftest.py:
 
     from main import app  # noqa: E402 - intentional late import
 """
+from __future__ import annotations
 
 import os
 from cryptography.fernet import Fernet
+
+import csv
+import io
+import json
+
+from typing import BinaryIO
+
+from starlette.datastructures import UploadFile
+
+
 
 
 def setup_test_env() -> None:
