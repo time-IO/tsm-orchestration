@@ -21,14 +21,15 @@ WITH static_data AS (
         dsl.device_property_id,
         c.label,
         dma.configuration_id,
-        hashtextextended(
-                CONCAT(
-                        ARRAY [sla.x, sla.y, COALESCE(sla.z, 0)]::text,
-                        sla.id,
-                        FALSE
-                ),
-                0
-        ) AS feature_id
+        NULL::bigint AS feature_id
+        --- hashtextextended(
+        ---         CONCAT(
+        ---                 ARRAY [sla.x, sla.y, COALESCE(sla.z, 0)]::text,
+        ---                 sla.id,
+        ---                 FALSE
+        ---         ),
+        ---         0
+        --- ) AS feature_id
      FROM public.sms_configuration_static_location_begin_action sla
        JOIN public.sms_device_mount_action dma
             ON dma.configuration_id = sla.configuration_id
@@ -93,14 +94,15 @@ dynamic_data AS(
         dsl.device_property_id,
         c.label,
         dma.configuration_id,
-        hashtextextended(
-            CONCAT(
-                ARRAY[ox.result_number, oy.result_number, COALESCE(oz.result_number, 0)]::text,
-                dla.id,
-                TRUE
-            ),
-            0
-        ) AS feature_id
+        NULL::bigint AS feature_id
+        -- hashtextextended(
+        --     CONCAT(
+        --         ARRAY[ox.result_number, oy.result_number, COALESCE(oz.result_number, 0)]::text,
+        --         dla.id,
+        --         TRUE
+        --     ),
+        --     0
+        -- ) AS feature_id
     FROM public.sms_configuration_dynamic_location_begin_action dla
         JOIN public.sms_device_mount_action dma
             ON dma.configuration_id = dla.configuration_id
