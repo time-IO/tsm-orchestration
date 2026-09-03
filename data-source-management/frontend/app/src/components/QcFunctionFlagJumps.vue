@@ -35,7 +35,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.thresh"
+      v-model.number="formData.thresh"
       label="thresh * (enter a floating point number)"
       :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Threshold for mean difference between adjacent windows to trigger flagging."
@@ -55,7 +55,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_periods"
+      v-model.number="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum observations required for a valid mean calculation."
