@@ -8,7 +8,7 @@ from models.parser import ParsedDataResponse
 from models.parser_json import (
     ParserJsonCreate,
     ParserJsonRead,
-    ParserJsonUpdate,
+    ParserJsonUpdate, ParserJsonParse,
 )
 
 from repositories.parser_json import ParserJsonRepository
@@ -68,9 +68,9 @@ async def validate(
     settings: str = Form(...),
     file: UploadFile = Depends(max_file_size(1024 * 1024)),
 ) -> ParsedDataResponse:
-    parser_settings = ParserJsonUpdate.model_validate_json(settings)
+    parser_settings = ParserJsonParse.model_validate_json(settings)
 
-    raw_data = (await file.read()).decode("utf-8")  # TODO assume utf-8?
+    raw_data = (await file.read()).decode("utf-8") # no file encoding in settings, so assuming utf-8
 
     response = parse_json_data(
         settings=parser_settings,

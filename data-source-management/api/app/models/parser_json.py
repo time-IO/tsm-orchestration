@@ -50,6 +50,9 @@ class ParserJsonUpdate(ParserDetailedUpdate):
     measurement_key: Optional[str] = None
     excluded_keys: Optional[list[str]] = None
 
+class ParserJsonParse(ParserJsonUpdate):
+    pass
+
 
 class ParserJson(SQLModel, table=True):
     __tablename__ = "parser_json"

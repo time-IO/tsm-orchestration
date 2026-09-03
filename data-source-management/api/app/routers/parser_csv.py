@@ -11,7 +11,7 @@ from models.parser import ParsedDataResponse
 from models.parser_csv import (
     ParserCsvCreate,
     ParserCsvRead,
-    ParserCsvUpdate,
+    ParserCsvUpdate, ParserCsvParse,
 )
 from models import User
 from repositories.parser_csv import ParserCsvRepository
@@ -71,7 +71,7 @@ async def validate(
     settings: str = Form(...),
     file: UploadFile = Depends(max_file_size(1024 * 1024)),
 ) -> ParsedDataResponse:
-    parser_settings = ParserCsvUpdate.model_validate_json(settings)
+    parser_settings = ParserCsvParse.model_validate_json(settings)
 
     raw_data = (await file.read()).decode(parser_settings.encoding or "UTF-8")
 

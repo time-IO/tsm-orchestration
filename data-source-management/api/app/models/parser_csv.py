@@ -69,6 +69,10 @@ class ParserCsvUpdate(ParserDetailedUpdate):
     timestamp_columns: Optional[list[ParserCsvTimestampColumnUpdate]] = None
 
 
+class ParserCsvParse(ParserCsvUpdate):
+    pass
+
+
 class ParserCsv(SQLModel, table=True):
     __tablename__ = "parser_csv"
 

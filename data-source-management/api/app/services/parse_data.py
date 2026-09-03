@@ -43,6 +43,9 @@ def get_json_parser_by_settings(settings: ParserJsonUpdate) -> JsonParser:
         "timestamp_keys": [
             {"key": x.key, "format": x.format} for x in settings.timestamp_keys
         ],
+        "excluded_keys": settings.excluded_keys,
+        "measurement_key": settings.measurement_key,
+        "timezone": settings.timezone,
     }
     return JsonParser(translated_settings)
 
