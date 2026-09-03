@@ -29,4 +29,3 @@ SELECT
     }'::jsonb AS "PROPERTIES"
 FROM obs_ts_action_type_coord
 ;
-
