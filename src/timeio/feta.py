@@ -886,6 +886,7 @@ class HTTP(Base):
     id: int = _prop(lambda self: self._attrs["ingest_id"])
     path_for_posts: str = _prop(lambda self: self._attrs["path_for_posts"])
     file_type: str = _prop(lambda self: self._attrs["file_type"])
+    api_key: str = _prop(lambda self: self._attrs["api_key"])
     enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):

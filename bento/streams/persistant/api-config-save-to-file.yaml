@@ -12,6 +12,8 @@ input:
     ws_rate_limit_message: ""
     allowed_verbs:
       - POST
+      - PUT
+      - DELETE
     timeout: 5s
     rate_limit: ""
     cert_file: ""
@@ -34,7 +36,34 @@ pipeline:
   processors:
     - mapping: |
         root = content()
-        # ignores * for mqtt
+        verb = metadata("http_server_request_method")   # POST / DELETE
+        req_path = metadata("http_server_request_path") # /streams/... 
+        meta.verb = verb
+        meta.req_path = req_path
+        # same path you used to persist
+        meta.file_path = "/data/streams" + req_path + ".json"
+        meta.api_path = req_path.replace("/streams/*/", "/streams/")
+
+    - switch:
+      cases:
+        - cond: 'meta("verb") == "DELETE"'
+          pipeline:
+            processors:
+              - file:
+                  operation: delete
+                  path: '${! meta("file_path") }'
+            outputs: []   # drop the message, nothing to forward
+        - cond: 'true'
+          pipeline:
+            processors:
+              # replace your file output with a file processor write
+              - file:
+                  operation: write
+                  path: '${! meta("file_path") }'
+
+    - mapping: |
+        root = content()
+        # ignores * for external_mqtt and http
         meta path_for_api = metadata("http_server_request_path").replace("/streams/*/", "/streams/")
 
 output:
@@ -54,6 +83,6 @@ output:
           period: ""
           jitter: 0
           check: ""
-    - file:
-        path: '${! metadata("http_server_request_path") }.json'
-        codec: all-bytes
+#    - file:
+#        path: '${! metadata("http_server_request_path") }.json'
+#        codec: all-bytes

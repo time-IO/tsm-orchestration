@@ -31,12 +31,22 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         # Only act for "Bento"-Ingests
         if thing.ingest_type  in ("ExtMQTT", "HTTP"):
-            # Prepare Bento stream configuration
-            stream_config = self.prepare_stream_config(thing)
-            # Create or update the Bento stream
-            self.create_or_update_stream(stream_config, thing)
+            # Unlikely
+            ingest = thing.http if thing.ingest_type == "HTTP" else thing.ext_mqtt
+            if ingest is None:
+                return
+
+            if ingest.enabled:
+                # Prepare Bento stream configuration
+                stream_config = self.prepare_stream_config(thing)
+                # Create or update the Bento stream
+                self.create_or_update_stream(stream_config, thing)
+            else:
+                # Try to delete, if ingest created in disabled state it's only a check if the stream doens't exist
+                self.delete_stream(thing)
 
     def prepare_stream_config(self, thing: Thing):
+        # fmt: off
         ingest_type = thing.ingest_type
 
         # outsource some logic for HTTP-streams
@@ -137,6 +147,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
         return stream_config
+    # fmt: on
 
     def create_or_update_stream(self, stream_config, thing: Thing):
         """Create or update a Bento stream via JSON API"""
@@ -166,6 +177,31 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         except Exception as e:
             logger.error(f"Error configuring Bento stream: {e}")
+
+    def delete_stream(self, thing: Thing):
+        """Delete Bento stream if it exists, otherwise log nothing to do."""
+
+        url = f"{self.bento_api_url_POST}/streams/{thing.ingest_type}/{thing.uuid}"
+
+        try:
+            # Check existence first
+            head = requests.get(url, timeout=30)
+
+            if head.status_code == 200:
+                # Stream exists -> delete it
+                del_resp = requests.delete(url, timeout=30)
+                if del_resp.ok or del_resp.status_code in (202, 204):
+                    logger.info(f"Disabled existing stream: {thing.uuid}")
+                else:
+                    logger.error(
+                        f"Failed to disable stream {thing.uuid}: "
+                        f"{del_resp.status_code} - {del_resp.text}"
+                    )
+            else:
+                logger.info(f"Nothing to disable, not active yet {thing.uuid}")
+
+        except Exception as e:
+            logger.error(f"Error disabling Bento stream {thing.uuid}: {e}")
 
 if __name__ == "__main__":
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))

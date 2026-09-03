@@ -14,6 +14,14 @@ import IngestNewExternalApiTtn from 'pages/IngestNewExternalApiTtn.vue';
 import IngestNewExternalApiUba from 'pages/IngestNewExternalApiUba.vue';
 import IngestDetailExternalApiUba from 'pages/IngestDetailExternalApiUba.vue';
 import IngestEditExternalApiUba from 'pages/IngestEditExternalApiUba.vue';
+import IngestNewHttp from 'pages/IngestNewHttp.vue';
+import IngestNewExternalMqtt from 'pages/IngestNewExternalMqtt.vue';
+import IngestDetailExternalMqtt from 'pages/IngestDetailExternalMqtt.vue';
+import IngestEditExternalMqtt from 'pages/IngestEditExternalMqtt.vue';
+import IngestCopyExternalMqtt from 'pages/IngestCopyExternalMqtt.vue';
+import IngestDetailHttp from 'pages/IngestDetailHttp.vue';
+import IngestEditHttp from 'pages/IngestEditHttp.vue';
+import IngestCopyHttp from 'pages/IngestCopyHttp.vue';
 import ParserOverview from 'pages/ParserOverview.vue';
 import ParserNew from 'pages/ParserNew.vue';
 import ParserNewCsv from 'pages/ParserNewCsv.vue';
@@ -95,6 +103,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/new/mqtt',
     component: IngestNewMqtt,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/new/http',
+    component: IngestNewHttp,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/new/external-mqtt',
+    component: IngestNewExternalMqtt,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -188,6 +206,16 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/external-mqtt/:id',
+    component: IngestDetailExternalMqtt,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/http/:id',
+    component: IngestDetailHttp,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/external-api/bosch/:id/edit',
     component: IngestEditExternalApiBosch,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -243,6 +271,16 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/external-mqtt/:id/edit',
+    component: IngestEditExternalMqtt,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/http/:id/edit',
+    component: IngestEditHttp,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/external-api/bosch/:id/copy',
     component: IngestCopyExternalApiBosch,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -290,6 +328,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-sftp/:id/copy',
     component: IngestCopyExternalSftp,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-mqtt/:id/copy',
+    component: IngestCopyExternalMqtt,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/http/:id/copy',
+    component: IngestCopyHttp,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {

@@ -1246,7 +1246,7 @@ services:
     image: ghcr.io/warpstreamlabs/bento:latest
     container_name: bento
     volumes:
-      - ./bento/ressources/:/ressources
+      - ./bento/resources/:/resources
       - ./bento/streams/:/streams
       - ./bento/main.yaml:/bento.yaml
     command: >

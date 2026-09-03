@@ -7,9 +7,11 @@ import ingestExternalApiTSystemsController from 'src/services/ingest_external_ap
 import ingestExternalApiSensotoController from 'src/services/ingest_external_api_sensoto';
 import ingestMqttController from 'src/services/ingest_mqtt';
 import ingestSftpController from 'src/services/ingest_sftp';
+import ingestHttpController from 'src/services/ingest_http';
 import ingestSftpStorageController from 'src/services/ingest_sftp_storage';
 import ingestExternalSftpController from 'src/services/ingest_external_sftp';
 import ingestExternalSftpStorageController from 'src/services/ingest_external_sftp_storage';
+import ingestExternalMqttController from 'src/services/ingest_external_mqtt';
 import triggerExternalApiGenController from 'src/services/trigger_external_api_generic';
 import permissionGroupController from 'src/services/permission_group';
 import userController from 'src/services/user';
