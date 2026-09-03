@@ -57,7 +57,10 @@
                     <q-item-label>MQTT Address</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.external_mqtt_address }}</q-item-label>
-                      <copy-btn title="Copy MQTT address" :text-to-copy="item.external_mqtt_address" />
+                      <copy-btn
+                        title="Copy MQTT address"
+                        :text-to-copy="item.external_mqtt_address"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -83,8 +86,14 @@
                   <q-item-section>
                     <q-item-label>MQTT Username</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ item.external_mqtt_username || 'N/A' }}</q-item-label>
-                      <copy-btn v-if="item.external_mqtt_username" title="Copy MQTT username" :text-to-copy="item.external_mqtt_username" />
+                      <q-item-label caption>{{
+                        item.external_mqtt_username || 'N/A'
+                      }}</q-item-label>
+                      <copy-btn
+                        v-if="item.external_mqtt_username"
+                        title="Copy MQTT username"
+                        :text-to-copy="item.external_mqtt_username"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -108,7 +117,11 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <copy-btn v-if="item.external_mqtt_password" title="Copy MQTT password" :text-to-copy="item.external_mqtt_password" />
+                      <copy-btn
+                        v-if="item.external_mqtt_password"
+                        title="Copy MQTT password"
+                        :text-to-copy="item.external_mqtt_password"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -117,8 +130,14 @@
                   <q-item-section>
                     <q-item-label>CA Certificate</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ shortenText(item.external_mqtt_ca_cert) || 'Not set' }}</q-item-label>
-                      <copy-btn v-if="item.external_mqtt_ca_cert" title="Copy CA certificate" :text-to-copy="item.external_mqtt_ca_cert" />
+                      <q-item-label caption>{{
+                        shortenText(item.external_mqtt_ca_cert) || 'Not set'
+                      }}</q-item-label>
+                      <copy-btn
+                        v-if="item.external_mqtt_ca_cert"
+                        title="Copy CA certificate"
+                        :text-to-copy="item.external_mqtt_ca_cert"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -127,8 +146,14 @@
                   <q-item-section>
                     <q-item-label>Client Certificate</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ shortenText(item.external_mqtt_client_cert) || 'Not set' }}</q-item-label>
-                      <copy-btn v-if="item.external_mqtt_client_cert" title="Copy client certificate" :text-to-copy="item.external_mqtt_client_cert" />
+                      <q-item-label caption>{{
+                        shortenText(item.external_mqtt_client_cert) || 'Not set'
+                      }}</q-item-label>
+                      <copy-btn
+                        v-if="item.external_mqtt_client_cert"
+                        title="Copy client certificate"
+                        :text-to-copy="item.external_mqtt_client_cert"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -137,8 +162,14 @@
                   <q-item-section>
                     <q-item-label>Client Key</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ shortenText(item.external_mqtt_client_key) || 'Not set' }}</q-item-label>
-                      <copy-btn v-if="item.external_mqtt_client_key" title="Copy client key" :text-to-copy="item.external_mqtt_client_key" />
+                      <q-item-label caption>{{
+                        shortenText(item.external_mqtt_client_key) || 'Not set'
+                      }}</q-item-label>
+                      <copy-btn
+                        v-if="item.external_mqtt_client_key"
+                        title="Copy client key"
+                        :text-to-copy="item.external_mqtt_client_key"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>

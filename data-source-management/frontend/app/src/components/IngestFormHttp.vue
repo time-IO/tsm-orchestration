@@ -148,10 +148,7 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import ParserSelect from 'components/ParserSelect.vue';
 import HelpButton from 'components/HelpButton.vue';
 import { ref } from 'vue';
-import type {
-  IngestHttpCreate,
-  IngestHttpUpdate,
-} from 'src/services/ingest_http/types';
+import type { IngestHttpCreate, IngestHttpUpdate } from 'src/services/ingest_http/types';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 
 defineProps<{
@@ -181,13 +178,7 @@ const formData = defineModel<IngestHttpCreate | IngestHttpUpdate>({
 
 const isApiKeyPwd = ref(true);
 
-const fileTypeOptions = [
-  'json',
-  'xml',
-  'csv',
-  'text',
-  'binary',
-];
+const fileTypeOptions = ['json', 'xml', 'csv', 'text', 'binary'];
 </script>
 
 <style scoped></style>

@@ -7,10 +7,6 @@ import { createIngestApiService } from 'src/services/factoryIngestService';
 
 const apiPath = 'ingest/http/';
 
-export default createIngestApiService<
-  IngestHttpPublic,
-  IngestHttpCreate,
-  IngestHttpUpdate
->(apiPath);
-
-
+export default createIngestApiService<IngestHttpPublic, IngestHttpCreate, IngestHttpUpdate>(
+  apiPath,
+);

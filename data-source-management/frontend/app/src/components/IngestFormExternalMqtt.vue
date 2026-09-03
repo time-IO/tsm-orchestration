@@ -82,7 +82,7 @@
                 type="number"
                 :rules="[
                   (val) => !!val || 'MQTT Broker Port is required',
-                  (val) => val > 0 && val <= 65535 || 'Port must be between 1 and 65535',
+                  (val) => (val > 0 && val <= 65535) || 'Port must be between 1 and 65535',
                 ]"
               >
                 <template #append>

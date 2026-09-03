@@ -74,11 +74,7 @@
                     <q-item-label>API Key</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption class="col-2">
-                        <q-input
-                          borderless
-                          v-model="apiKey"
-                          :type="isPwd ? 'password' : 'text'"
-                        >
+                        <q-input borderless v-model="apiKey" :type="isPwd ? 'password' : 'text'">
                           <template v-slot:prepend>
                             <q-icon
                               :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -88,7 +84,11 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <copy-btn v-if="item.api_key" title="Copy API key" :text-to-copy="item.api_key" />
+                      <copy-btn
+                        v-if="item.api_key"
+                        title="Copy API key"
+                        :text-to-copy="item.api_key"
+                      />
                     </div>
                   </q-item-section>
                 </q-item>
