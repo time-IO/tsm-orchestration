@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from typing import Any
 from models import TriggerQualityControl, User
 from dependencies import (
@@ -38,4 +39,5 @@ def trigger_quality_control(
         payload=payload,
         allowed_permission_group_ids=current_user.permission_group_ids,
         repo_quality_control=repo_quality_control,
+        access_scope=AccessScope.from_user(current_user),
     )

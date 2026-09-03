@@ -38,7 +38,7 @@ class ConstraintViolation(Exception):
 class OffsetRegex:
     """Regex patterns for offset validation."""
 
-    PATTERN = r"^(\d+)?(Y|YS|A|AS|Q|QS|M|MS|W(-MON|-TUE|-WED|-THU|-FRI|-SAT|-SUN)?|SM|SMS|D|B|C|BM|BMS|BQ|BQS|BY|BYS|CBM|CBMS|CQ|CQS|H|T|min|S|L|ms|U|us|N)$"
+    PATTERN = r"^(?!$)(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
     _compiled = re.compile(PATTERN)
 
     @classmethod

@@ -13,6 +13,7 @@ import ingestExternalSftpController from 'src/services/ingest_external_sftp';
 import ingestExternalSftpStorageController from 'src/services/ingest_external_sftp_storage';
 import ingestExternalMqttController from 'src/services/ingest_external_mqtt';
 import triggerExternalApiGenController from 'src/services/trigger_external_api_generic';
+import triggerExternalSftpController from 'src/services/trigger_external_sftp';
 import permissionGroupController from 'src/services/permission_group';
 import userController from 'src/services/user';
 import neutronMonitorStationController from 'src/services/neutron_monitor_stations';
@@ -54,6 +55,7 @@ export const API = {
   jsonParser: jsonParserController,
   soilcanParser: soilcanParserController,
   triggerExternalGenAPI: triggerExternalApiGenController,
+  triggerExternalSftp: triggerExternalSftpController,
   qualityControlSetting: qualityControlSettingController,
   sta: staController,
   triggerQCSetting: qualityControlSettingsTriggerController,

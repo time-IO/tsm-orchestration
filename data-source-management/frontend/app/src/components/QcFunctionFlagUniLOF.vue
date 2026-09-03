@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagUniLOF" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagUniLOF"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -30,7 +35,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.n"
+      v-model.number="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Number of periods to include in LOF calculation."
@@ -39,7 +44,7 @@
     <!--thresh-->
     <qc-function-form-float-enum-input
       class="q-mb-md"
-      v-model:input="formData.thresh"
+      v-model:input.number="formData.thresh"
       v-model:current_type="current_thresh_type"
       label="thresh"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -62,10 +67,10 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input="formData.corruption"
+      v-model:input.number="formData.corruption"
       v-model:current_type="current_corruption_type"
-      :rules_float="[ruleFactories.RANGE(0, 1)]"
-      :rules_int="[ruleFactories.MIN(0)]"
+      :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
+      :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint_float="Portion of data considered anomalous."
       hint_int="Count of data considered anomalous."
     />
@@ -84,7 +89,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.p"
+      v-model.number="formData.p"
       label="p (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
@@ -92,7 +97,7 @@
 
     <!--density-->
     <qc-function-form-float-enum-input
-      v-model:input="formData.density"
+      v-model:input.number="formData.density"
       v-model:current_type="current_density_type"
       label="density"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -131,7 +136,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_offset"
+      v-model.number="formData.min_offset"
       label="min_offset (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum value jump before and after clusters to flag."
@@ -175,6 +180,7 @@ const props = defineProps<{
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 
 const current_thresh_type = ref(POSSIBLE_QC_FUNCTION_TYPES.ENUM);

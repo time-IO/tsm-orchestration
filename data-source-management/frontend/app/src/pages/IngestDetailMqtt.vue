@@ -138,7 +138,7 @@
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" />
+      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" :mqtt-topic="item.topic" />
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>

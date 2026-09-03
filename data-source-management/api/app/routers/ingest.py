@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest,
@@ -43,7 +44,11 @@ def read_list(
         filters,
     )
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            sort_by=sort_by,
+            filters=filters,
+            access_scope=AccessScope.from_user(current_user),
+        )
     )
 
 
@@ -57,6 +62,4 @@ def delete(
     logger.debug(
         "Delete ingest requested by user_id=%s ingest_id=%s", current_user.id, id
     )
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

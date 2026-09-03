@@ -10,6 +10,7 @@ from routers import (
     ingest_sftp_storage,
     ingest_external_sftp_storage,
     ingest_mqtt,
+    ingest_mqtt_client,
     ingest_http,
     parser_csv,
     parser_json,
@@ -30,6 +31,7 @@ from routers import (
     sta_proxy,
     trigger_quality_control,
     trigger_ext_api,
+    trigger_ext_sftp,
     parser_timezone,
     parser_encoding,
     ingest,
@@ -80,6 +82,7 @@ app.include_router(ingest_external_api_sensoto.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_external_mqtt.router)
 app.include_router(ingest_mqtt.router)
+app.include_router(ingest_mqtt_client.router)
 app.include_router(ingest_sftp.router)
 app.include_router(ingest_http.router)
 app.include_router(ingest_sftp_storage.router)
@@ -93,6 +96,7 @@ app.include_router(user.router)
 app.include_router(sta_proxy.router)
 app.include_router(trigger_quality_control.router)
 app.include_router(trigger_ext_api.router)
+app.include_router(trigger_ext_sftp.router)
 app.include_router(parser_timezone.router)
 app.include_router(parser_encoding.router)
 app.include_router(parser_detailed.router)

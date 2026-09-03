@@ -5,8 +5,6 @@ import atexit
 import warnings
 from typing import Any, TypedDict
 
-from timeio.parser import soilcan_parser
-
 try:
     from typing import Self
 except ImportError:
@@ -600,15 +598,15 @@ class FileParser(Base, FromUUIDMixin):
         params["timestamp_keys"] = ts_cols
         return params
 
-    def _get_mqtt_params(self):
-        return {}
-
     def _get_soilcan_params(self):
         query = f"select * from {self._schema}.parser_soilcan where parser_id = %s"
         row = self._fetchone(self._conn, query, self.id)
         if not row:
             return {}
         return {k: v for k, v in row.items() if k != "parser_id"}
+
+    def _get_mqtt_params(self):
+        return {}
 
     def _get_csv_ts_cols(self):
         query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""

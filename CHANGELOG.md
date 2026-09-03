@@ -3,9 +3,31 @@
 
 ## [Unreleased]
 ### Added
+- Added link to saqc documentation in the header of a selected saqc function([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/690))
+- Trigger to (re)sync an external SFTP ingest with an optional date range ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
 ### Fixed
 ### Changed
+- Updated link to pandas documentation and added help icon to context window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/689))
+- Moved external API trigger into the ingest tools section ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
 ### Removed
+
+## [2026-08-26]
+### Added
+- Support for unix timestamps ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/650))
+- QC-Settings filter ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/670))
+- Soilcan Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/252))
+- `dfilter` parameter for QC-Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/256))
+- Parser type selection ([Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/266), [Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/270))
+### Fixed
+- JSON-Parser integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/662))
+- UBA-Api ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/678))
+- DB-API queries to onl select observations for a given thing ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/timeio-db-api/-/merge_requests/23))
+- MQTT-Questa Migration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/data-source-management/-/merge_requests/265))
+### Changed
+- Moved data-source-management to tsm-orchestration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/663))
+- Upgrade SaQC to 2.10 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/679))
+### Removed
+- Django Frontend and configdb-updater ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/654))
 
 ## [2026-07-24]
 ### Added
