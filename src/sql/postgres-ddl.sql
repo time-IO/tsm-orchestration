@@ -131,3 +131,104 @@ CREATE TABLE mqtt_message
 
     CONSTRAINT "mqtt_message_thing_id_fk_thing_id" FOREIGN KEY ("thing_id") REFERENCES "thing" ("id") DEFERRABLE INITIALLY DEFERRED
 );
+
+
+--
+-- Create table foi_datastream_mapping
+-- Cached, time-versioned mapping of main/x/y/z datastream_ids per
+-- dynamic-location configuration action (SMS). Kept in sync via
+-- reconcile_foi_datastream_mapping(), called after each SMS
+-- materialized view refresh. Only relevant for projects with
+-- dynamic things (currently: CRNS) - empty otherwise.
+--
+CREATE TABLE "foi_datastream_mapping"
+(
+    "id"                 bigserial                NOT NULL PRIMARY KEY,
+    "main_datastream_id" bigint                    NOT NULL,
+    "x_datastream_id"    bigint                    NOT NULL,
+    "y_datastream_id"    bigint                    NOT NULL,
+    "z_datastream_id"    bigint                    NULL,
+    "action_id"          bigint                    NOT NULL,
+    "configuration_id"   bigint                    NOT NULL,
+    "label"              text                      NOT NULL,
+    "valid_from"         timestamp with time zone  NOT NULL,
+    "valid_to"           timestamp with time zone  NULL,
+
+    CONSTRAINT "foi_dsm_valid_range" CHECK ("valid_to" IS NULL OR "valid_to" > "valid_from"),
+    CONSTRAINT "foi_datastream_mapping_main_datastream_id_fk"
+        FOREIGN KEY ("main_datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE UNIQUE INDEX "foi_dsm_action_id_uniq" ON "foi_datastream_mapping" ("action_id");
+CREATE INDEX "foi_dsm_main_datastream_id" ON "foi_datastream_mapping" ("main_datastream_id", "valid_from");
+CREATE INDEX "foi_dsm_x_datastream_id" ON "foi_datastream_mapping" ("x_datastream_id");
+CREATE INDEX "foi_dsm_y_datastream_id" ON "foi_datastream_mapping" ("y_datastream_id");
+CREATE INDEX "foi_dsm_z_datastream_id" ON "foi_datastream_mapping" ("z_datastream_id") WHERE "z_datastream_id" IS NOT NULL;
+
+
+--
+-- Create table foi
+-- One row per distinct coordinate combination for DYNAMIC things only
+-- (static FOIs remain computed live in the FEATURES view - cheap
+-- enough, no rework needed). feature_id is the same
+-- hashtextextended(...) value the legacy live computation used;
+-- here it's computed once at write time by the observation trigger.
+--
+CREATE TABLE "foi"
+(
+    "feature_id"  bigint                    NOT NULL PRIMARY KEY,
+    "is_dynamic"  boolean                   NOT NULL DEFAULT TRUE,
+    "action_id"   bigint                    NOT NULL,
+    "label"       text                      NOT NULL,
+    "begin_date"  timestamp with time zone  NOT NULL,
+    "coordinates" double precision[]        NOT NULL
+);
+
+CREATE INDEX "foi_action_id" ON "foi" ("action_id");
+
+
+--
+-- Create table foi_observation_lookup
+-- One row per observation that could be assigned a FOI. Observations
+-- with invalid/missing coordinates (e.g. Null Island (0,0)) get no
+-- entry - they simply have no FEATURE_ID in OBSERVATIONS.
+--
+CREATE TABLE "foi_observation_lookup"
+(
+    "o_id"       bigint                    NOT NULL PRIMARY KEY,
+    "feature_id" bigint                    NOT NULL,
+    "created_at" timestamp with time zone  NOT NULL DEFAULT now(),
+
+    CONSTRAINT "foi_observation_lookup_o_id_fk"
+        FOREIGN KEY ("o_id") REFERENCES "observation" ("id") DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT "foi_observation_lookup_feature_id_fk"
+        FOREIGN KEY ("feature_id") REFERENCES "foi" ("feature_id") DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE INDEX "foi_observation_lookup_feature_id" ON "foi_observation_lookup" ("feature_id");
+
+
+--
+-- Create table foi_recompute_queue
+-- Queue of retroactive-correction jobs, populated by
+-- reconcile_foi_datastream_mapping() (Fall 2: known action_id with
+-- changed datastream mapping). Processed asynchronously by a
+-- pg_cron job in small batches to avoid long-running transactions.
+--
+CREATE TABLE "foi_recompute_queue"
+(
+    "id"                 bigserial                 NOT NULL PRIMARY KEY,
+    "main_datastream_id" bigint                     NOT NULL,
+    "from_time"          timestamp with time zone   NOT NULL,
+    "to_time"            timestamp with time zone   NOT NULL,
+    "requested_at"       timestamp with time zone   NOT NULL DEFAULT now(),
+    "status"             varchar(20)                NOT NULL DEFAULT 'pending',
+    "processed_at"       timestamp with time zone   NULL,
+    "error_message"      text                       NULL,
+
+    CONSTRAINT "foi_recompute_queue_status_check"
+        CHECK ("status" IN ('pending', 'processing', 'done', 'failed'))
+);
+
+CREATE INDEX "foi_recompute_queue_pending" ON "foi_recompute_queue" ("status", "requested_at")
+    WHERE "status" = 'pending';
