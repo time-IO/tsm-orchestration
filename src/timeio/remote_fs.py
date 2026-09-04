@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import io
 import abc
 import logging
 import os
@@ -10,9 +11,11 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 from typing import IO, Any
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 import minio
 from minio.datatypes import Object as MinioObject
+from ftplib import FTP
 from paramiko import (
     SSHClient,
     SFTPClient,
@@ -24,6 +27,14 @@ from timeio.journaling import Journal
 
 journal = Journal("CronJob")
 logger = logging.getLogger("sftp_sync")
+
+
+@dataclass
+class FTPAttributes:
+    filename: str
+    is_dir: bool
+    size: int
+    mtime: float
 
 
 class RemoteFS(abc.ABC):
@@ -151,7 +162,7 @@ class MinioFS(RemoteFS):
         pass
 
 
-class FtpFS(RemoteFS):
+class SftpFS(RemoteFS):
 
     client: SFTPClient
     files: dict[str, SFTPAttributes]
@@ -165,7 +176,7 @@ class FtpFS(RemoteFS):
         path,
         keyfile_path=None,
         missing_host_key_policy: MissingHostKeyPolicy | None = None,
-    ) -> FtpFS:
+    ) -> SftpFS:
         # with urlparse(uri, scheme="sftp") the uri
         # is interpreted as relative path
         uri_parts = urlparse(uri if "://" in uri else f"sftp://{uri}")
@@ -259,6 +270,130 @@ class FtpFS(RemoteFS):
         self.connection.close()
 
 
+class FtpFS(RemoteFS):
+    client: FTP
+    files: dict[str, FTPAttributes]
+
+    @classmethod
+    def from_credentials(
+        cls,
+        uri,
+        username,
+        password,
+        path,
+        keyfile_path=None,
+        missing_host_key_policy=None,
+    ) -> FtpFS:
+        uri_parts = urlparse(uri)
+        ftp = FTP()
+        ftp.connect(uri_parts.hostname, uri_parts.port or 21, timeout=10)
+        ftp.login(username, password)
+        ftp.cwd(path)
+        return cls(ftp)
+
+    def __init__(self, client: FTP):
+        self.client = client
+        self.files = {}
+        self._get_files()
+
+    def _get_files(self, path=""):
+
+        cwd = self.client.pwd()
+
+        lines = []
+
+        list_path = f"LIST {path}" if path else "LIST"
+        self.client.retrlines(list_path, lines.append)
+
+        for line in lines:
+
+            parts = line.split(maxsplit=8)
+
+            if len(parts) < 9:
+                continue
+
+            permissions = parts[0]
+            size = int(parts[4])
+            name = parts[8]
+
+            is_dir = permissions.startswith("d")
+
+            rel = os.path.join(path, name) if path else name
+
+            self.files[rel] = FTPAttributes(
+                filename=name,
+                is_dir=is_dir,
+                size=size,
+                mtime=self._mtime(name),
+            )
+
+            if is_dir:
+                self._get_files(rel)
+
+        self.client.cwd(cwd)
+
+    def _mtime(self, path):
+        try:
+            resp = self.client.sendcmd(f"MDTM {path}")
+            timestamp = resp.split()[1]
+
+            return time.mktime(time.strptime(timestamp, "%Y%m%d%H%M%S"))
+
+        except Exception:
+            return 0
+
+    def exist(self, path):
+        return path in self.files
+
+    def is_dir(self, path):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+
+        return self.files[path].is_dir
+
+    def size(self, path):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+
+        return self.files[path].size
+
+    def last_modified(self, path):
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+
+        return self.files[path].mtime
+
+    @contextmanager
+    def open(self, path):
+
+        if not self.exist(path):
+            raise FileNotFoundError(path)
+
+        buffer = io.BytesIO()
+
+        self.client.retrbinary(f"RETR {path}", buffer.write)
+
+        buffer.seek(0)
+
+        try:
+            yield buffer
+        finally:
+            buffer.close()
+
+    def put(self, path: str, fo: IO[bytes], size: int):
+
+        self.client.storbinary(f"STOR {path}", fo)
+
+    def mkdir(self, path):
+
+        logger.debug(f"CREATE {path}")
+
+        self.client.mkd(path)
+
+    def close(self):
+        self.client.quit()
+
+
 def _to_epoch(value: str | None) -> float | None:
     """Parse a 'YYYY-MM-DD HH:MM:SS' UTC datetime string to epoch seconds."""
     if not value:
@@ -270,6 +405,7 @@ def sync(
     src: RemoteFS,
     trg: RemoteFS,
     thing_id: str,
+    scheme,
     datetime_from: str | None = None,
     datetime_to: str | None = None,
 ):
@@ -315,12 +451,13 @@ def sync(
                 continue
     except Exception:
         journal.error(
-            f"SFTP sync job failed for path: {path} and for thing {thing_id}", thing_id
+            f"{scheme} sync job failed for path: {path} and for thing {thing_id}",
+            thing_id,
         )
         raise
     else:
         journal.info(
-            f"SFTP sync job ran successfully. {synced} files synced for "
+            f"{scheme} sync job ran successfully. {synced} files synced for "
             f"thing {thing_id}",
             thing_id,
         )
