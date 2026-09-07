@@ -6,7 +6,7 @@ import random
 from unittest.mock import MagicMock
 from crontab import CronItem
 
-from setup_crontab import CreateThingInCrontabHandler, SYNC_JITTER_SECONDS
+from setup_crontab import CreateThingInCrontabHandler
 
 
 class ProjectMock:
@@ -136,12 +136,12 @@ def test_update_prepends_sleep_offset_to_command(old_schedule):
     # update the existing job (as on the next frontend_thing_update)
     CreateThingInCrontabHandler.apply_job(job, thing, is_new=False)
 
-    # the updated command now leads with the sleep offset
-    assert job.command.startswith("sleep ")
-    assert "&&" in job.command
-    assert uuid_ in job.command
-    offset = int(job.command.split()[1])
-    assert 0 <= offset <= SYNC_JITTER_SECONDS
+    # the updated command now leads with the sleep offset. With seed(42) the
+    # single randint(0, SYNC_JITTER_SECONDS) draw is deterministic (== 20).
+    assert job.command == (
+        f"sleep 20 && python3 /scripts/mqtt_sync_wrapper.py "
+        f"sync-thing {uuid_} > $STDOUT 2> $STDERR"
+    )
 
 
 @pytest.mark.parametrize(
