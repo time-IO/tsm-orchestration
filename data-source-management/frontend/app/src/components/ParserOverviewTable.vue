@@ -307,6 +307,11 @@ function onResize(e: MouseEvent) {
 }
 
 function stopResize() {
+  const preventSortTrigger = (ev: MouseEvent) => {
+    ev.stopPropagation();
+    document.removeEventListener('click', preventSortTrigger, true);
+  };
+  document.addEventListener('click', preventSortTrigger, true);
   resizingCol = null;
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
@@ -359,6 +364,7 @@ thead th {
 .row-highlight {
   background-color: rgba(255, 0, 0, 0.1);
 }
+
 .col-resize-handle {
   position: absolute;
   right: 0;
