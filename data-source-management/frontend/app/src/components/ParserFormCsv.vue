@@ -74,14 +74,16 @@
           <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]" />
 
           <!-- Header Field -->
-          <q-input
-            filled
-            class="q-mb-md"
-            v-model.number="formData.header"
-            label="Header row index"
-            hint="Row index where header is located (0 for first row)"
-            :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
-          />
+<q-input
+  filled
+  class="q-mb-md"
+  :model-value="formData.header"
+  label="Header row index"
+  hint="Row index where header is located (0 for first row)"
+  :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
+  @update:model-value="formData.header = toNullableNumber($event)"
+/>
+
 
           <!-- Timestamp Columns -->
           <div class="q-my-md">
@@ -251,6 +253,7 @@ import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
 import ParserParseCsv from 'components/ParserParseCsv.vue';
 import { QForm } from 'quasar';
+import { toNullableNumber } from 'src/utils/string_utils';
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;

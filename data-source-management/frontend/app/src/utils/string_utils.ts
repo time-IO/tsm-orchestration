@@ -54,3 +54,16 @@ export function unknownToString(value: unknown): string {
 
   return JSON.stringify(value) ?? '';
 }
+
+/**
+ * Converts the given input to a number or null.
+ * If the input is an empty string or null, the method returns null.
+ * Otherwise, it converts the input to a number.
+ *
+ * @param {string | number | null} value - The value to be converted to a nullable number.
+ * @return {number | null} The converted number, or null if the input is an empty string or null.
+ */
+export function toNullableNumber(value: string | number | null): number | null {
+  return value === '' || value === null ? null : Number(value)
+}
+
