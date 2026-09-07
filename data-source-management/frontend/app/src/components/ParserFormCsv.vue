@@ -74,16 +74,15 @@
           <parser-encoding-select v-model="formData.encoding" :rules="[rules.REQUIRED]" />
 
           <!-- Header Field -->
-<q-input
-  filled
-  class="q-mb-md"
-  :model-value="formData.header"
-  label="Header row index"
-  hint="Row index where header is located (0 for first row)"
-  :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
-  @update:model-value="formData.header = toNullableNumber($event)"
-/>
-
+          <q-input
+            filled
+            class="q-mb-md"
+            :model-value="formData.header"
+            label="Header row index"
+            hint="Row index where header is located (0 for first row)"
+            :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
+            @update:model-value="formData.header = toNullableNumber($event)"
+          />
 
           <!-- Timestamp Columns -->
           <div class="q-my-md">

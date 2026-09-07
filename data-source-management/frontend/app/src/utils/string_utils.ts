@@ -64,6 +64,5 @@ export function unknownToString(value: unknown): string {
  * @return {number | null} The converted number, or null if the input is an empty string or null.
  */
 export function toNullableNumber(value: string | number | null): number | null {
-  return value === '' || value === null ? null : Number(value)
+  return value === '' || value === null ? null : Number(value);
 }
-
