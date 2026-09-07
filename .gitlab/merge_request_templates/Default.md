@@ -2,23 +2,19 @@
 
 <!-- Describe the change and the operational risk. -->
 
-## Review Checklist
+## Review
 
-- [ ] A reviewer other than the author is assigned.
-- [ ] The author will not self-merge this MR.
-- [ ] The MR-event pipeline is green or every failure is understood and documented.
-- [ ] For CI changes, the full branch-push pipeline URL is linked here:
-      <!-- paste pipeline URL -->
-- [ ] For CI changes, a Maintainer reviewed the affected jobs, rules, needs,
-      artifacts, and release/tag behavior.
-- [ ] For CI changes, the MR-event pipeline does not hide failures in established
-      branch-push, image-build, integration, end-to-end, release, or tag jobs.
-- [ ] The auto-generated `Merge commit message` and `Squash commit message`
-      were not changed.
+- [ ] A reviewer is assigned, or the reason for a hotfix exception is documented.
 
 ## Validation
 
 <!-- List the commands, pipelines, or manual checks that prove the change. -->
+
+## CI changes (only if applicable)
+
+<!-- Link the full branch-push pipeline and describe any affected jobs, rules,
+needs, artifacts, or release/tag behavior. Ask a Maintainer to review CI
+changes. -->
 
 > :warning:
 >
