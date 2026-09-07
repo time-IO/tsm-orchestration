@@ -6,7 +6,7 @@ import random
 from unittest.mock import MagicMock
 from crontab import CronItem
 
-from setup_crontab import CreateThingInCrontabHandler
+from setup_crontab import CreateThingInCrontabHandler, SYNC_JITTER_SECONDS
 
 
 class ProjectMock:
@@ -109,6 +109,39 @@ def test_update_job_sftp(uuid, typ, kwargs, enabled, interval):
     # We just assert that a change in schedule happened, to test the explicit
     # update of the schedule/slices we have an extra test below
     assert job.slices.render() != old_slices
+
+
+@pytest.mark.parametrize(
+    "old_schedule",
+    ["*/15 * * * *", "0,10,20,30,40,50 * * * *"],  # pre-jitter schedules
+)
+def test_update_prepends_sleep_offset_to_command(old_schedule):
+    """An existing job whose command has no sleep offset (created before the
+    jitter change) must gain the sleep offset when it is updated."""
+    random.seed(42)
+    uuid_ = "0001"
+    # existing crontab entry: old command WITHOUT sleep offset
+    job = CronItem(
+        command=f"python3 /scripts/mqtt_sync_wrapper.py sync-thing {uuid_} > $STDOUT 2> $STDERR",
+        comment=f"2020-01-01 00:00:00 | project | thing | {uuid_}",
+    )
+    job.setall(old_schedule)
+    assert "sleep" not in job.command  # precondition: old command, no offset
+
+    thing = ThingMock(
+        uuid=uuid_,
+        ext_sftp=MagicMock(sync_interval=15, sync_enabled=True, uri="sftp://x:22"),
+    )
+
+    # update the existing job (as on the next frontend_thing_update)
+    CreateThingInCrontabHandler.apply_job(job, thing, is_new=False)
+
+    # the updated command now leads with the sleep offset
+    assert job.command.startswith("sleep ")
+    assert "&&" in job.command
+    assert uuid_ in job.command
+    offset = int(job.command.split()[1])
+    assert 0 <= offset <= SYNC_JITTER_SECONDS
 
 
 @pytest.mark.parametrize(
