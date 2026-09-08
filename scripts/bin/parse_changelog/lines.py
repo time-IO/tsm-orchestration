@@ -4,7 +4,6 @@ from .errors import (
     DuplicateSectionLineError,
     InvalidSuccessorLineError,
     InvalidLinkTitleLineError,
-    IncorrectVersionIncrementLineError,
     InvalidUnreleasedVersionLineError,
     MissingUnreleasedVersionLineError,
     MissingMergeRequestLinkLineError,
@@ -126,7 +125,7 @@ class InvalidLine(Line):
         return [VersionLine, SectionLine, ReleaseNoteLine]
 
 
-class LicenseFinishedLine(Line):
+class HeaderFinishedLine(Line):
     @staticmethod
     def get_allowed_successor_line_types():
         return [UnreleasedVersionLine]
@@ -138,7 +137,7 @@ class EmptyLine(Line):
         return []
 
 
-class LicenseLine(Line):
+class HeaderLine(Line):
     @staticmethod
     def get_allowed_successor_line_types():
-        return [LicenseLine, LicenseFinishedLine]
+        return [HeaderLine, HeaderFinishedLine]

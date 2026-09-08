@@ -3,14 +3,14 @@ import re
 from .lines import (
     EmptyLine,
     InvalidLine,
-    LicenseFinishedLine,
-    LicenseLine,
+    HeaderFinishedLine,
+    HeaderLine,
     ReleaseNoteLine,
     SectionLine,
     UnreleasedVersionLine,
     VersionLine,
 )
-from .errors import LicenseEndNotFoundLineError
+from .errors import HeaderEndNotFoundLineError
 
 VERSION_LINE_PATTERN = (
     r"## \[(?:(\d{4}-\d{2}-\d{2})|Unreleased)\]"
@@ -18,7 +18,7 @@ VERSION_LINE_PATTERN = (
 SECTION_LINE_PATTERN = r"^### (Added|Fixed|Changed|Removed)$"
 RELEASE_NOTE_LINE_PATTERN = r"^-\s.*"
 LINEBREAK_NOTE_LINE_PATTERN = r"^\s\s.*"
-LICENSE_FINISHED_LINE_PATTERN = "- Use `Added`, `Changed`, `Fixed`, `Removed`"
+HEADER_FINISHED_LINE_PATTERN = "- Use `Added`, `Changed`, `Fixed`, `Removed`"
 VER_PATTERN = r"^(\d{4})-(\d{2})-(\d{2})$"
 
 class ReleaseNoteVersion:
@@ -59,7 +59,7 @@ class ReleaseNoteVersion:
 class Parser:
     def __init__(self, file_content):
         self.current_line = None
-        self.license_finished = False
+        self.header_finished = False
         self.line_errors = []
         self.file_content = file_content
 
@@ -69,8 +69,8 @@ class Parser:
             if not isinstance(next_line, EmptyLine):
                 self.current_line = next_line
                 self.line_errors.extend(self.current_line.get_errors())
-        if not self.license_finished:
-            self.line_errors.append(LicenseEndNotFoundLineError(self.current_line))
+        if not self.header_finished:
+            self.line_errors.append(HeaderEndNotFoundLineError(self.current_line))
         return self.line_errors
 
     def parse_next_line(self, index, line_text):
@@ -80,14 +80,14 @@ class Parser:
         if not stripped_line_text:
             return EmptyLine(line_number, stripped_line_text, self.current_line)
 
-        if re.match(LICENSE_FINISHED_LINE_PATTERN, stripped_line_text):
-            self.license_finished = True
-            return LicenseFinishedLine(
+        if re.match(HEADER_FINISHED_LINE_PATTERN, stripped_line_text):
+            self.header_finished = True
+            return HeaderFinishedLine(
                 line_number, stripped_line_text, self.current_line
             )
 
-        if not self.license_finished:
-            return LicenseLine(line_number, stripped_line_text, self.current_line)
+        if not self.header_finished:
+            return HeaderLine(line_number, stripped_line_text, self.current_line)
 
         version_match = re.match(VERSION_LINE_PATTERN, stripped_line_text)
         if version_match:

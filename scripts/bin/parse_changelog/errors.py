@@ -95,11 +95,11 @@ class DuplicateSectionLineError(LineError):
         )
 
 
-class LicenseEndNotFoundLineError(LineError):
+class HeaderEndNotFoundLineError(LineError):
     def __init__(self, line):
         self.line = line
         super().__init__(
             line,
-            "Missing end of license.",
-            "License was never ended.",
+            "Missing end of header.",
+            "Header was never ended.",
         )
