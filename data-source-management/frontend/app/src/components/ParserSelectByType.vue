@@ -15,22 +15,22 @@
 
     <template #control>
       <div v-if="selectedParser" class="row items-center q-gutter-xs full-width">
-        <div class="text-caption text-italic text-grey">Name:</div>
+        <span class="text-caption text-italic text-grey">Name:</span>
         <q-chip dense square color="blue-grey-5" text-color="white">
           {{ truncateText(selectedParser.name, 50) }}
         </q-chip>
-        <div class="text-caption text-italic text-grey">Type:</div>
+        <span class="text-caption text-italic text-grey">Type:</span>
         <q-chip dense square color="lime-5" text-color="white">
           {{ selectedParser.parser_type }}
         </q-chip>
 
         <template v-if="selectedParser.parser_type === 'csv'">
-          <div class="text-caption text-italic text-grey">Delimiter:</div>
+          <span class="text-caption text-italic text-grey">Delimiter:</span>
           <q-chip dense square color="teal-5" text-color="white">
             {{ selectedParser.delimiter }}
           </q-chip>
           <template v-for="tk in selectedParser.timestamp_columns ?? []" :key="tk.id">
-            <div class="text-caption text-italic text-grey">Timestamp Column:</div>
+            <span class="text-caption text-italic text-grey">Timestamp Column:</span>
             <q-chip dense square color="light-green-5" text-color="white">
               {{ tk.column }}:{{ tk.timestamp_format }}
             </q-chip>
@@ -39,7 +39,7 @@
 
         <template v-if="selectedParser.parser_type === 'json'">
           <template v-for="tk in selectedParser.timestamp_keys ?? []" :key="tk.id">
-            <div class="text-caption text-italic text-grey">Timestamp Key:</div>
+            <span class="text-caption text-italic text-grey">Timestamp Key:</span>
             <q-chip dense square color="light-green-5" text-color="white">
               {{ tk.key }}:{{ tk.format }}
             </q-chip>
@@ -47,7 +47,7 @@
         </template>
 
         <template v-if="selectedParser.parser_type === 'soilcan'">
-          <div class="text-caption text-italic text-grey">Soilcan-Type:</div>
+          <span class="text-caption text-italic text-grey">Soilcan-Type:</span>
           <q-chip dense square color="teal-5" text-color="white">
             {{ selectedParser.type }}
           </q-chip>
