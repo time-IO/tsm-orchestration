@@ -10,7 +10,6 @@
   >
     <template #hint v-if="disable">
       <span>Select a Permission Group first</span>
-      <!-- TODO: move this to form components or do we always want this text? -->
     </template>
 
     <template #control>
