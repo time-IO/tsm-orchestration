@@ -11,11 +11,15 @@ from models.parser_csv import ParserCsvParse
 logger = logging.getLogger("app.services.parse_data")
 
 
-def validate_csv_parser_settings_with_data(settings: ParserCsvParse, raw_data: str) -> ParsedDataResponse:
+def validate_csv_parser_settings_with_data(
+    settings: ParserCsvParse, raw_data: str
+) -> ParsedDataResponse:
     return parse_data_with_parser(get_csv_parser_by_settings(settings), raw_data)
 
 
-def validate_json_parser_settings_with_data(settings: ParserJsonParse, raw_data: str) -> ParsedDataResponse:
+def validate_json_parser_settings_with_data(
+    settings: ParserJsonParse, raw_data: str
+) -> ParsedDataResponse:
     return parse_data_with_parser(get_json_parser_by_settings(settings), raw_data)
 
 
