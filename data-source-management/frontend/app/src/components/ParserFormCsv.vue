@@ -239,7 +239,7 @@
         </q-form>
       </q-card-section>
     </q-card>
-    <parser-parse-csv v-model="showValidationDialog" :form-data="validFormData" />
+    <parser-validate-csv v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
@@ -250,7 +250,7 @@ import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/t
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
-import ParserParseCsv from 'components/ParserParseCsv.vue';
+import ParserValidateCsv from 'components/ParserValidateCsv.vue';
 import { QForm } from 'quasar';
 import { toNullableNumber } from 'src/utils/string_utils';
 

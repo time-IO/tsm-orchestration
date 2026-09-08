@@ -17,7 +17,7 @@
           Parse a file with current settings of this {{ parserType }} parser.
         </div>
 
-        <parser-parse-file-input
+        <parser-validate-file-input
           v-model:file="file"
           v-model:was-file-rejected="wasFileRejected"
           :is-validating="isValidating"
@@ -35,12 +35,12 @@
           label="Auto-parse when valid changes detected"
         />
 
-        <parser-parse-banner
+        <parser-validate-banner
           :parsing-result="parsingResult"
           :have-settings-changed="haveSettingsChanged"
         />
 
-        <parser-parse-result-table
+        <parser-validate-result-table
           v-if="parsingResult.is_valid && parsingResult.data.length"
           class="q-mt-lg"
           :data="parsingResult.data"
@@ -56,9 +56,9 @@ import { computed, ref, toRaw, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import type { ParserPayloadParse, ParsingResult } from 'src/services/types';
 import { fileMetadataIsEqual } from 'src/utils/file_utils';
-import ParserParseFileInput from 'components/ParserParseFileInput.vue';
-import ParserParseBanner from 'components/ParserParseBanner.vue';
-import ParserParseResultTable from 'components/ParserParseResultTable.vue';
+import ParserValidateFileInput from 'components/ParserValidateFileInput.vue';
+import ParserValidateBanner from 'components/ParserValidateBanner.vue';
+import ParserValidateResultTable from 'components/ParserValidateResultTable.vue';
 
 const $q = useQuasar();
 

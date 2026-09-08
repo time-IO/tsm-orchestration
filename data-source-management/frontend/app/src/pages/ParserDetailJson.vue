@@ -152,7 +152,7 @@
       </q-card>
     </q-dialog>
   </q-page>
-  <parser-parse-json v-if="item" v-model="showValidationDialog" :form-data="item" overlay />
+  <parser-validate-json v-if="item" v-model="showValidationDialog" :form-data="item" overlay />
 </template>
 
 <script lang="ts" setup>
@@ -161,7 +161,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import type { JsonParserPublic } from 'src/services/parser_json/types';
-import ParserParseJson from 'components/ParserParseJson.vue';
+import ParserValidateJson from 'components/ParserValidateJson.vue';
 
 const $q = useQuasar();
 const route = useRoute();

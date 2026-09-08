@@ -1,5 +1,5 @@
 <template>
-  <parser-parse-drawer
+  <parser-validate-drawer
     allowed-file-type=".csv,text/csv`"
     allowed-file-type-name="CSV"
     parser-type="CSV"
@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import type { CsvParserParse, CsvParserUpdate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
-import ParserParseDrawer from 'components/ParserParseDrawer.vue';
+import ParserValidateDrawer from 'components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
 import { computed, toRaw } from 'vue';
 
