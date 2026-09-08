@@ -1,4 +1,8 @@
-from fastapi import Depends, HTTPException, Request, File, status, UploadFile
+from typing import TypeVar, Annotated
+
+from fastapi import Depends, HTTPException, Request, File, status, UploadFile, Form
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError
 from sqlmodel import Session, create_engine, select
 from config import settings
 from auth import oidc, OIDCError
@@ -207,6 +211,18 @@ def max_file_size(max_bytes: int):
         return file
 
     return _validate
+
+
+def json_form[T: BaseModel](model: type[T], field: str = "settings"):
+    async def dependency(raw: Annotated[str, Form(alias=field)]) -> T:
+        try:
+            return model.model_validate_json(raw)
+        except ValidationError as exc:
+            raise RequestValidationError(
+                [{**err, "loc": ("body", field, *err["loc"])} for err in exc.errors()]
+            ) from exc
+
+    return dependency
 
 
 def get_repo_ingest(session=Depends(get_session)):

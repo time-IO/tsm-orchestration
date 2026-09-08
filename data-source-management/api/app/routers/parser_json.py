@@ -1,9 +1,16 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Form
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from models import User
 from models.filters import BaseFilter
-from dependencies import get_current_user, get_repo_parser_json, max_file_size
+from dependencies import (
+    get_current_user,
+    get_repo_parser_json,
+    max_file_size,
+    json_form,
+)
 from models.parser import ParsedDataResponse
 from models.parser_json import (
     ParserJsonCreate,
@@ -66,17 +73,15 @@ def read_one(
     summary=f"Parse a file with a given {entity_name}",
 )
 async def validate(
-    settings: str = Form(...),
+    settings: Annotated[ParserJsonParse, Depends(json_form(ParserJsonParse))],
     file: UploadFile = Depends(max_file_size(1024 * 1024 * 10)),
 ) -> ParsedDataResponse:
-    parser_settings = ParserJsonParse.model_validate_json(settings)
-
     raw_data = (await file.read()).decode(
         "utf-8"
     )  # no file encoding in settings, so assuming utf-8
 
     response = parse_json_data(
-        settings=parser_settings,
+        settings=settings,
         raw_data=raw_data,
     )
 

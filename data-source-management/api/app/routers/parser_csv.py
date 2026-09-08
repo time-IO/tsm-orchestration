@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
@@ -6,6 +8,7 @@ from dependencies import (
     get_current_user,
     get_repo_parser_csv,
     max_file_size,
+    json_form,
 )
 from models.parser import ParsedDataResponse
 from models.parser_csv import (
@@ -17,7 +20,7 @@ from models.parser_csv import (
 from models import User
 from repositories.parser_csv import ParserCsvRepository
 from services.parse_data import parse_csv_data
-from fastapi import File, Form, UploadFile
+from fastapi import UploadFile
 from access_scope import AccessScope
 
 router = APIRouter(
@@ -69,15 +72,13 @@ def read_one(
     summary=f"Parse a file with a given {entity_name}",
 )
 async def validate(
-    settings: str = Form(...),
+    settings: Annotated[ParserCsvParse, Depends(json_form(ParserCsvParse))],
     file: UploadFile = Depends(max_file_size(1024 * 1024 * 10)),
 ) -> ParsedDataResponse:
-    parser_settings = ParserCsvParse.model_validate_json(settings)
-
-    raw_data = (await file.read()).decode(parser_settings.encoding or "UTF-8")
+    raw_data = (await file.read()).decode(settings.encoding or "UTF-8")
 
     response = parse_csv_data(
-        settings=parser_settings,
+        settings=settings,
         raw_data=raw_data,
     )
 
