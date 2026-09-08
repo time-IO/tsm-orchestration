@@ -8,7 +8,7 @@ from timeio.errors import ParsingWarning
 from models.parser import ParsedDataResponse
 from models.parser_csv import ParserCsvUpdate
 
-logger = logging.getLogger("app.services.trigger_ext_api")
+logger = logging.getLogger("app.services.parse_data")
 
 
 def parse_csv_data(settings: ParserCsvUpdate, raw_data: str) -> ParsedDataResponse:
