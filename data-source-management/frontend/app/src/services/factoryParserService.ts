@@ -15,7 +15,7 @@ export function createParserApiService<
   TUpdate extends ParserPayloadUpdate,
   TParse,
 >(apiPath: string) {
-  async function parseFile(settings: TParse, csvFile: File): Promise<ParsingResult> {
+  async function validateFile(settings: TParse, csvFile: File): Promise<ParsingResult> {
     const payload = new FormData();
 
     payload.append('settings', JSON.stringify(settings));
@@ -36,6 +36,6 @@ export function createParserApiService<
 
   return {
     ...createIngestApiService<TPublic, TCreate, TUpdate>(apiPath),
-    parseFile,
+    validateFile,
   };
 }

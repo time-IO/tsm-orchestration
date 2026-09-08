@@ -2,7 +2,7 @@ import type {
   CsvParserPublic,
   CsvParserCreate,
   CsvParserUpdate,
-  CsvParserParse,
+  CsvParserValidate,
 } from 'src/services/parser_csv/types';
 import { createParserApiService } from 'src/services/factoryParserService';
 
@@ -12,5 +12,5 @@ export default createParserApiService<
   CsvParserPublic,
   CsvParserCreate,
   CsvParserUpdate,
-  CsvParserParse
+  CsvParserValidate
 >(apiPath);

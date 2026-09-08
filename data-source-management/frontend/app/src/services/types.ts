@@ -3,11 +3,11 @@ import type {
   CsvParserUpdate,
   CsvParserPublic,
   CsvParserCreate,
-  CsvParserParse,
+  CsvParserValidate,
 } from 'src/services/parser_csv/types';
 import type {
   JsonParserCreate,
-  JsonParserParse,
+  JsonParserValidate,
   JsonParserPublic,
   JsonParserUpdate,
 } from 'src/services/parser_json/types';
@@ -67,15 +67,15 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
 export type ParserPayloadUpdate = CsvParserUpdate | JsonParserUpdate;
 export type ParserPayloadCreate = CsvParserCreate | JsonParserCreate;
 export type ParserPayloadPublic = CsvParserPublic | JsonParserPublic;
-export type ParserPayloadParse = CsvParserParse | JsonParserParse;
+export type ParserPayloadValidate = CsvParserValidate | JsonParserValidate;
 
 export interface ParserApiService<
   TPublic extends ParserPayloadPublic,
   TPayloadCreate extends ParserPayloadCreate,
   TPayloadUpdate extends ParserPayloadUpdate,
-  TPayloadParse extends ParserPayloadParse,
+  TPayloadValidate extends ParserPayloadValidate,
 > extends IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
-  parseFile(settings: TPayloadParse, csvFile: File): Promise<ParsingResult>;
+  validateFile(settings: TPayloadValidate, csvFile: File): Promise<ParsingResult>;
 }
 
 export type ParserRead = {

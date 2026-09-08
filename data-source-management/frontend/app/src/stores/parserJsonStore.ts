@@ -1,7 +1,7 @@
 import { acceptHMRUpdate } from 'pinia';
 import type {
   JsonParserCreate,
-  JsonParserParse,
+  JsonParserValidate,
   JsonParserPublic,
   JsonParserUpdate,
 } from 'src/services/parser_json/types';
@@ -12,7 +12,7 @@ export const useJsonParserStore = createParserStore<
   JsonParserPublic,
   JsonParserCreate,
   JsonParserUpdate,
-  JsonParserParse
+  JsonParserValidate
 >('jsonParserStore', API.jsonParser);
 
 if (import.meta.hot) {

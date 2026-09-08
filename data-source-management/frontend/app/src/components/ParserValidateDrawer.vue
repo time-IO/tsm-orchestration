@@ -51,10 +51,10 @@
   </q-drawer>
 </template>
 
-<script setup lang="ts" generic="T extends ParserPayloadParse">
+<script setup lang="ts" generic="T extends ParserPayloadValidate">
 import { computed, ref, toRaw, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import type { ParserPayloadParse, ParsingResult } from 'src/services/types';
+import type { ParserPayloadValidate, ParsingResult } from 'src/services/types';
 import { fileMetadataIsEqual } from 'src/utils/file_utils';
 import ParserValidateFileInput from 'components/ParserValidateFileInput.vue';
 import ParserValidateBanner from 'components/ParserValidateBanner.vue';

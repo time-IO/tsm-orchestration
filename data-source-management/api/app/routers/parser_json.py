@@ -20,7 +20,7 @@ from models.parser_json import (
 )
 
 from repositories.parser_json import ParserJsonRepository
-from services.parse_data import parse_json_data
+from services.parse_data import validate_json_parser_settings_with_data
 from fastapi import File, Form, UploadFile
 from access_scope import AccessScope
 
@@ -80,7 +80,7 @@ async def validate(
         "utf-8"
     )  # no file encoding in settings, so assuming utf-8
 
-    response = parse_json_data(
+    response = validate_json_parser_settings_with_data(
         settings=settings,
         raw_data=raw_data,
     )

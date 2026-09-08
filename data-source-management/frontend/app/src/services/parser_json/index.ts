@@ -2,7 +2,7 @@ import type {
   JsonParserPublic,
   JsonParserCreate,
   JsonParserUpdate,
-  JsonParserParse,
+  JsonParserValidate,
 } from 'src/services/parser_json/types';
 import { createParserApiService } from 'src/services/factoryParserService';
 
@@ -12,5 +12,5 @@ export default createParserApiService<
   JsonParserPublic,
   JsonParserCreate,
   JsonParserUpdate,
-  JsonParserParse
+  JsonParserValidate
 >(apiPath);

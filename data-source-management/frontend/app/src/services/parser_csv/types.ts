@@ -63,7 +63,7 @@ export type CsvParserUpdate = {
   encoding?: string | null;
 };
 
-export type CsvParserParse = {
+export type CsvParserValidate = {
   delimiter?: string | null;
   headlines_to_exclude?: string | null;
   footlines_to_exclude?: number | null;

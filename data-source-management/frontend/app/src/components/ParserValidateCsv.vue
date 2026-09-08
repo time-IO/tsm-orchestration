@@ -4,12 +4,12 @@
     allowed-file-type-name="CSV"
     parser-type="CSV"
     :parsing-settings="parsingSettings"
-    :parse-action="csvParserStore.dispatchParseFile"
+    :parse-action="csvParserStore.dispatchValidateFile"
   />
 </template>
 
 <script setup lang="ts">
-import type { CsvParserParse, CsvParserUpdate } from 'src/services/parser_csv/types';
+import type { CsvParserValidate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import ParserValidateDrawer from 'components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
@@ -19,7 +19,7 @@ const props = defineProps<{
   formData: CsvParserUpdate;
 }>();
 
-const parsingSettings: ComputedRef<CsvParserParse> = computed(() => {
+const parsingSettings: ComputedRef<CsvParserValidate> = computed(() => {
   return {
     delimiter: toRaw(props.formData.delimiter ?? null),
     headlines_to_exclude: toRaw(props.formData.headlines_to_exclude ?? null),

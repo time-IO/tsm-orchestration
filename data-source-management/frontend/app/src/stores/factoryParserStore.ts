@@ -5,7 +5,7 @@ import type {
   DefaultFilter,
   ParserApiService,
   ParserPayloadCreate,
-  ParserPayloadParse,
+  ParserPayloadValidate,
   ParserPayloadPublic,
   ParserPayloadUpdate,
   ParsingResult,
@@ -18,7 +18,7 @@ export function createParserStore<
   TPublic extends ParserPayloadPublic,
   TPayloadCreate extends ParserPayloadCreate,
   TPayloadUpdate extends ParserPayloadUpdate,
-  TPayloadParse extends ParserPayloadParse,
+  TPayloadParse extends ParserPayloadValidate,
 >(
   storeId: string,
   apiService: ParserApiService<TPublic, TPayloadCreate, TPayloadUpdate, TPayloadParse>,
@@ -85,8 +85,8 @@ export function createParserStore<
       async dispatchDelete(id: number): Promise<void> {
         await apiService.deleteOne(id);
       },
-      async dispatchParseFile(settings: TPayloadParse, csvFile: File): Promise<ParsingResult> {
-        return await apiService.parseFile(settings, csvFile);
+      async dispatchValidateFile(settings: TPayloadParse, csvFile: File): Promise<ParsingResult> {
+        return await apiService.validateFile(settings, csvFile);
       },
     },
   });

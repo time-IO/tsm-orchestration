@@ -19,7 +19,7 @@ from models.parser_csv import (
 )
 from models import User
 from repositories.parser_csv import ParserCsvRepository
-from services.parse_data import parse_csv_data
+from services.parse_data import validate_csv_parser_settings_with_data
 from fastapi import UploadFile
 from access_scope import AccessScope
 
@@ -77,7 +77,7 @@ async def validate(
 ) -> ParsedDataResponse:
     raw_data = (await file.read()).decode(settings.encoding or "UTF-8")
 
-    response = parse_csv_data(
+    response = validate_csv_parser_settings_with_data(
         settings=settings,
         raw_data=raw_data,
     )
