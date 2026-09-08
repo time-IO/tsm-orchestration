@@ -9,7 +9,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100M
+      storage: {{ .Values.persistence.size | quote }}
   {{- if .Values.global.pvc.storageClassName }}
   storageClassName: {{ .Values.global.pvc.storageClassName }}
   {{- end }}
