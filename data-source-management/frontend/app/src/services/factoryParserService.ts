@@ -15,14 +15,14 @@ export function createParserApiService<
   TUpdate extends ParserPayloadUpdate,
   TParse,
 >(apiPath: string) {
-  async function validateFile(settings: TParse, csvFile: File): Promise<ParsingResult> {
+  async function validateWithFile(settings: TParse, csvFile: File): Promise<ParsingResult> {
     const payload = new FormData();
 
     payload.append('settings', JSON.stringify(settings));
     payload.append('file', csvFile);
 
     try {
-      const result = await axiosInstance.post<ParsingResult>(`${apiPath}parse`, payload);
+      const result = await axiosInstance.post<ParsingResult>(`${apiPath}validate`, payload);
       return result.data;
     } catch (e) {
       return {
@@ -36,6 +36,6 @@ export function createParserApiService<
 
   return {
     ...createIngestApiService<TPublic, TCreate, TUpdate>(apiPath),
-    validateFile,
+    validateFile: validateWithFile,
   };
 }

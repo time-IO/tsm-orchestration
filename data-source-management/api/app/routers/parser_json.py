@@ -68,7 +68,7 @@ def read_one(
 
 
 @router.post(
-    "/parse",
+    "/validate",
     response_model=ParsedDataResponse,
     summary=f"Parse a file with a given {entity_name}",
 )
