@@ -28,6 +28,11 @@ env: []
 existingSecret: ""
 existingConfigMap: ""
 
+persistence:
+  # Storage capacity for the S3-compatible object data volume. Set an
+  # environment-specific override for deployments that store real data.
+  size: 100M
+
 ftp:
   enabled: false
   port: 40021

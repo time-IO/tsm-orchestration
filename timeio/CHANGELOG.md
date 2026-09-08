@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-08
+
+- Added `object-storage.persistence.size` so deployments can size the
+  S3-compatible data PVC independently; the generic default remains `100M`.
+
 ## [0.6.1] - 2026-08-28
 
 - Replaced the default object-storage runtime with pinned
