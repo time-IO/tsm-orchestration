@@ -6,6 +6,7 @@
     :breakpoint="breakpoint"
     bordered
     class="validation-sidebar"
+    :behavior="overlay ? 'mobile' : 'default'"
   >
     <div class="validation-sidebar__inner column no-wrap fit">
       <div class="row items-center justify-end q-pt-md q-pr-md">
@@ -29,7 +30,7 @@
 
         <q-checkbox
           v-model="autoValidate"
-          v-if="$q.screen.width >= breakpoint"
+          v-if="autoValidateCheckboxIsEnabled"
           class="q-mt-md q-mb-mt"
           label="Auto-parse when valid changes detected"
         />
@@ -66,13 +67,19 @@ type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
 const drawerIsOpen = defineModel<boolean>({
   default: false,
 });
-const props = defineProps<{
-  parsingSettings: T;
-  parseAction: ParseAction<T>;
-  allowedFileType: string;
-  allowedFileTypeName: string;
-  parserType: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    parsingSettings: T;
+    parseAction: ParseAction<T>;
+    allowedFileType: string;
+    allowedFileTypeName: string;
+    parserType: string;
+    overlay?: boolean;
+  }>(),
+  {
+    overlay: false,
+  },
+);
 
 const breakpoint = computed(() => $q.screen.sizes.md);
 const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
@@ -93,6 +100,9 @@ const lastValidatedFile = ref<File | null>(null);
 
 const autoValidate = ref(false);
 let autoValidateTimeout: ReturnType<typeof setTimeout> | null = null;
+const autoValidateCheckboxIsEnabled = computed(
+  () => $q.screen.width >= breakpoint.value && !props.overlay,
+);
 
 const isAlreadyValidated = computed(() => {
   if (!file.value || !lastValidatedFile.value || !lastValidatedSettings.value) {

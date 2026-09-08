@@ -158,6 +158,12 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
+          <q-btn
+            unelevated
+            icon="fact_check"
+            label="Test parser"
+            @click="showValidationDialog = true"
+          />
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
@@ -179,6 +185,7 @@
       </q-card>
     </q-dialog>
   </q-page>
+  <parser-parse-csv v-if="item" v-model="showValidationDialog" :form-data="item" overlay />
 </template>
 
 <script lang="ts" setup>
@@ -187,6 +194,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import type { CsvParserPublic } from 'src/services/parser_csv/types';
+import ParserParseCsv from 'components/ParserParseCsv.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -195,6 +203,7 @@ const store = useCsvParserStore();
 
 const item = ref<CsvParserPublic | null>(null);
 const deleteDialog = ref(false);
+const showValidationDialog = ref(false);
 const isLoading = ref(false);
 
 onMounted(async () => {

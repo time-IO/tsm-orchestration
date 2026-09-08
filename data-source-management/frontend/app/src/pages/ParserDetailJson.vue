@@ -125,7 +125,13 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
-          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
+          <q-btn
+            unelevated
+            icon="fact_check"
+            label="Test parser"
+            @click="showValidationDialog = true"
+          />
+          <!--<q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
     </div>
@@ -146,6 +152,7 @@
       </q-card>
     </q-dialog>
   </q-page>
+  <parser-parse-json v-if="item" v-model="showValidationDialog" :form-data="item" overlay />
 </template>
 
 <script lang="ts" setup>
@@ -154,6 +161,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import type { JsonParserPublic } from 'src/services/parser_json/types';
+import ParserParseJson from 'components/ParserParseJson.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -162,6 +170,7 @@ const store = useJsonParserStore();
 
 const item = ref<JsonParserPublic | null>(null);
 const deleteDialog = ref(false);
+const showValidationDialog = ref(false);
 const isLoading = ref(false);
 
 onMounted(async () => {
@@ -201,9 +210,9 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();
 };
 
-const openDeleteDialog = () => {
-  deleteDialog.value = true;
-};
+// const openDeleteDialog = () => {
+//   deleteDialog.value = true;
+// };
 
 const deleteItem = async () => {
   if (!item.value) {
