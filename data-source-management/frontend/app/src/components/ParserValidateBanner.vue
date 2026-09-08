@@ -10,7 +10,7 @@
     Parsing failed: {{ parsingResult.error }}
   </q-banner>
   <q-banner
-    v-if="parsingResult.is_valid && parsingResult.warnings.length > 0"
+    v-else-if="parsingResult.is_valid && parsingResult.warnings.length > 0"
     class="bg-warning text-black q-mt-lg"
     :class="{ 'validation-table--stale': haveSettingsChanged }"
   >
@@ -25,14 +25,14 @@
     </ul>
   </q-banner>
   <q-banner
-    v-if="parsingResult.is_valid && parsingResult.data.length"
+    v-else-if="parsingResult.is_valid && parsingResult.data.length > 0"
     class="bg-positive text-white q-mt-lg"
     :class="{ 'validation-table--stale': haveSettingsChanged }"
   >
     <template #avatar>
       <q-icon name="check_circle" />
     </template>
-    Parsing succeeded.
+    Parsing succeeded
   </q-banner>
 </template>
 

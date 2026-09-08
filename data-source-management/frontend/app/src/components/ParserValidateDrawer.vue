@@ -41,7 +41,7 @@
         />
 
         <parser-validate-result-table
-          v-if="parsingResult.is_valid && parsingResult.data.length"
+          v-if="parsingResult.is_valid && parsingResult.data.length > 0"
           class="q-mt-lg"
           :data="parsingResult.data"
           :is-stale="haveSettingsChanged"
