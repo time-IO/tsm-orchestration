@@ -18,7 +18,7 @@
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
-        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" ref="formRef">
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" :ref="FORM_REF_NAME">
           <!-- Name Field -->
           <q-input
             filled
@@ -244,7 +244,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRaw, watch } from 'vue';
+import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
@@ -295,7 +295,8 @@ const formData = defineModel<CsvParserFormData>({
   },
 });
 
-const formRef = ref<QForm | null>(null);
+const FORM_REF_NAME = 'formRef';
+const formRef = useTemplateRef<QForm | null>(FORM_REF_NAME);
 const validFormData = ref(structuredClone(toRaw(formData.value)));
 const showValidationDialog = ref(false);
 
