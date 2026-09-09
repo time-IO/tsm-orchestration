@@ -18,7 +18,7 @@
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
-        <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" :ref="FORM_REF_NAME">
           <!-- Name Field -->
           <q-input
             filled
@@ -200,15 +200,38 @@
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space />
-            <div class="col-6">
+            <div class="col-5">
               <q-btn
                 unelevated
                 color="green"
                 type="submit"
                 :loading="isLoading"
-                :disable="formData.timestamp_columns.length === 0"
+                :disable="!areRequiredFieldsFilled"
                 label="Save"
                 class="full-width"
+              />
+            </div>
+            <q-space />
+            <div class="col-5">
+              <q-btn
+                v-if="!showValidationDialog"
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Test parser"
+                class="full-width"
+                @click="showValidationDialog = true"
+                :disable="!areRequiredFieldsFilled"
+              />
+              <q-btn
+                v-else
+                unelevated
+                outline
+                color="primary"
+                icon="close"
+                label="Close parser testing"
+                class="full-width"
+                @click="showValidationDialog = false"
               />
             </div>
             <q-space />
@@ -216,16 +239,19 @@
         </q-form>
       </q-card-section>
     </q-card>
+    <parser-validate-csv v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
+import ParserValidateCsv from 'components/ParserValidateCsv.vue';
+import { QForm } from 'quasar';
 import { toNullableNumber } from 'src/utils/string_utils';
 
 type CsvParserFormData = CsvParserUpdate & {
@@ -268,6 +294,34 @@ const formData = defineModel<CsvParserFormData>({
     encoding: null,
   },
 });
+
+const FORM_REF_NAME = 'formRef';
+const formRef = useTemplateRef<QForm | null>(FORM_REF_NAME);
+const validFormData = ref(structuredClone(toRaw(formData.value)));
+const showValidationDialog = ref(false);
+
+const areRequiredFieldsFilled = computed(() => {
+  return (
+    !!formData.value.name &&
+    !!formData.value.delimiter &&
+    !!formData.value.timezone &&
+    !!formData.value.encoding &&
+    formData.value.timestamp_columns.length > 0
+  );
+});
+
+watch(
+  formData,
+  async () => {
+    if (areRequiredFieldsFilled.value) {
+      const valid = (await formRef.value?.validate(false)) ?? false;
+      if (valid) {
+        validFormData.value = structuredClone(toRaw(formData.value));
+      }
+    }
+  },
+  { deep: true },
+);
 
 const permissionGroupModel = computed({
   get() {

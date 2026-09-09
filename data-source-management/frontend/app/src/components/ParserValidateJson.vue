@@ -1,0 +1,34 @@
+<template>
+  <parser-validate-drawer
+    allowed-file-type=".json,text/json`"
+    allowed-file-type-name="JSON"
+    parser-type="JSON"
+    :parsing-settings="parsingSettings"
+    :parse-action="jsonParserStore.dispatchValidateFile"
+  />
+</template>
+
+<script setup lang="ts">
+import type { JsonParserValidate, JsonParserUpdate } from 'src/services/parser_json/types';
+import { useJsonParserStore } from 'stores/parserJsonStore';
+import ParserValidateDrawer from 'components/ParserValidateDrawer.vue';
+import type { ComputedRef } from 'vue';
+import { toRaw } from 'vue';
+import { computed } from 'vue';
+
+const props = defineProps<{
+  formData: JsonParserUpdate;
+}>();
+
+const parsingSettings: ComputedRef<JsonParserValidate> = computed(() => {
+  return {
+    timestamp_keys: toRaw(props.formData.timestamp_keys) ?? [],
+    comment: toRaw(props.formData.comment) ?? null,
+    timezone: toRaw(props.formData.timezone) ?? null,
+    measurement_key: toRaw(props.formData.measurement_key) ?? null,
+    excluded_keys: toRaw(props.formData.excluded_keys) ?? [],
+  };
+});
+
+const jsonParserStore = useJsonParserStore();
+</script>
