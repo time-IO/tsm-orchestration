@@ -134,7 +134,9 @@ def get_qc_things(funcs: list[QcFunction]) -> list[str]:
     return list(uuids)
 
 
-def filter_thing_functions(funcs: list[QcFunction], thing_uuid: str) -> list[QcFunction]:
+def filter_thing_functions(
+    funcs: list[QcFunction], thing_uuid: str
+) -> list[QcFunction]:
     out = []
     for func in funcs:
         uuids = set(str(f.thing_uuid) for f in func.fields)

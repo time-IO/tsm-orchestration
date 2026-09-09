@@ -148,7 +148,11 @@ class SaQCWrapper:
         # appending to an empty Datastream. If this issue is solved in SaQC we
         # should remove this block.
         # https://git.ufz.de/rdm-software/saqc/-/work_items/546
-        empty_targets = [t for t in func.target_names if self._qc.data[t].empty]
+        empty_targets = [
+            t
+            for t in func.target_names
+            if t in self._qc.columns and self._qc.data[t].empty
+        ]
         if empty_targets:
             logger.warning(
                 f"skipping '{func.func_name}' as it is targeting the empty datastream(s) {empty_targets}"
