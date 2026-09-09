@@ -95,7 +95,7 @@ def test_validate_parser(client, base_data):
     byte_size_slightly_less_than_ten_megabyte = 1024 * 1024 * 10 - 100
     upload_file = make_json_upload_file(byte_size_slightly_less_than_ten_megabyte)
     response = client.post(
-        f"{BASE_PATH}/parse",
+        f"{BASE_PATH}/validate",
         data={"settings": json.dumps(settings)},
         files={"file": as_multipart_file(upload_file, content_type="text/csv")},
     )
@@ -108,7 +108,7 @@ def test_validate_parser_content_too_large(client, base_data):
     byte_size_slightly_more_than_ten_megabyte = 1024 * 1024 * 10 + 100
     upload_file = make_json_upload_file(byte_size_slightly_more_than_ten_megabyte)
     response = client.post(
-        f"{BASE_PATH}/parse",
+        f"{BASE_PATH}/validate",
         data={"settings": json.dumps(settings)},
         files={"file": as_multipart_file(upload_file, content_type="text/csv")},
     )
