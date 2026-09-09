@@ -4,7 +4,7 @@ import type { AxiosError } from 'axios';
 /**
  * Resolves an error code and keyword into a localized error message.
  *
- * Looks up the i18next key `errors.<errorCode>.<keyword>`, falling back to
+ * Looks up the i18next key `axios.errors.<errorCode>.<keyword>`, falling back to
  * `errors.<errorCode>.default` if the keyword is not defined for that code.
  *
  * If the error code itself is unknown, falls back to `errors.unknown`.
