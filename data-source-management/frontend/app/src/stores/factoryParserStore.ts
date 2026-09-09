@@ -13,7 +13,6 @@ import type {
   QTableRequestPropPagination,
 } from 'src/services/types';
 
-// TODO: refactor store factories
 export function createParserStore<
   TPublic extends ParserPayloadPublic,
   TPayloadCreate extends ParserPayloadCreate,
