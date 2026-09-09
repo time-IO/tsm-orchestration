@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import warnings
+import logging
 
 import numpy as np
 import pandas as pd
@@ -10,10 +10,12 @@ from saqc.funcs.generic import compileGeneric
 
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream
 
+logger = logging.getLogger("run-quality-control")
+
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
 except ImportError:
-    warnings.warn("could not import module 'tsm_user_code'")
+    logger.warning("could not import module 'tsm_user_code'")
 
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
@@ -104,7 +106,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
                 valid = (history.hist[col] != UNFLAGGED) & history.hist[col].notna()
                 meta = history.meta[col]
                 df.loc[valid, "measure"] = meta["func"]
-                df.loc[valid, "userLabel"] = meta["kwargs"].get("label", None)
+                df.loc[valid, "userLabel"] = meta["kwargs"].get("label") or ""
                 series = pd.Series(index=df.index, dtype=object)
                 if not df.empty:
                     series = df.apply(self.toSTAannotations, axis=1)
@@ -141,6 +143,18 @@ class SaQCWrapper:
         return out
 
     def execute(self, func: QcFunction):
+        # NOTE:
+        # This is a (temporary) safeguard as SaQC is currently failing hard when
+        # appending to an empty Datastream. If this issue is solved in SaQC we
+        # should remove this block.
+        # https://git.ufz.de/rdm-software/saqc/-/work_items/546
+        empty_targets = [t for t in func.target_names if self._qc.data[t].empty]
+        if empty_targets:
+            logger.warning(
+                f"skipping '{func.func_name}' as it is targeting the empty datastream(s) {empty_targets}"
+            )
+            return
+
         # add targets
         for stream in func.targets:
             self._streams[stream.alias] = stream
