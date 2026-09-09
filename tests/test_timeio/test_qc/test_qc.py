@@ -152,7 +152,10 @@ def mock_dbapi():
 @pytest.mark.parametrize(
     "thing_uuid, expected",
     [
-        ("3e23c121-6a6e-48ac-9fb6-9d9a5bf06348", ("Static-T1", "Static-T2", "Static-P1", "Dynamic-P1")),
+        (
+            "3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
+            ("Static-T1", "Static-T2", "Static-P1", "Dynamic-P1"),
+        ),
         ("f3691b96-aca1-4585-95bf-6ea4c611503c", ("Dynamic-T1", "Dynamic-T2")),
     ],
 )
