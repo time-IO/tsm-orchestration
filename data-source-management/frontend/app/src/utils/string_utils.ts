@@ -1,5 +1,3 @@
-import { isIsoDate } from 'src/utils/validation/validators';
-
 /**
  * Truncates a string to the specified length.
  * @param text - The original string
