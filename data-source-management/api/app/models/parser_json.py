@@ -51,7 +51,7 @@ class ParserJsonUpdate(ParserDetailedUpdate):
     excluded_keys: Optional[list[str]] = None
 
 
-class ParserJsonParse(ParserJsonUpdate):
+class ParserJsonValidate(ParserJsonUpdate):
     pass
 
 

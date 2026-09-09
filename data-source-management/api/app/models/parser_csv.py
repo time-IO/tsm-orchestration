@@ -69,7 +69,7 @@ class ParserCsvUpdate(ParserDetailedUpdate):
     timestamp_columns: Optional[list[ParserCsvTimestampColumnUpdate]] = None
 
 
-class ParserCsvParse(ParserCsvUpdate):
+class ParserCsvValidate(ParserCsvUpdate):
     pass
 
 

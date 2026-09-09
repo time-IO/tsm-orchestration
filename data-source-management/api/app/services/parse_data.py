@@ -2,28 +2,28 @@ import warnings
 
 import logging
 
-from models.parser_json import ParserJsonParse
+from models.parser_json import ParserJsonValidate
 from timeio.parser import PandasParser, JsonParser, CsvParser
 from timeio.errors import ParsingWarning
 from models.parser import ParsedDataResponse
-from models.parser_csv import ParserCsvParse
+from models.parser_csv import ParserCsvValidate
 
 logger = logging.getLogger("app.services.parse_data")
 
 
 def validate_csv_parser_settings_with_data(
-    settings: ParserCsvParse, raw_data: str
+    settings: ParserCsvValidate, raw_data: str
 ) -> ParsedDataResponse:
     return parse_data_with_parser(get_csv_parser_by_settings(settings), raw_data)
 
 
 def validate_json_parser_settings_with_data(
-    settings: ParserJsonParse, raw_data: str
+    settings: ParserJsonValidate, raw_data: str
 ) -> ParsedDataResponse:
     return parse_data_with_parser(get_json_parser_by_settings(settings), raw_data)
 
 
-def get_csv_parser_by_settings(settings: ParserCsvParse) -> CsvParser:
+def get_csv_parser_by_settings(settings: ParserCsvValidate) -> CsvParser:
     translated_settings = {
         "decimal": ".",
         "delimiter": settings.delimiter,
@@ -41,7 +41,7 @@ def get_csv_parser_by_settings(settings: ParserCsvParse) -> CsvParser:
     return CsvParser(translated_settings)
 
 
-def get_json_parser_by_settings(settings: ParserJsonParse) -> JsonParser:
+def get_json_parser_by_settings(settings: ParserJsonValidate) -> JsonParser:
     translated_settings = {
         "comment": settings.comment,
         "timestamp_keys": [

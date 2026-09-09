@@ -16,7 +16,7 @@ from models.parser_json import (
     ParserJsonCreate,
     ParserJsonRead,
     ParserJsonUpdate,
-    ParserJsonParse,
+    ParserJsonValidate,
 )
 
 from repositories.parser_json import ParserJsonRepository
@@ -73,7 +73,7 @@ def read_one(
     summary=f"Parse a file with a given {entity_name}",
 )
 async def validate(
-    settings: Annotated[ParserJsonParse, Depends(json_form(ParserJsonParse))],
+    settings: Annotated[ParserJsonValidate, Depends(json_form(ParserJsonValidate))],
     file: UploadFile = Depends(max_file_size(1024 * 1024 * 10)),
 ) -> ParsedDataResponse:
     raw_data = (await file.read()).decode(
