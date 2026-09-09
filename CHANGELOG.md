@@ -5,6 +5,7 @@
 ### Added
 ### Fixed
 - Dragging columns in overview tables does not change the sorting behavior ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/700))
+- The header form field of the csv parser won't send an empty string when the user clears the input field ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/706))  
 ### Changed
 ### Removed
 
