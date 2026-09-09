@@ -108,10 +108,7 @@ function normalizeFormData(data: CsvParserCreate): CsvParserCreate {
         ? data.footlines_to_exclude
         : null,
     pandas_read_csv: data.pandas_read_csv || null,
-    timestamp_columns: (data.timestamp_columns || []).map((column) => ({
-      column: column.column,
-      timestamp_format: column.timestamp_format,
-    })),
+    timestamp_columns: data.timestamp_columns || [],
     comment: [...(data.comment || [])],
     header: !!data.header || data.header === 0 ? data.header : null,
     timezone: data.timezone || null,
