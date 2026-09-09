@@ -9,7 +9,10 @@
     >
       <template #header>
         <q-item-section>
-          <div class="text-weight-medium text-subtitle1">{{ item.name }}</div>
+          <div class="text-weight-medium text-subtitle1">
+            {{ item.name }}
+            <span v-if="item.label" class="text-h7 text-blue-grey-6">— {{ item.label }}</span>
+          </div>
           <div class="text-caption text-grey-6">
             <template v-if="getAlias(item, 'field').length">
               Field: {{ getAlias(item, 'field').join(', ') }}

@@ -157,7 +157,7 @@ class TestQualityControlConstraintsValidateFunctionArguments:
     def test_valid_arguments_for_flagIsolated(self):
         arguments = {
             "field": {"type": "datastream", "value": ["ds1"]},
-            "gap_window": {"type": "offset", "value": "2H"},
+            "gap_window": {"type": "offset", "value": "2min"},
             "group_window": {"type": "offset", "value": "1D"},
         }
         is_valid, errors = QualityControlConstraints.validate_function_arguments(
@@ -294,7 +294,7 @@ class TestQualityControlConstraintsValidateSettings:
                         name="field", type="datastream", input={"value": ["ds1"]}
                     ),
                     QualityControlFunctionArgumentCreate(
-                        name="gap_window", type="offset", input={"value": "2H"}
+                        name="gap_window", type="offset", input={"value": "2h"}
                     ),
                     QualityControlFunctionArgumentCreate(
                         name="group_window", type="offset", input={"value": "1D"}

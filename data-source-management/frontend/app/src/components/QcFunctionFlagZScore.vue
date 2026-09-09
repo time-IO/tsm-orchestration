@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagZScore" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagZScore"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -49,7 +54,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.thresh"
+      v-model.number="formData.thresh"
       label="thresh * (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Z-score threshold."
@@ -58,7 +63,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_residuals"
+      v-model.number="formData.min_residuals"
       label="min_residuals * (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum residual to consider a point as outlier."
@@ -67,7 +72,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_periods"
+      v-model.number="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minimum valid points in a window."
@@ -88,7 +93,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.axis"
+      v-model.number="formData.axis"
       label="axis (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0), ruleFactories.MAX(1)]"
       hint="Axis along which scoring is applied."
@@ -124,12 +129,14 @@ import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInpu
 import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
 import type { Datastream } from 'src/services/sta/types';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
+import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
 
 const props = defineProps<{
   permission_group_id: number;
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 const current_window_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 

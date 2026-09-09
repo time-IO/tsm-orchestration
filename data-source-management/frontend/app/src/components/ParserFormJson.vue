@@ -45,6 +45,53 @@
             label="Comment character (e.g. //)"
             hint="Character(s) used to indicate comment lines"
           />
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.measurement_key"
+            label="Measurement key"
+            hint='Optional: key of the nested object containing the actual measurement data (e.g. object, not "object")'
+          />
+
+          <!-- Excluded Keys -->
+          <div class="q-my-md">
+            <q-list
+              separator
+              v-for="(key, idx) in formData.excluded_keys ?? []"
+              :key="idx"
+              class="q-mb-sm"
+            >
+              <q-item>
+                <q-item-section>
+                  <q-input
+                    filled
+                    v-model="formData.excluded_keys![idx]"
+                    label="Excluded key"
+                    hint="Key to exclude from the payload"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    dense
+                    flat
+                    icon="remove_circle"
+                    color="red"
+                    @click="removeExcludedKey(idx)"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add excluded key"
+                flat
+                color="primary"
+                @click="addExcludedKey"
+              />
+            </div>
+          </div>
 
           <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
@@ -170,6 +217,9 @@ const formData = defineModel<JsonParserFormData>({
     description: null,
     timestamp_keys: [],
     comment: null,
+    measurement_key: null,
+    excluded_keys: [],
+    timezone: null,
   },
 });
 
@@ -198,5 +248,16 @@ function removeTimestampKey(index: number) {
 const showDocs = () => {
   window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
 };
+
+function addExcludedKey() {
+  if (!formData.value.excluded_keys) {
+    formData.value.excluded_keys = [];
+  }
+  formData.value.excluded_keys.push('');
+}
+
+function removeExcludedKey(index: number) {
+  formData.value.excluded_keys?.splice(index, 1);
+}
 </script>
 <style scoped></style>

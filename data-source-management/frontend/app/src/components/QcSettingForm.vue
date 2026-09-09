@@ -33,7 +33,13 @@
             label="Context Window *"
             hint="Enter a Context Window for this QC Setting"
             :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
-          />
+          >
+            <template v-slot:append>
+              <q-btn round flat icon="help_outline" @click="showContextDocumentation">
+                <q-tooltip>View Pandas Docs for information on available aliases</q-tooltip>
+              </q-btn>
+            </template>
+          </q-input>
           <!-- Description -->
           <q-input
             filled
@@ -138,7 +144,7 @@
           <div class="text-h6">Submit Quality Control Settings</div>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to submit? </q-card-section>
+        <q-card-section> Are you sure you want to submit?</q-card-section>
 
         <q-separator />
 
@@ -166,6 +172,7 @@
             v-if="currentFunctionFormComponent && formData.permission_group_id"
             :permission_group_id="formData.permission_group_id"
             :initial-data="editingFunction?.quality_control_function_arguments"
+            v-model:label="functionLabel"
             @submit="handleFunctionFormSubmit"
             @remove="handleRemove"
           />
@@ -195,7 +202,7 @@ import {
 } from 'src/utils/quality_control_function_utils';
 import type { PermissionGroup } from 'src/services/permission_group/types';
 import type { Datastream } from 'src/services/sta/types';
-import { isDatastreamType } from 'src/utils/quality_control_utils';
+import { isDatastreamType, showContextDocumentation } from 'src/utils/quality_control_utils';
 import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
 import { ruleFactories, rules } from 'src/utils/validation/rules';
 
@@ -218,6 +225,8 @@ defineProps<{
 }>();
 
 const emit = defineEmits(['save']);
+
+const functionLabel = ref<string | undefined>(undefined);
 
 const step = ref(1);
 const functionDialog = ref(false);
@@ -248,6 +257,7 @@ function handleEditFunction(index: number) {
   if (!func) return;
   editingIndex.value = index;
   selectedFunctionName.value = func.name;
+  functionLabel.value = func.label ?? undefined;
   functionFormDialog.value = true;
 }
 
@@ -319,6 +329,7 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     // Edit mode: replace existing function
     formData.value.quality_control_functions![editingIndex.value] = {
       name: selectedFunctionName.value,
+      label: functionLabel.value,
       quality_control_function_arguments: submittedData,
     };
     editingIndex.value = null;
@@ -326,10 +337,12 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     // Add mode: attach new function
     formData.value.quality_control_functions!.push({
       name: selectedFunctionName.value,
+      label: functionLabel.value,
       quality_control_function_arguments: submittedData,
     });
   }
   selectedFunctionName.value = null;
+  functionLabel.value = undefined;
   functionFormDialog.value = false;
 }
 
@@ -363,6 +376,7 @@ function handleRemoveDatastream({
 function selectFunction(item: FunctionOption) {
   functionDialog.value = false;
   selectedFunctionName.value = item.label;
+  functionLabel.value = undefined;
   functionFormDialog.value = true;
 }
 

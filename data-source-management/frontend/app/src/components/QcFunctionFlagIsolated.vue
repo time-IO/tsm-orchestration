@@ -1,6 +1,7 @@
 <template>
   <qc-function-form-template
     function-title="flagIsolated"
+    v-model:label="label"
     @submit="submitForm"
     @remove="removeForm"
   >
@@ -86,6 +87,8 @@ const props = defineProps<{
   permission_group_id: number;
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
+
+const label = defineModel<string | undefined>('label');
 
 const formData = ref({
   field: [] as Datastream[],

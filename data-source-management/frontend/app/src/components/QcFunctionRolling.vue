@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="rolling" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="rolling"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
     <div class="q-mb-md">
       <span class="text-bold block">Field *</span>
@@ -49,7 +54,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.min_periods"
+      v-model.number="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum points required for a valid result."
@@ -105,6 +110,7 @@ const props = defineProps<{
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 
 const funcOptions: Array<string> = [
