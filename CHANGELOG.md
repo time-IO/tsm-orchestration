@@ -8,6 +8,7 @@
 - Dragging columns in overview tables does not change the sorting behavior ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/700))
 - Correct validation of required parser fields ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/704))
 - The header form field of the csv parser won't send an empty string when the user clears the input field ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/706))
+- Automated QC was executing random QC Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/709))
 ### Changed
 ### Removed
 
