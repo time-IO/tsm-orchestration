@@ -32,7 +32,10 @@ _TEMPLATE = """\
         type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
         url="jdbc:{db_url}"
         username="{username}" password="{password}"
-        maxTotal="20" maxIdle="10" maxWaitMillis="-1"
+        maxTotal="20" minIdle="10" maxIdle="10" maxWaitMillis="-1" 
+        testWhileIdle="true" validationQuery="SELECT 1"
+        timeBetweenEvictionRunsMillis="30000"
+        minEvictableIdleTimeMillis="60000"
         defaultAutoCommit="false"
     />
 </Context>

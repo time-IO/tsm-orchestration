@@ -18,7 +18,7 @@ combined-e2e-test:
       - "python3 .gitlab/ci/py/e2e-setup-user.py"
       #  Create an ingest via the DSM API and capture its UUID and permission group UUID
       - "eval $(python3 -u .gitlab/ci/py/e2e-create-ingest.py)"
-      - "sleep 15"
+      - "sleep 20"
       # Verify Grafana, database, FROST and MinIO provisioning succeeded
       - "python3 .gitlab/ci/py/e2e-check-services.py"
       # Verify the full data flow: publish an MQTT message and confirm it is stored

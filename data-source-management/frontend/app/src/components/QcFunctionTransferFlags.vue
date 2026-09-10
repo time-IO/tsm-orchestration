@@ -1,6 +1,7 @@
 <template>
   <qc-function-form-template
     function-title="transferFlags"
+    v-model:label="label"
     @submit="submitForm"
     @remove="removeForm"
   >
@@ -92,6 +93,7 @@ const props = defineProps<{
   initialData?: QualityControlFunctionArgumentBase[];
 }>();
 
+const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 
 const formData = ref({

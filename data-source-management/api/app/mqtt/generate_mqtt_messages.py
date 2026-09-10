@@ -10,6 +10,15 @@ def create_sync_ext_api_msg(ingest_uuid, date_from, date_to):
     return msg
 
 
+def create_sync_ext_sftp_msg(ingest_uuid, datetime_from, datetime_to):
+    msg = {"thing": str(ingest_uuid)}
+    if datetime_from is not None:
+        msg["datetime_from"] = datetime_from
+    if datetime_to is not None:
+        msg["datetime_to"] = datetime_to
+    return msg
+
+
 def create_sync_quality_control(
     permission_group_uuid, qc_settings_name, start_date, end_date
 ):

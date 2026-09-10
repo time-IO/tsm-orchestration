@@ -76,6 +76,8 @@ class MqttPayload:
 
     class SyncExtSftpT(_t.TypedDict):
         thing: str  # UUID of the thing
+        datetime_from: _t.NotRequired[str]  # optional lower mtime bound (UTC)
+        datetime_to: _t.NotRequired[str]  # optional upper mtime bound (UTC)
 
     class SyncSmsT(_t.TypedDict):
         origin: str  # sms backend data or sms cv data

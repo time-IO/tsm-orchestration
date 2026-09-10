@@ -12,6 +12,7 @@ from .base_repository import (
 from .health import Health
 from .trigger_quality_control import TriggerQualityControl
 from .trigger_ext_api import TriggerSyncExtApiBase, TriggerSyncExtApiResponse
+from .trigger_ext_sftp import TriggerSyncExtSftpBase, TriggerSyncExtSftpResponse
 
 from .neutron_monitor_station import NeutronMonitorStation
 from .quality_control_setting import QualityControlSetting
@@ -51,6 +52,8 @@ __all__ = [
     "Health",
     "TriggerSyncExtApiBase",
     "TriggerSyncExtApiResponse",
+    "TriggerSyncExtSftpBase",
+    "TriggerSyncExtSftpResponse",
     "TriggerQualityControl",
     "Ingest",
     "IngestExternalApi",

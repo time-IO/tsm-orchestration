@@ -7,7 +7,7 @@ import pytest
 
 from timeio.parser.json_parser import JsonParser
 
-# from timeio.errors import ParsingError
+from timeio.errors import ParsingError
 
 RAWDATA = """
 {
@@ -304,3 +304,200 @@ def test_unix_milliseconds_timestamp():
 
     assert df.index.equals(expected_index)
     assert df["value"].tolist() == [1, 2, 3]
+
+
+LORAWAN_DATA = """
+{
+    "deduplicationId": "9947541e-2f10-40a9-9b6f-1e51085325b5",
+    "time": "2026-08-18T11:15:56.166747+00:00",
+    "deviceInfo": {
+        "tenantId": "700c0206-97d8-475a-a65d-f5a3175298fb",
+        "deviceName": "THL 0613 ID #083 MCU 25028710",
+        "devEui": "477191d4be5a97a3"
+    },
+    "devAddr": "62cbe321",
+    "data": "AATdABEY/wGAC9YJiBQ8AAAAMwM=",
+    "object": {
+        "Firmware_version_THL": 0,
+        "Voltage": 3.03,
+        "Frame_count": 1245,
+        "Illuminance": 51,
+        "Air_temperature": 24.4,
+        "Relative_humidity": 51.8,
+        "Datetime_valid": 0,
+        "Datetime_timezone": "UTC",
+        "Datetime": "2025-01-13T23:15:11"
+    },
+    "rxInfo": [
+        {
+            "gatewayId": "024a2763d8cc605e",
+            "rssi": -99
+        }
+    ]
+}
+"""
+
+
+def test_measurement_key_extracts_nested_object():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    assert df.columns.tolist() == [
+        "Firmware_version_THL",
+        "Voltage",
+        "Frame_count",
+        "Illuminance",
+        "Air_temperature",
+        "Relative_humidity",
+        "Datetime_valid",
+        "Datetime_timezone",
+    ]
+    assert df["Voltage"].tolist() == [3.03]
+    assert df["Frame_count"].tolist() == [1245]
+
+
+def test_measurement_key_localizes_timezone():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    expected_index = pd.DatetimeIndex(["2025-01-13 23:15:11"], tz="UTC")
+    assert df.index.equals(expected_index)
+
+
+def test_missing_measurement_key_raises_parsing_error():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "does_not_exist",
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+
+    with pytest.raises(ParsingError, match="Measurement key"):
+        parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+
+def test_without_measurement_key_and_timezone_keeps_root_and_naive_index():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    # unchanged behavior: no timezone configured -> naive index
+    assert df.index.tz is None
+    assert df.index.equals(pd.to_datetime(["2025-08-12 13:01:23"]))
+
+
+def test_excluded_keys_removes_keys_from_root():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+        "excluded_keys": ["Illuminance"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+
+
+def test_excluded_keys_removes_keys_from_measurement_key_object():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "measurement_key": "object",
+        "timezone": "UTC",
+        "excluded_keys": ["Illuminance", "Datetime_valid"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LORAWAN_DATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+    assert "Datetime_valid" not in df.columns
+    assert "Voltage" in df.columns
+
+
+def test_excluded_keys_on_array_data():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "excluded_keys": ["Illuminance"],
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(ARRAYDATA.strip(), "thing", "project")
+
+    assert "Illuminance" not in df.columns
+    assert df["Frame_count"].tolist() == [123, 124, 125]
+
+
+def test_without_excluded_keys_keeps_all_columns():
+    settings = {
+        "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+        "comment": "//",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(RAWDATA.strip(), "thing", "project")
+
+    assert "Frame_count" in df.columns
+
+
+LINA13_SENSOR_DATA = """
+{
+    "proband-id": "SU-Q993A",
+    "sensor-id": "7A9F503CD22866F5",
+    "calib-no2": "-21.76",
+    "calib-co": "4.18",
+    "calib-o3": "-46.74",
+    "data": [
+        {"ts": 1658133580721, "values": {"accel_x": -0.337, "accel_y": 5.28, "accel_z": 8.588}},
+        {"ts": 1658133579888, "values": {"accel_x": -0.437, "accel_y": 6.376, "accel_z": 7.402}},
+        {"ts": 1658133579883, "values": {"ambient_light": 138.9}},
+        {"ts": 1658133579373, "values": {"ambient_light": 118.8}},
+        {"ts": 1658133579115, "values": {"ambient_light": 105.6}},
+        {"ts": 1658133579042, "values": {"ambient_light": 90.9}},
+        {"ts": 1658133578779, "values": {"accel_x": -0.277, "accel_y": 8.718, "accel_z": 4.329}},
+        {"ts": 1658133578524, "values": {"ambient_light": 76.5}},
+        {"ts": 1658133577717, "values": {"accel_x": 0.096, "accel_y": 7.743, "accel_z": 6.572}},
+        {"ts": 1658133577616, "values": {"ambient_light": 95.3}}
+    ]
+}
+"""
+
+
+def test_lina13_measurement_key_with_unix_ms_timestamp_per_row():
+    settings = {
+        "measurement_key": "data",
+        "timestamp_keys": [{"key": "ts", "format": "UNIX_MS"}],
+        "timezone": "UTC",
+    }
+    parser = JsonParser(settings)
+    df = parser.do_parse(LINA13_SENSOR_DATA.strip(), "thing", "project")
+
+    # root-level metadata (proband-id, sensor-id, calib-*) must be gone
+    assert "proband-id" not in df.columns
+    assert "sensor-id" not in df.columns
+    assert "calib-no2" not in df.columns
+
+    # nested "values" object flattened into separate columns
+    assert "values.accel_x" in df.columns
+    assert "values.ambient_light" in df.columns
+
+    # each of the 10 rows keeps its own individual, millisecond-precise timestamp
+    assert len(df) == 10
+    assert df.index.tz is not None
+    assert str(df.index.tz) == "UTC"
+    assert df.index[0] == pd.Timestamp("2022-07-18 08:39:40.721", tz="UTC")
+    assert df.index[-1] == pd.Timestamp("2022-07-18 08:39:37.616", tz="UTC")
+
+    # spot-check values: accel rows keep their values, ambient_light rows are NaN there
+    assert df["values.accel_x"].iloc[0] == -0.337
+    assert pd.isna(df["values.accel_x"].iloc[2])
+    assert df["values.ambient_light"].iloc[2] == 138.9

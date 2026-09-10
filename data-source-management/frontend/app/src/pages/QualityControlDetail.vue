@@ -94,6 +94,15 @@
 
           <q-tab-panel name="functions">
             <q-card-section>
+              <q-input
+                class="q-mb-md"
+                filled
+                dense
+                clearable
+                v-model="functionSearch"
+                label="Search by label or name"
+                debounce="200"
+              />
               <div class="row items-center justify-end q-mb-sm">
                 <q-btn
                   flat
@@ -106,7 +115,7 @@
                 />
               </div>
               <qc-function-arg-list-view
-                :quality_control_functions="item.quality_control_functions"
+                :quality_control_functions="filteredFunctions"
                 :expand-all="expandAllFunctions"
               />
             </q-card-section>
@@ -233,6 +242,18 @@ const deleteItem = async () => {
 };
 
 const expandAllFunctions = ref(false);
+
+const functionSearch = ref('');
+
+const filteredFunctions = computed(() => {
+  const functions = item.value?.quality_control_functions ?? [];
+  if (!functionSearch.value.trim()) return functions;
+
+  const query = functionSearch.value.trim().toLowerCase();
+  return functions.filter(
+    (f) => f.label?.toLowerCase().includes(query) || f.name.toLowerCase().includes(query),
+  );
+});
 </script>
 
 <style scoped></style>

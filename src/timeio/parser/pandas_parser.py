@@ -34,13 +34,12 @@ class PandasParser(AbcParser):
         df: pd.DataFrame,
         timestamps: list[dict[str, Any]],
         parser_type: str,
-        new_format="%Y-%m-%dT%H:%M:%S%z",
     ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
 
         timestamps = [ts.copy() for ts in timestamps]
         unit_map = {
-            "UNIX_S": "s",
-            "UNIX_MS": "ms",
+            "UNIX_S": ("s", "%Y-%m-%dT%H:%M:%S%z"),
+            "UNIX_MS": ("ms", "%Y-%m-%dT%H:%M:%S.%f%z"),
         }
         for ts in timestamps:
             timestamp_format = ts["format"]
@@ -52,7 +51,7 @@ class PandasParser(AbcParser):
             elif parser_type == "json":
                 field = ts["key"]
 
-            unit = unit_map[timestamp_format]
+            unit, new_format = unit_map[timestamp_format]
 
             df[field] = pd.to_datetime(
                 df[field],

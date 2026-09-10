@@ -3,9 +3,30 @@
 
 ## [Unreleased]
 ### Added
+- Parser settings (CSV, JSON) can be validated/tested by uploading a file and viewing the parsing result immediately ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/668))
 ### Fixed
+- Dragging columns in overview tables does not change the sorting behavior ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/700))
+- Correct validation of required parser fields ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/704))
+- The header form field of the csv parser won't send an empty string when the user clears the input field ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/706))
+- Automated QC was executing random QC Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/709))
 ### Changed
 ### Removed
+
+## [2026-09-03]
+### Added
+- Added link to saqc documentation in the header of a selected saqc function([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/690))
+- Trigger to (re)sync an external SFTP ingest with an optional date range ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
+- New Options to JSON-Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/669))
+- Optional label for QC-Functions ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/674))
+- Simple MQTT-Client ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/682))
+- Superuser support ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/675))
+### Fixed
+- Input definitions of several QC-Function forms (([Merge Request 1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/692)), ([Merge Request 2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/691)))
+### Changed
+- Updated link to pandas documentation and added help icon to context window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/689))
+- Moved external API trigger into the ingest tools section ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/677))
+### Removed
+- Temporarily removed FeatureOfInterest ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/697))
 
 ## [2026-08-26]
 ### Added

@@ -45,7 +45,7 @@ def sample_quality_control_function_create():
                 name="field", type="datastream", input={"value": ["ds1"]}
             ),
             QualityControlFunctionArgumentCreate(
-                name="gap_window", type="offset", input={"value": "2H"}
+                name="gap_window", type="offset", input={"value": "2h"}
             ),
             QualityControlFunctionArgumentCreate(
                 name="group_window", type="offset", input={"value": "1D"}

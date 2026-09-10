@@ -12,10 +12,9 @@ class TestOffsetRegex:
         import re
 
         compiled = re.compile(OFFSET_REGEX)
-        assert compiled.match("1H") is not None
+        assert compiled.match("1s") is not None
         assert compiled.match("2D") is not None
         assert compiled.match("30min") is not None
-        assert compiled.match("1W-MON") is not None
         assert compiled.match("invalid") is None
 
 

@@ -14,34 +14,32 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types';
+import type { JsonParserUpdate } from 'src/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
 import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
-
-type JsonParserEditFormData = JsonParserUpdate & {
-  permission_group_id?: number | null;
-  timestamp_keys: JsonParserCreate['timestamp_keys'];
-};
+import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<JsonParserEditFormData>({
+const formData = ref<JsonParserFormData>({
   name: '',
   description: null,
   timestamp_keys: [],
   comment: null,
+  measurement_key: null,
   timezone: null,
+  excluded_keys: [],
 });
 const permissionGroupId = ref<number | null>(null);
 
 const isLoading = ref(false);
 const isSaving = ref(false);
 
-const initialFormData = ref<JsonParserEditFormData | null>(null);
+const initialFormData = ref<JsonParserFormData | null>(null);
 
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
@@ -124,7 +122,7 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: JsonParserUpdate): JsonParserEditFormData {
+function normalizeFormData(data: JsonParserUpdate): JsonParserFormData {
   return {
     name: data.name || '',
     description: data.description || null,
@@ -133,6 +131,8 @@ function normalizeFormData(data: JsonParserUpdate): JsonParserEditFormData {
       format: timestampKey.format,
     })),
     comment: data.comment || null,
+    measurement_key: data.measurement_key || null,
+    excluded_keys: data.excluded_keys || [],
     timezone: data.timezone || null,
   };
 }
