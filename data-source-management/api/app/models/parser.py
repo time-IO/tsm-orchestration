@@ -52,3 +52,10 @@ class Parser(SQLModel, table=True):
         infos = {"id": self.id, "parser_type": self.parser_type, **child_info}
 
         return infos
+
+
+class ParsedDataResponse(SQLModel):
+    data: list[dict]
+    error: str
+    is_valid: bool
+    warnings: list[str]
