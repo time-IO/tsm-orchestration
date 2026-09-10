@@ -33,6 +33,18 @@ class ExtApiSyncer(ABC):
         raise NotImplementedError
 
     @staticmethod
+    def result_value(result_type, value):
+        """Return ``value`` shaped for its result column.
+
+        The db-api ``result_json`` column is typed ``Json[Any]`` and expects a
+        JSON *string*, not a python object. All other result columns take the
+        raw value. Mirrors how ``parameters`` is already ``json.dumps``-ed.
+        """
+        if result_type == 2:
+            return json.dumps(value)
+        return value
+
+    @staticmethod
     def normalize_datetime(dt_str):
         """Parse a datetime string in any supported input format and return it
         as an ISO-8601 UTC string ('%Y-%m-%dT%H:%M:%SZ').
@@ -191,6 +203,12 @@ class TsystemsApiSyncer(ExtApiSyncer):
             }
             timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
+                # T-Systems attaches a per-field quality summary object
+                # (e.g. {"PM10": {"status": "VALID", ...}, ...}) alongside the
+                # scalar measurements. It is batch metadata, not an observation,
+                # so skip it instead of storing it as its own datastream.
+                if isinstance(value, dict):
+                    continue
                 if value is not None:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
@@ -535,7 +553,9 @@ class DwdApiSyncer(ExtApiSyncer):
                         "result_time": timestamp,  # ts is tz aware with UTC: "%Y-%m-%dT%H:%M:%S%z"
                         "result_type": result_type,
                         "datastream_pos": parameter,
-                        RESULT_TYPE_MAPPING[result_type]: value,
+                        RESULT_TYPE_MAPPING[result_type]: self.result_value(
+                            result_type, value
+                        ),
                         "parameters": json.dumps(
                             {"origin": "dwd_data", "column_header": source}
                         ),
@@ -575,7 +595,9 @@ class TtnApiSyncer(ExtApiSyncer):
                         "result_time": timestamp,  # tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": result_type,
                         "datastream_pos": k,
-                        RESULT_TYPE_MAPPING[result_type]: v,
+                        RESULT_TYPE_MAPPING[result_type]: self.result_value(
+                            result_type, v
+                        ),
                         "parameters": json.dumps(
                             {"origin": api_response["url"], "column_header": k}
                         ),
