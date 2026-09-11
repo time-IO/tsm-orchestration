@@ -22,6 +22,11 @@ class CreateFrostInstanceHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.tomcat_proxy_url = get_envvar("TOMCAT_PROXY_URL")
+        # serviceRootUrl of the non-proxied internal FROST. Defaults to the public
+        # one until the token-checking API in front of it is wired up.
+        self.internal_proxy_url = get_envvar(
+            "TOMCAT_INTERNAL_PROXY_URL", self.tomcat_proxy_url
+        )
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
@@ -32,6 +37,16 @@ class CreateFrostInstanceHandler(AbstractHandler):
             password=thing.database.ro_password,
             db_url=thing.database.ro_url,
             tomcat_proxy_url=self.tomcat_proxy_url,
+        )
+        # internal FROST: same context but connecting as the sti_ user, whose
+        # search_path points at the project's "_internal" schema.
+        frost.write_context_file(
+            schema=thing.database.schema,
+            user=f"sti_{thing.database.ro_username.lower()}",
+            password=thing.database.ro_password,
+            db_url=thing.database.ro_url,
+            tomcat_proxy_url=self.internal_proxy_url,
+            context_dir=frost.INTERNAL_CONTEXT_FILES_DIR,
         )
 
 

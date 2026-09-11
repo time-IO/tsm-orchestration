@@ -4,14 +4,14 @@ BEGIN
         SELECT 1
         FROM information_schema.tables
         WHERE table_name = 'FEATURES'
-        AND table_schema = '{tsm_schema}'
+        AND table_schema = '{target_schema}'
         AND table_type = 'BASE TABLE')
     THEN EXECUTE 'DROP TABLE "FEATURES" CASCADE';
     ELSIF EXISTS (
         SELECT 1
         FROM information_schema.tables
         WHERE table_name = 'FEATURES'
-        AND table_schema = '{tsm_schema}'
+        AND table_schema = '{target_schema}'
         AND table_type = 'VIEW'
         )
     THEN EXECUTE 'DROP VIEW "FEATURES" CASCADE';

@@ -377,6 +377,30 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
+  # ===========
+  # Internal FROST
+  # ===========
+  # Serves the per-project "*_internal" schemas (public + internal visibility).
+  # Reuses the frost image. Deliberately NOT exposed via the proxy: it is meant
+  # to sit behind a token-checking API (not part of this MR).
+  frost-internal:
+    image: "${TIMEIO_IMAGE_REGISTRY}/frost:${TIMEIO_FROST_IMAGE_TAG}"
+    build:
+      context: tomcat
+      args:
+        BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
+        FROST_VERSION: "${STA_FROST_VERSION}"
+        UID: "${UID}"
+        GID: "${GID}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    volumes:
+      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+    logging:
+      options:
+        max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
+        max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
 
   # Summary
   # =======
@@ -625,6 +649,7 @@ services:
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
       TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
+      TOMCAT_INTERNAL_PROXY_URL: "${STA_INTERNAL_PROXY_URL}"
       MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
@@ -644,6 +669,7 @@ services:
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
+      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/home/appuser/app/src/frost_context_files_internal:rw"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1279,6 +1305,7 @@ services:
 
 volumes:
   tomcat-context:
+  tomcat-context-internal:
   database:
   visualization:
   mqtt-broker:

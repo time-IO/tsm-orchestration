@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 
 import psycopg
 from psycopg import sql
@@ -20,6 +21,10 @@ journal = Journal("System", errors="ignore")
 
 STA_PREFIX = "sta_"
 GRF_PREFIX = "grf_"
+STI_PREFIX = "sti_"
+# Suffix for the per-project schema that holds the "internal" FROST views
+# (public + internal visibility). Served by a separate, non-proxied FROST.
+INTERNAL_SUFFIX = "_internal"
 
 
 class CreateThingInPostgresHandler(AbstractHandler):
@@ -61,6 +66,13 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug(f"create grafana read-only user {grf_user}")
             self.create_ro_user(thing, user_prefix=GRF_PREFIX)
 
+        if not self.user_exists(sti_user := STI_PREFIX + ro_user):
+            logger.debug(f"create sta-internal read-only user {sti_user}")
+            self.create_internal_schema(thing)
+            self.create_ro_user(
+                thing, user_prefix=STI_PREFIX, schema=user + INTERNAL_SUFFIX
+            )
+
         logger.info("update/create thing in db")
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
@@ -69,6 +81,12 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.create_frost_views(thing)
         logger.debug(f"grand frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
+        logger.debug("create/refresh internal frost views")
+        self.create_frost_views(thing, internal=True)
+        logger.debug(f"grant internal frost view privileges to {sti_user}")
+        self.grant_sta_select(
+            thing, user_prefix=STI_PREFIX, schema=user + INTERNAL_SUFFIX
+        )
         logger.debug("create/refresh grafana views")
         self.create_grafana_views(thing)
         logger.debug(f"grand grafana view privileges to {grf_user}")
@@ -93,12 +111,12 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_ro_user(self, thing, user_prefix: str = ""):
+    def create_ro_user(self, thing, user_prefix: str = "", schema: str | None = None):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 ro_username = user_prefix.lower() + thing.database.ro_username.lower()
                 ro_user = sql.Identifier(ro_username)
-                schema = sql.Identifier(thing.database.username.lower())
+                schema = sql.Identifier(schema or thing.database.username.lower())
                 ro_passw = decrypt(thing.database.ro_password, get_crypt_key())
 
                 c.execute(
@@ -161,6 +179,23 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=sql.Identifier(thing.database.username.lower()))
                 )
 
+    def create_internal_schema(self, thing):
+        # Separate schema holding the "internal" FROST views, owned by the
+        # project user (same as the public schema).
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                user = sql.Identifier(thing.database.username.lower())
+                c.execute(
+                    sql.SQL(
+                        "CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}"
+                    ).format(
+                        schema=sql.Identifier(
+                            thing.database.username.lower() + INTERNAL_SUFFIX
+                        ),
+                        user=user,
+                    )
+                )
+
     def deploy_ddl(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-ddl.sql")
         with open(file) as fh:
@@ -218,8 +253,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
-    def grant_sta_select(self, thing, user_prefix: str):
-        schema = sql.Identifier(thing.database.username.lower())
+    def grant_sta_select(self, thing, user_prefix: str, schema: str | None = None):
+        schema = sql.Identifier(schema or thing.database.username.lower())
         sta_user = sql.Identifier(
             user_prefix.lower() + thing.database.ro_username.lower()
         )
@@ -283,7 +318,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
-    def create_frost_views(self, thing):
+    def create_frost_views(self, thing, internal: bool = False):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
             os.path.join(base_path, "schema_context.sql"),
@@ -299,6 +334,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
         ]
 
         schema = thing.database.schema.lower()
+        # Schema the views are actually deployed into (used by feature.sql to
+        # find/drop a pre-existing FEATURES in the *target* schema). This differs
+        # from {tsm_schema}, which stays the project schema as it is the
+        # datasource_id the views filter on.
+        target_schema = schema + INTERNAL_SUFFIX if internal else schema
         user = sql.Identifier(thing.database.username.lower())
         SMS_URL = os.environ.get("SMS_URL")
         CV_URL = os.environ.get("CV_URL")
@@ -308,7 +348,23 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         with self.db.connection() as conn:
             with conn.cursor() as c:
-                c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
+                if internal:
+                    # Deploy identical views into the "_internal" schema. Keep the
+                    # project schema OUT of the search_path: otherwise the files'
+                    # `DROP VIEW IF EXISTS "OBSERVATIONS"` would, on the first run
+                    # (empty internal schema), fall through and drop the *public*
+                    # view in the project schema. Sibling helper views resolve to
+                    # the internal schema; the sole raw table (observation) is
+                    # qualified explicitly below.
+                    c.execute(
+                        sql.SQL("SET search_path TO {internal}, public").format(
+                            internal=sql.Identifier(
+                                thing.database.username.lower() + INTERNAL_SUFFIX
+                            ),
+                        )
+                    )
+                else:
+                    c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
                 for file in files:
                     logger.debug(f"deploy file: {file}")
                     with open(file) as fh:
@@ -318,8 +374,27 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     # from userinput. Additionally, we escape single quotes, prevent closing
                     # the outer quotes in the file.
                     view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
+                    view = view.replace(
+                        "{target_schema}", f"{escape_quote(target_schema)}"
+                    )
                     view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
                     view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
+                    if internal:
+                        # Relax the visibility filter to public OR internal. is_public
+                        # only ever appears qualified as c.<> (sms_configuration) and
+                        # d.<> (sms_device), so these two replacements are exhaustive.
+                        view = view.replace(
+                            "c.is_public", "(c.is_public OR c.is_internal)"
+                        )
+                        view = view.replace(
+                            "d.is_public", "(d.is_public OR d.is_internal)"
+                        )
+                        # `observation` is the only raw project table referenced
+                        # unqualified; qualify it since the project schema is not on
+                        # the search_path for the internal deploy (see above).
+                        view = re.sub(
+                            r"\bobservation\b", f'"{schema}".observation', view
+                        )
                     c.execute(view)
 
     def create_grafana_views(self, thing):
