@@ -312,7 +312,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 # The DROP/CREATE below needs an ACCESS EXCLUSIVE lock on each
                 # view and would otherwise queue indefinitely behind a reader,
                 # blocking further queries in the meantime. Fail fast instead:
-                # give up waiting for the lock after 10s.
+                # give up waiting for the lock after 30s.
                 c.execute("SET lock_timeout TO '30s'")
                 for file in files:
                     logger.debug(f"deploy file: {file}")
