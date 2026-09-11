@@ -484,6 +484,8 @@ services:
       S3_REGION: "${DSM_S3_REGION}"
       STA_ROOT_URL: "${DSM_API_STA_ROOT_URL}"
       STA_VERSION: "${DSM_API_STA_VERSION}"
+      DB_API_BASE_URL: "${DB_API_BASE_URL}"
+      DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
 
 
   # Summary
@@ -803,7 +805,7 @@ services:
       MQTT_BROKER: mqtt-broker:1883
       MQTT_USER: "${MQTT_USER}"
       MQTT_PASSWORD: "${MQTT_PASSWORD}"
-      MQTT_CLIENT_ID: worker-run-qc-tiggered
+      MQTT_CLIENT_ID: worker-run-qc-triggered
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
       TOPIC_QC_DONE: qaqc_done
@@ -1133,8 +1135,8 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
-    cpus: 0.5
-    mem_limit: 4g
+    cpus: 2
+    mem_limit: 8g
     environment:
       SETUP_SERVICE: "${CRON_SETUP_SERVICE}"
       # The following is needed for sftp sync jobs

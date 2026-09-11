@@ -13,11 +13,23 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
-Release note without dash.
+- Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
 
+
+## [2026-09-10]
+### Added
+- Parser settings (CSV, JSON) can be validated/tested by uploading a file and viewing the parsing result immediately ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/668))
+- Support for FTP file transfer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/645))
 ### Fixed
-- Dragging columns in overview tables does not change the sorting behavior ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
-
+- Dragging columns in overview tables does not change the sorting behavior ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/700))
+- Correct validation of required parser fields ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/704))
+- The header form field of the csv parser won't send an empty string when the user clears the input field ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/706))
+- Automated QC was executing random QC Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/709))
+- Grafana panel headers were not showing property information when units are empty ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/711))
+- TSystems API datetime handling ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/707))
+### Changed
+- Frostsettings to prevent long wakeup times ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/699))
+### Removed
 
 ## [2026-09-03]
 

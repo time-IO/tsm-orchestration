@@ -1,16 +1,27 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from models import User
 from models.filters import BaseFilter
-from dependencies import get_current_user, get_repo_parser_json
+from dependencies import (
+    get_current_user,
+    get_repo_parser_json,
+    max_file_size,
+    json_form,
+)
+from models.parser import ParsedDataResponse
 from models.parser_json import (
     ParserJsonCreate,
     ParserJsonRead,
     ParserJsonUpdate,
+    ParserJsonValidate,
 )
 
 from repositories.parser_json import ParserJsonRepository
+from services.parse_data import validate_json_parser_settings_with_data
+from fastapi import File, Form, UploadFile
 from access_scope import AccessScope
 
 router = APIRouter(
@@ -54,6 +65,27 @@ def read_one(
     return repo.to_flat(
         repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
+
+
+@router.post(
+    "/validate",
+    response_model=ParsedDataResponse,
+    summary=f"Parse a file with a given {entity_name}",
+)
+async def validate(
+    settings: Annotated[ParserJsonValidate, Depends(json_form(ParserJsonValidate))],
+    file: UploadFile = Depends(max_file_size(1024 * 1024 * 10)),
+) -> ParsedDataResponse:
+    raw_data = (await file.read()).decode(
+        "utf-8"
+    )  # no file encoding in settings, so assuming utf-8
+
+    response = validate_json_parser_settings_with_data(
+        settings=settings,
+        raw_data=raw_data,
+    )
+
+    return response
 
 
 @router.post("/", response_model=ParserJsonRead, summary=f"Create one {entity_name}")

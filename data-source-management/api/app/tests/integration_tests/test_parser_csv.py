@@ -6,14 +6,27 @@ Each test creates data via the API, verifies it, and cleans up after
 itself. This tests the full stack: router -> repository -> database.
 """
 
+import io
+import json
+import warnings
+from unittest.mock import patch
+
+import pandas as pd
 import pytest
-from sqlmodel import Session, text
+from sqlmodel import Session
+from starlette.datastructures import UploadFile
+from timeio.errors import ParsingWarning
 from main import app
 from dependencies import engine, get_current_user
-from tests.test_utils import UserProxy
 from models import User
+from ..utils.upload_files import make_csv_upload_file, as_multipart_file
+from ..utils.user_proxy import UserProxy
 
 BASE_PATH = "/parser/csv"
+
+
+def _upload_file(content: str, filename: str = "test.csv") -> UploadFile:
+    return UploadFile(file=io.BytesIO(content.encode("utf-8")), filename=filename)
 
 
 @pytest.fixture(autouse=True)
@@ -89,7 +102,134 @@ def test_read_not_found(client):
     assert response.status_code == 404
 
 
-# --- auth / permission tests ---
+def test_validate_content_size_valid(client, base_data):
+    settings = _csv_payload(base_data)
+    byte_size_slightly_less_than_ten_megabyte = 1024 * 1024 * 10 - 100
+    upload_file = make_csv_upload_file(byte_size_slightly_less_than_ten_megabyte)
+    response = client.post(
+        f"{BASE_PATH}/validate",
+        data={"settings": json.dumps(settings)},
+        files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+    )
+    assert response.status_code == 200
+    assert response.json()["is_valid"] is True
+
+
+def test_validate_content_too_large(client, base_data):
+    settings = _csv_payload(base_data)
+    byte_size_slightly_more_than_ten_megabyte = 1024 * 1024 * 10 + 100
+    upload_file = make_csv_upload_file(byte_size_slightly_more_than_ten_megabyte)
+    response = client.post(
+        f"{BASE_PATH}/validate",
+        data={"settings": json.dumps(settings)},
+        files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+    )
+    assert response.status_code == 413
+
+
+def test_validate_passes_translated_settings_and_data_to_parser(client, base_data):
+    settings = _csv_payload(
+        base_data,
+        delimiter=";",
+        timezone="Europe/Berlin",
+        headlines_to_exclude="1",
+        footlines_to_exclude=2,
+        comment=["#"],
+        header=0,
+        timestamp_columns=[{"column": 1, "timestamp_format": "%Y-%m-%d"}],
+    )
+    file_content = "col_a;col_b\nfoo;2024-01-01"
+    upload_file = _upload_file(f"\n{file_content}\n\n")
+
+    with patch("services.parse_data.CsvParser") as MockCsvParser:
+        MockCsvParser.return_value.do_parse.return_value = pd.DataFrame({"a": [1]})
+        response = client.post(
+            f"{BASE_PATH}/validate",
+            data={"settings": json.dumps(settings)},
+            files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+        )
+
+    assert response.status_code == 200
+    MockCsvParser.assert_called_once_with(
+        {
+            "decimal": ".",
+            "delimiter": ";",
+            "skipfooter": 2,
+            "timestamp_columns": [{"column": 1, "format": "%Y-%m-%d"}],
+            "headlines_to_exclude": "1",
+            "footlines_to_exclude": 2,
+            "timezone": "Europe/Berlin",
+            "comment": ["#"],
+            "header": 0,
+        }
+    )
+    do_parse = MockCsvParser.return_value.do_parse
+    do_parse.assert_called_once_with(file_content, "project", "thing")
+
+
+def test_validate_returns_parsed_data_from_parser_as_response(client, base_data):
+    settings = _csv_payload(base_data)
+    upload_file = make_csv_upload_file(50)
+    fake_df = pd.DataFrame({"value": [10, 20]})
+
+    with patch("services.parse_data.CsvParser") as MockCsvParser:
+        MockCsvParser.return_value.do_parse.return_value = fake_df
+        response = client.post(
+            f"{BASE_PATH}/validate",
+            data={"settings": json.dumps(settings)},
+            files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_valid"] is True
+    assert body["error"] == ""
+    assert body["warnings"] == []
+    assert body["data"] == fake_df.reset_index().to_dict(orient="records")
+
+
+def test_validate_returns_parser_exception_as_response(client, base_data):
+    settings = _csv_payload(base_data)
+    upload_file = make_csv_upload_file(50)
+
+    with patch("services.parse_data.CsvParser") as MockCsvParser:
+        MockCsvParser.return_value.do_parse.side_effect = ValueError(
+            "something went wrong in the parser"
+        )
+        response = client.post(
+            f"{BASE_PATH}/validate",
+            data={"settings": json.dumps(settings)},
+            files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_valid"] is False
+    assert body["error"] == "something went wrong in the parser"
+    assert body["data"] == []
+
+
+def test_validate_returns_parser_warnings_as_response(client, base_data):
+    settings = _csv_payload(base_data)
+    upload_file = make_csv_upload_file(50)
+    fake_df = pd.DataFrame({"value": [1]})
+
+    def fake_do_parse(*_args, **_kwargs):
+        warnings.warn("something looked fishy", ParsingWarning)
+        return fake_df
+
+    with patch("services.parse_data.CsvParser") as MockCsvParser:
+        MockCsvParser.return_value.do_parse.side_effect = fake_do_parse
+        response = client.post(
+            f"{BASE_PATH}/validate",
+            data={"settings": json.dumps(settings)},
+            files={"file": as_multipart_file(upload_file, content_type="text/csv")},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_valid"] is True
+    assert body["warnings"] == ["something looked fishy"]
 
 
 def test_read_list_unauthenticated(client_no_auth):
