@@ -18,7 +18,7 @@ VERSION_LINE_PATTERN = (
 SECTION_LINE_PATTERN = r"^### (Added|Fixed|Changed|Removed)$"
 RELEASE_NOTE_LINE_PATTERN = r"^-\s.*"
 LINEBREAK_NOTE_LINE_PATTERN = r"^\s\s.*"
-HEADER_FINISHED_LINE_PATTERN = "- Use `Added`, `Changed`, `Fixed`, `Removed`"
+HEADER_FINISHED_LINE_PATTERN = "<!-- BEGIN OF CHANGELOG -->"
 VER_PATTERN = r"^(\d{4})-(\d{2})-(\d{2})$"
 
 class ReleaseNoteVersion:

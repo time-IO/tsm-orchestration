@@ -3,25 +3,25 @@
 # The following checks are done:
 #
 # - Ensure every line is followed by an allowed successor type:
+#   h: header line
 #   v: version line
 #   s: section line
 #   r: release note line
 #
 #   Valid transitions:
+#   H -> hV
 #   V -> vS
 #   S -> sR
 #   R -> r | rV | rS | rR
 #
 # Versions
 # - Ensure every version consists of a valid semantic version tag and a well-formatted date or Unreleased-mark.
-#   valid syntax with date: <MAJOR>.<MINOR>.<PATCH> - <YYYY>-<MM>-<DD>
-#   valid syntax for unreleased: <MAJOR>.<MINOR>.<PATCH> (Unreleased)
+#   valid syntax with date: [<YYYY>.<mm>.<dd>]
+#   valid syntax for unreleased: [Unreleased]
 # - Ensure there is exactly one unreleased version at the top of the changelog.
-# - Ensure every version is a correct semantic increment of its predecessor
-#   (one of the subversions is incremented while subordinate versions are set to 0).
 #
 # Sections
-# - Ensure there are no invalid section keys. Allowed keys are: Added, Changed, Fixed
+# - Ensure there are no invalid section keys. Allowed keys are: Added, Changed, Fixed, Removed
 # - Ensure there is no duplicate section entry per version.
 # - Ensure there is no empty section without a release note.
 #

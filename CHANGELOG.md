@@ -1,6 +1,14 @@
 # Changelog
-- Use `Added`, `Changed`, `Fixed`, `Removed`
+<!--
+When adding a changelog entry, ensure the following:
+- Every new entry requires a link to a Merge Request
+- Allowed sections are `Added`, `Changed`, `Fixed`, `Removed`
+- Do not add one of those sections until it contains at least one changelog entry
+- The most recent version is named `[Unreleased]` and contains no sections initially
+- See `scripts/bin/parse_changelog/__main__.py` for an overview of checks for this file
+-->
 
+<!-- BEGIN OF CHANGELOG -->
 
 ## [Unreleased]
 
