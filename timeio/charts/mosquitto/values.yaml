@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: "iegomez/mosquitto-go-auth"
-  tag: latest
+  digest: "sha256:acd65f8566f22126e3bf3b72fe5bee8a5002ca57695f211b1904013953560c3f"
   pullPolicy: Always
 name: mosquitto
 port: 1883

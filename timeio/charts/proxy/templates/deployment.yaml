@@ -24,7 +24,7 @@ spec:
         fsGroup: {{ .Values.securityContext.fsGroup }}
       containers:
       - name: {{ .Values.proxy.name }}
-        image: {{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}
+        image: {{ if .Values.proxy.image.digest }}{{ .Values.proxy.image.repository }}@{{ .Values.proxy.image.digest }}{{ else }}{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}{{ end }}
         imagePullPolicy: {{ .Values.proxy.image.pullPolicy }}
         securityContext:
           allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}

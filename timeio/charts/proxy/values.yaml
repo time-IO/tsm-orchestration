@@ -24,7 +24,7 @@ proxy:
   name: proxy
   image:
     repository: "nginxinc/nginx-unprivileged"
-    tag: latest
+    digest: "sha256:4210a3296e7cae7b4f355da48192cd5ea51c88acf9892b95bff967cede85a915"
     pullPolicy: Always
 
 existingSecret: ""
