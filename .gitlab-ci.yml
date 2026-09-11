@@ -88,7 +88,9 @@ push_oci:
     - test -n "$TIMEIO_CHART_MANIFEST_DIGEST"
     - |
       {
-        printf 'TIMEIO_CHART_REF=oci://%s\n' "$OCI_HELM_REPO"
+        # Helm appends the chart name to the OCI repository on push; the
+        # downstream promotion must therefore receive that complete reference.
+        printf 'TIMEIO_CHART_REF=oci://%s/%s\n' "$OCI_HELM_REPO" "$HELM_PACKAGE_NAME"
         printf 'TIMEIO_CHART_VERSION=%s\n' "$TIMEIO_CHART_VERSION"
         printf 'TIMEIO_CHART_MANIFEST_DIGEST=%s\n' "$TIMEIO_CHART_MANIFEST_DIGEST"
         printf 'TIMEIO_CHART_ARCHIVE_SHA256=%s\n' "$TIMEIO_CHART_ARCHIVE_SHA256"
