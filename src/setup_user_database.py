@@ -53,6 +53,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dml")
             self.deploy_dml(thing)
 
+        self.upsert_schema_thing_mapping(thing)
+
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
             self.create_ro_user(thing, user_prefix=STA_PREFIX)
@@ -73,8 +75,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.create_grafana_views(thing)
         logger.debug(f"grand grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
-
-        self.upsert_schema_thing_mapping(thing)
 
     def create_user(self, thing):
 
@@ -309,6 +309,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
+                # The DROP/CREATE below needs an ACCESS EXCLUSIVE lock on each
+                # view and would otherwise queue indefinitely behind a reader,
+                # blocking further queries in the meantime. Fail fast instead:
+                # give up waiting for the lock after 10s.
+                c.execute("SET lock_timeout TO '10s'")
                 for file in files:
                     logger.debug(f"deploy file: {file}")
                     with open(file) as fh:
@@ -335,6 +340,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
             with conn.cursor() as c:
                 user = sql.Identifier(thing.database.username.lower())
                 c.execute(sql.SQL("SET search_path TO {0}").format(user))
+                # Same rationale as create_frost_views: fail fast rather than
+                # queue the DROP/CREATE behind a reader holding the view lock.
+                c.execute("SET lock_timeout TO '10s'")
                 c.execute(view)
 
     def upsert_thing(self, thing) -> bool:
