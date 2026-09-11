@@ -3,7 +3,7 @@ name: timeio
 description: "A Helm chart for time.IO"
 type: application
 # to-do: The version used here is not yet in sync with regular time.IO release versions (YYYY-mm-dd)
-version: 0.6.2
+version: 0.6.3
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
@@ -65,6 +65,10 @@ dependencies:
     version: 0.0.1
     repository: "file://charts/worker-file-ingest"
 
+  - name: worker-file-ingest-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-file-ingest-triggered"
+
   - name: worker-grafana-user-orgs
     version: 0.0.1
     repository: "file://charts/worker-grafana-user-orgs"
@@ -77,9 +81,17 @@ dependencies:
     version: 0.0.1
     repository: "file://charts/worker-run-qaqc"
 
+  - name: worker-run-qc-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-run-qc-triggered"
+
   - name: worker-sync-extapis
     version: 0.0.1
     repository: "file://charts/worker-sync-extapis"
+
+  - name: worker-sync-extapis-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extapis-triggered"
 
   - name: worker-sync-extsftp
     version: 0.0.1

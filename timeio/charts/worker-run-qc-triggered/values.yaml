@@ -6,14 +6,14 @@ image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
   tag: "prod-2026-09-10"
   pullPolicy: Always
-name: worker-mqtt-ingest
+name: worker-run-qc-triggered
 
 securityContext:
   allowPrivilegeEscalation: False
   capabilities:
     drop: ["ALL"]
   runAsUser: 1000
-  runAsNonRoot: True
+  runAsNonRoot: true
   seccompProfile:
     type: RuntimeDefault
 

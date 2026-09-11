@@ -4,7 +4,7 @@ enabled: true
 
 image:
   repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
-  tag: "prod-2026-06-26"
+  tag: "prod-2026-09-10"
   pullPolicy: Always
 name: worker-sync-extsftp
 

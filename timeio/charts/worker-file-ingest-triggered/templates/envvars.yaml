@@ -5,18 +5,14 @@ metadata:
   name: {{ .Values.name }}-envvars
 data:
   LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
-  TOPIC: "frontend_thing_update"
+  TOPIC: "object_storage_notification_triggered"
   MQTT_BROKER: "mosquitto:1883"
-  MQTT_CLIENT_ID: "thing-setup"
+  MQTT_CLIENT_ID: "file-ingest-triggered"
   MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
   MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
-  SMS_URL: "{{ .Values.global.envvars.SMS_URL }}"
-  CV_URL: "{{ .Values.global.envvars.CV_URL }}"
-  TOMCAT_PROXY_URL: "{{ include "timeio.publicUrl" . }}/sta/"
+  TOPIC_DATA_PARSED: "data_parsed"
   MINIO_SECURE: "{{ .Values.global.envvars.MINIO_SECURE }}"
-  MINIO_URL: "{{ .Values.global.envvars.MINIO_HOST }}"
-  GRAFANA_URL: "{{ .Values.global.envvars.GRAFANA_URL }}"
-  GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "{{ .Values.global.envvars.GRAFANA_DEFAULT_DATASOURCE_SSLMODE }}"
+  MINIO_URL: "{{  .Values.global.envvars.MINIO_HOST }}"
   DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
   JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
 {{- end }}

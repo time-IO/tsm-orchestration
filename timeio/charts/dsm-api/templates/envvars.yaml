@@ -22,4 +22,7 @@ data:
   STA_ROOT_URL: "{{ include "timeio.publicUrl" . }}/sta"
   STA_VERSION: "/v1.1/"
   INGEST_MQTT_BROKER_URI: "tsm.ufz.de:8883"
+  S3_ENDPOINT: "{{ .Values.global.envvars.DSM_API_S3_ENDPOINT }}"
+  S3_SECURE: "{{ .Values.global.envvars.DSM_API_S3_SECURE }}"
+  S3_REGION: "{{ .Values.global.envvars.DSM_API_S3_REGION }}"
 {{- end }}
