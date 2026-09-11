@@ -1,0 +1,4 @@
+apiVersion: v2
+name: worker-sync-extapis-triggered
+version: 0.0.1
+description: A Helm chart for the worker-sync-extapis-triggered service
