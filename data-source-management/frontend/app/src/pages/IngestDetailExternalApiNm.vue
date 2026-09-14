@@ -141,7 +141,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiNeutronMonitorPublic } from '@/services/ingest_external_api_neutron_monitor/types';
-import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
+import { useIngestExternalApiNeutronMonitorStore } from '@/stores/ingestExternalApiNeutronMonitorStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
 

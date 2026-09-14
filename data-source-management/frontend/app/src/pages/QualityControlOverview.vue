@@ -211,7 +211,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import type { QTableColumn } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
 import TriggerQualityControlSettingsDialog from '@/components/TriggerQualityControlSettingsDialog.vue';

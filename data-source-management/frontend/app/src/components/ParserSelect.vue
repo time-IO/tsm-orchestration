@@ -92,9 +92,9 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import type { ParserSelectOption } from '@/services/types';
 import { useQuasar } from 'quasar';
-import { useCsvParserStore } from 'stores/parserCsvStore';
-import { useJsonParserStore } from 'stores/parserJsonStore';
-import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
+import { useJsonParserStore } from '@/stores/parserJsonStore';
+import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
 

@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { debounce } from 'quasar';
-import { useStaStore } from 'stores/staStore';
+import { useStaStore } from '@/stores/staStore';
 import { ref } from 'vue';
 import type { StaEntity } from '@/services/sta/types';
 

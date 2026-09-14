@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import type { JsonParserValidate, JsonParserUpdate } from '@/services/parser_json/types';
-import { useJsonParserStore } from 'stores/parserJsonStore';
+import { useJsonParserStore } from '@/stores/parserJsonStore';
 import ParserValidateDrawer from '@/components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
 import { toRaw } from 'vue';

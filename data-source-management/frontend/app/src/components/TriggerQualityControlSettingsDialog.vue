@@ -47,7 +47,7 @@
 import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerQCSBase } from '@/services/quality_control_settings_trigger/types';
-import { useTriggerQCSStore } from 'stores/qualityControlSettingsTriggerStore';
+import { useTriggerQCSStore } from '@/stores/qualityControlSettingsTriggerStore';
 import { date, useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });

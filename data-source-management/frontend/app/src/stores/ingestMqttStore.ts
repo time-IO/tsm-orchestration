@@ -5,7 +5,7 @@ import type {
   IngestMqttUpdate,
 } from '@/services/ingest_mqtt/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestMqttStore = createIngestStore<
   IngestMqttPublic,

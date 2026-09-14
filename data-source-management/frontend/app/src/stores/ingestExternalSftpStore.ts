@@ -5,7 +5,7 @@ import type {
   IngestExternalSftpUpdate,
 } from '@/services/ingest_external_sftp/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalSftpStore = createIngestStore<
   IngestExternalSftpPublic,

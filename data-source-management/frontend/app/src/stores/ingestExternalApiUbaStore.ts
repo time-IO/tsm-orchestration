@@ -5,7 +5,7 @@ import type {
   IngestExternalApiUbaUpdate,
 } from '@/services/ingest_external_api_uba/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiUbaStore = createIngestStore<
   IngestExternalApiUbaPublic,

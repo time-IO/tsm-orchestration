@@ -12,7 +12,7 @@
 import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useJsonParserStore } from 'stores/parserJsonStore';
+import { useJsonParserStore } from '@/stores/parserJsonStore';
 import type { JsonParserCreate } from '@/services/parser_json/types';
 import ParserFormJson from '@/components/ParserFormJson.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';

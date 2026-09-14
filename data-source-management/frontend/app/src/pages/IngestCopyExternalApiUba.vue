@@ -14,7 +14,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalApiUbaCreate } from '@/services/ingest_external_api_uba/types';
-import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import { useIngestExternalApiUbaStore } from '@/stores/ingestExternalApiUbaStore';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalApiUba from '@/components/IngestFormExternalApiUba.vue';
 

@@ -29,7 +29,7 @@
 import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { useIngestStore } from 'stores/ingestStore';
+import { useIngestStore } from '@/stores/ingestStore';
 import IngestOverviewTable from '@/components/IngestOverviewTable.vue';
 import IngestOverviewFilter from '@/components/IngestOverviewFilter.vue';
 const { t } = useI18n();

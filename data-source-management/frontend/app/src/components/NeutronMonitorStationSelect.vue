@@ -36,7 +36,7 @@
 import { nextTick, onMounted, ref, watch } from 'vue';
 import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
 import { useQuasar } from 'quasar';
-import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
+import { useNeutronMonitorStationStore } from '@/stores/neutronMonitorStationStore';
 import { rules } from '@/utils/validation/rules';
 
 const neutronMonitorStationStore = useNeutronMonitorStationStore();

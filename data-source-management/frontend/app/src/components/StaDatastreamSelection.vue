@@ -68,7 +68,7 @@ import type {
   TemporaryDatastream,
 } from '@/services/sta/types';
 import { debounce, useQuasar } from 'quasar';
-import { useStaStore } from 'stores/staStore';
+import { useStaStore } from '@/stores/staStore';
 import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
 import type { Datastream } from '@/services/sta/types';
 

@@ -6,7 +6,7 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Notify } from 'quasar';
 
 /*

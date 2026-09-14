@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import type { QualityControlSettingUpdate } from '@/services/quality_control_setting/types';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import QcSettingForm from '@/components/QcSettingForm.vue';

@@ -5,7 +5,7 @@ import type {
   IngestExternalApiSensotoUpdate,
 } from '@/services/ingest_external_api_sensoto/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiSensotoStore = createIngestStore<
   IngestExternalApiSensotoPublic,

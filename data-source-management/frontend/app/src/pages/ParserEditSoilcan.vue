@@ -15,7 +15,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { SoilcanParserUpdate } from '@/services/parser_soilcan/types';
-import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
+import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import ParserFormSoilcan from '@/components/ParserFormSoilcan.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 

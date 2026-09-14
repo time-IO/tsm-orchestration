@@ -15,7 +15,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
-import { useCsvParserStore } from 'stores/parserCsvStore';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 

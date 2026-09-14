@@ -5,7 +5,7 @@ import type {
   IngestExternalApiDwdUpdate,
 } from '@/services/ingest_external_api_dwd/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiDwdStore = createIngestStore<
   IngestExternalApiDwdPublic,

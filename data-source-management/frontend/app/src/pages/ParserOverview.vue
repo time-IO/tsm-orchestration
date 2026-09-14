@@ -32,7 +32,7 @@ import { computed } from 'vue';
 import { useQuasar } from 'quasar';
 import ParserOverviewTable from '@/components/ParserOverviewTable.vue';
 import ParserOverviewFilter from '@/components/ParserOverviewFilter.vue';
-import { useParserDetailedStore } from 'stores/parserDetailedStore';
+import { useParserDetailedStore } from '@/stores/parserDetailedStore';
 
 const $q = useQuasar();
 

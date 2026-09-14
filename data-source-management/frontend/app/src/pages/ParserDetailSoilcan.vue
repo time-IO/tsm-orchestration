@@ -105,7 +105,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
+import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { computed, onMounted, ref } from 'vue';
 import type { SoilcanParserPublic } from '@/services/parser_soilcan/types';
 

@@ -95,7 +95,7 @@
 import { computed, onUnmounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { MqttLiveConnection } from '@/services/ingest_mqtt_client';
 import type { MqttLiveMessage } from '@/services/ingest_mqtt_client/types';
 

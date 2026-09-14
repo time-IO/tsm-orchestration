@@ -12,7 +12,7 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
+import { useIngestExternalApiNeutronMonitorStore } from '@/stores/ingestExternalApiNeutronMonitorStore';
 import type { IngestExternalApiNeutronMonitorCreate } from '@/services/ingest_external_api_neutron_monitor/types';
 import IngestFormExternalApiNm from '@/components/IngestFormExternalApiNm.vue';
 

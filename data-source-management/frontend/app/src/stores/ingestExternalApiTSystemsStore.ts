@@ -5,7 +5,7 @@ import type {
   IngestExternalApiTSystemsUpdate,
 } from '@/services/ingest_external_api_tsystems/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiTSystemsStore = createIngestStore<
   IngestExternalApiTSystemsPublic,

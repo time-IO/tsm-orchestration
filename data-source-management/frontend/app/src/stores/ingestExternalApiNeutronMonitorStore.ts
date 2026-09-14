@@ -5,7 +5,7 @@ import type {
   IngestExternalApiNeutronMonitorUpdate,
 } from '@/services/ingest_external_api_neutron_monitor/types';
 import { API } from '@/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiNeutronMonitorStore = createIngestStore<
   IngestExternalApiNeutronMonitorPublic,

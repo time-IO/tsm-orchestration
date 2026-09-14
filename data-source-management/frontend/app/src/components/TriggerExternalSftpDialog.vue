@@ -56,7 +56,7 @@
 import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerSyncExtSftpBase } from '@/services/trigger_external_sftp/types';
-import { useTriggerExternalSftpStore } from 'stores/externalSftpTriggerStore';
+import { useTriggerExternalSftpStore } from '@/stores/externalSftpTriggerStore';
 import { date, useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });

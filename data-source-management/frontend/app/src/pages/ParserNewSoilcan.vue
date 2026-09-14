@@ -12,7 +12,7 @@
 import { computed, ref } from 'vue';
 import ParserFormSoilcan from '@/components/ParserFormSoilcan.vue';
 import type { SoilcanParserCreate } from '@/services/parser_soilcan/types';
-import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
+import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';

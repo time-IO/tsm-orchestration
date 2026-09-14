@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
 import type { MqttParser } from '@/services/parser_mqtt/types';
-import { useMqttParserStore } from 'stores/parserMqttStore';
+import { useMqttParserStore } from '@/stores/parserMqttStore';
 import { useQuasar } from 'quasar';
 import { rules } from '@/utils/validation/rules';
 

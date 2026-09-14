@@ -15,7 +15,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { IngestSftpCreate } from '@/services/ingest_sftp/types';
-import { useIngestSftpStore } from 'stores/ingestSftpStore';
+import { useIngestSftpStore } from '@/stores/ingestSftpStore';
 import IngestFormSftp from '@/components/IngestFormSftp.vue';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import type { ParserRead } from '@/services/types';

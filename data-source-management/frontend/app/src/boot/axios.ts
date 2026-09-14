@@ -1,6 +1,6 @@
 import { defineBoot } from '#q-app';
 import axios, { type AxiosInstance } from 'axios';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 declare module 'vue' {
   interface ComponentCustomProperties {

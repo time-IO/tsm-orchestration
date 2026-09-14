@@ -6,7 +6,7 @@ import type {
   JsonParserUpdate,
 } from '@/services/parser_json/types';
 import { API } from '@/services';
-import { createParserStore } from 'stores/factoryParserStore';
+import { createParserStore } from '@/stores/factoryParserStore';
 
 export const useJsonParserStore = createParserStore<
   JsonParserPublic,

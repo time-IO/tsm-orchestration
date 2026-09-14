@@ -235,7 +235,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalSftpPublic } from '@/services/ingest_external_sftp/types';
-import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
+import { useIngestExternalSftpStore } from '@/stores/ingestExternalSftpStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
 import { API } from '@/services';
