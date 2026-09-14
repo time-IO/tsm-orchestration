@@ -51,7 +51,7 @@ black:
 prettier:
   stage: check
   needs: []
-  image: node:25
+  image: node:24
   before_script:
     - cd data-source-management/frontend/app
     - npm ci
@@ -70,7 +70,7 @@ prettier:
 npm-lint:
   stage: check
   needs: []
-  image: node:25
+  image: node:24
   before_script:
     - cd data-source-management/frontend/app
     - npm ci
@@ -89,7 +89,7 @@ npm-lint:
 npm-test:
   stage: check
   needs: []
-  image: node:25
+  image: node:24
   before_script:
     - cd data-source-management/frontend/app
     - npm ci
