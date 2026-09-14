@@ -167,7 +167,7 @@ defineEmits<{
   save: [];
 }>();
 const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBoschUpdate>({
-  default: ()=>({
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,

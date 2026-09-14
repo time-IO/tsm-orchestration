@@ -1,9 +1,6 @@
 import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type {
-  QTableRequestProp,
-  QTableRequestPropPagination,
-} from '@/services/types';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import { defaultPagination } from '@/utils/pagination_utils';
 import type { IngestWithApiInfoRead } from '@/services/ingest/types';
 
