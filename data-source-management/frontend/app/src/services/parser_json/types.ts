@@ -42,7 +42,7 @@ export type JsonParserCreate = {
 };
 
 export type JsonParserUpdate = {
-  name?: string;
+  name?: string | null;
   description?: string | null;
   comment?: string | null;
   timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
