@@ -19,8 +19,8 @@ export type IngestExternalApiSensotoPublic = {
 export type IngestExternalApiSensotoCreate = {
   permission_group_id: number | null;
   name: string;
-  network: string;
-  device: string;
+  network: string | null;
+  device: string | null;
   description: string | null;
   sync_enabled: boolean;
   sync_interval_in_minutes: number | null;
@@ -30,8 +30,8 @@ export type IngestExternalApiSensotoCreate = {
 export type IngestExternalApiSensotoUpdate = {
   permission_group_id?: number | null;
   name?: string;
-  network?: string;
-  device?: string;
+  network?: string | null;
+  device?: string | null;
   description?: string | null;
   sync_enabled?: boolean;
   sync_interval_in_minutes?: number | null;
