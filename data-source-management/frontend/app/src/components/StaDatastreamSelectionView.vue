@@ -48,7 +48,7 @@
 </template>
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue';
-import type { Datastream } from 'src/services/sta/types';
+import type { Datastream } from '@/services/sta/types';
 import StaDatastreamList from 'components/StaDatastreamList.vue';
 
 const props = defineProps<{

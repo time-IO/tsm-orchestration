@@ -90,13 +90,13 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
-import type { ParserSelectOption } from 'src/services/types';
+import type { ParserSelectOption } from '@/services/types';
 import { useQuasar } from 'quasar';
 import { useCsvParserStore } from 'stores/parserCsvStore';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
-import { rules } from 'src/utils/validation/rules';
+import { rules } from '@/utils/validation/rules';
 
 const csvParserStore = useCsvParserStore();
 const jsonParserStore = useJsonParserStore();

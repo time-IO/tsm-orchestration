@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
+import type { IngestExternalSftpCreate } from '@/services/ingest_external_sftp/types';
 import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
-import type { ParserRead } from 'src/services/types';
+import type { ParserRead } from '@/services/types';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();

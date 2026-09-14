@@ -1,12 +1,12 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type {
   ParserFilter,
   QTableRequestProp,
   QTableRequestPropPagination,
-} from 'src/services/types';
-import { defaultPagination } from 'src/utils/pagination_utils';
-import type { ParserDetailedRead } from 'src/services/parser_detailed/types';
+} from '@/services/types';
+import { defaultPagination } from '@/utils/pagination_utils';
+import type { ParserDetailedRead } from '@/services/parser_detailed/types';
 
 export const useParserDetailedStore = defineStore('parserDetailedStore', {
   state: () => ({

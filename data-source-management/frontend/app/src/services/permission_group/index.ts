@@ -1,6 +1,6 @@
 import { axiosInstance } from 'boot/axios';
-import type { PaginatedResponse } from 'src/services/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PaginatedResponse } from '@/services/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 const apiPath = 'permission-group/';
 

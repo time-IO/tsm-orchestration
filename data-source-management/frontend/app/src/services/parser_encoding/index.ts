@@ -1,5 +1,5 @@
 import { axiosInstance } from 'boot/axios';
-import type { ParserEncoding } from 'src/services/parser_encoding/types';
+import type { ParserEncoding } from '@/services/parser_encoding/types';
 
 const apiPath = 'parser_encoding/';
 

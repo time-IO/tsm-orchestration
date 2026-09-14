@@ -159,8 +159,8 @@
 import { computed, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar, format, exportFile } from 'quasar';
-import type { S3ObjectEntry } from 'src/services/ingest_sftp_storage/types';
-import type { IngestStorageService } from 'src/services/factoryIngestStorageService';
+import type { S3ObjectEntry } from '@/services/ingest_sftp_storage/types';
+import type { IngestStorageService } from '@/services/factoryIngestStorageService';
 
 const showDialog = defineModel<boolean>({ default: false });
 const { ingestId, service, bucketName } = defineProps<{

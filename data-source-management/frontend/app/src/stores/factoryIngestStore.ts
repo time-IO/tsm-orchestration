@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { markRaw } from 'vue';
-import { defaultPagination } from 'src/utils/pagination_utils';
+import { defaultPagination } from '@/utils/pagination_utils';
 import type {
   DefaultFilter,
   IngestApiService,
   QTableRequestProp,
   QTableRequestPropPagination,
-} from 'src/services/types';
+} from '@/services/types';
 
 export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
   storeId: string,

@@ -4,8 +4,8 @@ import type {
   JsonParserValidate,
   JsonParserPublic,
   JsonParserUpdate,
-} from 'src/services/parser_json/types';
-import { API } from 'src/services';
+} from '@/services/parser_json/types';
+import { API } from '@/services';
 import { createParserStore } from 'stores/factoryParserStore';
 
 export const useJsonParserStore = createParserStore<

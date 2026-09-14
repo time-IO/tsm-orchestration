@@ -163,7 +163,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestMqttPublic } from 'src/services/ingest_mqtt/types';
+import type { IngestMqttPublic } from '@/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import CopyBtn from 'components/CopyBtn.vue';
 import IngestToolsSection from 'components/IngestToolsSection.vue';

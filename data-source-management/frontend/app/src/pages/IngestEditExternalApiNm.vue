@@ -15,9 +15,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalApiNeutronMonitorStore';
-import type { IngestExternalApiNeutronMonitorUpdate } from 'src/services/ingest_external_api_neutron_monitor/types';
-import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestExternalApiNeutronMonitorUpdate } from '@/services/ingest_external_api_neutron_monitor/types';
+import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalApiNm from 'components/IngestFormExternalApiNm.vue';
 
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();

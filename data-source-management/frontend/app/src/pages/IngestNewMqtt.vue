@@ -13,7 +13,7 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestMqttCreate } from 'src/services/ingest_mqtt/types';
+import type { IngestMqttCreate } from '@/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import IngestFormMqtt from 'components/IngestFormMqtt.vue';
 

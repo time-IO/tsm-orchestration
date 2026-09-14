@@ -54,8 +54,8 @@
 <script setup lang="ts" generic="T extends ParserPayloadValidate">
 import { computed, ref, toRaw, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import type { ParserPayloadValidate, ParsingResult } from 'src/services/types';
-import { fileMetadataIsEqual } from 'src/utils/file_utils';
+import type { ParserPayloadValidate, ParsingResult } from '@/services/types';
+import { fileMetadataIsEqual } from '@/utils/file_utils';
 import ParserValidateFileInput from 'components/ParserValidateFileInput.vue';
 import ParserValidateBanner from 'components/ParserValidateBanner.vue';
 import ParserValidateResultTable from 'components/ParserValidateResultTable.vue';

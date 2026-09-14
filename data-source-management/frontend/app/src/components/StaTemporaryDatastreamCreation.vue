@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import StaThingSelection from 'components/StaThingSelection.vue';
 import { ref, computed } from 'vue';
-import type { StaEntity, Datastream, TemporaryDatastream } from 'src/services/sta/types';
+import type { StaEntity, Datastream, TemporaryDatastream } from '@/services/sta/types';
 
 const showDialog = defineModel<boolean>({ default: false });
 

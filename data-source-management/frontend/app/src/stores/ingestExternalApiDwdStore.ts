@@ -3,8 +3,8 @@ import type {
   IngestExternalApiDwdCreate,
   IngestExternalApiDwdPublic,
   IngestExternalApiDwdUpdate,
-} from 'src/services/ingest_external_api_dwd/types';
-import { API } from 'src/services';
+} from '@/services/ingest_external_api_dwd/types';
+import { API } from '@/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
 
 export const useIngestExternalApiDwdStore = createIngestStore<

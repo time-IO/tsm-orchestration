@@ -101,9 +101,9 @@ import { ref, watch } from 'vue';
 import ParserTypeSelect from 'components/ParserTypeSelect.vue';
 import ParserSelect from 'components/ParserSelect.vue';
 import { useRouter } from 'vue-router';
-import type { ParserRead, ParserSelectOption } from 'src/services/types';
+import type { ParserRead, ParserSelectOption } from '@/services/types';
 import BaseField from 'components/common/BaseField.vue';
-import { truncateText } from 'src/utils/string_utils';
+import { truncateText } from '@/utils/string_utils';
 
 const selectedParserId = defineModel<number | null | undefined>();
 const selectedParser = ref<ParserSelectOption | null>(null);

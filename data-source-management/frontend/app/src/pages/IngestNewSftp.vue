@@ -12,7 +12,7 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
+import type { IngestSftpCreate } from '@/services/ingest_sftp/types';
 import { useIngestSftpStore } from 'stores/ingestSftpStore';
 import IngestFormSftp from 'components/IngestFormSftp.vue';
 

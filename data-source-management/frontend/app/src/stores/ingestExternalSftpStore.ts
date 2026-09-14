@@ -3,8 +3,8 @@ import type {
   IngestExternalSftpCreate,
   IngestExternalSftpPublic,
   IngestExternalSftpUpdate,
-} from 'src/services/ingest_external_sftp/types';
-import { API } from 'src/services';
+} from '@/services/ingest_external_sftp/types';
+import { API } from '@/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
 
 export const useIngestExternalSftpStore = createIngestStore<

@@ -34,10 +34,10 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
+import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
 import { useQuasar } from 'quasar';
 import { useNeutronMonitorStationStore } from 'stores/neutronMonitorStationStore';
-import { rules } from 'src/utils/validation/rules';
+import { rules } from '@/utils/validation/rules';
 
 const neutronMonitorStationStore = useNeutronMonitorStationStore();
 

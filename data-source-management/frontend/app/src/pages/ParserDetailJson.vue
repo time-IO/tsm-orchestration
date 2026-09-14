@@ -160,7 +160,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useJsonParserStore } from 'stores/parserJsonStore';
-import type { JsonParserPublic } from 'src/services/parser_json/types';
+import type { JsonParserPublic } from '@/services/parser_json/types';
 import ParserValidateJson from 'components/ParserValidateJson.vue';
 
 const $q = useQuasar();

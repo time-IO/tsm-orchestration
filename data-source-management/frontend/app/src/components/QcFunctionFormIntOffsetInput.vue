@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
 
 defineProps<{

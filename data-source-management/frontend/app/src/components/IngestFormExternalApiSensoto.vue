@@ -108,8 +108,8 @@ import type {
   IngestExternalApiSensotoCreate,
   IngestExternalApiSensotoUpdate,
 } from '../services/ingest_external_api_sensoto/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;

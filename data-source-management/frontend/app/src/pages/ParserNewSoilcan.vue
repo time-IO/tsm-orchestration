@@ -11,11 +11,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import ParserFormSoilcan from 'components/ParserFormSoilcan.vue';
-import type { SoilcanParserCreate } from 'src/services/parser_soilcan/types';
+import type { SoilcanParserCreate } from '@/services/parser_soilcan/types';
 import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const soilcanParserStore = useSoilcanParserStore();
 const $q = useQuasar();

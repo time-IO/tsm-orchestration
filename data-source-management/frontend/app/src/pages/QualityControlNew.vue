@@ -10,12 +10,12 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import type { QualityControlSettingCreate } from 'src/services/quality_control_setting/types';
+import type { QualityControlSettingCreate } from '@/services/quality_control_setting/types';
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import QcSettingForm from 'components/QcSettingForm.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();
 const $q = useQuasar();

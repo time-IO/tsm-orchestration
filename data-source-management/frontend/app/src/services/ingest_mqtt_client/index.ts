@@ -1,4 +1,4 @@
-import type { MqttLiveHandlers } from 'src/services/ingest_mqtt_client/types';
+import type { MqttLiveHandlers } from '@/services/ingest_mqtt_client/types';
 
 type ServerFrame = {
   type?: string;

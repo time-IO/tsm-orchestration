@@ -3,8 +3,8 @@ import type {
   IngestMqttCreate,
   IngestMqttPublic,
   IngestMqttUpdate,
-} from 'src/services/ingest_mqtt/types';
-import { API } from 'src/services';
+} from '@/services/ingest_mqtt/types';
+import { API } from '@/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
 
 export const useIngestMqttStore = createIngestStore<

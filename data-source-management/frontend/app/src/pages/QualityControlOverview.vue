@@ -215,7 +215,7 @@ import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore
 import type { QTableColumn } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
 import TriggerQualityControlSettingsDialog from 'components/TriggerQualityControlSettingsDialog.vue';
-import type { QualityControlSettingPublic } from 'src/services/quality_control_setting/types';
+import type { QualityControlSettingPublic } from '@/services/quality_control_setting/types';
 import { useQuasar } from 'quasar';
 import QcSettingOverviewFilter from 'components/QCSettingOverviewFilter.vue';
 

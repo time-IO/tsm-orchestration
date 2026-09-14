@@ -84,12 +84,12 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestSftpCreate, IngestSftpUpdate } from '@/services/ingest_sftp/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 import ParserSelectByType from 'components/ParserSelectByType.vue';
-import type { ParserRead } from 'src/services/types';
+import type { ParserRead } from '@/services/types';
 
 defineProps<{
   title: string;

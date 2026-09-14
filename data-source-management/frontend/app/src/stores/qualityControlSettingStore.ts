@@ -3,8 +3,8 @@ import type {
   QualityControlSettingCreate,
   QualityControlSettingPublic,
   QualityControlSettingUpdate,
-} from 'src/services/quality_control_setting/types';
-import { API } from 'src/services';
+} from '@/services/quality_control_setting/types';
+import { API } from '@/services';
 import { createIngestStore } from 'stores/factoryIngestStore';
 
 export const useQualityControlSettingStore = createIngestStore<

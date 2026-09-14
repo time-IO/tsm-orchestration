@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import DateTimePicker from 'components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
-import type { TriggerQCSBase } from 'src/services/quality_control_settings_trigger/types';
+import type { TriggerQCSBase } from '@/services/quality_control_settings_trigger/types';
 import { useTriggerQCSStore } from 'stores/qualityControlSettingsTriggerStore';
 import { date, useQuasar } from 'quasar';
 

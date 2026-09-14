@@ -174,8 +174,8 @@
 </template>
 
 <script setup lang="ts">
-import { default_parser_columns, generateParserPath } from 'src/utils/pagination_utils';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
+import { default_parser_columns, generateParserPath } from '@/utils/pagination_utils';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import { computed, onMounted, ref } from 'vue';
 import { copyToClipboard, useQuasar } from 'quasar';
 

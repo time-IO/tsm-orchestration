@@ -13,9 +13,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalApiSensotoUpdate } from 'src/services/ingest_external_api_sensoto/types';
+import type { IngestExternalApiSensotoUpdate } from '@/services/ingest_external_api_sensoto/types';
 import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
 
 // Composition API

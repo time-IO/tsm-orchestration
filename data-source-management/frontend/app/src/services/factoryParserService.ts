@@ -1,13 +1,13 @@
 import { axiosInstance } from 'boot/axios';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+import { createIngestApiService } from '@/services/factoryIngestService';
 import type {
   ParserPayloadCreate,
   ParserPayloadPublic,
   ParserPayloadUpdate,
   ParsingResult,
-} from 'src/services/types';
+} from '@/services/types';
 import type { AxiosError } from 'axios';
-import { getErrorTextByAxiosError } from 'src/utils/axios_utils';
+import { getErrorTextByAxiosError } from '@/utils/axios_utils';
 
 export function createParserApiService<
   TPublic extends ParserPayloadPublic,

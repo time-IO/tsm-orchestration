@@ -13,7 +13,7 @@ import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
-import type { IngestExternalApiBoschCreate } from 'src/services/ingest_external_api_bosch/types';
+import type { IngestExternalApiBoschCreate } from '@/services/ingest_external_api_bosch/types';
 import IngestFormExternalApiBosch from 'components/IngestFormExternalApiBosch.vue';
 
 const boschStore = useIngestExternalApiBoschStore();

@@ -11,13 +11,13 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import type { QualityControlSettingCreate } from 'src/services/quality_control_setting/types';
+import type { QualityControlSettingCreate } from '@/services/quality_control_setting/types';
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import QcSettingForm from 'components/QcSettingForm.vue';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();
 const $q = useQuasar();

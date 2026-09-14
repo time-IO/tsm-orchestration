@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { JsonParserUpdate } from 'src/services/parser_json/types';
+import type { JsonParserUpdate } from '@/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
 import ParserFormJson from 'components/ParserFormJson.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
-import type { JsonParserFormData } from 'src/services/parser_json/formTypes';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
+import type { JsonParserFormData } from '@/services/parser_json/formTypes';
 
 const jsonParserStore = useJsonParserStore();
 const $q = useQuasar();

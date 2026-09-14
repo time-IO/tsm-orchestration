@@ -246,13 +246,13 @@
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
+import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
 import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 import ParserValidateCsv from 'components/ParserValidateCsv.vue';
 import { QForm } from 'quasar';
-import { toNullableNumber } from 'src/utils/string_utils';
+import { toNullableNumber } from '@/utils/string_utils';
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;

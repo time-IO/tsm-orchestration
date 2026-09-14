@@ -12,7 +12,7 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestExternalApiTSystemsCreate } from 'src/services/ingest_external_api_tsystems/types';
+import type { IngestExternalApiTSystemsCreate } from '@/services/ingest_external_api_tsystems/types';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
 

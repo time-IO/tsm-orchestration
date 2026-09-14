@@ -13,9 +13,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestExternalApiTSystemsCreate } from 'src/services/ingest_external_api_tsystems/types';
+import type { IngestExternalApiTSystemsCreate } from '@/services/ingest_external_api_tsystems/types';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
