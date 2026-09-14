@@ -1,7 +1,6 @@
 import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type {
-  ParserFilter,
   QTableRequestProp,
   QTableRequestPropPagination,
 } from '@/services/types';

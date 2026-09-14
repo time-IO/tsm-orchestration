@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import { markRaw } from 'vue';
 import { defaultPagination } from '@/utils/pagination_utils';
 import type {
-  DefaultFilter,
   IngestApiService,
   QTableRequestProp,
   QTableRequestPropPagination,
