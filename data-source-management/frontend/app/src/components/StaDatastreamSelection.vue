@@ -58,8 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import StaThingSelection from 'components/StaThingSelection.vue';
-import StaDatastreamSearchTable from 'components/StaDatastreamSearchTable.vue';
+import StaThingSelection from '@/components/StaThingSelection.vue';
+import StaDatastreamSearchTable from '@/components/StaDatastreamSearchTable.vue';
 import { computed, ref, onMounted, watch } from 'vue';
 import type {
   QuasarPaginationInterface,
@@ -69,7 +69,7 @@ import type {
 } from '@/services/sta/types';
 import { debounce, useQuasar } from 'quasar';
 import { useStaStore } from 'stores/staStore';
-import StaDatastreamCard from 'components/StaDatastreamCard.vue';
+import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
 import type { Datastream } from '@/services/sta/types';
 
 import type { AxiosError } from 'axios';

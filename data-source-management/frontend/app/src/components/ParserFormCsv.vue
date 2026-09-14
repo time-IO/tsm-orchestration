@@ -245,12 +245,12 @@
 
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
-import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
-import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import ParserEncodingSelect from '@/components/ParserEncodingSelect.vue';
+import ParserTimezoneSelect from '@/components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import ParserValidateCsv from 'components/ParserValidateCsv.vue';
+import ParserValidateCsv from '@/components/ParserValidateCsv.vue';
 import { QForm } from 'quasar';
 import { toNullableNumber } from '@/utils/string_utils';
 

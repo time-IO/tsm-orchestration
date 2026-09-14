@@ -16,7 +16,7 @@ import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import type { JsonParserUpdate } from '@/services/parser_json/types';
 import { useJsonParserStore } from 'stores/parserJsonStore';
-import ParserFormJson from 'components/ParserFormJson.vue';
+import ParserFormJson from '@/components/ParserFormJson.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 import type { JsonParserFormData } from '@/services/parser_json/formTypes';
 

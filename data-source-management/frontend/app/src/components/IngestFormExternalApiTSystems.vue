@@ -135,13 +135,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiTSystemsCreate,
   IngestExternalApiTSystemsUpdate,
 } from '@/services/ingest_external_api_tsystems/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
+import HelpButton from '@/components/HelpButton.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{

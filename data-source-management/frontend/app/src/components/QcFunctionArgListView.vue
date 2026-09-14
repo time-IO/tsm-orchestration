@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { isDatastreamType } from '@/utils/quality_control_utils';
-import StaDatastreamCard from 'components/StaDatastreamCard.vue';
+import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionPublic,

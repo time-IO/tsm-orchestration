@@ -15,7 +15,7 @@ import type { QualityControlSettingUpdate } from '@/services/quality_control_set
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import QcSettingForm from 'components/QcSettingForm.vue';
+import QcSettingForm from '@/components/QcSettingForm.vue';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 

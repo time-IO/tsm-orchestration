@@ -71,9 +71,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Datastream, TemporaryDatastream } from '@/services/sta/types';
-import StaDatastreamSelection from 'components/StaDatastreamSelection.vue';
-import StaDatastreamCard from 'components/StaDatastreamCard.vue';
-import StaTemporaryDatastreamCreation from 'components/StaTemporaryDatastreamCreation.vue';
+import StaDatastreamSelection from '@/components/StaDatastreamSelection.vue';
+import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
+import StaTemporaryDatastreamCreation from '@/components/StaTemporaryDatastreamCreation.vue';
 
 const selectedDatastreams = defineModel<Datastream[]>({ default: [] });
 

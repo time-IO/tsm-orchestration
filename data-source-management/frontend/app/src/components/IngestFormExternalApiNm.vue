@@ -104,15 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import NeutronMonitorStationSelect from 'components/NeutronMonitorStationSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import NeutronMonitorStationSelect from '@/components/NeutronMonitorStationSelect.vue';
 import type {
   IngestExternalApiNeutronMonitorCreate,
   IngestExternalApiNeutronMonitorUpdate,
 } from '@/services/ingest_external_api_neutron_monitor/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
-import HelpButton from 'components/HelpButton.vue';
+import HelpButton from '@/components/HelpButton.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{

@@ -16,7 +16,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
 import type { IngestExternalApiBoschCreate } from '@/services/ingest_external_api_bosch/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import IngestFormExternalApiBosch from 'components/IngestFormExternalApiBosch.vue';
+import IngestFormExternalApiBosch from '@/components/IngestFormExternalApiBosch.vue';
 
 const boschStore = useIngestExternalApiBoschStore();
 const $q = useQuasar();

@@ -14,7 +14,7 @@ import type { IngestExternalApiDwdCreate } from '@/services/ingest_external_api_
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
+import IngestFormExternalApiDwd from '@/components/IngestFormExternalApiDwd.vue';
 
 const dwdStore = useIngestExternalApiDwdStore();
 const $q = useQuasar();

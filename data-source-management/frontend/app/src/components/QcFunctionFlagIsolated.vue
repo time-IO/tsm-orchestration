@@ -75,10 +75,10 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
+import StaDatastreamInput from '@/components/StaDatastreamInput.vue';
+import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vue';
 import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
+import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';

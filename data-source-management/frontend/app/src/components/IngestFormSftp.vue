@@ -83,12 +83,12 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type { IngestSftpCreate, IngestSftpUpdate } from '@/services/ingest_sftp/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
+import HelpButton from '@/components/HelpButton.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import ParserSelectByType from 'components/ParserSelectByType.vue';
+import ParserSelectByType from '@/components/ParserSelectByType.vue';
 import type { ParserRead } from '@/services/types';
 
 defineProps<{

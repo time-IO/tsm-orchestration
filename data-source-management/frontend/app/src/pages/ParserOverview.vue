@@ -28,10 +28,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-// import IngestOverviewFilter from 'components/IngestOverviewFilter.vue';
+// import IngestOverviewFilter from '@/components/IngestOverviewFilter.vue';
 import { useQuasar } from 'quasar';
-import ParserOverviewTable from 'components/ParserOverviewTable.vue';
-import ParserOverviewFilter from 'components/ParserOverviewFilter.vue';
+import ParserOverviewTable from '@/components/ParserOverviewTable.vue';
+import ParserOverviewFilter from '@/components/ParserOverviewFilter.vue';
 import { useParserDetailedStore } from 'stores/parserDetailedStore';
 
 const $q = useQuasar();

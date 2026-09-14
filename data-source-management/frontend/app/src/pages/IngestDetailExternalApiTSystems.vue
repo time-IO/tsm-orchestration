@@ -167,8 +167,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import type { IngestExternalApiTSystemsPublic } from '@/services/ingest_external_api_tsystems/types';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

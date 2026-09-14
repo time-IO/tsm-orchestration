@@ -18,7 +18,7 @@ import { useIngestExternalApiNeutronMonitorStore } from 'stores/ingestExternalAp
 import type { IngestExternalApiNeutronMonitorCreate } from '@/services/ingest_external_api_neutron_monitor/types';
 import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import IngestFormExternalApiNm from 'components/IngestFormExternalApiNm.vue';
+import IngestFormExternalApiNm from '@/components/IngestFormExternalApiNm.vue';
 
 const ingestExternalApiNeutronMonitorStore = useIngestExternalApiNeutronMonitorStore();
 const $q = useQuasar();

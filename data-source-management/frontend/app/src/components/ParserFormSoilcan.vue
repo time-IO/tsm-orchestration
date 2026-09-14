@@ -79,7 +79,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SoilcanParserUpdate } from '@/services/parser_soilcan/types';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 
 type SoilcanParserFormData = SoilcanParserUpdate & {
   permission_group_id?: number | null;

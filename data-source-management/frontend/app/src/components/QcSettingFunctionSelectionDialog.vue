@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import type { FunctionOption } from '@/utils/quality_control_utils';
-import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
+import SaqcInfoIcon from '@/components/SaqcInfoIcon.vue';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 

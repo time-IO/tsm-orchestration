@@ -183,11 +183,11 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import { QForm } from 'quasar';
-import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
-import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
-import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
+import QcFunctionArgListView from '@/components/QcFunctionArgListView.vue';
+import QcSettingFunctionSelectionDialog from '@/components/QcSettingFunctionSelectionDialog.vue';
+import StaDatastreamSelectionDialog from '@/components/StaDatastreamSelection.vue';
 import { computed, type Ref, ref } from 'vue';
 import type {
   QualityControlFunctionCreate,

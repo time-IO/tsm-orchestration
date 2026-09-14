@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import DateTimePicker from 'components/DateTimePicker.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerSyncExtApiBase } from '@/services/trigger_external_api_generic/types';
 import { useTriggerExternalGenericApiStore } from 'stores/externalApiTriggerStore';

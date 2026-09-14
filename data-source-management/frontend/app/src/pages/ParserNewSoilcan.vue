@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import ParserFormSoilcan from 'components/ParserFormSoilcan.vue';
+import ParserFormSoilcan from '@/components/ParserFormSoilcan.vue';
 import type { SoilcanParserCreate } from '@/services/parser_soilcan/types';
 import { useSoilcanParserStore } from 'stores/parserSoilcanStore';
 import { useQuasar } from 'quasar';

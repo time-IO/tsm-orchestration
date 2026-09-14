@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import type { CsvParserValidate, CsvParserUpdate } from '@/services/parser_csv/types';
 import { useCsvParserStore } from 'stores/parserCsvStore';
-import ParserValidateDrawer from 'components/ParserValidateDrawer.vue';
+import ParserValidateDrawer from '@/components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
 import { computed, toRaw } from 'vue';
 

@@ -42,11 +42,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import IngestOverviewExternalApiTable from 'components/IngestOverviewExternalApiTable.vue';
+import IngestOverviewExternalApiTable from '@/components/IngestOverviewExternalApiTable.vue';
 import { useIngestExternalApiStore } from 'stores/ingestExternalApiStore';
 import type { IngestExternalApiRead } from '@/services/ingest_external_api/types';
-import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
-import IngestOverviewExternalApiFilter from 'components/IngestOverviewExternalApiFilter.vue';
+import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
+import IngestOverviewExternalApiFilter from '@/components/IngestOverviewExternalApiFilter.vue';
 import { default_ingest_external_api_columns } from '@/utils/pagination_utils';
 
 const store = useIngestExternalApiStore();

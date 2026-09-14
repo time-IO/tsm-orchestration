@@ -16,7 +16,7 @@ import { useQuasar } from 'quasar';
 import type { IngestExternalApiSensotoCreate } from '@/services/ingest_external_api_sensoto/types';
 import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
+import IngestFormExternalApiSensoto from '@/components/IngestFormExternalApiSensoto.vue';
 
 // Composition API
 const $q = useQuasar();

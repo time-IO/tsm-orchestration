@@ -13,7 +13,7 @@ import QcFunctionRenameField from '@/components/QcFunctionRenameField.vue';
 import QcFunctionRolling from '@/components/QcFunctionRolling.vue';
 import QcFunctionTransferFlags from '@/components/QcFunctionTransferFlags.vue';
 import QcFunctionProcessGeneric from '@/components/QCFunctionProcessGeneric.vue';
-import QCFunctionFlagGeneric from 'components/QCFunctionFlagGeneric.vue';
+import QCFunctionFlagGeneric from '@/components/QCFunctionFlagGeneric.vue';
 
 export type QcFunctionName =
   | 'flagPlateau'

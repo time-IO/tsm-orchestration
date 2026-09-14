@@ -14,7 +14,7 @@ import type { QualityControlSettingCreate } from '@/services/quality_control_set
 import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import QcSettingForm from 'components/QcSettingForm.vue';
+import QcSettingForm from '@/components/QcSettingForm.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();

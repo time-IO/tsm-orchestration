@@ -146,14 +146,14 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiBoschCreate,
   IngestExternalApiBoschUpdate,
 } from '@/services/ingest_external_api_bosch/types';
 import { ref } from 'vue';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
+import HelpButton from '@/components/HelpButton.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{

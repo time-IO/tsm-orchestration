@@ -16,7 +16,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalApiTSystemsUpdate } from '@/services/ingest_external_api_tsystems/types';
 import { useIngestExternalApiTSystemsStore } from 'stores/ingestExternalApiTSystemsStore';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import IngestFormExternalApiTSystems from 'components/IngestFormExternalApiTSystems.vue';
+import IngestFormExternalApiTSystems from '@/components/IngestFormExternalApiTSystems.vue';
 
 const tsystemsStore = useIngestExternalApiTSystemsStore();
 const $q = useQuasar();

@@ -17,7 +17,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { IngestMqttUpdate } from '@/services/ingest_mqtt/types';
 import { useIngestMqttStore } from 'stores/ingestMqttStore';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import IngestFormMqtt from 'components/IngestFormMqtt.vue';
+import IngestFormMqtt from '@/components/IngestFormMqtt.vue';
 
 const mqttStore = useIngestMqttStore();
 const $q = useQuasar();

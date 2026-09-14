@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiSensotoCreate,
   IngestExternalApiSensotoUpdate,

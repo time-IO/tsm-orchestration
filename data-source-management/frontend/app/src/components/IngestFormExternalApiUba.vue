@@ -112,9 +112,9 @@ import type {
   IngestExternalApiUbaCreate,
   IngestExternalApiUbaUpdate,
 } from '@/services/ingest_external_api_uba/types';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
+import HelpButton from '@/components/HelpButton.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{

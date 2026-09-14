@@ -14,7 +14,7 @@ import type { IngestExternalApiSensotoCreate } from '@/services/ingest_external_
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
-import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
+import IngestFormExternalApiSensoto from '@/components/IngestFormExternalApiSensoto.vue';
 
 const sensStore = useIngestExternalApiSensotoStore();
 const $q = useQuasar();

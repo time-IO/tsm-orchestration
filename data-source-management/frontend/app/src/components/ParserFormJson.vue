@@ -206,11 +206,11 @@
 
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type { JsonParserCreate, JsonParserUpdate } from '@/services/parser_json/types.ts';
-import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
+import ParserTimezoneSelect from '@/components/ParserTimezoneSelect.vue';
 import { rules } from '@/utils/validation/rules';
-import ParserValidateJson from 'components/ParserValidateJson.vue';
+import ParserValidateJson from '@/components/ParserValidateJson.vue';
 import { QForm } from 'quasar';
 
 type JsonParserFormData = JsonParserUpdate & {
