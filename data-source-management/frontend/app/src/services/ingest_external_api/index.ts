@@ -3,7 +3,7 @@ import type {
   PaginatedResponse,
   QTableRequestPropPagination,
 } from '@/services/types';
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { IngestExternalApiRead } from '@/services/ingest_external_api/types';
 
 const apiPath = 'ingest/external-api/';

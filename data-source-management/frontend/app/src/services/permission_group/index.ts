@@ -1,4 +1,4 @@
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { PaginatedResponse } from '@/services/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 

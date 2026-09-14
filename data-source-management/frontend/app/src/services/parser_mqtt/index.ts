@@ -1,4 +1,4 @@
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { MqttParser } from '@/services/parser_mqtt/types';
 import type { PaginatedResponse } from '@/services/types';
 

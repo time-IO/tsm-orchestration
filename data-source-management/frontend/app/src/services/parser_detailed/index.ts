@@ -3,7 +3,7 @@ import type {
   ParserFilter,
   QTableRequestPropPagination,
 } from '@/services/types';
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { ParserDetailedRead } from '@/services/parser_detailed/types';
 
 const apiPath = 'parser-detailed/';

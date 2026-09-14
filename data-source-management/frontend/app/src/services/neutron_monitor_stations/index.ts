@@ -1,4 +1,4 @@
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 
 import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
 import type { PaginatedResponse } from '@/services/types';

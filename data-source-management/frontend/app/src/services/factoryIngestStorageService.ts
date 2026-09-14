@@ -1,5 +1,5 @@
 import type { S3ObjectEntry } from '@/services/ingest_sftp_storage/types';
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 
 export function createIngestStorageService(apiPath: string) {
   async function listFiles(id: number, prefix = '') {
