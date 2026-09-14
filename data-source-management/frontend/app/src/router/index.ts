@@ -36,7 +36,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   });
 
   // Global navigation guard
-  Router.beforeEach(async (to, from, next) => {
+  Router.beforeEach(async (to) => {
     const authStore = useAuthStore();
 
     if (!authStore.user) {
@@ -51,9 +51,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
         message: 'Authentication required! Please login.',
       });
 
-      next('/');
-    } else {
-      next();
+      return '/';
     }
   });
 
