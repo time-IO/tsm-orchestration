@@ -62,7 +62,7 @@ export default defineConfig((ctx) => {
 
       publicPath: ENV_BASE_URL,
       // analyze: true,
-      env: {
+      defineEnv: {
         API_BASE_URL: ENV_API_BASE_URL,
         OIDC_IDP_URL: ENV_OIDC_IDP_URL,
         OIDC_CLIENT_ID: ENV_OIDC_CLIENT_ID,
