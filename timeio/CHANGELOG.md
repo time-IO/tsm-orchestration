@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-09-14
+
+- Use the `Recreate` deployment strategy for Frost so its single
+  ReadWriteOnce context volume is released before a replacement pod starts.
+
 ## [0.6.6] - 2026-09-14
 
 - Preserved the trailing newline in the generated Mosquitto TLS configuration,

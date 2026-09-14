@@ -31,6 +31,10 @@ metadata:
     app: {{ .Values.name }}
 spec:
   replicas: 1
+  # Frost's context volume is ReadWriteOnce. Recreate prevents a rolling update
+  # from scheduling a replacement while the old pod still holds that volume.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ .Values.name }}
