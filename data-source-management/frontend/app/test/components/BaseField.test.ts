@@ -2,7 +2,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 
-import BaseField from "@/components/common/BaseField.vue";
+import BaseField from '@/components/common/BaseField.vue';
 
 installQuasarPlugin();
 

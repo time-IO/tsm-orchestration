@@ -6,9 +6,7 @@ export default defineConfig(async () =>
     test: {
       environment: 'happy-dom',
       setupFiles: 'test/setup-file.ts',
-      include: [
-        'test/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      ],
+      include: ['test/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     },
   }),
 );
