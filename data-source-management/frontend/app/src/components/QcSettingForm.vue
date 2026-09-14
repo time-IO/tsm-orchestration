@@ -207,14 +207,14 @@ import { FUNCTIONS_WITH_REQUIRED_TARGET } from '@/utils/quality_control_utils';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
-  default: {
+  default: () => ({
     name: null,
     context_window: null,
     is_active: true,
     description: null,
     permission_group_id: null,
     quality_control_functions: [],
-  },
+  }),
 });
 
 defineProps<{

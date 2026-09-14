@@ -104,13 +104,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestSftpCreate | IngestSftpUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
     parser_id: null,
     filename_pattern: null,
-  },
+  }),
 });
 </script>
 

@@ -90,12 +90,12 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestMqttCreate | IngestMqttUpdate>({
-  default: {
+  default: () => ({
     name: null,
     permission_group_id: null,
     description: null,
     parser_id: null,
-  },
+  }),
 });
 
 const usernameModel = computed({

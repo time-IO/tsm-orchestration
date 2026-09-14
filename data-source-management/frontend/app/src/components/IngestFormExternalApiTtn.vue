@@ -138,7 +138,7 @@ defineEmits<{
 const formData = defineModel<
   IngestExternalApiTheThingsNetworkCreate | IngestExternalApiTheThingsNetworkUpdate
 >({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -146,7 +146,7 @@ const formData = defineModel<
     sync_interval_in_minutes: null,
     endpoint_uri: null,
     api_key: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

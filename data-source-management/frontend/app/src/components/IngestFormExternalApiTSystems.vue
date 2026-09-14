@@ -156,7 +156,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApiTSystemsUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -166,7 +166,7 @@ const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApi
     station_id: null,
     tsystems_username: null,
     tsystems_password: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

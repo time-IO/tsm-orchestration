@@ -237,7 +237,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<JsonParserFormData>({
-  default: {
+  default: () => ({
     name: null,
     permission_group_id: null,
     description: null,
@@ -246,7 +246,7 @@ const formData = defineModel<JsonParserFormData>({
     measurement_key: null,
     excluded_keys: [],
     timezone: null,
-  },
+  }),
 });
 
 const FORM_REF_NAME = 'formRef';

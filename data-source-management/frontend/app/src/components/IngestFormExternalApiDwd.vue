@@ -138,7 +138,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: '',
@@ -146,7 +146,7 @@ const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUp
     sync_enabled: false,
     sync_interval_in_minutes: null,
     period_in_minutes: null,
-  },
+  }),
 });
 
 function openDwdDocs() {

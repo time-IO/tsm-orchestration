@@ -167,7 +167,7 @@ defineEmits<{
   save: [];
 }>();
 const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBoschUpdate>({
-  default: {
+  default: ()=>({
     name: '',
     permission_group_id: null,
     description: null,
@@ -178,7 +178,7 @@ const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBos
     bosch_username: null,
     bosch_password: null,
     period_in_minutes: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

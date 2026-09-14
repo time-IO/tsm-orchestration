@@ -205,7 +205,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
@@ -217,7 +217,7 @@ const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate
     username: null,
     sync_enabled: false,
     sync_interval_in_minutes: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

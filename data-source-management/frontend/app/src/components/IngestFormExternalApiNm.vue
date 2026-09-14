@@ -130,7 +130,7 @@ defineEmits<{
 const formData = defineModel<
   IngestExternalApiNeutronMonitorCreate | IngestExternalApiNeutronMonitorUpdate
 >({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -138,7 +138,7 @@ const formData = defineModel<
     sync_enabled: false,
     sync_interval_in_minutes: null,
     time_resolution_in_minutes: null,
-  },
+  }),
 });
 
 const timeResolutionOptions = [

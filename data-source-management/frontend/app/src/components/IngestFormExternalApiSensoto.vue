@@ -123,7 +123,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiSensotoUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -131,7 +131,7 @@ const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiS
     device: null,
     sync_enabled: false,
     sync_interval_in_minutes: null,
-  },
+  }),
 });
 </script>
 

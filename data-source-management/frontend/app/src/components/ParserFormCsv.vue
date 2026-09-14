@@ -279,7 +279,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<CsvParserFormData>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
@@ -292,7 +292,7 @@ const formData = defineModel<CsvParserFormData>({
     header: null,
     timezone: null,
     encoding: null,
-  },
+  }),
 });
 
 const FORM_REF_NAME = 'formRef';

@@ -103,13 +103,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<SoilcanParserFormData>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
     type: '',
     header: false,
-  },
+  }),
 });
 
 const permissionGroupModel = computed({

@@ -129,13 +129,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiUbaCreate | IngestExternalApiUbaUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: '',
     station_id: null,
     sync_enabled: false,
-  },
+  }),
 });
 
 function openUbaDocs() {
