@@ -129,6 +129,7 @@ pytest-scripts:
   image: python:3.13
   before_script:
     - pip install pytest
+    - pip install -r scripts/bin/requirements.txt
   script:
     - python3 -m pytest scripts/tests
   rules:
@@ -195,7 +196,7 @@ check-changelog:
   stage: check
   image: python:3.11-bullseye
   script:
-    - pip install requests
+    - pip install -r scripts/bin/requirements.txt
     - python -m scripts.bin.parse_changelog --file CHANGELOG.md # check whether changelog syntax is valid
     - set +e # don't cancel the job on any non-zero code
     - scripts/bin/compare_changelog_with_main.sh || EXIT_CODE=$? # check whether changelog entry was made
