@@ -23,7 +23,7 @@ export function createIngestStore<TPublic, TPayloadCreate, TPayloadUpdate>(
         date_from: undefined,
         date_to: undefined,
         functions: undefined,
-      } as DefaultFilter,
+      },
       loading: false,
     }),
     actions: {

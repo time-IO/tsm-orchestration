@@ -19,7 +19,7 @@ export const useParserDetailedStore = defineStore('parserDetailedStore', {
       permission_group_id: undefined,
       date_from: undefined,
       date_to: undefined,
-    } as ParserFilter,
+    },
     loading: false,
   }),
 

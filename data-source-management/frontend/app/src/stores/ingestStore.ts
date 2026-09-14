@@ -19,7 +19,7 @@ export const useIngestStore = defineStore('ingestStore', {
       permission_group_id: undefined,
       date_from: undefined,
       date_to: undefined,
-    } as IngestFilter,
+    },
     loading: false,
   }),
 

@@ -192,18 +192,18 @@ const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  n: 20 as number,
-  thresh: 'auto' as string | number,
-  probability: null as number | null,
-  corruption: null as number | null,
+  n: 20,
+  thresh: 'auto',
+  probability: null,
+  corruption: null,
   algorithm: 'ball_tree',
-  p: 1 as number,
-  density: 'auto' as string | number,
+  p: 1,
+  density: 'auto',
   fill_na: true,
   slope_correct: true,
-  min_offset: null as number | null,
+  min_offset: null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {
