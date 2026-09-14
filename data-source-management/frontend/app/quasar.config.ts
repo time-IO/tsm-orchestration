@@ -4,14 +4,14 @@
 import { defineConfig } from '#q-app';
 import { fileURLToPath } from 'node:url';
 
-const ENV_API_BASE_URL = process.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER';
-const ENV_OIDC_IDP_URL = process.env.OIDC_IDP_URL || 'ENV_OIDC_IDP_URL_PLACEHOLDER';
-const ENV_OIDC_CLIENT_ID = process.env.OIDC_CLIENT_ID || 'ENV_OIDC_CLIENT_ID_PLACEHOLDER';
-const ENV_OIDC_REDIRECT_URI = process.env.OIDC_REDIRECT_URI || 'ENV_OIDC_REDIRECT_URI_PLACEHOLDER';
-const ENV_OIDC_SCOPE = process.env.OIDC_SCOPE || 'ENV_OIDC_SCOPE_PLACEHOLDER';
+const ENV_API_BASE_URL = import.meta.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER';
+const ENV_OIDC_IDP_URL = import.meta.env.OIDC_IDP_URL || 'ENV_OIDC_IDP_URL_PLACEHOLDER';
+const ENV_OIDC_CLIENT_ID = import.meta.env.OIDC_CLIENT_ID || 'ENV_OIDC_CLIENT_ID_PLACEHOLDER';
+const ENV_OIDC_REDIRECT_URI = import.meta.env.OIDC_REDIRECT_URI || 'ENV_OIDC_REDIRECT_URI_PLACEHOLDER';
+const ENV_OIDC_SCOPE = import.meta.env.OIDC_SCOPE || 'ENV_OIDC_SCOPE_PLACEHOLDER';
 const ENV_OIDC_POST_LOGOUT_REDIRECT_URI =
-  process.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER';
-const ENV_BASE_URL = process.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER';
+  import.meta.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER';
+const ENV_BASE_URL = import.meta.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER';
 
 export default defineConfig((ctx) => {
   return {
@@ -165,7 +165,7 @@ export default defineConfig((ctx) => {
     // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
     ssr: {
       prodPort: 3000, // The default port that the production server should use
-      // (gets superseded if process.env.PORT is specified at runtime)
+      // (gets superseded if import.meta.env.PORT is specified at runtime)
 
       middlewares: [
         'render', // keep this as last one

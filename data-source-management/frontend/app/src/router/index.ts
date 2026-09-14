@@ -19,9 +19,9 @@ import { Notify } from 'quasar';
  */
 
 export default defineRouter(function (/* { store, ssrContext } */) {
-  const createHistory = process.env.SERVER
+  const createHistory = import.meta.env.SERVER
     ? createMemoryHistory
-    : process.env.VUE_ROUTER_MODE === 'history'
+    : import.meta.env.VUE_ROUTER_MODE === 'history'
       ? createWebHistory
       : createWebHashHistory;
 
@@ -32,7 +32,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     // Leave this as is and make changes in quasar.conf.js instead!
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
-    history: createHistory(process.env.VUE_ROUTER_BASE),
+    history: createHistory(import.meta.env.VUE_ROUTER_BASE),
   });
 
   // Global navigation guard

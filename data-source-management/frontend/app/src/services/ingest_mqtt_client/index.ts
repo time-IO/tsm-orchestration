@@ -10,7 +10,7 @@ type ServerFrame = {
 };
 
 function buildWsUrl(id: number): string {
-  const base = (process.env.API_BASE_URL || '').replace(/\/$/, '');
+  const base = (import.meta.env.API_BASE_URL || '').replace(/\/$/, '');
   // http(s):// -> ws(s)://
   const wsBase = base.replace(/^http/, 'ws');
   return `${wsBase}/ingest/mqtt/${id}/live`;
