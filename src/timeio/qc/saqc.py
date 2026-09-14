@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import json
 
 import numpy as np
 import pandas as pd
@@ -19,6 +20,7 @@ except ImportError:
 
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
+FINAL_QUALITY_COLUMNS = ["value", "metric", "parameters", "dimension"]
 
 # used to identify which function calls are allowed to overwrite a `target`,
 # TODO: use the new SaQC function mode variable to infer programmatically
@@ -28,7 +30,6 @@ saqc.options.field_target = "append"
 
 
 class STAMPLATEScheme(saqc.FloatScheme):
-
     @staticmethod
     def toSTAannotations(row: pd.Series) -> dict[str, str | dict[str, str]]:
         """Create a dict that can be translated to a structured json according to
@@ -44,7 +45,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
         }
 
     @staticmethod
-    def fromSTAannotations(s: pd.Series) -> pd.DataFrame:
+    def _fromSTAannotations(s: pd.Series) -> pd.DataFrame:
         """Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
         timeIO/STA standard quality labels (dicts parsed from a structured JSON).
         """
@@ -62,7 +63,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
 
         data = {}
         for key, series in flags.items():  # type: str, pd.Series
-            df: pd.DataFrame = self.fromSTAannotations(series)
+            df: pd.DataFrame = self._fromSTAannotations(series)
             history = saqc.core.History(index=df.index)
             for (anno, measure, user_label), values in df.groupby(
                 ["annotation", "measure", "userLabel"]
@@ -111,6 +112,137 @@ class STAMPLATEScheme(saqc.FloatScheme):
                 if not df.empty:
                     series = df.apply(self.toSTAannotations, axis=1)
                 out[field] = series
+
+        return out
+
+
+class STAMPLATESchemeFinal(saqc.FloatScheme):
+    SAQC_DOCS_URL = "https://rdm-software.pages.ufz.de/saqc/_api/saqc.SaQC.html"
+    SAQC_DIMENSION_URL = (
+        "https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/blob/main/"
+        "src/timeio/qc/saqc.py"
+    )
+    INTERNAL_KWARGS = {"field", "target", "dfilter", "flag", "label"}
+    # SaQC represents unflagged values as -inf, which is not valid JSON as a number.
+    UNFLAGGED_LABEL = "-inf"
+
+    @staticmethod
+    def _metric_name(metric: str) -> str:
+        return str(metric).rstrip("/").rsplit("/", maxsplit=1)[-1]
+
+    @classmethod
+    def _parameters(cls, kwargs: dict) -> dict:
+        return {
+            key: value.item() if hasattr(value, "item") else value
+            for key, value in kwargs.items()
+            if key not in cls.INTERNAL_KWARGS
+        }
+
+    @staticmethod
+    def _quality_measurement_to_row(measurement: dict) -> dict:
+        return {
+            "value": measurement["value"],
+            "metric": STAMPLATESchemeFinal._metric_name(measurement["metric"]),
+            "parameters": measurement["parameters"],
+            "dimension": measurement["dimension"],
+        }
+
+    @staticmethod
+    def _from_sta_annotations(s: pd.Series) -> pd.DataFrame:
+        """
+        Make a pandas.Dataframe with QUALITY_COLUMNS from a pandas.Series with
+        timeIO/STA standard quality labels (dicts parsed from a structured JSON).
+        """
+        rows = []
+        index = []
+        for idx, obj in s.items():
+            for measurement in obj["resultQuality"]["hasQualityMeasurements"]:
+                rows.append(
+                    STAMPLATESchemeFinal._quality_measurement_to_row(measurement)
+                )
+                index.append(idx)
+
+        df = pd.DataFrame(rows, index=index)
+        if df.empty:
+            df = df.reindex(columns=FINAL_QUALITY_COLUMNS)
+        return df[FINAL_QUALITY_COLUMNS]
+
+    def toInternal(self, flags: saqc.DictOfSeries) -> saqc.Flags:
+        """
+        Translate a dict of pandas.Series of json quality annotations
+        to a Flags object with a History (with metadata) for each series.
+        """
+
+        data = {}
+        for key, series in flags.items():  # type: str, pd.Series
+            df: pd.DataFrame = self._from_sta_annotations(series)
+            history = saqc.core.History(index=series.index)
+            if not df.empty:
+                df["_parameters_key"] = df["parameters"].map(
+                    lambda params: json.dumps(params, sort_keys=True)
+                )
+                for (value, metric, _), values in df.groupby(
+                    ["value", "metric", "_parameters_key"]
+                ):
+                    column = pd.Series(np.nan, index=series.index)
+                    column.loc[values.index] = self(value)
+                    parameters = values["parameters"].iloc[0]
+                    history.append(
+                        column, meta={"func": metric, "kwargs": parameters}
+                    )
+            data[key] = history
+        return saqc.Flags(data)
+
+    def toExternal(
+        self, flags: saqc.Flags, attrs: dict | None = None
+    ) -> saqc.DictOfSeries:
+        """
+        Translate from internal Flags object with multiple Histories (with metadata)
+        to a dict of pandas.Dataframes, each with QUALITY_COLUMNS.
+        """
+        UNFLAGGED = saqc.UNFLAGGED  # noqa
+        out = saqc.DictOfSeries()
+
+        for field in flags.columns:
+            history = flags.history[field]
+            index = history.index
+            size = len(index)
+            result = np.full(size, None, dtype=object)
+            measurements = [[] for _ in range(size)]
+            dimension = self.SAQC_DIMENSION_URL
+            unflagged = self.UNFLAGGED_LABEL
+            for col in history.columns:
+                # We map the meta entries (func and label) to the respective rows
+                column = history.hist[col]
+                history_meta = history.meta[col]
+                parameters = self._parameters(history_meta.get("kwargs") or {})
+                metric = f"{self.SAQC_DOCS_URL}#saqc.SaQC.{history_meta['func']}"
+                values = column.to_numpy()
+                flagged = (column != UNFLAGGED).to_numpy() & column.notna().to_numpy()
+                measurement_idx = col + 1
+                template = {
+                    "jsonld.id": f"qualityMeasurement_{measurement_idx}",
+                    "value": unflagged,
+                    "metric": metric,
+                    "parameters": parameters,
+                    "dimension": dimension,
+                }
+                for pos in range(size):
+                    if flagged[pos]:
+                        measurement = template.copy()
+                        measurement["value"] = values[pos].item()
+                    else:
+                        measurement = template.copy()
+                    measurements[pos].append(measurement)
+
+            for pos, inline_measurements in enumerate(measurements):
+                result[pos] = {
+                    "resultQuality": {
+                        "hasQualityMeasurements": inline_measurements,
+                        "primaryQualityMeasurement": inline_measurements[-1],
+                    }
+                }
+            out[field] = pd.Series(result, index=index, dtype=object)
 
         return out
 
