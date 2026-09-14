@@ -5,7 +5,7 @@ metadata:
 data:
   # Loaded by mosquitto.conf via `include_dir /tmp/mosquitto-conf/tls/`. Empty
   # unless tls.enabled, so the plaintext-only default is preserved.
-  mosquitto.tls.conf: |-
+  mosquitto.tls.conf: |
 {{- if .Values.tls.enabled }}
     listener {{ .Values.tls.port }}
 {{- if .Values.tls.caKey }}
