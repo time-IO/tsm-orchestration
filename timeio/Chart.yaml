@@ -3,7 +3,7 @@ name: timeio
 description: "A Helm chart for time.IO"
 type: application
 # to-do: The version used here is not yet in sync with regular time.IO release versions (YYYY-mm-dd)
-version: 0.6.6
+version: 0.6.7
 
 icon: https://tsm.ufz.de/images/timeio.svg
 
