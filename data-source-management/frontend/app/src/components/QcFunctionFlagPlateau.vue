@@ -123,7 +123,7 @@ const formData = ref({
   max_length: null as number | null,
   min_jump: null as number | null,
   granularity: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

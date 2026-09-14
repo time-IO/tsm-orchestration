@@ -96,7 +96,7 @@ const formData = ref({
   target: [] as Datastream[],
   min: null as number | null,
   max: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

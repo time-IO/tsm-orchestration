@@ -202,7 +202,7 @@ const formData = ref({
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

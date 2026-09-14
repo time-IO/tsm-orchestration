@@ -95,7 +95,7 @@ const formData = ref({
   target: [] as Datastream[],
   gap_window: null as number | null,
   group_window: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

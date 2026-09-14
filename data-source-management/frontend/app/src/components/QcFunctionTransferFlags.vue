@@ -101,7 +101,7 @@ const formData = ref({
   target: [] as Datastream[],
   squeeze: false,
   overwrite: false,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

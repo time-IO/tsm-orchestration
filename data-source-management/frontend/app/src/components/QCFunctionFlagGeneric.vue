@@ -84,8 +84,8 @@ const emit = defineEmits(['submit', 'remove']);
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  func: '' as string,
-  flag: 255.0 as number | null,
+  func: '',
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

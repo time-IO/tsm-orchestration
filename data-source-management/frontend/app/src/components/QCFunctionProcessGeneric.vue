@@ -64,7 +64,7 @@ const emit = defineEmits(['submit', 'remove']);
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  func: '' as string,
+  func: '',
 });
 
 function loadInitialData() {

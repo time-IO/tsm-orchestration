@@ -152,7 +152,7 @@ const formData = ref({
   min_periods: null as number | null,
   center: true,
   axis: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

@@ -132,7 +132,7 @@ const formData = ref({
   func: 'mean',
   min_periods: null as number | null,
   center: true,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 

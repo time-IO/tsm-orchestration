@@ -116,7 +116,7 @@ const formData = ref({
   window: null as number | null,
   thresh: null as number | null,
   thresh_relative: null as number | null,
-  flag: 255.0 as number | null,
+  flag: 255.0,
   dfilter: 0 as number | null,
 });
 
