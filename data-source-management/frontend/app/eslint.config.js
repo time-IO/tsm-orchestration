@@ -79,5 +79,12 @@ export default defineConfigWithVueTs(
     },
   },
 
+  {
+    files: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
+    },
+  },
+
   prettierSkipFormatting,
 );

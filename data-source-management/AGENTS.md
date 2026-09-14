@@ -5,7 +5,8 @@ These commands assume the orchestration repository root as the working directory
 ## Focused Verification
 
 ```bash
-# Frontend: ESLint, vue-tsc, then a production build
+# Frontend: Vitest, ESLint, vue-tsc, then a production build
+./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm test
 ./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm run lint:all
 ./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm run build
 
@@ -18,7 +19,7 @@ These commands assume the orchestration repository root as the working directory
 ./data-source-management/run_integration_tests.sh -k 'focused_expression'
 ```
 
-- Frontend `npm test` deliberately exits successfully without running tests. `npm run format` writes files; it is not a check.
+- Frontend `npm test` runs Vitest once; use `npm run test:watch` for local watch mode. `npm run format` writes files; it is not a check.
 - Plain API `pytest` also collects `tests/integration_tests/`; do not use it as a unit-only shortcut.
 - The integration script always stops and removes `dsm-api-test-db` on exit, even if that container existed before the run. Integration create/update paths also publish to MQTT.
 

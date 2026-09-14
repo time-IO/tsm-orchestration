@@ -94,7 +94,6 @@ npm-test:
     - cd data-source-management/frontend/app
     - npm ci
   script:
-    # no tests defined yet, but we can already include this job
     - npm run test
   rules:
     # Never run if pipeline is triggered by a tag commit, a merge_request_event or a push on main
