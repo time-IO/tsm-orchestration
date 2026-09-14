@@ -3,4 +3,15 @@ kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-tls-config
 data:
-  mosquitto.tls.conf: {{ .Files.Get "config/mosquitto.tls.conf" | quote }}
+  # Loaded by mosquitto.conf via `include_dir /tmp/mosquitto-conf/tls/`. Empty
+  # unless tls.enabled, so the plaintext-only default is preserved.
+  mosquitto.tls.conf: |-
+{{- if .Values.tls.enabled }}
+    listener {{ .Values.tls.port }}
+{{- if .Values.tls.caKey }}
+    cafile {{ .Values.tls.certMountPath }}/{{ .Values.tls.caKey }}
+{{- end }}
+    certfile {{ .Values.tls.certMountPath }}/{{ .Values.tls.certKey }}
+    keyfile {{ .Values.tls.certMountPath }}/{{ .Values.tls.keyKey }}
+    require_certificate {{ .Values.tls.requireClientCert }}
+{{- end }}
