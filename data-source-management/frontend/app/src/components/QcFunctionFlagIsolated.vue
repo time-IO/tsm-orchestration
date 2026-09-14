@@ -93,10 +93,10 @@ const label = defineModel<string | undefined>('label');
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  gap_window: null as number | null,
-  group_window: null as number | null,
+  gap_window: null,
+  group_window: null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {

@@ -102,7 +102,7 @@ const formData = ref({
   squeeze: false,
   overwrite: false,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {

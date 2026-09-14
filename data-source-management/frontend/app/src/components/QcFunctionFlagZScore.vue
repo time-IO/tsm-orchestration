@@ -153,7 +153,7 @@ const formData = ref({
   center: true,
   axis: null as number | null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {

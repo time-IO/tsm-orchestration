@@ -117,7 +117,7 @@ const formData = ref({
   thresh: null as number | null,
   thresh_relative: null as number | null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 const label = defineModel<string | undefined>('label');

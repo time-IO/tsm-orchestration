@@ -133,7 +133,7 @@ const formData = ref({
   min_periods: null as number | null,
   center: true,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {

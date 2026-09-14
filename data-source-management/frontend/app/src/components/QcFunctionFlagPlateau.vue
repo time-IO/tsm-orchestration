@@ -124,7 +124,7 @@ const formData = ref({
   min_jump: null as number | null,
   granularity: null as number | null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 const label = defineModel<string | undefined>('label');

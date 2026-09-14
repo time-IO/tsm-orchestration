@@ -106,7 +106,7 @@ const formData = ref({
   window: null as number | null,
   min_periods: null as number | null,
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {

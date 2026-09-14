@@ -86,7 +86,7 @@ const formData = ref({
   target: [] as Datastream[],
   func: '',
   flag: 255.0,
-  dfilter: 0 as number | null,
+  dfilter: 0,
 });
 
 function loadInitialData() {
