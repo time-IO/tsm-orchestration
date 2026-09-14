@@ -90,7 +90,7 @@ export default defineConfig((ctx) => {
             // you need to set `runtimeOnly: false`
             // runtimeOnly: false,
 
-            ssr: ctx.modeName === 'ssr',
+            ssr: ctx.mode.ssr || ctx.mode.ssg,
 
             // you need to set i18n resource including paths !
             include: [fileURLToPath(new URL('./src/i18n', import.meta.url))],
