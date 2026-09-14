@@ -189,16 +189,33 @@ const current_corruption_type = ref(POSSIBLE_QC_FUNCTION_TYPES.FLOAT);
 
 const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 
-const formData = ref({
+type UniLofFormData = {
+  field: Datastream[];
+  target: Datastream[];
+  n: number;
+  thresh: string | number;
+  probability: number | null;
+  corruption: number | null;
+  algorithm: string;
+  p: number;
+  density: string | number;
+  fill_na: boolean;
+  slope_correct: boolean;
+  min_offset: number | null;
+  flag: number;
+  dfilter: number;
+};
+
+const formData = ref<UniLofFormData>({
   field: [] as Datastream[],
   target: [] as Datastream[],
   n: 20,
-  thresh: 'auto' as string | number,
+  thresh: 'auto',
   probability: null as number | null,
   corruption: null as number | null,
   algorithm: 'ball_tree',
   p: 1,
-  density: 'auto' as string | number,
+  density: 'auto',
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
@@ -227,7 +244,9 @@ function loadInitialData() {
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.n = (nArg?.input.value as number) ?? 20;
+
   formData.value.thresh = (threshArg?.input.value as string | number) ?? 'auto';
+
   formData.value.probability = (probabilityArg?.input.value as number) ?? null;
   formData.value.corruption = (corruptionArg?.input.value as number) ?? null;
   formData.value.algorithm = (algorithmArg?.input.value as string) ?? 'ball_tree';
