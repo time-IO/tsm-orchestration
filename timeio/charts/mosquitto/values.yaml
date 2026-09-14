@@ -7,6 +7,29 @@ image:
 name: mosquitto
 port: 1883
 
+# MQTTS (TLS) listener. Disabled by default; the plaintext 1883 listener is
+# unaffected. Enable per environment and supply a broker certificate through
+# tls.existingSecret. Broker auth is global (per_listener_settings false), so
+# the same username/password/ACL backend guards both listeners.
+tls:
+  enabled: false
+  port: 8883
+  # Secret holding the broker server certificate and private key. Required
+  # when tls.enabled is true.
+  existingSecret: ""
+  certKey: tls.crt
+  keyKey: tls.key
+  # Optional CA bundle key within existingSecret. Set it when the data loggers
+  # (or mTLS) need an explicit CA, matching the legacy ca.crt/server.crt/
+  # server.key convention. Leave empty for publicly-trusted (cert-manager ACME)
+  # certificates, where clients validate against the public root.
+  caKey: ""
+  # Directory the certificate and key are mounted into inside the broker.
+  certMountPath: /etc/mosquitto/certs
+  # Require connecting clients to present a certificate (mTLS). When false,
+  # clients authenticate with username/password over the encrypted channel.
+  requireClientCert: false
+
 securityContext:
   allowPrivilegeEscalation: False
   capabilities:

@@ -105,6 +105,11 @@ spec:
           name: {{ .Values.name }}-config
         - mountPath: /etc/mosquitto/config/tls
           name: {{ .Values.name }}-tls-config
+{{- if .Values.tls.enabled }}
+        - mountPath: {{ .Values.tls.certMountPath }}
+          name: {{ .Values.name }}-tls-certs
+          readOnly: true
+{{- end }}
       volumes:
       - name: {{ .Values.name }}-pv
         persistentVolumeClaim:
@@ -122,3 +127,8 @@ spec:
         configMap:
           name: {{ .Values.name }}-db-probe-cm
           defaultMode: 0755
+{{- if .Values.tls.enabled }}
+      - name: {{ .Values.name }}-tls-certs
+        secret:
+          secretName: {{ required "mosquitto.tls.existingSecret is required when tls.enabled" .Values.tls.existingSecret }}
+{{- end }}

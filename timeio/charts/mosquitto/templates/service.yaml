@@ -6,6 +6,13 @@ spec:
   selector:
     app: {{ .Values.name }}
   ports:
-    - protocol: TCP
+    - name: mqtt
+      protocol: TCP
       port: {{ .Values.port }}
       targetPort: {{ .Values.port }}
+{{- if .Values.tls.enabled }}
+    - name: mqtts
+      protocol: TCP
+      port: {{ .Values.tls.port }}
+      targetPort: {{ .Values.tls.port }}
+{{- end }}

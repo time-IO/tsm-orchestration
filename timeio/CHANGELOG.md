@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.5] - 2026-09-14
+
+- Added optional Mosquitto MQTTS listener support on port 8883, including the
+  TLS certificate mount and Service port; disabled by default.
+
 ## [0.6.2] - 2026-09-08
 
 - Added `object-storage.persistence.size` so deployments can size the
