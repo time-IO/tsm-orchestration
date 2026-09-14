@@ -284,7 +284,7 @@ const formData = defineModel<CsvParserFormData>({
     name: null,
     description: null,
     delimiter: null,
-    headlines_to_exclude: 0,
+    headlines_to_exclude: null,
     footlines_to_exclude: 0,
     pandas_read_csv: null,
     timestamp_columns: [],
