@@ -5,6 +5,7 @@
 ### Added
 ### Fixed
 ### Changed
+- Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
 ### Removed
 
 ## [2026-09-10]
