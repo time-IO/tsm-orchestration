@@ -12,6 +12,7 @@ export default defineConfig(async () =>
         // Matches all files with extension 'js', 'jsx', 'ts' and 'tsx'
         'src/**/*.vitest.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
         'test/vitest/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+        'test/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       ],
     },
   }),
