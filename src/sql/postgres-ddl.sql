@@ -214,8 +214,77 @@ CREATE TABLE IF NOT EXISTS recompute_progress (
     last_completed_time timestamp with time zone NOT NULL
 );
 
+-- Calculates feature ID for newly arrived observations
+-- and carries them into foi_catalog_dynamic and foi_observation_lookup.
+CREATE OR REPLACE FUNCTION trg_populate_foi_observation() RETURNS trigger AS
+$$
+BEGIN
+    EXECUTE format('SET LOCAL search_path TO %I, public', TG_TABLE_SCHEMA);
 
+    SET LOCAL enable_hashjoin = off;
+    SET LOCAL enable_mergejoin = off;
+-- Filter on only newly arrived observations by new_table
+    WITH candidates AS (
+        SELECT DISTINCT
+            m.main_datastream_id,
+            m.action_id,
+            m.label,
+            m.valid_from AS begin_date,
+            o.id AS o_id,
+            ox.result_number AS x,
+            oy.result_number AS y,
+            oz.result_number AS z
+        FROM new_table n
+            JOIN foi_datastream_mapping m
+                ON n.datastream_id IN (m.main_datastream_id, m.x_datastream_id,
+                                        m.y_datastream_id, m.z_datastream_id)
+            JOIN observation o
+                ON o.datastream_id = m.main_datastream_id
+                AND o.result_time = n.result_time
+                AND o.result_time >= m.valid_from
+                AND (m.valid_to IS NULL OR o.result_time < m.valid_to)
+            JOIN observation ox
+                ON ox.datastream_id = m.x_datastream_id
+                AND ox.result_time = o.result_time
+            JOIN observation oy
+                ON oy.datastream_id = m.y_datastream_id
+                AND oy.result_time = o.result_time
+            LEFT JOIN observation oz
+                ON oz.datastream_id = m.z_datastream_id
+                AND oz.result_time = o.result_time
+        WHERE NOT (ox.result_number = 0 AND oy.result_number = 0)
+          AND (m.z_datastream_id IS NULL OR oz.result_number IS NOT NULL)
+          AND NOT EXISTS (
+              SELECT 1 FROM foi_observation_lookup fol WHERE fol.o_id = o.id
+          )
+    ),
+    computed AS MATERIALIZED (
+        SELECT
+            o_id, action_id, label, begin_date,
+            ARRAY[x, y, COALESCE(z, 0)] AS coordinates,
+            hashtextextended(
+                CONCAT(ARRAY[x, y, COALESCE(z, 0)]::text, action_id, TRUE), 0
+            ) AS feature_id
+        FROM candidates
+    ),
+    inserted_foi AS (
+        INSERT INTO foi_catalog_dynamic (feature_id, is_dynamic, action_id, label, begin_date, coordinates)
+        SELECT feature_id, TRUE, action_id, label, begin_date, coordinates
+        FROM computed
+        GROUP BY feature_id, action_id, label, begin_date, coordinates
+        ON CONFLICT (feature_id) DO NOTHING
+    )
+    INSERT INTO foi_observation_lookup (o_id, feature_id)
+    SELECT o_id, feature_id FROM computed
+    ON CONFLICT (o_id) DO NOTHING;
 
+    RETURN NULL;
+
+EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'trg_populate_foi_observation fehlgeschlagen: %', SQLERRM;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- Reads the SMS configuration tables (public.sms_*) and
@@ -325,3 +394,172 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
+-- Processes an explicit time window for all channels
+-- that are currently in foi_recompute_queue.
+-- Updates both foi_catalog_dynamic and
+-- foi_observation_lookup afterwards.
+CREATE OR REPLACE FUNCTION process_foi_recompute_queue(
+    p_from timestamp with time zone,
+    p_to   timestamp with time zone
+) RETURNS TABLE(inserted_foi bigint, updated_lookup bigint) AS
+$$
+DECLARE
+    v_inserted_foi   bigint;
+    v_updated_lookup bigint;
+BEGIN
+    SET LOCAL enable_hashjoin = off;
+    SET LOCAL enable_mergejoin = off;
+-- Filter which datastreams are affected by the change
+    WITH relevant_mains AS MATERIALIZED (
+        SELECT m.main_datastream_id, m.x_datastream_id, m.y_datastream_id, m.z_datastream_id,
+               m.valid_from, m.valid_to, m.action_id, m.label
+        FROM foi_datastream_mapping m
+        WHERE EXISTS (
+            SELECT 1 FROM foi_recompute_queue q
+            WHERE q.main_datastream_id = m.main_datastream_id
+        )
+    ),
+    candidates AS (
+        SELECT
+            m.action_id, m.label, m.valid_from AS begin_date,
+            ox.result_number AS x, oy.result_number AS y, oz.result_number AS z,
+            o.id AS o_id
+        FROM relevant_mains m
+            JOIN observation o
+                ON o.datastream_id = m.main_datastream_id
+                AND o.result_time BETWEEN p_from AND p_to
+                AND o.result_time >= m.valid_from
+                AND (m.valid_to IS NULL OR o.result_time < m.valid_to)
+            JOIN observation ox ON ox.datastream_id = m.x_datastream_id AND ox.result_time = o.result_time
+            JOIN observation oy ON oy.datastream_id = m.y_datastream_id AND oy.result_time = o.result_time
+            LEFT JOIN observation oz ON oz.datastream_id = m.z_datastream_id AND oz.result_time = o.result_time
+        WHERE NOT (ox.result_number = 0 AND oy.result_number = 0)
+          AND (m.z_datastream_id IS NULL OR oz.result_number IS NOT NULL)
+          AND EXISTS (SELECT 1 FROM foi_observation_lookup fol WHERE fol.o_id = o.id)
+    ),
+    computed AS MATERIALIZED (
+        SELECT
+            o_id, action_id, label, begin_date,
+            ARRAY[x, y, COALESCE(z, 0)] AS coordinates,
+            hashtextextended(CONCAT(ARRAY[x, y, COALESCE(z, 0)]::text, action_id, TRUE), 0) AS feature_id
+        FROM candidates
+    ),
+    new_foi AS (
+        INSERT INTO foi_catalog_dynamic (feature_id, is_dynamic, action_id, label, begin_date, coordinates)
+        SELECT feature_id, TRUE, action_id, label, begin_date, coordinates
+        FROM computed
+        GROUP BY feature_id, action_id, label, begin_date, coordinates
+        ON CONFLICT (feature_id) DO NOTHING
+        RETURNING feature_id
+    ),
+    updated AS (
+        UPDATE foi_observation_lookup fol
+        SET feature_id = c.feature_id
+        FROM computed c
+        WHERE fol.o_id = c.o_id
+          AND fol.feature_id IS DISTINCT FROM c.feature_id
+        RETURNING fol.o_id
+    )
+    SELECT
+        (SELECT count(*) FROM new_foi),
+        (SELECT count(*) FROM updated)
+    INTO v_inserted_foi, v_updated_lookup;
+
+    RETURN QUERY SELECT v_inserted_foi, v_updated_lookup;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Clean up orphaned FOI coordinates with no related
+-- observation. Runs at the end of each complete recompute.
+CREATE OR REPLACE FUNCTION cleanup_orphaned_foi() RETURNS void AS
+$$
+BEGIN
+    DELETE FROM foi_catalog_dynamic f
+    WHERE NOT EXISTS (
+        SELECT 1 FROM foi_observation_lookup fol WHERE fol.feature_id = f.feature_id
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+--Steps through a time window in stages (p_chunk_interval),
+-- calls process_foi_recompute_queue() per stage, with real -
+-- - COMMIT and a FIXED pause in between (p_pause_seconds).
+-- Progress over recompute_progress.
+-- Cancel at any time, the same call automatically sets away.
+CREATE OR REPLACE PROCEDURE run_recompute_until_done(
+    p_job_name text,
+    p_schema text,
+    p_chunk_interval interval DEFAULT '30 days',
+    p_pause_seconds numeric DEFAULT 10
+) AS
+$$
+DECLARE
+    v_window_start timestamp with time zone;
+    v_window_end   timestamp with time zone;
+    v_global_from  timestamp with time zone;
+    v_global_to    timestamp with time zone;
+BEGIN
+    EXECUTE format('SET LOCAL search_path TO %I, public', p_schema);
+
+    SELECT min(from_time), max(to_time) INTO v_global_from, v_global_to
+    FROM foi_recompute_queue;
+
+    IF v_global_from IS NULL THEN
+        RETURN;
+    END IF;
+
+    INSERT INTO recompute_progress (job_name, last_completed_time)
+    VALUES (p_job_name, v_global_from)
+    ON CONFLICT (job_name) DO NOTHING;
+
+    SELECT last_completed_time INTO v_window_start
+    FROM recompute_progress WHERE job_name = p_job_name;
+
+    WHILE v_window_start < v_global_to LOOP
+        EXECUTE format('SET LOCAL search_path TO %I, public', p_schema);
+
+        v_window_end := LEAST(v_window_start + p_chunk_interval, v_global_to);
+
+        PERFORM process_foi_recompute_queue(v_window_start, v_window_end);
+
+        UPDATE recompute_progress
+        SET last_completed_time = v_window_end
+        WHERE job_name = p_job_name;
+
+        COMMIT;
+
+        PERFORM pg_sleep(p_pause_seconds);
+
+        v_window_start := v_window_end;
+    END LOOP;
+
+    BEGIN
+        PERFORM cleanup_orphaned_foi();
+    EXCEPTION WHEN OTHERS THEN
+        RAISE WARNING 'cleanup_orphaned_foi() fehlgeschlagen: %', SQLERRM;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+
+--Trigger on observation to keep foi_catalog_dynamic
+-- and foi_observation_lookup up to date
+CREATE TRIGGER observation_foi_sync_insert
+AFTER INSERT ON observation
+REFERENCING NEW TABLE AS new_table
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_populate_foi_observation();
+
+CREATE TRIGGER observation_foi_sync_update
+AFTER UPDATE ON observation
+REFERENCING NEW TABLE AS new_table
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_populate_foi_observation();
