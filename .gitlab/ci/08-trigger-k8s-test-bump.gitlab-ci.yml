@@ -1,0 +1,23 @@
+---
+
+# After new main-branch images are tagged in the registry, advance the TimeIO
+# web-intern-TEST GitOps wrapper (ufz-tsm/ufz-deployment) to the newest build.
+#
+# ufz-deployment lives on the same GitLab instance as this project
+# (codebase.helmholtz.cloud), so this is a native multi-project trigger with no
+# token: authorization is granted by ufz-deployment's CI job-token allowlist.
+# The downstream `bump-timeio-images-test` job keys on TIMEIO_IMAGE_BUMP=test.
+# web-intern-STAGE stays behind ufz-deployment's manual promotion gate.
+trigger-k8s-test-image-bump:
+  stage: notify
+  needs:
+    - "stage-tag-images-in-registry"
+  variables:
+    TIMEIO_IMAGE_BUMP: "test"
+  trigger:
+    project: "ufz-tsm/ufz-deployment"
+    branch: "main"
+  rules:
+    # Run if pipeline is triggered by a push on main and image tagging succeeded.
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
+      when: on_success
