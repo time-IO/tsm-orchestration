@@ -46,5 +46,5 @@ SELECT
     ) AS "FEATURE",
     '{}'::jsonb AS "PROPERTIES"
 
-FROM crns_test.foi_features_combined;
+FROM foi_features_combined;
 

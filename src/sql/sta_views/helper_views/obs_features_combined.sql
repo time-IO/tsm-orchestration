@@ -1,5 +1,5 @@
-DROP VIEW IF EXISTS crns_test.obs_ts_action_type_coord CASCADE;
-CREATE OR REPLACE VIEW crns_test.obs_ts_action_type_coord AS
+DROP VIEW IF EXISTS obs_features_combined CASCADE;
+CREATE OR REPLACE VIEW obs_features_combined AS
 
 WITH static_data AS (
     SELECT
@@ -26,8 +26,8 @@ WITH static_data AS (
             ON d.id = dma.device_id AND d.is_public
         JOIN public.sms_datastream_link dsl
             ON dsl.device_mount_action_id = dma.id
-            AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
-        JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+            AND dsl.datasource_id = '{tsm_schema}'
+        JOIN observation o
             ON o.datastream_id = dsl.datastream_id
     WHERE o.result_time >= sla.begin_date
       AND (sla.end_date IS NULL OR o.result_time <= sla.end_date)
@@ -49,12 +49,12 @@ dynamic_data AS (
         o.result_time,
         dsl.device_property_id,
         fol.feature_id
-    FROM crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.foi_observation_lookup fol
-        JOIN crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.observation o
+    FROM foi_observation_lookup fol
+        JOIN observation o
             ON o.id = fol.o_id
         JOIN public.sms_datastream_link dsl
             ON dsl.datastream_id = o.datastream_id
-            AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+            AND dsl.datasource_id = '{tsm_schema}'
             AND o.result_time >= dsl.begin_date
             AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
 )

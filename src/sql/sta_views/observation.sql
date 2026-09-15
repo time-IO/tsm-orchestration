@@ -1,5 +1,5 @@
-DROP VIEW IF EXISTS crns_test."OBSERVATIONS" CASCADE;
-CREATE VIEW crns_test."OBSERVATIONS" AS
+DROP VIEW IF EXISTS "OBSERVATIONS" CASCADE;
+CREATE VIEW "OBSERVATIONS" AS
 
 
 SELECT
@@ -27,5 +27,5 @@ SELECT
       "jsonld.type": "ObservationProperties",
       "dataSource": null
     }'::jsonb AS "PROPERTIES"
-FROM crns_test.obs_ts_action_type_coord
+FROM obs_features_combined
 ;

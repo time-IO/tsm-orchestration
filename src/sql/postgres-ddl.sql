@@ -134,58 +134,44 @@ CREATE TABLE mqtt_message
 );
 
 
---
 -- Create table foi_datastream_mapping
 -- Cached, time-versioned mapping of main/x/y/z datastream_ids per
 -- dynamic-location configuration action (SMS). Kept in sync via
--- reconcile_foi_datastream_mapping(), called after each SMS
--- materialized view refresh. Only relevant for projects with
+-- reconcile_foi_datastream_mapping().
+-- Only relevant for projects with
 -- dynamic things (currently: CRNS) - empty otherwise.
 --
-CREATE TABLE "foi_datastream_mapping"
-(
-    "id"                 bigserial                NOT NULL PRIMARY KEY,
-    "main_datastream_id" bigint                    NOT NULL,
-    "x_datastream_id"    bigint                    NOT NULL,
-    "y_datastream_id"    bigint                    NOT NULL,
-    "z_datastream_id"    bigint                    NULL,
-    "action_id"          bigint                    NOT NULL,
-    "configuration_id"   bigint                    NOT NULL,
-    "label"              text                      NOT NULL,
-    "valid_from"         timestamp with time zone  NOT NULL,
-    "valid_to"           timestamp with time zone  NULL,
-
-    CONSTRAINT "foi_dsm_valid_range" CHECK ("valid_to" IS NULL OR "valid_to" > "valid_from"),
-    CONSTRAINT "foi_datastream_mapping_main_datastream_id_fk"
-        FOREIGN KEY ("main_datastream_id") REFERENCES "datastream" ("id") DEFERRABLE INITIALLY DEFERRED
+CREATE TABLE IF NOT EXISTS foi_datastream_mapping (
+    main_datastream_id bigint NOT NULL,
+    x_datastream_id     bigint NOT NULL,
+    y_datastream_id     bigint NOT NULL,
+    z_datastream_id     bigint,
+    action_id           bigint NOT NULL,
+    configuration_id    bigint,
+    label               text,
+    valid_from          timestamp with time zone NOT NULL,
+    valid_to            timestamp with time zone,
+    PRIMARY KEY (main_datastream_id, valid_from)
 );
 
-CREATE UNIQUE INDEX "foi_dsm_action_id_uniq" ON "foi_datastream_mapping" ("action_id");
-CREATE INDEX "foi_dsm_main_datastream_id" ON "foi_datastream_mapping" ("main_datastream_id", "valid_from");
-CREATE INDEX "foi_dsm_x_datastream_id" ON "foi_datastream_mapping" ("x_datastream_id");
-CREATE INDEX "foi_dsm_y_datastream_id" ON "foi_datastream_mapping" ("y_datastream_id");
-CREATE INDEX "foi_dsm_z_datastream_id" ON "foi_datastream_mapping" ("z_datastream_id") WHERE "z_datastream_id" IS NOT NULL;
+CREATE INDEX IF NOT EXISTS foi_dsm_x_datastream_id ON foi_datastream_mapping (x_datastream_id);
+CREATE INDEX IF NOT EXISTS foi_dsm_y_datastream_id ON foi_datastream_mapping (y_datastream_id);
 
 
---
--- Create table foi
--- One row per distinct coordinate combination for DYNAMIC things only
--- (static FOIs remain computed live in the FEATURES view - cheap
--- enough, no rework needed). feature_id is the same
--- hashtextextended(...) value the legacy live computation used;
--- here it's computed once at write time by the observation trigger.
---
-CREATE TABLE "foi"
-(
-    "feature_id"  bigint                    NOT NULL PRIMARY KEY,
-    "is_dynamic"  boolean                   NOT NULL DEFAULT TRUE,
-    "action_id"   bigint                    NOT NULL,
-    "label"       text                      NOT NULL,
-    "begin_date"  timestamp with time zone  NOT NULL,
-    "coordinates" double precision[]        NOT NULL
+
+-- Catalog of all distinct coordinates (= "Features of Interest").
+-- One line per unique position, the feature_id is a
+-- deterministic hash of (x, y, z, action_id)
+-- Same position always provides the same feature_id.
+
+CREATE TABLE IF NOT EXISTS foi_catalog_dynamic (
+    feature_id  bigint PRIMARY KEY,
+    is_dynamic  boolean NOT NULL DEFAULT TRUE,
+    action_id   bigint,
+    label       text,
+    begin_date  timestamp with time zone,
+    coordinates double precision[]
 );
-
-CREATE INDEX "foi_action_id" ON "foi" ("action_id");
 
 
 --
@@ -193,43 +179,149 @@ CREATE INDEX "foi_action_id" ON "foi" ("action_id");
 -- One row per observation that could be assigned a FOI. Observations
 -- with invalid/missing coordinates (e.g. Null Island (0,0)) get no
 -- entry - they simply have no FEATURE_ID in OBSERVATIONS.
---
-CREATE TABLE "foi_observation_lookup"
-(
-    "o_id"       bigint                    NOT NULL PRIMARY KEY,
-    "feature_id" bigint                    NOT NULL,
-    "created_at" timestamp with time zone  NOT NULL DEFAULT now(),
 
-    CONSTRAINT "foi_observation_lookup_o_id_fk"
-        FOREIGN KEY ("o_id") REFERENCES "observation" ("id") DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT "foi_observation_lookup_feature_id_fk"
-        FOREIGN KEY ("feature_id") REFERENCES "foi" ("feature_id") DEFERRABLE INITIALLY DEFERRED
+CREATE TABLE IF NOT EXISTS foi_observation_lookup (
+    o_id       bigint PRIMARY KEY,
+    feature_id bigint REFERENCES foi_catalog_dynamic(feature_id)
 );
 
-CREATE INDEX "foi_observation_lookup_feature_id" ON "foi_observation_lookup" ("feature_id");
+CREATE INDEX IF NOT EXISTS foi_observation_lookup_feature_id_idx
+    ON foi_observation_lookup (feature_id);
 
 
---
--- Create table foi_recompute_queue
--- Queue of retroactive-correction jobs, populated by
--- reconcile_foi_datastream_mapping() (Fall 2: known action_id with
--- changed datastream mapping). Processed asynchronously by a
--- pg_cron job in small batches to avoid long-running transactions.
---
-CREATE TABLE "foi_recompute_queue"
-(
-    "id"                 bigserial                 NOT NULL PRIMARY KEY,
-    "main_datastream_id" bigint                     NOT NULL,
-    "from_time"          timestamp with time zone   NOT NULL,
-    "to_time"            timestamp with time zone   NOT NULL,
-    "requested_at"       timestamp with time zone   NOT NULL DEFAULT now(),
-    "status"             varchar(20)                NOT NULL DEFAULT 'pending',
-    "processed_at"       timestamp with time zone   NULL,
-    "error_message"      text                       NULL,
+-- Correction log: filled when an SMS configuration is changed
+-- retroactively (e.g. wrong channel corrected), populated by
+-- reconcile_foi_datastream_mapping(). process_foi_recompute_queue()
+-- checks live with each call what actually needs to be done.
 
-    CONSTRAINT "foi_recompute_queue_status_check"
-        CHECK ("status" IN ('pending', 'processing', 'done', 'failed'))
+CREATE TABLE IF NOT EXISTS foi_recompute_queue (
+    id                 bigserial PRIMARY KEY,
+    main_datastream_id bigint NOT NULL,
+    from_time          timestamp with time zone NOT NULL,
+    to_time            timestamp with time zone NOT NULL,
+    created_at         timestamp with time zone DEFAULT now()
 );
 
-CREATE INDEX "foi_recompute_queue_pending" ON "foi_recompute_queue" ("status", "requested_at")
-    WHERE "status" = 'pending';
+CREATE INDEX IF NOT EXISTS foi_recompute_queue_main_ds_idx ON foi_recompute_queue (main_datastream_id);
+
+
+-- Progress cursor for long-running recompute
+-- orders (run_recompute_until_done()). One entry per
+-- named order (job_name) -- allows demolition and
+-- automatic continuation at the same place.
+CREATE TABLE IF NOT EXISTS recompute_progress (
+    job_name text PRIMARY KEY,
+    last_completed_time timestamp with time zone NOT NULL
+);
+
+
+
+
+
+-- Reads the SMS configuration tables (public.sms_*) and
+-- updates foi_datastream_mapping accordingly.
+-- Creates orders in the foi_recompute_queue.
+CREATE OR REPLACE FUNCTION reconcile_foi_datastream_mapping(
+    p_datasource_id text
+) RETURNS void AS
+$$
+DECLARE
+    r RECORD;
+BEGIN
+--for every dla-configuration (action-id) one row
+    FOR r IN
+        SELECT DISTINCT
+            dla.id                 AS action_id,
+            dma.configuration_id,
+            c.label,
+            dla.begin_date,
+            dla.end_date,
+            dsl_main.datastream_id AS main_datastream_id,
+            dsl_x.datastream_id    AS x_datastream_id,
+            dsl_y.datastream_id    AS y_datastream_id,
+            dsl_z.datastream_id    AS z_datastream_id
+        FROM public.sms_configuration_dynamic_location_begin_action dla
+                 JOIN public.sms_device_mount_action dma
+                      ON dma.configuration_id = dla.configuration_id
+                 JOIN public.sms_configuration c
+                      ON c.id = dma.configuration_id AND c.is_public
+                 JOIN public.sms_device d
+                      ON d.id = dma.device_id AND d.is_public
+                 JOIN public.sms_datastream_link dsl_main
+                      ON dsl_main.device_mount_action_id = dma.id
+                      AND dsl_main.datasource_id = p_datasource_id
+                      AND dsl_main.end_date IS NULL
+                 JOIN public.sms_datastream_link dsl_x
+                      ON dsl_x.device_mount_action_id = dma.id
+                      AND dsl_x.device_property_id = dla.x_property_id
+                      AND dsl_x.end_date IS NULL
+                 JOIN public.sms_datastream_link dsl_y
+                      ON dsl_y.device_mount_action_id = dma.id
+                      AND dsl_y.device_property_id = dla.y_property_id
+                      AND dsl_y.end_date IS NULL
+                 LEFT JOIN public.sms_datastream_link dsl_z
+                      ON dsl_z.device_mount_action_id = dma.id
+                      AND dsl_z.device_property_id = dla.z_property_id
+                      AND dsl_z.end_date IS NULL
+
+    LOOP
+
+-- Updating foi_datastream_mapping
+        IF EXISTS (
+            SELECT 1 FROM foi_datastream_mapping
+            WHERE main_datastream_id = r.main_datastream_id
+              AND valid_from = r.begin_date
+        ) THEN
+
+            UPDATE foi_datastream_mapping m
+            SET x_datastream_id = r.x_datastream_id,
+                y_datastream_id = r.y_datastream_id,
+                z_datastream_id = r.z_datastream_id,
+                valid_to        = r.end_date
+            WHERE m.main_datastream_id = r.main_datastream_id
+              AND m.valid_from = r.begin_date
+              AND (m.x_datastream_id, m.y_datastream_id,
+                   COALESCE(m.z_datastream_id, -1),
+                   COALESCE(m.valid_to, 'infinity'::timestamp with time zone))
+                      IS DISTINCT FROM
+                  (r.x_datastream_id, r.y_datastream_id,
+                   COALESCE(r.z_datastream_id, -1),
+                   COALESCE(r.end_date, 'infinity'::timestamp with time zone));
+
+-- Updating foi_recompute_queue
+            IF FOUND THEN
+                IF EXISTS (
+                    SELECT 1 FROM foi_recompute_queue
+                    WHERE main_datastream_id = r.main_datastream_id
+                      AND from_time <= COALESCE(r.end_date, now())
+                      AND to_time >= r.begin_date
+                ) THEN
+                    UPDATE foi_recompute_queue
+                    SET from_time = r.begin_date,
+                        to_time   = COALESCE(r.end_date, now())
+                    WHERE main_datastream_id = r.main_datastream_id
+                      AND from_time <= COALESCE(r.end_date, now())
+                      AND to_time >= r.begin_date;
+                ELSE
+                    INSERT INTO foi_recompute_queue (main_datastream_id, from_time, to_time)
+                    VALUES (r.main_datastream_id, r.begin_date, COALESCE(r.end_date, now()));
+                END IF;
+            END IF;
+
+        ELSE
+
+-- new datastream or new timetable: INSERT
+            INSERT INTO foi_datastream_mapping
+                (main_datastream_id, x_datastream_id, y_datastream_id, z_datastream_id,
+                 action_id, configuration_id, label, valid_from, valid_to)
+            VALUES
+                (r.main_datastream_id, r.x_datastream_id, r.y_datastream_id, r.z_datastream_id,
+                 r.action_id, r.configuration_id, r.label, r.begin_date, r.end_date)
+            ON CONFLICT (main_datastream_id, valid_from) DO NOTHING;
+
+            INSERT INTO foi_recompute_queue (main_datastream_id, from_time, to_time)
+            VALUES (r.main_datastream_id, r.begin_date, COALESCE(r.end_date, now()));
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;

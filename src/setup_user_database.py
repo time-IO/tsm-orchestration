@@ -293,7 +293,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             os.path.join(base_path, "observed_property.sql"),
             os.path.join(base_path, "datastream.sql"),
             os.path.join(base_path, "helper_views", "foi_features_combined.sql"),
-            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
+            os.path.join(base_path, "helper_views", "obs_features_combined.sql"),
             os.path.join(base_path, "feature.sql"),
             os.path.join(base_path, "observation.sql"),
         ]

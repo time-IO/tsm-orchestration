@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE VIEW crns_test.foi_features_combined AS
+CREATE OR REPLACE VIEW foi_features_combined AS
 
 SELECT
     feature_id, is_dynamic, action_id, label, begin_date, coordinates
@@ -16,7 +16,7 @@ FROM (
         JOIN public.sms_configuration c ON c.id = dma.configuration_id AND c.is_public
         JOIN public.sms_device d ON d.id = dma.device_id AND d.is_public
         JOIN public.sms_datastream_link dsl ON dsl.device_mount_action_id = dma.id
-            AND dsl.datasource_id = 'crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b'
+            AND dsl.datasource_id = '{tsm_schema}'
 ) static_coords
 
 
@@ -25,4 +25,4 @@ UNION ALL
 
 SELECT
     feature_id, is_dynamic, action_id, label, begin_date, coordinates
-FROM crnscosmicrayneutronsens_b1b36815413f48ea92ba3a0fbc795f7b.foi_catalog_dynamic
+FROM foi_catalog_dynamic
