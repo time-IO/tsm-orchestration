@@ -123,6 +123,7 @@ COMMENT ON COLUMN related_datastream.target_id IS 'Codomain, target  or set of d
 
 
 CREATE TABLE mqtt_message
+
 (
     "id"          bigserial                NOT NULL PRIMARY KEY,
     "timestamp"   timestamp with time zone NOT NULL,
