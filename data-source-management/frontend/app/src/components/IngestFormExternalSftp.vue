@@ -72,10 +72,24 @@
               <q-input
                 filled
                 class="q-mb-md"
-                v-model="formData.uri"
+                v-model="uriHostWithoutProtocolPrefix"
                 label="Fileserver URI *"
                 :rules="[rules.REQUIRED]"
+                :prefix="currentProtocolPrefix"
               >
+                <template #prepend>
+                  <q-btn-toggle
+                    class="ma-0 pa-0"
+                    filled
+                    v-model="selectedProtocol"
+                    :options="PROTOCOL_OPTIONS"
+                    emit-value
+                    map-options
+                    hide-bottom-space
+                    style="min-width: 110px"
+                    aria-label="Protokoll"
+                  />
+                </template>
                 <template #append>
                   <help-button
                     titleHelp="Fileserver URI"
@@ -142,6 +156,7 @@
 
             <div class="q-mt-md">
               <q-input
+                class="q-mb-md uri-field"
                 filled
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
@@ -184,11 +199,12 @@ import type {
 } from '@/services/ingest_external_sftp/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import HelpButton from '@/components/HelpButton.vue';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ParserSelectByType from '@/components/ParserSelectByType.vue';
 
 import { ruleFactories, rules } from '@/utils/validation/rules';
 import type { ParserRead } from '@/services/types';
+import { removePrefixIfExists, removeSuffixIfExists } from '@/utils/string_utils';
 
 defineProps<{
   title: string;
@@ -219,6 +235,53 @@ const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate
 });
 
 const isPwd = ref(true);
+
+const PROTOCOLS = ['sftp', 'ftp'];
+const PROTOCOL_OPTIONS = PROTOCOLS.map((p) => ({ label: p.toUpperCase(), value: p }));
+type Protocol = (typeof PROTOCOLS)[number];
+const selectedProtocol = ref<Protocol>('sftp');
+
+function getProtocolPrefixByProtocol(value: Protocol): string {
+  return `${value}://`;
+}
+
+const currentProtocolPrefix = computed<string>(() => {
+  return getProtocolPrefixByProtocol(selectedProtocol.value);
+});
+
+function detectProtocol(uri: string): Protocol | null {
+  return PROTOCOLS.find((p) => uri.startsWith(getProtocolPrefixByProtocol(p))) ?? null;
+}
+
+function stripProtocol(uri: string): string {
+  PROTOCOLS.forEach((p) => {
+    uri = removePrefixIfExists(uri, getProtocolPrefixByProtocol(p));
+  });
+  return removeSuffixIfExists(uri, '/');
+}
+
+const uriHostWithoutProtocolPrefix = computed<string>({
+  get: () => stripProtocol(formData.value.uri ?? ''),
+  set: (value) => {
+    selectedProtocol.value = detectProtocol(value.trim()) ?? selectedProtocol.value;
+    const host = stripProtocol(value);
+    formData.value.uri = host ? getProtocolPrefixByProtocol(selectedProtocol.value) + host : null;
+  },
+});
+
+watch(selectedProtocol, (value) => {
+  const host = stripProtocol(formData.value.uri ?? '');
+  formData.value.uri = host ? getProtocolPrefixByProtocol(value) + host : null;
+});
+
+watch(
+  () => formData.value.uri,
+  (uri) => {
+    if (!uri) return;
+    selectedProtocol.value = detectProtocol(uri) ?? selectedProtocol.value;
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped></style>

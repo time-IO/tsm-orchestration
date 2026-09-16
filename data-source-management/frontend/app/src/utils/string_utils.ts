@@ -28,6 +28,34 @@ export function truncateText(
 }
 
 /**
+ * Removes a prefix from a string if it is present.
+ * @param text - The original string
+ * @param prefix - Prefix to remove (e.g. "https://")
+ * @param caseSensitive - If false, the prefix is matched ignoring case (default: true)
+ * @returns The string without the leading prefix, or the original string if it does not start with it
+ */
+export function removePrefixIfExists(text: string, prefix: string, caseSensitive = true): string {
+  if (!text || !prefix) return text;
+  const haystack = caseSensitive ? text : text.trim().toLowerCase();
+  const needle = caseSensitive ? prefix : prefix.toLowerCase();
+  return haystack.startsWith(needle) ? text.slice(prefix.length) : text;
+}
+
+/**
+ * Removes a suffix from a string if it is present.
+ * @param text - The original string
+ * @param suffix - Suffix to remove (e.g. "/")
+ * @param caseSensitive - If false, the suffix is matched ignoring case (default: true)
+ * @returns The string without the trailing suffix, or the original string if it does not end with it
+ */
+export function removeSuffixIfExists(text: string, suffix: string, caseSensitive = true): string {
+  if (!text || !suffix) return text;
+  const haystack = caseSensitive ? text : text.trim().toLowerCase();
+  const needle = caseSensitive ? suffix : suffix.toLowerCase();
+  return haystack.endsWith(needle) ? text.slice(0, text.length - suffix.length) : text;
+}
+
+/**
  * Stringifies any value of unknown type. Includes parsing of ISO dates.
  * @param value - The value to stringify string
  * @returns The parsed string
