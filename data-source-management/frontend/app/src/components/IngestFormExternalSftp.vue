@@ -156,7 +156,6 @@
 
             <div class="q-mt-md">
               <q-input
-                class="q-mb-md uri-field"
                 filled
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
