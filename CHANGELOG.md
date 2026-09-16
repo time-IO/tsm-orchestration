@@ -3,9 +3,12 @@
 
 ## [Unreleased]
 ### Added
+- QC-Functions within a QC Setting can be reordered via drag & drop, determining their execution order ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 ### Fixed
 ### Changed
 ### Removed
+
+
 
 ## [2026-09-10]
 ### Added
