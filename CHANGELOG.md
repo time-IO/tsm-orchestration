@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 ### Added
+- Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
 ### Fixed
 ### Changed
 ### Removed
