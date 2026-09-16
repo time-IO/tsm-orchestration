@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS recompute_progress (
 
 -- Calculates feature ID for newly arrived observations
 -- and carries them into foi_catalog_dynamic and foi_observation_lookup.
-CREATE OR REPLACE FUNCTION trg_populate_foi_observation() RETURNS trigger AS
+CREATE OR REPLACE FUNCTION public.trg_populate_foi_observation() RETURNS trigger AS
 $$
 BEGIN
     EXECUTE format('SET LOCAL search_path TO %I, public', TG_TABLE_SCHEMA);
@@ -290,7 +290,7 @@ $$ LANGUAGE plpgsql;
 -- Reads the SMS configuration tables (public.sms_*) and
 -- updates foi_datastream_mapping accordingly.
 -- Creates orders in the foi_recompute_queue.
-CREATE OR REPLACE FUNCTION reconcile_foi_datastream_mapping(
+CREATE OR REPLACE FUNCTION public.reconcile_foi_datastream_mapping(
     p_datasource_id text
 ) RETURNS void AS
 $$
@@ -402,7 +402,7 @@ $$ LANGUAGE plpgsql;
 -- that are currently in foi_recompute_queue.
 -- Updates both foi_catalog_dynamic and
 -- foi_observation_lookup afterwards.
-CREATE OR REPLACE FUNCTION process_foi_recompute_queue(
+CREATE OR REPLACE FUNCTION public.process_foi_recompute_queue(
     p_from timestamp with time zone,
     p_to   timestamp with time zone
 ) RETURNS TABLE(inserted_foi bigint, updated_lookup bigint) AS
@@ -477,7 +477,7 @@ $$ LANGUAGE plpgsql;
 
 -- Clean up orphaned FOI coordinates with no related
 -- observation. Runs at the end of each complete recompute.
-CREATE OR REPLACE FUNCTION cleanup_orphaned_foi() RETURNS void AS
+CREATE OR REPLACE FUNCTION public.cleanup_orphaned_foi() RETURNS void AS
 $$
 BEGIN
     DELETE FROM foi_catalog_dynamic f
@@ -494,7 +494,7 @@ $$ LANGUAGE plpgsql;
 -- - COMMIT and a FIXED pause in between (p_pause_seconds).
 -- Progress over recompute_progress.
 -- Cancel at any time, the same call automatically sets away.
-CREATE OR REPLACE PROCEDURE run_recompute_until_done(
+CREATE OR REPLACE PROCEDURE public.run_recompute_until_done(
     p_job_name text,
     p_schema text,
     p_chunk_interval interval DEFAULT '30 days',
