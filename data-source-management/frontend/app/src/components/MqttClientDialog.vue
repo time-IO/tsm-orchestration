@@ -95,9 +95,9 @@
 import { computed, onUnmounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
-import { useAuthStore } from 'stores/authStore';
-import { MqttLiveConnection } from 'src/services/ingest_mqtt_client';
-import type { MqttLiveMessage } from 'src/services/ingest_mqtt_client/types';
+import { useAuthStore } from '@/stores/authStore';
+import { MqttLiveConnection } from '@/services/ingest_mqtt_client';
+import type { MqttLiveMessage } from '@/services/ingest_mqtt_client/types';
 
 const showDialog = defineModel<boolean>({ default: false });
 const { ingestId, topic } = defineProps<{

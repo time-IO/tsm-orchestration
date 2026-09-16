@@ -85,14 +85,14 @@
 </template>
 
 <script setup lang="ts">
-import { isDatastreamType } from 'src/utils/quality_control_utils';
-import StaDatastreamCard from 'components/StaDatastreamCard.vue';
+import { isDatastreamType } from '@/utils/quality_control_utils';
+import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionPublic,
   QualityControlFunctionUpdate,
-} from 'src/services/quality_control_setting/types';
-import type { Datastream } from 'src/services/sta/types';
+} from '@/services/quality_control_setting/types';
+import type { Datastream } from '@/services/sta/types';
 
 defineProps<{
   removable?: boolean;

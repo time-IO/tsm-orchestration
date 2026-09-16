@@ -84,13 +84,13 @@
 
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
-import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
-import StaDatastreamInput from 'components/StaDatastreamInput.vue';
-import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
-import type { Datastream } from 'src/services/sta/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
+import StaDatastreamInput from '@/components/StaDatastreamInput.vue';
+import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vue';
+import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import type { Datastream } from '@/services/sta/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -105,8 +105,8 @@ const formData = ref({
   thresh: null as number | null,
   window: null as number | null,
   min_periods: null as number | null,
-  flag: 255.0 as number | null,
-  dfilter: 0 as number | null,
+  flag: 255.0,
+  dfilter: 0,
 });
 
 function loadInitialData() {

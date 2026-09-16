@@ -122,14 +122,14 @@
 </template>
 
 <script setup lang="ts">
-import StaDatastreamInput from 'components/StaDatastreamInput.vue';
+import StaDatastreamInput from '@/components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
-import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
-import QcFunctionFormIntOffsetInput from 'components/QcFunctionFormIntOffsetInput.vue';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
-import type { Datastream } from 'src/services/sta/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
+import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
+import QcFunctionFormIntOffsetInput from '@/components/QcFunctionFormIntOffsetInput.vue';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import type { Datastream } from '@/services/sta/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
+import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -152,8 +152,8 @@ const formData = ref({
   min_periods: null as number | null,
   center: true,
   axis: null as number | null,
-  flag: 255.0 as number | null,
-  dfilter: 0 as number | null,
+  flag: 255.0,
+  dfilter: 0,
 });
 
 function loadInitialData() {

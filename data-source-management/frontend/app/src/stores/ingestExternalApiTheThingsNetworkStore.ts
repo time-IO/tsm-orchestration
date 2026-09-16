@@ -3,9 +3,9 @@ import type {
   IngestExternalApiTheThingsNetworkCreate,
   IngestExternalApiTheThingsNetworkPublic,
   IngestExternalApiTheThingsNetworkUpdate,
-} from 'src/services/ingest_external_api_the_things_network/types';
-import { API } from 'src/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+} from '@/services/ingest_external_api_the_things_network/types';
+import { API } from '@/services';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiTheThingsNetworkStore = createIngestStore<
   IngestExternalApiTheThingsNetworkPublic,
