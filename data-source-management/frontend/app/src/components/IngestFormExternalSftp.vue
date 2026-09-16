@@ -235,7 +235,7 @@ const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate
 
 const isPwd = ref(true);
 
-const PROTOCOLS = ['sftp', 'ftp'];
+const PROTOCOLS = ['sftp', 'ftp'] as const;
 const PROTOCOL_OPTIONS = PROTOCOLS.map((p) => ({ label: p.toUpperCase(), value: p }));
 type Protocol = (typeof PROTOCOLS)[number];
 const selectedProtocol = ref<Protocol>('sftp');
