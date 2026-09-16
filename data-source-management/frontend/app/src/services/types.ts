@@ -1,6 +1,16 @@
 import type { AxiosResponse } from 'axios';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
-import type { JsonParserPublic } from 'src/services/parser_json/types';
+import type {
+  CsvParserUpdate,
+  CsvParserPublic,
+  CsvParserCreate,
+  CsvParserValidate,
+} from 'src/services/parser_csv/types';
+import type {
+  JsonParserCreate,
+  JsonParserValidate,
+  JsonParserPublic,
+  JsonParserUpdate,
+} from 'src/services/parser_json/types';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -54,6 +64,20 @@ export interface IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
   deleteOne(id: number): Promise<AxiosResponse<void>>;
 }
 
+export type ParserPayloadUpdate = CsvParserUpdate | JsonParserUpdate;
+export type ParserPayloadCreate = CsvParserCreate | JsonParserCreate;
+export type ParserPayloadPublic = CsvParserPublic | JsonParserPublic;
+export type ParserPayloadValidate = CsvParserValidate | JsonParserValidate;
+
+export interface ParserApiService<
+  TPublic extends ParserPayloadPublic,
+  TPayloadCreate extends ParserPayloadCreate,
+  TPayloadUpdate extends ParserPayloadUpdate,
+  TPayloadValidate extends ParserPayloadValidate,
+> extends IngestApiService<TPublic, TPayloadCreate, TPayloadUpdate> {
+  validateFile(settings: TPayloadValidate, csvFile: File): Promise<ParsingResult>;
+}
+
 export type ParserRead = {
   parser_type: string;
   name: string;
@@ -66,4 +90,11 @@ export type ParserSelectOption = ParserRead & {
   timestamp_keys?: JsonParserPublic['timestamp_keys'];
   type?: string;
   header?: number | boolean | null;
+};
+
+export type ParsingResult = {
+  data: Record<string, unknown>[];
+  error: string;
+  warnings: string[];
+  is_valid: boolean;
 };

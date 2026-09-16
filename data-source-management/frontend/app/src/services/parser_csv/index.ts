@@ -2,9 +2,15 @@ import type {
   CsvParserPublic,
   CsvParserCreate,
   CsvParserUpdate,
+  CsvParserValidate,
 } from 'src/services/parser_csv/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+import { createParserApiService } from 'src/services/factoryParserService';
 
 const apiPath = 'parser/csv/';
 
-export default createIngestApiService<CsvParserPublic, CsvParserCreate, CsvParserUpdate>(apiPath);
+export default createParserApiService<
+  CsvParserPublic,
+  CsvParserCreate,
+  CsvParserUpdate,
+  CsvParserValidate
+>(apiPath);

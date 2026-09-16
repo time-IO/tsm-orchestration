@@ -58,6 +58,7 @@
             :permission-group-id="formData.permission_group_id"
             :disable="!formData.permission_group_id"
             :preselected-parser="itemParser"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Action Buttons -->

@@ -1,70 +1,73 @@
 <template>
-  <div v-if="selectedParser" class="q-mb-md">
-    <span class="text-caption">Selected Parser: </span>
-    <span class="text-caption text-italic text-grey">Name:</span>
-    <q-chip dense square color="blue-grey-5" text-color="white">
-      {{ selectedParser.name }}
-    </q-chip>
-    <span class="text-caption text-italic text-grey">Type:</span>
-    <q-chip dense square color="lime-5" text-color="white">
-      {{ selectedParser.parser_type }}
-    </q-chip>
-
-    <template v-if="selectedParser.parser_type === 'csv'">
-      <span class="text-caption text-italic text-grey">Delimiter:</span>
-      <q-chip dense square color="teal-5" text-color="white">
-        {{ selectedParser.delimiter }}
-      </q-chip>
-      <template v-for="tk in selectedParser.timestamp_columns ?? []" :key="tk.id">
-        <span class="text-caption text-italic text-grey">Timestamp Column:</span>
-        <q-chip dense square color="light-green-5" text-color="white">
-          {{ tk.column }}:{{ tk.timestamp_format }}
-        </q-chip>
-      </template>
-    </template>
-
-    <template v-if="selectedParser.parser_type === 'json'">
-      <template v-for="tk in selectedParser.timestamp_keys ?? []" :key="tk.id">
-        <span class="text-caption text-italic text-grey">Timestamp Key:</span>
-        <q-chip dense square color="light-green-5" text-color="white">
-          {{ tk.key }}:{{ tk.format }}
-        </q-chip>
-      </template>
-    </template>
-
-    <template v-if="selectedParser.parser_type === 'soilcan'">
-      <span class="text-caption text-italic text-grey">Soilcan-Type:</span>
-      <q-chip dense square color="teal-5" text-color="white">
-        {{ selectedParser.type }}
-      </q-chip>
-      <span class="text-caption text-italic text-grey">Header:</span>
-      <q-chip dense square color="light-green-5" text-color="white">
-        {{ selectedParser.header ? 'Yes' : 'No' }}
-      </q-chip>
-    </template>
-
-    <q-icon
-      name="launch"
-      class="cursor-pointer"
-      color="blue-grey-5"
-      text-color="white"
-      @click.stop="openParser(selectedParser.id, selectedParser.parser_type)"
-    >
-      <q-tooltip>Open in new window</q-tooltip>
-    </q-icon>
-  </div>
-
-  <q-btn
-    outline
-    no-caps
-    class="q-mb-md full-width"
-    icon="tune"
-    :label="selectedParser ? 'Update Parser' : 'Select Parser'"
+  <BaseField
+    filled
+    readonly
+    label="Parser *"
+    :model-value="selectedParserId"
     :disable="disable"
     @click="openDialog"
+    v-bind="$attrs"
   >
-    <q-tooltip v-if="disable">Select a Permission Group first</q-tooltip>
-  </q-btn>
+    <template #hint v-if="disable">
+      <span>Select a Permission Group first</span>
+    </template>
+
+    <template #control>
+      <div v-if="selectedParser" class="row items-center q-gutter-xs full-width">
+        <span class="text-caption text-italic text-grey">Name:</span>
+        <q-chip dense square color="blue-grey-5" text-color="white">
+          {{ truncateText(selectedParser.name, 50) }}
+        </q-chip>
+        <span class="text-caption text-italic text-grey">Type:</span>
+        <q-chip dense square color="lime-5" text-color="white">
+          {{ selectedParser.parser_type }}
+        </q-chip>
+
+        <template v-if="selectedParser.parser_type === 'csv'">
+          <span class="text-caption text-italic text-grey">Delimiter:</span>
+          <q-chip dense square color="teal-5" text-color="white">
+            {{ selectedParser.delimiter }}
+          </q-chip>
+          <template v-for="tk in selectedParser.timestamp_columns ?? []" :key="tk.id">
+            <span class="text-caption text-italic text-grey">Timestamp Column:</span>
+            <q-chip dense square color="light-green-5" text-color="white">
+              {{ tk.column }}:{{ tk.timestamp_format }}
+            </q-chip>
+          </template>
+        </template>
+
+        <template v-if="selectedParser.parser_type === 'json'">
+          <template v-for="tk in selectedParser.timestamp_keys ?? []" :key="tk.id">
+            <span class="text-caption text-italic text-grey">Timestamp Key:</span>
+            <q-chip dense square color="light-green-5" text-color="white">
+              {{ tk.key }}:{{ tk.format }}
+            </q-chip>
+          </template>
+        </template>
+
+        <template v-if="selectedParser.parser_type === 'soilcan'">
+          <span class="text-caption text-italic text-grey">Soilcan-Type:</span>
+          <q-chip dense square color="teal-5" text-color="white">
+            {{ selectedParser.type }}
+          </q-chip>
+          <div class="text-caption text-italic text-grey">Header:</div>
+          <q-chip dense square color="light-green-5" text-color="white">
+            {{ selectedParser.header ? 'Yes' : 'No' }}
+          </q-chip>
+        </template>
+
+        <q-icon
+          name="launch"
+          class="cursor-pointer"
+          color="blue-grey-5"
+          text-color="white"
+          @click.stop="openParser(selectedParser.id, selectedParser.parser_type)"
+        >
+          <q-tooltip>Open in new window</q-tooltip>
+        </q-icon>
+      </div>
+    </template>
+  </BaseField>
 
   <q-dialog v-model="showDialog">
     <q-card style="min-width: 400px">
@@ -99,6 +102,8 @@ import ParserTypeSelect from 'components/ParserTypeSelect.vue';
 import ParserSelect from 'components/ParserSelect.vue';
 import { useRouter } from 'vue-router';
 import type { ParserRead, ParserSelectOption } from 'src/services/types';
+import BaseField from 'components/common/BaseField.vue';
+import { truncateText } from 'src/utils/string_utils';
 
 const selectedParserId = defineModel<number | null | undefined>();
 const selectedParser = ref<ParserSelectOption | null>(null);

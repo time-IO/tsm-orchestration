@@ -2,7 +2,7 @@ DROP VIEW IF EXISTS "datastream_properties" CASCADE;
 CREATE VIEW "datastream_properties" AS
 SELECT DISTINCT
     case
-        when dp.property_name is null or dp.property_name = '' or dp.unit_name is null
+        when dp.property_name is null or dp.property_name = ''
         then tsm_ds.position
         else concat_ws(
                 ' - ',

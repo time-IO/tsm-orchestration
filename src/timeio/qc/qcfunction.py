@@ -134,11 +134,13 @@ def get_qc_things(funcs: list[QcFunction]) -> list[str]:
     return list(uuids)
 
 
-def filter_thing_functions(funcs: list[QcFunction], thing_id: int) -> list[QcFunction]:
+def filter_thing_functions(
+    funcs: list[QcFunction], thing_uuid: str
+) -> list[QcFunction]:
     out = []
     for func in funcs:
-        thing_ids = set(int(f.sms_configuration_id) for f in func.fields)
-        if thing_id in thing_ids:
+        uuids = set(str(f.thing_uuid) for f in func.fields)
+        if thing_uuid in uuids:
             out.append(func)
     return out
 
@@ -177,7 +179,7 @@ def filter_functions_to_execute(
     return selected_funcs
 
 
-def filter_qc_functions(funcs: list[QcFunction], sta_thing_id: int) -> list[QcFunction]:
-    thing_funcs = filter_thing_functions(funcs, sta_thing_id)
+def filter_qc_functions(funcs: list[QcFunction], thing_uuid: str) -> list[QcFunction]:
+    thing_funcs = filter_thing_functions(funcs, thing_uuid)
     funcs_to_process = filter_functions_to_execute(funcs, thing_funcs)
     return funcs_to_process

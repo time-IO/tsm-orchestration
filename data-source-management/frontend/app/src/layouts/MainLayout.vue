@@ -14,7 +14,7 @@
 
         <q-toolbar-title>{{ t('appname') }}</q-toolbar-title>
 
-        <q-btn round flat>
+        <q-btn round flat aria-label="Account">
           <q-avatar>
             <span v-if="authStore.isAuthenticated">{{ authStore.initials }}</span>
             <q-icon v-else name="account_circle" />

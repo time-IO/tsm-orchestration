@@ -62,3 +62,15 @@ export type CsvParserUpdate = {
   timezone?: string | null;
   encoding?: string | null;
 };
+
+export type CsvParserValidate = {
+  delimiter?: string | null;
+  headlines_to_exclude?: string | null;
+  footlines_to_exclude?: number | null;
+  pandas_read_csv?: string | null;
+  timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
+  header?: number | null;
+  comment?: string[];
+  timezone?: string | null;
+  encoding?: string | null;
+};

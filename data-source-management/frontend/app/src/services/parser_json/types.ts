@@ -50,3 +50,11 @@ export type JsonParserUpdate = {
   measurement_key?: string | null;
   excluded_keys?: string[] | null;
 };
+
+export type JsonParserValidate = {
+  comment?: string | null;
+  timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
+  timezone: string | null;
+  measurement_key?: string | null;
+  excluded_keys?: string[] | null;
+};

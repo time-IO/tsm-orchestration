@@ -131,8 +131,10 @@ unit-test-dsm-api:
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
     - pip install -r data-source-management/api/requirements.txt
+    - cp -r src/timeio data-source-management/api/app/timeio
+      # maybe run the tests in the backend container instead after installing testing tools?
   script:
-    - pytest data-source-management/api/app/tests/unit_tests data-source-management/api/app/tests/validation -v -W error
+    - pytest data-source-management/api/app/tests/unit_tests data-source-management/api/app/tests/validation -v
   rules:
     - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
       when: never

@@ -118,7 +118,7 @@ class QcHandler(AbstractHandler):
             if not qc_funcs:
                 return
             if thing is not None:
-                qc_funcs = filter_qc_functions(qc_funcs, thing.id)
+                qc_funcs = filter_qc_functions(qc_funcs, thing.uuid)
             logger.info(f"COLLECTED TESTS: {qc_funcs}")
 
             N = len(qc_funcs)

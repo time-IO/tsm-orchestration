@@ -69,6 +69,29 @@
         <mqtt-client-dialog v-model="mqttOpen" :ingest-id="ingestId" :topic="mqttTopic" />
       </div>
 
+      <div :class="toolClass('journal')">
+        <q-card flat bordered class="full-height cursor-pointer column" @click="journalOpen = true">
+          <q-card-section class="col row items-center no-wrap q-pa-md">
+            <q-avatar
+              rounded
+              size="2.5rem"
+              color="deep-purple"
+              text-color="white"
+              icon="receipt_long"
+            />
+            <div class="q-ml-md">
+              <div class="text-subtitle2 text-weight-medium">Journal</div>
+              <div class="text-caption text-grey-7">
+                View this ingest's user-facing journal (logs, warnings and errors recorded while
+                processing its data).
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <journal-dialog v-model="journalOpen" :ingest-id="ingestId" />
+      </div>
+
       <div v-if="triggerType" :class="toolClass('trigger')">
         <q-card flat bordered class="full-height cursor-pointer column" @click="triggerOpen = true">
           <q-card-section class="col row items-center no-wrap q-pa-md">
@@ -101,6 +124,7 @@ import type { IngestStorageService } from 'src/services/factoryIngestStorageServ
 import { publicAsset } from 'src/utils/public_asset';
 import S3ExplorerDialog from 'components/S3ExplorerDialog.vue';
 import MqttClientDialog from 'components/MqttClientDialog.vue';
+import JournalDialog from 'components/JournalDialog.vue';
 import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
 import TriggerExternalSftpDialog from 'components/TriggerExternalSftpDialog.vue';
 
@@ -117,6 +141,7 @@ const { uuid, service, mqttTopic, triggerType } = defineProps<{
 
 const explorerOpen = ref(false);
 const mqttOpen = ref(false);
+const journalOpen = ref(false);
 const triggerOpen = ref(false);
 const grafanaLogo = publicAsset('icons/grafana_icon.png');
 
@@ -140,6 +165,7 @@ const visibleTools = computed(() => {
   if (visualizationUrl.value) tools.push('grafana');
   if (service) tools.push('explorer');
   if (mqttTopic) tools.push('mqtt');
+  tools.push('journal');
   if (triggerType) tools.push('trigger');
   return tools;
 });
