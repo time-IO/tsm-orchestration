@@ -1,10 +1,10 @@
-import { axiosInstance } from 'boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type {
   IngestFilter,
   PaginatedResponse,
   QTableRequestPropPagination,
-} from 'src/services/types';
-import type { IngestWithApiInfoRead } from 'src/services/ingest/types';
+} from '@/services/types';
+import type { IngestWithApiInfoRead } from '@/services/ingest/types';
 
 const apiPath = 'ingest/';
 

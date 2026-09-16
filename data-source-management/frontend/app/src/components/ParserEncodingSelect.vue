@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { useParserEncodingStore } from 'stores/parserEncodingStore';
+import { useParserEncodingStore } from '@/stores/parserEncodingStore';
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 

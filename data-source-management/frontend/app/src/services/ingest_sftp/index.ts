@@ -2,8 +2,8 @@ import type {
   IngestSftpPublic,
   IngestSftpCreate,
   IngestSftpUpdate,
-} from 'src/services/ingest_sftp/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/ingest_sftp/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = 'ingest/sftp/';
 

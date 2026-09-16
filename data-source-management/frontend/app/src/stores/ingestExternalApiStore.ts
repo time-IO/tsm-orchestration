@@ -1,12 +1,12 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type {
   IngestExternalApiFilter,
   QTableRequestProp,
   QTableRequestPropPagination,
-} from 'src/services/types';
-import { defaultPagination } from 'src/utils/pagination_utils';
-import type { IngestExternalApiRead } from 'src/services/ingest_external_api/types';
+} from '@/services/types';
+import { defaultPagination } from '@/utils/pagination_utils';
+import type { IngestExternalApiRead } from '@/services/ingest_external_api/types';
 
 export const useIngestExternalApiStore = defineStore('ingestExternalApiStore', {
   state: () => ({

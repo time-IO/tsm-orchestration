@@ -51,7 +51,9 @@ async function expectLoggedOut(page: Page) {
   // login form. In that state Login is an entry in the account popover.
   await expect(accountControl(page)).toBeVisible();
   await accountControl(page).click();
-  await expect(loginControl(page)).toBeVisible();
+  await expect(
+    page.locator(".q-menu .q-item").filter({ hasText: loginControlName }),
+  ).toBeVisible();
 }
 
 test("controlled origin provides Web Crypto for OIDC PKCE @auth", async ({

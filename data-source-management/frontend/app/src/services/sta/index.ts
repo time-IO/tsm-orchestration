@@ -1,5 +1,5 @@
-import { axiosInstance } from 'src/boot/axios';
-import type { StaDatastreamRequestParameter } from 'src/services/sta/types';
+import { axiosInstance } from '@/boot/axios';
+import type { StaDatastreamRequestParameter } from '@/services/sta/types';
 
 const apiPath = '/sta/';
 

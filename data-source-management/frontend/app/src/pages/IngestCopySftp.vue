@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestSftpCreate } from 'src/services/ingest_sftp/types';
-import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import IngestFormSftp from 'components/IngestFormSftp.vue';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { ParserRead } from 'src/services/types';
+import type { IngestSftpCreate } from '@/services/ingest_sftp/types';
+import { useIngestSftpStore } from '@/stores/ingestSftpStore';
+import IngestFormSftp from '@/components/IngestFormSftp.vue';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { ParserRead } from '@/services/types';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();

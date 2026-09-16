@@ -165,15 +165,15 @@
 </template>
 
 <script setup lang="ts">
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import StaDatastreamInput from 'components/StaDatastreamInput.vue';
+import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
+import StaDatastreamInput from '@/components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
-import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
-import QcFunctionFormFloatEnumInput from 'components/QcFunctionFormFloatEnumInput.vue';
-import QcFunctionFormFloatIntInput from 'components/QcFunctionFormFloatIntInput.vue';
-import type { Datastream } from 'src/services/sta/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import QcFunctionFormFloatEnumInput from '@/components/QcFunctionFormFloatEnumInput.vue';
+import QcFunctionFormFloatIntInput from '@/components/QcFunctionFormFloatIntInput.vue';
+import type { Datastream } from '@/services/sta/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -189,21 +189,38 @@ const current_corruption_type = ref(POSSIBLE_QC_FUNCTION_TYPES.FLOAT);
 
 const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 
-const formData = ref({
+type UniLofFormData = {
+  field: Datastream[];
+  target: Datastream[];
+  n: number;
+  thresh: string | number;
+  probability: number | null;
+  corruption: number | null;
+  algorithm: string;
+  p: number;
+  density: string | number;
+  fill_na: boolean;
+  slope_correct: boolean;
+  min_offset: number | null;
+  flag: number;
+  dfilter: number;
+};
+
+const formData = ref<UniLofFormData>({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  n: 20 as number,
-  thresh: 'auto' as string | number,
+  n: 20,
+  thresh: 'auto',
   probability: null as number | null,
   corruption: null as number | null,
   algorithm: 'ball_tree',
-  p: 1 as number,
-  density: 'auto' as string | number,
+  p: 1,
+  density: 'auto',
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
-  flag: 255.0 as number | null,
-  dfilter: 0 as number | null,
+  flag: 255.0,
+  dfilter: 0,
 });
 
 function loadInitialData() {
@@ -227,7 +244,9 @@ function loadInitialData() {
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.n = (nArg?.input.value as number) ?? 20;
+
   formData.value.thresh = (threshArg?.input.value as string | number) ?? 'auto';
+
   formData.value.probability = (probabilityArg?.input.value as number) ?? null;
   formData.value.corruption = (corruptionArg?.input.value as number) ?? null;
   formData.value.algorithm = (algorithmArg?.input.value as string) ?? 'ball_tree';
