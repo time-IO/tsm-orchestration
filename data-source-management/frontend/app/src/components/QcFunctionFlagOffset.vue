@@ -1,5 +1,10 @@
 <template>
-  <qc-function-form-template function-title="flagJumps" @submit="submitForm" @remove="removeForm">
+  <qc-function-form-template
+    function-title="flagOffset"
+    v-model:label="label"
+    @submit="submitForm"
+    @remove="removeForm"
+  >
     <!-- field        -->
 
     <div class="q-mb-md">
@@ -31,7 +36,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.tolerance"
+      v-model.number="formData.tolerance"
       label="tolerance * (enter a floating point number)"
       :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
       hint="Maximum allowed difference between preceding and succeeding values."
@@ -50,7 +55,7 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model="formData.thresh"
+      v-model.number="formData.thresh"
       label="thresh (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       hint="Minimum absolute difference to consider a sequence as an offset."
@@ -114,6 +119,8 @@ const formData = ref({
   flag: 255.0 as number | null,
   dfilter: 0 as number | null,
 });
+
+const label = defineModel<string | undefined>('label');
 
 function loadInitialData() {
   if (!props.initialData) return;

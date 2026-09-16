@@ -25,7 +25,7 @@ def get_admin_token():
             "username": admin_user,
             "password": admin_password,
             "grant_type": "password",
-        }
+        },
     )
     response.raise_for_status()
     return response.json()["access_token"]
@@ -40,18 +40,18 @@ def create_user(token):
         "firstName": "Test",
         "lastName": "User",
         "enabled": True,
-        "credentials": [{
-            "userLabel": "Password",
-            "temporary": False,
-            "type": "password",
-            "value": test_password
-        }],
-        "requiredActions": []
+        "credentials": [
+            {
+                "userLabel": "Password",
+                "temporary": False,
+                "type": "password",
+                "value": test_password,
+            }
+        ],
+        "requiredActions": [],
     }
     response = requests.post(
-        url,
-        headers={"Authorization": f"Bearer {token}"},
-        json=payload
+        url, headers={"Authorization": f"Bearer {token}"}, json=payload
     )
     if response.status_code == 409:
         print(f"User {test_username} already exists, updating instead")
@@ -59,7 +59,7 @@ def create_user(token):
         update_response = requests.put(
             f"{url}/{user_id}",
             headers={"Authorization": f"Bearer {token}"},
-            json=payload
+            json=payload,
         )
         update_response.raise_for_status()
         return
@@ -72,7 +72,7 @@ def get_user_id(token):
     response = requests.get(
         url,
         headers={"Authorization": f"Bearer {token}"},
-        params={"username": test_username, "exact": "true"}
+        params={"username": test_username, "exact": "true"},
     )
     response.raise_for_status()
     users = response.json()
@@ -87,7 +87,7 @@ def create_or_get_group(token):
     response = requests.post(
         url,
         headers={"Authorization": f"Bearer {token}"},
-        json={"name": group_path.strip("/")}
+        json={"name": group_path.strip("/")},
     )
     if response.status_code not in (201, 409, 400):
         response.raise_for_status()
@@ -103,7 +103,9 @@ def create_or_get_group(token):
 
 
 def add_user_to_group(token, user_id, group_id):
-    url = f"http://{host}/keycloak/admin/realms/{realm}/users/{user_id}/groups/{group_id}"
+    url = (
+        f"http://{host}/keycloak/admin/realms/{realm}/users/{user_id}/groups/{group_id}"
+    )
     response = requests.put(
         url,
         headers={"Authorization": f"Bearer {token}"},
@@ -117,7 +119,7 @@ def enable_direct_access_grants(token):
     response = requests.get(
         url,
         headers={"Authorization": f"Bearer {token}"},
-        params={"clientId": client_id}
+        params={"clientId": client_id},
     )
     response.raise_for_status()
     clients = response.json()
@@ -134,9 +136,7 @@ def enable_direct_access_grants(token):
     client_data = clients[0]
     client_data["directAccessGrantsEnabled"] = True
     update_response = requests.put(
-        update_url,
-        headers={"Authorization": f"Bearer {token}"},
-        json=client_data
+        update_url, headers={"Authorization": f"Bearer {token}"}, json=client_data
     )
     update_response.raise_for_status()
     print(f"Enabled direct access grants for {client_id}")

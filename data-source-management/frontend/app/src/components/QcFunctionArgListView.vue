@@ -1,4 +1,22 @@
 <template>
+  <q-list separator class="rounded-borders q-mt-sm q-ml-sm">
+    <q-expansion-item
+      v-for="(item, i) in quality_control_functions"
+      :key="i"
+      :model-value="expandAll ?? false"
+      style="border: 1px solid #cfd8dc; border-radius: 4px"
+      class="q-mb-md"
+    >
+      <template #header>
+        <q-item-section>
+          <div class="text-weight-medium text-subtitle1">
+            {{ item.name }}
+            <span v-if="item.label" class="text-h7 text-blue-grey-6">— {{ item.label }}</span>
+          </div>
+          <div class="text-caption text-grey-6">
+            <template v-if="getAlias(item, 'field').length">
+              Field: {{ getAlias(item, 'field').join(', ') }}
+            </template>
   <draggable
     v-model="localFunctions"
     item-key="_clientId"

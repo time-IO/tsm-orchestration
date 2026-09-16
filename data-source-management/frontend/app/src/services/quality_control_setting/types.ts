@@ -19,17 +19,20 @@ export type QualityControlFunctionArgumentUpdate = QualityControlFunctionArgumen
 export type QualityControlFunctionPublic = {
   id: number;
   name: string;
+  label?: string | null | undefined;
   quality_control_function_arguments: QualityControlFunctionArgumentPublic[];
 };
 
 export type QualityControlFunctionCreate = {
   name: string;
+  label?: string | null | undefined;
   _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentCreate[];
 };
 
 export type QualityControlFunctionUpdate = {
   name: string;
+  label?: string | null | undefined;
   _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentUpdate[];
 };

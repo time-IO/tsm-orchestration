@@ -1,3 +1,5 @@
+import json
+
 from pydantic import field_validator
 from sqlmodel import SQLModel, Field, Column, Relationship
 from typing import Optional, Any
@@ -65,6 +67,10 @@ class ParserCsvUpdate(ParserDetailedUpdate):
     comment: Optional[list[str]] = None
     header: Optional[int] = None
     timestamp_columns: Optional[list[ParserCsvTimestampColumnUpdate]] = None
+
+
+class ParserCsvValidate(ParserCsvUpdate):
+    pass
 
 
 class ParserCsv(SQLModel, table=True):

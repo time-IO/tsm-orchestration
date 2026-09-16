@@ -29,8 +29,9 @@ const formData = ref<JsonParserCreate>({
   timestamp_keys: [],
   comment: null,
   timezone: null,
+  measurement_key: null,
+  excluded_keys: [],
 });
-
 const isLoading = ref(false);
 
 const initialFormData = ref<JsonParserCreate | null>(null);
@@ -116,12 +117,14 @@ async function save() {
 
 function normalizeFormData(data: JsonParserCreate): JsonParserCreate {
   return {
-    permission_group_id: data.permission_group_id,
     name: data.name || '',
+    permission_group_id: data.permission_group_id,
     description: data.description || null,
     timestamp_keys: data.timestamp_keys || [],
     comment: data.comment || null,
     timezone: data.timezone || null,
+    measurement_key: data.measurement_key || null,
+    excluded_keys: data.excluded_keys || [],
   };
 }
 </script>

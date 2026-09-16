@@ -1,4 +1,8 @@
-from fastapi import Depends, HTTPException, Request
+from typing import TypeVar, Annotated
+
+from fastapi import Depends, HTTPException, Request, File, status, UploadFile, Form
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError
 from sqlmodel import Session, create_engine, select
 from config import settings
 from auth import oidc, OIDCError
@@ -190,6 +194,35 @@ def sync_permission_groups(
         raise HTTPException(
             status_code=500, detail=f"Failed to sync permission groups: {str(e)}"
         )
+
+
+def max_file_size(max_bytes: int):
+    async def _validate(file: UploadFile = File(...)) -> UploadFile:
+        chunk_size = 1024 * 1024
+        size = 0
+        while chunk := await file.read(chunk_size):
+            size += len(chunk)
+            if size > max_bytes:
+                raise HTTPException(
+                    status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                    detail=f"File too large. Max allowed size is {max_bytes} bytes.",
+                )
+        await file.seek(0)
+        return file
+
+    return _validate
+
+
+def json_form[T: BaseModel](model: type[T], field: str = "settings"):
+    async def dependency(raw: Annotated[str, Form(alias=field)]) -> T:
+        try:
+            return model.model_validate_json(raw)
+        except ValidationError as exc:
+            raise RequestValidationError(
+                [{**err, "loc": ("body", field, *err["loc"])} for err in exc.errors()]
+            ) from exc
+
+    return dependency
 
 
 def get_repo_ingest(session=Depends(get_session)):

@@ -1,9 +1,9 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">{{ title }}</h5>
-    <div class="row">
+    <div class="row q-mb-lg">
       <div class="col">
-        <q-btn label="back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
+        <q-btn label="back" icon="chevron_left" :to="backRoute" />
       </div>
     </div>
 
@@ -11,7 +11,7 @@
 
     <q-card class="q-mb-lg" flat>
       <q-card-section>
-        <q-form @submit.prevent="$emit('save')" class="q-gutter-md">
+        <q-form @submit.prevent="$emit('save')" class="q-gutter-md" :ref="FORM_REF_NAME">
           <!-- Name Field -->
           <q-input
             filled
@@ -45,6 +45,53 @@
             label="Comment character (e.g. //)"
             hint="Character(s) used to indicate comment lines"
           />
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.measurement_key"
+            label="Measurement key"
+            hint='Optional: key of the nested object containing the actual measurement data (e.g. object, not "object")'
+          />
+
+          <!-- Excluded Keys -->
+          <div class="q-my-md">
+            <q-list
+              separator
+              v-for="(key, idx) in formData.excluded_keys ?? []"
+              :key="idx"
+              class="q-mb-sm"
+            >
+              <q-item>
+                <q-item-section>
+                  <q-input
+                    filled
+                    v-model="formData.excluded_keys![idx]"
+                    label="Excluded key"
+                    hint="Key to exclude from the payload"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    dense
+                    flat
+                    icon="remove_circle"
+                    color="red"
+                    @click="removeExcludedKey(idx)"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="row q-gutter-sm items-center q-mb-sm">
+              <q-btn
+                icon="add"
+                label="Add excluded key"
+                flat
+                color="primary"
+                @click="addExcludedKey"
+              />
+            </div>
+          </div>
 
           <parser-timezone-select v-model="formData.timezone" :rules="[rules.REQUIRED]" />
 
@@ -114,15 +161,38 @@
           <!-- Action Buttons -->
           <div class="row q-mt-lg">
             <q-space />
-            <div class="col-6">
+            <div class="col-5">
               <q-btn
                 unelevated
                 color="green"
                 type="submit"
                 :loading="isLoading"
-                :disable="formData.timestamp_keys.length === 0"
+                :disable="!areRequiredFieldsFilled"
                 label="Save"
                 class="full-width"
+              />
+            </div>
+            <q-space />
+            <div class="col-5">
+              <q-btn
+                v-if="!showValidationDialog"
+                unelevated
+                color="primary"
+                icon="fact_check"
+                label="Test parser"
+                class="full-width"
+                @click="showValidationDialog = true"
+                :disable="!areRequiredFieldsFilled"
+              />
+              <q-btn
+                v-else
+                unelevated
+                outline
+                color="primary"
+                icon="close"
+                label="Close parser testing"
+                class="full-width"
+                @click="showValidationDialog = false"
               />
             </div>
             <q-space />
@@ -130,15 +200,18 @@
         </q-form>
       </q-card-section>
     </q-card>
+    <parser-validate-json v-model="showValidationDialog" :form-data="validFormData" />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
 import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
 import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
 import { rules } from 'src/utils/validation/rules';
+import ParserValidateJson from 'components/ParserValidateJson.vue';
+import { QForm } from 'quasar';
 
 type JsonParserFormData = JsonParserUpdate & {
   permission_group_id?: number | null;
@@ -170,8 +243,35 @@ const formData = defineModel<JsonParserFormData>({
     description: null,
     timestamp_keys: [],
     comment: null,
+    measurement_key: null,
+    excluded_keys: [],
+    timezone: null,
   },
 });
+
+const FORM_REF_NAME = 'formRef';
+const formRef = useTemplateRef<QForm | null>(FORM_REF_NAME);
+const validFormData = ref(structuredClone(toRaw(formData.value)));
+const showValidationDialog = ref(false);
+
+const areRequiredFieldsFilled = computed(() => {
+  return (
+    !!formData.value.name && !!formData.value.timezone && formData.value.timestamp_keys.length > 0
+  );
+});
+
+watch(
+  formData,
+  async () => {
+    if (areRequiredFieldsFilled.value) {
+      const valid = (await formRef.value?.validate(false)) ?? false;
+      if (valid) {
+        validFormData.value = structuredClone(toRaw(formData.value));
+      }
+    }
+  },
+  { deep: true },
+);
 
 const permissionGroupModel = computed({
   get() {
@@ -198,5 +298,16 @@ function removeTimestampKey(index: number) {
 const showDocs = () => {
   window.open('https://pandas.pydata.org/docs/reference/api/pandas.Period.strftime.html', '_blank');
 };
+
+function addExcludedKey() {
+  if (!formData.value.excluded_keys) {
+    formData.value.excluded_keys = [];
+  }
+  formData.value.excluded_keys.push('');
+}
+
+function removeExcludedKey(index: number) {
+  formData.value.excluded_keys?.splice(index, 1);
+}
 </script>
 <style scoped></style>

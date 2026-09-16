@@ -52,10 +52,12 @@ class QualityControlFunctionBase(SQLModel):
     )
     name: str
     position: int = Field(default=0)
+    label: str | None = None
 
 
 class QualityControlFunctionCreate(SQLModel):
     name: str
+    label: str | None = None
     position: int = 0
     quality_control_function_arguments: list[QualityControlFunctionArgumentCreate]
 
@@ -63,6 +65,7 @@ class QualityControlFunctionCreate(SQLModel):
 class QualityControlFunctionUpdate(SQLModel):
     name: str | None = None
     position: int | None = None
+    label: str | None = None
     quality_control_function_arguments: (
         list[QualityControlFunctionArgumentUpdate] | None
     ) = None
@@ -71,6 +74,7 @@ class QualityControlFunctionUpdate(SQLModel):
 class QualityControlFunctionPublic(SQLModel):
     id: int
     name: str
+    label: str | None = None
     position: int
     quality_control_function_arguments: list[QualityControlFunctionArgumentPublic]
 
