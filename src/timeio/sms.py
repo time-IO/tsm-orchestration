@@ -294,9 +294,6 @@ class SmsMaterializedViewsSyncer:
                         cur.execute(template.format(sql.Identifier(view)))
                         self.logger.info(f"Refreshed materialized view: {view}")
 
-                 # neu: foi_datastream_mapping erst NACH allen Refreshes ableiten
-                    cur.execute(sql.SQL("SELECT reconcile_foi_datastream_mapping()"))
-                    self.logger.info("Reconciled foi_datastream_mapping")
 
         except psycopg.Error as e:
             self.logger.error(
