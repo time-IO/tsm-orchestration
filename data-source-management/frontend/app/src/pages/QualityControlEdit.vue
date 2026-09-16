@@ -67,7 +67,7 @@ onMounted(async () => {
         }),
       );
       formData.value = loadedData;
-      initialFormData.value = structuredClone(loadedData);
+      initialFormData.value = structuredClone(normalizeFormData(loadedData));
     } catch {
       $q.notify({
         type: 'negative',
