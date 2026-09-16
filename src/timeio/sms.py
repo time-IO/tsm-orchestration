@@ -293,8 +293,6 @@ class SmsMaterializedViewsSyncer:
                     for view in self.materialized_views:
                         cur.execute(template.format(sql.Identifier(view)))
                         self.logger.info(f"Refreshed materialized view: {view}")
-
-
         except psycopg.Error as e:
             self.logger.error(
                 f"Error occurred during refreshing materialized view: {e!r}"
