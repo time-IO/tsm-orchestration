@@ -37,8 +37,6 @@
           />
 
           <q-card-section class="q-pa-none">
-            <div class="text-h6 q-mb-md">SFTP Settings</div>
-
             <div class="q-mt-md">
               <q-input
                 filled
@@ -81,7 +79,7 @@
                 <template #append>
                   <help-button
                     titleHelp="Fileserver URI"
-                    textHelp="The external SFTP ingest file server URI uses the format
+                    textHelp="The external FTP/SFTP ingest file server URI uses the format
                     sftp://hostname[:port], where hostname is the server address and port is
                     optional (default: 22)."
                   />

@@ -208,7 +208,7 @@ const topNavigation: NavEntry[] = [
     addRoute: '/ingest/new',
     addOptions: [
       { label: 'SFTP/S3', route: '/ingest/new/sftp' },
-      { label: 'External SFTP', route: '/ingest/new/external-sftp' },
+      { label: 'External FTP/SFTP', route: '/ingest/new/external-sftp' },
       { label: 'MQTT', route: '/ingest/new/mqtt' },
       { separator: true, label: 'External API' },
       { label: 'Bosch IoT', route: '/ingest/new/external-api/bosch' },

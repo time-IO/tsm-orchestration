@@ -45,7 +45,7 @@ export const default_ingest_columns: QTableColumn[] = [
         case 'mqtt':
           return 'MQTT';
         case 'external_sftp':
-          return 'External SFTP';
+          return 'External FTP/SFTP';
         case 'sensoto':
           return 'Sensoto';
         default:

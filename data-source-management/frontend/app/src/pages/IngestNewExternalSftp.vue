@@ -1,6 +1,6 @@
 <template>
   <ingest-form-external-sftp
-    title="New External SFTP Ingest"
+    title="New External FTP/SFTP Ingest"
     :is-loading="isLoading"
     back-route="/ingest/new"
     v-model="formData"

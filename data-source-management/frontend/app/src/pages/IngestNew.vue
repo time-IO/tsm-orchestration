@@ -91,9 +91,9 @@ const data = [
   {
     name: 'ext_sftp',
     icon: 'folder_special',
-    label: 'External SFTP',
+    label: 'External FTP/SFTP',
     description:
-      'Sync external SFTP folders into a new S3 bucket with a fitting file format and parser',
+      'Sync external FTP/SFTP folders into a new S3 bucket with a fitting file format and parser',
     path: '/ingest/new/external-sftp',
   },
   {
