@@ -108,6 +108,10 @@ const functionOptions: FunctionOption[] = [
     label: 'transferFlags',
     description: 'Transfer flags from one variable to another.',
   },
+  {
+  label: 'flagConstants',
+  description: 'Flag plateaus / series of constant values whose total change stays below a threshold.',
+  },
 ];
 
 function emitSelectFunction(item: FunctionOption) {

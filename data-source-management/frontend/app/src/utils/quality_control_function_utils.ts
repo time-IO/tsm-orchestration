@@ -14,6 +14,7 @@ import QcFunctionRolling from '@/components/QcFunctionRolling.vue';
 import QcFunctionTransferFlags from '@/components/QcFunctionTransferFlags.vue';
 import QcFunctionProcessGeneric from '@/components/QCFunctionProcessGeneric.vue';
 import QCFunctionFlagGeneric from '@/components/QCFunctionFlagGeneric.vue';
+import QcFunctionFlagConstants from "@/components/QcFunctionFlagConstants.vue";
 
 export type QcFunctionName =
   | 'flagPlateau'
@@ -30,7 +31,9 @@ export type QcFunctionName =
   | 'rolling'
   | 'transferFlags'
   | 'processGeneric'
-  | 'flagGeneric';
+  | 'flagGeneric'
+  | 'flagConstants'
+  ;
 
 export const qcFunctionComponents: Record<QcFunctionName, Component> = {
   flagPlateau: QcFunctionFlagPlateau,
@@ -48,6 +51,7 @@ export const qcFunctionComponents: Record<QcFunctionName, Component> = {
   transferFlags: QcFunctionTransferFlags,
   processGeneric: QcFunctionProcessGeneric,
   flagGeneric: QCFunctionFlagGeneric,
+  flagConstants: QcFunctionFlagConstants,
 };
 
 export function getQcFunctionComponent(functionName: QcFunctionName): Component | null {
