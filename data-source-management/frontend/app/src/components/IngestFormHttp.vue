@@ -187,7 +187,7 @@ const formData = defineModel<IngestHttpCreate | IngestHttpUpdate>({
 
 const isApiKeyPwd = ref(true);
 
-const fileTypeOptions = ['json', 'xml', 'csv', 'text', 'binary'];
+const fileTypeOptions = ['json', 'xml', 'csv', 'txt', 'zip'];
 </script>
 
 <style scoped></style>
