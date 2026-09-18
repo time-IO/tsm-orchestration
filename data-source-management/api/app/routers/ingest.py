@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
 from access_scope import AccessScope
 from dependencies import (
     get_current_user,
@@ -8,6 +10,7 @@ from models import User
 from models.filters import IngestFilter
 from models.ingest import IngestWithApiInfoRead
 from repositories.ingest import IngestRepository
+from services.db_api import get_ingest_configurations, get_ingest_journal
 import logging
 
 from fastapi_pagination import Page
@@ -63,3 +66,35 @@ def delete(
         "Delete ingest requested by user_id=%s ingest_id=%s", current_user.id, id
     )
     return repo.delete(id, access_scope=AccessScope.from_user(current_user))
+
+
+@router.get("/{ingest_id}/configurations", tags=["ingest/configurations"])
+async def read_ingest_configurations(
+    ingest_id: int,
+    repo: IngestRepository = Depends(get_repo_ingest),
+    current_user: User = Depends(get_current_user),
+):
+    ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
+    return await get_ingest_configurations(ingest.uuid)
+
+
+@router.get("/{ingest_id}/journal", tags=["ingest/journal"])
+async def read_ingest_journal(
+    ingest_id: int,
+    datetime_from: Optional[str] = Query(None),
+    datetime_to: Optional[str] = Query(None),
+    level: Optional[str] = Query(
+        None, description="Filter by level, e.g. INFO/WARNING/ERROR"
+    ),
+    limit: int = Query(100, description="Max entries, newest first"),
+    repo: IngestRepository = Depends(get_repo_ingest),
+    current_user: User = Depends(get_current_user),
+):
+    ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
+    return await get_ingest_journal(
+        ingest.uuid,
+        datetime_from=datetime_from,
+        datetime_to=datetime_to,
+        level=level,
+        limit=limit,
+    )

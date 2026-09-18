@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from config import settings
 from dependencies import get_repo_ingest
 
-ROUTER_MODULE = "routers.ingest_journal"
+ROUTER_MODULE = "services.db_api"
 INGEST_UUID = "11111111-1111-1111-1111-111111111111"
 
 

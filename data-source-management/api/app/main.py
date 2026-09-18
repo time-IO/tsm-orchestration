@@ -11,8 +11,6 @@ from routers import (
     ingest_external_sftp_storage,
     ingest_mqtt,
     ingest_mqtt_client,
-    ingest_journal,
-    ingest_configurations,
     parser_csv,
     parser_json,
     ingest_external_api_the_things_network,
@@ -82,8 +80,6 @@ app.include_router(ingest_external_api_sensoto.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_mqtt.router)
 app.include_router(ingest_mqtt_client.router)
-app.include_router(ingest_journal.router)
-app.include_router(ingest_configurations.router)
 app.include_router(ingest_sftp.router)
 app.include_router(ingest_sftp_storage.router)
 app.include_router(ingest_external_sftp_storage.router)
