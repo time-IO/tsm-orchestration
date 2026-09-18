@@ -153,6 +153,8 @@
         :service="API.ingestSftpStorage"
         :bucket-name="item.bucket_name"
       />
+
+      <related-section :ingest-id="item.id" />
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -182,6 +184,7 @@ import { useIngestSftpStore } from '@/stores/ingestSftpStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
 import { API } from '@/services';
+import RelatedSection from '@/components/RelatedSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

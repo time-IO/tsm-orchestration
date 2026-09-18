@@ -23,6 +23,7 @@ import soilcanParserController from '@/services/parser_soilcan';
 import qualityControlSettingController from '@/services/quality_control_setting';
 import staController from '@/services/sta';
 import qualityControlSettingsTriggerController from '@/services/quality_control_settings_trigger';
+import smsConfigurationsController from '@/services/sms_configurations';
 
 import parserTimezoneController from '@/services/parser_timezone';
 import parserEncodingController from '@/services/parser_encoding';
@@ -65,4 +66,5 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
+  smsConfigurations: smsConfigurationsController
 };
