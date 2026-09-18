@@ -32,9 +32,7 @@ async def _fetch_db_api(path: str, *, params: dict | None = None) -> Any:
         return response.json()
     except httpx.HTTPStatusError as e:
         logger.warning(f"DB API returned {e.response.status_code} for {path}")
-        raise HTTPException(
-            status_code=502, detail=f"Failed to fetch DB API"
-        ) from e
+        raise HTTPException(status_code=502, detail=f"Failed to fetch DB API") from e
     except httpx.HTTPError as e:
         logger.warning(f"Failed to reach DB API for {path}: {e}")
         raise HTTPException(status_code=502, detail="Failed to reach DB API") from e
