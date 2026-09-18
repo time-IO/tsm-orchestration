@@ -3,8 +3,8 @@ import type {
   CsvParserCreate,
   CsvParserUpdate,
   CsvParserValidate,
-} from 'src/services/parser_csv/types';
-import { createParserApiService } from 'src/services/factoryParserService';
+} from '@/services/parser_csv/types';
+import { createParserApiService } from '@/services/factoryParserService';
 
 const apiPath = 'parser/csv/';
 

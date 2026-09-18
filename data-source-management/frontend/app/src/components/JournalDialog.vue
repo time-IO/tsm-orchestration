@@ -84,8 +84,8 @@
 import { ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
-import { API } from 'src/services';
-import type { JournalEntry } from 'src/services/ingest_journal/types';
+import { API } from '@/services';
+import type { JournalEntry } from '@/services/ingest_journal/types';
 
 const showDialog = defineModel<boolean>({ default: false });
 const { ingestId } = defineProps<{

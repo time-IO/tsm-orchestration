@@ -157,11 +157,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import { useRoute, useRouter } from 'vue-router';
-import type { QualityControlSettingPublic } from 'src/services/quality_control_setting/types';
-import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
-import TriggerQualityControlSettingsDialog from 'components/TriggerQualityControlSettingsDialog.vue';
+import type { QualityControlSettingPublic } from '@/services/quality_control_setting/types';
+import QcFunctionArgListView from '@/components/QcFunctionArgListView.vue';
+import TriggerQualityControlSettingsDialog from '@/components/TriggerQualityControlSettingsDialog.vue';
 
 const $q = useQuasar();
 const store = useQualityControlSettingStore();

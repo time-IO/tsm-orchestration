@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ParsingResult } from 'src/services/types';
+import type { ParsingResult } from '@/services/types';
 
 defineProps<{
   parsingResult: ParsingResult;

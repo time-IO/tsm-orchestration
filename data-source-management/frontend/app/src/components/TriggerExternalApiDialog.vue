@@ -50,10 +50,10 @@
 </template>
 
 <script setup lang="ts">
-import DateTimePicker from 'components/DateTimePicker.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
-import type { TriggerSyncExtApiBase } from 'src/services/trigger_external_api_generic/types';
-import { useTriggerExternalGenericApiStore } from 'stores/externalApiTriggerStore';
+import type { TriggerSyncExtApiBase } from '@/services/trigger_external_api_generic/types';
+import { useTriggerExternalGenericApiStore } from '@/stores/externalApiTriggerStore';
 import { date, useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });

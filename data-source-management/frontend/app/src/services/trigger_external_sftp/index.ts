@@ -1,4 +1,4 @@
-import { axiosInstance } from 'src/boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { TriggerSyncExtSftpBase, TriggerSyncExtSftpResponse } from './types.ts';
 
 async function trigger_sftp(input: TriggerSyncExtSftpBase) {

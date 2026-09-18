@@ -188,38 +188,38 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import { QForm } from 'quasar';
-import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
-import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
-import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
+import QcFunctionArgListView from '@/components/QcFunctionArgListView.vue';
+import QcSettingFunctionSelectionDialog from '@/components/QcSettingFunctionSelectionDialog.vue';
+import StaDatastreamSelectionDialog from '@/components/StaDatastreamSelection.vue';
 import { computed, type Ref, ref } from 'vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
   QualityControlSettingCreate,
   QualityControlSettingUpdate,
-} from 'src/services/quality_control_setting/types';
-import type { FunctionOption } from 'src/utils/quality_control_utils';
+} from '@/services/quality_control_setting/types';
+import type { FunctionOption } from '@/utils/quality_control_utils';
 import {
   getQcFunctionComponent,
   type QcFunctionName,
-} from 'src/utils/quality_control_function_utils';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { Datastream } from 'src/services/sta/types';
-import { isDatastreamType, showContextDocumentation } from 'src/utils/quality_control_utils';
-import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/utils/quality_control_function_utils';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { Datastream } from '@/services/sta/types';
+import { isDatastreamType, showContextDocumentation } from '@/utils/quality_control_utils';
+import { FUNCTIONS_WITH_REQUIRED_TARGET } from '@/utils/quality_control_utils';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
-  default: {
+  default: () => ({
     name: null,
     context_window: null,
     is_active: true,
     description: null,
     permission_group_id: null,
     quality_control_functions: [],
-  },
+  }),
 });
 
 defineProps<{
