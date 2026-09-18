@@ -109,8 +109,9 @@ const functionOptions: FunctionOption[] = [
     description: 'Transfer flags from one variable to another.',
   },
   {
-  label: 'flagConstants',
-  description: 'Flag plateaus / series of constant values whose total change stays below a threshold.',
+    label: 'flagConstants',
+    description:
+      'Flag plateaus / series of constant values whose total change stays below a threshold.',
   },
 ];
 

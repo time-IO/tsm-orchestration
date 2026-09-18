@@ -33,10 +33,15 @@
 
     <!-- window        -->
     <div class="q-mb-md">
-      <q-input filled v-model="formData.window" :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]" label="Window *" />
+      <q-input
+        filled
+        v-model="formData.window"
+        :rules="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
+        label="Window *"
+      />
       <span class="text-caption text-grey block">
-        Size of the rolling window. Either an integer (number of timestamps per window) or an
-        offset string (e.g. '3h') for the window's total temporal extent.
+        Size of the rolling window. Either an integer (number of timestamps per window) or an offset
+        string (e.g. '3h') for the window's total temporal extent.
       </span>
     </div>
 
