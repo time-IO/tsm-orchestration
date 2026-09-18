@@ -16,12 +16,34 @@
         >
           <template #header>
             <q-item-section v-if="removable" side class="q-pr-none">
-              <q-icon
-                name="drag_indicator"
-                size="1.4em"
-                class="drag-handle cursor-move text-grey-6"
-                @click.stop
-              />
+              <div class="column items-center">
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  icon="arrow_upward"
+                  :disable="i === 0"
+                  aria-label="Move function up"
+                  @click.stop="moveUp(i)"
+                />
+                <q-icon
+                  name="drag_indicator"
+                  size="1.4em"
+                  class="drag-handle cursor-move text-grey-6"
+                  @click.stop
+                />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  icon="arrow_downward"
+                  :disable="i === localFunctions.length - 1"
+                  aria-label="Move function down"
+                  @click.stop="moveDown(i)"
+                />
+              </div>
             </q-item-section>
 
             <q-item-section>
@@ -196,6 +218,16 @@ function nonDatastreamArgs(item: FunctionWithClientId) {
   return item.quality_control_function_arguments.filter(
     (a: QcFunctionArgument) => !isDatastreamType(a),
   );
+}
+
+function moveUp(index: number) {
+  if (index === 0) return;
+  emit('reorder', { oldIndex: index, newIndex: index - 1 });
+}
+
+function moveDown(index: number) {
+  if (index === localFunctions.value.length - 1) return;
+  emit('reorder', { oldIndex: index, newIndex: index + 1 });
 }
 </script>
 
