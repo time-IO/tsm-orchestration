@@ -135,14 +135,11 @@ import type {
 import type { Datastream } from '@/services/sta/types';
 
 type FunctionWithClientId = (
-  | QualityControlFunctionCreate
-  | QualityControlFunctionPublic
-  | QualityControlFunctionUpdate
+  QualityControlFunctionCreate | QualityControlFunctionPublic | QualityControlFunctionUpdate
 ) & { _clientId: string };
 
 type QcFunctionArgument =
-  | QualityControlFunctionArgumentCreate
-  | QualityControlFunctionArgumentPublic;
+  QualityControlFunctionArgumentCreate | QualityControlFunctionArgumentPublic;
 
 const props = defineProps<{
   removable?: boolean;
