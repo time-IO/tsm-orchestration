@@ -72,7 +72,7 @@ helm-package-push:
   script:
     - VERSION=$(helm show chart "$HELM_CHART_DIR" | yq '.version' | tr -d '\n')
     - test -n "$VERSION"
-    - echo "Chart version declared in $HELM_CHART_DIR/Chart.yaml: $VERSION"
+    - echo "Declared chart version ($HELM_CHART_DIR/Chart.yaml) is $VERSION"
     # --- Version-clash guard -------------------------------------------------
     # Fail hard if this chart version already exists in the OCI registry, so a
     # merge to main that forgot to bump Chart.yaml surfaces as a broken
