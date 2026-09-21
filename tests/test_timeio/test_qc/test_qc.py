@@ -114,7 +114,6 @@ class MockDBapi:
                     "result_number": random.uniform(10, 500),
                     "result_quality": None,
                 }
-                }
             )
 
         return {"observations": out}

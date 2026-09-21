@@ -162,9 +162,8 @@
                   color="negative"
                   icon="delete"
                   @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
-                  >
+                >
                   <q-tooltip>Delete</q-tooltip>
-
                 </q-btn>
               </template>
 

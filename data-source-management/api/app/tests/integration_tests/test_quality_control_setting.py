@@ -152,6 +152,7 @@ def test_delete_wrong_group_returns_404(client, base_data, other_group_data):
     response = client.delete(f"{BASE_PATH}/{qc_id}")
     assert response.status_code == 404
 
+
 def test_read_list(client, base_data):
     for name in ["QC Setting List A", "QC Setting List B"]:
         client.post(f"{BASE_PATH}/", json=_qc_payload(base_data, name=name))

@@ -11,10 +11,8 @@ INSERT_QUERY = """
 
 
 def get_schemas_with_things(cur):
-    return cur.execute(
-        """SELECT schemaname FROM pg_tables
-           WHERE tablename = 'thing';"""
-    ).fetchall()
+    return cur.execute("""SELECT schemaname FROM pg_tables
+           WHERE tablename = 'thing';""").fetchall()
 
 
 def get_things(cur, schema):
