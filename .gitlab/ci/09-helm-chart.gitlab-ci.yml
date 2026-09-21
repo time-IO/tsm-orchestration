@@ -41,7 +41,12 @@ helm-lint:
     # Validate on any branch push that touches the chart.
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       changes:
-        - helm/**/*
+        # Compare against main (not just the previous push) so the chart is
+        # re-validated on every push while the branch differs from main in
+        # helm/ — even a push that itself only touches unrelated files.
+        paths:
+          - helm/**/*
+        compare_to: "refs/heads/main"
       when: always
 
 
@@ -57,7 +62,12 @@ helm-template:
       when: never
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       changes:
-        - helm/**/*
+        # Compare against main (not just the previous push) so the chart is
+        # re-validated on every push while the branch differs from main in
+        # helm/ — even a push that itself only touches unrelated files.
+        paths:
+          - helm/**/*
+        compare_to: "refs/heads/main"
       when: always
 
 
