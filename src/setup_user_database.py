@@ -329,9 +329,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     c.execute(view)
 
     def create_grafana_views(self, thing):
-        base_path = os.path.join(
-            os.path.dirname(__file__), "sql", "grafana_views"
-        )
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "grafana_views")
         files = [
             os.path.join(base_path, "datastream_properties.sql"),
             os.path.join(base_path, "sta_datastream_links.sql"),
