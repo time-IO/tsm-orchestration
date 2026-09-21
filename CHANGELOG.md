@@ -3,6 +3,7 @@
 
 ## [Unreleased]
 ### Added
+- Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 ### Fixed
 ### Changed
 - Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
