@@ -31,7 +31,7 @@
       />
     </div>
 
-  <!--    window-->
+    <!--    window-->
     <qc-function-form-int-offset-input
       label="window * "
       class="q-mb-md"
@@ -92,7 +92,7 @@ import type { QualityControlFunctionArgumentBase } from '@/services/quality_cont
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import QcFunctionFormIntOffsetInput from "@/components/QcFunctionFormIntOffsetInput.vue";
+import QcFunctionFormIntOffsetInput from '@/components/QcFunctionFormIntOffsetInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
