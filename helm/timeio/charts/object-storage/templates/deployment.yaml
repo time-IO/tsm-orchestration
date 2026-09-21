@@ -1,0 +1,148 @@
+{{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $ftp := .Values.ftp | default dict }}
+{{- $ftpTLS := $ftp.tls | default dict }}
+{{- $ftpPassiveRange := $ftp.passivePortRange | default dict }}
+{{- $sftp := .Values.sftp | default dict }}
+{{- $sftpPrivateKey := $sftp.sshPrivateKey | default dict }}
+{{- $certMountPath := .Values.certs.mountPath | default "/minio/certs" }}
+{{- $image := printf "%s:%s" .Values.image.repository .Values.image.tag }}
+{{- if .Values.image.digest }}
+  {{- $image = printf "%s@%s" $image .Values.image.digest }}
+{{- end }}
+{{- $ftpTLSSecret := "" }}
+{{- if and $ftp.enabled $ftpTLS.enabled }}
+  {{- $ftpTLSSecret = required "object-storage.ftp.tls.existingSecret is required when FTP TLS is enabled" $ftpTLS.existingSecret }}
+{{- end }}
+{{- $sftpSecret := "" }}
+{{- if $sftp.enabled }}
+  {{- $sftpSecret = required "object-storage.sftp.sshPrivateKey.existingSecret is required when SFTP is enabled" $sftpPrivateKey.existingSecret }}
+{{- end }}
+{{- $mountCerts := or $ftpTLSSecret $sftpSecret }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ $image | quote }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+        - {{ .Values.command.executable | default "silo" | quote }}
+        - "server"
+        - "--console-address"
+        - ":9001"
+{{- if $ftp.enabled }}
+        - "--ftp"
+        - "address=:{{ $ftp.port }}"
+{{- if $ftpPassiveRange.enabled }}
+        - "--ftp"
+        - "passive-port-range={{ $ftpPassiveRange.start }}-{{ $ftpPassiveRange.end }}"
+{{- end }}
+{{- if $ftpTLS.enabled }}
+        - "--ftp"
+        - "tls-private-key={{ $certMountPath }}/{{ $ftpTLS.privateKeyKey }}"
+        - "--ftp"
+        - "tls-public-cert={{ $certMountPath }}/{{ $ftpTLS.publicCertKey }}"
+{{- end }}
+{{- end }}
+{{- if $sftp.enabled }}
+        - "--sftp"
+        - "address=:{{ $sftp.port }}"
+        - "--sftp"
+        - "ssh-private-key={{ $certMountPath }}/{{ $sftpPrivateKey.key }}"
+{{- end }}
+        - "--json"
+        - "/vol0"
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /vol0
+          name: {{ .Values.name }}-pv
+{{- if $mountCerts }}
+        - mountPath: {{ $certMountPath }}
+          name: {{ .Values.name }}-protocol-certs
+          readOnly: true
+{{- end }}
+      volumes:
+      - name: {{ .Values.name }}-pv
+        persistentVolumeClaim:
+          claimName: {{ .Values.name }}-data-pvc
+{{- if $mountCerts }}
+      - name: {{ .Values.name }}-protocol-certs
+        projected:
+          sources:
+{{- if $ftpTLSSecret }}
+          - secret:
+              name: {{ $ftpTLSSecret }}
+              items:
+              - key: {{ $ftpTLS.privateKeyKey }}
+                path: {{ $ftpTLS.privateKeyKey }}
+              - key: {{ $ftpTLS.publicCertKey }}
+                path: {{ $ftpTLS.publicCertKey }}
+{{- end }}
+{{- if $sftpSecret }}
+          - secret:
+              name: {{ $sftpSecret }}
+              items:
+              - key: {{ $sftpPrivateKey.key }}
+                path: {{ $sftpPrivateKey.key }}
+{{- end }}
+{{- end }}
+{{- end }}

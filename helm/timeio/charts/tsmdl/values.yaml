@@ -1,0 +1,24 @@
+replicaCount: 1
+
+enabled: true
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/timeio-images/tsmdl"
+  digest: "sha256:f8aa4e889b82ffa7c73f09ed29645679a1054817e4105b9c0d2e19f1a55c4e01"
+  pullPolicy: Always
+name: tsmdl
+port: 8001
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+env: []
+
+existingSecret: ""
+existingConfigMap: ""

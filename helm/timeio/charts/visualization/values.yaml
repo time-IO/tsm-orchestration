@@ -1,0 +1,36 @@
+replicaCount: 1
+
+enabled: true
+
+name: visualization
+
+image:
+  repository: "grafana/grafana"
+  tag: 11.6.13
+  pullPolicy: Always
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+env: []
+
+mqtt_init:
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: [ "ALL" ]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+existingSecret: ""
+existingConfigMap: ""

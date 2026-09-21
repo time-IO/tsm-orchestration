@@ -1,0 +1,50 @@
+replicaCount: 1
+
+enabled: true
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/frost"
+  tag: "prod-2026-09-10"
+  pullPolicy: Always
+name: frost
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+worker:
+  image:
+    repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/dispatcher"
+    tag: "prod-2026-09-10"
+    pullPolicy: Always
+  name: worker-frost-setup
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: ["ALL"]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  env: []
+  existingSecret: ""
+  existingConfigMap: ""
+
+mqtt_init:
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: [ "ALL" ]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  env: []
+
+existingSecret: ""

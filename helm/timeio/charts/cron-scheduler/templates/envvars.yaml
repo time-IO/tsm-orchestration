@@ -1,0 +1,24 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  SETUP_SERVICE: "{{ .Values.global.envvars.CRON_SETUP_SERVICE }}"
+  CREATEDB_POSTGRES_HOST: "{{ .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
+  CREATEDB_POSTGRES_DATABASE: "{{ .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
+  SMS_ACCESS_TYPE: "{{ .Values.global.envvars.SMS_ACCESS_TYPE }}"
+  SMS_API_URL: "{{ .Values.global.envvars.SMS_URL }}backend/api/v1/"
+  CV_ACCESS_TYPE: "{{ .Values.global.envvars.CV_ACCESS_TYPE }}"
+  CV_API_URL: "{{  .Values.global.envvars.CV_URL }}api/v1/"
+  LOG_LEVEL: "{{  .Values.global.envvars.LOG_LEVEL }}"
+  MINIO_URL: "{{  .Values.global.envvars.MINIO_HOST }}"
+  MIINO_SECURE: "{{  .Values.global.envvars.MINIO_SECURE }}"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  MQTT_BROKER: "mosquitto:1883"
+  MQTT_CLIENT_ID: "cron-scheduler"
+  MQTT_CLEAN_SESSION: "{{  .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_QOS: "{{  .Values.global.envvars.MQTT_QOS }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
+  API_SYNC_TOPIC: "sync_ext_apis"
+{{- end }}

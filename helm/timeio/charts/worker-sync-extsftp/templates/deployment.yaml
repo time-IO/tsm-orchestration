@@ -1,0 +1,99 @@
+{{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+      - name: "mqtt-connection-check"
+        image: "eclipse-mosquitto:2.0"
+        securityContext:
+          runAsUser: {{ .Values.mqtt_init.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.mqtt_init.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.mqtt_init.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.mqtt_init.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.mqtt_init.securityContext.seccompProfile.type }}
+        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+        volumeMounts:
+          - name: init-mqtt-worker
+            mountPath: /tmp/init-mqtt-worker
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.mqtt_init.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command: ["python3", "sync_extsftp_manager.py"]
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+      volumes:
+        - name: init-mqtt-worker
+          configMap:
+            name: init-mqtt-worker
+{{- end }}

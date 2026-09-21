@@ -1,0 +1,40 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  KC_DB: "{{ .Values.global.envvars.KC_DB }}"
+  KC_DB_URL: "{{ .Values.global.envvars.KC_DB_URL }}"
+  KC_PROXY_HEADERS: "{{ .Values.global.envvars.KC_PROXY_HEADERS }}"
+  KC_HTTP_ENABLED: "{{ .Values.global.envvars.KC_HTTP_ENABLED }}"
+  KC_HTTP_RELATIVE_PATH: "/keycloak"
+  KC_HOSTNAME: "{{ include "timeio.publicHost" . }}"
+  KC_HOSTNAME_STRICT: "false"
+  KC_HEALTH_ENABLED: "true"
+  MQTT_BROKER: "tcp://mosquitto:1883"
+  MQTT_TOPIC: "userinfo_keycloak"
+  MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
+  MQTT_CLIENT_ID: "keycloak"
+  KC_LOG_LEVEL: "{{ .Values.global.envvars.KC_LOG_LEVEL }}"
+  KC_PROXY: "edge"
+  KEYCLOAK_GENERIC_OIDC_ALIAS: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_ALIAS }}"
+  KEYCLOAK_GENERIC_OIDC_TOKEN_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_TOKEN_URL }}"
+  KEYCLOAK_GENERIC_OIDC_JWKS_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_JWKS_URL }}"
+  KEYCLOAK_GENERIC_OIDC_ISSUER: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_ISSUER }}"
+  KEYCLOAK_GENERIC_OIDC_USERINFO_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_USERINFO_URL }}"
+  KEYCLOAK_GENERIC_OIDC_CONF_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_CONF_URL }}"
+  KEYCLOAK_GENERIC_OIDC_AUTH_URL: "{{ .Values.global.envvars.KEYCLOAK_GENERIC_OIDC_AUTH_URL }}"
+  KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: '["{{ include "timeio.publicUrl" . }}/data-source-management/login-callback"]'
+  KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "{{ include "timeio.publicUrl" . }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_BASE_URL: "{{ include "timeio.publicUrl" . }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_ADMIN_URL: "{{ include "timeio.publicUrl" . }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_ROOT_URL: "{{ include "timeio.publicUrl" . }}/data-source-management/"
+  KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: '["{{ include "timeio.publicUrl" . }}"]'
+  KEYCLOAK_GRAFANA_CLIENT_REDIRECT_URIS: '["{{ include "timeio.publicUrl" . }}/visualization/login/generic_oauth"]'
+  KEYCLOAK_GRAFANA_CLIENT_POST_LOGOUT_URIS: "{{ include "timeio.publicUrl" . }}/visualization/login"
+  KEYCLOAK_GRAFANA_CLIENT_BASE_URL: "{{ include "timeio.publicUrl" . }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_ADMIN_URL: "{{ include "timeio.publicUrl" . }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_ROOT_URL: "{{ include "timeio.publicUrl" . }}/visualization/"
+  KEYCLOAK_GRAFANA_CLIENT_WEB_ORIGINS: '["{{ include "timeio.publicUrl" . }}"]'
+{{- end }}

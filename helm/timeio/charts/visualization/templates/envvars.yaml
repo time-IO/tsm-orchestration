@@ -1,0 +1,19 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  GF_SERVER_ROOT_URL: "{{ include "timeio.publicUrl" . }}/{{ .Values.name }}/"
+  GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+  GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+  GF_AUTH_GENERIC_OAUTH_NAME: "time.IO Keycloak"
+  GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: "true"
+  GF_AUTH_GENERIC_OAUTH_SCOPES: "openid email profile eduperson_principal_name"
+  GF_AUTH_GENERIC_OAUTH_AUTH_URL: "{{ include "timeio.oidcAuthUrl" . }}"
+  GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "{{ include "timeio.oidcTokenUrl" . }}"
+  GF_AUTH_GENERIC_OAUTH_API_URL: "{{ include "timeio.oidcUserinfoUrl" . }}"
+  GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: "eduperson_principal_name"
+  GF_AUTH_OAUTH_SKIP_ORG_ROLE_UPDATE_SYNC: "true"
+  GF_AUTH_GENERIC_OAUTH_SKIP_ORG_ROLE_SYNC: "true"
+{{- end }}

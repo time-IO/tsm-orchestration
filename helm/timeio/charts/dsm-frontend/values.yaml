@@ -1,0 +1,24 @@
+replicaCount: 1
+
+enabled: true
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-frontend-rootless"
+  tag: prod-2026-09-10
+  pullPolicy: Always
+name: dsm-frontend
+port: 8080
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 101
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+env: []
+
+existingSecret: ""
+existingConfigMap: ""

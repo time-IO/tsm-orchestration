@@ -1,0 +1,30 @@
+replicaCount: 1
+
+name: proxy
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+ref:
+  institute:
+    link: "https://www.ufz.de"
+    name: "Helmholtz-Centre for Environmental Research"
+  department:
+    link: "https://www.ufz.de/index.php?en=45348"
+    name: "Research Data Management"
+
+proxy:
+  name: proxy
+  image:
+    repository: "nginxinc/nginx-unprivileged"
+    digest: "sha256:4210a3296e7cae7b4f355da48192cd5ea51c88acf9892b95bff967cede85a915"
+    pullPolicy: Always
+
+existingSecret: ""

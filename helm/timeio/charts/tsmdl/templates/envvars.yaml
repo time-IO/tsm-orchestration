@@ -1,0 +1,12 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  STA_ENDPOINT_URL: "{{ include "timeio.publicUrl" . }}/sta/"
+  UVICORN_ARGS: ""
+  ROOT_PATH: "/tsmdl"
+  ORGANIZATION: "ufz"
+  IDP_USERINFO_URL: {{ include "timeio.oidcUserinfoUrl" . | quote }}
+{{- end }}

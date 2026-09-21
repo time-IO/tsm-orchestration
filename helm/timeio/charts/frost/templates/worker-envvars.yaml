@@ -1,0 +1,16 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.worker.name }}-envvars
+data:
+  LOG_LEVEL: "{{ .Values.global.envvars.LOG_LEVEL }}"
+  TOPIC: "frontend_thing_update"
+  MQTT_BROKER: "mosquitto:1883"
+  MQTT_CLIENT_ID: "frost-setup"
+  MQTT_CLEAN_SESSION: "{{ .Values.global.envvars.MQTT_CLEAN_SESSION }}"
+  MQTT_QOS: "{{ .Values.global.envvars.MQTT_QOS }}"
+  TOMCAT_PROXY_URL: "{{ include "timeio.publicUrl" . }}/sta/"
+  DB_API_BASE_URL: "{{ .Values.global.envvars.DB_API_BASE_URL }}"
+  JOURNALING: "{{ .Values.global.envvars.JOURNALING }}"
+{{- end }}

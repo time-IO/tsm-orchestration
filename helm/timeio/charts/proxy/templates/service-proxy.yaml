@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.proxy.name }}
+spec:
+  selector:
+    app: {{ .Values.proxy.name }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+    - name: s3
+      protocol: TCP
+      port: 9000
+      targetPort: 9000

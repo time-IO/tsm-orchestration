@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tsmdl
+version: 0.0.1
+description: A Helm chart for the tsmdl service

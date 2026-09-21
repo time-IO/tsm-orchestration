@@ -1,0 +1,134 @@
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  serviceName: {{ .Values.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/entrypoint-cm: {{ include (print $.Template.BasePath "/entrypoint-CM.yaml") . | sha256sum }}
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/mosquitto-cm: {{ include (print $.Template.BasePath "/mosquitto-CM.yaml") . | sha256sum }}
+        checksum/mosquitto-tls-cm: {{ include (print $.Template.BasePath "/mosquitto-tls-CM.yaml") . | sha256sum }}
+        checksum/mosquitto-db-probe-cm: {{ include (print $.Template.BasePath "/mosquitto-db-probe-CM.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+      - name: {{ .Values.name}}-init
+        image: alpine/psql:17.5
+        securityContext:
+          runAsUser: {{ .Values.db_init.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.db_init.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.db_init.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.db_init.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.db_init.securityContext.seccompProfile.type }}
+        command: ["/bin/sh", "-c", "/tmp/mosquitto-db-probe/mosquitto-db-probe.sh"]
+        volumeMounts:
+          - name: mosquitto-db-probe
+            mountPath: /tmp/mosquitto-db-probe
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+          - configMapRef:
+              name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+          - secretRef:
+              name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.db_init.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ if .Values.image.digest }}{{ .Values.image.repository }}@{{ .Values.image.digest }}{{ else }}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{ end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command: ["/bin/sh", "/entrypoint/docker-entrypoint.sh", "/usr/sbin/mosquitto", "-c", "/tmp/mosquitto-conf/mosquitto.conf"]
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /mosquitto-data
+          name: {{ .Values.name }}-pv
+        - mountPath: /entrypoint
+          name: {{ .Values.name }}-entrypoint
+        - mountPath: /etc/mosquitto/config
+          name: {{ .Values.name }}-config
+        - mountPath: /etc/mosquitto/config/tls
+          name: {{ .Values.name }}-tls-config
+{{- if .Values.tls.enabled }}
+        - mountPath: {{ .Values.tls.certMountPath }}
+          name: {{ .Values.name }}-tls-certs
+          readOnly: true
+{{- end }}
+      volumes:
+      - name: {{ .Values.name }}-pv
+        persistentVolumeClaim:
+          claimName: {{ .Values.name }}-pvc
+      - name: {{ .Values.name }}-entrypoint
+        configMap:
+          name: {{ .Values.name }}-entrypoint
+      - name: {{ .Values.name }}-config
+        configMap:
+          name: {{ .Values.name }}-config
+      - name: {{ .Values.name }}-tls-config
+        configMap:
+          name: {{ .Values.name }}-tls-config
+      - name: {{ .Values.name }}-db-probe
+        configMap:
+          name: {{ .Values.name }}-db-probe-cm
+          defaultMode: 0755
+{{- if .Values.tls.enabled }}
+      - name: {{ .Values.name }}-tls-certs
+        secret:
+          secretName: {{ required "mosquitto.tls.existingSecret is required when tls.enabled" .Values.tls.existingSecret }}
+{{- end }}

@@ -1,0 +1,196 @@
+{{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $globalWorkerValues := index $globalChartValues "worker" | default dict }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $workerSecretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $workerSecretName = printf "%s-secret" .Values.worker.name  }}
+{{- else }}
+  {{- $workerSecretName = default .Values.worker.existingSecret (index $globalWorkerValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
+{{- end }}
+
+{{- $workerConfigMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $workerConfigMapName = printf "%s-envvars" .Values.worker.name }}
+{{- else }}
+  {{- $workerConfigMapName = default .Values.worker.existingConfigMap (index $globalWorkerValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  serviceName: {{ .Values.name }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/cron-entrypoint-cm: {{ include (print $.Template.BasePath "/cron-entrypoint-CM.yaml") . | sha256sum }}
+        checksum/crond-pid-cm: {{ include (print $.Template.BasePath "/crond-pid-CM.yaml") . | sha256sum }}
+        checksum/crontab-cm: {{ include (print $.Template.BasePath "/crontab-CM.yaml") . | sha256sum }}
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/worker-envvars: {{ include (print $.Template.BasePath "/worker-envvars.yaml") . | sha256sum }}
+        checksum/worker-secret: {{ include (print $.Template.BasePath "/worker-secret.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        command:
+        - tini
+        - --
+        - /bin/sh
+        - -c
+        - /tmp/entrypoint/cron-entrypoint.sh
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /tmp/entrypoint/cron-entrypoint.sh
+          name: {{ .Values.name }}-entrypoint
+          subPath: cron-entrypoint.sh
+          readOnly: true
+        - mountPath: /tmp/cron/crontab.txt
+          name: crontab-pv
+          subPath: crontab.txt
+          readOnly: true
+      - name: {{ .Values.worker.name }}
+        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.worker.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.worker.securityContext.seccompProfile.type }}
+        command: ["python3", "setup_crontab.py"]
+{{- if or $workerConfigMapName $workerSecretName }}
+        envFrom:
+{{- if $workerConfigMapName }}
+          - configMapRef:
+              name: {{ $workerConfigMapName }}
+{{- end }}
+{{- if $workerSecretName }}
+          - secretRef:
+              name: {{ $workerSecretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.worker.env }}
+        env:
+{{ toYaml . | nindent 12 }}
+{{- end }}
+        volumeMounts:
+          - mountPath: /tmp/cron
+            name: crontab-pv
+      initContainers:
+        - name: crontab-file-init
+          image: busybox
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+            capabilities:
+              drop: {{ .Values.worker.securityContext.capabilities.drop }}
+            runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+            runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.worker.securityContext.seccompProfile.type }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ ! -f /tmp/cron/crontab.txt ]; then
+                touch /tmp/cron/crontab.txt
+                echo "* * * * * /scripts/sync_sms_materialized_views.py > $STDOUT 2>$STDERR" > /tmp/cron/crontab.txt
+              fi
+          volumeMounts:
+            - mountPath: /tmp/cron
+              name: crontab-pv
+        - name: "mqtt-connection-check"
+          image: "eclipse-mosquitto:2.0"
+          securityContext:
+            runAsUser: {{ .Values.mqtt_init.securityContext.runAsUser }}
+            allowPrivilegeEscalation: {{ .Values.mqtt_init.securityContext.allowPrivilegeEscalation }}
+            capabilities:
+              drop: {{ .Values.mqtt_init.securityContext.capabilities.drop }}
+            runAsNonRoot: {{ .Values.mqtt_init.securityContext.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.mqtt_init.securityContext.seccompProfile.type }}
+
+          command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+          volumeMounts:
+            - name: init-mqtt-worker
+              mountPath: /tmp/init-mqtt-worker
+{{- if or $configMapName $secretName }}
+          envFrom:
+{{- if $configMapName }}
+            - configMapRef:
+                name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+            - secretRef:
+                name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.mqtt_init.env }}
+          env:
+{{ toYaml . | nindent 12 }}
+{{- end }}
+      volumes:
+      - name: {{ .Values.name }}-entrypoint
+        configMap:
+          name: {{ .Values.name }}-entrypoint
+          defaultMode: 0775
+      - name: crontab-pv
+        persistentVolumeClaim:
+          claimName: crontab-pvc
+      - name: init-mqtt-worker
+        configMap:
+          name: init-mqtt-worker
+{{- end }}

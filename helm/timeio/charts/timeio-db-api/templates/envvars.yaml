@@ -1,0 +1,8 @@
+{{- if .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  UVICORN_ARGS: " --root-path /db_api"
+{{- end }}

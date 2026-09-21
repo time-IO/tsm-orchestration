@@ -1,0 +1,28 @@
+{{- if and .Values.enabled .Values.global.createConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-envvars
+data:
+  ALLOWED_ORIGINS: "{{ include "timeio.publicUrl" . }}"
+  ALLOWED_VOS: "{{ .Values.global.envvars.ALLOWED_VOS }}"
+  API_ROOT_PATH: "{{ .Values.global.envvars.DSM_API_ROOT_PATH }}"
+  LOG_LEVEL: "DEBUG"
+  MINIO_SFTP_PORT: "{{ .Values.global.envvars.MINIO_SFTP_PORT }}"
+  MQTT_BROKER_HOST: "mosquitto"
+  MQTT_BROKER: "mosquitto:1883"
+  MQTT_PORT: "1883"
+  MQTT_CLIENT_ID: "dsm-api"
+  MQTT_QOS: "2"
+  OIDC_ISSUER: "{{ include "timeio.oidcIssuer" . }}"
+  OIDC_WELL_KNOWN: "{{ include "timeio.oidcConfUrl" . }}"
+  POSTGRES_DB: "{{ .Values.global.envvars.CREATEDB_POSTGRES_DATABASE }}"
+  POSTGRES_SERVER: "{{ .Values.global.envvars.CREATEDB_POSTGRES_HOST }}"
+  PROXY_URL: "{{ include "timeio.publicUrl" . }}"
+  STA_ROOT_URL: "{{ include "timeio.publicUrl" . }}/sta"
+  STA_VERSION: "/v1.1/"
+  INGEST_MQTT_BROKER_URI: "tsm.ufz.de:8883"
+  S3_ENDPOINT: "{{ .Values.global.envvars.DSM_API_S3_ENDPOINT }}"
+  S3_SECURE: "{{ .Values.global.envvars.DSM_API_S3_SECURE }}"
+  S3_REGION: "{{ .Values.global.envvars.DSM_API_S3_REGION }}"
+{{- end }}

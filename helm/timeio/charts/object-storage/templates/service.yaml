@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+spec:
+  selector:
+    app: {{ .Values.name }}
+  ports:
+    - name: s3
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: console
+      protocol: TCP
+      port: 9001
+      targetPort: 9001
+{{- if .Values.ftp.enabled }}
+    - name: ftp
+      protocol: TCP
+      port: {{ .Values.ftp.port }}
+      targetPort: {{ .Values.ftp.port }}
+{{- if .Values.ftp.passivePortRange.enabled }}
+{{- range untilStep (int .Values.ftp.passivePortRange.start) (int (add .Values.ftp.passivePortRange.end 1)) 1 }}
+    - name: ftp-pasv-{{ . }}
+      protocol: TCP
+      port: {{ . }}
+      targetPort: {{ . }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.sftp.enabled }}
+    - name: sftp
+      protocol: TCP
+      port: {{ .Values.sftp.port }}
+      targetPort: {{ .Values.sftp.port }}
+{{- end }}

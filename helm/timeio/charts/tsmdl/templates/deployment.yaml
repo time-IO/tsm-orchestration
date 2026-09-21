@@ -1,0 +1,67 @@
+{{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $configMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $configMapName = printf "%s-envvars" .Values.name }}
+{{- else }}
+  {{- $configMapName = default .Values.existingConfigMap (index $globalChartValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/envvars: {{ include (print $.Template.BasePath "/envvars.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ if .Values.image.digest }}{{ .Values.image.repository }}@{{ .Values.image.digest }}{{ else }}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{ end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        ports:
+          - containerPort: {{ .Values.port }}
+        command: ["/app/start.{{ .Values.global.envvars.TSM_DL_ENVIRONMENT }}.sh"]
+{{- if or $configMapName $secretName }}
+        envFrom:
+{{- if $configMapName }}
+        - configMapRef:
+            name: {{ $configMapName }}
+{{- end }}
+{{- if $secretName }}
+        - secretRef:
+            name: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+{{- end }}

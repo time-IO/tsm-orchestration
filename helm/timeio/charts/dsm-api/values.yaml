@@ -1,0 +1,35 @@
+replicaCount: 1
+
+enabled: true
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-dsm-api"
+  tag: prod-2026-09-10
+  pullPolicy: Always
+name: dsm-api
+port: 8000
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+env: []
+
+mqtt_init:
+  securityContext:
+    allowPrivilegeEscalation: False
+    capabilities:
+      drop: [ "ALL" ]
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  env: []
+
+existingSecret: ""
+existingConfigMap: ""

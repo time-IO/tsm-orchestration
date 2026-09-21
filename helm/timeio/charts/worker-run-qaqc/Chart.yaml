@@ -1,0 +1,4 @@
+apiVersion: v2
+name: worker-run-qaqc
+version: 0.0.1
+description: A Helm chart for the worker-run-qaqc service

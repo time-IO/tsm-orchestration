@@ -1,0 +1,108 @@
+apiVersion: v2
+name: timeio
+description: "A Helm chart for time.IO"
+type: application
+# to-do: The version used here is not yet in sync with regular time.IO release versions (YYYY-mm-dd)
+version: 0.6.8
+
+icon: https://tsm.ufz.de/images/timeio.svg
+
+dependencies:
+
+  - name: dsm-api
+    version: 0.0.1
+    repository: "file://charts/dsm-api"
+
+  - name: dsm-frontend
+    version: 0.0.1
+    repository: "file://charts/dsm-frontend"
+
+  - name: keycloak
+    version: 0.0.1
+    repository: "file://charts/keycloak"
+
+  - name: cron-scheduler
+    version: 0.0.1
+    repository: "file://charts/cron-scheduler"
+
+  - name: flyway
+    version: 0.0.1
+    repository: "file://charts/flyway"
+
+  - name: frost
+    version: 0.0.1
+    repository: "file://charts/frost"
+
+  - name: mosquitto
+    version: 0.0.1
+    repository: "file://charts/mosquitto"
+
+  - name: object-storage
+    version: 0.0.2
+    repository: "file://charts/object-storage"
+
+  - name: proxy
+    version: 0.0.1
+    repository: "file://charts/proxy"
+
+  - name: timeio-db-api
+    version: 0.0.1
+    repository: "file://charts/timeio-db-api"
+
+  - name: tsmdl
+    version: 0.0.1
+    repository: "file://charts/tsmdl"
+
+  - name: visualization
+    version: 0.0.1
+    repository: "file://charts/visualization"
+
+  - name: worker-thing-setup
+    version: 0.0.1
+    repository: "file://charts/worker-thing-setup"
+
+  - name: worker-file-ingest
+    version: 0.0.1
+    repository: "file://charts/worker-file-ingest"
+
+  - name: worker-file-ingest-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-file-ingest-triggered"
+
+  - name: worker-grafana-user-orgs
+    version: 0.0.1
+    repository: "file://charts/worker-grafana-user-orgs"
+
+  - name: worker-mqtt-ingest
+    version: 0.0.1
+    repository: "file://charts/worker-mqtt-ingest"
+
+  - name: worker-run-qaqc
+    version: 0.0.1
+    repository: "file://charts/worker-run-qaqc"
+
+  - name: worker-run-qc-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-run-qc-triggered"
+
+  - name: worker-sync-extapis
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extapis"
+
+  - name: worker-sync-extapis-triggered
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extapis-triggered"
+
+  - name: worker-sync-extsftp
+    version: 0.0.1
+    repository: "file://charts/worker-sync-extsftp"
+
+  - name: worker-sync-sms
+    version: 0.0.1
+    repository: "file://charts/worker-sync-sms"
+
+  - name: postgres
+    repository: oci://registry-1.docker.io/cloudpirates
+    version: 0.19.*
+    condition: database.enabled
+    alias: "database"

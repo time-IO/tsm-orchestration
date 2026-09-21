@@ -1,0 +1,142 @@
+{{- if .Values.enabled }}
+{{- $globalValues := .Values.global | default dict }}
+{{- $globalChartValues := index $globalValues .Values.name | default dict }}
+{{- $globalWorkerValues := index $globalChartValues "worker" | default dict }}
+{{- $secretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $secretName = printf "%s-secret" .Values.name }}
+{{- else }}
+  {{- $secretName = default .Values.existingSecret (index $globalChartValues "existingSecret") }}
+{{- end }}
+
+{{- $workerSecretName := "" }}
+{{- if .Values.global.createSecrets }}
+  {{- $workerSecretName = printf "%s-secret" .Values.worker.name }}
+{{- else }}
+  {{- $workerSecretName = default .Values.worker.existingSecret (index $globalWorkerValues "existingSecret") }}
+{{- end }}
+
+{{- $workerConfigMapName := "" }}
+{{- if .Values.global.createConfigMaps }}
+  {{- $workerConfigMapName = printf "%s-envvars" .Values.worker.name }}
+{{- else }}
+  {{- $workerConfigMapName = default .Values.worker.existingConfigMap (index $globalWorkerValues "existingConfigMap") }}
+{{- end }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: 1
+  # Frost's context volume is ReadWriteOnce. Recreate prevents a rolling update
+  # from scheduling a replacement while the old pod still holds that volume.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/index-jsp-cm: {{ include (print $.Template.BasePath "/index-jsp-CM.yaml") . | sha256sum }}
+        checksum/worker-envvars: {{ include (print $.Template.BasePath "/worker-envvars.yaml") . | sha256sum }}
+        checksum/worker-secret: {{ include (print $.Template.BasePath "/worker-secret.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      initContainers:
+      - name: "mqtt-connection-check"
+        image: "eclipse-mosquitto:2.0"
+        securityContext:
+          runAsUser: {{ .Values.mqtt_init.securityContext.runAsUser }}
+          allowPrivilegeEscalation: {{ .Values.mqtt_init.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.mqtt_init.securityContext.capabilities.drop }}
+          runAsNonRoot: {{ .Values.mqtt_init.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.mqtt_init.securityContext.seccompProfile.type }}
+        command: [ "sh", "/tmp/init-mqtt-worker/init-mqtt-worker.sh" ]
+        volumeMounts:
+          - name: init-mqtt-worker
+            mountPath: /tmp/init-mqtt-worker
+{{- if or $workerConfigMapName $workerSecretName }}
+        envFrom:
+{{- if $workerConfigMapName }}
+          - configMapRef:
+              name: {{ $workerConfigMapName }}
+{{- end }}
+{{- if $workerSecretName }}
+          - secretRef:
+              name: {{ $workerSecretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.mqtt_init.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+        volumeMounts:
+        - mountPath: /usr/local/tomcat/conf/Catalina/localhost
+          name: {{ .Values.name }}-context
+          readOnly: true
+        - mountPath: /usr/local/tomcat/webapps/ROOT/index.jsp
+          name: {{ .Values.name }}-index
+          subPath: index.jsp
+      - name: {{ .Values.worker.name }}
+        image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.worker.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.worker.securityContext.capabilities.drop }}
+          runAsUser: {{ .Values.worker.securityContext.runAsUser }}
+          runAsNonRoot: {{ .Values.worker.securityContext.runAsNonRoot }}
+          seccompProfile:
+            type: {{ .Values.worker.securityContext.seccompProfile.type }}
+        command: ["python3", "setup_frost.py"]
+{{- if or $workerConfigMapName $workerSecretName }}
+        envFrom:
+{{- if $workerConfigMapName }}
+        - configMapRef:
+            name: {{ $workerConfigMapName }}
+{{- end }}
+{{- if $workerSecretName }}
+        - secretRef:
+            name: {{ $workerSecretName }}
+{{- end }}
+{{- end }}
+{{- with .Values.worker.env }}
+        env:
+{{ toYaml . | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /home/appuser/app/src/frost_context_files
+          name: {{ .Values.name }}-context
+      volumes:
+      - name: {{ .Values.name }}-context
+        persistentVolumeClaim:
+          claimName: tomcat-context-pvc
+      - name: {{ .Values.name }}-index
+        configMap:
+          name: {{ .Values.name }}-index
+      - name: init-mqtt-worker
+        configMap:
+          name: init-mqtt-worker
+{{- end }}

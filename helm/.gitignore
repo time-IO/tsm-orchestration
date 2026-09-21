@@ -1,0 +1,17 @@
+.idea/
+**/*.tgz
+**/Chart.lock
+timeio/.env
+timeio/core/object-storage/conf/id_ed25519
+timeio/core/object-storage/conf/id_ed25519.pub
+timeio/core/object-storage/conf/minio-ftp.crt
+timeio/core/object-storage/conf/minio-ftp.key
+timeio/core/proxy/conf/private.key
+timeio/core/proxy/conf/public.crt
+timeio/prod-values.yaml
+timeio/certs
+secrets-base64
+timeio/*.yaml
+!timeio/values.yaml
+!timeio/Chart.yaml
+**/secrets/

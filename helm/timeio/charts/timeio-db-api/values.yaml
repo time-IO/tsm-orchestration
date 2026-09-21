@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  repository: "registry.hzdr.de/ufz-tsm/timeio-db-api/timeio-db-api"
+  tag: 2026-08-19-082952
+  pullPolicy: Always
+name: timeio-db-api
+port: 8001
+
+securityContext:
+  allowPrivilegeEscalation: False
+  capabilities:
+    drop: ["ALL"]
+  runAsUser: 1000
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+env: []
+
+existingSecret: ""
+existingConfigMap: ""

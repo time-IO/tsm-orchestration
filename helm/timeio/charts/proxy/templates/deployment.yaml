@@ -1,0 +1,58 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicaCount}}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+      annotations:
+        checksum/css-cm: {{ include (print $.Template.BasePath "/css-CM.yaml") . | sha256sum }}
+        checksum/html-cm: {{ include (print $.Template.BasePath "/html-CM.yaml") . | sha256sum }}
+        checksum/locations-cm: {{ include (print $.Template.BasePath "/locations-CM.yaml") . | sha256sum }}
+        checksum/nginx-conf-cm: {{ include (print $.Template.BasePath "/nginx-conf-CM.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+      - name: {{ .Values.proxy.name }}
+        image: {{ if .Values.proxy.image.digest }}{{ .Values.proxy.image.repository }}@{{ .Values.proxy.image.digest }}{{ else }}{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag }}{{ end }}
+        imagePullPolicy: {{ .Values.proxy.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+          capabilities:
+            drop: {{ .Values.securityContext.capabilities.drop }}
+          seccompProfile:
+            type: {{ .Values.securityContext.seccompProfile.type }}
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+        volumeMounts:
+        - name: {{ .Values.name }}-html
+          mountPath: /usr/share/nginx/html
+        - name: {{ .Values.name }}-css
+          mountPath: /usr/share/nginx/html/css
+        - name: {{ .Values.name }}-default
+          mountPath: /etc/nginx/conf.d
+        - name: {{ .Values.name }}-locs
+          mountPath: /etc/nginx/locations
+      volumes:
+      - name: {{ .Values.name }}-html
+        configMap:
+          name: {{ .Values.name }}-html
+      - name: {{ .Values.name }}-css
+        configMap:
+          name: {{ .Values.name }}-css
+      - name: {{ .Values.name }}-default
+        configMap:
+          name: {{ .Values.name }}-default
+      - name: {{ .Values.name }}-locs
+        configMap:
+          name: {{ .Values.name }}-locs
