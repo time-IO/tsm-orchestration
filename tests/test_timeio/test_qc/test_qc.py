@@ -230,6 +230,33 @@ def test_qc_function_execution(func, data_in, data_out):
         assert (qc._qc.data[stream.alias] == data_in[stream]["data"]).all()
 
 
+def test_qc_function_execution_writes_flagged_result_quality():
+    func = QcFunction(
+        "TEST",
+        func_name="flagRange",
+        fields=[T1S33],
+        params={"min": 900, "max": 1200},
+    )
+    data_in = {T1S33: pd.DataFrame({"data": [800, 1000]})}
+
+    qc = SaQCWrapper(data_in)
+    qc.execute(func)
+
+    quality = qc.data[T1S33]["quality"]
+    flagged_measurement = quality.iloc[0]["resultQuality"][
+        "primaryQualityMeasurement"
+    ]
+    unflagged_measurement = quality.iloc[1]["resultQuality"][
+        "primaryQualityMeasurement"
+    ]
+
+    assert flagged_measurement["value"] == 255.0
+    assert flagged_measurement["metric"].endswith("#saqc.SaQC.flagRange")
+    assert flagged_measurement["parameters"] == {"min": 900, "max": 1200}
+    assert flagged_measurement["dimension"].endswith("src/timeio/qc/saqc.py")
+    assert unflagged_measurement["value"] == "-inf"
+
+
 @pytest.mark.parametrize(
     "func, data_in, data_out",
     [

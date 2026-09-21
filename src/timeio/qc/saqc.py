@@ -155,7 +155,7 @@ class STAMPLATESchemeFinal(saqc.FloatScheme):
         """
         rows = []
         index = []
-        for idx, obj in s.items():
+        for idx, obj in s.dropna().items():
             for measurement in obj["resultQuality"]["hasQualityMeasurements"]:
                 rows.append(
                     STAMPLATESchemeFinal._quality_measurement_to_row(measurement)
@@ -215,8 +215,11 @@ class STAMPLATESchemeFinal(saqc.FloatScheme):
                 # We map the meta entries (func and label) to the respective rows
                 column = history.hist[col]
                 history_meta = history.meta[col]
+                func_name = history_meta["func"]
+                if not func_name.startswith("flag"):
+                    continue
                 parameters = self._parameters(history_meta.get("kwargs") or {})
-                metric = f"{self.SAQC_DOCS_URL}#saqc.SaQC.{history_meta['func']}"
+                metric = f"{self.SAQC_DOCS_URL}#saqc.SaQC.{func_name}"
                 values = column.to_numpy()
                 flagged = (column != UNFLAGGED).to_numpy() & column.notna().to_numpy()
                 measurement_idx = col + 1
@@ -236,6 +239,8 @@ class STAMPLATESchemeFinal(saqc.FloatScheme):
                     measurements[pos].append(measurement)
 
             for pos, inline_measurements in enumerate(measurements):
+                if not inline_measurements:
+                    continue
                 result[pos] = {
                     "resultQuality": {
                         "hasQualityMeasurements": inline_measurements,
@@ -259,7 +264,7 @@ class SaQCWrapper:
         self._qc = saqc.SaQC(
             data=saqc.DictOfSeries(values),
             flags=saqc.DictOfSeries(flags),
-            scheme=STAMPLATEScheme(),
+            scheme=STAMPLATESchemeFinal(),
         )
         # we keep the original data to check for modifications later
         self._input_data = data
