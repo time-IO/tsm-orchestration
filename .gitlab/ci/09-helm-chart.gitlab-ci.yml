@@ -1,0 +1,162 @@
+---
+
+# Pipeline for the in-tree time.IO Helm chart at helm/timeio.
+#
+# The chart was merged in from the former ufz-tsm/helm-deployment repository.
+# These jobs are fully independent of the Docker image build/release pipeline
+# and only run when files under helm/ change:
+#   * branch pushes  -> lint + template (validation only, no push)
+#   * push on main   -> enforce a NEW Chart.yaml version, then package, push
+#                       (classic + OCI) and trigger the ufz-deployment chart
+#                       promotion to the web-intern-TEST GitOps wrapper.
+#
+# Charts are pushed to a dedicated OCI sub-path ($CI_REGISTRY_IMAGE/charts) so
+# the chart name "timeio" cannot collide with the per-service Docker image
+# names published under $CI_REGISTRY_IMAGE/<service>.
+
+.helm-base:
+  image:
+    name: "alpine/helm:4.0.4"
+    entrypoint: [""]
+  variables:
+    HELM_CHART_DIR: "helm/timeio"
+    HELM_PACKAGE_NAME: "timeio"
+    OCI_HELM_REPO: "${CI_REGISTRY_IMAGE}/charts"
+    ENABLE_CLASSIC_PUSH: "true"
+    ENABLE_OCI_PUSH: "true"
+  # The chart tooling needs no docker-in-docker service.
+  services: []
+
+
+helm-lint:
+  extends: .helm-base
+  stage: check
+  needs: []
+  script:
+    - helm lint "$HELM_CHART_DIR"
+  rules:
+    # Never on tags, merge_request events or main (mirrors the other check jobs).
+    - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    # Validate on any branch push that touches the chart.
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      changes:
+        - helm/**/*
+      when: always
+
+
+helm-template:
+  extends: .helm-base
+  stage: check
+  needs: []
+  script:
+    - helm dependency build "$HELM_CHART_DIR"
+    - helm template "$HELM_CHART_DIR" > /dev/null
+  rules:
+    - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      changes:
+        - helm/**/*
+      when: always
+
+
+helm-package-push:
+  extends: .helm-base
+  stage: release
+  # Independent of the image pipeline; nothing to wait for on a main push.
+  needs: []
+  before_script:
+    - apk add --no-cache yq curl
+    - helm registry login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
+  script:
+    - VERSION=$(helm show chart "$HELM_CHART_DIR" | yq '.version' | tr -d '\n')
+    - test -n "$VERSION"
+    - echo "Chart version declared in $HELM_CHART_DIR/Chart.yaml: $VERSION"
+    # --- Version-clash guard -------------------------------------------------
+    # Fail hard if this chart version already exists in the OCI registry, so a
+    # merge to main that forgot to bump Chart.yaml surfaces as a broken
+    # pipeline instead of silently overwriting a published chart.
+    #
+    # NOTE: `helm show chart` exits 0 even when the reference is missing (it
+    # only prints "Error: ... not found" to stderr), so we MUST classify by
+    # output content, never by exit status.
+    - |
+      out=$(helm show chart "oci://${OCI_HELM_REPO}/${HELM_PACKAGE_NAME}" --version "$VERSION" 2>&1 || true)
+      if printf '%s\n' "$out" | grep -qiE '(not found|manifest unknown|name unknown|not.?found)'; then
+        echo "Version ${VERSION} is not published yet - proceeding."
+      elif printf '%s\n' "$out" | grep -qE "^version:[[:space:]]*['\"]?${VERSION}['\"]?[[:space:]]*$"; then
+        echo "ERROR: chart ${HELM_PACKAGE_NAME} version ${VERSION} already exists in oci://${OCI_HELM_REPO}." >&2
+        echo "       Bump 'version:' in ${HELM_CHART_DIR}/Chart.yaml before merging to main." >&2
+        exit 1
+      else
+        echo "ERROR: could not determine whether chart version ${VERSION} already exists; registry said:" >&2
+        printf '%s\n' "$out" >&2
+        exit 1
+      fi
+    # --- Package -------------------------------------------------------------
+    - helm dependency build "$HELM_CHART_DIR"
+    - helm package "$HELM_CHART_DIR" --version "$VERSION"
+    - CHART="${HELM_PACKAGE_NAME}-${VERSION}.tgz"
+    - test -f "$CHART"
+    - ARCHIVE_SHA256=$(sha256sum "$CHART" | awk '{print $1}')
+    # --- Push (classic Helm package registry) --------------------------------
+    - |
+      if [ "$ENABLE_CLASSIC_PUSH" = "true" ]; then
+        curl --fail-with-body --request POST \
+          --user "gitlab-ci-token:${CI_JOB_TOKEN}" \
+          --form "chart=@${CHART}" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"
+      fi
+    # --- Push (OCI) ----------------------------------------------------------
+    - PUSH_OUTPUT=$(helm push "${CHART}" "oci://${OCI_HELM_REPO}")
+    - printf '%s\n' "$PUSH_OUTPUT"
+    - MANIFEST_DIGEST=$(printf '%s\n' "$PUSH_OUTPUT" | awk '/^Digest:/ { print $2 }')
+    - test -n "$MANIFEST_DIGEST"
+    # --- Hand the immutable chart identity to the promotion trigger ----------
+    - |
+      {
+        # Helm appends the chart name to the OCI repo on push, so the downstream
+        # promotion must receive that complete reference.
+        printf 'TIMEIO_CHART_REF=oci://%s/%s\n' "$OCI_HELM_REPO" "$HELM_PACKAGE_NAME"
+        printf 'TIMEIO_CHART_VERSION=%s\n' "$VERSION"
+        printf 'TIMEIO_CHART_MANIFEST_DIGEST=%s\n' "$MANIFEST_DIGEST"
+        printf 'TIMEIO_CHART_ARCHIVE_SHA256=%s\n' "$ARCHIVE_SHA256"
+      } > timeio-push.env
+    - cat timeio-push.env
+  artifacts:
+    paths:
+      - "timeio-*.tgz"
+    reports:
+      dotenv: timeio-push.env
+  rules:
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
+      changes:
+        - helm/**/*
+      when: on_success
+
+
+# Advance the TimeIO web-intern-TEST GitOps wrapper (ufz-tsm/ufz-deployment) to
+# the freshly published chart. Native multi-project trigger (no token): the
+# downstream job-token allowlist already authorises this project, exactly like
+# trigger-k8s-test-image-bump. The downstream promote-timeio-test job keys on
+# TIMEIO_PROMOTION_TARGET=test; stage promotion stays behind its manual gate.
+trigger-chart-promotion:
+  stage: notify
+  needs:
+    - job: "helm-package-push"
+      artifacts: true
+  variables:
+    TIMEIO_PROMOTION_TARGET: "test"
+    TIMEIO_CHART_REF: "$TIMEIO_CHART_REF"
+    TIMEIO_CHART_VERSION: "$TIMEIO_CHART_VERSION"
+    TIMEIO_CHART_MANIFEST_DIGEST: "$TIMEIO_CHART_MANIFEST_DIGEST"
+    TIMEIO_CHART_ARCHIVE_SHA256: "$TIMEIO_CHART_ARCHIVE_SHA256"
+  trigger:
+    project: "ufz-tsm/ufz-deployment"
+    branch: "main"
+  rules:
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
+      changes:
+        - helm/**/*
+      when: on_success

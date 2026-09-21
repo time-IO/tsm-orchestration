@@ -268,3 +268,27 @@ TSM_DIRECTORY (can be any dir)
   - Password: `admin`
 
 See [here](./keycloak/README.md) for further information regarding configuration and setup.
+# Kubernetes deployment (Helm chart)
+
+The Kubernetes deployment of time.IO lives in-tree as a Helm umbrella chart at
+[`helm/timeio`](./helm/timeio) (subcharts under `helm/timeio/charts/`). It was
+merged in from the former `ufz-tsm/helm-deployment` repository; the GitOps
+wrapper (`ufz-tsm/ufz-deployment`) is still a separate repo and consumes the
+chart published by this repo's CI.
+
+Validate the chart locally (no cluster required):
+
+```bash
+helm lint helm/timeio
+helm dependency build helm/timeio     # pulls the postgres OCI dependency
+helm template helm/timeio > /dev/null
+```
+
+The chart pipeline (`.gitlab/ci/09-helm-chart.gitlab-ci.yml`) runs only when
+files under `helm/` change. **Bump `version:` in `helm/timeio/Chart.yaml` for
+any change to the chart** — the post-merge pipeline hard-fails if that version
+already exists in the registry.
+
+> Note: some assets (Flyway migrations, mosquitto/keycloak/cron/nginx config)
+> are temporarily duplicated between the repo root and the chart and must be
+> kept in sync until a follow-up unifies them.
