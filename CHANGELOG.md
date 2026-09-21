@@ -3,7 +3,7 @@
 
 ## [Unreleased]
 ### Added
-- Quality control settings can be deleted from the overview list ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
+- Quality control setting 'flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
 ### Fixed
 ### Changed
 ### Removed
