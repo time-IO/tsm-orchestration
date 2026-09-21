@@ -53,6 +53,11 @@ stage-tag-images-in-registry:
         docker push $image:$BUILD_DATE;
       done
     - docker images
+    # Expose the immutable build tag so the k8s test-bump trigger can pin it.
+    - echo "TIMEIO_BUILD_TAG=$BUILD_DATE" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
   tags:
     - "dind"
 
