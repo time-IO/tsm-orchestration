@@ -35,6 +35,13 @@ class GrafanaDashboard:
             "liveNow": True,
             "panels": [
                 self._journal_panel(thing, datasource),
+                # STA datastreams row, between journal and raw observations. The
+                # panel is driven purely by the sta_datastream template variable,
+                # so the dashboard is built identically for every thing and
+                # linkings added later show up on the next load without a rebuild
+                # (zero linkings -> zero panels).
+                self._sta_row_panel(),
+                self._sta_observation_panel(thing, datasource),
                 self._observations_row_panel(),
                 self._observation_panel(thing, datasource),
             ],
@@ -44,6 +51,7 @@ class GrafanaDashboard:
                 "list": [
                     self._datastream_templating(thing, datasource),
                     self._show_qaqc_templating(datasource),
+                    self._sta_datastream_templating(thing, datasource),
                 ]
             },
             "time": {"from": "now-7d", "to": "now"},
@@ -86,6 +94,27 @@ class GrafanaDashboard:
                 {"text": "False", "value": "False", "selected": True},
                 {"text": "True", "value": "True", "selected": False},
             ],
+        }
+
+    def _sta_datastream_templating(self, thing, datasource) -> dict:
+        return {
+            "datasource": datasource,
+            # visible, user-selectable dropdown at the top of the dashboard
+            "hide": 0,
+            # includeAll would render a phantom "All" panel with an empty value
+            # (and a SQL error) when a thing has no linkings; with includeAll
+            # off, zero options -> zero repeated panels, so only the info text
+            # panel remains.
+            "includeAll": False,
+            "label": "STA Datastream",
+            "multi": True,
+            "name": "sta_datastream",
+            "query": self._sta_datastream_sql(thing.uuid),
+            # refresh on dashboard load, so linkings added later appear
+            "refresh": 1,
+            # keep the query order (newest linking first) for a sensible default
+            "sort": 0,
+            "type": "query",
         }
 
     def _observation_panel(self, thing: Thing, datasource: DatasourceT) -> dict:
@@ -149,6 +178,51 @@ class GrafanaDashboard:
                 {"id": "custom.axisSoftMax", "value": 1},
                 {"id": "custom.pointSize", "value": 7},
             ],
+        }
+
+    @staticmethod
+    def _sta_row_panel() -> dict:
+        return {
+            "collapsed": False,
+            "gridPos": {"h": 1, "w": 24},
+            "panels": [],
+            "title": "STA Datastreams",
+            "type": "row",
+        }
+
+    def _sta_observation_panel(self, thing: Thing, datasource: DatasourceT) -> dict:
+        return {
+            "datasource": datasource,
+            "gridPos": {"h": 8},
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": False,
+                }
+            },
+            "maxPerRow": 3,
+            "repeat": "sta_datastream",
+            "repeatDirection": "h",
+            "targets": [
+                self._sta_observation_query_target(thing, datasource),
+            ],
+            "title": "$sta_datastream",
+            "type": "timeseries",
+        }
+
+    @classmethod
+    def _sta_observation_query_target(
+        cls, thing: ThingT, datasource: DatasourceT
+    ) -> dict:
+        return {
+            "datasource": datasource,
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": True,
+            "rawSql": cls._sta_observation_sql(thing.uuid),
+            "refId": "A",
         }
 
     @staticmethod
@@ -244,5 +318,17 @@ class GrafanaDashboard:
     @staticmethod
     def _qaqc_sql(uuid: str) -> str:
         with open("timeio/grafana/sql/qaqc.sql", "r") as f:
+            sql = f.read().format(uuid=uuid)
+        return sql
+
+    @staticmethod
+    def _sta_datastream_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_datastream.sql", "r") as f:
+            sql = f.read().format(uuid=uuid)
+        return sql
+
+    @staticmethod
+    def _sta_observation_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_observation.sql", "r") as f:
             sql = f.read().format(uuid=uuid)
         return sql

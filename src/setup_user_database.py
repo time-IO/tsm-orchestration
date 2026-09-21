@@ -277,7 +277,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(
                     sql.SQL(
                         "GRANT SELECT ON TABLE thing, datastream, observation, "
-                        'journal, datastream_properties, "LOCATIONS", "THINGS", '
+                        "journal, datastream_properties, sta_datastream_links, "
+                        '"LOCATIONS", "THINGS", '
                         '"THINGS_LOCATIONS", "SENSORS", "OBS_PROPERTIES", "DATASTREAMS", '
                         '"OBSERVATIONS" TO {grf_user}'
                     ).format(grf_user=grf_user, schema=schema)
@@ -328,14 +329,13 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     c.execute(view)
 
     def create_grafana_views(self, thing):
-        file = os.path.join(
-            os.path.dirname(__file__),
-            "sql",
-            "grafana_views",
-            "datastream_properties.sql",
+        base_path = os.path.join(
+            os.path.dirname(__file__), "sql", "grafana_views"
         )
-        with open(file) as fh:
-            view = fh.read()
+        files = [
+            os.path.join(base_path, "datastream_properties.sql"),
+            os.path.join(base_path, "sta_datastream_links.sql"),
+        ]
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 user = sql.Identifier(thing.database.username.lower())
@@ -343,7 +343,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 # Same rationale as create_frost_views: fail fast rather than
                 # queue the DROP/CREATE behind a reader holding the view lock.
                 c.execute("SET lock_timeout TO '10s'")
-                c.execute(view)
+                for file in files:
+                    with open(file) as fh:
+                        c.execute(fh.read())
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
