@@ -40,7 +40,7 @@ class GrafanaDashboard:
                 # STA datastreams row, between journal and raw observations
                 self._sta_row_panel(),
                 self._sta_observation_panel(thing, datasource),
-                self._no_sta_links_panel(datasource),
+                self._sta_links_info_panel(datasource),
                 self._observations_row_panel(),
                 self._observation_panel(thing, datasource),
             ],
@@ -51,7 +51,7 @@ class GrafanaDashboard:
                     self._datastream_templating(thing, datasource),
                     self._show_qaqc_templating(datasource),
                     self._sta_datastream_templating(thing, datasource),
-                    self._sta_no_links_templating(thing, datasource),
+                    self._sta_links_info_templating(thing, datasource),
                 ]
             },
             "time": {"from": "now-7d", "to": "now"},
@@ -110,16 +110,16 @@ class GrafanaDashboard:
             "type": "query",
         }
 
-    def _sta_no_links_templating(self, thing, datasource) -> dict:
+    def _sta_links_info_templating(self, thing, datasource) -> dict:
         return {
             "datasource": datasource,
-            # hidden helper: info text when no linkings, else empty string
+            # hidden helper: SMS link, prefixed with a note when no linkings exist
             "hide": 2,
             "includeAll": False,
-            "label": "STA No Links",
+            "label": "STA Links Info",
             "multi": False,
-            "name": "sta_no_links",
-            "query": self._sta_no_links_sql(thing.uuid),
+            "name": "sta_links_info",
+            "query": self._sta_links_info_sql(thing.uuid),
             "refresh": 1,
             "type": "query",
         }
@@ -233,14 +233,14 @@ class GrafanaDashboard:
         }
 
     @staticmethod
-    def _no_sta_links_panel(datasource: DatasourceT) -> dict:
-        # Shows sta_no_links as content: info text when no linkings, else empty
+    def _sta_links_info_panel(datasource: DatasourceT) -> dict:
+        # Renders sta_links_info: SMS link, prefixed when no linkings exist
         return {
             "datasource": datasource,
             "gridPos": {"h": 2, "w": 24},
             "options": {
                 "mode": "markdown",
-                "content": "${sta_no_links}",
+                "content": "${sta_links_info}",
             },
             "transparent": True,
             "type": "text",
@@ -349,8 +349,8 @@ class GrafanaDashboard:
         return sql
 
     @staticmethod
-    def _sta_no_links_sql(uuid: str) -> str:
-        with open("timeio/grafana/sql/sta_no_links.sql", "r") as f:
+    def _sta_links_info_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_links_info.sql", "r") as f:
             sql = f.read().format(uuid=uuid, sms_url=os.environ.get("SMS_URL", ""))
         return sql
 
