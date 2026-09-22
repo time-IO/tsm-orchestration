@@ -181,7 +181,7 @@ const formDataWithTypes = computed(() => {
     dfilterObject,
   ];
 
-    // only add optional fields if their value is not null
+  // only add optional fields if their value is not null
   if (targetObject.input.value !== null) returnArray.push(targetObject);
   if (min_periodsObject.input.value !== null) returnArray.push(min_periodsObject);
 
