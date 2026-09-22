@@ -35,8 +35,8 @@
     <qc-function-form-int-offset-input
       label="window *"
       class="q-mb-md"
-      :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
-      :rules_offset="[rules.CONTEXT_WINDOW]"
+      :rules_int="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(1)]"
+      :rules_offset="[rules.REQUIRED, rules.CONTEXT_WINDOW]"
       v-model:current_type="current_window_type"
       v-model:input="formData.window"
       hint="Rolling window size."
@@ -132,6 +132,7 @@ function loadInitialData() {
   formData.value.flag = (flagArg?.input.value as number) ?? 255;
   formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
 }
+
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
 const formDataWithTypes = computed(() => {
