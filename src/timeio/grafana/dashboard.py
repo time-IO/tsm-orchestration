@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from timeio.grafana.typehints import DatasourceT, FolderT
 from typing import TYPE_CHECKING
 
@@ -35,12 +37,7 @@ class GrafanaDashboard:
             "liveNow": True,
             "panels": [
                 self._journal_panel(thing, datasource),
-                # STA datastreams row, between journal and raw observations. Both
-                # panels below are driven purely by template variables, so the
-                # dashboard is built identically for every thing and linkings
-                # added later show up on the next load without a rebuild: the
-                # observation panel repeats once per linking (zero when none),
-                # and the info text panel shows only when there are no linkings.
+                # STA datastreams row, between journal and raw observations
                 self._sta_row_panel(),
                 self._sta_observation_panel(thing, datasource),
                 self._no_sta_links_panel(datasource),
@@ -102,35 +99,25 @@ class GrafanaDashboard:
     def _sta_datastream_templating(self, thing, datasource) -> dict:
         return {
             "datasource": datasource,
-            # visible, user-selectable dropdown at the top of the dashboard
             "hide": 0,
-            # includeAll would render a phantom "All" panel with an empty value
-            # (and a SQL error) when a thing has no linkings; with includeAll
-            # off, zero options -> zero repeated panels, so only the info text
-            # panel remains.
-            "includeAll": False,
+            "includeAll": True,  # empty value is guarded in sta_observation.sql
             "label": "STA Datastream",
             "multi": True,
             "name": "sta_datastream",
             "query": self._sta_datastream_sql(thing.uuid),
-            # refresh on dashboard load, so linkings added later appear
-            "refresh": 1,
-            # keep the query order (newest linking first) for a sensible default
-            "sort": 0,
+            "refresh": 1,  # re-query on load, so new linkings appear
+            "sort": 0,  # keep query order (newest first)
             "type": "query",
         }
 
     def _sta_no_links_templating(self, thing, datasource) -> dict:
         return {
             "datasource": datasource,
-            # hidden helper variable: yields a single option when the thing has
-            # no STA linkings and no options otherwise, so the info text panel
-            # (repeat: sta_no_links) shows exactly once when there are none and
-            # disappears as soon as a linking exists.
+            # hidden helper: info text when no linkings, else empty string
             "hide": 2,
             "includeAll": False,
             "label": "STA No Links",
-            "multi": True,
+            "multi": False,
             "name": "sta_no_links",
             "query": self._sta_no_links_sql(thing.uuid),
             "refresh": 1,
@@ -247,16 +234,14 @@ class GrafanaDashboard:
 
     @staticmethod
     def _no_sta_links_panel(datasource: DatasourceT) -> dict:
-        # Repeats over sta_no_links: rendered once (info text) when the thing has
-        # no STA linkings, and not at all as soon as one exists.
+        # Shows sta_no_links as content: info text when no linkings, else empty
         return {
             "datasource": datasource,
-            "gridPos": {"h": 3, "w": 24},
+            "gridPos": {"h": 2, "w": 24},
             "options": {
                 "mode": "markdown",
-                "content": "No STA linkings available.",
+                "content": "${sta_no_links}",
             },
-            "repeat": "sta_no_links",
             "transparent": True,
             "type": "text",
         }
@@ -366,7 +351,7 @@ class GrafanaDashboard:
     @staticmethod
     def _sta_no_links_sql(uuid: str) -> str:
         with open("timeio/grafana/sql/sta_no_links.sql", "r") as f:
-            sql = f.read().format(uuid=uuid)
+            sql = f.read().format(uuid=uuid, sms_url=os.environ.get("SMS_URL", ""))
         return sql
 
     @staticmethod

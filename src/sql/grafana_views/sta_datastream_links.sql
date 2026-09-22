@@ -26,8 +26,7 @@ SELECT
     ds_id,
     begin_date,
     end_date,
-    -- Append the link id when the SMS name is not unique within a thing,
-    -- so consecutive settings don't collapse to identical panel titles.
+    -- append link id when the SMS name isn't unique within a thing
     CASE
         WHEN count(*) OVER (PARTITION BY t_uuid, base_name) > 1
         THEN concat(base_name, ' (#', link_id, ')')
