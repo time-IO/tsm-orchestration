@@ -10,25 +10,31 @@ class DatastreamComparer:
         self.mapping = self._read_yaml()
         self.thing_uuid = next(iter(self.mapping))
 
-        self.query_ds_id = sql.SQL("""
+        self.query_ds_id = sql.SQL(
+            """
             SELECT d.id, d.name, d.position FROM {schema}.datastream d
             JOIN {schema}.thing t ON t.id = d.thing_id
             WHERE t.uuid = %s AND d.position = %s
-        """).format(schema=sql.Identifier(self.schema))
+        """
+        ).format(schema=sql.Identifier(self.schema))
 
-        self.query_timerange = sql.SQL("""
+        self.query_timerange = sql.SQL(
+            """
             SELECT MIN(result_time), MAX(result_time)
             FROM {schema}.observation
             WHERE datastream_id = %s
-        """).format(schema=sql.Identifier(self.schema))
+        """
+        ).format(schema=sql.Identifier(self.schema))
 
-        self.query_timerange_obs = sql.SQL("""
+        self.query_timerange_obs = sql.SQL(
+            """
             SELECT result_time, result_type, result_number,
                    result_string, result_json, result_boolean
             FROM {schema}.observation
             WHERE datastream_id = %s
               AND result_time BETWEEN %s AND %s
-        """).format(schema=sql.Identifier(self.schema))
+        """
+        ).format(schema=sql.Identifier(self.schema))
 
     def _read_yaml(self):
         with open(self.mapping_file, "r") as f:

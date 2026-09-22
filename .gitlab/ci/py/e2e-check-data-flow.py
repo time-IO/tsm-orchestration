@@ -7,6 +7,7 @@ import requests
 import psycopg
 import paho.mqtt.publish as publish
 
+
 host = "docker"
 realm = "timeio"
 test_username = "testuser"
