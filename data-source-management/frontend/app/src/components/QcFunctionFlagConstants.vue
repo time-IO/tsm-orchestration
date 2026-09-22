@@ -47,7 +47,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.thresh"
-      :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
+      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       label="thresh"
       hint="Maximum total change allowed per window."
     />
@@ -58,6 +58,7 @@
       filled
       v-model.number="formData.min_periods"
       :rules="[rules.INTEGER, ruleFactories.MIN(2)]"
+      @update:model-value="(val) => (formData.min_periods = val === '' ? null : Number(val))"
       label="min_periods"
       hint="Minimum number of valid timestamps required per window (>= 2)."
     />
@@ -78,6 +79,7 @@
       filled
       v-model.number="formData.dfilter"
       :rules="[rules.FLOAT]"
+      @update:model-value="(val) => (formData.dfilter = val === '' ? 0 : Number(val))"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
     />
@@ -107,7 +109,7 @@ const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
   window: null as number | null,
-  thresh: null as number | null,
+  thresh: 0,
   min_periods: null as number | null,
   flag: 255.0,
   dfilter: 0,
@@ -127,7 +129,7 @@ function loadInitialData() {
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
   formData.value.window = (windowArg?.input.value as number) ?? null;
-  formData.value.thresh = (threshArg?.input.value as number) ?? null;
+  formData.value.thresh = (threshArg?.input.value as number) ?? 0;
   formData.value.min_periods = (min_periodsArg?.input.value as number) ?? 2;
   formData.value.flag = (flagArg?.input.value as number) ?? 255;
   formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
@@ -197,7 +199,7 @@ const resetFormData = () => {
   formData.value.field = [];
   formData.value.target = [];
   formData.value.window = null;
-  formData.value.thresh = null;
+  formData.value.thresh = 0;
   formData.value.min_periods = null;
   formData.value.flag = 255.0;
   formData.value.dfilter = 0;
