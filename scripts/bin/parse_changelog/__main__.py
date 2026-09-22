@@ -51,7 +51,7 @@ def die(message, exit_code=1):
 def main():
     # file fetching/reading
     arg_parser = argparse.ArgumentParser(
-        description="Parse a SMS CHANGELOG.md file from a branch or local file."
+        description="Parse a time.IO CHANGELOG.md file from a branch or local file."
     )
     group = arg_parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--branch", type=str, help="Specify a branch name")
