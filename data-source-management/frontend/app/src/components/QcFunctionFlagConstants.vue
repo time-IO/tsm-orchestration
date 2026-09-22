@@ -46,8 +46,9 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.thresh"
+      :model-value="formData.thresh"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
+      @update:model-value="(val) => (formData.thresh = val === '' ? null : Number(val))"
       label="thresh"
       hint="Maximum total change allowed per window."
     />
@@ -67,9 +68,10 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.flag"
+      :model-value="formData.flag"
       label="Flag (enter a floating point number)"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
+      @update:model-value="(val) => (formData.flag = val === '' ? null : Number(val))"
       hint="Flag assigned to values identified by this function."
     />
 
@@ -105,12 +107,20 @@ const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 const current_window_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 
-const formData = ref({
-  field: [] as Datastream[],
-  target: [] as Datastream[],
-  window: null as number | null,
+const formData = ref<{
+  field: Datastream[];
+  target: Datastream[];
+  window: number | null;
+  thresh: number | null;
+  min_periods: number | null;
+  flag: number | null;
+  dfilter: number;
+}>({
+  field: [],
+  target: [],
+  window: null,
   thresh: 0,
-  min_periods: null as number | null,
+  min_periods: null,
   flag: 255.0,
   dfilter: 0,
 });
@@ -155,7 +165,7 @@ const formDataWithTypes = computed(() => {
   };
   const threshObject = {
     name: 'thresh',
-    input: { value: formData.value.thresh },
+    input: { value: formData.value.thresh ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const min_periodsObject = {
@@ -165,7 +175,7 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
