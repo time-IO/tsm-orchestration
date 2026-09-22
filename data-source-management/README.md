@@ -11,13 +11,11 @@ docker compose build
 ## Run
 
 Run with the time.IO orchestration setup.
-
 ```
 ./up.sh
 ```
 
 For development:
-
 ```
 ./up-with-dev.sh
 ```
