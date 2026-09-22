@@ -33,7 +33,7 @@
 
     <!--    window-->
     <qc-function-form-int-offset-input
-      label="window * "
+      label="window *"
       class="q-mb-md"
       :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
       :rules_offset="[rules.CONTEXT_WINDOW]"
