@@ -47,7 +47,7 @@
       class="q-mb-md"
       filled
       v-model.number="formData.thresh"
-      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
+      :rules="[rules.FLOAT, rules.REQUIRED, ruleFactories.MIN(0)]"
       label="thresh"
       hint="Maximum total change allowed per window."
     />
