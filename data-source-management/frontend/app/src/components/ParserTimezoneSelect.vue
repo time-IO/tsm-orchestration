@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { onMounted, ref } from 'vue';
-import { useParserTimezoneStore } from 'stores/parserTimezoneStore';
+import { useParserTimezoneStore } from '@/stores/parserTimezoneStore';
 
 const store = useParserTimezoneStore();
 const $q = useQuasar();

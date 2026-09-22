@@ -1,6 +1,6 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { StaDatastreamRequestParameter } from 'src/services/sta/types';
+import type { StaDatastreamRequestParameter } from '@/services/sta/types';
 
 export const useStaStore = defineStore('staStore', {
   state: () => ({

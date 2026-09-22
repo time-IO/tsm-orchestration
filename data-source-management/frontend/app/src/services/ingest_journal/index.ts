@@ -1,5 +1,5 @@
-import { axiosInstance } from 'src/boot/axios';
-import type { JournalQuery, JournalResponse } from 'src/services/ingest_journal/types';
+import { axiosInstance } from '@/boot/axios';
+import type { JournalQuery, JournalResponse } from '@/services/ingest_journal/types';
 
 const apiPath = '/ingest';
 

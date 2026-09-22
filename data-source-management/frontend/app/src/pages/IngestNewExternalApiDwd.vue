@@ -10,11 +10,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { IngestExternalApiDwdCreate } from 'src/services/ingest_external_api_dwd/types';
+import type { IngestExternalApiDwdCreate } from '@/services/ingest_external_api_dwd/types';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
+import { useIngestExternalApiDwdStore } from '@/stores/ingestExternalApiDwdStore';
+import IngestFormExternalApiDwd from '@/components/IngestFormExternalApiDwd.vue';
 
 const dwdStore = useIngestExternalApiDwdStore();
 const $q = useQuasar();

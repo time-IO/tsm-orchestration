@@ -1,4 +1,4 @@
-FROM node:25.8-slim AS js-builder
+FROM node:24.21.0-slim AS js-builder
 
 RUN mkdir /datasourcefrontend
 COPY ./app /datasourcefrontend
