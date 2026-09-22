@@ -35,13 +35,15 @@ class GrafanaDashboard:
             "liveNow": True,
             "panels": [
                 self._journal_panel(thing, datasource),
-                # STA datastreams row, between journal and raw observations. The
-                # panel is driven purely by the sta_datastream template variable,
-                # so the dashboard is built identically for every thing and
-                # linkings added later show up on the next load without a rebuild
-                # (zero linkings -> zero panels).
+                # STA datastreams row, between journal and raw observations. Both
+                # panels below are driven purely by template variables, so the
+                # dashboard is built identically for every thing and linkings
+                # added later show up on the next load without a rebuild: the
+                # observation panel repeats once per linking (zero when none),
+                # and the info text panel shows only when there are no linkings.
                 self._sta_row_panel(),
                 self._sta_observation_panel(thing, datasource),
+                self._no_sta_links_panel(datasource),
                 self._observations_row_panel(),
                 self._observation_panel(thing, datasource),
             ],
@@ -52,6 +54,7 @@ class GrafanaDashboard:
                     self._datastream_templating(thing, datasource),
                     self._show_qaqc_templating(datasource),
                     self._sta_datastream_templating(thing, datasource),
+                    self._sta_no_links_templating(thing, datasource),
                 ]
             },
             "time": {"from": "now-7d", "to": "now"},
@@ -114,6 +117,23 @@ class GrafanaDashboard:
             "refresh": 1,
             # keep the query order (newest linking first) for a sensible default
             "sort": 0,
+            "type": "query",
+        }
+
+    def _sta_no_links_templating(self, thing, datasource) -> dict:
+        return {
+            "datasource": datasource,
+            # hidden helper variable: yields a single option when the thing has
+            # no STA linkings and no options otherwise, so the info text panel
+            # (repeat: sta_no_links) shows exactly once when there are none and
+            # disappears as soon as a linking exists.
+            "hide": 2,
+            "includeAll": False,
+            "label": "STA No Links",
+            "multi": True,
+            "name": "sta_no_links",
+            "query": self._sta_no_links_sql(thing.uuid),
+            "refresh": 1,
             "type": "query",
         }
 
@@ -226,6 +246,22 @@ class GrafanaDashboard:
         }
 
     @staticmethod
+    def _no_sta_links_panel(datasource: DatasourceT) -> dict:
+        # Repeats over sta_no_links: rendered once (info text) when the thing has
+        # no STA linkings, and not at all as soon as one exists.
+        return {
+            "datasource": datasource,
+            "gridPos": {"h": 3, "w": 24},
+            "options": {
+                "mode": "markdown",
+                "content": "No STA linkings available.",
+            },
+            "repeat": "sta_no_links",
+            "transparent": True,
+            "type": "text",
+        }
+
+    @staticmethod
     def _observations_row_panel() -> dict:
         return {
             "collapsed": False,
@@ -324,6 +360,12 @@ class GrafanaDashboard:
     @staticmethod
     def _sta_datastream_sql(uuid: str) -> str:
         with open("timeio/grafana/sql/sta_datastream.sql", "r") as f:
+            sql = f.read().format(uuid=uuid)
+        return sql
+
+    @staticmethod
+    def _sta_no_links_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_no_links.sql", "r") as f:
             sql = f.read().format(uuid=uuid)
         return sql
 
