@@ -42,7 +42,9 @@ def test_frost_not_reachable(client, monkeypatch):
     monkeypatch.setattr(
         frost_proxy,
         "_client",
-        httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://frost"),
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="http://frost"
+        ),
     )
     response = client.get("/v1.1")
     assert response.status_code == 502
