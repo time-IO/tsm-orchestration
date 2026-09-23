@@ -1,0 +1,73 @@
+"""add ingest http and external mqtt tables
+
+Revision ID: 4e4465cdc4ba
+Revises: d404a0156749
+Create Date: 2026-09-23 11:22:02.413136
+
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import sqlmodel
+from encryption import EncryptedType
+
+# revision identifiers, used by Alembic.
+revision: str = "4e4465cdc4ba"
+down_revision: Union[str, Sequence[str], None] = "d404a0156749"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    op.create_table(
+        "ingest_external_mqtt",
+        sa.Column("ingest_id", sa.Integer(), nullable=False),
+        sa.Column(
+            "external_mqtt_address", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("external_mqtt_port", sa.Integer(), nullable=False),
+        sa.Column(
+            "external_mqtt_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("external_mqtt_password", EncryptedType(), nullable=True),
+        sa.Column("external_mqtt_ca_cert", EncryptedType(), nullable=True),
+        sa.Column("external_mqtt_client_cert", EncryptedType(), nullable=True),
+        sa.Column("external_mqtt_client_key", EncryptedType(), nullable=True),
+        sa.Column(
+            "external_mqtt_topic", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("enabled", sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("ingest_id"),
+    )
+    op.create_table(
+        "ingest_http",
+        sa.Column("ingest_id", sa.Integer(), nullable=False),
+        sa.Column("path_for_posts", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("file_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("api_key", EncryptedType(), nullable=False),
+        sa.Column("enabled", sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("ingest_id"),
+    )
+    op.drop_constraint("ck_ingest_type", "ingest", type_="check")
+    op.create_check_constraint(
+        "ck_ingest_type",
+        "ingest",
+        "ingest_type IN ('mqtt','sftp','external_api', 'external_sftp', 'external_mqtt', 'http')",
+    )
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    op.drop_constraint("ck_ingest_type", "ingest", type_="check")
+    op.create_check_constraint(
+        "ck_ingest_type",
+        "ingest",
+        "ingest_type IN ('mqtt','sftp','external_api', 'external_sftp')",
+    )
+    op.drop_table("ingest_http")
+    op.drop_table("ingest_external_mqtt")
