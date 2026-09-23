@@ -36,35 +36,34 @@ pipeline:
   processors:
     - mapping: |
         root = content()
-        verb = metadata("http_server_request_method")   # POST / DELETE
-        req_path = metadata("http_server_request_path") # /streams/... 
-        meta.verb = verb
-        meta.req_path = req_path
+        let verb = metadata("http_server_request_method")   # POST / DELETE
+        let req_path = metadata("http_server_request_path") # /streams/...
+        meta verb = $verb
+        meta req_path = $req_path
         # same path you used to persist
-        meta.file_path = "/data/streams" + req_path + ".json"
-        meta.api_path = req_path.replace("/streams/*/", "/streams/")
+        meta file_path = "/data/streams" + $req_path + ".json"
 
     - switch:
-      cases:
-        - cond: 'meta("verb") == "DELETE"'
-          pipeline:
-            processors:
-              - file:
-                  operation: delete
-                  path: '${! meta("file_path") }'
-            outputs: []   # drop the message, nothing to forward
-        - cond: 'true'
-          pipeline:
-            processors:
-              # replace your file output with a file processor write
-              - file:
-                  operation: write
-                  path: '${! meta("file_path") }'
+        - check: 'meta("verb") == "DELETE"'
+          processors:
+            - file:
+                operation: delete
+                path: '${! meta("file_path") }'
+            - mapping: 'root = deleted()' # drop the message, nothing to forward
+        - check: ""
+          processors:
+            # replace your file output with a file processor write
+            - file:
+                operation: write
+                path: '${! meta("file_path") }'
 
     - mapping: |
         root = content()
-        # ignores * for external_mqtt and http
-        meta path_for_api = metadata("http_server_request_path").replace("/streams/*/", "/streams/")
+        # Bento's own dynamic-streams API only takes a single-segment stream
+        # ID (/streams/{id}), so strip the leading /streams/{ingest-type}/
+        # segment before forwarding, e.g. /streams/external_mqtt/{uuid} ->
+        # /streams/{uuid}.
+        meta path_for_api = metadata("http_server_request_path").re_replace_all("^/streams/[^/]+/", "/streams/")
 
 output:
   broker:
@@ -72,7 +71,10 @@ output:
     outputs:
     - http_client:
         url: 'http://localhost:4195${! metadata("path_for_api") }'
-        verb: POST
+        # Forward the original verb: Bento's real API rejects POST on an
+        # existing stream (400 Stream already exists), so updates (PUT) must
+        # stay PUT.
+        verb: '${! meta("verb") }'
         headers: {}
         rate_limit: "" # No default (optional)
         timeout: 5s
