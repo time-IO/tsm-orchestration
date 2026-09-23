@@ -37,7 +37,7 @@ class IngestHttp(SQLModel, table=True):
     api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
     enabled: bool = False
 
-    ingest: Ingest = Relationship(back_populates="ingest_http_detail")
+    ingest: Ingest = Relationship(back_populates="http_detail")
 
     @property
     def ingest_type(self):
