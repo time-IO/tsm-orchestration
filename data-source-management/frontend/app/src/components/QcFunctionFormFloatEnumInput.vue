@@ -1,10 +1,11 @@
 <template>
   <q-input
     v-if="current_type === POSSIBLE_QC_FUNCTION_TYPES.FLOAT"
-    v-model.number="input"
+   :model-value="input"
     filled
     :label="`${label} (enter a floating point number)`"
     :rules="rules_float"
+    @update:model-value="(val) => (input = toNumberOrNull(val))"
     :hint="hint"
     v-bind="$attrs"
   >
@@ -35,6 +36,7 @@
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import { toNumberOrNull } from '@/utils/quality_control_function_utils';
 
 defineProps<{
   label: string;
@@ -45,7 +47,7 @@ defineProps<{
 }>();
 
 const current_type = defineModel('current_type');
-const input = defineModel<string | number>('input');
+const input = defineModel<string | number | null>('input');
 
 const change_type_to = (type: string) => {
   current_type.value = type;

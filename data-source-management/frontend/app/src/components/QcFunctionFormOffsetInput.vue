@@ -1,9 +1,10 @@
 <template>
   <q-input
     filled
-    v-model="model"
+    :model-value="model"
     :label="`${label} (enter a offset alias)`"
     :rules="rules"
+     @update:model-value="(val) => (model = emptyToNull(val))"
     :hint="hint"
     v-bind="$attrs"
   >
@@ -21,6 +22,7 @@
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
 import { showContextDocumentation } from '@/utils/quality_control_utils';
+import { emptyToNull } from '@/utils/quality_control_function_utils';
 
 const model = defineModel<number | string | null>({ default: null });
 

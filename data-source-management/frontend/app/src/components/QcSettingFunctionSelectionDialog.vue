@@ -54,7 +54,15 @@ const showDialog = defineModel<boolean | null>({ default: false });
 const emit = defineEmits(['select']);
 
 const functionOptions: FunctionOption[] = [
-  { label: 'flagPlateau', description: 'Flag anomalous value plateaus in a time series.' },
+  { label: 'flagAll', description: 'Set the given flag at all unflagged positions.' },
+  {
+    label: 'flagByScatterLowpass',
+    description: 'Flag data chunks exceeding a deviation threshold.',
+  },
+  {
+    label: 'flagGeneric',
+    description: 'Flag values based on custom conditions',
+  },
   { label: 'flagIsolated', description: 'Find and flag temporally isolated data groups.' },
   {
     label: 'flagJumps',
@@ -64,13 +72,10 @@ const functionOptions: FunctionOption[] = [
     label: 'flagOffset',
     description: 'Detect and flag spikes or offset value courses in data.',
   },
+  { label: 'flagPlateau', description: 'Flag anomalous value plateaus in a time series.' },
   {
     label: 'flagRange',
     description: 'Flag values exceeding the given min-max interval.',
-  },
-  {
-    label: 'flagAll',
-    description: 'Set the given flag at all unflagged positions.',
   },
   {
     label: 'flagUniLOF',
@@ -79,14 +84,6 @@ const functionOptions: FunctionOption[] = [
   {
     label: 'flagZScore',
     description: 'Flag data points where (rolling) Z-score exceeds threshold.',
-  },
-  {
-    label: 'flagByScatterLowpass',
-    description: 'Flag data chunks exceeding a deviation threshold.',
-  },
-  {
-    label: 'flagGeneric',
-    description: 'Flag values based on custom conditions',
   },
   {
     label: 'processGeneric',

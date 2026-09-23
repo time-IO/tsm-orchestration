@@ -35,9 +35,10 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.n"
+      :model-value="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
+      @update:model-value="(val) => (formData.n = toNumberOrNull(val))"
       hint="Number of periods to include in LOF calculation."
     />
 
@@ -57,9 +58,10 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.probability"
+      :model-value="formData.probability"
       label="probability (enter a floating point number)"
       :rules="[ruleFactories.RANGE(0, 1), rules.FLOAT]"
+      @update:model-value="(val) => (formData.probability = toNumberOrNull(val))"
       hint="Outlier probability cutoff."
     />
 
@@ -89,9 +91,10 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.p"
+     :model-value="formData.p"
       label="p (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
+      @update:model-value="(val) => (formData.p = toNumberOrNull(val))"
       hint="Minkowski metric degree."
     />
 
@@ -136,9 +139,10 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.min_offset"
+     :model-value="formData.min_offset"
       label="min_offset (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
+      @update:model-value="(val) => (formData.min_offset = toNumberOrNull(val))"
       hint="Minimum value jump before and after clusters to flag."
     />
 
@@ -146,20 +150,22 @@
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.flag"
+      :model-value="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      hint="Flag assigned to values identified by this function."
+      :rules="[ruleFactories.MIN(0)]"
+      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
+       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
     <q-input
       class="q-mb-md"
       filled
-      v-model.number="formData.dfilter"
+      :model-value="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -174,6 +180,8 @@ import QcFunctionFormFloatEnumInput from '@/components/QcFunctionFormFloatEnumIn
 import QcFunctionFormFloatIntInput from '@/components/QcFunctionFormFloatIntInput.vue';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
+import { nullableNumber, toNumberOrNull } from '@/utils/quality_control_function_utils';
+
 
 const props = defineProps<{
   permission_group_id: number;
@@ -192,35 +200,35 @@ const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 type UniLofFormData = {
   field: Datastream[];
   target: Datastream[];
-  n: number;
+  n: number | null;
   thresh: string | number;
   probability: number | null;
   corruption: number | null;
   algorithm: string;
-  p: number;
+  p: number | null;
   density: string | number;
   fill_na: boolean;
   slope_correct: boolean;
   min_offset: number | null;
-  flag: number;
-  dfilter: number;
+  flag: number | null;
+  dfilter: number | null;
 };
 
 const formData = ref<UniLofFormData>({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  n: 20,
+  n: nullableNumber(20),
   thresh: 'auto',
   probability: null as number | null,
   corruption: null as number | null,
   algorithm: 'ball_tree',
-  p: 1,
+  p: nullableNumber(1),
   density: 'auto',
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
-  flag: 255.0,
-  dfilter: 0,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {
@@ -255,8 +263,8 @@ function loadInitialData() {
   formData.value.fill_na = (fillNaArg?.input.value as boolean) ?? true;
   formData.value.slope_correct = (slopeCorrectArg?.input.value as boolean) ?? true;
   formData.value.min_offset = (minOffsetArg?.input.value as number) ?? null;
-  formData.value.flag = (flagArg?.input.value as number) ?? null;
-  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? 255.0;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? 0;
 
   if (threshArg) {
     current_thresh_type.value = threshArg.type;
@@ -341,12 +349,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255},
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter },
+    input: { value: formData.value.dfilter ?? 0},
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 

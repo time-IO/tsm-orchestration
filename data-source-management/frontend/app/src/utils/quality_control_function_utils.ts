@@ -53,3 +53,10 @@ export const qcFunctionComponents: Record<QcFunctionName, Component> = {
 export function getQcFunctionComponent(functionName: QcFunctionName): Component | null {
   return qcFunctionComponents[functionName] ?? null;
 }
+
+export const toNumberOrNull = (val: string | number | null): number | null =>
+  val === '' || val === null ? null : Number(val);
+
+export const nullableNumber = (initial: number): number | null => initial;
+
+export const emptyToNull = <T,>(val: T | ''): T | null => (val === '' ? null : val);

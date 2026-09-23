@@ -1,10 +1,11 @@
 <template>
   <q-input
     v-if="current_type === POSSIBLE_QC_FUNCTION_TYPES.INT"
-    v-model.number="input"
+    :model-value="input"
     filled
     :label="`${label} (enter a integer number)`"
     :rules="rules_int"
+    @update:model-value="(val) => (input = toNumberOrNull(val))"
     :hint="hint"
     v-bind="$attrs"
   >
@@ -34,6 +35,7 @@
 import type { ValidationRule } from 'quasar';
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vue';
+import { toNumberOrNull } from '@/utils/quality_control_function_utils';
 
 defineProps<{
   label: string;
