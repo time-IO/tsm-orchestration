@@ -2,11 +2,15 @@ import type {
   JsonParserPublic,
   JsonParserCreate,
   JsonParserUpdate,
-} from 'src/services/parser_json/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+  JsonParserValidate,
+} from '@/services/parser_json/types';
+import { createParserApiService } from '@/services/factoryParserService';
 
 const apiPath = 'parser/json/';
 
-export default createIngestApiService<JsonParserPublic, JsonParserCreate, JsonParserUpdate>(
-  apiPath,
-);
+export default createParserApiService<
+  JsonParserPublic,
+  JsonParserCreate,
+  JsonParserUpdate,
+  JsonParserValidate
+>(apiPath);

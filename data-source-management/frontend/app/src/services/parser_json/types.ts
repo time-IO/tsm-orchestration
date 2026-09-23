@@ -1,4 +1,4 @@
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 export type JsonParserTimestampKeyCreate = {
   key: string | null;
@@ -42,11 +42,19 @@ export type JsonParserCreate = {
 };
 
 export type JsonParserUpdate = {
-  name?: string;
+  name?: string | null;
   description?: string | null;
   comment?: string | null;
   timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
   timezone?: string | null;
+  measurement_key?: string | null;
+  excluded_keys?: string[] | null;
+};
+
+export type JsonParserValidate = {
+  comment?: string | null;
+  timestamp_keys?: Array<JsonParserTimestampKeyUpdate> | null;
+  timezone: string | null;
   measurement_key?: string | null;
   excluded_keys?: string[] | null;
 };

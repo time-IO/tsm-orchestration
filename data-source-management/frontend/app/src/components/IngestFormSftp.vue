@@ -58,6 +58,7 @@
             :permission-group-id="formData.permission_group_id"
             :disable="!formData.permission_group_id"
             :preselected-parser="itemParser"
+            :rules="[rules.REQUIRED]"
           />
 
           <!-- Action Buttons -->
@@ -82,13 +83,13 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { IngestSftpCreate, IngestSftpUpdate } from 'src/services/ingest_sftp/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
-import ParserSelectByType from 'components/ParserSelectByType.vue';
-import type { ParserRead } from 'src/services/types';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import type { IngestSftpCreate, IngestSftpUpdate } from '@/services/ingest_sftp/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
+import ParserSelectByType from '@/components/ParserSelectByType.vue';
+import type { ParserRead } from '@/services/types';
 
 defineProps<{
   title: string;
@@ -103,13 +104,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestSftpCreate | IngestSftpUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
     parser_id: null,
     filename_pattern: null,
-  },
+  }),
 });
 </script>
 

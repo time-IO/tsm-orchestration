@@ -51,6 +51,10 @@ class ParserJsonUpdate(ParserDetailedUpdate):
     excluded_keys: Optional[list[str]] = None
 
 
+class ParserJsonValidate(ParserJsonUpdate):
+    pass
+
+
 class ParserJson(SQLModel, table=True):
     __tablename__ = "parser_json"
 

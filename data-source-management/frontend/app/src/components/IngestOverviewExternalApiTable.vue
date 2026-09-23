@@ -101,8 +101,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
-import { default_ingest_external_api_columns } from 'src/utils/pagination_utils';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
+import { default_ingest_external_api_columns } from '@/utils/pagination_utils';
 import type { QTableColumn } from 'quasar';
 
 defineOptions({
@@ -192,6 +192,11 @@ function onResize(e: MouseEvent) {
 }
 
 function stopResize() {
+  const preventSortTrigger = (ev: MouseEvent) => {
+    ev.stopPropagation();
+    document.removeEventListener('click', preventSortTrigger, true);
+  };
+  document.addEventListener('click', preventSortTrigger, true);
   resizingCol = null;
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);

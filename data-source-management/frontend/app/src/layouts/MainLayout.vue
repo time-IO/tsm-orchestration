@@ -14,7 +14,7 @@
 
         <q-toolbar-title>{{ t('appname') }}</q-toolbar-title>
 
-        <q-btn round flat>
+        <q-btn round flat aria-label="Account">
           <q-avatar>
             <span v-if="authStore.isAuthenticated">{{ authStore.initials }}</span>
             <q-icon v-else name="account_circle" />
@@ -140,10 +140,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
-import TheFooter from 'components/TheFooter.vue';
+import TheFooter from '@/components/TheFooter.vue';
 
 const { t } = useI18n();
 const leftDrawerOpen = ref(false);

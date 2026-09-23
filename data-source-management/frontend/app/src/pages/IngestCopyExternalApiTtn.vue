@@ -13,10 +13,10 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
-import type { IngestExternalApiTheThingsNetworkCreate } from 'src/services/ingest_external_api_the_things_network/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import IngestFormExternalApiTtn from 'components/IngestFormExternalApiTtn.vue';
+import { useIngestExternalApiTheThingsNetworkStore } from '@/stores/ingestExternalApiTheThingsNetworkStore';
+import type { IngestExternalApiTheThingsNetworkCreate } from '@/services/ingest_external_api_the_things_network/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import IngestFormExternalApiTtn from '@/components/IngestFormExternalApiTtn.vue';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
 const $q = useQuasar();

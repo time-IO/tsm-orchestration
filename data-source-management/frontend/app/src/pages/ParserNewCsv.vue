@@ -12,10 +12,10 @@
 import { computed, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { CsvParserCreate } from 'src/services/parser_csv/types';
-import { useCsvParserStore } from 'stores/parserCsvStore';
-import ParserFormCsv from 'components/ParserFormCsv.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import type { CsvParserCreate } from '@/services/parser_csv/types';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
+import ParserFormCsv from '@/components/ParserFormCsv.vue';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
@@ -104,16 +104,13 @@ function normalizeFormData(data: CsvParserCreate): CsvParserCreate {
         ? data.headlines_to_exclude
         : null,
     footlines_to_exclude:
-      data.footlines_to_exclude !== null && data.footlines_to_exclude !== undefined
+      !!data.footlines_to_exclude || data.footlines_to_exclude === 0
         ? data.footlines_to_exclude
         : null,
     pandas_read_csv: data.pandas_read_csv || null,
-    timestamp_columns: (data.timestamp_columns || []).map((column) => ({
-      column: column.column,
-      timestamp_format: column.timestamp_format,
-    })),
+    timestamp_columns: data.timestamp_columns || [],
     comment: [...(data.comment || [])],
-    header: data.header !== null && data.header !== undefined ? data.header : null,
+    header: !!data.header || data.header === 0 ? data.header : null,
     timezone: data.timezone || null,
     encoding: data.encoding || null,
   };

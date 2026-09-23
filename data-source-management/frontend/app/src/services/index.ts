@@ -1,38 +1,39 @@
-import ingestExternalApiBoschController from 'src/services/ingest_external_api_bosch';
-import ingestExternalApiDwdController from 'src/services/ingest_external_api_dwd';
-import ingestExternalApiNeutronMonitorController from 'src/services/ingest_external_api_neutron_monitor';
-import ingestExternalApiUbaController from 'src/services/ingest_external_api_uba';
-import ingestExternalApiTheThingsNetworkController from 'src/services/ingest_external_api_the_things_network';
-import ingestExternalApiTSystemsController from 'src/services/ingest_external_api_tsystems';
-import ingestExternalApiSensotoController from 'src/services/ingest_external_api_sensoto';
-import ingestMqttController from 'src/services/ingest_mqtt';
-import ingestSftpController from 'src/services/ingest_sftp';
-import ingestHttpController from 'src/services/ingest_http';
-import ingestSftpStorageController from 'src/services/ingest_sftp_storage';
-import ingestExternalSftpController from 'src/services/ingest_external_sftp';
-import ingestExternalSftpStorageController from 'src/services/ingest_external_sftp_storage';
-import ingestExternalMqttController from 'src/services/ingest_external_mqtt';
-import triggerExternalApiGenController from 'src/services/trigger_external_api_generic';
-import triggerExternalSftpController from 'src/services/trigger_external_sftp';
-import permissionGroupController from 'src/services/permission_group';
-import userController from 'src/services/user';
-import neutronMonitorStationController from 'src/services/neutron_monitor_stations';
-import mqttParserController from 'src/services/parser_mqtt';
-import csvParserController from 'src/services/parser_csv';
-import jsonParserController from 'src/services/parser_json';
-import soilcanParserController from 'src/services/parser_soilcan';
-import qualityControlSettingController from 'src/services/quality_control_setting';
-import staController from 'src/services/sta';
-import qualityControlSettingsTriggerController from 'src/services/quality_control_settings_trigger';
+import ingestExternalApiBoschController from '@/services/ingest_external_api_bosch';
+import ingestExternalApiDwdController from '@/services/ingest_external_api_dwd';
+import ingestExternalApiNeutronMonitorController from '@/services/ingest_external_api_neutron_monitor';
+import ingestExternalApiUbaController from '@/services/ingest_external_api_uba';
+import ingestExternalApiTheThingsNetworkController from '@/services/ingest_external_api_the_things_network';
+import ingestExternalApiTSystemsController from '@/services/ingest_external_api_tsystems';
+import ingestExternalApiSensotoController from '@/services/ingest_external_api_sensoto';
+import ingestMqttController from '@/services/ingest_mqtt';
+import ingestJournalController from '@/services/ingest_journal';
+import ingestSftpController from '@/services/ingest_sftp';
+import ingestHttpController from '@/services/ingest_http';
+import ingestSftpStorageController from '@/services/ingest_sftp_storage';
+import ingestExternalSftpController from '@/services/ingest_external_sftp';
+import ingestExternalSftpStorageController from '@/services/ingest_external_sftp_storage';
+import ingestExternalMqttController from '@/services/ingest_external_mqtt';
+import triggerExternalApiGenController from '@/services/trigger_external_api_generic';
+import triggerExternalSftpController from '@/services/trigger_external_sftp';
+import permissionGroupController from '@/services/permission_group';
+import userController from '@/services/user';
+import neutronMonitorStationController from '@/services/neutron_monitor_stations';
+import mqttParserController from '@/services/parser_mqtt';
+import csvParserController from '@/services/parser_csv';
+import jsonParserController from '@/services/parser_json';
+import soilcanParserController from '@/services/parser_soilcan';
+import qualityControlSettingController from '@/services/quality_control_setting';
+import staController from '@/services/sta';
+import qualityControlSettingsTriggerController from '@/services/quality_control_settings_trigger';
 
-import parserTimezoneController from 'src/services/parser_timezone';
-import parserEncodingController from 'src/services/parser_encoding';
+import parserTimezoneController from '@/services/parser_timezone';
+import parserEncodingController from '@/services/parser_encoding';
 
-import ingestController from 'src/services/ingest';
-import parserDetailedController from 'src/services/parser_detailed';
-import ingestExternalApiController from 'src/services/ingest_external_api';
+import ingestController from '@/services/ingest';
+import parserDetailedController from '@/services/parser_detailed';
+import ingestExternalApiController from '@/services/ingest_external_api';
 
-import usageStatisticsController from 'src/services/usage_statistics';
+import usageStatisticsController from '@/services/usage_statistics';
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -43,6 +44,7 @@ export const API = {
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiSensoto: ingestExternalApiSensotoController,
   ingestMqtt: ingestMqttController,
+  ingestJournal: ingestJournalController,
   ingestSftp: ingestSftpController,
   ingestSftpStorage: ingestSftpStorageController,
   ingestExternalSftp: ingestExternalSftpController,

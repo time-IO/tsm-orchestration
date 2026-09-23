@@ -1,7 +1,7 @@
-import type { QTableRequestPropPagination } from 'src/services/types';
+import type { QTableRequestPropPagination } from '@/services/types';
 import type { QTableColumn } from 'quasar';
-import type { IngestWithApiInfoRead } from 'src/services/ingest/types';
-import type { ParserDetailedRead } from 'src/services/parser_detailed/types';
+import type { IngestWithApiInfoRead } from '@/services/ingest/types';
+import type { ParserDetailedRead } from '@/services/parser_detailed/types';
 
 export const defaultPagination: QTableRequestPropPagination = {
   sortBy: 'name',

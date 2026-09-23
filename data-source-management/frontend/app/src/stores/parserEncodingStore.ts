@@ -1,6 +1,6 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { ParserEncoding } from 'src/services/parser_encoding/types';
+import type { ParserEncoding } from '@/services/parser_encoding/types';
 
 export const useParserEncodingStore = defineStore('parserEncodingStore', {
   state: () => ({

@@ -62,6 +62,7 @@
                 :permission-group-id="formData.permission_group_id"
                 :disable="!formData.permission_group_id"
                 :preselected-parser="itemParser"
+                :rules="[rules.REQUIRED]"
               />
             </div>
           </q-card-section>
@@ -178,18 +179,18 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalSftpCreate,
   IngestExternalSftpUpdate,
-} from 'src/services/ingest_external_sftp/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
+} from '@/services/ingest_external_sftp/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
 import { ref } from 'vue';
-import ParserSelectByType from 'components/ParserSelectByType.vue';
+import ParserSelectByType from '@/components/ParserSelectByType.vue';
 
-import { ruleFactories, rules } from 'src/utils/validation/rules';
-import type { ParserRead } from 'src/services/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
+import type { ParserRead } from '@/services/types';
 
 defineProps<{
   title: string;
@@ -204,7 +205,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
@@ -216,7 +217,7 @@ const formData = defineModel<IngestExternalSftpCreate | IngestExternalSftpUpdate
     username: null,
     sync_enabled: false,
     sync_interval_in_minutes: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

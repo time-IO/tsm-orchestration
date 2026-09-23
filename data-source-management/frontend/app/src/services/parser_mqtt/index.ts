@@ -1,6 +1,6 @@
-import { axiosInstance } from 'boot/axios';
-import type { MqttParser } from 'src/services/parser_mqtt/types';
-import type { PaginatedResponse } from 'src/services/types';
+import { axiosInstance } from '@/boot/axios';
+import type { MqttParser } from '@/services/parser_mqtt/types';
+import type { PaginatedResponse } from '@/services/types';
 
 const apiPath = 'parser/mqtt/';
 

@@ -176,10 +176,10 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useIngestExternalApiBoschStore } from 'stores/ingestExternalApiBoschStore';
-import type { IngestExternalApiBoschPublic } from 'src/services/ingest_external_api_bosch/types';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
+import { useIngestExternalApiBoschStore } from '@/stores/ingestExternalApiBoschStore';
+import type { IngestExternalApiBoschPublic } from '@/services/ingest_external_api_bosch/types';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

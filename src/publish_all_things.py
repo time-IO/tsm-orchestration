@@ -39,9 +39,7 @@ class PublishAllThings:
             )
             # TODO: use a regular mqtt client. publish_single is for
             #  one-time use only.
-            mqtt.publish_single(
-                self.publish_topic, json.dumps({"thing_uuid": thing_uuid})
-            )
+            mqtt.publish_single(self.publish_topic, json.dumps({"thing": thing_uuid}))
 
 
 if __name__ == "__main__":
