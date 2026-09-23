@@ -5,6 +5,7 @@ from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
 from timeio.common import get_envvar, setup_logging
 from timeio.typehints import MqttPayload
+from timeio.crypto import decrypt, get_crypt_key
 
 logger = logging.getLogger("bento-setup")
 
@@ -27,6 +28,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.bento_api_url = get_envvar("BENTO_API_URL")
         self.bento_api_url_POST = get_envvar("BENTO_API_URL_POST")
+        self.crypt_key = get_crypt_key()
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -78,11 +80,22 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         # Create Bento stream configuration
         if ingest_type == "external_mqtt":
+            # feta reads raw DB columns, so encrypted fields need decrypting here.
+            def dec(v):
+                return decrypt(v, self.crypt_key) if v else v
+
+            ca_cert = dec(thing.ext_mqtt.external_mqtt_ca_cert)
+            client_cert = dec(thing.ext_mqtt.external_mqtt_client_cert)
+            client_key = dec(thing.ext_mqtt.external_mqtt_client_key)
+            ext_password = dec(thing.ext_mqtt.external_mqtt_password)
+            # No TLS toggle in the schema; infer it from port 8883 or a cert being set.
+            tls_enabled = thing.ext_mqtt.external_mqtt_port == 8883 or bool(ca_cert) or bool(client_cert)
             stream_config = {
                 "input": {
                     "mqtt": {
                         "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
-                        "client_id": "",
+                        # empty client_id gets "identifier rejected" by most brokers
+                        "client_id": f"timeio-ext-{thing.uuid}",
                         "dynamic_client_id_suffix": "",
                         "connect_timeout": "30s",
                         "will": {
@@ -93,20 +106,18 @@ class CreateThingInBentoHandler(AbstractHandler):
                             "payload": ""
                         },
                         "user": thing.ext_mqtt.external_mqtt_username,
-                        "password": thing.ext_mqtt.external_mqtt_password,
+                        "password": ext_password,
                         "keepalive": 30,
                         "tls": {
-                            "enabled": False,
+                            "enabled": tls_enabled,
                             "skip_cert_verify": False,
                             "enable_renegotiation": False,
-                            "root_cas": thing.ext_mqtt.external_mqtt_ca_cert,
+                            "root_cas": ca_cert or "",
                             "root_cas_file": "",
-                            "client_certs": [
-                                {
-                                    "cert": thing.ext_mqtt.external_mqtt_client_cert,
-                                    "key": thing.ext_mqtt.external_mqtt_client_key,
-                                }
-                            ]
+                            "client_certs": (
+                                [{"cert": client_cert, "key": client_key}]
+                                if client_cert and client_key else []
+                            )
                         },
                         "topics": [thing.ext_mqtt.external_mqtt_topic],
                         "qos": 1,
@@ -124,8 +135,9 @@ class CreateThingInBentoHandler(AbstractHandler):
                 "output": {
                     "mqtt": {
                         "urls": ["mqtt-broker:1883"],
+                        "client_id": f"timeio-int-{thing.uuid}",
                         "user": thing.mqtt.user,
-                        "password": thing.mqtt.password,
+                        "password": dec(thing.mqtt.password),
                         "topic": f"mqtt_ingest/{thing.mqtt.user}"
                     }
                 }
@@ -187,10 +199,12 @@ class CreateThingInBentoHandler(AbstractHandler):
     def create_or_update_stream(self, stream_config, thing: Thing, ingest_type: str):
         """Create or update a Bento stream via JSON API"""
         url = f"{self.bento_api_url_POST}/streams/{ingest_type}/{thing.uuid}"
+        # bento_api_url_POST only accepts POST/PUT/DELETE; check existence via the real API.
+        exists_url = f"{self.bento_api_url}/streams/{thing.uuid}"
 
         try:
             # First try to get existing stream
-            response = requests.get(url, timeout=30)
+            response = requests.get(exists_url, timeout=30)
 
             if response.status_code == 200:
                 # Stream exists, update it
@@ -218,10 +232,11 @@ class CreateThingInBentoHandler(AbstractHandler):
         """Delete Bento stream if it exists, otherwise log nothing to do."""
 
         url = f"{self.bento_api_url_POST}/streams/{ingest_type}/{thing.uuid}"
+        exists_url = f"{self.bento_api_url}/streams/{thing.uuid}"  # see create_or_update_stream
 
         try:
             # Check existence first
-            head = requests.get(url, timeout=30)
+            head = requests.get(exists_url, timeout=30)
 
             if head.status_code == 200:
                 # Stream exists -> delete it
