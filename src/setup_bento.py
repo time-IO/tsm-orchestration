@@ -28,6 +28,7 @@ class CreateThingInBentoHandler(AbstractHandler):
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.bento_api_url = get_envvar("BENTO_API_URL")
         self.bento_api_url_POST = get_envvar("BENTO_API_URL_POST")
+        self.s3_region = get_envvar("S3_REGION")
         self.crypt_key = get_crypt_key()
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
@@ -74,20 +75,20 @@ class CreateThingInBentoHandler(AbstractHandler):
             )
             self.delete_stream(thing, ingest_type)
 
+    def dec(self, v):
+        # feta reads raw DB columns, so encrypted fields need decrypting here.
+        return decrypt(v, self.crypt_key) if v else v
+
     def prepare_stream_config(self, thing: Thing, ingest_type: str):
         # fmt: off
-        bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
+        bento_timestamp = "${!now().ts_format(\"20060102_150405\")}"
 
         # Create Bento stream configuration
         if ingest_type == "external_mqtt":
-            # feta reads raw DB columns, so encrypted fields need decrypting here.
-            def dec(v):
-                return decrypt(v, self.crypt_key) if v else v
-
-            ca_cert = dec(thing.ext_mqtt.external_mqtt_ca_cert)
-            client_cert = dec(thing.ext_mqtt.external_mqtt_client_cert)
-            client_key = dec(thing.ext_mqtt.external_mqtt_client_key)
-            ext_password = dec(thing.ext_mqtt.external_mqtt_password)
+            ca_cert = self.dec(thing.ext_mqtt.external_mqtt_ca_cert)
+            client_cert = self.dec(thing.ext_mqtt.external_mqtt_client_cert)
+            client_key = self.dec(thing.ext_mqtt.external_mqtt_client_key)
+            ext_password = self.dec(thing.ext_mqtt.external_mqtt_password)
             # No TLS toggle in the schema; infer it from port 8883 or a cert being set.
             tls_enabled = thing.ext_mqtt.external_mqtt_port == 8883 or bool(ca_cert) or bool(client_cert)
             stream_config = {
@@ -137,7 +138,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                         "urls": ["mqtt-broker:1883"],
                         "client_id": f"timeio-int-{thing.uuid}",
                         "user": thing.mqtt.user,
-                        "password": dec(thing.mqtt.password),
+                        "password": self.dec(thing.mqtt.password),
                         "topic": f"mqtt_ingest/{thing.mqtt.user}"
                     }
                 }
@@ -178,10 +179,10 @@ class CreateThingInBentoHandler(AbstractHandler):
                         "path": f"{bento_timestamp}.{thing.http.file_type}",
                         "endpoint": "http://object-storage:9000",
                         "force_path_style_urls": True,
-                        "region": "",
+                        "region": self.s3_region,
                         "credentials": {
                             "id": f"{thing.s3_store.user}",  # ideally inject via env/config
-                            "secret": f"{thing.s3_store.password}"
+                            "secret": self.dec(thing.s3_store.password)
                         }
                     }
                 }
