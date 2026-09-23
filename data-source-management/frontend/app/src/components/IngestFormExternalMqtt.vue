@@ -1,6 +1,10 @@
 <template>
   <q-page class="q-pa-lg">
     <h5 class="q-mb-none">{{ title }}</h5>
+    <div class="text-caption text-grey-7 q-mb-md">
+      <strong>Note:</strong>
+      This is a new ingest type and may not yet work as expected.
+    </div>
     <div class="row">
       <div class="col">
         <q-btn label="Back" class="q-mb-lg" icon="chevron_left" :to="backRoute" />
