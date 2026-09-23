@@ -233,7 +233,9 @@ class CreateThingInBentoHandler(AbstractHandler):
         """Delete Bento stream if it exists, otherwise log nothing to do."""
 
         url = f"{self.bento_api_url_POST}/streams/{ingest_type}/{thing.uuid}"
-        exists_url = f"{self.bento_api_url}/streams/{thing.uuid}"  # see create_or_update_stream
+        exists_url = (
+            f"{self.bento_api_url}/streams/{thing.uuid}"  # see create_or_update_stream
+        )
 
         try:
             # Check existence first
