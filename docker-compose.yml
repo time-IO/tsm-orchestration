@@ -553,7 +553,7 @@ services:
   # Description
   # For detailed description and hints for development, visit sta-proxy/README.md
   sta-proxy-api:
-    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-api:${DSM_API_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-api:${STA_PROXY_API_IMAGE_TAG}
     build:
       context: .
       dockerfile: sta-proxy/api/docker/prod/Dockerfile
@@ -590,7 +590,7 @@ services:
   # Latter will not be not started or built with docker compose setup by default.
   # To build it, use `docker compose --profile build build`
   sta-proxy-frontend:
-    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend:${STA_PROXY_FRONTEND_IMAGE_TAG}
     build:
       context: ./sta-proxy/frontend
       dockerfile: docker/generic-image/Dockerfile
@@ -599,18 +599,18 @@ services:
       dsm-api:
         condition: service_started
     environment:
-      ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
-      ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
-      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
-      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
-      ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
-      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
-      ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+      ENV_API_BASE_URL_PLACEHOLDER: "${STA_PROXY_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${STA_PROXY_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${STA_PROXY_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${STA_PROXY_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${STA_PROXY_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${STA_PROXY_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${STA_PROXY_FRONTEND_RELATIVE_PATH}"
 
   sta-proxy-frontend-rootless:
     profiles:
       - build # activate profile to build
-    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend-rootless:${DSM_FRONTEND_IMAGE_TAG}
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend-rootless:${STA_PROXY_FRONTEND_IMAGE_TAG}
     build:
       context: ./data-source-management/frontend
       dockerfile: docker/generic-image/Dockerfile-rootless
