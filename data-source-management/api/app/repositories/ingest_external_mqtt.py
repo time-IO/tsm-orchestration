@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+from access_scope import AccessScope
 
 from models.filters import IngestFilter
 
@@ -26,15 +27,21 @@ class IngestExternalMqttRepository:
         self.session = session
 
     def find_one(
-        self, id: int, permission_group_ids_of_user: list[int]
+        self,
+        id: int,
+        access_scope: AccessScope,
     ) -> IngestExternalMqtt:
         statement = (
             select(self.model)
             .join(self.model.ingest)
             .where(self.model.ingest_id == id)
-            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         entity = self.session.exec(statement).unique().scalar_one_or_none()
         if not entity:
@@ -43,16 +50,20 @@ class IngestExternalMqttRepository:
 
     def find_all(
         self,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
         sort_by: Optional[str] = None,
         filters: Optional[IngestFilter] = None,
     ):
         statement = (
             select(self.model)
             .join(self.model.ingest)
-            .where(Ingest.permission_group_id.in_(permission_group_ids_of_user))
             .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
         )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
 
         if filters:
             statement = apply_filters(statement, filters)
@@ -65,11 +76,11 @@ class IngestExternalMqttRepository:
         self,
         payload: IngestExternalMqttCreate,
         extra_data,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ) -> IngestExternalMqtt:
 
-        RepositoryValidator.check_payload_permission_group(
-            payload.permission_group_id, permission_group_ids_of_user
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
@@ -103,15 +114,15 @@ class IngestExternalMqttRepository:
         self,
         ingest_id: int,
         payload: IngestExternalMqttUpdate,
-        permission_group_ids_of_user: list[int],
+        access_scope: AccessScope,
     ) -> IngestExternalMqtt:
 
         if payload.permission_group_id is not None:
-            RepositoryValidator.check_payload_permission_group(
-                payload.permission_group_id, permission_group_ids_of_user
+            RepositoryValidator.check_payload_access_scope(
+                payload.permission_group_id, access_scope
             )
 
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         ingest = entity.ingest
 
@@ -153,8 +164,8 @@ class IngestExternalMqttRepository:
             self.session.rollback()
             raise HTTPException(status_code=400, detail="Failed to update.")
 
-    def delete(self, ingest_id: int, permission_group_ids_of_user: list[int]):
-        entity = self.find_one(ingest_id, permission_group_ids_of_user)
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
 
         # workaround as cascade delete doesn't seem to work currently
         ing = entity.ingest

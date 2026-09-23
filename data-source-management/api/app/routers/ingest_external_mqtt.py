@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest_external_mqtt,
     create_database_if_not_exists,
-    get_repo_parser_detailed,
 )
 from models import User
 from models.ingest_external_mqtt import (
@@ -15,7 +15,6 @@ from models.ingest_external_mqtt import (
 )
 from models.filters import IngestFilter
 from repositories.ingest_external_mqtt import IngestExternalMqttRepository
-from repositories.parser_detailed import ParserDetailedRepository
 
 from mqtt import publish_frontend_thing_update
 
@@ -42,7 +41,11 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            access_scope=AccessScope.from_user(current_user),
+            sort_by=sort_by,
+            filters=filters,
+        )
     )
 
 
@@ -56,9 +59,7 @@ def read_one(
     repo: IngestExternalMqttRepository = Depends(get_repo_ingest_external_mqtt),
 ):
     return repo.to_flat(
-        repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
 
 
@@ -73,15 +74,7 @@ def create(
     payload: IngestExternalMqttCreate,
     current_user: User = Depends(get_current_user),
     repo: IngestExternalMqttRepository = Depends(get_repo_ingest_external_mqtt),
-    parser_repo: ParserDetailedRepository = Depends(get_repo_parser_detailed),
 ):
-    if payload.parser_id:
-        parser = parser_repo.find_one(
-            payload.parser_id, current_user.permission_group_ids
-        )
-        if not parser or parser.permission_group_id != payload.permission_group_id:
-            raise HTTPException(status_code=401, detail="Not allowed to use parser")
-
     # MQTT doesn't need SSH keypairs or bucket credentials like SFTP does
     extra_data = {
         "created_by_id": current_user.id,
@@ -90,7 +83,7 @@ def create(
     entity = repo.create(
         payload,
         extra_data,
-        permission_group_ids_of_user=current_user.permission_group_ids,
+        access_scope=AccessScope.from_user(current_user),
     )
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
@@ -108,18 +101,8 @@ def update(
     payload: IngestExternalMqttUpdate,
     current_user: User = Depends(get_current_user),
     repo: IngestExternalMqttRepository = Depends(get_repo_ingest_external_mqtt),
-    parser_repo: ParserDetailedRepository = Depends(get_repo_parser_detailed),
 ):
-    if payload.parser_id:
-        parser = parser_repo.find_one(
-            payload.parser_id, current_user.permission_group_ids
-        )
-        if not parser or parser.permission_group_id != payload.permission_group_id:
-            raise HTTPException(status_code=401, detail="Not allowed to use parser")
-
-    entity = repo.update(
-        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
 
@@ -131,6 +114,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: IngestExternalMqttRepository = Depends(get_repo_ingest_external_mqtt),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

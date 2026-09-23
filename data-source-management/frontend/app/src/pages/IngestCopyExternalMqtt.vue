@@ -4,7 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
-    :item-parser="itemParser"
+    :item-parser-id="formData.parser_id"
     v-model="formData"
     @save="save"
   />
@@ -17,7 +17,6 @@ import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalMqttCreate } from '@/services/ingest_external_mqtt/types';
 import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import type { ParserRead } from '@/services/types';
 import IngestFormExternalMqtt from '@/components/IngestFormExternalMqtt.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
@@ -45,7 +44,6 @@ const formData = ref<IngestExternalMqttCreate>({
 const isLoading = ref(false);
 
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
-const itemParser = ref<ParserRead | null>(null);
 
 onMounted(async () => {
   if (route.params.id) {
@@ -54,7 +52,6 @@ onMounted(async () => {
       const data = await ingestExternalMqttStore.dispatchGetOne(id);
 
       itemPermissionGroup.value = data.permission_group;
-      itemParser.value = data.parser;
 
       formData.value = {
         permission_group_id: data.permission_group_id,

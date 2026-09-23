@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination import paginate
+from access_scope import AccessScope
 from dependencies import (
     get_current_user,
     get_repo_ingest_http,
@@ -42,7 +43,11 @@ def read_list(
     sort_by: str | None = None,
 ):
     return paginate(
-        repo.find_all(current_user.permission_group_ids, sort_by, filters=filters)
+        repo.find_all(
+            access_scope=AccessScope.from_user(current_user),
+            sort_by=sort_by,
+            filters=filters,
+        )
     )
 
 
@@ -54,9 +59,7 @@ def read_one(
     repo: IngestHttpRepository = Depends(get_repo_ingest_http),
 ):
     return repo.to_flat(
-        repo.find_one(
-            id, permission_group_ids_of_user=current_user.permission_group_ids
-        )
+        repo.find_one(id, access_scope=AccessScope.from_user(current_user))
     )
 
 
@@ -75,7 +78,7 @@ def create(
 ):
     if payload.parser_id:
         parser = parser_repo.find_one(
-            payload.parser_id, current_user.permission_group_ids
+            payload.parser_id, access_scope=AccessScope.from_user(current_user)
         )
         if not parser or parser.permission_group_id != payload.permission_group_id:
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
@@ -88,7 +91,7 @@ def create(
     entity = repo.create(
         payload,
         extra_data,
-        permission_group_ids_of_user=current_user.permission_group_ids,
+        access_scope=AccessScope.from_user(current_user),
     )
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
@@ -110,14 +113,12 @@ def update(
 ):
     if payload.parser_id:
         parser = parser_repo.find_one(
-            payload.parser_id, current_user.permission_group_ids
+            payload.parser_id, access_scope=AccessScope.from_user(current_user)
         )
         if not parser or parser.permission_group_id != payload.permission_group_id:
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
-    entity = repo.update(
-        id, payload, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))
     publish_frontend_thing_update(entity)
     return repo.to_flat(entity)
 
@@ -129,6 +130,4 @@ def delete(
     current_user: User = Depends(get_current_user),
     repo: IngestHttpRepository = Depends(get_repo_ingest_http),
 ):
-    return repo.delete(
-        id, permission_group_ids_of_user=current_user.permission_group_ids
-    )
+    return repo.delete(id, access_scope=AccessScope.from_user(current_user))

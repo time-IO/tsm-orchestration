@@ -44,13 +44,9 @@
             <div class="text-h6 q-mb-md">Parser Settings</div>
 
             <div class="q-mt-md">
-              <parser-select-by-type
-                class="q-mb-md"
+              <mqtt-parser-select
                 v-model="formData.parser_id"
-                :permission-group-id="formData.permission_group_id"
-                :disable="!formData.permission_group_id"
-                :preselected-parser="itemParser"
-                :rules="[rules.REQUIRED]"
+                :preselected-item-id="itemParserId"
               />
             </div>
           </q-card-section>
@@ -222,7 +218,7 @@
 
 <script setup lang="ts">
 import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
-import ParserSelectByType from '@/components/ParserSelectByType.vue';
+import MqttParserSelect from '@/components/MqttParserSelect.vue';
 import HelpButton from '@/components/HelpButton.vue';
 import { ref } from 'vue';
 import type {
@@ -230,15 +226,13 @@ import type {
   IngestExternalMqttUpdate,
 } from '@/services/ingest_external_mqtt/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
-import type { ParserRead } from '@/services/types';
-import { rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
-  itemParser?: ParserRead | null;
+  itemParserId?: number | null | undefined;
 }>();
 
 defineEmits<{
