@@ -167,8 +167,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestHttpPublic } from '@/services/ingest_http/types';
 import { useIngestHttpStore } from '@/stores/ingestHttpStore';
-import CopyBtn from 'components/CopyBtn.vue';
-import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
+import CopyBtn from '@/components/CopyBtn.vue';
+import VisualizationLinkBtn from '@/components/VisualizationLinkBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();

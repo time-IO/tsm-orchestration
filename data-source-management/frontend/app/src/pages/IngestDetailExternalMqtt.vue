@@ -248,8 +248,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalMqttPublic } from '@/services/ingest_external_mqtt/types';
 import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
-import CopyBtn from 'components/CopyBtn.vue';
-import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
+import CopyBtn from '@/components/CopyBtn.vue';
+import VisualizationLinkBtn from '@/components/VisualizationLinkBtn.vue';
 
 const $q = useQuasar();
 const route = useRoute();

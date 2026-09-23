@@ -14,7 +14,7 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { IngestHttpCreate } from '@/services/ingest_http/types';
 import { useIngestHttpStore } from '@/stores/ingestHttpStore';
-import IngestFormHttp from 'components/IngestFormHttp.vue';
+import IngestFormHttp from '@/components/IngestFormHttp.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const httpStore = useIngestHttpStore();

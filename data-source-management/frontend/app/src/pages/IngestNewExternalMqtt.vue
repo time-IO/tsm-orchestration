@@ -14,7 +14,7 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { IngestExternalMqttCreate } from '@/services/ingest_external_mqtt/types';
 import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
-import IngestFormExternalMqtt from 'components/IngestFormExternalMqtt.vue';
+import IngestFormExternalMqtt from '@/components/IngestFormExternalMqtt.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestExternalMqttStore = useIngestExternalMqttStore();
