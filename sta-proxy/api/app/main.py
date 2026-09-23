@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers import frost_endpoints, frost_proxy
 from services import close_frost_client
 from config import settings
 
@@ -40,3 +41,6 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+app.include_router(frost_endpoints.router)
+app.include_router(frost_proxy.router)
