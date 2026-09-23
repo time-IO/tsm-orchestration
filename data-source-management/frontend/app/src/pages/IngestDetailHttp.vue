@@ -107,10 +107,7 @@
                     <q-item-label>Bucket Username</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.bucket_username }}</q-item-label>
-                      <copy-btn
-                        title="Copy bucket username"
-                        :text-to-copy="item.bucket_username"
-                      />
+                      <copy-btn title="Copy bucket username" :text-to-copy="item.bucket_username" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -134,10 +131,7 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <copy-btn
-                        title="Copy bucket password"
-                        :text-to-copy="item.bucket_password"
-                      />
+                      <copy-btn title="Copy bucket password" :text-to-copy="item.bucket_password" />
                     </div>
                   </q-item-section>
                 </q-item>
