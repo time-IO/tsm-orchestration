@@ -12,8 +12,35 @@
     <div v-else-if="item">
       <q-card>
         <q-card-section>
-          <div class="text-h4">{{ item.name }}</div>
-          <div class="text-subtitle1">{{ item.description }}</div>
+          <div class="row items-start no-wrap">
+            <div class="col">
+              <div class="text-h5 ellipsis" style="max-width: 100%">{{ item.name }}</div>
+              <q-tooltip>
+                {{ item.name }}
+              </q-tooltip>
+              <div class="text-subtitle1" style="max-width: 100%">{{ item.description }}</div>
+            </div>
+
+            <q-btn-dropdown
+              color="secondary"
+              unelevated
+              icon="add"
+              label="Create Ingest"
+              class="q-ml-md"
+            >
+              <q-list>
+                <q-item
+                  v-for="ingestType in availableIngestTypes"
+                  :key="ingestType.value"
+                  clickable
+                  v-close-popup
+                  :to="createIngestRoute(ingestType.value)"
+                >
+                  <q-item-section>{{ ingestType.label }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+          </div>
         </q-card-section>
 
         <q-separator />
@@ -144,12 +171,26 @@ const editRoute = computed(() => {
   }
   return '';
 });
+
 const copyRoute = computed(() => {
   if (item.value?.id) {
     return `${basePath}${item.value.id}/copy`;
   }
   return '';
 });
+
+const availableIngestTypes = [
+  { value: 'external-sftp', label: 'External SFTP' },
+  { value: 'sftp', label: 'SFTP' },
+];
+
+function createIngestRoute(ingestTypeValue: string) {
+  if (!item.value?.id) return '';
+  return {
+    path: `/ingest/new/${ingestTypeValue}`,
+    query: { parserId: String(item.value.id), parserType: 'soilcan' },
+  };
+}
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString();

@@ -47,7 +47,8 @@ const csvParserStore = useCsvParserStore();
 const jsonParserStore = useJsonParserStore();
 const soilcanParserStore = useSoilcanParserStore();
 
-const parserStoresByType: Record<string,
+const parserStoresByType: Record<
+  string,
   typeof csvParserStore | typeof jsonParserStore | typeof soilcanParserStore
 > = {
   csv: csvParserStore,
