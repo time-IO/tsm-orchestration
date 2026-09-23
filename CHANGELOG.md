@@ -14,6 +14,7 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
+- STA proxy service for controlled and user-friendly access of FROST endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/663)) 
 
 
 ## [2026-09-10]
