@@ -832,6 +832,8 @@ class S3Store(Base):
             return self._s3_from_sftp()
         if self.ingest_type == "external_sftp":
             return self._s3_from_extsftp()
+        if self.ingest_type == "http":
+            return self._s3_from_http()
 
     def _s3_from_sftp(self):
         query = f"""
@@ -853,6 +855,18 @@ class S3Store(Base):
                     bucket_password as password,
                     bucket_name
                 FROM {self._schema}.ingest_external_sftp
+                WHERE ingest_id = %s
+            """
+
+        return self._fetchone(self._conn, query, self.id)
+
+    def _s3_from_http(self):
+        query = f"""
+                SELECT
+                    bucket_username as username,
+                    bucket_password as password,
+                    bucket_name
+                FROM {self._schema}.ingest_http
                 WHERE ingest_id = %s
             """
 

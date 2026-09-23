@@ -21,6 +21,7 @@ export type IngestExternalMqttPublic = {
   external_mqtt_client_cert: string | null;
   external_mqtt_client_key: string | null;
   enabled: boolean;
+  internal_mqtt_topic: string | null;
 };
 
 export type IngestExternalMqttCreate = {

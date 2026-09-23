@@ -15,6 +15,10 @@ from models.ingest_external_mqtt import (
 )
 from models.filters import IngestFilter
 from repositories.ingest_external_mqtt import IngestExternalMqttRepository
+from utils import generate_password, hash_password
+from config import settings
+import uuid
+import re
 
 from mqtt import publish_frontend_thing_update
 
@@ -75,14 +79,31 @@ def create(
     current_user: User = Depends(get_current_user),
     repo: IngestExternalMqttRepository = Depends(get_repo_ingest_external_mqtt),
 ):
-    # MQTT doesn't need SSH keypairs or bucket credentials like SFTP does
+    # MQTT doesn't need SSH keypairs or bucket credentials like SFTP does, but
+    # every external_mqtt ingest gets a companion internal MQTT user so Bento
+    # can relay the bridged data onto our own broker (see setup_bento.py).
+    _uuid = uuid.uuid4()
+    internal_mqtt_username = re.sub(
+        "[^a-z0-9-]+", "", f"ingest-external-mqtt-{_uuid}"
+    )
+    internal_mqtt_password = generate_password(40)
+
     extra_data = {
         "created_by_id": current_user.id,
+        "uuid": _uuid,
+    }
+    internal_mqtt_extra_data = {
+        "username": internal_mqtt_username,
+        "password": internal_mqtt_password,
+        "password_hashed": hash_password(internal_mqtt_password),
+        "topic": "mqtt_ingest/" + internal_mqtt_username,
+        "uri": settings.INGEST_MQTT_BROKER_URI,
     }
 
     entity = repo.create(
         payload,
         extra_data,
+        internal_mqtt_extra_data,
         access_scope=AccessScope.from_user(current_user),
     )
     publish_frontend_thing_update(entity)

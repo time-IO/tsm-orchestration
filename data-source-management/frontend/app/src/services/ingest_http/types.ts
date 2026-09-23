@@ -16,6 +16,9 @@ export type IngestHttpPublic = {
   file_type: string;
   api_key: string | null;
   enabled: boolean;
+  bucket_name: string;
+  bucket_username: string;
+  bucket_password: string;
 };
 
 export type IngestHttpCreate = {

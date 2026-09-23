@@ -1,4 +1,4 @@
-"""add ingest http and external mqtt tables
+"""add ingest http and external mqtt tables, with http bucket credentials
 
 Revision ID: 4e4465cdc4ba
 Revises: d404a0156749
@@ -50,6 +50,11 @@ def upgrade() -> None:
         sa.Column("file_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("api_key", EncryptedType(), nullable=False),
         sa.Column("enabled", sa.Boolean(), nullable=False),
+        sa.Column("bucket_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column(
+            "bucket_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+        ),
+        sa.Column("bucket_password", EncryptedType(), nullable=False),
         sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("ingest_id"),
     )

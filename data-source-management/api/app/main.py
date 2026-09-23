@@ -9,6 +9,7 @@ from routers import (
     ingest_sftp,
     ingest_sftp_storage,
     ingest_external_sftp_storage,
+    ingest_http_storage,
     ingest_mqtt,
     ingest_mqtt_client,
     ingest_http,
@@ -89,6 +90,7 @@ app.include_router(ingest_sftp.router)
 app.include_router(ingest_http.router)
 app.include_router(ingest_sftp_storage.router)
 app.include_router(ingest_external_sftp_storage.router)
+app.include_router(ingest_http_storage.router)
 app.include_router(parser_mqtt.router)
 app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)

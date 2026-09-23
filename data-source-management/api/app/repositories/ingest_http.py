@@ -234,6 +234,9 @@ class IngestHttpRepository:
             file_type=entity.file_type,
             api_key=entity.api_key,
             enabled=entity.enabled,
+            bucket_name=entity.bucket_name,
+            bucket_username=entity.bucket_username,
+            bucket_password=entity.bucket_password,
             # Permission Group
             permission_group={
                 "id": permission_group.id,

@@ -1,5 +1,5 @@
 from constants import IngestType
-from models import IngestExternalMqtt, Ingest
+from models import IngestExternalMqtt, IngestMqtt, Ingest
 from models.ingest_external_mqtt import (
     IngestExternalMqttCreate,
     IngestExternalMqttUpdate,
@@ -35,7 +35,10 @@ class IngestExternalMqttRepository:
             select(self.model)
             .join(self.model.ingest)
             .where(self.model.ingest_id == id)
-            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+            .options(
+                joinedload(self.model.ingest).joinedload(Ingest.permission_group),
+                joinedload(self.model.ingest).joinedload(Ingest.mqtt_detail),
+            )
         )
 
         if not access_scope.is_superuser:
@@ -57,7 +60,10 @@ class IngestExternalMqttRepository:
         statement = (
             select(self.model)
             .join(self.model.ingest)
-            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+            .options(
+                joinedload(self.model.ingest).joinedload(Ingest.permission_group),
+                joinedload(self.model.ingest).joinedload(Ingest.mqtt_detail),
+            )
         )
 
         if not access_scope.is_superuser:
@@ -76,6 +82,7 @@ class IngestExternalMqttRepository:
         self,
         payload: IngestExternalMqttCreate,
         extra_data,
+        internal_mqtt_extra_data: dict,
         access_scope: AccessScope,
     ) -> IngestExternalMqtt:
 
@@ -100,6 +107,13 @@ class IngestExternalMqttRepository:
             )
 
             self.session.add(ingest_external_mqtt)
+
+            # Companion internal MQTT user, so Bento can relay the bridged
+            # data onto our own broker (see setup_bento.py).
+            internal_mqtt = IngestMqtt(
+                ingest_id=ingest.id, **internal_mqtt_extra_data
+            )
+            self.session.add(internal_mqtt)
 
             self.session.commit()
 
@@ -241,6 +255,7 @@ class IngestExternalMqttRepository:
             external_mqtt_client_key=entity.external_mqtt_client_key,
             external_mqtt_topic=entity.external_mqtt_topic,
             enabled=entity.enabled,
+            internal_mqtt_topic=ing.mqtt_detail.topic if ing.mqtt_detail else None,
             # Permission Group
             permission_group={
                 "id": permission_group.id,

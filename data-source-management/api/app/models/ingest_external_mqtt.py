@@ -8,12 +8,13 @@ class IngestExternalMqttRead(IngestRead):
     external_mqtt_address: str
     external_mqtt_port: int
     external_mqtt_username: str
-    external_mqtt_password: str
-    external_mqtt_ca_cert: str
-    external_mqtt_client_cert: str
-    external_mqtt_client_key: str
+    external_mqtt_password: Optional[str] = None
+    external_mqtt_ca_cert: Optional[str] = None
+    external_mqtt_client_cert: Optional[str] = None
+    external_mqtt_client_key: Optional[str] = None
     external_mqtt_topic: str
     enabled: bool
+    internal_mqtt_topic: Optional[str] = None
 
 
 class IngestExternalMqttCreate(IngestCreate):
@@ -50,17 +51,21 @@ class IngestExternalMqtt(SQLModel, table=True):
     external_mqtt_address: str
     external_mqtt_port: int
     external_mqtt_username: str
-    external_mqtt_password: str = Field(
-        sa_column=Column("external_mqtt_password", EncryptedType, nullable=True)
+    external_mqtt_password: Optional[str] = Field(
+        default=None,
+        sa_column=Column("external_mqtt_password", EncryptedType, nullable=True),
     )
-    external_mqtt_ca_cert: str = Field(
-        sa_column=Column("external_mqtt_ca_cert", EncryptedType, nullable=True)
+    external_mqtt_ca_cert: Optional[str] = Field(
+        default=None,
+        sa_column=Column("external_mqtt_ca_cert", EncryptedType, nullable=True),
     )
-    external_mqtt_client_cert: str = Field(
-        sa_column=Column("external_mqtt_client_cert", EncryptedType, nullable=True)
+    external_mqtt_client_cert: Optional[str] = Field(
+        default=None,
+        sa_column=Column("external_mqtt_client_cert", EncryptedType, nullable=True),
     )
-    external_mqtt_client_key: str = Field(
-        sa_column=Column("external_mqtt_client_key", EncryptedType, nullable=True)
+    external_mqtt_client_key: Optional[str] = Field(
+        default=None,
+        sa_column=Column("external_mqtt_client_key", EncryptedType, nullable=True),
     )
     external_mqtt_topic: str
     enabled: bool = False

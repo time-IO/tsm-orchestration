@@ -40,7 +40,6 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
-                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -95,6 +94,56 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Bucket Name</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.bucket_name }}</q-item-label>
+                      <copy-btn title="Copy bucket name" :text-to-copy="item.bucket_name" />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Bucket Username</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption>{{ item.bucket_username }}</q-item-label>
+                      <copy-btn
+                        title="Copy bucket username"
+                        :text-to-copy="item.bucket_username"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Bucket Password</q-item-label>
+                    <div class="row items-center">
+                      <q-item-label caption class="col-2">
+                        <q-input
+                          borderless
+                          v-model="item.bucket_password"
+                          :type="isBucketPwd ? 'password' : 'text'"
+                        >
+                          <template v-slot:prepend>
+                            <q-icon
+                              :name="isBucketPwd ? 'visibility_off' : 'visibility'"
+                              class="cursor-pointer"
+                              @click="isBucketPwd = !isBucketPwd"
+                            />
+                          </template>
+                        </q-input>
+                      </q-item-label>
+                      <copy-btn
+                        title="Copy bucket password"
+                        :text-to-copy="item.bucket_password"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Created At (UTC)</q-item-label>
                     <q-item-label caption>{{ formatDate(item.created_at) }}</q-item-label>
                   </q-item-section>
@@ -141,6 +190,13 @@
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
+
+      <ingest-tools-section
+        :uuid="item.uuid"
+        :ingest-id="item.id"
+        :service="API.ingestHttpStorage"
+        :bucket-name="item.bucket_name"
+      />
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -168,7 +224,8 @@ import { useQuasar } from 'quasar';
 import type { IngestHttpPublic } from '@/services/ingest_http/types';
 import { useIngestHttpStore } from '@/stores/ingestHttpStore';
 import CopyBtn from '@/components/CopyBtn.vue';
-import VisualizationLinkBtn from '@/components/VisualizationLinkBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import { API } from '@/services';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -179,6 +236,7 @@ const item = ref<IngestHttpPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 const isPwd = ref(true);
+const isBucketPwd = ref(true);
 
 const backUrl = '/ingest';
 

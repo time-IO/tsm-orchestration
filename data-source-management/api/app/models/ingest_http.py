@@ -5,10 +5,13 @@ from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
 
 
 class IngestHttpRead(IngestRead):
-    path_for_posts: str
+    path_for_posts: Optional[str] = None
     file_type: str
     api_key: str
     enabled: bool
+    bucket_name: str
+    bucket_username: str
+    bucket_password: str
 
 
 class IngestHttpCreate(IngestCreate):
@@ -36,6 +39,12 @@ class IngestHttp(SQLModel, table=True):
     file_type: str
     api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
     enabled: bool = False
+
+    bucket_name: str
+    bucket_username: str
+    bucket_password: str = Field(
+        sa_column=Column("bucket_password", EncryptedType, nullable=False)
+    )
 
     ingest: Ingest = Relationship(back_populates="http_detail")
 

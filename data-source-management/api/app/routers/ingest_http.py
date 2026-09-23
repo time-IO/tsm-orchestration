@@ -17,6 +17,9 @@ from models.ingest_http import (
 from models.filters import IngestFilter
 from repositories.ingest_http import IngestHttpRepository
 from repositories.parser_detailed import ParserDetailedRepository
+from utils import generate_password
+import uuid
+import re
 
 from mqtt import publish_frontend_thing_update
 
@@ -83,9 +86,19 @@ def create(
         if not parser or parser.permission_group_id != payload.permission_group_id:
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
-    # HTTP doesn't need SSH keypairs or bucket credentials like SFTP does
+    # HTTP doesn't need SSH keypairs like SFTP does, but it does get its own
+    # internal S3 bucket to deliver posted files into.
+    _uuid = uuid.uuid4()
+    bucket_username = re.sub("[^a-z0-9-]+", "", f"ingest-http-{_uuid}")
+    bucket_name = bucket_username
+    bucket_password = generate_password(40)
+
     extra_data = {
         "created_by_id": current_user.id,
+        "uuid": _uuid,
+        "bucket_name": bucket_name,
+        "bucket_username": bucket_username,
+        "bucket_password": bucket_password,
     }
 
     entity = repo.create(
