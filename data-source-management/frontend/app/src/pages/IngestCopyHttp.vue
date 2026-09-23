@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestHttpCreate } from 'src/services/ingest_http/types';
-import { useIngestHttpStore } from 'stores/ingestHttpStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestHttpCreate } from '@/services/ingest_http/types';
+import { useIngestHttpStore } from '@/stores/ingestHttpStore';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormHttp from 'components/IngestFormHttp.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestHttpStore = useIngestHttpStore();
 const $q = useQuasar();

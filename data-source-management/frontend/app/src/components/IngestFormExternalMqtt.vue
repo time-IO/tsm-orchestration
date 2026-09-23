@@ -26,7 +26,7 @@
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[(val: unknown) => !!val || 'Permission Group is required']"
           />
 
           <!-- Description -->
@@ -227,8 +227,8 @@ import { ref } from 'vue';
 import type {
   IngestExternalMqttCreate,
   IngestExternalMqttUpdate,
-} from 'src/services/ingest_external_mqtt/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+} from '@/services/ingest_external_mqtt/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 defineProps<{
   title: string;
@@ -243,7 +243,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalMqttCreate | IngestExternalMqttUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
@@ -257,7 +257,7 @@ const formData = defineModel<IngestExternalMqttCreate | IngestExternalMqttUpdate
     external_mqtt_client_key: null,
     external_mqtt_topic: null,
     enabled: false,
-  },
+  }),
 });
 
 const isPwd = ref(true);

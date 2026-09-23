@@ -2,8 +2,8 @@ import type {
   IngestExternalMqttPublic,
   IngestExternalMqttCreate,
   IngestExternalMqttUpdate,
-} from 'src/services/ingest_external_mqtt/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/ingest_external_mqtt/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = 'ingest/external-mqtt/';
 

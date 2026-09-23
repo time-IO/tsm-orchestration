@@ -165,8 +165,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestHttpPublic } from 'src/services/ingest_http/types';
-import { useIngestHttpStore } from 'stores/ingestHttpStore';
+import type { IngestHttpPublic } from '@/services/ingest_http/types';
+import { useIngestHttpStore } from '@/stores/ingestHttpStore';
 import CopyBtn from 'components/CopyBtn.vue';
 import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
 

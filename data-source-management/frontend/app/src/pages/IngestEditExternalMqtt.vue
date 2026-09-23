@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestExternalMqttUpdate } from 'src/services/ingest_external_mqtt/types';
-import { useIngestExternalMqttStore } from 'stores/ingestExternalMqttStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestExternalMqttUpdate } from '@/services/ingest_external_mqtt/types';
+import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalMqtt from 'components/IngestFormExternalMqtt.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestExternalMqttStore = useIngestExternalMqttStore();
 const $q = useQuasar();
@@ -38,7 +38,7 @@ const formData = ref<IngestExternalMqttUpdate>({
   external_mqtt_ca_cert: null,
   external_mqtt_client_cert: null,
   external_mqtt_client_key: null,
-  enabled: null,
+  enabled: false,
 });
 
 const isLoading = ref(false);
@@ -66,7 +66,7 @@ onMounted(async () => {
         external_mqtt_ca_cert: data.external_mqtt_ca_cert || null,
         external_mqtt_client_cert: data.external_mqtt_client_cert || null,
         external_mqtt_client_key: data.external_mqtt_client_key || null,
-        enabled: data.enabled || null,
+        enabled: data.enabled || false,
       };
     } catch {
       $q.notify({
@@ -105,7 +105,7 @@ async function save() {
       external_mqtt_ca_cert: formData.value.external_mqtt_ca_cert || null,
       external_mqtt_client_cert: formData.value.external_mqtt_client_cert || null,
       external_mqtt_client_key: formData.value.external_mqtt_client_key || null,
-      enabled: formData.value.enabled || null,
+      enabled: formData.value.enabled || false,
     };
 
     isLoading.value = true;

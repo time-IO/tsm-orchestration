@@ -26,7 +26,7 @@
           <permission-group-select
             v-model="formData.permission_group_id"
             :preselected-item="itemPermissionGroup"
-            :rules="[(val) => !!val || 'Permission Group is required']"
+            :rules="[(val: unknown) => !!val || 'Permission Group is required']"
           />
 
           <!-- Description -->
@@ -148,8 +148,8 @@ import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
 import ParserSelect from 'components/ParserSelect.vue';
 import HelpButton from 'components/HelpButton.vue';
 import { ref } from 'vue';
-import type { IngestHttpCreate, IngestHttpUpdate } from 'src/services/ingest_http/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestHttpCreate, IngestHttpUpdate } from '@/services/ingest_http/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 defineProps<{
   title: string;
@@ -164,7 +164,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestHttpCreate | IngestHttpUpdate>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
@@ -173,7 +173,7 @@ const formData = defineModel<IngestHttpCreate | IngestHttpUpdate>({
     file_type: null,
     api_key: null,
     enabled: false,
-  },
+  }),
 });
 
 const isApiKeyPwd = ref(true);

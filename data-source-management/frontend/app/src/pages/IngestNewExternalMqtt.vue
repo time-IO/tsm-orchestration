@@ -12,10 +12,10 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestExternalMqttCreate } from 'src/services/ingest_external_mqtt/types';
-import { useIngestExternalMqttStore } from 'stores/ingestExternalMqttStore';
+import type { IngestExternalMqttCreate } from '@/services/ingest_external_mqtt/types';
+import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
 import IngestFormExternalMqtt from 'components/IngestFormExternalMqtt.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestExternalMqttStore = useIngestExternalMqttStore();
 const $q = useQuasar();
@@ -34,7 +34,7 @@ const formData = ref<IngestExternalMqttCreate>({
   external_mqtt_ca_cert: null,
   external_mqtt_client_cert: null,
   external_mqtt_client_key: null,
-  enabled: null,
+  enabled: false,
 });
 
 const isLoading = ref(false);

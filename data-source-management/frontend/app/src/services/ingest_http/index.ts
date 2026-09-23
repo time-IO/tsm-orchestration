@@ -2,8 +2,8 @@ import type {
   IngestHttpPublic,
   IngestHttpCreate,
   IngestHttpUpdate,
-} from 'src/services/ingest_http/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/ingest_http/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = 'ingest/http/';
 

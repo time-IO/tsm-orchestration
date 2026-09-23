@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestHttpUpdate } from 'src/services/ingest_http/types';
-import { useIngestHttpStore } from 'stores/ingestHttpStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestHttpUpdate } from '@/services/ingest_http/types';
+import { useIngestHttpStore } from '@/stores/ingestHttpStore';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormHttp from 'components/IngestFormHttp.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestHttpStore = useIngestHttpStore();
 const $q = useQuasar();
@@ -33,7 +33,7 @@ const formData = ref<IngestHttpUpdate>({
   path_for_posts: null,
   file_type: null,
   api_key: null,
-  enabled: null,
+  enabled: false,
 });
 
 const isLoading = ref(false);
@@ -56,7 +56,7 @@ onMounted(async () => {
         path_for_posts: data.path_for_posts || null,
         file_type: data.file_type || null,
         api_key: data.api_key || null,
-        enabled: data.enabled || null,
+        enabled: data.enabled || false,
       };
     } catch {
       $q.notify({
@@ -90,7 +90,7 @@ async function save() {
       path_for_posts: formData.value.path_for_posts || null,
       file_type: formData.value.file_type || null,
       api_key: formData.value.api_key || null,
-      enabled: formData.value.enabled || null,
+      enabled: formData.value.enabled || false,
     };
 
     isLoading.value = true;

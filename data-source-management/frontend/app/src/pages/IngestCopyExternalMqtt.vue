@@ -14,11 +14,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { IngestExternalMqttCreate } from 'src/services/ingest_external_mqtt/types';
-import { useIngestExternalMqttStore } from 'stores/ingestExternalMqttStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { IngestExternalMqttCreate } from '@/services/ingest_external_mqtt/types';
+import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
+import type { PermissionGroup } from '@/services/permission_group/types';
 import IngestFormExternalMqtt from 'components/IngestFormExternalMqtt.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const ingestExternalMqttStore = useIngestExternalMqttStore();
 const $q = useQuasar();

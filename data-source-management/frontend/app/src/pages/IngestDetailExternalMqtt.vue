@@ -246,8 +246,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalMqttPublic } from 'src/services/ingest_external_mqtt/types';
-import { useIngestExternalMqttStore } from 'stores/ingestExternalMqttStore';
+import type { IngestExternalMqttPublic } from '@/services/ingest_external_mqtt/types';
+import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
 import CopyBtn from 'components/CopyBtn.vue';
 import VisualizationLinkBtn from 'components/VisualizationLinkBtn.vue';
 

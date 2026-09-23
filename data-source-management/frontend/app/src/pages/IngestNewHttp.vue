@@ -12,10 +12,10 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestHttpCreate } from 'src/services/ingest_http/types';
-import { useIngestHttpStore } from 'stores/ingestHttpStore';
+import type { IngestHttpCreate } from '@/services/ingest_http/types';
+import { useIngestHttpStore } from '@/stores/ingestHttpStore';
 import IngestFormHttp from 'components/IngestFormHttp.vue';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const httpStore = useIngestHttpStore();
 const $q = useQuasar();
@@ -29,7 +29,7 @@ const formData = ref<IngestHttpCreate>({
   path_for_posts: null,
   file_type: null,
   api_key: null,
-  enabled: null,
+  enabled: false,
 });
 
 const isLoading = ref(false);
