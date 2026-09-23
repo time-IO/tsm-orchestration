@@ -83,9 +83,7 @@ def create(
     # every external_mqtt ingest gets a companion internal MQTT user so Bento
     # can relay the bridged data onto our own broker (see setup_bento.py).
     _uuid = uuid.uuid4()
-    internal_mqtt_username = re.sub(
-        "[^a-z0-9-]+", "", f"ingest-external-mqtt-{_uuid}"
-    )
+    internal_mqtt_username = re.sub("[^a-z0-9-]+", "", f"ingest-external-mqtt-{_uuid}")
     internal_mqtt_password = generate_password(40)
 
     extra_data = {

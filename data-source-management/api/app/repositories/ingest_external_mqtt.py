@@ -110,9 +110,7 @@ class IngestExternalMqttRepository:
 
             # Companion internal MQTT user, so Bento can relay the bridged
             # data onto our own broker (see setup_bento.py).
-            internal_mqtt = IngestMqtt(
-                ingest_id=ingest.id, **internal_mqtt_extra_data
-            )
+            internal_mqtt = IngestMqtt(ingest_id=ingest.id, **internal_mqtt_extra_data)
             self.session.add(internal_mqtt)
 
             self.session.commit()
