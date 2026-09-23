@@ -8,6 +8,8 @@ from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("bento-setup")
 
+BENTO_INGEST_TYPES = ("external_mqtt", "http")
+
 
 class CreateThingInBentoHandler(AbstractHandler):
 
@@ -28,33 +30,54 @@ class CreateThingInBentoHandler(AbstractHandler):
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
+        # thing.ingest_type is a timeio.feta.IngestType wrapper object, not a
+        # plain str -- .name holds the actual "external_mqtt"/"http"/... value.
+        ingest_type = thing.ingest_type.name
+        logger.info(
+            f"Received update for thing {thing.uuid} ({thing.name}), "
+            f"ingest_type={ingest_type}"
+        )
 
         # Only act for "Bento"-Ingests
-        if thing.ingest_type in ("ExtMQTT", "HTTP"):
-            # Unlikely
-            ingest = thing.http if thing.ingest_type == "HTTP" else thing.ext_mqtt
-            if ingest is None:
+        if ingest_type not in BENTO_INGEST_TYPES:
+            logger.info(
+                f"Skipping {thing.uuid}: ingest_type {ingest_type!r} is not "
+                f"Bento-managed ({BENTO_INGEST_TYPES})"
+            )
+            return
+
+        ingest = thing.http if ingest_type == "http" else thing.ext_mqtt
+        if ingest is None:
+            logger.warning(
+                f"Skipping {thing.uuid}: no {ingest_type} ingest details "
+                f"found for this thing"
+            )
+            return
+
+        if ingest.enabled:
+            logger.info(
+                f"Ingest {thing.uuid} is enabled, preparing Bento stream config"
+            )
+            try:
+                stream_config = self.prepare_stream_config(thing, ingest_type)
+            except Exception as e:
+                logger.error(
+                    f"Failed to prepare Bento stream config for {thing.uuid}: {e}"
+                )
                 return
+            self.create_or_update_stream(stream_config, thing, ingest_type)
+        else:
+            logger.info(
+                f"Ingest {thing.uuid} is disabled, ensuring its Bento stream is removed"
+            )
+            self.delete_stream(thing, ingest_type)
 
-            if ingest.enabled:
-                # Prepare Bento stream configuration
-                stream_config = self.prepare_stream_config(thing)
-                # Create or update the Bento stream
-                self.create_or_update_stream(stream_config, thing)
-            else:
-                # Try to delete, if ingest created in disabled state it's only a check if the stream doens't exist
-                self.delete_stream(thing)
-
-    def prepare_stream_config(self, thing: Thing):
+    def prepare_stream_config(self, thing: Thing, ingest_type: str):
         # fmt: off
-        ingest_type = thing.ingest_type
-
-        # outsource some logic for HTTP-streams
-        path = thing.http.url_for_thing if thing.http.url_for_thing else thing.uuid
         bento_timestamp = "${!now().ts_format(\"1_Jan_2006_15:04:05\")}"
 
         # Create Bento stream configuration
-        if ingest_type == "ExtMQTT":
+        if ingest_type == "external_mqtt":
             stream_config = {
                 "input": {
                     "mqtt": {
@@ -107,8 +130,15 @@ class CreateThingInBentoHandler(AbstractHandler):
                     }
                 }
             }
+            logger.info(
+                f"Prepared ExtMQTT stream for {thing.uuid}: "
+                f"source={thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port} "
+                f"topic={thing.ext_mqtt.external_mqtt_topic!r} -> "
+                f"internal topic mqtt_ingest/{thing.mqtt.user}"
+            )
 
-        elif ingest_type == "HTTP":
+        elif ingest_type == "http":
+            path = thing.http.path_for_posts if thing.http.path_for_posts else thing.uuid
             stream_config = {
                 "input": {
                     "http_server": {
@@ -144,15 +174,19 @@ class CreateThingInBentoHandler(AbstractHandler):
                     }
                 }
             }
+            logger.info(
+                f"Prepared HTTP stream for {thing.uuid}: "
+                f"path=/http-ingest/{path} -> bucket={thing.s3_store.bucket}"
+            )
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
         return stream_config
 
     # fmt: on
 
-    def create_or_update_stream(self, stream_config, thing: Thing):
+    def create_or_update_stream(self, stream_config, thing: Thing, ingest_type: str):
         """Create or update a Bento stream via JSON API"""
-        url = f"{self.bento_api_url_POST}/streams/{thing.ingest_type}/{thing.uuid}"
+        url = f"{self.bento_api_url_POST}/streams/{ingest_type}/{thing.uuid}"
 
         try:
             # First try to get existing stream
@@ -160,27 +194,30 @@ class CreateThingInBentoHandler(AbstractHandler):
 
             if response.status_code == 200:
                 # Stream exists, update it
-                logger.info(f"Updating existing stream: {thing.uuid}")
+                logger.info(f"Updating existing stream: {thing.uuid} at {url}")
                 response = requests.put(url, json=stream_config, timeout=30)
             else:
                 # Stream doesn't exist, create it
-                logger.info(f"Creating new stream: {thing.uuid}")
+                logger.info(f"Creating new stream: {thing.uuid} at {url}")
                 response = requests.post(url, json=stream_config, timeout=30)
 
             if response.ok:
-                logger.info(f"Successfully configured stream: {thing.uuid}")
+                logger.info(
+                    f"Successfully configured stream: {thing.uuid} "
+                    f"(status {response.status_code})"
+                )
             else:
                 logger.error(
                     f"Failed to configure stream {thing.uuid}: {response.status_code} - {response.text}"
                 )
 
         except Exception as e:
-            logger.error(f"Error configuring Bento stream: {e}")
+            logger.error(f"Error configuring Bento stream {thing.uuid} at {url}: {e}")
 
-    def delete_stream(self, thing: Thing):
+    def delete_stream(self, thing: Thing, ingest_type: str):
         """Delete Bento stream if it exists, otherwise log nothing to do."""
 
-        url = f"{self.bento_api_url_POST}/streams/{thing.ingest_type}/{thing.uuid}"
+        url = f"{self.bento_api_url_POST}/streams/{ingest_type}/{thing.uuid}"
 
         try:
             # Check existence first
