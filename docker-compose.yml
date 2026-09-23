@@ -1139,11 +1139,9 @@ services:
       - ./bento/resources/:/resources
       - ./bento/streams/:/streams
       - ./bento/main.yaml:/bento.yaml
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
       - "${BENTO_PERSISTENCE_VOLUME:-bento}:/data"
-    command: >
-      streams
-      --prefix-stream-endpoints=false
-      ./streams/*/*.yaml
+    entrypoint: ["/entrypoint.sh"]
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
