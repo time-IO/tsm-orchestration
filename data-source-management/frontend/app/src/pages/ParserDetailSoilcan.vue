@@ -22,7 +22,7 @@
             </div>
 
             <q-btn-dropdown
-              color="secondary"
+              color="light-blue-8"
               unelevated
               icon="add"
               label="Create Ingest"
