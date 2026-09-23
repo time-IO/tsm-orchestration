@@ -22,12 +22,12 @@ class CreateThingInBentoHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
 
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.bento_api_url = get_envvar("BENTO_API_URL")
         self.bento_api_url_POST = get_envvar("BENTO_API_URL_POST")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
 
         # Only act for "Bento"-Ingests
         if thing.ingest_type in ("ExtMQTT", "HTTP"):
