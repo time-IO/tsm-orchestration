@@ -51,7 +51,7 @@
       hint="Size of the rolling windows used to calculate the mean."
     />
 
- <!--    min_periods-->
+    <!--    min_periods-->
     <q-input
       class="q-mb-md"
       filled
@@ -109,7 +109,7 @@ const formData = ref({
   window: null as number | null,
   min_periods: null as number | null,
   flag: nullableNumber(255.0),
-  dfilter: nullableNumber(0)
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {
@@ -164,12 +164,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag ?? 255},
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter ?? 0},
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 

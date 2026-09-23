@@ -59,4 +59,4 @@ export const toNumberOrNull = (val: string | number | null): number | null =>
 
 export const nullableNumber = (initial: number): number | null => initial;
 
-export const emptyToNull = <T,>(val: T | ''): T | null => (val === '' ? null : val);
+export const emptyToNull = <T>(val: T | ''): T | null => (val === '' ? null : val);

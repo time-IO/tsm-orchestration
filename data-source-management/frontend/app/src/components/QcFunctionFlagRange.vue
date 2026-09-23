@@ -60,7 +60,7 @@
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
-       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
@@ -84,7 +84,7 @@ import type { QualityControlFunctionArgumentBase } from '@/services/quality_cont
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import {nullableNumber, toNumberOrNull} from "@/utils/quality_control_function_utils";
+import { nullableNumber, toNumberOrNull } from '@/utils/quality_control_function_utils';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -146,12 +146,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag ?? 255},
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter ?? 0},
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 

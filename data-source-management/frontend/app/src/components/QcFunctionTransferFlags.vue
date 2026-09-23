@@ -65,7 +65,7 @@
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
-       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
@@ -151,12 +151,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag ?? 255},
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter ?? 0},
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 

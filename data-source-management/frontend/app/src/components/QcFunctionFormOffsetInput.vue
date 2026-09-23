@@ -4,7 +4,7 @@
     :model-value="model"
     :label="`${label} (enter a offset alias)`"
     :rules="rules"
-     @update:model-value="(val) => (model = emptyToNull(val))"
+    @update:model-value="(val) => (model = emptyToNull(val))"
     :hint="hint"
     v-bind="$attrs"
   >
