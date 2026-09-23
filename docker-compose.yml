@@ -544,6 +544,92 @@ services:
 
   # Summary
   # =======
+  # brief: An API for controlled access to STA endpoints, acting as proxy
+  # dir: sta-proxy/api
+  # see also:
+  #  - sta-proxy/README.md
+  #
+  # ===========
+  # Description
+  # For detailed description and hints for development, visit sta-proxy/README.md
+  sta-proxy-api:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-api:${DSM_API_IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: sta-proxy/api/docker/prod/Dockerfile
+      args:
+        UID: "${UID:-1000}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "debug"
+      API_ROOT_PATH: ""
+      BASE_URL: "${PROXY_URL}"
+      OIDC_WELL_KNOWN: "${STA_PROXY_API_OIDC_WELL_KNOWN}"
+      OIDC_ISSUER: "${STA_PROXY_API_OIDC_ISSUER}"
+      OIDC_AUDIENCE: "${STA_PROXY_API_OIDC_AUDIENCE}"
+      ALLOWED_ORIGINS: "${STA_PROXY_API_ALLOWED_ORIGINS}"
+      FROST_URL: "http://frost:8080/"
+
+
+  # Summary
+  # =======
+  # brief: A user frontend to access STA endpoints
+  # dir: sta-proxy/frontend
+  # see also:
+  #  - sta-proxy/README.md
+  #
+  # Description
+  # ===========
+  # For detailed description and hints for development, visit sta-proxy/README.md
+  #
+  # NOTE that two services exist: sta-proxy-frontend and sta-proxy-frontend-rootless
+  # Latter will not be not started or built with docker compose setup by default.
+  # To build it, use `docker compose --profile build build`
+  sta-proxy-frontend:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend:${DSM_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./sta-proxy/frontend
+      dockerfile: docker/generic-image/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      dsm-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+
+  sta-proxy-frontend-rootless:
+    profiles:
+      - build # activate profile to build
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend-rootless:${DSM_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./data-source-management/frontend
+      dockerfile: docker/generic-image/Dockerfile-rootless
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      sta-proxy-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${DSM_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${DSM_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${DSM_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+
+
+  # Summary
+  # =======
   # brief: Make services accessible on single address  (eg. tsm.ufz.de)
   # dir: nginx
   # see also: ./nginx/*.conf
@@ -1203,11 +1289,11 @@ services:
       KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
       KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
       # Keycloak client config (used in configuration template)
-      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_APP_URL}/login-callback\"]"
-      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_BASE_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_OIDC_REDIRECT_URI}\", \"${STA_PROXY_FRONTEND_OIDC_REDIRECT_URI}\"]"
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}##${STA_PROXY_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "${PROXY_URL}"
       KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
       KEYCLOAK_GRAFANA_CLIENT_SECRET: "${VISUALIZATION_KEYCLOAK_CLIENT_SECRET}"
       KEYCLOAK_GRAFANA_CLIENT_ID: "${VISUALIZATION_KEYCLOAK_CLIENT_ID}"

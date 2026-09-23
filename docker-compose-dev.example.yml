@@ -100,6 +100,34 @@ services:
       BASE_URL: "${DSM_FRONTEND_RELATIVE_PATH:-/data-source-management/}"
     command: "quasar dev"
 
+  sta-proxy-api:
+    image: timeio-sta-proxy-api-local:dev
+    build:
+      context: .
+      dockerfile: ./sta-proxy/api/docker/Dockerfile-Dev
+    working_dir: /app
+    volumes:
+      - ./sta-proxy/api/app:/app:rw
+
+  sta-proxy-frontend:
+    image: timeio-sta-proxy-frontend-local:dev
+    build:
+      context: ./sta-proxy/frontend
+      dockerfile: docker/Dockerfile-Dev
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./sta-proxy/frontend/app:/home/node/app:rw,cached
+    environment:
+      API_BASE_URL: "${STA_PROXY_API_APP_URL:-http://localhost/sta}"
+      OIDC_CLIENT_ID: "${STA_PROXY_FRONTEND_OIDC_CLIENT_ID:-timeIO-client}"
+      OIDC_IDP_URL: "${STA_PROXY_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
+      OIDC_REDIRECT_URI: "${STA_PROXY_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/sta-proxy/login-callback}"
+      OIDC_SCOPE: "${STA_PROXY_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "${STA_PROXY_FRONTEND_APP_URL:-http://localhost/sta-proxy}"
+      BASE_URL: "${STA_PROXY_FRONTEND_RELATIVE_PATH:-/sta-proxy/}"
+    command: "quasar dev"
+
   timeio-db-api:
     ports:
       - "127.0.0.1:8001:8001"
