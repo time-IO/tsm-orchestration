@@ -36,7 +36,7 @@ pipeline:
   processors:
     - mapping: |
         root = content()
-        let verb = metadata("http_server_request_method")   # POST / DELETE
+        let verb = metadata("http_server_verb")              # POST / PUT / DELETE
         let req_path = metadata("http_server_request_path") # /streams/...
         meta verb = $verb
         meta req_path = $req_path
@@ -66,25 +66,36 @@ pipeline:
         meta path_for_api = metadata("http_server_request_path").re_replace_all("^/streams/[^/]+/", "/streams/")
 
 output:
-  broker:
-    pattern: fan_out
-    outputs:
-    - http_client:
-        url: 'http://localhost:4195${! metadata("path_for_api") }'
-        # Forward the original verb: Bento's real API rejects POST on an
-        # existing stream (400 Stream already exists), so updates (PUT) must
-        # stay PUT.
-        verb: '${! meta("verb") }'
-        headers: {}
-        rate_limit: "" # No default (optional)
-        timeout: 5s
-        max_in_flight: 64
-        batching:
-          count: 0
-          byte_size: 0
-          period: ""
-          jitter: 0
-          check: ""
-#    - file:
-#        path: '${! metadata("http_server_request_path") }.json'
-#        codec: all-bytes
+  # http_client's "verb" field doesn't support interpolation, so route per verb instead.
+  switch:
+    cases:
+      - check: 'meta("verb") == "POST"'
+        output:
+          http_client:
+            url: 'http://localhost:4195${! metadata("path_for_api") }'
+            verb: POST
+            headers: {}
+            rate_limit: "" # No default (optional)
+            timeout: 5s
+            max_in_flight: 64
+            batching:
+              count: 0
+              byte_size: 0
+              period: ""
+              jitter: 0
+              check: ""
+      - check: 'meta("verb") == "PUT"'
+        output:
+          http_client:
+            url: 'http://localhost:4195${! metadata("path_for_api") }'
+            verb: PUT
+            headers: {}
+            rate_limit: "" # No default (optional)
+            timeout: 5s
+            max_in_flight: 64
+            batching:
+              count: 0
+              byte_size: 0
+              period: ""
+              jitter: 0
+              check: ""
