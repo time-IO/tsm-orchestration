@@ -14,7 +14,9 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
-
+### Fixed
+- QC function forms: optional numeric fields no longer send an empty string to the backend when cleared, 
+which previously caused validation errors on submit. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/730))
 
 ## [2026-09-10]
 
