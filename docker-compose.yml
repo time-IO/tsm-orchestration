@@ -31,6 +31,7 @@ services:
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/volume/mqtt"
       - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/tmp/volume/visualization"
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/tmp/volume/tomcat"
+      - "${BENTO_PERSISTENCE_VOLUME:-bento}:/tmp/volume/bento"
       # Mount local MinIO FTP TLS certificate and SSH host key
       - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/bind/minio/minio-ftp.crt:ro"
       - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/bind/minio/minio-ftp.key:ro"
@@ -1127,10 +1128,15 @@ services:
   bento:
     image: ghcr.io/warpstreamlabs/bento:latest
     container_name: bento
+    user: "${UID}:${GID}"
+    depends_on:
+      init:
+        condition: service_completed_successfully
     volumes:
       - ./bento/resources/:/resources
       - ./bento/streams/:/streams
       - ./bento/main.yaml:/bento.yaml
+      - "${BENTO_PERSISTENCE_VOLUME:-bento}:/data"
     command: >
       streams
       --prefix-stream-endpoints=false
@@ -1297,3 +1303,4 @@ volumes:
   mqtt-broker:
   object-storage:
   crontab:
+  bento:
