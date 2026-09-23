@@ -1,0 +1,89 @@
+<template>
+  <q-layout view="lHh lpR lff">
+    <q-header elevated>
+      <q-toolbar class="bg-blue-grey-5 text-white">
+        <q-toolbar-title>{{ t('appname') }}</q-toolbar-title>
+
+        <q-btn round flat aria-label="Account">
+          <q-avatar>
+            <span v-if="authStore.isAuthenticated">{{ authStore.initials }}</span>
+            <q-icon v-else name="account_circle" />
+          </q-avatar>
+          <q-tooltip>Account</q-tooltip>
+          <q-menu>
+            <q-list style="min-width: 100px">
+              <template v-if="authStore.isAuthenticated">
+                <q-item @click="handleLogout" clickable v-close-popup>
+                  <q-item-section>Logout</q-item-section>
+                </q-item>
+              </template>
+              <template v-else>
+                <q-item @click="handleLogin" clickable v-close-popup>
+                  <q-item-section>Login</q-item-section>
+                </q-item>
+              </template>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+    </q-header>
+
+    <q-page-container>
+      <div :class="{ 'page-width-constrained': route.meta.constrainWidth }">
+        <router-view />
+      </div>
+    </q-page-container>
+  </q-layout>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter, useRoute } from 'vue-router';
+import { useQuasar } from 'quasar';
+
+const { t } = useI18n();
+
+const authStore = useAuthStore();
+const router = useRouter();
+const route = useRoute();
+const $q = useQuasar();
+
+const handleLogin = async () => {
+  try {
+    await authStore.login();
+  } catch {
+    $q.notify({
+      type: 'negative',
+      position: 'top',
+      timeout: 0,
+      actions: [
+        {
+          icon: 'close',
+          color: 'white',
+          round: true,
+          handler: () => {},
+        },
+      ],
+      message: 'Authorization provider not reachable. Please contact an application admin.',
+    });
+  }
+};
+
+const handleLogout = async () => {
+  try {
+    await authStore.logout();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    await router.push('/');
+  }
+};
+</script>
+
+<style scoped>
+.page-width-constrained {
+  max-width: 1400px;
+  width: 100%;
+}
+</style>
