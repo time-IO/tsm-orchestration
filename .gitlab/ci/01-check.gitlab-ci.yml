@@ -39,7 +39,7 @@ black:
   before_script:
     - pip install black
   script:
-    - black --check src/ tests/ data-source-management/api/app/
+    - black --check src/ tests/ data-source-management/api/app/ sta-proxy/api/app
   rules:
     # Never run if pipeline is triggered by a tag commit, a merge_request_event or a push on main
     - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
@@ -48,7 +48,7 @@ black:
     - if: "$CI_PIPELINE_SOURCE == 'push'"
       when: always
 
-prettier:
+prettier-dsm:
   stage: check
   needs: []
   image: node:24
@@ -67,7 +67,26 @@ prettier:
     - changes:
       - data-source-management/frontend/app/**/*
 
-npm-lint:
+prettier-sta-proxy:
+  stage: check
+  needs: []
+  image: node:24
+  before_script:
+    - cd sta-proxy/frontend/app
+    - npm ci
+  script:
+    - npx prettier --check .
+  rules:
+    # Never run if pipeline is triggered by a tag commit, a merge_request_event or a push on main
+    - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    # Always run if pipeline is triggered by a push on a branch
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: always
+    - changes:
+      - sta-proxy/frontend/app/**/*
+
+npm-lint-dsm:
   stage: check
   needs: []
   image: node:24
@@ -86,7 +105,26 @@ npm-lint:
     - changes:
       - data-source-management/frontend/app/**/*
 
-npm-test:
+npm-lint-sta-proxy:
+  stage: check
+  needs: []
+  image: node:24
+  before_script:
+    - cd sta-proxy/frontend/app
+    - npm ci
+  script:
+    - npm run lint:all
+  rules:
+    # Never run if pipeline is triggered by a tag commit, a merge_request_event or a push on main
+    - if: "$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_COMMIT_BRANCH == 'main'"
+      when: never
+    # Always run if pipeline is triggered by a push on a branch
+    - if: "$CI_PIPELINE_SOURCE == 'push'"
+      when: always
+    - changes:
+      - sta-proxy/frontend/app/**/*
+
+npm-test-dsm:
   stage: check
   needs: []
   image: node:24
@@ -150,7 +188,6 @@ unit-test-dsm-api:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
     - pip install -r data-source-management/api/requirements.txt
     - cp -r src/timeio data-source-management/api/app/timeio
-      # maybe run the tests in the backend container instead after installing testing tools?
   script:
     - pytest data-source-management/api/app/tests/unit_tests data-source-management/api/app/tests/validation -v
   rules:
@@ -160,6 +197,23 @@ unit-test-dsm-api:
       when: always
     - changes:
         - data-source-management/api/**/*
+
+unit-test-sta-proxy-api:
+  stage: check
+  needs: []
+  image: python:3.13-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
+    - pip install -r data-source-management/api/requirements.txt
+  script:
+    - pytest sta-proxy/api/app/tests/unit_tests sta-proxy/api/app/tests/validation -v
+  rules:
+    - if: '$CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: always
+    - changes:
+        - sta-proxy/api/**/*
 
 check-alembic-migrations:
   stage: check
