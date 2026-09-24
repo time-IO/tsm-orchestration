@@ -865,7 +865,8 @@ class S3Store(Base):
                 SELECT
                     bucket_username as username,
                     bucket_password as password,
-                    bucket_name
+                    bucket_name,
+                    '*' as filename_pattern
                 FROM {self._schema}.ingest_http
                 WHERE ingest_id = %s
             """
@@ -974,9 +975,10 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         query = f"""select i.* from {cls._schema}.ingest i
                 left join {cls._schema}.ingest_sftp s on i.id = s.ingest_id
                 left join {cls._schema}.ingest_external_sftp es on i.id = es.ingest_id
-                where es.bucket_name = %s or s.bucket_name = %s"""
+                left join {cls._schema}.ingest_http h on i.id = h.ingest_id
+                where es.bucket_name = %s or s.bucket_name = %s or h.bucket_name = %s"""
         conn = cls._get_connection(dsn, **kwargs)
-        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name)):
+        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name, bucket_name)):
             raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
         if len(res) > 1:
             warnings.warn(
