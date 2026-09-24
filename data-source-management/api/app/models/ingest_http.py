@@ -3,11 +3,14 @@ from typing import Optional
 from encryption import EncryptedType
 from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
 
+# Sent as the X-Api-Key header to authenticate incoming HTTP ingest requests.
+API_KEY_MIN_LENGTH = 8
+
 
 class IngestHttpRead(IngestRead):
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: Optional[str] = None
+    api_key: str
     enabled: bool
     bucket_name: str
     bucket_username: str
@@ -17,14 +20,14 @@ class IngestHttpRead(IngestRead):
 class IngestHttpCreate(IngestCreate):
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: Optional[str] = None
+    api_key: str = Field(min_length=API_KEY_MIN_LENGTH)
     enabled: bool = False
 
 
 class IngestHttpUpdate(IngestUpdate):
     path_for_posts: Optional[str] = None
     file_type: Optional[str] = None
-    api_key: Optional[str] = None
+    api_key: Optional[str] = Field(default=None, min_length=API_KEY_MIN_LENGTH)
     enabled: Optional[bool] = None
 
 
@@ -37,8 +40,9 @@ class IngestHttp(SQLModel, table=True):
 
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: Optional[str] = Field(
-        default=None, sa_column=Column("api_key", EncryptedType, nullable=True)
+    api_key: str = Field(
+        min_length=API_KEY_MIN_LENGTH,
+        sa_column=Column("api_key", EncryptedType, nullable=False),
     )
     enabled: bool = False
 

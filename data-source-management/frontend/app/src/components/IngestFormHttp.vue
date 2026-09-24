@@ -99,8 +99,9 @@
                 filled
                 class="q-mb-md"
                 v-model="formData.api_key"
-                label="API Key"
+                label="API Key *"
                 :type="isApiKeyPwd ? 'password' : 'text'"
+                :rules="[rules.REQUIRED, ruleFactories.MIN(8)]"
               >
                 <template #append>
                   <q-icon
@@ -110,7 +111,7 @@
                   />
                   <help-button
                     titleHelp="API Key"
-                    textHelp="An optional API key for authenticating incoming HTTP requests."
+                    textHelp="Required API key (at least 8 characters) sent as the X-Api-Key header to authenticate incoming HTTP requests."
                   />
                 </template>
               </q-input>
@@ -156,7 +157,7 @@ import { ref } from 'vue';
 import type { IngestHttpCreate, IngestHttpUpdate } from '@/services/ingest_http/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import type { ParserRead } from '@/services/types';
-import { rules } from '@/utils/validation/rules';
+import { rules, ruleFactories } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
