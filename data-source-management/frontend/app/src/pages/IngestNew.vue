@@ -112,7 +112,7 @@ const data = [
   },
   {
     name: 'http',
-    icon: 'http',
+    icon: 'upload_file',
     label: 'HTTP',
     description:
       'Create an HTTP POST endpoint for ingesting files into a new object storage bucket.',
