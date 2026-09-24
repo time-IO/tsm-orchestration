@@ -92,10 +92,11 @@ class CreateThingInBentoHandler(AbstractHandler):
             ext_password = self.dec(thing.ext_mqtt.external_mqtt_password)
             # No TLS toggle in the schema; infer it from port 8883 or a cert being set.
             tls_enabled = thing.ext_mqtt.external_mqtt_port == 8883 or bool(ca_cert) or bool(client_cert)
+            scheme = "tls" if tls_enabled else "tcp"
             stream_config = {
                 "input": {
                     "mqtt": {
-                        "urls": [f"tcp://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
+                        "urls": [f"{scheme}://{thing.ext_mqtt.external_mqtt_address}:{thing.ext_mqtt.external_mqtt_port}"],
                         # empty client_id gets "identifier rejected" by most brokers
                         "client_id": f"timeio-ext-{thing.uuid}",
                         "dynamic_client_id_suffix": "",
