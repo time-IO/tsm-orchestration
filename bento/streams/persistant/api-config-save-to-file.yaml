@@ -56,6 +56,18 @@ pipeline:
                 operation: write
                 path: '${! meta("file_path") }'
 
+    - switch:
+        - check: errored()
+          processors:
+            - log:
+                level: ERROR
+                message: '${! "Failed to " + meta("verb") + " persisted stream file " + meta("file_path") + ": " + error() }'
+        - check: ""
+          processors:
+            - log:
+                level: INFO
+                message: '${! (if meta("verb") == "DELETE" { "Deleted" } else { "Wrote" }) + " persisted stream file " + meta("file_path") }'
+
     - mapping: |
         root = content()
         # Bento's own dynamic-streams API only takes a single-segment stream
