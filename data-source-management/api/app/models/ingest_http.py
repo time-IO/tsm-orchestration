@@ -7,7 +7,7 @@ from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
 class IngestHttpRead(IngestRead):
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: str
+    api_key: Optional[str] = None
     enabled: bool
     bucket_name: str
     bucket_username: str
@@ -17,7 +17,7 @@ class IngestHttpRead(IngestRead):
 class IngestHttpCreate(IngestCreate):
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: str
+    api_key: Optional[str] = None
     enabled: bool = False
 
 
@@ -37,7 +37,9 @@ class IngestHttp(SQLModel, table=True):
 
     path_for_posts: Optional[str] = None
     file_type: str
-    api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
+    api_key: Optional[str] = Field(
+        default=None, sa_column=Column("api_key", EncryptedType, nullable=True)
+    )
     enabled: bool = False
 
     bucket_name: str

@@ -48,7 +48,7 @@ def upgrade() -> None:
         sa.Column("ingest_id", sa.Integer(), nullable=False),
         sa.Column("path_for_posts", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("file_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("api_key", EncryptedType(), nullable=False),
+        sa.Column("api_key", EncryptedType(), nullable=True),
         sa.Column("enabled", sa.Boolean(), nullable=False),
         sa.Column("bucket_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(

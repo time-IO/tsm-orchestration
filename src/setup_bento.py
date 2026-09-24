@@ -1,3 +1,4 @@
+import json
 import requests
 import logging
 
@@ -152,44 +153,74 @@ class CreateThingInBentoHandler(AbstractHandler):
 
         elif ingest_type == "http":
             path = thing.http.path_for_posts if thing.http.path_for_posts else thing.uuid
-            stream_config = {
-                "input": {
-                    "http_server": {
-                        "address": "",  # or configurable
-                        "path": f"/http-ingest/{path}",
-                        "ws_path": f"/http-ingest/{path}/ws",
-                        "allowed_verbs": ["POST"],
-                        "timeout": "5s",
-                        "rate_limit": ""
-                    }
-                },
-                "buffer": {
-                    "type": "none"
-                },
-                "pipeline": {
-                    "processors": [
-                        {
-                            "mapping": "root = content()"
-                        }
-                    ]
-                },
-                "output": {
-                    "aws_s3": {
-                        "bucket": f"{thing.s3_store.bucket}",
-                        "path": f"{bento_timestamp}.{thing.http.file_type}",
-                        "endpoint": "http://object-storage:9000",
-                        "force_path_style_urls": True,
-                        "region": self.s3_region,
-                        "credentials": {
-                            "id": f"{thing.s3_store.user}",  # ideally inject via env/config
-                            "secret": self.dec(thing.s3_store.password)
-                        }
+            api_key = self.dec(thing.http.api_key)
+
+            http_server = {
+                "address": "",  # or configurable
+                "path": f"/http-ingest/{path}",
+                "ws_path": f"/http-ingest/{path}/ws",
+                "allowed_verbs": ["POST"],
+                "timeout": "5s",
+                "rate_limit": ""
+            }
+            aws_s3_output = {
+                "aws_s3": {
+                    "bucket": f"{thing.s3_store.bucket}",
+                    "path": f"{bento_timestamp}.{thing.http.file_type}",
+                    "endpoint": "http://object-storage:9000",
+                    "force_path_style_urls": True,
+                    "region": self.s3_region,
+                    "credentials": {
+                        "id": f"{thing.s3_store.user}",  # ideally inject via env/config
+                        "secret": self.dec(thing.s3_store.password)
                     }
                 }
             }
+
+            if api_key:
+                # Require a matching X-Api-Key header. Unauthorized requests
+                # get a 401 and are never written to the bucket.
+                http_server["sync_response"] = {
+                    "status": '${! meta("status_code") }',
+                    "headers": {"Content-Type": "application/json"}
+                }
+                processors = [{
+                    "mapping": (
+                        f'let ok = meta("X-Api-Key") == {json.dumps(api_key)}\n'
+                        'meta status_code = if $ok { "200" } else { "401" }\n'
+                        'root = if $ok { content() } else { {"error": "unauthorized"} }'
+                    )
+                }]
+                output = {
+                    "switch": {
+                        "cases": [
+                            {
+                                "check": 'meta("status_code") == "200"',
+                                "output": {
+                                    "broker": {
+                                        "pattern": "fan_out",
+                                        "outputs": [{"sync_response": {}}, aws_s3_output]
+                                    }
+                                }
+                            },
+                            {"check": "", "output": {"sync_response": {}}}
+                        ]
+                    }
+                }
+            else:
+                processors = [{"mapping": "root = content()"}]
+                output = aws_s3_output
+
+            stream_config = {
+                "input": {"http_server": http_server},
+                "buffer": {"type": "none"},
+                "pipeline": {"processors": processors},
+                "output": output
+            }
             logger.info(
                 f"Prepared HTTP stream for {thing.uuid}: "
-                f"path=/http-ingest/{path} -> bucket={thing.s3_store.bucket}"
+                f"path=/http-ingest/{path} -> bucket={thing.s3_store.bucket} "
+                f"(api_key {'required' if api_key else 'not set'})"
             )
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
