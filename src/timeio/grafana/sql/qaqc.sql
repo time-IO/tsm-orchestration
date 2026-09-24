@@ -27,7 +27,7 @@ FROM observation o
 WHERE o.datastream_id = (
     SELECT dp.ds_id
     FROM datastream_properties dp
-    WHERE ${{datastream_pos:singlequote}} in (dp.property,dp.position)
+    WHERE dp.position = ${{datastream_pos:singlequote}}
     AND dp.t_uuid::text = '{uuid}'
 ) AND ${{show_qaqc_flags}} = 'True'
 AND result_quality IS NOT NULL

@@ -6,6 +6,7 @@ import os
 
 import psycopg
 from psycopg import sql
+from typing import cast, Literal
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.databases import Database
@@ -33,10 +34,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.db = Database(get_envvar("DATABASE_URL"))
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: dict, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         logger.info(f"start processing. {thing.name=}, {thing.uuid=}")
         ro_user = thing.database.ro_username.lower()
         user = thing.database.username.lower()
@@ -50,7 +51,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug("deploy dll")
             self.deploy_ddl(thing)
             logger.debug("deploy dml")
-            self.deploy_dml()
+            self.deploy_dml(thing)
+
+        self.upsert_schema_thing_mapping(thing)
 
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
@@ -205,12 +208,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(user=user)
                 )
 
-    def deploy_dml(self):
+    def deploy_dml(self, thing):
         file = os.path.join(os.path.dirname(__file__), "sql", "postgres-dml.sql")
         with open(file) as fh:
             query = fh.read()
         with self.db.connection() as conn:
             with conn.cursor() as c:
+                user = sql.Identifier(thing.database.username.lower())
+                c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
     def grant_sta_select(self, thing, user_prefix: str):
@@ -272,7 +277,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(
                     sql.SQL(
                         "GRANT SELECT ON TABLE thing, datastream, observation, "
-                        'journal, datastream_properties, "LOCATIONS", "THINGS", '
+                        "journal, datastream_properties, sta_datastream_links, "
+                        '"LOCATIONS", "THINGS", '
                         '"THINGS_LOCATIONS", "SENSORS", "OBS_PROPERTIES", "DATASTREAMS", '
                         '"OBSERVATIONS" TO {grf_user}'
                     ).format(grf_user=grf_user, schema=schema)
@@ -304,6 +310,11 @@ class CreateThingInPostgresHandler(AbstractHandler):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
+                # The DROP/CREATE below needs an ACCESS EXCLUSIVE lock on each
+                # view and would otherwise queue indefinitely behind a reader,
+                # blocking further queries in the meantime. Fail fast instead:
+                # give up waiting for the lock after 30s.
+                c.execute("SET lock_timeout TO '30s'")
                 for file in files:
                     logger.debug(f"deploy file: {file}")
                     with open(file) as fh:
@@ -318,19 +329,21 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     c.execute(view)
 
     def create_grafana_views(self, thing):
-        file = os.path.join(
-            os.path.dirname(__file__),
-            "sql",
-            "grafana_views",
-            "datastream_properties.sql",
-        )
-        with open(file) as fh:
-            view = fh.read()
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "grafana_views")
+        files = [
+            os.path.join(base_path, "datastream_properties.sql"),
+            os.path.join(base_path, "sta_datastream_links.sql"),
+        ]
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 user = sql.Identifier(thing.database.username.lower())
                 c.execute(sql.SQL("SET search_path TO {0}").format(user))
-                c.execute(view)
+                # Same rationale as create_frost_views: fail fast rather than
+                # queue the DROP/CREATE behind a reader holding the view lock.
+                c.execute("SET lock_timeout TO '10s'")
+                for file in files:
+                    with open(file) as fh:
+                        c.execute(fh.read())
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
@@ -366,6 +379,39 @@ class CreateThingInPostgresHandler(AbstractHandler):
             with conn.cursor() as c:
                 c.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", [username])
                 return len(c.fetchall()) > 0
+
+    def upsert_schema_thing_mapping(self, thing):
+        # This ensures that we don't compare
+        # None to None later at the early exit.
+        if thing.database.username is None:
+            raise ValueError("schema must not be None")
+
+        q = "SELECT schema FROM public.schema_thing_mapping WHERE thing_uuid=%s"
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                curr_schema = c.execute(cast(Literal, q), [thing.uuid]).fetchone()
+
+        if curr_schema is not None:
+            curr_schema = curr_schema[0]
+
+        if curr_schema == thing.database.username:
+            logger.debug(f"thing:schema mapping already exists")
+            return
+
+        q = (
+            "INSERT INTO public.schema_thing_mapping (schema, thing_uuid) "
+            "VALUES (%s::varchar(100), %s::uuid) "
+            "ON CONFLICT (schema, thing_uuid) DO UPDATE SET "
+            "schema = EXCLUDED.schema, "
+            "thing_uuid = EXCLUDED.thing_uuid "
+        )
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(cast(Literal, q), [thing.database.username, thing.uuid])
+        if curr_schema is None:
+            logger.info(f"created thing:schema mapping in DB for thing {thing.uuid}")
+        else:
+            logger.info(f"updated thing:schema mapping in DB for thing {thing.uuid}")
 
 
 if __name__ == "__main__":

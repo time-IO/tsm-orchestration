@@ -12,18 +12,31 @@ from io import StringIO
 from functools import reduce
 
 from timeio.parser.pandas_parser import PandasParser
-from timeio.errors import ParsingError, ParsingWarning
+from timeio.errors import ParsingError, ParsingWarning, EmptyDataError
 from timeio.journaling import Journal
 
 parsedT = TypeVar("parsedT")
 journal = Journal("CsvParser", errors="warn")
 
+DEFAULT_SETTINGS = {
+    "comment": "#",
+    "decimal": ".",
+    "na_values": None,
+    "encoding": "utf-8",
+    "engine": "python",
+    "on_bad_lines": "warn",
+    "header": None,
+}
+
 
 class CsvParser(PandasParser):
+    def __init__(self, settings: dict[str, Any] | None = None):
+        settings = dict(settings or {})
+        pandas_read_csv = settings.pop("pandas_read_csv", None) or {}
+        super().__init__({**DEFAULT_SETTINGS, **settings, **pandas_read_csv})
 
     @staticmethod
     def _set_index(df: pd.DataFrame, timestamp_columns: dict) -> pd.DataFrame:
-
         date_columns = [df.columns[d["column"]] for d in timestamp_columns]
         try:
             date_format = " ".join([d["format"] for d in timestamp_columns])
@@ -99,11 +112,16 @@ class CsvParser(PandasParser):
 
     @staticmethod
     def _apply_skipping(lines, skiprows, skipfooter):
-
         if skiprows is None:
             skiprows = []
+        # in Config-DB or pandas_read_csv JSON, skiprows is stored as an integer
         if isinstance(skiprows, int):
             skiprows = range(skiprows)
+        # in DSM-DB skiprows is stored as a string of comma-separated integers
+        if isinstance(skiprows, str):
+            skiprows = [int(i) for i in skiprows.split(",")]
+            if len(skiprows) == 1:
+                skiprows = range(skiprows[0])
         skiprows = set(skiprows)
 
         if skipfooter is None:
@@ -137,21 +155,33 @@ class CsvParser(PandasParser):
         regex = rf"({comment_regex}).*"
         return [re.sub(regex, "", line.strip()) for line in lines]
 
-    def do_parse(self, rawdata: str, project_name: str, thing_uuid: str):
+    def do_parse(
+        self, rawdata: str, project_name: str, thing_uuid: str
+    ) -> pd.DataFrame:
         """
         Parse rawdata string to pandas.DataFrame
         rawdata: the unparsed content
         NOTE:
             we need to preserve the original column numbering
         """
+        if len(rawdata) == 0:
+            raise EmptyDataError("No data given")
+
         settings = self._validate_settings(self.settings.copy())
         self.logger.info(settings)
 
         timestamp_columns = settings.pop("timestamp_columns")
         ts_indices = [i["column"] for i in timestamp_columns]
         header_line = settings.get("header", None)
-        skiprows = settings.pop("skiprows", 0)
-        skipfooter = settings.pop("skipfooter", 0)
+
+        # handle deprecated settings keywords for skipping rows and footers
+        skiprows = settings.pop("skiprows", None)
+        headlines_to_exclude = settings.pop("headlines_to_exclude", None)
+        skiprows = skiprows if skiprows is not None else headlines_to_exclude or 0
+        skipfooter = settings.pop("skipfooter", None)
+        footlines_to_exclude = settings.pop("footlines_to_exclude", None)
+        skipfooter = skipfooter if skipfooter is not None else footlines_to_exclude or 0
+
         custom_names = settings.pop("names", None)
         duplicate = settings.pop("duplicate", False)
         tz_info = settings.pop("timezone", None)
@@ -213,6 +243,11 @@ class CsvParser(PandasParser):
                     df.columns = custom_names
             else:
                 df.columns = range(len(df.columns))
+        df, timestamp_columns = self.normalize_unix_timestamps(
+            df,
+            timestamp_columns,
+            "csv",
+        )
         df = self._set_index(df, timestamp_columns)
         if tz_info is not None:
             try:
@@ -240,8 +275,8 @@ class CsvParser(PandasParser):
 
         self.logger.debug(f"data.shape={df.shape}")
 
-        self._start_date = df.index[0]
-        self._end_date = df.index[-1]
+        self._start_date = df.index.min()
+        self._end_date = df.index.max()
         return df
 
 

@@ -4,11 +4,12 @@ from __future__ import annotations
 import io
 import logging
 
+from urllib.parse import urlparse
 from paramiko import WarningPolicy
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
-from timeio.remote_fs import MinioFS, FtpFS, sync
+from timeio.remote_fs import MinioFS, SftpFS, sync, FtpFS
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
 from timeio.journaling import Journal
@@ -29,7 +30,7 @@ Additional set the following environment variables:
   MINIO_USER        Minio user with r/w privileges
   MINIO_PASSWORD    Password for minio user above.
   MINIO_SECURE      Use minio secure connection; [true, false, 1, 0]
-  CONFIGDB_DSN      DB which stores the credentials for the external sftp server
+  DSMDB_DSN         DB which stores the credentials for the external sftp server
                     (source of sync) and also the (existing) bucket-name for the
                     target S3 storage. See also DSN format below.
 
@@ -55,10 +56,10 @@ class SyncExtSftpManager(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
     def act(self, content: MqttPayload.SyncExtSftpT, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         minio_secure = get_envvar("MINIO_SECURE").lower() not in ["false", "0"]
         target = MinioFS.from_credentials(
             endpoint=get_envvar("MINIO_URL"),
@@ -69,8 +70,16 @@ class SyncExtSftpManager(AbstractHandler):
         )
         priv_key = decrypt(thing.ext_sftp.ssh_priv_key, get_crypt_key())
         password = decrypt(thing.ext_sftp.password, get_crypt_key())
+        uri = urlparse(thing.ext_sftp.uri)
+        scheme = uri.scheme.lower()
+        if scheme != "ftp":
+            scheme = "sftp"
+        fs_class = {
+            "ftp": FtpFS,
+            "sftp": SftpFS,
+        }.get(scheme)
         try:
-            source = FtpFS.from_credentials(
+            source = fs_class.from_credentials(
                 uri=thing.ext_sftp.uri,
                 username=thing.ext_sftp.user,
                 password=password,
@@ -79,11 +88,18 @@ class SyncExtSftpManager(AbstractHandler):
                 missing_host_key_policy=WarningPolicy(),
             )
         except Exception as e:
-            msg = f"Failed to create SFTP client. Reason: {e}"
+            msg = f"Failed to create {scheme} client. Reason: {e}"
             journal.error(msg, thing.uuid)
             logger.error(msg)
             return
-        sync(source, target, thing.uuid)
+        sync(
+            source,
+            target,
+            thing.uuid,
+            scheme,
+            datetime_from=content.get("datetime_from"),
+            datetime_to=content.get("datetime_to"),
+        )
         source.close()
 
 

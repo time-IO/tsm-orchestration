@@ -20,7 +20,7 @@ class PublishAllThings:
             try:
                 with conn.cursor() as cursor:
                     cursor.execute("""
-                        Select uuid::TEXT from config_db.thing;
+                        Select uuid::TEXT from dsm_db.ingest;
                         """)
                     logger.info(f"Fetching uuids of all stored things")
                     self.things_uuids = [row[0] for row in cursor.fetchall()]
@@ -39,9 +39,7 @@ class PublishAllThings:
             )
             # TODO: use a regular mqtt client. publish_single is for
             #  one-time use only.
-            mqtt.publish_single(
-                self.publish_topic, json.dumps({"thing_uuid": thing_uuid})
-            )
+            mqtt.publish_single(self.publish_topic, json.dumps({"thing": thing_uuid}))
 
 
 if __name__ == "__main__":

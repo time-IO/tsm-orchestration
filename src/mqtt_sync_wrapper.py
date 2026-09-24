@@ -26,13 +26,13 @@ def get_bosch_timerange(thing):
     settings = thing.ext_api.settings
     now_utc = datetime.now(timezone.utc)
     now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-    timestamp_from = now_utc - timedelta(minutes=settings["period"])
+    timestamp_from = now_utc - timedelta(minutes=settings["period_in_minutes"])
     timestamp_from_str = timestamp_from.strftime("%Y-%m-%dT%H:%M:%SZ")
     return timestamp_from_str, now_str
 
 
 def get_dwd_timerange(thing):
-    yesterday = datetime.now() - timedelta(days=1)
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
     yesterday_start = datetime.strftime(yesterday, "%Y-%m-%dT00:00:00")
     yesterday_end = datetime.strftime(yesterday, "%Y-%m-%dT23:55:00")
     return yesterday_start, yesterday_end
@@ -40,7 +40,7 @@ def get_dwd_timerange(thing):
 
 def get_uba_timerange(thing):
     """UBA API expects time_from/time_to in the range of 1 to 24"""
-    datetime_now = datetime.now()
+    datetime_now = datetime.now(timezone.utc)
     datetime_from = datetime_now - timedelta(hours=1)
     if datetime_now.hour == 0:
         datetime_to = (datetime_now - timedelta(days=1)).strftime(
@@ -78,10 +78,10 @@ def get_nm_timerange(thing):
             )
             date = cur.fetchone()[0]
             if date:
-                start_date = date
-    return start_date.strftime("%Y-%m-%d %H:%M:%S"), datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+                start_date = date.astimezone(timezone.utc)
+    return start_date.strftime("%Y-%m-%d %H:%M:%S"), datetime.now(
+        timezone.utc
+    ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 TIMERANGE_MAPPING = {
@@ -103,7 +103,7 @@ def cli():
 @cli.command()
 @click.argument("thing_uuid")
 def sync_thing(thing_uuid: str):
-    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("CONFIGDB_DSN"))
+    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("DSMDB_DSN"))
     if thing.ext_api is not None:
         ext_api_name = thing.ext_api.api_type_name
         datetime_from, datetime_to = TIMERANGE_MAPPING[ext_api_name](thing)

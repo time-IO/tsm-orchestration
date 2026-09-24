@@ -19,6 +19,10 @@ MINUTES_PER_HOUR = 60
 MINUTES_PER_DAY = 60 * 24
 MINUTES_PER_WEEK = 60 * 24 * 7
 
+# Random per-job start delay (seconds) prepended to the sync command to spread
+# out jobs that share the same minute
+SYNC_JITTER_SECONDS = 30
+
 
 class CreateThingInCrontabHandler(AbstractHandler):
     def __init__(self):
@@ -32,10 +36,10 @@ class CreateThingInCrontabHandler(AbstractHandler):
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
         self.tabfile = "/tmp/cron/crontab.txt"
-        self.configdb_dsn = get_envvar("CONFIGDB_DSN")
+        self.dsmdb_dsn = get_envvar("DSMDB_DSN")
 
-    def act(self, content: MqttPayload.ConfigDBUpdate, message: MQTTMessage):
-        thing = Thing.from_uuid(content["thing"], dsn=self.configdb_dsn)
+    def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         with CronTab(tabfile=self.tabfile) as crontab:
             for job in crontab:
                 if self.job_belongs_to_thing(job, thing):
@@ -66,7 +70,11 @@ class CreateThingInCrontabHandler(AbstractHandler):
         comment = cls.mk_comment(thing)
         uuid = thing.uuid
         script = "/scripts/mqtt_sync_wrapper.py"
-        command = f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
+        offset = randint(0, SYNC_JITTER_SECONDS)
+        command = (
+            f"sleep {offset} && "
+            f"python3 {script} sync-thing {uuid} > $STDOUT 2> $STDERR"
+        )
         if thing.ext_sftp:
             interval = int(thing.ext_sftp.sync_interval)
             schedule = (

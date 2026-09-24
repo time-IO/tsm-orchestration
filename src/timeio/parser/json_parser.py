@@ -15,15 +15,26 @@ from timeio.journaling import Journal
 
 journal = Journal("JsonParser", errors="warn")
 
+DEFAULT_SETTINGS = {
+    "timestamp_keys": [{"key": "Datetime", "format": "%Y-%m-%dT%H:%M:%S"}],
+}
+
 
 class JsonParser(PandasParser):
 
     def __init__(
-        self, settings: dict[str, Any], normalize_kws: dict[str, Any] | None = None
+        self,
+        settings: dict[str, Any] | None = None,
+        normalize_kws: dict[str, Any] | None = None,
     ):
-        super().__init__(settings)
+        settings = dict(settings or {})
+        configured_normalize_kws = settings.pop("pandas_json_normalize", None) or {}
+        super().__init__({**DEFAULT_SETTINGS, **settings})
+
         if normalize_kws is None:
-            normalize_kws = {}
+            normalize_kws = configured_normalize_kws
+        else:
+            normalize_kws = dict(normalize_kws)
 
         # Remove keywords that control program flow
         for key in ["data", "errors"]:
@@ -41,13 +52,44 @@ class JsonParser(PandasParser):
         clean_string = re.sub(comment_re, "", rawdata)
         return clean_string
 
-    def _json_to_df(self, rawdata: str, comment: str = None) -> pd.DataFrame:
+    def _json_to_df(
+        self,
+        rawdata: str,
+        comment: str = None,
+        measurement_key: str = None,
+        excluded_keys: list[str] = None,
+    ) -> pd.DataFrame:
         cleaned_data = self._clean_string(rawdata, comment) if comment else rawdata
         json_data = json.loads(cleaned_data)
+
+        if measurement_key is not None:
+            try:
+                if isinstance(json_data, list):
+                    json_data = [item[measurement_key] for item in json_data]
+                else:
+                    json_data = json_data[measurement_key]
+            except KeyError as e:
+                raise ParsingError(
+                    f"Measurement key {measurement_key!r} not found: {e}"
+                )
+
+        if excluded_keys:
+            if isinstance(json_data, list):
+                json_data = [
+                    {k: v for k, v in item.items() if k not in excluded_keys}
+                    for item in json_data
+                ]
+            else:
+                json_data = {
+                    k: v for k, v in json_data.items() if k not in excluded_keys
+                }
+
         return pd.json_normalize(json_data, **self.normalize_kws)
 
     @staticmethod
-    def _set_index(df: pd.DataFrame, timestamp_keys: dict) -> pd.DataFrame:
+    def _set_index(
+        df: pd.DataFrame, timestamp_keys: dict, timezone: str = None
+    ) -> pd.DataFrame:
         date_keys = [d["key"] for d in timestamp_keys]
         date_format = " ".join([d["format"] for d in timestamp_keys])
 
@@ -67,16 +109,32 @@ class JsonParser(PandasParser):
                 ParsingWarning,
             )
         index.name = None
+
+        if timezone is not None:
+            if dt_index.dt.tz is None:
+                dt_index = dt_index.dt.tz_localize(timezone)
+            else:
+                dt_index = dt_index.dt.tz_convert(timezone)
+
         df.index = dt_index
         return df
 
-    def do_parse(self, rawdata: str, thing, project) -> pd.DataFrame:
+    def do_parse(
+        self,
+        rawdata: str,
+        project_name,
+        thing_uuid,
+    ) -> pd.DataFrame:
         self.logger.info(self.settings)
         comment = self.settings.get("comment")
+        measurement_key = self.settings.get("measurement_key")
+        excluded_keys = self.settings.get("excluded_keys")
+        timezone = self.settings.get("timezone")
         timestamp_keys = self.settings.get("timestamp_keys", {})
-        df = self._json_to_df(rawdata, comment)
+        df = self._json_to_df(rawdata, comment, measurement_key, excluded_keys)
+        df, timestamp_keys = self.normalize_unix_timestamps(df, timestamp_keys, "json")
         try:
-            df = self._set_index(df, timestamp_keys)
+            df = self._set_index(df, timestamp_keys, timezone)
         except KeyError as e:
             raise ParsingError(f"Timestamp path error: {e}")
         self._start_date = df.index[0]

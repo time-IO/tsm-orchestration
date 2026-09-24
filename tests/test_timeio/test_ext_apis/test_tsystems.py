@@ -52,8 +52,8 @@ def test_tsystems_fetch_api_data(
     settings = {
         "group": "group",
         "version": 1,
-        "password": "enc_pw",
-        "username": "user",
+        "tsystems_password": "enc_pw",
+        "tsystems_username": "user",
         "station_id": "uuid",
     }
     thing = mock_thing(settings)

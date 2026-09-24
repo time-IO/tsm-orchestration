@@ -6,6 +6,7 @@ import re
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -31,6 +32,38 @@ class ExtApiSyncer(ABC):
     def do_parse(self, api_response) -> dict:
         raise NotImplementedError
 
+    @staticmethod
+    def result_value(result_type, value):
+        """Return ``value`` shaped for its result column.
+
+        The db-api ``result_json`` column is typed ``Json[Any]`` and expects a
+        JSON *string*, not a python object. All other result columns take the
+        raw value. Mirrors how ``parameters`` is already ``json.dumps``-ed.
+        """
+        if result_type == 2:
+            return json.dumps(value)
+        return value
+
+    @staticmethod
+    def normalize_datetime(dt_str):
+        """Parse a datetime string in any supported input format and return it
+        as an ISO-8601 UTC string ('%Y-%m-%dT%H:%M:%SZ').
+
+        Producers of the sync message are inconsistent: the DSM API sends a
+        space-separated datetime ('%Y-%m-%d %H:%M:%S') while the cron wrapper
+        (mqtt_sync_wrapper) sends ISO-8601 with 'T...Z'. Accept both.
+        """
+        formats = [
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%SZ",
+        ]
+        for fmt in formats:
+            try:
+                return datetime.strptime(dt_str, fmt).strftime("%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                pass
+        raise ValueError(f"Unsupported datetime format: {dt_str}")
+
 
 def request_with_handling(method, url, timeout=(10, 60), **kwargs):
     try:
@@ -51,6 +84,21 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         raise ExtApiRequestError(f"Network error: {e}")
 
 
+def dynamic_parameter_mapping(v):
+    if isinstance(v, bool):
+        return 3
+    elif isinstance(v, (int, float)):
+        return 0
+    elif isinstance(v, str):
+        return 1
+    elif isinstance(v, dict):
+        return 2
+    else:
+        raise ExtApiRequestError(
+            f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
+        )
+
+
 RESULT_TYPE_MAPPING = {
     0: "result_number",
     1: "result_string",
@@ -61,18 +109,6 @@ RESULT_TYPE_MAPPING = {
 
 class BoschApiSyncer(ExtApiSyncer):
 
-    def normalize_datetime(self, dt_str):
-        formats = [
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%SZ",
-        ]
-        for fmt in formats:
-            try:
-                return datetime.strptime(dt_str, fmt).strftime("%Y-%m-%dT%H:%M:%SZ")
-            except ValueError:
-                pass
-        raise ValueError(f"Unsupported datetime format: {dt_str}")
-
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         dt_from = self.normalize_datetime(content["datetime_from"])
@@ -82,9 +118,9 @@ class BoschApiSyncer(ExtApiSyncer):
         )
         if urlparse(server_url).scheme != "https":
             raise NoHttpsError(f"{server_url} is not https")
-        password = decrypt(settings["password"], get_crypt_key())
+        password = decrypt(settings["bosch_password"], get_crypt_key())
         headers = {
-            "Authorization": f"{self.basic_auth(settings['username'], password)}",
+            "Authorization": f"{self.basic_auth(settings['bosch_username'], password)}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -106,9 +142,9 @@ class BoschApiSyncer(ExtApiSyncer):
                 obs["IMEI"] = int(obs["IMEI"])  # Convert IMEI to int if present
             timestamp = obs.pop("UTC")
             for parameter, value in obs.items():
-                if value:
+                if value is not None:
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # string is tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": 0,
                         "datastream_pos": parameter,
                         "result_number": value,
@@ -133,19 +169,21 @@ class TsystemsApiSyncer(ExtApiSyncer):
         "https://moc.caritc.de/sensorstation-management/api/measurements/average"
     )
     tsytems_auth_url = (
-        "https://moc.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
+        "https://lcmm.caritc.de/auth/realms/lcmm/protocol/openid-connect/token"
     )
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        pw_dec = decrypt(settings["password"], get_crypt_key())
-        bearer_token = self.get_bearer_token(settings["username"], pw_dec)
+        dt_from = self.normalize_datetime(content["datetime_from"])
+        dt_to = self.normalize_datetime(content["datetime_to"])
+        pw_dec = decrypt(settings["tsystems_password"], get_crypt_key())
+        bearer_token = self.get_bearer_token(settings["tsystems_username"], pw_dec)
         headers = {"Accept": "*/*", "Authorization": f"Bearer {bearer_token}"}
         params = {
             "aggregationTime": "FINEST",
             "aggregationValues": "ALL_FIELDS",
-            "from": content["datetime_from"],
-            "to": content["datetime_to"],
+            "from": dt_from,
+            "to": dt_to,
         }
         response = request_with_handling(
             "GET",
@@ -165,17 +203,27 @@ class TsystemsApiSyncer(ExtApiSyncer):
             }
             timestamp = entry.pop("sendTimestamp")
             for parameter, value in entry.items():
-                if value:
+                # T-Systems attaches a per-field quality summary object
+                # (e.g. {"PM10": {"status": "VALID", ...}, ...}) alongside the
+                # scalar measurements. It is batch metadata, not an observation,
+                # so skip it instead of storing it as its own datastream.
+                if isinstance(value, dict):
+                    continue
+                if value is not None:
+                    result_type = dynamic_parameter_mapping(value)
                     body = {
-                        "result_time": self.unix_ts_to_str(timestamp),
-                        "result_type": 0,
-                        "result_number": value,
+                        "result_time": self.unix_ts_to_str(
+                            timestamp
+                        ),  # unix ts is converted to UTC datetime string
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: value,
                         "datastream_pos": parameter,
                         "parameters": json.dumps(
                             {"origin": "tsystems_data", "column_header": source}
                         ),
                     }
                     bodies.append(body)
+
         return bodies
 
     @staticmethod
@@ -359,6 +407,15 @@ class UbaApiSyncer(ExtApiSyncer):
                 )
         return measure_data
 
+    @staticmethod
+    def cet_to_utc(dt_string):
+        # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
+        dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
+        dt_cet = dt.replace(tzinfo=ZoneInfo("CET"))
+        dt_utc = dt_cet.astimezone(timezone.utc)
+
+        return dt_utc.isoformat()
+
     def parse_measure_data(self, measure_data: list, station_id: str) -> list:
         """Creates POST body from combined uba measures data"""
         bodies = []
@@ -369,9 +426,9 @@ class UbaApiSyncer(ExtApiSyncer):
         for entry in measure_data:
             if entry["timestamp"][11:13] == "24":
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
-            if entry["value"]:
+            if entry["value"] is not None:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["value"],
                     "datastream_pos": entry["measure"],
@@ -434,9 +491,9 @@ class UbaApiSyncer(ExtApiSyncer):
             }
             if entry["timestamp"][11:13] == "24":
                 entry["timestamp"] = self.adjust_datetime(entry["timestamp"])
-            if entry["airquality_index"]:
+            if entry["airquality_index"] is not None:
                 body = {
-                    "result_time": entry["timestamp"],
+                    "result_time": self.cet_to_utc(entry["timestamp"]),  # CET to UTC
                     "result_type": 0,
                     "result_number": entry["airquality_index"],
                     "datastream_pos": "AQI",
@@ -490,13 +547,15 @@ class DwdApiSyncer(ExtApiSyncer):
             obs.pop("fallback_source_ids", None)
             obs.pop("source_id", None)
             for parameter, value in obs.items():
-                if value:
+                if value is not None:
                     result_type = self.PARAMETER_MAPPING[parameter]
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # ts is tz aware with UTC: "%Y-%m-%dT%H:%M:%S%z"
                         "result_type": result_type,
                         "datastream_pos": parameter,
-                        RESULT_TYPE_MAPPING[result_type]: value,
+                        RESULT_TYPE_MAPPING[result_type]: self.result_value(
+                            result_type, value
+                        ),
                         "parameters": json.dumps(
                             {"origin": "dwd_data", "column_header": source}
                         ),
@@ -506,21 +565,6 @@ class DwdApiSyncer(ExtApiSyncer):
 
 
 class TtnApiSyncer(ExtApiSyncer):
-    @staticmethod
-    def dynamic_parameter_mapping(v):
-        if isinstance(v, bool):
-            return 3
-        elif isinstance(v, (int, float)):
-            return 0
-        elif isinstance(v, str):
-            return 1
-        elif isinstance(v, dict):
-            return 2
-        else:
-            raise ExtApiRequestError(
-                f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
-            )
-
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         url = settings["endpoint_uri"]
@@ -545,13 +589,15 @@ class TtnApiSyncer(ExtApiSyncer):
             timestamp = msg["received_at"]
             values = msg["decoded_payload"]
             for k, v in values.items():
-                if v:
-                    result_type = self.dynamic_parameter_mapping(v)
+                if v is not None:
+                    result_type = dynamic_parameter_mapping(v)
                     body = {
-                        "result_time": timestamp,
+                        "result_time": timestamp,  # tz aware with UTC: "%Y-%m-%dT%H:%M:%S.%fZ"
                         "result_type": result_type,
                         "datastream_pos": k,
-                        RESULT_TYPE_MAPPING[result_type]: v,
+                        RESULT_TYPE_MAPPING[result_type]: self.result_value(
+                            result_type, v
+                        ),
                         "parameters": json.dumps(
                             {"origin": api_response["url"], "column_header": k}
                         ),
@@ -581,7 +627,7 @@ class NmApiSyncer(ExtApiSyncer):
             "stations[]": settings["station_id"],
             "tabchoice": "revori",
             "dtype": "corr_for_efficiency",
-            "tresolution": settings["time_resolution"],
+            "tresolution": settings["time_resolution_in_minutes"],
             "force": 1,
             "date_choice": "bydate",
             "start_year": {start_date.year},
@@ -603,7 +649,7 @@ class NmApiSyncer(ExtApiSyncer):
         return {
             "response_data": rows,
             "station_id": settings["station_id"],
-            "resolution": settings["time_resolution"],
+            "resolution": settings["time_resolution_in_minutes"],
         }
 
     def do_parse(self, api_response):
@@ -614,10 +660,16 @@ class NmApiSyncer(ExtApiSyncer):
             "nm_api_url": self.nm_base_url,
         }
         for timestamp, value in api_response["response_data"]:
-            if value:
+            ts_dt = datetime.strptime(
+                timestamp, "%Y-%m-%d %H:%M:%S"
+            )  # ts is UTC but not tz aware yet
+            ts_tz = ts_dt.replace(
+                tzinfo=timezone.utc
+            )  # make ts UTC aware before DB insert
+            if value is not None:
                 bodies.append(
                     {
-                        "result_time": timestamp,
+                        "result_time": ts_tz,
                         "result_type": 0,
                         "datastream_pos": api_response["station_id"],
                         "result_number": float(value),
@@ -667,7 +719,7 @@ class SensotoApiSyncer(ExtApiSyncer):
                 "sensoto_device": entry.pop("device"),
             }
             body = {
-                "result_time": entry["end"],
+                "result_time": entry["end"],  # tz aware with UTC: "%Y-%m-%dT%H:%MZ"
                 "result_type": 0,
                 "datastream_pos": entry["sensor"],
                 "result_number": entry["v"],

@@ -11,15 +11,16 @@ from timeio.parser import (
     YdocMl417Parser,
     ChirpStackGenericParser,
     AbcParser,
-    _default_settings,
 )
+from timeio.parser.csv_parser import DEFAULT_SETTINGS as CSV_DEFAULT_SETTINGS
+from timeio.parser.json_parser import DEFAULT_SETTINGS as JSON_DEFAULT_SETTINGS
 
 
 @pytest.mark.parametrize(
     "parser_type, expected_type, expected_attrs",
     [
-        ("csvparser", CsvParser, {"settings": dict}),
-        ("jsonparser", JsonParser, {"settings": dict, "normalize_kws": dict}),
+        ("csv", CsvParser, {"settings": dict}),
+        ("json", JsonParser, {"settings": dict, "normalize_kws": dict}),
         ("campbell_cr6", CampbellCr6Parser, {}),
         ("ydoc_ml417", YdocMl417Parser, {}),
         ("chirpstack_generic", ChirpStackGenericParser, {}),
@@ -40,47 +41,43 @@ def test__get_parser__unknown_type():
         get_parser("NonExistentType", {})
 
 
-CSV_DEFAULT_SETTINGS = _default_settings[CsvParser]
-JSON_DEFAULT_SETTINGS = _default_settings[JsonParser]
-
-
 @pytest.mark.parametrize(
     "parser_type, settings, expected",
     [
-        ("csvparser", {}, CSV_DEFAULT_SETTINGS),
-        ("csvparser", None, CSV_DEFAULT_SETTINGS),
-        ("csvparser", {"newkey": "spam"}, CSV_DEFAULT_SETTINGS | {"newkey": "spam"}),
-        ("csvparser", {"header": "new"}, CSV_DEFAULT_SETTINGS | {"header": "new"}),
+        ("csv", {}, CSV_DEFAULT_SETTINGS),
+        ("csv", None, CSV_DEFAULT_SETTINGS),
+        ("csv", {"newkey": "spam"}, CSV_DEFAULT_SETTINGS | {"newkey": "spam"}),
+        ("csv", {"header": "new"}, CSV_DEFAULT_SETTINGS | {"header": "new"}),
         (
-            "csvparser",
+            "csv",
             {"pandas_read_csv": {"newkey": "spam"}},
             CSV_DEFAULT_SETTINGS | {"newkey": "spam"},
         ),
         (
-            "csvparser",
+            "csv",
             {"pandas_read_csv": {"header": "new"}},
             CSV_DEFAULT_SETTINGS | {"header": "new"},
         ),
         (
-            "csvparser",
+            "csv",
             {"header": "b", "pandas_read_csv": {"header": "a"}},
             CSV_DEFAULT_SETTINGS | {"header": "a"},
         ),
         (
-            "csvparser",
+            "csv",
             {"header": "b", "pandas_read_csv": None},
             CSV_DEFAULT_SETTINGS | {"header": "b"},
         ),
         # JSON PARSER
-        ("jsonparser", {}, JSON_DEFAULT_SETTINGS),
-        ("jsonparser", None, JSON_DEFAULT_SETTINGS),
-        ("jsonparser", {"newkey": "spam"}, JSON_DEFAULT_SETTINGS | {"newkey": "spam"}),
-        ("jsonparser", {"header": "new"}, JSON_DEFAULT_SETTINGS | {"header": "new"}),
+        ("json", {}, JSON_DEFAULT_SETTINGS),
+        ("json", None, JSON_DEFAULT_SETTINGS),
+        ("json", {"newkey": "spam"}, JSON_DEFAULT_SETTINGS | {"newkey": "spam"}),
+        ("json", {"header": "new"}, JSON_DEFAULT_SETTINGS | {"header": "new"}),
         (
             # pandas_json_normalize keywords are NOT merged with settings, in contrary
             # to pandas_read_csv with the CSV parser. Instead, the normalisation
             # keywords are stored as attribute within the class (see JsonParser.normalize_kws)
-            "jsonparser",
+            "json",
             {"pandas_json_normalize": {"newkey": "spam"}},
             JSON_DEFAULT_SETTINGS,
         ),

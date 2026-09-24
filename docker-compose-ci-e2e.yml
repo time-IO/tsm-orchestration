@@ -1,0 +1,75 @@
+---
+# CI end-to-end overlay for the Playwright login regression test.
+#
+# It starts the branch-built stack with the development Keycloak realm, whose
+# throwaway user is safe for an isolated CI environment, and runs Playwright on
+# the same Compose network. This never connects to Stage, production, or AAI.
+services:
+  proxy:
+    # The browser shares this service's network namespace, so the controlled
+    # stack does not need to claim workstation or runner host ports.
+    ports: !reset []
+
+  keycloak:
+    volumes:
+      - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+    environment:
+      # Keep the token issuer/frontchannel fixed to browser localhost, but let
+      # discovery fetched over the Compose network advertise reachable
+      # backchannel endpoints such as JWKS and userinfo on `keycloak:8081`.
+      KC_HOSTNAME: "http://localhost/keycloak"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # Keep the controlled client registration independent of a developer's
+      # existing .env values.
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: '["http://localhost/data-source-management/login-callback"]'
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "http://localhost/data-source-management"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "http://localhost/data-source-management"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "http://localhost/data-source-management"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "http://localhost/data-source-management"
+      KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: '["http://localhost"]'
+
+  dsm-api:
+    environment:
+      # Fetch discovery over the Compose network, while validating the issuer
+      # that the loopback-facing Keycloak advertises to the browser.
+      OIDC_WELL_KNOWN: "http://keycloak:${KEYCLOAK_PORT}/keycloak/realms/timeio/.well-known/openid-configuration"
+      OIDC_ISSUER: "http://localhost/keycloak/realms/timeio"
+
+  dsm-frontend:
+    environment:
+      # Make the overlay self-contained instead of relying on values expanded
+      # earlier from .env. The browser's localhost is the shared proxy network.
+      ENV_API_BASE_URL_PLACEHOLDER: "http://localhost/data-source-management/api"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "http://localhost/keycloak/realms/timeio"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management/login-callback"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "http://localhost/data-source-management"
+
+  playwright:
+    image: "mcr.microsoft.com/playwright:v1.62.0-noble"
+    # Sharing the proxy network namespace makes browser localhost reach nginx.
+    # Chromium treats loopback HTTP as a trustworthy context, so Web Crypto is
+    # available for OIDC PKCE without weakening browser security settings.
+    network_mode: "service:proxy"
+    depends_on:
+      proxy:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    environment:
+      TIMEIO_BASE_URL: "http://localhost"
+      TIMEIO_FRONTEND_PATH: "/data-source-management/"
+      # These public development-realm credentials provision a throwaway local
+      # realm; they are not Stage or production credentials.
+      TIMEIO_USERNAME: "user1"
+      TIMEIO_PASSWORD: "password"
+      # Disable network-bearing traces and all visual artifacts for this auth
+      # job; even throwaway local OIDC tokens must not become CI artifacts.
+      TIMEIO_CONTROLLED_AUTH_CI: "true"
+      CI: "true"
+    volumes:
+      - "./tests/playwright:/work"
+    working_dir: /work
+    command:
+      - "sh"
+      - "-c"
+      - "npm ci --ignore-scripts && npx playwright test --grep @auth"

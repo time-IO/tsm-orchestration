@@ -39,9 +39,9 @@ def setupMQTT(host, username, password):
 
 @click.command()
 @click.option(
-    "--configdb-dsn",
-    default="postgresql://configdb:configdb@localhost:5432/postgres",
-    envvar="CONFIGDB_DSN",
+    "--dsmdb-dsn",
+    default="postgresql://dsm_db:dsm_db@localhost:5432/postgres",
+    envvar="DSMDB_DSN",
 )
 @click.option(
     "--thing-uuid", default="0a308373-ab29-4317-b351-1443e8a1babd", envvar="THING_UUID"
@@ -56,7 +56,7 @@ def setupMQTT(host, username, password):
 @click.option("--start-date", default=None)
 @click.option("--end-date", default=None)
 def main(
-    configdb_dsn,
+    dsmdb_dsn,
     thing_uuid,
     minio_host,
     minio_user,
@@ -68,7 +68,9 @@ def main(
     start_date,
     end_date,
 ):
-    store = Thing.from_uuid(thing_uuid, dsn=configdb_dsn).raw_data_storage
+    thing = Thing.from_uuid(thing_uuid, dsn=dsmdb_dsn)
+    store = thing.raw_data_storage
+    bucket = store.bucket
 
     minio = Minio(
         endpoint=minio_host,
@@ -78,7 +80,6 @@ def main(
     )
     mqtt = setupMQTT(mqtt_host, mqtt_user, mqtt_password)
 
-    bucket = store.bucket
     fnpattern_from_thing = store.filename_pattern
     fnpattern_from_job = filename_pattern
     if start_date:

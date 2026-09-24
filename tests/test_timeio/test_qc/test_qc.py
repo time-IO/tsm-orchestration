@@ -150,13 +150,16 @@ def mock_dbapi():
 
 
 @pytest.mark.parametrize(
-    "thing_id, expected",
+    "thing_uuid, expected",
     [
-        (1, ("Static-T1", "Static-T2", "Static-P1", "Dynamic-P1")),
-        (2, ("Dynamic-T1", "Dynamic-T2")),
+        (
+            "3e23c121-6a6e-48ac-9fb6-9d9a5bf06348",
+            ("Static-T1", "Static-T2", "Static-P1", "Dynamic-P1"),
+        ),
+        ("f3691b96-aca1-4585-95bf-6ea4c611503c", ("Dynamic-T1", "Dynamic-T2")),
     ],
 )
-def test_collect_tests(thing_id, expected):
+def test_collect_tests(thing_uuid, expected):
     qc_functions = [
         QcFunction(
             "Static-T1",
@@ -175,7 +178,7 @@ def test_collect_tests(thing_id, expected):
             func_name="processGeneric",
             fields=[T1S33, T1S36],
             targets=[NEW],
-            params={"func": "(T1S33 + T1S36)/2"},
+            params={"function": "(T1S33 + T1S36)/2"},
         ),
         QcFunction(
             "Dynamic-T1",
@@ -193,7 +196,7 @@ def test_collect_tests(thing_id, expected):
         ),
     ]
 
-    tests = filter_qc_functions(qc_functions, thing_id)
+    tests = filter_qc_functions(qc_functions, thing_uuid)
     assert set(set([t.name for t in tests])) == set(expected)
 
 
@@ -250,7 +253,7 @@ def test_qc_function_execution(func, data_in, data_out):
                 func_name="processGeneric",
                 fields=[T1S33, T1S36],
                 targets=[NEW],
-                params={"func": "(T1S33 + T1S36) / 2"},
+                params={"function": "(T1S33 + T1S36) / 2"},
             ),
             {
                 T1S33: [900, 910, 920, 930],
@@ -296,7 +299,7 @@ def test_immutable_stream_overwrite(mock_dbapi):
         "",
         func_name="processGeneric",
         fields=[T1S33],
-        params={"func": "T1S33 + 5"},
+        params={"function": "T1S33 + 5"},
     )
 
     data = read_stream_data(mock_dbapi, streams=[T1S33])
@@ -347,7 +350,7 @@ def test_processing_workflow(local_dbapi):
         func_name="processGeneric",
         fields=[T1S27],
         targets=[NEW],
-        params={"func": "T1S27 + 5"},
+        params={"function": "T1S27 + 5"},
     )
 
     data = read_stream_data(local_dbapi, streams=fields)

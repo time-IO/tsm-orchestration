@@ -173,6 +173,9 @@ configure the mosquitto server on runtime without to reload it when things chang
 
 For dynamic acls from database: https://gist.github.com/TheAshwanik/7ed2a3032ca16841bcaa
 
+## Data source management
+
+For information and hints on data source management including development setup, visit [its separate README](/data-source-management/README.md).
 
 ## Minio
 
@@ -248,7 +251,6 @@ Please note that this will only work if you have the other TSM respositories in 
 TSM_DIRECTORY (can be any dir)
 ├── tsm-orchestration
 ├── tsm-dispatcher
-├── tsm-frontend
 ├── tsm-basic-demo-scheduler
 ├── tsm-extractor
 └── tsm-ufz-tsmdl

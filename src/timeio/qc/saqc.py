@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 
-import warnings
+import logging
 
-import ast
 import numpy as np
 import pandas as pd
 
 import saqc
-from saqc.parsing.visitor import ConfigFunctionParser
+from saqc.funcs.generic import compileGeneric
 
 from timeio.qc.qcfunction import QcFunction, QcFunctionStream
+
+logger = logging.getLogger("run-quality-control")
 
 try:
     import tsm_user_code  # noqa, this registers user functions on SaQC
 except ImportError:
-    warnings.warn("could not import module 'tsm_user_code'")
+    logger.warning("could not import module 'tsm_user_code'")
 
 QUALITY_COLUMNS = ["annotationType", "annotation", "measure", "userLabel", "version"]
 #                  "saqc"             flag         func       label        saqc.version
+
+# used to identify which function calls are allowed to overwrite a `target`,
+# TODO: use the new SaQC function mode variable to infer programmatically
+PROCESSING_FUNCTIONS = {"processGeneric", "rolling"}
+
+saqc.options.field_target = "append"
 
 
 class STAMPLATEScheme(saqc.FloatScheme):
@@ -99,7 +106,7 @@ class STAMPLATEScheme(saqc.FloatScheme):
                 valid = (history.hist[col] != UNFLAGGED) & history.hist[col].notna()
                 meta = history.meta[col]
                 df.loc[valid, "measure"] = meta["func"]
-                df.loc[valid, "userLabel"] = meta["kwargs"].get("label", None)
+                df.loc[valid, "userLabel"] = meta["kwargs"].get("label") or ""
                 series = pd.Series(index=df.index, dtype=object)
                 if not df.empty:
                     series = df.apply(self.toSTAannotations, axis=1)
@@ -136,37 +143,41 @@ class SaQCWrapper:
         return out
 
     def execute(self, func: QcFunction):
+        # NOTE:
+        # This is a (temporary) safeguard as SaQC is currently failing hard when
+        # appending to an empty Datastream. If this issue is solved in SaQC we
+        # should remove this block.
+        # https://git.ufz.de/rdm-software/saqc/-/work_items/546
+        empty_targets = [
+            t
+            for t in func.target_names
+            if t in self._qc.columns and self._qc.data[t].empty
+        ]
+        if empty_targets:
+            logger.warning(
+                f"skipping '{func.func_name}' as it is targeting the empty datastream(s) {empty_targets}"
+            )
+            return
+
         # add targets
         for stream in func.targets:
             self._streams[stream.alias] = stream
 
         saqc_func = getattr(self._qc, func.func_name)
-        if func.func_name == "flagRange":
-            # NOTE: needed to work around a SaQC-Bug,
-            #       that will be fixed in the next release
-            # TODO: remove entire block after the bug is fixed
-            for f in func.field_names:
-                self._qc = saqc_func(field=f, target=func.target_names, **func.params)
-            return
 
         if func.func_name.endswith("Generic"):
-            # NOTE:
-            # The generic function parser is not as well exposed in
-            # SaQC as is could be, that's why we need to go the extra
-            # mile and built a valid saqc config-file function
-            func_string = f"{func.func_name}({','.join('='.join(item) for item in func.params.items())})"
-            tree = ast.parse(func_string, mode="eval").body
-            _, kwargs = ConfigFunctionParser().parse(tree)
-            func.params["func"] = kwargs["func"]
+            func.params["func"] = compileGeneric(func.params.pop("function"))
+
         self._qc = saqc_func(
             field=func.field_names, target=func.target_names, **func.params
         )
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
         if stream in self._input_data:
-            return not self._qc._data[stream.alias].equals(
-                self._input_data[stream]["data"]
-            )
+            called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
+            for func_name in called_qc_funcs:
+                if func_name in PROCESSING_FUNCTIONS:
+                    return True
         return False
 
     def index_is_modified(self, stream: QcFunctionStream) -> bool:
