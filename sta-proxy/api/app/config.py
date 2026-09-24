@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     FROST_TIMEOUT: float = 30.0
     FROST_ENDPOINTS_PATH: str = "/"
     BASE_URL: str = "http://localhost"
+    DSM_API_URL: str = "http://dsm-api:8000"
 
     @computed_field  # type: ignore[prop-decorator]
     @property
