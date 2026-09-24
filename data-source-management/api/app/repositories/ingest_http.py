@@ -84,6 +84,7 @@ class IngestHttpRepository:
         )
 
         self.check_for_existing_name_create(payload.name, payload.permission_group_id)
+        self.check_for_existing_path_create(payload.path_for_posts)
 
         try:
             extra_data["ingest_type"] = IngestType.HTTP
@@ -127,6 +128,7 @@ class IngestHttpRepository:
         self.check_for_existing_name_update(
             payload.name, ingest.permission_group_id, ingest.id
         )
+        self.check_for_existing_path_update(payload.path_for_posts, ingest_id)
 
         try:
 
@@ -211,6 +213,38 @@ class IngestHttpRepository:
         existing = self.session.exec(statement).scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
+
+    def check_for_existing_path_create(self, path_for_posts):
+        # path_for_posts feeds the global Bento HTTP route, so - unlike name -
+        # this check is instance-wide, not scoped to a permission group, and
+        # exact-match (case-sensitive), matching how the route is compared.
+        if not path_for_posts:
+            return
+
+        statement = select(self.model).where(
+            self.model.path_for_posts == path_for_posts
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="This path for posts is already in use."
+            )
+
+    def check_for_existing_path_update(self, path_for_posts, entity_id):
+        if not path_for_posts:
+            return
+
+        statement = select(self.model).where(
+            self.model.path_for_posts == path_for_posts,
+            self.model.ingest_id != entity_id,
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="This path for posts is already in use."
+            )
 
     def to_flat(self, entity: IngestHttp) -> IngestHttpRead:
         ing = entity.ingest

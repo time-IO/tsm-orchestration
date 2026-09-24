@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship, Column
+from sqlmodel import SQLModel, Field, Relationship, Column, Index
 from typing import Optional
 from encryption import EncryptedType
 from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
@@ -33,6 +33,17 @@ class IngestHttpUpdate(IngestUpdate):
 
 class IngestHttp(SQLModel, table=True):
     __tablename__ = "ingest_http"
+    __table_args__ = (
+        # path_for_posts feeds the global Bento HTTP route (/http-ingest/{path}),
+        # so it must be unique instance-wide. NULL is excluded since
+        # setup_bento.py falls back to the (already unique) thing UUID then.
+        Index(
+            "ix_ingest_http_path_for_posts",
+            "path_for_posts",
+            unique=True,
+            postgresql_where=Column("path_for_posts").isnot(None),
+        ),
+    )
 
     ingest_id: int = Field(
         foreign_key="ingest.id", primary_key=True, ondelete="CASCADE"

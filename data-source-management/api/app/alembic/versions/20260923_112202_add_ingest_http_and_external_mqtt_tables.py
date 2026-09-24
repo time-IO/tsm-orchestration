@@ -58,6 +58,16 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("ingest_id"),
     )
+    # path_for_posts feeds the global Bento HTTP route (/http-ingest/{path}),
+    # so it must be unique instance-wide. NULL is excluded: setup_bento.py
+    # falls back to the thing's UUID (already unique) when no path is set.
+    op.create_index(
+        "ix_ingest_http_path_for_posts",
+        "ingest_http",
+        ["path_for_posts"],
+        unique=True,
+        postgresql_where=sa.text("path_for_posts IS NOT NULL"),
+    )
     op.drop_constraint("ck_ingest_type", "ingest", type_="check")
     op.create_check_constraint(
         "ck_ingest_type",
@@ -74,5 +84,6 @@ def downgrade() -> None:
         "ingest",
         "ingest_type IN ('mqtt','sftp','external_api', 'external_sftp')",
     )
+    op.drop_index("ix_ingest_http_path_for_posts", table_name="ingest_http")
     op.drop_table("ingest_http")
     op.drop_table("ingest_external_mqtt")
