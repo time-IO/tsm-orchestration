@@ -67,7 +67,7 @@ async function fetchEndpoints() {
   loading.value = true;
   try {
     const response = await API.endpoints.getList();
-    endpoints.value = response.data.endpoints;
+    endpoints.value = response.data.endpoints ?? [];
   } catch {
     $q.notify({
       position: 'top',
