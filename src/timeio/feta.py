@@ -978,7 +978,9 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
                 left join {cls._schema}.ingest_http h on i.id = h.ingest_id
                 where es.bucket_name = %s or s.bucket_name = %s or h.bucket_name = %s"""
         conn = cls._get_connection(dsn, **kwargs)
-        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name, bucket_name)):
+        if not (
+            res := cls._fetchall(conn, query, bucket_name, bucket_name, bucket_name)
+        ):
             raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
         if len(res) > 1:
             warnings.warn(
