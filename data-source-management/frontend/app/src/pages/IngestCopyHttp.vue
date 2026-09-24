@@ -56,7 +56,9 @@ onMounted(async () => {
         name: `${data.name} - Copy`,
         description: data.description,
         parser_id: data.parser_id,
-        path_for_posts: data.path_for_posts,
+        // path_for_posts must be unique, so don't carry it over - leave it
+        // empty and let the copy fall back to its own UUID as the path.
+        path_for_posts: null,
         file_type: data.file_type,
         api_key: null,
         enabled: data.enabled,

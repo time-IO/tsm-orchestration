@@ -68,13 +68,13 @@
                 filled
                 class="q-mb-md"
                 v-model="formData.path_for_posts"
-                label="Path for Posts *"
-                :rules="[(val) => !!val || 'Path for Posts is required']"
+                label="Path for Posts"
+                hint="Leave empty to use this ingest's UUID as the path instead."
               >
                 <template #append>
                   <help-button
                     titleHelp="Path for Posts"
-                    textHelp="The HTTP path endpoint where data will be posted. For example, /api/v1/data or /ingest."
+                    textHelp="The HTTP path endpoint where data will be posted, e.g. /api/v1/data or /ingest. Must be unique across all HTTP ingests. If left empty, the ingest's UUID is used as the path instead."
                   />
                 </template>
               </q-input>

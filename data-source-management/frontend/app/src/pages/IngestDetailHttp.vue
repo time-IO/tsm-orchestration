@@ -55,9 +55,15 @@
                   <q-item-section>
                     <q-item-label>Path for Posts</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ item.path_for_posts }}</q-item-label>
-                      <copy-btn title="Copy path for posts" :text-to-copy="item.path_for_posts" />
+                      <q-item-label caption>{{ item.path_for_posts || item.uuid }}</q-item-label>
+                      <copy-btn
+                        title="Copy path for posts"
+                        :text-to-copy="item.path_for_posts || item.uuid"
+                      />
                     </div>
+                    <q-item-label v-if="!item.path_for_posts" caption class="text-grey-7">
+                      No path set — the ingest's UUID is used instead.
+                    </q-item-label>
                   </q-item-section>
                 </q-item>
 
