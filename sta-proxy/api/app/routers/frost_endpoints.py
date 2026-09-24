@@ -18,5 +18,5 @@ router = APIRouter(
     summary="Returns the list of FROST endpoints with public urls",
 )
 @router.get("/", include_in_schema=False)
-async def list_endpoints() -> FrostEndpointsResponse:
-    return await frost_endpoints_service()
+async def list_endpoints(q: str | None = None) -> FrostEndpointsResponse:
+    return await frost_endpoints_service(q=q)

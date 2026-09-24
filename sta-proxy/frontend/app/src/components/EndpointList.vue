@@ -1,5 +1,20 @@
 <template>
   <div class="q-pa-md">
+   <q-input
+      v-model="searchQuery"
+      debounce="300"
+      outlined
+      dense
+      clearable
+      placeholder="Filter endpoints..."
+      class="q-mb-md"
+      style="max-width: 400px"
+   >
+    <template #prepend>
+      <q-icon name="search" />
+    </template>
+  </q-input>
+
     <template v-if="loading">
       <q-item v-for="n in 3" :key="n" style="max-width: 300px">
         <q-item-section avatar>
@@ -49,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { API } from '@/services';
 import type { FrostEndpoint } from '@/services/endpoints/types';
@@ -58,15 +73,21 @@ const $q = useQuasar();
 
 const loading = ref(true);
 const endpoints = ref<FrostEndpoint[]>([]);
+const searchQuery = ref('');
+
 
 onMounted(async () => {
   await fetchEndpoints();
 });
 
+ watch(searchQuery, async () => {
+   await fetchEndpoints();
+ });
+
 async function fetchEndpoints() {
   loading.value = true;
   try {
-    const response = await API.endpoints.getList();
+      const response = await API.endpoints.getList(searchQuery.value || undefined);
     endpoints.value = response.data.endpoints ?? [];
   } catch {
     $q.notify({

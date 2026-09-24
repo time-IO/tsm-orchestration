@@ -29,7 +29,18 @@ def rewrite_endpoint(frost_endpoint: FrostEndpoint) -> FrostEndpoint:
     return frost_endpoint
 
 
-async def frost_endpoints_service() -> FrostEndpointsResponse:
+def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
+    q = q.lower()
+    fields = [
+        endpoint.name,
+        endpoint.displayName,
+        endpoint.group,
+        endpoint.project or "",
+    ]
+    return any(q in field.lower() for field in fields)
+
+
+async def frost_endpoints_service(q: str | None = None) -> FrostEndpointsResponse:
     try:
         upstream = await get_frost_client().get(
             settings.FROST_ENDPOINTS_PATH,
@@ -48,6 +59,9 @@ async def frost_endpoints_service() -> FrostEndpointsResponse:
         raise HTTPException(status_code=502, detail="FROST endpoints not available")
 
     endpoints = [rewrite_endpoint(endpoint) for endpoint in endpoints]
+
+    if q:
+        endpoints = [e for e in endpoints if matches_query(e, q)]
 
     logger.debug("Returning %s FROST endpoints", len(endpoints))
     return FrostEndpointsResponse(endpoints=endpoints)
