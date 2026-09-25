@@ -48,7 +48,12 @@
           </q-item-section>
 
           <q-item-section>
-            <q-item-label>{{ endpoint.displayName }}</q-item-label>
+            <q-item-label>
+              {{ endpoint.displayName }}
+              <q-badge v-if="endpoint.is_own" color="positive" class="q-ml-sm">
+                Your project
+              </q-badge>
+            </q-item-label>
             <q-item-label caption>{{ endpoint.url }}</q-item-label>
           </q-item-section>
 

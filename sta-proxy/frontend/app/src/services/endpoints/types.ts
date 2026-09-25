@@ -4,6 +4,7 @@ export type FrostEndpoint = {
   group: string;
   project: string | null;
   url: string;
+  is_own: boolean;
 };
 
 export type FrostEndpointsResponse = {
