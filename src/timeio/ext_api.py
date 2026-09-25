@@ -99,6 +99,13 @@ def dynamic_parameter_mapping(v):
         )
 
 
+def unix_ts_to_str(ts_unix: int) -> str:
+    """Convert unix timestamp to datetime string"""
+    dt = datetime.fromtimestamp(ts_unix, tz=timezone.utc)
+    ts_str = dt.strftime("%Y-%m-%d %H:%M:%S%z")
+    return ts_str
+
+
 RESULT_TYPE_MAPPING = {
     0: "result_number",
     1: "result_string",
@@ -212,7 +219,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 if value is not None:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
-                        "result_time": self.unix_ts_to_str(
+                        "result_time": unix_ts_to_str(
                             timestamp
                         ),  # unix ts is converted to UTC datetime string
                         "result_type": result_type,
@@ -225,13 +232,6 @@ class TsystemsApiSyncer(ExtApiSyncer):
                     bodies.append(body)
 
         return bodies
-
-    @staticmethod
-    def unix_ts_to_str(ts_unix: int) -> str:
-        """Convert unix timestamp to datetime string"""
-        dt = datetime.fromtimestamp(ts_unix, tz=timezone.utc)
-        ts_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return ts_str
 
     def get_bearer_token(self, username: str, password: str) -> str:
         """Get bearer token for API authentication"""
@@ -747,23 +747,48 @@ class SensotoApiSyncer(ExtApiSyncer):
 
 
 class ZentraApiSyncer(ExtApiSyncer):
-    base_url = "https://api.zentracloud.io/v5/devices"
+    base_url = "https://zentracloud.com/api/v3/get_readings/"
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        api_key = decrypt(settings["api_key"], get_crypt_key())
-        headers = {
-            "X-API-Key": api_key,
-            "Accept": "*/*",
-        }
         params = {
-            "start_datetime": content["datetime_from"],
-            "end_datetime": content["datetime_to"],
-            "units": settings["units"],
+            "device_sn": settings.device,
+            "start_date": content["datetime_from"],
+            "end_date": content["datetime_to"],
+            "output_format": "json",
+            "per_page": 2000,
         }
-        url = f"{self.base_url}/{settings['device_id']}/data"
-        response = request_with_handling("GET", url, headers=headers, params=params)
+        token = f"Token {decrypt(settings["token"], get_crypt_key())}"
+        headers = {"Authorization": token}
+        response = request_with_handling(
+            "GET", self.base_url, params=params, headers=headers
+        )
+
         return response.json()
 
     def do_parse(self, api_response):
-        pass
+        bodies = []
+        for param, v in api_response.json()["data"].items():
+            data = v[0]
+            source = {
+                "device_name": data["metadata"]["device_name"],
+                "sensor_name": data["metadata"]["sensor_name"],
+                "units": data["metadata"]["units"],
+            }
+            for entry in data["readings"]:
+                if entry["value"] is not None:
+                    result_type = dynamic_parameter_mapping(entry["value"])
+                    body = {
+                        "result_time": unix_ts_to_str(
+                            entry["timestamp_utc"]
+                        ),  # timestamp is UTC aware
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: entry["value"],
+                        "datastream_pos": param,
+                        "parameters": json.dumps(
+                            {"origin": "zentra_api", "column_header": source},
+                            ensure_ascii=False,
+                        ),
+                    }
+                    bodies.append(body)
+            return bodies
