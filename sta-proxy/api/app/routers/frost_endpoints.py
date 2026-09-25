@@ -19,6 +19,10 @@ router = APIRouter(
 )
 @router.get("/", include_in_schema=False)
 async def list_endpoints(
-    q: str | None = None, authorization: str | None = Header(default=None)
+    q: str | None = None,
+    authorization: str | None = Header(default=None),
+    ingest: str | None = None,
 ) -> FrostEndpointsResponse:
-    return await frost_endpoints_service(q=q, authorization=authorization)
+    return await frost_endpoints_service(
+        q=q, authorization=authorization, ingest=ingest
+    )

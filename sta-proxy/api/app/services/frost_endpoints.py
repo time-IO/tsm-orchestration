@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from config import settings
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import get_frost_client
-from services.permission_groups import fetch_own_database_usernames
+from services.permission_groups import fetch_own_database_usernames, search_own_ingests
 
 logger = logging.getLogger("app.services.frost_endpoints")
 
@@ -65,7 +65,9 @@ def parse_frost_name(name: str) -> FrostEndpoint:
 
 
 async def frost_endpoints_service(
-    q: str | None = None, authorization: str | None = None
+    q: str | None = None,
+    authorization: str | None = None,
+    ingest: str | None = None,
 ) -> FrostEndpointsResponse:
     try:
         upstream = await get_frost_client().get(
@@ -97,6 +99,13 @@ async def frost_endpoints_service(
         missing_usernames = own_usernames - existing_names
         for username in missing_usernames:
             endpoints.append(parse_frost_name(username))
+
+        # Sort own endpoints first, keeping their relative order otherwise
+        endpoints.sort(key=lambda e: not e.is_own)
+
+        if ingest:
+            ingest_usernames = await search_own_ingests(authorization, ingest)
+            endpoints = [e for e in endpoints if e.name in ingest_usernames]
 
     if q:
         endpoints = [e for e in endpoints if matches_query(e, q)]
