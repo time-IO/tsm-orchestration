@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md">
-   <q-input
+    <q-input
       v-model="searchQuery"
       debounce="300"
       outlined
@@ -9,11 +9,27 @@
       placeholder="Filter endpoints..."
       class="q-mb-md"
       style="max-width: 400px"
-   >
-    <template #prepend>
-      <q-icon name="search" />
-    </template>
-  </q-input>
+    >
+      <template #prepend>
+        <q-icon name="search" />
+      </template>
+    </q-input>
+
+    <q-input
+      v-if="authStore.isAuthenticated"
+      v-model="ingestQuery"
+      debounce="300"
+      outlined
+      dense
+      clearable
+      placeholder="Filter by ingest name..."
+      class="q-mb-md"
+      style="max-width: 400px"
+    >
+      <template #prepend>
+        <q-icon name="filter_alt" />
+      </template>
+    </q-input>
 
     <template v-if="loading">
       <q-item v-for="n in 3" :key="n" style="max-width: 300px">
@@ -73,26 +89,32 @@ import { onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { API } from '@/services';
 import type { FrostEndpoint } from '@/services/endpoints/types';
+import { useAuthStore } from '@/stores/authStore';
 
 const $q = useQuasar();
+const authStore = useAuthStore();
 
 const loading = ref(true);
 const endpoints = ref<FrostEndpoint[]>([]);
 const searchQuery = ref('');
+const ingestQuery = ref('');
 
 
 onMounted(async () => {
   await fetchEndpoints();
 });
 
- watch(searchQuery, async () => {
+ watch([searchQuery, ingestQuery], async () => {
    await fetchEndpoints();
  });
 
 async function fetchEndpoints() {
   loading.value = true;
   try {
-      const response = await API.endpoints.getList(searchQuery.value || undefined);
+      const response = await API.endpoints.getList(
+        searchQuery.value || undefined,
+         ingestQuery.value || undefined,
+      );
     endpoints.value = response.data.endpoints ?? [];
   } catch {
     $q.notify({
