@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from config import settings
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import get_frost_client
+from services.permission_groups import fetch_own_database_usernames
 
 logger = logging.getLogger("app.services.frost_endpoints")
 
@@ -40,7 +41,32 @@ def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
     return any(q in field.lower() for field in fields)
 
 
-async def frost_endpoints_service(q: str | None = None) -> FrostEndpointsResponse:
+def parse_frost_name(name: str) -> FrostEndpoint:
+    """Build a FrostEndpoint from an existing FROST/database schema name,
+    parsing out group/project/displayName the same way the FROST
+    endpoints JSP does when listing its webapp directories."""
+    first = name.find("_")
+    second = name.find("_", first + 1) if first != -1 else -1
+
+    group = name[:first] if first != -1 else name
+    project = name[first + 1 : second] if second != -1 else None
+    display_name = f"{group} {project}" if project else group
+
+    url = f"{settings.BASE_URL.rstrip('/')}/sta/{name}/v1.1"
+
+    return FrostEndpoint(
+        name=name,
+        displayName=display_name,
+        group=group,
+        project=project,
+        url=url,
+        is_own=True,
+    )
+
+
+async def frost_endpoints_service(
+    q: str | None = None, authorization: str | None = None
+) -> FrostEndpointsResponse:
     try:
         upstream = await get_frost_client().get(
             settings.FROST_ENDPOINTS_PATH,
@@ -59,6 +85,18 @@ async def frost_endpoints_service(q: str | None = None) -> FrostEndpointsRespons
         raise HTTPException(status_code=502, detail="FROST endpoints not available")
 
     endpoints = [rewrite_endpoint(endpoint) for endpoint in endpoints]
+
+    if authorization:
+        own_usernames = await fetch_own_database_usernames(authorization)
+        existing_names = {endpoint.name for endpoint in endpoints}
+
+        for endpoint in endpoints:
+            if endpoint.name in own_usernames:
+                endpoint.is_own = True
+
+        missing_usernames = own_usernames - existing_names
+        for username in missing_usernames:
+            endpoints.append(parse_frost_name(username))
 
     if q:
         endpoints = [e for e in endpoints if matches_query(e, q)]

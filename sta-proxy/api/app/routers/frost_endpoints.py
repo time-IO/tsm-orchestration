@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 from models import FrostEndpointsResponse
 from services import frost_endpoints_service
 
@@ -18,5 +18,7 @@ router = APIRouter(
     summary="Returns the list of FROST endpoints with public urls",
 )
 @router.get("/", include_in_schema=False)
-async def list_endpoints(q: str | None = None) -> FrostEndpointsResponse:
-    return await frost_endpoints_service(q=q)
+async def list_endpoints(
+    q: str | None = None, authorization: str | None = Header(default=None)
+) -> FrostEndpointsResponse:
+    return await frost_endpoints_service(q=q, authorization=authorization)
