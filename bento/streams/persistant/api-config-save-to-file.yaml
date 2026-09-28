@@ -41,7 +41,7 @@ pipeline:
         meta verb = $verb
         meta req_path = $req_path
         # same path you used to persist
-        meta file_path = "/data/streams" + $req_path + ".json"
+        meta file_path = "/data" + $req_path + ".json"
 
     - switch:
         - check: 'meta("verb") == "DELETE"'
