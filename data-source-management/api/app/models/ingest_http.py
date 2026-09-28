@@ -33,6 +33,7 @@ class IngestHttpRead(IngestRead):
     bucket_name: str
     bucket_username: str
     bucket_password: str
+    parser: dict
 
 
 class IngestHttpCreate(IngestCreate):

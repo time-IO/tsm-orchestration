@@ -15,6 +15,7 @@ class IngestExternalMqttRead(IngestRead):
     external_mqtt_topic: str
     enabled: bool
     internal_mqtt_topic: Optional[str] = None
+    parser: dict
 
 
 class IngestExternalMqttCreate(IngestCreate):
