@@ -120,6 +120,31 @@ def sync_thing(thing_uuid: str):
 
 
 @cli.command()
+@click.argument("thing_uuid")
+@click.option(
+    "--days",
+    default=7,
+    show_default=True,
+    help="Look-back window in days, ending now, independent of the thing's configured sync interval.",
+)
+def resync_range(thing_uuid: str, days: int):
+    """Manually (re-)trigger an ext-api sync over a custom look-back window,
+    e.g. for a periodic full-week resync alongside the regular cron job."""
+    thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("DSMDB_DSN"))
+    if thing.ext_api is None:
+        raise click.ClickException(f"Thing '{thing_uuid}' has no ext_api configured")
+    now_utc = datetime.now(timezone.utc)
+    datetime_from = (now_utc - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    datetime_to = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+    message = {
+        "thing": thing.uuid,
+        "datetime_from": datetime_from,
+        "datetime_to": datetime_to,
+    }
+    publish_single(get_envvar("API_SYNC_TOPIC"), json.dumps(message))
+
+
+@cli.command()
 @click.argument("origin")
 def sync_sms(origin: str):
     message = {"origin": origin}
