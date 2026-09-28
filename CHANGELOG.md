@@ -17,7 +17,7 @@ When adding a changelog entry, ensure the following:
 - Grafana ingest dashboards show linked STA datastreams in their own row, with a link to manage datastream linkings in the SMS ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
-- Backend CLI command for ops to manually resync an ext-api thing over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
+- Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
