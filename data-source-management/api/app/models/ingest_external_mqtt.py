@@ -7,7 +7,7 @@ from .ingest import Ingest, IngestRead, IngestCreate, IngestUpdate
 class IngestExternalMqttRead(IngestRead):
     external_mqtt_address: str
     external_mqtt_port: int
-    external_mqtt_username: str
+    external_mqtt_username: Optional[str] = None
     external_mqtt_password: Optional[str] = None
     external_mqtt_ca_cert: Optional[str] = None
     external_mqtt_client_cert: Optional[str] = None
@@ -51,7 +51,10 @@ class IngestExternalMqtt(SQLModel, table=True):
 
     external_mqtt_address: str
     external_mqtt_port: int
-    external_mqtt_username: str
+    external_mqtt_username: Optional[str] = Field(
+        default=None,
+        sa_column=Column("external_mqtt_username", nullable=True),
+    )
     external_mqtt_password: Optional[str] = Field(
         default=None,
         sa_column=Column("external_mqtt_password", EncryptedType, nullable=True),

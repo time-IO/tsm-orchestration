@@ -30,7 +30,7 @@ def upgrade() -> None:
         ),
         sa.Column("external_mqtt_port", sa.Integer(), nullable=False),
         sa.Column(
-            "external_mqtt_username", sqlmodel.sql.sqltypes.AutoString(), nullable=False
+            "external_mqtt_username", sqlmodel.sql.sqltypes.AutoString(), nullable=True
         ),
         sa.Column("external_mqtt_password", EncryptedType(), nullable=True),
         sa.Column("external_mqtt_ca_cert", EncryptedType(), nullable=True),
