@@ -100,6 +100,7 @@
                 v-model="formData.external_mqtt_topic"
                 label="MQTT Topic *"
                 :rules="[(val) => !!val || 'MQTT Topic is required']"
+                hint="Be careful with using wildcard (#), as it may combine data from multiple sources."
               >
                 <template #append>
                   <help-button
