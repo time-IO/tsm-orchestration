@@ -61,11 +61,11 @@ onMounted(async () => {
         external_mqtt_address: data.external_mqtt_address,
         external_mqtt_port: data.external_mqtt_port,
         external_mqtt_topic: data.external_mqtt_topic,
-        external_mqtt_username: null,
-        external_mqtt_password: null,
-        external_mqtt_ca_cert: null,
-        external_mqtt_client_cert: null,
-        external_mqtt_client_key: null,
+        external_mqtt_username: data.external_mqtt_username,
+        external_mqtt_password: data.external_mqtt_password,
+        external_mqtt_ca_cert: data.external_mqtt_ca_cert,
+        external_mqtt_client_cert: data.external_mqtt_client_cert,
+        external_mqtt_client_key: data.external_mqtt_client_key,
         enabled: data.enabled,
       };
     } catch {
