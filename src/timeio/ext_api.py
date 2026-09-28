@@ -752,13 +752,13 @@ class ZentraApiSyncer(ExtApiSyncer):
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         params = {
-            "device_sn": settings.device,
+            "device_sn": settings["device_sn"],
             "start_date": content["datetime_from"],
             "end_date": content["datetime_to"],
             "output_format": "json",
             "per_page": 2000,
         }
-        token = f"Token {decrypt(settings["token"], get_crypt_key())}"
+        token = f"Token {decrypt(settings['api_key'], get_crypt_key())}"
         headers = {"Authorization": token}
         response = request_with_handling(
             "GET", self.base_url, params=params, headers=headers
@@ -768,7 +768,7 @@ class ZentraApiSyncer(ExtApiSyncer):
 
     def do_parse(self, api_response):
         bodies = []
-        for param, v in api_response.json()["data"].items():
+        for param, v in api_response["data"].items():
             data = v[0]
             source = {
                 "device_name": data["metadata"]["device_name"],
@@ -791,4 +791,4 @@ class ZentraApiSyncer(ExtApiSyncer):
                         ),
                     }
                     bodies.append(body)
-            return bodies
+        return bodies

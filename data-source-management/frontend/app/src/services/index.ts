@@ -5,6 +5,7 @@ import ingestExternalApiUbaController from '@/services/ingest_external_api_uba';
 import ingestExternalApiTheThingsNetworkController from '@/services/ingest_external_api_the_things_network';
 import ingestExternalApiTSystemsController from '@/services/ingest_external_api_tsystems';
 import ingestExternalApiSensotoController from '@/services/ingest_external_api_sensoto';
+import ingestExternalApiZentraController from '@/services/ingest_external_api_zentra';
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
 import ingestSftpController from '@/services/ingest_sftp';
@@ -41,6 +42,7 @@ export const API = {
   ingestExternalApiTheThingsNetwork: ingestExternalApiTheThingsNetworkController,
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiSensoto: ingestExternalApiSensotoController,
+  ingestExternalApiZentra: ingestExternalApiZentraController,
   ingestMqtt: ingestMqttController,
   ingestJournal: ingestJournalController,
   ingestSftp: ingestSftpController,

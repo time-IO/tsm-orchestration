@@ -218,6 +218,7 @@ const topNavigation: NavEntry[] = [
       { label: 'TSystems', route: '/ingest/new/external-api/tsystems' },
       { label: 'The Things Network', route: '/ingest/new/external-api/ttn' },
       { label: 'Umweltbundesamt (UBA)', route: '/ingest/new/external-api/uba' },
+      { label: 'Zentra', route: '/ingest/new/external-api/zentra' },
     ],
   },
   {

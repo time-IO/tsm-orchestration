@@ -14,6 +14,10 @@ import IngestNewExternalApiTtn from '@/pages/IngestNewExternalApiTtn.vue';
 import IngestNewExternalApiUba from '@/pages/IngestNewExternalApiUba.vue';
 import IngestDetailExternalApiUba from '@/pages/IngestDetailExternalApiUba.vue';
 import IngestEditExternalApiUba from '@/pages/IngestEditExternalApiUba.vue';
+import IngestDetailExternalApiZentra from '@/pages/IngestDetailExternalApiZentra.vue';
+import IngestCopyExternalApiZentra from '@/pages/IngestCopyExternalApiZentra.vue';
+import IngestNewExternalApiZentra from '@/pages/IngestNewExternalApiZentra.vue';
+import IngestEditExternalApiZentra from '@/pages/IngestEditExternalApiZentra.vue';
 import ParserOverview from '@/pages/ParserOverview.vue';
 import ParserNew from '@/pages/ParserNew.vue';
 import ParserNewCsv from '@/pages/ParserNewCsv.vue';
@@ -138,6 +142,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/new/external-api/zentra',
+    component: IngestNewExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/external-api/bosch/:id',
     component: IngestDetailExternalApiBosch,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -170,6 +179,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/dwd/:id',
     component: IngestDetailExternalApiDwd,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/zentra/:id',
+    component: IngestDetailExternalApiZentra,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -227,6 +241,11 @@ const routes: RouteRecordRaw[] = [
     component: IngestEditExternalApiTSystems,
     meta: { requiresAuth: true, constrainWidth: true },
   },
+    {
+    path: '/ingest/external-api/zentra/:id/edit',
+    component: IngestEditExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
   {
     path: '/ingest/mqtt/:id/edit',
     component: IngestEditMqtt,
@@ -275,6 +294,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/sensoto/:id/copy',
     component: IngestCopyExternalApiSensoto,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/zentra/:id/copy',
+    component: IngestCopyExternalApiZentra,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {

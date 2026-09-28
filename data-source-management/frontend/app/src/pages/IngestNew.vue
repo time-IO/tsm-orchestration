@@ -143,6 +143,7 @@ const externalAPis = {
       path: '/ingest/new/external-api/uba',
       docsUrl: 'https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/',
     },
+    { name: 'zentra', label: 'Zentra', path: '/ingest/new/external-api/zentra' },
   ],
 };
 
