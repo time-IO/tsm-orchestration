@@ -31,6 +31,7 @@ def upgrade() -> None:
             "units", sa.Enum("METRIC", "IMPERIAL", name="unitsenum"), nullable=True
         ),
         sa.Column("api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("last_mrid", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["ingest_id"], ["ingest_external_api.ingest_id"], ondelete="CASCADE"
         ),
@@ -48,6 +49,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("ingest_external_api_zentra")
+    op.execute("DROP TYPE IF EXISTS unitsenum")
     op.drop_constraint("ck_api_type", "ingest_external_api", type_="check")
     op.create_check_constraint(
         "ck_api_type",

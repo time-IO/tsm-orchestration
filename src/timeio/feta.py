@@ -510,6 +510,16 @@ class ExtAPI(Base):
             return None
         return {k: v for k, v in row.items() if k != "ingest_id"}
 
+    def update_last_mrid(self, last_mrid: str | None) -> None:
+        """Persist the last-seen MRID for this API's settings, used for checkpoint pagination."""
+        table = self._table_mapping[self.api_type.name]
+        query = sql.SQL("UPDATE {}.{} SET last_mrid = %s WHERE ingest_id = %s").format(
+            sql.Identifier(self._schema), sql.Identifier(table)
+        )
+        with self._conn.cursor() as cur:
+            cur.execute(query, [last_mrid, self.id])
+        self._conn.commit()
+
 
 class ExtSFTP(Base):
     _schema = SCHEMA
