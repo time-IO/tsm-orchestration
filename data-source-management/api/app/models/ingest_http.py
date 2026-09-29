@@ -11,8 +11,9 @@ API_KEY_MIN_LENGTH = 8
 
 # path_for_posts feeds directly into a URL path segment (/http-ingest/{path}),
 # so it's restricted to RFC 3986 unreserved characters - no percent-encoding
-# is ever needed, and it can't be split into extra path segments.
-PATH_FOR_POSTS_PATTERN = re.compile(r"^[a-zA-Z0-9._-]+$")
+# is ever needed, and it can't be split into extra path segments. It must
+# start with an alphanumeric character so it can never be '.' or '..'.
+PATH_FOR_POSTS_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]*$")
 
 
 def _validate_path_for_posts(v: Optional[str]) -> Optional[str]:
@@ -20,7 +21,8 @@ def _validate_path_for_posts(v: Optional[str]) -> Optional[str]:
         return None
     if not PATH_FOR_POSTS_PATTERN.match(v):
         raise ValueError(
-            "Path for posts may only contain letters, digits, '.', '_', and '-'."
+            "Path for posts must start with a letter or digit and may only "
+            "contain letters, digits, '.', '_', and '-'."
         )
     return v
 

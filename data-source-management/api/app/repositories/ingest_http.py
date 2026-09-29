@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 from fastapi import HTTPException
 from typing import Optional
+import uuid as uuid_pkg
 from access_scope import AccessScope
 
 from models.filters import IngestFilter
@@ -19,6 +20,10 @@ from sorting import apply_sort_list
 from fastapi_filters.ext.sqlalchemy import apply_filters
 
 from validation import RepositoryValidator
+
+UUID_PATH_ERROR = (
+    "This path for posts is the UUID of another HTTP ingest and cannot be used."
+)
 
 
 class IngestHttpRepository:
@@ -214,6 +219,23 @@ class IngestHttpRepository:
         if existing:
             raise HTTPException(status_code=400, detail="This name already exists.")
 
+    def _path_matches_ingest_uuid(self, path_for_posts, exclude_ingest_id=None):
+        # Ingests without a path_for_posts are served at /http-ingest/{uuid},
+        # so a custom path equal to an existing ingest's UUID would collide.
+        try:
+            parsed = uuid_pkg.UUID(path_for_posts)
+        except ValueError:
+            return False
+        if str(parsed) != path_for_posts:
+            return False
+
+        statement = (
+            select(self.model).join(self.model.ingest).where(Ingest.uuid == parsed)
+        )
+        if exclude_ingest_id is not None:
+            statement = statement.where(self.model.ingest_id != exclude_ingest_id)
+        return self.session.exec(statement).first() is not None
+
     def check_for_existing_path_create(self, path_for_posts):
         # path_for_posts feeds the global Bento HTTP route, so - unlike name -
         # this check is instance-wide, not scoped to a permission group, and
@@ -230,6 +252,8 @@ class IngestHttpRepository:
             raise HTTPException(
                 status_code=400, detail="This path for posts is already in use."
             )
+        if self._path_matches_ingest_uuid(path_for_posts):
+            raise HTTPException(status_code=400, detail=UUID_PATH_ERROR)
 
     def check_for_existing_path_update(self, path_for_posts, entity_id):
         if not path_for_posts:
@@ -245,6 +269,8 @@ class IngestHttpRepository:
             raise HTTPException(
                 status_code=400, detail="This path for posts is already in use."
             )
+        if self._path_matches_ingest_uuid(path_for_posts, entity_id):
+            raise HTTPException(status_code=400, detail=UUID_PATH_ERROR)
 
     def to_flat(self, entity: IngestHttp) -> IngestHttpRead:
         ing = entity.ingest
