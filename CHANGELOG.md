@@ -18,6 +18,7 @@ When adding a changelog entry, ensure the following:
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
 - Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
+- Internal STA view schema per project in preparation of protected STA endpoints ([Merge Request])(https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/733)
 
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
