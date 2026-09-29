@@ -25,6 +25,9 @@ When adding a changelog entry, ensure the following:
 - Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
 - Increased Mosquitto per-client queue limits (max queued messages to 1,000,000, max queued bytes to 2 GB) ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/732))
 
+### Fixed
+- The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
+
 ## [2026-09-10]
 
 ### Added
