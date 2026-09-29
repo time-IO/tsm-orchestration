@@ -77,6 +77,7 @@
             class="q-mb-md"
             v-model.number="formData.period_in_minutes"
             label="Period (in minutes) *"
+             hint="Determines the time window fetched per sync (up to 2,000 readings per request, Zentra's limit). Should roughly match your sync interval to avoid gaps or overlaps."
             :rules="[
               (val) => !!val || 'Period is required',
               (val) =>
