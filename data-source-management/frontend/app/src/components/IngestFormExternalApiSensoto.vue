@@ -43,7 +43,7 @@
           <q-input
             filled
             v-model="formData.network"
-            label="Network"
+            label="Network *"
             type="text"
             hint="Sensoto network identifier"
             :rules="[rules.REQUIRED]"
@@ -53,11 +53,23 @@
           <q-input
             filled
             v-model="formData.device"
-            label="Device"
+            label="Device *"
             type="text"
             hint="Sensoto device identifier"
             :rules="[rules.REQUIRED]"
           />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model.number="formData.period_in_minutes"
+            label="Period (in minutes) *"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(0)]"
+          >
+            <template #append>
+              <help-button termHelp="period" />
+            </template>
+          </q-input>
 
           <!-- Sync Settings -->
           <q-card-section class="q-pa-none">
@@ -110,6 +122,7 @@ import type {
 } from '../services/ingest_external_api_sensoto/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
+import HelpButton from "@/components/HelpButton.vue";
 
 defineProps<{
   title: string;

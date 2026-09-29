@@ -13,16 +13,17 @@ from .ingest_external_api import (
 class IngestExternalApiSensotoRead(IngestExternalApiRead):
     network: str
     device: str
-
+    period_in_minutes: int
 
 class IngestExternalApiSensotoCreate(IngestExternalApiCreate):
     network: str
     device: str
-
+    period_in_minutes: int
 
 class IngestExternalApiSensotoUpdate(IngestExternalApiUpdate):
     network: Optional[str] = None
     device: Optional[str] = None
+    period_in_minutes: Optional[int] = None
 
 
 class IngestExternalApiSensoto(SQLModel, table=True):
@@ -35,6 +36,7 @@ class IngestExternalApiSensoto(SQLModel, table=True):
     )
     network: str = Field(nullable=False)
     device: str = Field(nullable=False)
+    period_in_minutes: int = Field(nullable=False)
 
     external_api: IngestExternalApi = Relationship(back_populates="sensoto")
 
