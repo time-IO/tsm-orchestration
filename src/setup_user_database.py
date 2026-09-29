@@ -88,9 +88,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         logger.debug("create/refresh internal frost views")
         self.create_internal_frost_views(thing)
         logger.debug(f"grant internal frost view privileges to {sta_internal_user}")
-        self.grant_sta_select(
-            thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema
-        )
+        self.grant_sta_select(thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema)
 
         logger.debug("create/refresh grafana views")
         self.create_grafana_views(thing)
@@ -386,7 +384,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     # schema (raw observation + datasource_id); {target_schema} is
                     # the internal schema (feature.sql existence check).
                     view = view.replace("{tsm_schema}", f"{self.escape_quote(schema)}")
-                    view = view.replace("{target_schema}", f"{self.escape_quote(int_schema)}")
+                    view = view.replace(
+                        "{target_schema}", f"{self.escape_quote(int_schema)}"
+                    )
                     view = view.replace("{sms_url}", f"{self.escape_quote(SMS_URL)}")
                     view = view.replace("{cv_url}", f"{self.escape_quote(CV_URL)}")
                     c.execute(view)
