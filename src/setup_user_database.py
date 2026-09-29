@@ -19,7 +19,10 @@ logger = logging.getLogger("db-setup")
 journal = Journal("System", errors="ignore")
 
 STA_PREFIX = "sta_"
+STA_INTERNAL_PREFIX = "sti_"
 GRF_PREFIX = "grf_"
+
+INTERNAL_SCHEMA_SUFFIX = "_int"
 
 
 class CreateThingInPostgresHandler(AbstractHandler):
@@ -55,6 +58,16 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         self.upsert_schema_thing_mapping(thing)
 
+        int_schema = thing.database.username.lower() + INTERNAL_SCHEMA_SUFFIX
+
+        if not self.user_exists(sta_internal_user := STA_INTERNAL_PREFIX + ro_user):
+            logger.debug(f"create sta-internal read-only user {sta_internal_user}")
+            logger.debug(f"create internal schema {int_schema}")
+            self.create_schema(thing, schema=int_schema)
+            self.create_ro_user(
+                thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema
+            )
+
         if not self.user_exists(sta_user := STA_PREFIX + ro_user):
             logger.debug(f"create sta read-only user {sta_user}")
             self.create_ro_user(thing, user_prefix=STA_PREFIX)
@@ -67,13 +80,21 @@ class CreateThingInPostgresHandler(AbstractHandler):
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        logger.debug("create/refresh frost views")
+        logger.debug("create/refresh public frost views")
         self.create_frost_views(thing)
-        logger.debug(f"grand frost view privileges to {sta_user}")
+        logger.debug(f"grant public frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
+
+        logger.debug("create/refresh internal frost views")
+        self.create_internal_frost_views(thing)
+        logger.debug(f"grant internal frost view privileges to {sta_internal_user}")
+        self.grant_sta_select(
+            thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema
+        )
+
         logger.debug("create/refresh grafana views")
         self.create_grafana_views(thing)
-        logger.debug(f"grand grafana view privileges to {grf_user}")
+        logger.debug(f"grant grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
     def create_user(self, thing):
@@ -93,12 +114,12 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_ro_user(self, thing, user_prefix: str = ""):
+    def create_ro_user(self, thing, user_prefix: str = "", schema: str | None = None):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 ro_username = user_prefix.lower() + thing.database.ro_username.lower()
                 ro_user = sql.Identifier(ro_username)
-                schema = sql.Identifier(thing.database.username.lower())
+                schema = sql.Identifier(schema or thing.database.username.lower())
                 ro_passw = decrypt(thing.database.ro_password, get_crypt_key())
 
                 c.execute(
@@ -152,13 +173,15 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_schema(self, thing):
+    def create_schema(self, thing, schema: str | None = None):
+        owner = sql.Identifier(thing.database.username.lower())
+        schema_ident = sql.Identifier(schema or thing.database.username.lower())
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(
                     sql.SQL(
-                        "CREATE SCHEMA IF NOT EXISTS {user} AUTHORIZATION {user}"
-                    ).format(user=sql.Identifier(thing.database.username.lower()))
+                        "CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {owner}"
+                    ).format(schema=schema_ident, owner=owner)
                 )
 
     def deploy_ddl(self, thing):
@@ -218,8 +241,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(sql.SQL("SET search_path TO {0}").format(user))
                 c.execute(query)
 
-    def grant_sta_select(self, thing, user_prefix: str):
-        schema = sql.Identifier(thing.database.username.lower())
+    def grant_sta_select(self, thing, user_prefix: str, schema: str | None = None):
+        schema = sql.Identifier(schema or thing.database.username.lower())
         sta_user = sql.Identifier(
             user_prefix.lower() + thing.database.ro_username.lower()
         )
@@ -284,6 +307,10 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
+    @staticmethod
+    def escape_quote(s: str) -> str:
+        return s.replace("'", "''")
+
     def create_frost_views(self, thing):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
@@ -304,9 +331,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
         SMS_URL = os.environ.get("SMS_URL")
         CV_URL = os.environ.get("CV_URL")
 
-        def escape_quote(s: str) -> str:
-            return s.replace("'", "''")
-
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
@@ -323,9 +347,48 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     # full control over the values, especially that the value does not come
                     # from userinput. Additionally, we escape single quotes, prevent closing
                     # the outer quotes in the file.
-                    view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
-                    view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
-                    view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
+                    view = view.replace("{tsm_schema}", f"{self.escape_quote(schema)}")
+                    view = view.replace("{sms_url}", f"{self.escape_quote(SMS_URL)}")
+                    view = view.replace("{cv_url}", f"{self.escape_quote(CV_URL)}")
+                    c.execute(view)
+
+    def create_internal_frost_views(self, thing):
+        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views_internal")
+        files = [
+            os.path.join(base_path, "schema_context.sql"),
+            os.path.join(base_path, "thing.sql"),
+            os.path.join(base_path, "location.sql"),
+            os.path.join(base_path, "sensor.sql"),
+            os.path.join(base_path, "observed_property.sql"),
+            os.path.join(base_path, "datastream.sql"),
+            os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
+            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
+            os.path.join(base_path, "feature.sql"),
+            os.path.join(base_path, "observation.sql"),
+        ]
+
+        schema = thing.database.schema.lower()
+        int_schema = schema + INTERNAL_SCHEMA_SUFFIX
+        target = sql.Identifier(int_schema)
+        SMS_URL = os.environ.get("SMS_URL")
+        CV_URL = os.environ.get("CV_URL")
+
+        with self.db.connection() as conn:
+            with conn.cursor() as c:
+                c.execute(sql.SQL("SET search_path TO {target}").format(target=target))
+                c.execute("SET lock_timeout TO '30s'")
+                for file in files:
+                    logger.debug(f"deploy file: {file}")
+                    with open(file) as fh:
+                        view = fh.read()
+                    # See create_frost_views: values are trusted (no user input)
+                    # and single quotes are escaped. {tsm_schema} is the project
+                    # schema (raw observation + datasource_id); {target_schema} is
+                    # the internal schema (feature.sql existence check).
+                    view = view.replace("{tsm_schema}", f"{self.escape_quote(schema)}")
+                    view = view.replace("{target_schema}", f"{self.escape_quote(int_schema)}")
+                    view = view.replace("{sms_url}", f"{self.escape_quote(SMS_URL)}")
+                    view = view.replace("{cv_url}", f"{self.escape_quote(CV_URL)}")
                     c.execute(view)
 
     def create_grafana_views(self, thing):
