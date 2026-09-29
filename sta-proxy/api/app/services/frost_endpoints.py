@@ -33,7 +33,6 @@ def rewrite_endpoint(frost_endpoint: FrostEndpoint) -> FrostEndpoint:
 def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
     q = q.lower()
     fields = [
-        endpoint.name,
         endpoint.displayName,
         endpoint.group,
         endpoint.project or "",
