@@ -27,9 +27,7 @@ def test_get_bosch_timerange_with_bosch_settings():
     from_dt = datetime.strptime(from_str, "%Y-%m-%dT%H:%M:%SZ").replace(
         tzinfo=timezone.utc
     )
-    to_dt = datetime.strptime(to_str, "%Y-%m-%dT%H:%M:%SZ").replace(
-        tzinfo=timezone.utc
-    )
+    to_dt = datetime.strptime(to_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
     delta_minutes = (to_dt - from_dt).total_seconds() / 60
     assert delta_minutes == pytest.approx(60, abs=1)
@@ -39,17 +37,13 @@ def test_get_bosch_timerange_with_sensoto_settings():
     """Regression test: sensoto previously had no `period_in_minutes` in its
     settings, causing get_bosch_timerange to raise a KeyError when used via
     TIMERANGE_MAPPING['sensoto']."""
-    thing = _mock_thing(
-        {"network": "net1", "device": "dev1", "period_in_minutes": 15}
-    )
+    thing = _mock_thing({"network": "net1", "device": "dev1", "period_in_minutes": 15})
     from_str, to_str = get_bosch_timerange(thing)
 
     from_dt = datetime.strptime(from_str, "%Y-%m-%dT%H:%M:%SZ").replace(
         tzinfo=timezone.utc
     )
-    to_dt = datetime.strptime(to_str, "%Y-%m-%dT%H:%M:%SZ").replace(
-        tzinfo=timezone.utc
-    )
+    to_dt = datetime.strptime(to_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
     delta_minutes = (to_dt - from_dt).total_seconds() / 60
     assert delta_minutes == pytest.approx(15, abs=1)

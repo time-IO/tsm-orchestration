@@ -7,7 +7,6 @@ from .conf import CONTENT, mock_thing, mock_response
 
 from timeio import ext_api
 
-
 SENSOTO_SETTINGS = {
     "network": "net1",
     "device": "dev1",
@@ -19,17 +18,11 @@ SENSOTO_SETTINGS = {
 def test_sensoto_fetch_api_data(mock_request, mock_response, mock_thing):
     thing = mock_thing(SENSOTO_SETTINGS)
 
-    sensors_response = mock_response(
-        data={"items": [{"name": "s1"}, {"name": "s2"}]}
-    )
+    sensors_response = mock_response(data={"items": [{"name": "s1"}, {"name": "s2"}]})
     agg_s1 = mock_response(data={"phenomenon": {"aggregation": "avg"}})
     agg_s2 = mock_response(data={"phenomenon": {"aggregation": "sum"}})
-    measurements_s1 = mock_response(
-        data=[{"end": "2025-01-01T00:15Z", "v": 1.1}]
-    )
-    measurements_s2 = mock_response(
-        data=[{"end": "2025-01-01T00:15Z", "v": 2.2}]
-    )
+    measurements_s1 = mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 1.1}])
+    measurements_s2 = mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 2.2}])
 
     mock_request.side_effect = [
         sensors_response,

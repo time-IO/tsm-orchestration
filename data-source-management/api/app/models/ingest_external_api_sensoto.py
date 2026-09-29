@@ -15,10 +15,12 @@ class IngestExternalApiSensotoRead(IngestExternalApiRead):
     device: str
     period_in_minutes: int
 
+
 class IngestExternalApiSensotoCreate(IngestExternalApiCreate):
     network: str
     device: str
     period_in_minutes: int
+
 
 class IngestExternalApiSensotoUpdate(IngestExternalApiUpdate):
     network: Optional[str] = None

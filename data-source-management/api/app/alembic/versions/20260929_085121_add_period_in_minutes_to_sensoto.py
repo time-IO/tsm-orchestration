@@ -23,9 +23,13 @@ def upgrade() -> None:
     """Upgrade schema."""
     op.add_column(
         "ingest_external_api_sensoto",
-        sa.Column("period_in_minutes", sa.Integer(), nullable=False, server_default="60"),
+        sa.Column(
+            "period_in_minutes", sa.Integer(), nullable=False, server_default="60"
+        ),
     )
-    op.alter_column("ingest_external_api_sensoto", "period_in_minutes", server_default=None)
+    op.alter_column(
+        "ingest_external_api_sensoto", "period_in_minutes", server_default=None
+    )
 
 
 def downgrade() -> None:
