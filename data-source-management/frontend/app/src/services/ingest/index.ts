@@ -48,9 +48,5 @@ async function getList(pagination: QTableRequestPropPagination, filters: IngestF
 async function deleteOne(id: number) {
   return await axiosInstance.delete(`${apiPath}${id}`);
 }
-async function getDatabaseName(id: number): Promise<string> {
-  const response = await axiosInstance.get<string>(`${apiPath}${id}/database`)
-  return response.data
-}
 
-export default { getList, deleteOne, getDatabaseName };
+export default { getList, deleteOne };
