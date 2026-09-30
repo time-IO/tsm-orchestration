@@ -12,7 +12,10 @@ os.environ["POSTGRES_PASSWORD"] = os.environ.get("POSTGRES_TEST_PASSWORD", "post
 from ..utils.test_env import setup_test_env
 
 setup_test_env()
+import functools
 import uuid
+
+import httpx
 import pytest
 from sqlmodel import Session, select, text
 from fastapi.testclient import TestClient
@@ -21,8 +24,10 @@ from models.parser import Parser
 from models.parser_detailed import ParserDetailed
 from models.database import Database
 
+from config import settings
 from main import app
 from dependencies import engine, get_current_user
+from ..utils.db_api import FakeDbApi
 from ..utils.user_proxy import UserProxy
 
 
@@ -298,3 +303,48 @@ def cleanup_qc(base_data):
             params={"pg_id": base_data["permission_group_id"]},
         )
         session.commit()
+
+
+@pytest.fixture
+def db_api(monkeypatch) -> FakeDbApi:
+    fake = FakeDbApi()
+    monkeypatch.setattr(settings, "DB_API_BASE_URL", fake.base_url)
+    monkeypatch.setattr(settings, "DB_API_AUTH_TOKEN", fake.token)
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        functools.partial(
+            httpx.AsyncClient, transport=httpx.MockTransport(fake.handle)
+        ),
+    )
+    return fake
+
+
+@pytest.fixture
+def db_api_unconfigured(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "DB_API_BASE_URL", "")
+
+
+@pytest.fixture
+def mqtt_ingest(client, base_data, cleanup_ingest) -> dict:
+    response = client.post(
+        "/ingest/mqtt/",
+        json={
+            "name": "Integration Test DB-API Ingest owned by Test User",
+            "permission_group_id": base_data["permission_group_id"],
+            "parser_id": base_data["parser_id"],
+        },
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+@pytest.fixture
+def switch_to_other_group(other_group_data):
+    def _switch() -> None:
+        with Session(engine) as s:
+            user = s.get(User, other_group_data["user_id"])
+            proxy = UserProxy(user, [other_group_data["permission_group_id"]])
+        app.dependency_overrides[get_current_user] = lambda: proxy
+
+    return _switch
