@@ -1,9 +1,8 @@
 <template>
   <q-page>
     <q-layout view="lHh lpR fFf">
-      <div class="q-pa-md">
-        <endpoint-search-filter class="q-mb-md" />
-        <endpoint-ingest-filter v-if="authStore.isAuthenticated" class="q-mb-md" />
+      <div class="q-pa-lg">
+        <endpoint-filter class="q-mb-xl" />
         <endpoint-list />
       </div>
     </q-layout>
@@ -13,19 +12,16 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
-import EndpointIngestFilter from '@/components/EndpointIngestFilter.vue';
+import EndpointFilter from '@/components/EndpointFilter.vue';
 import EndpointList from '@/components/EndpointList.vue';
-import EndpointSearchFilter from '@/components/EndpointSearchFilter.vue';
-import { useAuthStore } from '@/stores/authStore';
 import { useEndpointStore } from '@/stores/endpointStore';
 
 const $q = useQuasar();
-const authStore = useAuthStore();
 const endpointStore = useEndpointStore();
 
 onMounted(fetchEndpoints);
 
-watch(() => ({ ...endpointStore.filters }), fetchEndpoints);
+watch(() => [endpointStore.filters.q, endpointStore.filters.ingest?.id], fetchEndpoints);
 
 async function fetchEndpoints() {
   try {

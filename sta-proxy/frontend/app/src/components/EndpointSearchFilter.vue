@@ -5,8 +5,8 @@
     outlined
     dense
     clearable
-    placeholder="Filter endpoints..."
-    style="max-width: 400px"
+    placeholder="Search by name..."
+    hint="Names are similar to Permission groups"
   >
     <template #prepend>
       <q-icon name="search" />
