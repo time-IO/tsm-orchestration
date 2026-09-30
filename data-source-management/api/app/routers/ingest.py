@@ -98,3 +98,13 @@ async def read_ingest_journal(
         level=level,
         limit=limit,
     )
+
+
+@router.get("/{ingest_id}/database", tags=["ingest/database"])
+async def read_ingest_journal(
+    ingest_id: int,
+    repo: IngestRepository = Depends(get_repo_ingest),
+    current_user: User = Depends(get_current_user),
+):
+    ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
+    return ingest.permission_group.database.username
