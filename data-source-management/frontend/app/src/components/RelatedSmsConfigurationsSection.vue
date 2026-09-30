@@ -82,7 +82,7 @@
             <div class="col">
               Select
               <span class="text-weight-bold">{{ databaseName }}</span>
-              as Datasource and <span class="text-weight-bold">ingestName</span> as Thing.
+              as Datasource and <span class="text-weight-bold">{{ ingestName }}</span> as Thing.
             </div>
           </li>
         </ol>
@@ -118,8 +118,9 @@ import { onMounted, ref } from 'vue';
 import { API } from '@/services';
 import { truncateText } from '@/utils/string_utils';
 
-const { ingestId } = defineProps<{
+const { ingestId, ingestName } = defineProps<{
   ingestId: number;
+  ingestName: string
 }>();
 
 export type SmsConfiguration = {

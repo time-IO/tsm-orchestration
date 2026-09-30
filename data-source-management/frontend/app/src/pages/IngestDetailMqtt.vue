@@ -144,7 +144,7 @@
         </div>
 
         <div class="col-12 col-md-5">
-          <related-sms-configurations-section :ingest-id="item.id"/>
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name"/>
         </div>
       </div>
     </div>
