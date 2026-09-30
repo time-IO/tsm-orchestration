@@ -30,6 +30,8 @@ def _sensoto_dict(make_ingest_dict, **overrides):
         "sync_interval_in_minutes": None,
         "network": "network-1",
         "device": "device-1",
+        "organization": "open",
+        "period_in_minutes": 15,
     }
     defaults.update(overrides)
     return make_ingest_dict(**defaults)
@@ -81,6 +83,8 @@ def test_create(client, override_repo, make_ingest_dict, mock_publish_frontend_u
         "sync_interval_in_minutes": 15,
         "network": "network-1",
         "device": "device-1",
+        "organization": "open",
+        "period_in_minutes": 15,
     }
 
     response = client.post(f"{BASE_PATH}/", json=payload)
