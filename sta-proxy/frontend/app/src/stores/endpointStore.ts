@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia';
 import { API } from '@/services';
 import type { FrostEndpoint } from '@/services/endpoints/types';
+import type { Ingest } from '@/services/ingests/types';
 
 let latestRequestId = 0;
 
 type EndpointFilters = {
   q: string | null;
-  ingest: string | null;
+  ingest: Ingest | null;
 };
 
 type EndpointState = {
@@ -21,18 +22,27 @@ export const useEndpointStore = defineStore('endpoint', {
     loading: true,
     filters: {
       q: '',
-      ingest: '',
+      ingest: null,
     },
   }),
 
+  getters: {
+    hasActiveFilters: (state) => !!state.filters.q || state.filters.ingest !== null,
+  },
+
   actions: {
+    resetFilters() {
+      this.filters.q = '';
+      this.filters.ingest = null;
+    },
+
     async fetchEndpoints() {
       const requestId = ++latestRequestId;
       this.loading = true;
       try {
         const response = await API.endpoints.getList(
           this.filters.q || undefined,
-          this.filters.ingest || undefined,
+          this.filters.ingest?.id,
         );
         if (requestId === latestRequestId) {
           this.endpoints = response.data.endpoints ?? [];
