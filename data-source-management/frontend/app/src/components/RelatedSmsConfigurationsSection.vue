@@ -98,7 +98,7 @@ export type SmsConfiguration = {
 
 const configurations = ref<SmsConfiguration[]>([]);
 const databaseName = ref<string>('');
-const smsUrl = ref<string>('https://web.app.ufz.de/sms');
+const smsUrl = ref<string>(import.meta.env.SMS_URL);
 const wikiUrl = 'https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/Metadata';
 
 onMounted(async () => {
