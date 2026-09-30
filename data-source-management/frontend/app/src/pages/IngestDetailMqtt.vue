@@ -3,12 +3,12 @@
     <h5 class="q-mb-none">MQTT Ingest</h5>
     <div class="row">
       <div class="col">
-        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl" />
+        <q-btn class="q-mb-lg" icon="chevron_left" label="back" :to="backUrl"/>
       </div>
     </div>
 
     <div v-if="isLoading" class="q-pa-md">
-      <q-spinner color="primary" size="3em" />
+      <q-spinner color="primary" size="3em"/>
     </div>
 
     <div v-else-if="item">
@@ -21,7 +21,7 @@
           <div class="text-subtitle1" style="max-width: 100%">{{ item.description }}</div>
         </q-card-section>
 
-        <q-separator />
+        <q-separator/>
 
         <q-card-section>
           <div class="row q-col-gutter-md">
@@ -39,7 +39,7 @@
                     <q-item-label>UUID</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
-                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
+                      <copy-btn title="Copy UUID" :text-to-copy="item.uuid"/>
                     </div>
                   </q-item-section>
                 </q-item>
@@ -56,7 +56,7 @@
                     <q-item-label>Username</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.username }}</q-item-label>
-                      <copy-btn title="Copy username" :text-to-copy="item.username" />
+                      <copy-btn title="Copy username" :text-to-copy="item.username"/>
                     </div>
                   </q-item-section>
                 </q-item>
@@ -80,7 +80,7 @@
                           </template>
                         </q-input>
                       </q-item-label>
-                      <copy-btn title="Copy password" :text-to-copy="item.password" />
+                      <copy-btn title="Copy password" :text-to-copy="item.password"/>
                     </div>
                   </q-item-section>
                 </q-item>
@@ -101,7 +101,7 @@
                     <q-item-label>Broker URI</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uri }}</q-item-label>
-                      <copy-btn title="Copy Broker URI" :text-to-copy="item.uri" />
+                      <copy-btn title="Copy Broker URI" :text-to-copy="item.uri"/>
                     </div>
                   </q-item-section>
                 </q-item>
@@ -111,7 +111,7 @@
                     <q-item-label>Topic</q-item-label>
                     <div class="row items-center">
                       <q-item-label caption>{{ item.topic }}</q-item-label>
-                      <copy-btn title="Copy Topic" :text-to-copy="item.topic" />
+                      <copy-btn title="Copy Topic" :text-to-copy="item.topic"/>
                     </div>
                   </q-item-section>
                 </q-item>
@@ -127,18 +127,26 @@
           </div>
         </q-card-section>
 
-        <q-separator />
+        <q-separator/>
 
         <q-card-actions>
-          <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
-          <q-space />
-          <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
-          <q-space />
+          <q-btn :to="editRoute" color="primary" flat> Edit</q-btn>
+          <q-space/>
+          <q-btn :to="copyRoute" color="black" flat> Copy</q-btn>
+          <q-space/>
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" :mqtt-topic="item.topic" />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" :mqtt-topic="item.topic"/>
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id"/>
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -147,12 +155,12 @@
           <h6 class="q-mt-none">Confirm Delete</h6>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to delete this item? </q-card-section>
+        <q-card-section> Are you sure you want to delete this item?</q-card-section>
 
         <q-card-actions align="right">
-          <q-btn v-close-popup color="primary" flat label="Cancel" />
-          <q-space />
-          <q-btn color="negative" flat label="Delete" @click="deleteItem" />
+          <q-btn v-close-popup color="primary" flat label="Cancel"/>
+          <q-space/>
+          <q-btn color="negative" flat label="Delete" @click="deleteItem"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -160,13 +168,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
-import type { IngestMqttPublic } from '@/services/ingest_mqtt/types';
-import { useIngestMqttStore } from '@/stores/ingestMqttStore';
+import {computed, onMounted, ref} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
+import {useQuasar} from 'quasar';
+import type {IngestMqttPublic} from '@/services/ingest_mqtt/types';
+import {useIngestMqttStore} from '@/stores/ingestMqttStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import RelatedSmsConfigurationsSection from "@/components/RelatedSmsConfigurationsSection.vue";
 
 const $q = useQuasar();
 const route = useRoute();

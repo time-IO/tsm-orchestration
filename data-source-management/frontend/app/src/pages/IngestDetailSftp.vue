@@ -147,14 +147,20 @@
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section
-        :uuid="item.uuid"
-        :ingest-id="item.id"
-        :service="API.ingestSftpStorage"
-        :bucket-name="item.bucket_name"
-      />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            :service="API.ingestSftpStorage"
+            :bucket-name="item.bucket_name"
+          />
+        </div>
 
-      <related-section :ingest-id="item.id" />
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -184,7 +190,7 @@ import { useIngestSftpStore } from '@/stores/ingestSftpStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
 import { API } from '@/services';
-import RelatedSection from '@/components/RelatedSection.vue';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();
