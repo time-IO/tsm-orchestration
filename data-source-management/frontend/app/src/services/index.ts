@@ -7,6 +7,7 @@ import ingestExternalApiTSystemsController from '@/services/ingest_external_api_
 import ingestExternalApiSensotoController from '@/services/ingest_external_api_sensoto';
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
+import ingestDatabaseController from '@/services/ingest_database';
 import ingestSftpController from '@/services/ingest_sftp';
 import ingestSftpStorageController from '@/services/ingest_sftp_storage';
 import ingestExternalSftpController from '@/services/ingest_external_sftp';
@@ -66,5 +67,6 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
-  smsConfigurations: smsConfigurationsController
+  smsConfigurations: smsConfigurationsController,
+  ingestDatabase: ingestDatabaseController
 };
