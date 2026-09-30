@@ -1,10 +1,10 @@
 export type FrostEndpoint = {
   name: string;
-  displayName: string;
+  display_name: string;
   group: string;
   project: string | null;
   url: string;
-  is_own: boolean;
+  is_internal: boolean;
 };
 
 export type FrostEndpointsResponse = {
