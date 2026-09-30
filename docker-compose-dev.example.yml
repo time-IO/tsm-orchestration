@@ -126,6 +126,7 @@ services:
       OIDC_SCOPE: "${STA_PROXY_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
       OIDC_POST_LOGOUT_REDIRECT_URI: "${STA_PROXY_FRONTEND_APP_URL:-http://localhost/sta-proxy}"
       BASE_URL: "${STA_PROXY_FRONTEND_RELATIVE_PATH:-/sta-proxy/}"
+      SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
     command: "quasar dev"
 
   timeio-db-api:

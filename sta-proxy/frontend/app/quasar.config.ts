@@ -13,6 +13,7 @@ const ENV_OIDC_SCOPE = import.meta.env.OIDC_SCOPE || 'ENV_OIDC_SCOPE_PLACEHOLDER
 const ENV_OIDC_POST_LOGOUT_REDIRECT_URI =
   import.meta.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER';
 const ENV_BASE_URL = import.meta.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER';
+const ENV_SMS_URL = import.meta.env.SMS_URL || 'ENV_SMS_URL_PLACEHOLDER';
 
 export default defineConfig((ctx) => {
   return {
@@ -65,6 +66,7 @@ export default defineConfig((ctx) => {
       // analyze: true,
       defineEnv: {
         API_BASE_URL: ENV_API_BASE_URL,
+        SMS_URL: ENV_SMS_URL,
         OIDC_IDP_URL: ENV_OIDC_IDP_URL,
         OIDC_CLIENT_ID: ENV_OIDC_CLIENT_ID,
         OIDC_REDIRECT_URI: ENV_OIDC_REDIRECT_URI,
