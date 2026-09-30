@@ -48,10 +48,6 @@ def endpoint_from_frost(raw: dict) -> FrostEndpoint:
     return endpoint
 
 
-def permission_group_display_name(name: str) -> str:
-    return name.rsplit(":", 1)[-1]
-
-
 def normalize_search(value: str) -> str:
     return value.replace("_", "").casefold()
 
@@ -111,13 +107,8 @@ async def frost_endpoints_service(
                 endpoints.append(parse_frost_name(username))
 
         for endpoint in endpoints:
-            permission_group = permission_groups.get(endpoint.name)
-            if permission_group:
+            if endpoint.name in permission_groups:
                 endpoint.is_internal = True
-                if permission_group.get("name"):
-                    endpoint.display_name = permission_group_display_name(
-                        permission_group["name"]
-                    )
 
         # show internal endpoints first
         endpoints.sort(key=lambda e: not e.is_internal)

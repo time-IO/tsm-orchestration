@@ -46,7 +46,7 @@
           <q-td key="visibility" :props="props" auto-width>
             <q-icon
               :name="props.row.is_internal ? 'lock_open' : 'visibility'"
-              color="primary"
+              :color="props.row.is_internal ? 'orange' : 'green'"
               size="sm"
             >
               <q-tooltip>{{ props.row.is_internal ? 'Internal' : 'Public' }}</q-tooltip>
