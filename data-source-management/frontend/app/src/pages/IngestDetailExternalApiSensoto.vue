@@ -54,6 +54,13 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>Organization</q-item-label>
+                    <q-item-label caption>{{ item.organization }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Network</q-item-label>
                     <q-item-label caption>{{ item.network }}</q-item-label>
                   </q-item-section>
@@ -63,6 +70,17 @@
                   <q-item-section>
                     <q-item-label>Device</q-item-label>
                     <q-item-label caption>{{ item.device }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
+                    <q-item-label>Token</q-item-label>
+                    <q-item-label caption>
+                      <q-badge :color="item.token ? 'positive' : 'grey'">
+                        {{ item.token ? 'Set' : 'Not set' }}
+                      </q-badge>
+                    </q-item-label>
                   </q-item-section>
                 </q-item>
 

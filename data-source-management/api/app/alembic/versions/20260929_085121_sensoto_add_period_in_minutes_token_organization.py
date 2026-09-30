@@ -30,8 +30,24 @@ def upgrade() -> None:
     op.alter_column(
         "ingest_external_api_sensoto", "period_in_minutes", server_default=None
     )
+    op.add_column(
+        "ingest_external_api_sensoto",
+        sa.Column("token", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    )
+    op.add_column(
+        "ingest_external_api_sensoto",
+        sa.Column(
+            "organization",
+            sqlmodel.sql.sqltypes.AutoString(),
+            nullable=False,
+            server_default="open",
+        ),
+    )
+    op.alter_column("ingest_external_api_sensoto", "organization", server_default=None)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_column("ingest_external_api_sensoto", "organization")
+    op.drop_column("ingest_external_api_sensoto", "token")
     op.drop_column("ingest_external_api_sensoto", "period_in_minutes")

@@ -281,7 +281,9 @@ class IngestExternalApiSensotoRepository:
             # Sensoto
             network=sens.network,
             device=sens.device,
+            organization=sens.organization,
             period_in_minutes=sens.period_in_minutes,
+            token=sens.token,
             # Permission Group
             permission_group={
                 "id": permission_group.id,

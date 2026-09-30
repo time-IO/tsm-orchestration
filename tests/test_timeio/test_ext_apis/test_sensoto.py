@@ -85,3 +85,71 @@ def test_sensoto_do_parse():
     assert obs["datastream_pos"] == "s1"
     assert obs["result_time"] == "2025-01-01T00:15Z"
     assert "sensoto_data" in obs["parameters"]
+
+
+@patch("timeio.ext_api.get_crypt_key", return_value="dummy-key")
+@patch("timeio.ext_api.decrypt", return_value="secret-token")
+@patch("timeio.ext_api.request_with_handling")
+def test_sensoto_fetch_with_token(
+    mock_request, mock_decrypt, mock_key, mock_response, mock_thing
+):
+    thing = mock_thing({**SENSOTO_SETTINGS, "token": "encrypted-token"})
+    mock_request.side_effect = [
+        mock_response(data={"items": [{"name": "s1"}]}),
+        mock_response(data={"phenomenon": {"aggregation": "avg"}}),
+        mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 1.1}]),
+    ]
+
+    ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
+
+    mock_decrypt.assert_called_once_with("encrypted-token", "dummy-key")
+    assert mock_request.call_count == 3
+    # der Token muss an ALLEN Requests hängen, auch an den beiden in get_sensor_data
+    for call in mock_request.call_args_list:
+        assert call.kwargs["params"]["token"] == "secret-token"
+
+
+@pytest.mark.parametrize("token", [None, ""])
+@patch("timeio.ext_api.decrypt")
+@patch("timeio.ext_api.request_with_handling")
+def test_sensoto_fetch_without_token(
+    mock_request, mock_decrypt, token, mock_response, mock_thing
+):
+    thing = mock_thing({**SENSOTO_SETTINGS, "token": token})
+    mock_request.side_effect = [
+        mock_response(data={"items": [{"name": "s1"}]}),
+        mock_response(data={"phenomenon": {"aggregation": "avg"}}),
+        mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 1.1}]),
+    ]
+
+    ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
+
+    mock_decrypt.assert_not_called()
+    for call in mock_request.call_args_list:
+        assert "token" not in (call.kwargs.get("params") or {})
+
+
+@pytest.mark.parametrize(
+    "organization, expected",
+    [
+        (None, "open"),
+        ("", "open"),
+        ("valigruen", "valigruen"),
+    ],
+)
+@patch("timeio.ext_api.request_with_handling")
+def test_sensoto_organization_in_url(
+    mock_request, organization, expected, mock_response, mock_thing
+):
+    thing = mock_thing({**SENSOTO_SETTINGS, "organization": organization})
+    mock_request.side_effect = [
+        mock_response(data={"items": [{"name": "s1"}]}),
+        mock_response(data={"phenomenon": {"aggregation": "avg"}}),
+        mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 1.1}]),
+    ]
+
+    ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
+
+    assert mock_request.call_count == 3
+    for call in mock_request.call_args_list:
+        assert f"/organizations/{expected}/networks/" in call.args[1]

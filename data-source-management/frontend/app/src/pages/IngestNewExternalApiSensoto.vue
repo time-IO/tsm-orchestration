@@ -26,9 +26,11 @@ const formData = ref<IngestExternalApiSensotoCreate>({
   description: '',
   network: '',
   device: '',
+  organization: 'open',
   sync_enabled: false,
   sync_interval_in_minutes: null,
   period_in_minutes: null,
+  token: null,
 });
 const isLoading = ref(false);
 
@@ -39,9 +41,11 @@ async function save() {
     permission_group_id: formData.value.permission_group_id,
     network: formData.value.network,
     device: formData.value.device,
+    organization: formData.value.organization,
     sync_enabled: formData.value.sync_enabled,
     sync_interval_in_minutes: formData.value.sync_interval_in_minutes,
     period_in_minutes: formData.value.period_in_minutes,
+    token: formData.value.token,
   };
   try {
     isLoading.value = true;

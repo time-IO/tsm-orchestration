@@ -38,24 +38,55 @@
             rows="3"
             hint="Provide additional details about this ingest configuration"
           />
+          <q-separator class="q-my-lg" />
+
+          <div class="text-subtitle1">Organization &amp; access</div>
+
+          <q-input
+            filled
+            v-model="formData.organization"
+            label="Organization *"
+            type="text"
+            hint="Sensoto organization the network belongs to, e.g. open or valigruen"
+            :rules="[rules.REQUIRED]"
+          />
+
+          <q-input
+            filled
+            class="q-mb-md"
+            v-model="formData.token"
+            label="Token (optional)"
+            :type="isPwd ? 'password' : 'text'"
+            hint="Only needed for protected data. The token must grant access to the organization above."
+            clearable
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
 
           <q-separator class="q-my-lg" />
+          <div class="text-subtitle1">Data source</div>
+
           <q-input
             filled
             v-model="formData.network"
             label="Network *"
             type="text"
-            hint="Sensoto network identifier"
+            hint="Sensoto network identifier (within the organization)"
             :rules="[rules.REQUIRED]"
           />
 
-          <q-separator class="q-my-lg" />
           <q-input
             filled
             v-model="formData.device"
             label="Device *"
             type="text"
-            hint="Sensoto device identifier"
+            hint="Sensoto device identifier (within the network)"
             :rules="[rules.REQUIRED]"
           />
 
@@ -122,7 +153,8 @@ import type {
 } from '../services/ingest_external_api_sensoto/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import HelpButton from "@/components/HelpButton.vue";
+import HelpButton from '@/components/HelpButton.vue';
+import { ref } from 'vue';
 
 defineProps<{
   title: string;
@@ -142,10 +174,14 @@ const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiS
     description: null,
     network: null,
     device: null,
+    organization: 'open',
     sync_enabled: false,
     sync_interval_in_minutes: null,
+    token: null,
   }),
 });
+
+const isPwd = ref(true);
 </script>
 
 <style scoped></style>

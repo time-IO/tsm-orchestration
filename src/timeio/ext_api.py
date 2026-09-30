@@ -9,6 +9,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
+from timeio.grafana import organization
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
@@ -682,7 +683,11 @@ class NmApiSyncer(ExtApiSyncer):
 
 
 class SensotoApiSyncer(ExtApiSyncer):
-    base_url = "https://api.sensoto.io/v1/organizations/open/networks"
+    organizations_url = "https://api.sensoto.io/v1/organizations"
+    default_organization = "open"
+
+    def _networks_url(self, organization):
+        return f"{self.organizations_url}/{organization}/networks"
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -690,17 +695,27 @@ class SensotoApiSyncer(ExtApiSyncer):
             settings["network"],
             settings["device"],
         )
-        sensor_data = self.get_sensor_data(network, device)
+        organization = settings.get("organization") or self.default_organization
+        networks_url = self._networks_url(organization)
+
+        auth_params = {}
+        if token_enc := settings.get("token"):
+            auth_params["token"] = decrypt(token_enc, get_crypt_key())
+
+        sensor_data = self.get_sensor_data(
+            network, device, auth_params, organization=organization
+        )
         api_response = list()
         params = {
             "start": content["datetime_from"],
             "end": content["datetime_to"],
             "timeFormat": "interval",
+            **auth_params,
         }
         for s in sensor_data:
             res = request_with_handling(
                 "GET",
-                f"{self.base_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
+                f"{networks_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
                 params=params,
             )
             api_data = res.json()
@@ -731,15 +746,20 @@ class SensotoApiSyncer(ExtApiSyncer):
 
         return bodies
 
-    def get_sensor_data(self, network, device):
+    def get_sensor_data(self, network, device, params=None, organization=None):
+        networks_url = self._networks_url(organization or self.default_organization)
         sensor_data = list()
         sensors_resp = request_with_handling(
-            "GET", f"{self.base_url}/{network}/devices/{device}/sensors"
+            "GET",
+            f"{networks_url}/{network}/devices/{device}/sensors",
+            params=params,
         )
         sensors = [i["name"] for i in sensors_resp.json()["items"]]
         for s in sensors:
             agg_resp = request_with_handling(
-                "GET", f"{self.base_url}/{network}/devices/{device}/sensors/{s}"
+                "GET",
+                f"{networks_url}/{network}/devices/{device}/sensors/{s}",
+                params=params,
             )
             agg = agg_resp.json()["phenomenon"]["aggregation"]
             sensor_data.append({"sensor": s, "aggregation": agg})

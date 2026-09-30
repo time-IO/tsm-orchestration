@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column
 from typing import Optional
 
 from constants import ApiType
@@ -8,24 +8,31 @@ from .ingest_external_api import (
     IngestExternalApiCreate,
     IngestExternalApiUpdate,
 )
+from encryption import EncryptedType
 
 
 class IngestExternalApiSensotoRead(IngestExternalApiRead):
     network: str
     device: str
+    organization: str
     period_in_minutes: int
+    token: Optional[str] = None
 
 
 class IngestExternalApiSensotoCreate(IngestExternalApiCreate):
     network: str
     device: str
+    organization: str = "open"
     period_in_minutes: int
+    token: Optional[str] = None
 
 
 class IngestExternalApiSensotoUpdate(IngestExternalApiUpdate):
     network: Optional[str] = None
     device: Optional[str] = None
+    organization: Optional[str] = None
     period_in_minutes: Optional[int] = None
+    token: Optional[str] = None
 
 
 class IngestExternalApiSensoto(SQLModel, table=True):
@@ -38,7 +45,11 @@ class IngestExternalApiSensoto(SQLModel, table=True):
     )
     network: str = Field(nullable=False)
     device: str = Field(nullable=False)
+    organization: str = Field(default="open", nullable=False)
     period_in_minutes: int = Field(nullable=False)
+    token: Optional[str] = Field(
+        default=None, sa_column=Column("token", EncryptedType, nullable=True)
+    )
 
     external_api: IngestExternalApi = Relationship(back_populates="sensoto")
 
