@@ -52,6 +52,7 @@ When adding a changelog entry, ensure the following:
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
 - Increased Mosquitto per-client queue limits (max queued messages to 1,000,000, max queued bytes to 2 GB) ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/732))
+- Set all self-built image base images to an exact version tag in their Dockerfiles instead of floating tags (init: alpine 3.24.2, frost: tomcat 11.0.26-jdk25-temurin, dispatcher and cron-scheduler: debian trixie-20260918-slim, dsm-api: python 3.13.15-slim-trixie, dsm-frontend: node 24.21.0-slim + nginx/nginx-unprivileged 1.29.8-alpine) and removed the `*_BASE_IMAGE_*` build overrides from `docker-compose.yml`, `.env.example` and `releases/release.env` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/xxx))
 
 ## [2026-09-10]
 
