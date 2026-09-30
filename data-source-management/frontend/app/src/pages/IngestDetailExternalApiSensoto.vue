@@ -124,11 +124,15 @@
 
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-7">
-          <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" trigger-type="external-api" />
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            trigger-type="external-api"
+          />
         </div>
 
         <div class="col-12 col-md-5">
-          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name"/>
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
         </div>
       </div>
     </div>
@@ -159,7 +163,7 @@ import { useIngestExternalApiSensotoStore } from '@/stores/ingestExternalApiSens
 import type { IngestExternalApiSensotoPublic } from '@/services/ingest_external_api_sensoto/types';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
-import RelatedSmsConfigurationsSection from "@/components/RelatedSmsConfigurationsSection.vue";
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

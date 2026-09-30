@@ -68,5 +68,5 @@ export const API = {
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
   smsConfigurations: smsConfigurationsController,
-  ingestDatabase: ingestDatabaseController
+  ingestDatabase: ingestDatabaseController,
 };

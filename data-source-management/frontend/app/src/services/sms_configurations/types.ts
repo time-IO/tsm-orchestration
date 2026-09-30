@@ -1,4 +1,4 @@
 export type SmsConfiguration = {
-  label: string,
-  url: string
+  label: string;
+  url: string;
 };

@@ -71,7 +71,7 @@ export default defineConfig((ctx) => {
         OIDC_REDIRECT_URI: ENV_OIDC_REDIRECT_URI,
         OIDC_SCOPE: ENV_OIDC_SCOPE,
         OIDC_POST_LOGOUT_REDIRECT_URI: ENV_OIDC_POST_LOGOUT_REDIRECT_URI,
-        SMS_URL: ENV_SMS_URL
+        SMS_URL: ENV_SMS_URL,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

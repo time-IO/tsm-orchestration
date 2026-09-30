@@ -88,7 +88,7 @@ import ExternalLinkText from '@/components/common/ExternalLinkText.vue';
 
 const { ingestId, ingestName } = defineProps<{
   ingestId: number;
-  ingestName: string
+  ingestName: string;
 }>();
 
 export type SmsConfiguration = {
