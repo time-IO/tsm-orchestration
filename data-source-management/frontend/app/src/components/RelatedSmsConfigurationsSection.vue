@@ -5,77 +5,100 @@
     <q-separator />
 
     <q-card-section>
-      <div class="text-caption text-grey-7 q-mb-md">
-        <span v-if="configurations.length"
-          >SMS configurations this ingest is linked to. Open one to view its devices, mounts and
-          metadata in the Sensor Management System.</span
-        >
-        <span v-else>
-          The Sensor Management System allows you to manage sensors, measurement setups and
-          campaigns. Once you link data from time.IO with metadata from SMS, linked Configurations
-          will appear here.
+      <template v-if="loading">
+        <q-skeleton type="text" width="70%" class="q-mb-md" />
+        <q-list bordered separator class="rounded-borders">
+          <q-item v-for="n in 4" :key="n">
+            <q-item-section>
+              <q-skeleton type="text" :width="`${50 + n * 10}%`" />
+            </q-item-section>
+            <q-item-section side>
+              <q-skeleton type="circle" size="28px" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </template>
+
+      <div v-else-if="error" class="column items-center text-center q-pa-lg">
+        <q-icon name="mdi-alert-circle-outline" color="negative" size="36px" class="q-mb-sm" />
+        <span class="q-mt-xs">
+          {{ error }}
         </span>
       </div>
 
-      <q-list v-if="configurations.length" bordered separator class="rounded-borders">
-        <q-item v-for="(config, index) in configurations" :key="config.url ?? index">
-          <q-item-section>
-            <q-item-label class="text-subtitle2 text-weight-medium overflow-auto">
-              {{ truncateText(config.label, 50) }}
-            </q-item-label>
-          </q-item-section>
+      <template v-else>
+        <div class="text-caption text-grey-7 q-mb-md">
+          <span v-if="configurations.length"
+            >SMS configurations this ingest is linked to. Open one to view its devices, mounts and
+            metadata in the Sensor Management System.</span
+          >
+          <span v-if="!configurations.length">
+            The Sensor Management System allows you to manage sensors, measurement setups and
+            campaigns. Once you link data from time.IO with metadata from SMS, linked Configurations
+            will appear here.
+          </span>
+        </div>
 
-          <q-item-section v-if="config.url" side>
-            <q-btn
-              flat
-              round
-              dense
-              icon="open_in_new"
-              color="grey-7"
-              @click="openInNewTab(config.url)"
-            >
-              <q-tooltip>Open in new tab</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-      </q-list>
+        <q-list v-if="configurations.length" bordered separator class="rounded-borders">
+          <q-item v-for="(config, index) in configurations" :key="config.url ?? index">
+            <q-item-section>
+              <q-item-label class="text-subtitle2 text-weight-medium overflow-auto">
+                {{ truncateText(config.label, 50) }}
+              </q-item-label>
+            </q-item-section>
 
-      <div v-else class="text-caption">
-        <p>To link a configuration with this ingest, do the following:</p>
+            <q-item-section v-if="config.url" side>
+              <q-btn
+                flat
+                round
+                dense
+                icon="open_in_new"
+                color="grey-7"
+                @click="openInNewTab(config.url)"
+              >
+                <q-tooltip>Open in new tab</q-tooltip>
+              </q-btn>
+            </q-item-section>
+          </q-item>
+        </q-list>
 
-        <ol class="link-steps q-mt-sm">
-          <li class="row no-wrap items-start q-mb-sm">
-            <q-icon name="mdi-numeric-1-circle" color="grey-6" size="18px" class="step-icon" />
-            <div class="col">
-              Go to the
-              <external-link-text :href="smsUrl" text="Sensor Management System (SMS)" />
-              and create a Configuration or open an existing one.
-            </div>
-          </li>
+        <div v-else-if="databaseName" class="text-caption">
+          <p>To link a configuration with this ingest, do the following:</p>
 
-          <li class="row no-wrap items-start q-mb-sm">
-            <q-icon name="mdi-numeric-2-circle" color="grey-6" size="18px" class="step-icon" />
-            <div class="col">
-              Go to the tab <span class="text-weight-bold">Data Linking</span> and fill the form
-              accordingly.
-            </div>
-          </li>
+          <ol class="link-steps q-mt-sm">
+            <li class="row no-wrap items-start q-mb-sm">
+              <q-icon name="mdi-numeric-1-circle" color="grey-6" size="18px" class="step-icon" />
+              <div class="col">
+                Go to the
+                <external-link-text :href="smsUrl" text="Sensor Management System (SMS)" />
+                and create a Configuration or open an existing one.
+              </div>
+            </li>
 
-          <li class="row no-wrap items-start q-mb-sm">
-            <q-icon name="mdi-numeric-3-circle" color="grey-6" size="18px" class="step-icon" />
-            <div class="col">
-              Select
-              <span class="text-weight-bold">{{ databaseName }}</span>
-              as Datasource and <span class="text-weight-bold">{{ ingestName }}</span> as Thing.
-            </div>
-          </li>
-        </ol>
+            <li class="row no-wrap items-start q-mb-sm">
+              <q-icon name="mdi-numeric-2-circle" color="grey-6" size="18px" class="step-icon" />
+              <div class="col">
+                Go to the tab <span class="text-weight-bold">Data Linking</span> and fill the form
+                accordingly.
+              </div>
+            </li>
 
-        <p>
-          Learn more about the detailed connection process on our
-          <external-link-text :href="wikiUrl" text="Wiki page" />.
-        </p>
-      </div>
+            <li class="row no-wrap items-start q-mb-sm">
+              <q-icon name="mdi-numeric-3-circle" color="grey-6" size="18px" class="step-icon" />
+              <div class="col">
+                Select
+                <span class="text-weight-bold">{{ databaseName }}</span>
+                as Datasource and <span class="text-weight-bold">{{ ingestName }}</span> as Thing.
+              </div>
+            </li>
+          </ol>
+
+          <p>
+            Learn more about the detailed connection process on our
+            <external-link-text :href="wikiUrl" text="Wiki page" />.
+          </p>
+        </div>
+      </template>
     </q-card-section>
   </q-card>
 </template>
@@ -85,6 +108,8 @@ import { onMounted, ref } from 'vue';
 import { API } from '@/services';
 import { truncateText } from '@/utils/string_utils';
 import ExternalLinkText from '@/components/common/ExternalLinkText.vue';
+import { getGenericFetchingError } from '@/utils/axios_utils';
+import { useQuasar } from 'quasar';
 
 const { ingestId, ingestName } = defineProps<{
   ingestId: number;
@@ -96,16 +121,39 @@ export type SmsConfiguration = {
   url: string;
 };
 
+const $q = useQuasar();
+
 const configurations = ref<SmsConfiguration[]>([]);
 const databaseName = ref<string>('');
+
+const loading = ref(false);
+const error = ref<string | null>(null);
+
 const smsUrl = ref<string>(import.meta.env.SMS_URL);
 const wikiUrl = 'https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/Metadata';
 
-onMounted(async () => {
+onMounted(load);
+
+async function load() {
   if (!ingestId) return;
-  configurations.value = await API.smsConfigurations.getConfigurationsByIngest(ingestId);
-  databaseName.value = await API.ingestDatabase.getDatabaseName(ingestId);
-});
+  loading.value = true;
+  error.value = null;
+  try {
+    configurations.value = await API.smsConfigurations.getConfigurationsByIngest(ingestId);
+  } catch {
+    error.value = getGenericFetchingError('configurations');
+  }
+  try {
+    databaseName.value = await API.ingestDatabase.getDatabaseName(ingestId);
+  } catch {
+    $q.notify({
+      type: 'warning',
+      message: getGenericFetchingError('datasource endpoint'),
+    });
+  } finally {
+    loading.value = false;
+  }
+}
 
 function openInNewTab(url: string) {
   window.open(url, '_blank', 'noopener,noreferrer');
