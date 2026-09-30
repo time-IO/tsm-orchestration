@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from timeio.grafana.typehints import DatasourceT, FolderT
 from typing import TYPE_CHECKING
 
@@ -35,6 +37,10 @@ class GrafanaDashboard:
             "liveNow": True,
             "panels": [
                 self._journal_panel(thing, datasource),
+                # STA datastreams row, between journal and raw observations
+                self._sta_row_panel(),
+                self._sta_observation_panel(thing, datasource),
+                self._sta_links_info_panel(datasource),
                 self._observations_row_panel(),
                 self._observation_panel(thing, datasource),
             ],
@@ -44,6 +50,8 @@ class GrafanaDashboard:
                 "list": [
                     self._datastream_templating(thing, datasource),
                     self._show_qaqc_templating(datasource),
+                    self._sta_datastream_templating(thing, datasource),
+                    self._sta_links_info_templating(thing, datasource),
                 ]
             },
             "time": {"from": "now-7d", "to": "now"},
@@ -86,6 +94,34 @@ class GrafanaDashboard:
                 {"text": "False", "value": "False", "selected": True},
                 {"text": "True", "value": "True", "selected": False},
             ],
+        }
+
+    def _sta_datastream_templating(self, thing, datasource) -> dict:
+        return {
+            "datasource": datasource,
+            "hide": 0,
+            "includeAll": True,  # empty value is guarded in sta_observation.sql
+            "label": "STA Datastream",
+            "multi": True,
+            "name": "sta_datastream",
+            "query": self._sta_datastream_sql(thing.uuid),
+            "refresh": 1,  # re-query on load, so new linkings appear
+            "sort": 0,  # keep query order (newest first)
+            "type": "query",
+        }
+
+    def _sta_links_info_templating(self, thing, datasource) -> dict:
+        return {
+            "datasource": datasource,
+            # hidden helper: SMS link, prefixed with a note when no linkings exist
+            "hide": 2,
+            "includeAll": False,
+            "label": "STA Links Info",
+            "multi": False,
+            "name": "sta_links_info",
+            "query": self._sta_links_info_sql(thing.uuid),
+            "refresh": 1,
+            "type": "query",
         }
 
     def _observation_panel(self, thing: Thing, datasource: DatasourceT) -> dict:
@@ -149,6 +185,65 @@ class GrafanaDashboard:
                 {"id": "custom.axisSoftMax", "value": 1},
                 {"id": "custom.pointSize", "value": 7},
             ],
+        }
+
+    @staticmethod
+    def _sta_row_panel() -> dict:
+        return {
+            "collapsed": False,
+            "gridPos": {"h": 1, "w": 24},
+            "panels": [],
+            "title": "STA Datastreams",
+            "type": "row",
+        }
+
+    def _sta_observation_panel(self, thing: Thing, datasource: DatasourceT) -> dict:
+        return {
+            "datasource": datasource,
+            "gridPos": {"h": 8},
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": False,
+                }
+            },
+            "maxPerRow": 3,
+            "repeat": "sta_datastream",
+            "repeatDirection": "h",
+            "targets": [
+                self._sta_observation_query_target(thing, datasource),
+            ],
+            "title": "$sta_datastream",
+            "type": "timeseries",
+        }
+
+    @classmethod
+    def _sta_observation_query_target(
+        cls, thing: ThingT, datasource: DatasourceT
+    ) -> dict:
+        return {
+            "datasource": datasource,
+            "editorMode": "code",
+            "format": "time_series",
+            "rawQuery": True,
+            "rawSql": cls._sta_observation_sql(thing.uuid),
+            "refId": "A",
+        }
+
+    @staticmethod
+    def _sta_links_info_panel(datasource: DatasourceT) -> dict:
+        # Renders sta_links_info: SMS link, prefixed when no linkings exist
+        return {
+            "datasource": datasource,
+            "gridPos": {"h": 2, "w": 24},
+            "options": {
+                "mode": "markdown",
+                "content": "${sta_links_info}",
+            },
+            "transparent": True,
+            "type": "text",
         }
 
     @staticmethod
@@ -244,5 +339,23 @@ class GrafanaDashboard:
     @staticmethod
     def _qaqc_sql(uuid: str) -> str:
         with open("timeio/grafana/sql/qaqc.sql", "r") as f:
+            sql = f.read().format(uuid=uuid)
+        return sql
+
+    @staticmethod
+    def _sta_datastream_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_datastream.sql", "r") as f:
+            sql = f.read().format(uuid=uuid)
+        return sql
+
+    @staticmethod
+    def _sta_links_info_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_links_info.sql", "r") as f:
+            sql = f.read().format(uuid=uuid, sms_url=os.environ.get("SMS_URL", ""))
+        return sql
+
+    @staticmethod
+    def _sta_observation_sql(uuid: str) -> str:
+        with open("timeio/grafana/sql/sta_observation.sql", "r") as f:
             sql = f.read().format(uuid=uuid)
         return sql

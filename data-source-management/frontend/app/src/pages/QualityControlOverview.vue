@@ -156,15 +156,15 @@
                 >
                   <q-tooltip>Copy</q-tooltip>
                 </q-btn>
-                <!--                <q-btn-->
-                <!--                  flat-->
-                <!--                  outline-->
-                <!--                  color="negative"-->
-                <!--                  icon="delete"-->
-                <!--                  @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-                <!--                >-->
-                <!--                  <q-tooltip>Delete</q-tooltip>-->
-                <!--                </q-btn>-->
+                <q-btn
+                  flat
+                  outline
+                  color="negative"
+                  icon="delete"
+                  @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-btn>
               </template>
 
               <template v-else-if="col.name === 'created_by'">
@@ -275,10 +275,10 @@ const openTriggerDialog = () => {
   showTriggerDialog.value = true;
 };
 
-// const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
-//   idToDelete.value = id;
-//   deleteDialog.value = true;
-// };
+const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
+  idToDelete.value = id;
+  deleteDialog.value = true;
+};
 
 const deleteItem = async () => {
   if (!idToDelete.value) {

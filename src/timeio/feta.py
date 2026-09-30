@@ -832,6 +832,8 @@ class S3Store(Base):
             return self._s3_from_sftp()
         if self.ingest_type == "external_sftp":
             return self._s3_from_extsftp()
+        if self.ingest_type == "http":
+            return self._s3_from_http()
 
     def _s3_from_sftp(self):
         query = f"""
@@ -858,11 +860,61 @@ class S3Store(Base):
 
         return self._fetchone(self._conn, query, self.id)
 
+    def _s3_from_http(self):
+        query = f"""
+                SELECT
+                    bucket_username as username,
+                    bucket_password as password,
+                    bucket_name,
+                    '*' as filename_pattern
+                FROM {self._schema}.ingest_http
+                WHERE ingest_id = %s
+            """
+
+        return self._fetchone(self._conn, query, self.id)
+
     # thing.RawDataStorage interface
     # password, filename_pattern
     # are already defined above
     username = user
     bucket_name = bucket
+
+
+class ExtMQTT(Base):
+    _schema = SCHEMA
+    _table_name = "ingest_external_mqtt"
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
+    external_mqtt_address: str = _prop(
+        lambda self: self._attrs["external_mqtt_address"]
+    )
+    external_mqtt_port: int = _prop(lambda self: self._attrs["external_mqtt_port"])
+    external_mqtt_username: str = _prop(
+        lambda self: self._attrs["external_mqtt_username"]
+    )
+    external_mqtt_password: str = _prop(
+        lambda self: self._attrs["external_mqtt_password"]
+    )
+    external_mqtt_ca_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_ca_cert"]
+    )
+    external_mqtt_client_cert: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_cert"]
+    )
+    external_mqtt_client_key: str = _prop(
+        lambda self: self._attrs["external_mqtt_client_key"]
+    )
+    external_mqtt_topic: str = _prop(lambda self: self._attrs["external_mqtt_topic"])
+    enabled: bool = _prop(lambda self: self._attrs["enabled"])
+
+
+class HTTP(Base):
+    _schema = SCHEMA
+    _table_name = "ingest_http"
+    id: int = _prop(lambda self: self._attrs["ingest_id"])
+    path_for_posts: str = _prop(lambda self: self._attrs["path_for_posts"])
+    file_type: str = _prop(lambda self: self._attrs["file_type"])
+    api_key: str = _prop(lambda self: self._attrs["api_key"])
+    enabled: bool = _prop(lambda self: self._attrs["enabled"])
 
 
 class Thing(Base, FromNameMixin, FromUUIDMixin):
@@ -878,6 +930,8 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
+    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    http: HTTP | None = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
 
     @property
     def ingest_type(self) -> IngestType:
@@ -921,9 +975,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
         query = f"""select i.* from {cls._schema}.ingest i
                 left join {cls._schema}.ingest_sftp s on i.id = s.ingest_id
                 left join {cls._schema}.ingest_external_sftp es on i.id = es.ingest_id
-                where es.bucket_name = %s or s.bucket_name = %s"""
+                left join {cls._schema}.ingest_http h on i.id = h.ingest_id
+                where es.bucket_name = %s or s.bucket_name = %s or h.bucket_name = %s"""
         conn = cls._get_connection(dsn, **kwargs)
-        if not (res := cls._fetchall(conn, query, bucket_name, bucket_name)):
+        if not (
+            res := cls._fetchall(conn, query, bucket_name, bucket_name, bucket_name)
+        ):
             raise ObjectNotFound(f"No {cls.__name__} found for {bucket_name=}")
         if len(res) > 1:
             warnings.warn(
