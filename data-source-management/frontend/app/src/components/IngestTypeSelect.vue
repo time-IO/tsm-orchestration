@@ -23,6 +23,8 @@ const options = [
   { id: 'sftp', name: 'Sftp' },
   { id: 'external_api', name: 'External Api' },
   { id: 'external_sftp', name: 'External Sftp' },
+  { id: 'external_mqtt', name: 'External Mqtt' },
+  { id: 'http', name: 'Http' },
 ];
 </script>
 
