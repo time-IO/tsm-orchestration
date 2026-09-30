@@ -6,7 +6,8 @@ from fastapi import HTTPException
 from config import settings
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import get_frost_client
-from services.permission_groups import fetch_own_database_usernames, search_own_ingests
+from services.ingests import fetch_ingest_permission_group_id
+from services.permission_groups import fetch_own_permission_groups
 
 logger = logging.getLogger("app.services.frost_endpoints")
 
@@ -25,48 +26,64 @@ def rewrite_endpoint_url(url: str) -> str:
     return settings.BASE_URL.rstrip("/") + path
 
 
-def rewrite_endpoint(frost_endpoint: FrostEndpoint) -> FrostEndpoint:
-    frost_endpoint.url = rewrite_endpoint_url(frost_endpoint.url)
-    return frost_endpoint
+def frost_display_name(group: str, project: str | None) -> str:
+    return (project or group).upper()
+
+
+def endpoint_from_frost(raw: dict) -> FrostEndpoint:
+    """Build a FrostEndpoint from an entry of the FROST endpoints listing.
+    FROST's own "displayName" is ignored, the display name is derived."""
+    group = raw.get("group")
+    project = raw.get("project")
+    endpoint = FrostEndpoint.model_validate(
+        {
+            "name": raw.get("name"),
+            "display_name": frost_display_name(group or "", project),
+            "group": group,
+            "project": project,
+            "url": raw.get("url"),
+        }
+    )
+    endpoint.url = rewrite_endpoint_url(endpoint.url)
+    return endpoint
+
+
+def permission_group_display_name(name: str) -> str:
+    return name.rsplit(":", 1)[-1]
+
+
+def normalize_search(value: str) -> str:
+    return value.replace("_", "").casefold()
 
 
 def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
-    q = q.lower()
-    fields = [
-        endpoint.displayName,
-        endpoint.group,
-        endpoint.project or "",
-    ]
-    return any(q in field.lower() for field in fields)
+    return normalize_search(q) in normalize_search(endpoint.display_name)
 
 
 def parse_frost_name(name: str) -> FrostEndpoint:
-    """Build a FrostEndpoint from an existing FROST/database schema name,
-    parsing out group/project/displayName the same way the FROST
-    endpoints JSP does when listing its webapp directories."""
     first = name.find("_")
     second = name.find("_", first + 1) if first != -1 else -1
 
     group = name[:first] if first != -1 else name
     project = name[first + 1 : second] if second != -1 else None
-    display_name = f"{group} {project}" if project else group
+    display_name = frost_display_name(group, project)
 
     url = f"{settings.BASE_URL.rstrip('/')}/sta/{name}/v1.1"
 
     return FrostEndpoint(
         name=name,
-        displayName=display_name,
+        display_name=display_name,
         group=group,
         project=project,
         url=url,
-        is_own=True,
+        is_internal=True,
     )
 
 
 async def frost_endpoints_service(
     q: str | None = None,
     authorization: str | None = None,
-    ingest: str | None = None,
+    ingest_id: int | None = None,
 ) -> FrostEndpointsResponse:
     try:
         upstream = await get_frost_client().get(
@@ -77,7 +94,7 @@ async def frost_endpoints_service(
         upstream.raise_for_status()
         data = upstream.json()
         raw_endpoints = data.get("endpoints", []) if isinstance(data, dict) else []
-        endpoints = [FrostEndpoint.model_validate(e) for e in raw_endpoints]
+        endpoints = [endpoint_from_frost(e) for e in raw_endpoints]
     except httpx.TimeoutException:
         logger.warning("Timeout while fetching FROST endpoints")
         raise HTTPException(status_code=504, detail="FROST server timeout")
@@ -85,26 +102,36 @@ async def frost_endpoints_service(
         logger.error("Fetching FROST endpoints failed: %s", e)
         raise HTTPException(status_code=502, detail="FROST endpoints not available")
 
-    endpoints = [rewrite_endpoint(endpoint) for endpoint in endpoints]
-
     if authorization:
-        own_usernames = await fetch_own_database_usernames(authorization)
+        permission_groups = await fetch_own_permission_groups(authorization)
         existing_names = {endpoint.name for endpoint in endpoints}
 
+        for username in permission_groups:
+            if username not in existing_names:
+                endpoints.append(parse_frost_name(username))
+
         for endpoint in endpoints:
-            if endpoint.name in own_usernames:
-                endpoint.is_own = True
+            permission_group = permission_groups.get(endpoint.name)
+            if permission_group:
+                endpoint.is_internal = True
+                if permission_group.get("name"):
+                    endpoint.display_name = permission_group_display_name(
+                        permission_group["name"]
+                    )
 
-        missing_usernames = own_usernames - existing_names
-        for username in missing_usernames:
-            endpoints.append(parse_frost_name(username))
+        # show internal endpoints first
+        endpoints.sort(key=lambda e: not e.is_internal)
 
-        # Sort own endpoints first, keeping their relative order otherwise
-        endpoints.sort(key=lambda e: not e.is_own)
-
-        if ingest:
-            ingest_usernames = await search_own_ingests(authorization, ingest)
-            endpoints = [e for e in endpoints if e.name in ingest_usernames]
+        if ingest_id is not None:
+            permission_group_id = await fetch_ingest_permission_group_id(
+                authorization, ingest_id
+            )
+            endpoints = [
+                e
+                for e in endpoints
+                if permission_group_id is not None
+                and permission_groups.get(e.name, {}).get("id") == permission_group_id
+            ]
 
     if q:
         endpoints = [e for e in endpoints if matches_query(e, q)]

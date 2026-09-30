@@ -21,8 +21,8 @@ router = APIRouter(
 async def list_endpoints(
     q: str | None = None,
     authorization: str | None = Header(default=None),
-    ingest: str | None = None,
+    ingest_id: int | None = None,
 ) -> FrostEndpointsResponse:
     return await frost_endpoints_service(
-        q=q, authorization=authorization, ingest=ingest
+        q=q, authorization=authorization, ingest_id=ingest_id
     )
