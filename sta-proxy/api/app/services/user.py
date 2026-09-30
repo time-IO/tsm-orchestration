@@ -3,8 +3,8 @@ import logging
 import httpx
 from fastapi import HTTPException
 
-from config import settings
-from models import UserPublic
+from services.dsm_api import fetch_dsm_api
+from models.user import UserPublic
 
 logger = logging.getLogger("app.services.user")
 
@@ -14,13 +14,7 @@ async def get_me_service(authorization: str | None) -> UserPublic:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
-        async with httpx.AsyncClient(timeout=settings.FROST_TIMEOUT) as client:
-            upstream = await client.get(
-                f"{settings.DSM_API_URL}/me/",
-                headers={"authorization": authorization, "accept": "application/json"},
-            )
-        upstream.raise_for_status()
-        return UserPublic.model_validate(upstream.json())
+        return UserPublic.model_validate(await fetch_dsm_api("/me/", authorization))
     except httpx.TimeoutException:
         logger.warning("Timeout while fetching user info from DSM API")
         raise HTTPException(status_code=504, detail="DSM API timeout")

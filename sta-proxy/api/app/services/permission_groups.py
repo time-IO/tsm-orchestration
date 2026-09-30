@@ -2,7 +2,7 @@ import logging
 
 import httpx
 
-from config import settings
+from services.dsm_api import fetch_dsm_api
 
 logger = logging.getLogger("app.services.permission_groups")
 
@@ -11,13 +11,7 @@ async def fetch_own_database_usernames(authorization: str) -> set[str]:
     """Fetch the current user's permission groups from the DSM API and
     return the set of associated FROST database usernames (schema names)."""
     try:
-        async with httpx.AsyncClient(timeout=settings.FROST_TIMEOUT) as client:
-            upstream = await client.get(
-                f"{settings.DSM_API_URL}/permission-group/",
-                headers={"authorization": authorization, "accept": "application/json"},
-            )
-        upstream.raise_for_status()
-        data = upstream.json()
+        data = await fetch_dsm_api("/permission-group/", authorization)
     except (httpx.HTTPError, ValueError) as e:
         logger.warning("Fetching own permission groups failed: %s", e)
         return set()
@@ -33,21 +27,12 @@ async def search_own_ingests(authorization: str, ingest_query: str) -> set[str]:
     FROST database usernames belonging to the matching ingests'
     permission groups."""
     try:
-        async with httpx.AsyncClient(timeout=settings.FROST_TIMEOUT) as client:
-            ingest_response = await client.get(
-                f"{settings.DSM_API_URL}/ingest/",
-                headers={"authorization": authorization, "accept": "application/json"},
-                params={"name[ilike]": f"%{ingest_query}%"},
-            )
-            ingest_response.raise_for_status()
-            ingest_data = ingest_response.json()
-
-            pg_response = await client.get(
-                f"{settings.DSM_API_URL}/permission-group/",
-                headers={"authorization": authorization, "accept": "application/json"},
-            )
-            pg_response.raise_for_status()
-            pg_data = pg_response.json()
+        ingest_data = await fetch_dsm_api(
+            "/ingest/",
+            authorization,
+            params={"name[ilike]": f"%{ingest_query}%"},
+        )
+        pg_data = await fetch_dsm_api("/permission-group/", authorization)
     except (httpx.HTTPError, ValueError) as e:
         logger.warning("Searching own ingests failed: %s", e)
         return set()
