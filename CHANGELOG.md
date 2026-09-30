@@ -20,8 +20,9 @@ When adding a changelog entry, ensure the following:
 - Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 
 ### Changed
-- Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
+- Grafana ![Bildschirmfoto vom 2026-09-29 17-31-14.png](../../../Bilder/Bildschirmfotos/Bildschirmfoto%20vom%202026-09-29%2017-31-14.png)raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
+- Refactoring: Unified overview tables for Ingest, Ingest External API, Parser and QC Settings into a common base component ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/737))
 
 ## [2026-09-10]
 
