@@ -48,8 +48,7 @@
             <q-icon name="mdi-numeric-1-circle" color="grey-6" size="18px" class="step-icon" />
             <div class="col">
               Go to the
-              <span class="text-weight-bold">Sensor Management System (SMS)</span>
-              <inline-external-link-button :href="smsUrl" />
+              <external-link-text :href="smsUrl" text="Sensor Management System (SMS)" />
               and create a Configuration or open an existing one.
             </div>
           </li>
@@ -74,9 +73,7 @@
 
         <p>
           Learn more about the detailed connection process on our
-
-          <span class="text-weight-bold">Wiki page</span>
-          <inline-external-link-button :href="wikiUrl" />.
+          <external-link-text :href="wikiUrl" text="Wiki page" />.
         </p>
       </div>
     </q-card-section>
@@ -87,7 +84,7 @@
 import { onMounted, ref } from 'vue';
 import { API } from '@/services';
 import { truncateText } from '@/utils/string_utils';
-import InlineExternalLinkButton from "@/components/common/InlineExternalLinkButton.vue";
+import ExternalLinkText from '@/components/common/ExternalLinkText.vue';
 
 const { ingestId, ingestName } = defineProps<{
   ingestId: number;
