@@ -45,32 +45,17 @@
 
         <ol class="link-steps q-mt-sm">
           <li class="row no-wrap items-start q-mb-sm">
-            <div class="step-number bg-grey-6 text-white">1</div>
+            <q-icon name="mdi-numeric-1-circle" color="grey-6" size="18px" class="step-icon" />
             <div class="col">
               Go to the
               <span class="text-weight-bold">Sensor Management System (SMS)</span>
-              <q-btn
-                flat
-                dense
-                round
-                size="xs"
-                icon="open_in_new"
-                color="grey-7"
-                class="q-ml-xs"
-                type="a"
-                :href="smsUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open the Sensor Management System in a new tab"
-              >
-                <q-tooltip>Open SMS in a new tab</q-tooltip>
-              </q-btn>
+              <inline-external-link-button :href="smsUrl" />
               and create a Configuration or open an existing one.
             </div>
           </li>
 
           <li class="row no-wrap items-start q-mb-sm">
-            <div class="step-number bg-grey-6 text-white">2</div>
+            <q-icon name="mdi-numeric-2-circle" color="grey-6" size="18px" class="step-icon" />
             <div class="col">
               Go to the tab <span class="text-weight-bold">Data Linking</span> and fill the form
               accordingly.
@@ -78,7 +63,7 @@
           </li>
 
           <li class="row no-wrap items-start q-mb-sm">
-            <div class="step-number bg-grey-6 text-white">3</div>
+            <q-icon name="mdi-numeric-3-circle" color="grey-6" size="18px" class="step-icon" />
             <div class="col">
               Select
               <span class="text-weight-bold">{{ databaseName }}</span>
@@ -91,22 +76,7 @@
           Learn more about the detailed connection process on our
 
           <span class="text-weight-bold">Wiki page</span>
-          <q-btn
-            flat
-            dense
-            round
-            size="xs"
-            icon="open_in_new"
-            color="grey-7"
-            class="q-ml-xs"
-            type="a"
-            href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/Metadata"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open the Sensor Management System in a new tab"
-          >
-            <q-tooltip>Open SMS in a new tab</q-tooltip> </q-btn
-          >.
+          <inline-external-link-button :href="wikiUrl" />.
         </p>
       </div>
     </q-card-section>
@@ -117,6 +87,7 @@
 import { onMounted, ref } from 'vue';
 import { API } from '@/services';
 import { truncateText } from '@/utils/string_utils';
+import InlineExternalLinkButton from "@/components/common/InlineExternalLinkButton.vue";
 
 const { ingestId, ingestName } = defineProps<{
   ingestId: number;
@@ -131,6 +102,7 @@ export type SmsConfiguration = {
 const configurations = ref<SmsConfiguration[]>([]);
 const databaseName = ref<string>('');
 const smsUrl = ref<string>('https://web.app.ufz.de/sms');
+const wikiUrl = 'https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/Metadata';
 
 onMounted(async () => {
   if (!ingestId) return;
@@ -149,15 +121,8 @@ function openInNewTab(url: string) {
   padding-left: 0;
 }
 
-.step-number {
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
+.step-icon {
+  flex: 0 0 auto;
   margin-right: 8px;
-  border-radius: 50%;
-  font-size: 11px;
-  line-height: 18px;
-  text-align: center;
-  font-weight: 500;
 }
 </style>
