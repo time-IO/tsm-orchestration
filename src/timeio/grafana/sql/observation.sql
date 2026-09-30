@@ -8,7 +8,7 @@ WITH date_filtered AS (
   WHERE $__timeFilter(o.result_time)
   AND o.datastream_id = (
       SELECT dp.ds_id FROM datastream_properties dp
-      WHERE ${{datastream_pos:singlequote}} in (dp.property, dp.position)
+      WHERE dp.position = ${{datastream_pos:singlequote}}
       AND dp.t_uuid :: text = '{uuid}')
   ORDER BY o.result_time DESC
   LIMIT 1000000  -- 1M
@@ -21,7 +21,7 @@ fallback AS (
   FROM observation o
   WHERE o.datastream_id = (
     SELECT dp.ds_id FROM datastream_properties dp
-    WHERE ${{datastream_pos:singlequote}} in (dp.property, dp.position)
+    WHERE dp.position = ${{datastream_pos:singlequote}}
     AND dp.t_uuid :: text = '{uuid}')
   ORDER BY o.result_time DESC  -- most recent
   LIMIT 10000  -- 10k
