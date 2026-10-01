@@ -27,6 +27,7 @@ from .ingest_external_api_the_things_network import IngestExternalApiTheThingsNe
 from .ingest_external_api_tsystems import IngestExternalApiTSystems
 from .ingest_external_api_uba import IngestExternalApiUba
 from .ingest_external_api_sensoto import IngestExternalApiSensoto
+from .ingest_external_api_zentra import IngestExternalApiZentra
 from .ingest_external_sftp import IngestExternalSftp
 from .ingest_external_mqtt import IngestExternalMqtt
 from .ingest_http import IngestHttp
@@ -66,6 +67,7 @@ __all__ = [
     "IngestExternalApiTSystems",
     "IngestExternalApiUba",
     "IngestExternalApiSensoto",
+    "IngestExternalApiZentra",
     "IngestExternalSftp",
     "IngestExternalMqtt",
     "IngestHttp",

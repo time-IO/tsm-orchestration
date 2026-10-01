@@ -52,6 +52,8 @@ export const default_ingest_columns: QTableColumn[] = [
           return 'HTTP';
         case 'sensoto':
           return 'Sensoto';
+        case 'zentra':
+          return 'Zentra';
         default:
           return 'Type not defined';
       }
@@ -123,6 +125,8 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
           return 'Umweltbundesamt (UBA) Air Data';
         case 'sensoto':
           return 'Sensoto';
+        case 'zentra':
+          return 'Zentra';
         default:
           return '';
       }
@@ -230,7 +234,8 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
           return `/ingest/external-api/uba/${val.id}`;
         case 'sensoto':
           return `/ingest/external-api/sensoto/${val.id}`;
-
+        case 'zentra':
+          return `/ingest/external-api/zentra/${val.id}`;
         default:
           return 'api type not defined';
       }
@@ -280,6 +285,8 @@ export const formatExternalApiType = (val: string | null) => {
       return 'Umweltbundesamt (UBA) Air Data';
     case 'sensoto':
       return 'Sensoto';
+    case 'zentra':
+      return 'Zentra';
     default:
       return val;
   }

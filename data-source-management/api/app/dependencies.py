@@ -34,6 +34,7 @@ from repositories.ingest_external_api_tsystems import (
 )
 from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
 from repositories.ingest_external_api_sensoto import IngestExternalApiSensotoRepository
+from repositories.ingest_external_api_zentra import IngestExternalApiZentraRepository
 from repositories.ingest_external_sftp import IngestExternalSftpRepository
 from repositories.ingest_external_mqtt import IngestExternalMqttRepository
 from repositories.ingest_mqtt import IngestMqttRepository
@@ -261,6 +262,10 @@ def get_repo_ingest_external_api_the_things_network(session=Depends(get_session)
 
 def get_repo_ingest_external_api_tsystems(session=Depends(get_session)):
     return IngestExternalApiTSystemsRepository(session)
+
+
+def get_repo_ingest_external_api_zentra(session=Depends(get_session)):
+    return IngestExternalApiZentraRepository(session)
 
 
 def get_repo_ingest_external_sftp(session=Depends(get_session)):
