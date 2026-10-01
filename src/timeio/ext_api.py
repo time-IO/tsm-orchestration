@@ -750,7 +750,6 @@ class ZentraApiSyncer(ExtApiSyncer):
     base_url = "https://zentracloud.com/api/v3/get_readings/"
     per_page = 2000
 
-
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         token = f"Token {decrypt(settings['api_key'], get_crypt_key())}"
