@@ -24,6 +24,7 @@ When adding a changelog entry, ensure the following:
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Upgraded @quasar/app-vite to version 3 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/716))
+- Increased Mosquitto per-client queue limits (max queued messages to 1,000,000, max queued bytes to 2 GB) ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/732))
 
 ## [2026-09-10]
 
