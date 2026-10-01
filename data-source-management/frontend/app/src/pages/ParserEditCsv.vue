@@ -11,13 +11,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useQuasar } from 'quasar';
-import { useRoute, useRouter } from 'vue-router';
-import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
-import { useCsvParserStore } from '@/stores/parserCsvStore';
+import {computed, onMounted, ref} from 'vue';
+import {useQuasar} from 'quasar';
+import {useRoute, useRouter} from 'vue-router';
+import type {CsvParserCreate, CsvParserUpdate} from '@/services/parser_csv/types';
+import {useCsvParserStore} from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
-import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
+import {useUnsavedChanges} from '@/composables/useUnsavedChanges';
+import {parseJsonField} from "@/utils/string_utils";
 
 type CsvParserEditFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
@@ -52,8 +53,10 @@ const initialFormData = ref<CsvParserUpdate | null>(null);
 
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
+
   return (
-    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+    JSON.stringify(formData.value) !==
+    JSON.stringify(initialFormData.value)
   );
 });
 
@@ -65,7 +68,7 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await csvParserStore.dispatchGetOne(id);
 
-      const loadedData = normalizeFormData(data);
+      const loadedData = apiToForm(data);
 
       formData.value = loadedData;
       permissionGroupId.value = data.permission_group_id;
@@ -94,7 +97,7 @@ async function save() {
   try {
     const id = Number(route.params.id);
 
-    const data: CsvParserUpdate = normalizeFormData(formData.value);
+    const data: CsvParserUpdate = formToApi(formData.value);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -120,7 +123,8 @@ async function save() {
           icon: 'close',
           color: 'white',
           round: true,
-          handler: () => {},
+          handler: () => {
+          },
         },
       ],
       message: 'Failed to update parser',
@@ -131,27 +135,51 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: CsvParserUpdate): CsvParserEditFormData {
+function apiToForm(data: CsvParserUpdate): CsvParserEditFormData {
   return {
     name: data.name || null,
     description: data.description || null,
     delimiter: data.delimiter || null,
+
     headlines_to_exclude:
-      data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
+      data.headlines_to_exclude !== null &&
+      data.headlines_to_exclude !== undefined
         ? data.headlines_to_exclude
         : null,
+
     footlines_to_exclude:
-      !!data.footlines_to_exclude || data.footlines_to_exclude === 0
+      data.footlines_to_exclude !== null &&
+      data.footlines_to_exclude !== undefined
         ? data.footlines_to_exclude
         : null,
-    pandas_read_csv: data.pandas_read_csv || null,
+
+    pandas_read_csv: data.pandas_read_csv
+      ? JSON.stringify(data.pandas_read_csv, null, 2)
+      : '',
+
     timestamp_columns: data.timestamp_columns || [],
-    header: !!data.header || data.header === 0 ? data.header : null,
+
+    header:
+      data.header !== null && data.header !== undefined
+        ? data.header
+        : null,
+
     comment: [...(data.comment || [])],
     timezone: data.timezone || null,
     encoding: data.encoding || null,
   };
 }
+
+function formToApi(data: CsvParserEditFormData): CsvParserUpdate {
+  return {
+    ...data,
+
+    pandas_read_csv: data.pandas_read_csv
+      ? parseJsonField(data.pandas_read_csv)
+      : null,
+  };
+}
+
 </script>
 
 <style scoped></style>

@@ -66,3 +66,22 @@ export function unknownToString(value: unknown): string {
 export function toNullableNumber(value: string | number | null): number | null {
   return value === '' || value === null ? null : Number(value);
 }
+
+/**
+ * Parses a JSON field from the provided value. If the value is already an object, it gets returned as is.
+ * If the value is invalid or cannot be parsed into JSON, it throws an error.
+ *
+ * @param {string | object | null} value - The value to be parsed, which could be a JSON string or an object.
+ * @return {object | null} The parsed JSON object or null if the input is falsy.
+ * @throws {Error} Throws an error if the value cannot be parsed as JSON.
+ */
+export function parseJsonField(value: string | object | null | undefined) {
+  if (!value) return null
+  if (typeof value === 'object') return value
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    throw new Error('Pandas read csv must contain valid JSON')
+  }
+}

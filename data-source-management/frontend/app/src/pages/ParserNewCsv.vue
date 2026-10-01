@@ -9,13 +9,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, toRaw } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import type { CsvParserCreate } from '@/services/parser_csv/types';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
+import {parseJsonField} from "@/utils/string_utils";
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
@@ -38,12 +39,15 @@ const formData = ref<CsvParserCreate>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<CsvParserCreate>(normalizeFormData(formData.value));
+const initialFormData = ref<CsvParserCreate>(
+   structuredClone(toRaw(formData.value)),
+);
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
   return (
-    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
+    JSON.stringify(formData.value) !==
+    JSON.stringify(initialFormData.value)
   );
 });
 
@@ -51,7 +55,7 @@ useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 async function save() {
   try {
-    const data: CsvParserCreate = normalizeFormData(formData.value);
+    const data: CsvParserCreate = formToApi(formData.value);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -93,24 +97,37 @@ async function save() {
   }
 }
 
-function normalizeFormData(data: CsvParserCreate): CsvParserCreate {
+function formToApi(data: CsvParserCreate): CsvParserCreate {
   return {
     permission_group_id: data.permission_group_id,
     name: data.name || null,
     description: data.description || null,
     delimiter: data.delimiter || null,
+
     headlines_to_exclude:
-      data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
+      data.headlines_to_exclude !== null &&
+      data.headlines_to_exclude !== undefined
         ? data.headlines_to_exclude
         : null,
+
     footlines_to_exclude:
-      !!data.footlines_to_exclude || data.footlines_to_exclude === 0
+      data.footlines_to_exclude !== null &&
+      data.footlines_to_exclude !== undefined
         ? data.footlines_to_exclude
         : null,
-    pandas_read_csv: data.pandas_read_csv || null,
+
+    pandas_read_csv: data.pandas_read_csv
+      ? parseJsonField(data.pandas_read_csv)
+      : null,
+
     timestamp_columns: data.timestamp_columns || [],
     comment: [...(data.comment || [])],
-    header: !!data.header || data.header === 0 ? data.header : null,
+
+    header:
+      data.header !== null && data.header !== undefined
+        ? data.header
+        : null,
+
     timezone: data.timezone || null,
     encoding: data.encoding || null,
   };
