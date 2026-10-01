@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from access_scope import AccessScope
 from dependencies import (
     get_current_user,
@@ -107,4 +107,7 @@ async def read_ingest_database_name(
     current_user: User = Depends(get_current_user),
 ):
     ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
-    return ingest.permission_group.database.username
+    database = ingest.permission_group.database
+    if database is None:
+        raise HTTPException(status_code=404, detail="No database for this ingest")
+    return database.username
