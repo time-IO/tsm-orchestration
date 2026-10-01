@@ -22,7 +22,6 @@ class IngestExternalApiZentraRead(IngestExternalApiRead):
     period_in_minutes: int
     units: Optional[Literal["metric", "imperial"]] = "metric"
     api_key: str
-    last_mrid: Optional[str] = None  # Last Measurement Record ID
 
 
 class IngestExternalApiZentraCreate(IngestExternalApiCreate):
@@ -50,7 +49,6 @@ class IngestExternalApiZentra(SQLModel, table=True):
     period_in_minutes: int
     units: Optional[UnitsEnum] = UnitsEnum.METRIC
     api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
-    last_mrid: Optional[str] = None
     external_api: IngestExternalApi = Relationship(back_populates="zentra_detail")
 
     @property

@@ -283,7 +283,6 @@ class IngestExternalApiZentraRepository:
             period_in_minutes=zentra.period_in_minutes,
             units=zentra.units,
             api_key=zentra.api_key,
-            last_mrid=zentra.last_mrid,
             # Permission Group
             permission_group={
                 "id": permission_group.id,

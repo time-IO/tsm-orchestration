@@ -748,49 +748,23 @@ class SensotoApiSyncer(ExtApiSyncer):
 
 class ZentraApiSyncer(ExtApiSyncer):
     base_url = "https://zentracloud.com/api/v3/get_readings/"
-    per_page = 2000
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
-        token = f"Token {decrypt(settings['api_key'], get_crypt_key())}"
-        headers = {"Authorization": token}
-
         params = {
             "device_sn": settings["device_sn"],
+            "start_date": content["datetime_from"],
+            "end_date": content["datetime_to"],
             "output_format": "json",
-            "per_page": self.per_page,
+            "per_page": 2000,
         }
-
-        last_mrid = settings.get("last_mrid")
-        if last_mrid:
-            # Resuming a backlog: continue from the last checkpoint
-            params["start_mrid"] = last_mrid
-        else:
-            # Normal, time-window-based sync
-            params["start_date"] = content["datetime_from"]
-            params["end_date"] = content["datetime_to"]
-
+        token = f"Token {decrypt(settings['api_key'], get_crypt_key())}"
+        headers = {"Authorization": token}
         response = request_with_handling(
             "GET", self.base_url, params=params, headers=headers
         )
-        api_response = response.json()
 
-        # Determine whether there's likely more data waiting (page was full)
-        total_readings = sum(
-            len(v[0]["readings"]) for v in api_response["data"].values()
-        )
-        if total_readings >= self.per_page:
-            highest_mrid = max(
-                entry["mrid"]
-                for v in api_response["data"].values()
-                for entry in v[0]["readings"]
-            )
-            thing.ext_api.update_last_mrid(str(highest_mrid))
-        elif last_mrid:
-            # Backlog fully caught up; resume normal time-based sync next run
-            thing.ext_api.update_last_mrid(None)
-
-        return api_response
+        return response.json()
 
     def do_parse(self, api_response):
         bodies = []
