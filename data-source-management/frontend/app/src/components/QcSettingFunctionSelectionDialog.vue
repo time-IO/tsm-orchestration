@@ -46,8 +46,8 @@
 </template>
 
 <script setup lang="ts">
-import type { FunctionOption } from 'src/utils/quality_control_utils';
-import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
+import type { FunctionOption } from '@/utils/quality_control_utils';
+import SaqcInfoIcon from '@/components/SaqcInfoIcon.vue';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 
@@ -107,6 +107,11 @@ const functionOptions: FunctionOption[] = [
   {
     label: 'transferFlags',
     description: 'Transfer flags from one variable to another.',
+  },
+  {
+    label: 'flagConstants',
+    description:
+      'Flag plateaus / series of constant values whose total change stays below a threshold.',
   },
 ];
 

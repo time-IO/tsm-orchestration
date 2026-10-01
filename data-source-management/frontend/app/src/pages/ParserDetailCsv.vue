@@ -192,9 +192,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useCsvParserStore } from 'stores/parserCsvStore';
-import type { CsvParserPublic } from 'src/services/parser_csv/types';
-import ParserValidateCsv from 'components/ParserValidateCsv.vue';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
+import type { CsvParserPublic } from '@/services/parser_csv/types';
+import ParserValidateCsv from '@/components/ParserValidateCsv.vue';
 
 const $q = useQuasar();
 const route = useRoute();

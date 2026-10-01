@@ -4,9 +4,9 @@ import type {
   CsvParserValidate,
   CsvParserPublic,
   CsvParserUpdate,
-} from 'src/services/parser_csv/types';
-import { API } from 'src/services';
-import { createParserStore } from 'stores/factoryParserStore';
+} from '@/services/parser_csv/types';
+import { API } from '@/services';
+import { createParserStore } from '@/stores/factoryParserStore';
 
 export const useCsvParserStore = createParserStore<
   CsvParserPublic,

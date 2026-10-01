@@ -12,9 +12,9 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { IngestExternalSftpCreate } from 'src/services/ingest_external_sftp/types';
-import { useIngestExternalSftpStore } from 'stores/ingestExternalSftpStore';
-import IngestFormExternalSftp from 'components/IngestFormExternalSftp.vue';
+import type { IngestExternalSftpCreate } from '@/services/ingest_external_sftp/types';
+import { useIngestExternalSftpStore } from '@/stores/ingestExternalSftpStore';
+import IngestFormExternalSftp from '@/components/IngestFormExternalSftp.vue';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();

@@ -45,13 +45,13 @@
 </template>
 
 <script setup lang="ts">
-import QcFunctionFormTemplate from 'components/QcFunctionFormTemplate.vue';
-import StaDatastreamInput from 'components/StaDatastreamInput.vue';
+import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
+import StaDatastreamInput from '@/components/StaDatastreamInput.vue';
 import { computed, ref, watch } from 'vue';
-import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
-import type { Datastream } from 'src/services/sta/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import type { Datastream } from '@/services/sta/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -64,7 +64,7 @@ const emit = defineEmits(['submit', 'remove']);
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  func: '' as string,
+  func: '',
 });
 
 function loadInitialData() {

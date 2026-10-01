@@ -27,9 +27,9 @@
 
 <script setup lang="ts">
 import { debounce } from 'quasar';
-import { useStaStore } from 'stores/staStore';
+import { useStaStore } from '@/stores/staStore';
 import { ref } from 'vue';
-import type { StaEntity } from 'src/services/sta/types';
+import type { StaEntity } from '@/services/sta/types';
 
 const model = defineModel<StaEntity | null>();
 const { permission_group_id } = defineProps<{

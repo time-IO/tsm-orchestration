@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { openSaqcDocuForFunction } from 'src/utils/quality_control_utils';
+import { openSaqcDocuForFunction } from '@/utils/quality_control_utils';
 
 defineProps<{
   label: string;

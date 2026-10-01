@@ -140,10 +140,10 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import type { IngestExternalApiDwdPublic } from 'src/services/ingest_external_api_dwd/types';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
+import { useIngestExternalApiDwdStore } from '@/stores/ingestExternalApiDwdStore';
+import type { IngestExternalApiDwdPublic } from '@/services/ingest_external_api_dwd/types';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

@@ -1,5 +1,5 @@
-import { axiosInstance } from 'boot/axios';
-import type { UsageStatisticsResponse } from 'src/services/usage_statistics/types';
+import { axiosInstance } from '@/boot/axios';
+import type { UsageStatisticsResponse } from '@/services/usage_statistics/types';
 
 const apiPath = 'usage-statistics/';
 

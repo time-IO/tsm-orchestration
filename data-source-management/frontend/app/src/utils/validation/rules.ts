@@ -1,12 +1,12 @@
-import { i18n } from 'src/boot/i18n';
+import { i18n } from '@/boot/i18n';
 import {
   allowedTimestampTokens,
   isContextWindow,
   isDatastreamAlias,
   isHttpsUrl,
-} from 'src/utils/validation/validators';
+} from '@/utils/validation/validators';
 import { date } from 'quasar';
-import { formatExact } from 'src/utils/time_utils';
+import { formatExact } from '@/utils/time_utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValidationRule = (val: any) => boolean | string;

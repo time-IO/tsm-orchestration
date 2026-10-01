@@ -9,9 +9,9 @@
 </template>
 
 <script setup lang="ts">
-import type { CsvParserValidate, CsvParserUpdate } from 'src/services/parser_csv/types';
-import { useCsvParserStore } from 'stores/parserCsvStore';
-import ParserValidateDrawer from 'components/ParserValidateDrawer.vue';
+import type { CsvParserValidate, CsvParserUpdate } from '@/services/parser_csv/types';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
+import ParserValidateDrawer from '@/components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
 import { computed, toRaw } from 'vue';
 

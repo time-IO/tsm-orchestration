@@ -13,10 +13,10 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalApiDwdUpdate } from 'src/services/ingest_external_api_dwd/types';
-import { useIngestExternalApiDwdStore } from 'stores/ingestExternalApiDwdStore';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import IngestFormExternalApiDwd from 'components/IngestFormExternalApiDwd.vue';
+import type { IngestExternalApiDwdUpdate } from '@/services/ingest_external_api_dwd/types';
+import { useIngestExternalApiDwdStore } from '@/stores/ingestExternalApiDwdStore';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import IngestFormExternalApiDwd from '@/components/IngestFormExternalApiDwd.vue';
 
 // Composition API
 const $q = useQuasar();

@@ -3,7 +3,7 @@
     v-if="current_type === POSSIBLE_QC_FUNCTION_TYPES.INT"
     v-model.number="input"
     filled
-    :label="`${label} (enter a integer number)`"
+    :label="`${label} (enter an integer number)`"
     :rules="rules_int"
     :hint="hint"
     v-bind="$attrs"
@@ -32,8 +32,8 @@
 
 <script setup lang="ts">
 import type { ValidationRule } from 'quasar';
-import { POSSIBLE_QC_FUNCTION_TYPES } from 'src/utils/quality_control_utils';
-import QcFunctionFormOffsetInput from 'components/QcFunctionFormOffsetInput.vue';
+import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
+import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vue';
 
 defineProps<{
   label: string;

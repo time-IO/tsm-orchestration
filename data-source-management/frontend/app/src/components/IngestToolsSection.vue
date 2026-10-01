@@ -120,13 +120,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { IngestStorageService } from 'src/services/factoryIngestStorageService';
-import { publicAsset } from 'src/utils/public_asset';
-import S3ExplorerDialog from 'components/S3ExplorerDialog.vue';
-import MqttClientDialog from 'components/MqttClientDialog.vue';
-import JournalDialog from 'components/JournalDialog.vue';
-import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
-import TriggerExternalSftpDialog from 'components/TriggerExternalSftpDialog.vue';
+import type { IngestStorageService } from '@/services/factoryIngestStorageService';
+import { publicAsset } from '@/utils/public_asset';
+import S3ExplorerDialog from '@/components/S3ExplorerDialog.vue';
+import MqttClientDialog from '@/components/MqttClientDialog.vue';
+import JournalDialog from '@/components/JournalDialog.vue';
+import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
+import TriggerExternalSftpDialog from '@/components/TriggerExternalSftpDialog.vue';
 
 type TriggerType = 'external-api' | 'external-sftp';
 

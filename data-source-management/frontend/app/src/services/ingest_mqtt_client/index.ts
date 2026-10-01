@@ -1,4 +1,4 @@
-import type { MqttLiveHandlers } from 'src/services/ingest_mqtt_client/types';
+import type { MqttLiveHandlers } from '@/services/ingest_mqtt_client/types';
 
 type ServerFrame = {
   type?: string;
@@ -10,7 +10,7 @@ type ServerFrame = {
 };
 
 function buildWsUrl(id: number): string {
-  const base = (process.env.API_BASE_URL || '').replace(/\/$/, '');
+  const base = (import.meta.env.API_BASE_URL || '').replace(/\/$/, '');
   // http(s):// -> ws(s)://
   const wsBase = base.replace(/^http/, 'ws');
   return `${wsBase}/ingest/mqtt/${id}/live`;

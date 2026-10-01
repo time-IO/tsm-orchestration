@@ -1,6 +1,6 @@
-import { defineBoot } from '#q-app/wrappers';
+import { defineBoot } from '#q-app';
 import axios, { type AxiosInstance } from 'axios';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 declare module 'vue' {
   interface ComponentCustomProperties {
@@ -15,7 +15,7 @@ declare module 'vue' {
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-const axiosInstance = axios.create({ baseURL: process.env.API_BASE_URL! });
+const axiosInstance = axios.create({ baseURL: import.meta.env.API_BASE_URL });
 
 export default defineBoot(({ app }) => {
   axiosInstance.interceptors.request.use((config) => {

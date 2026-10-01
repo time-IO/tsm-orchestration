@@ -156,15 +156,15 @@
                 >
                   <q-tooltip>Copy</q-tooltip>
                 </q-btn>
-                <!--                <q-btn-->
-                <!--                  flat-->
-                <!--                  outline-->
-                <!--                  color="negative"-->
-                <!--                  icon="delete"-->
-                <!--                  @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"-->
-                <!--                >-->
-                <!--                  <q-tooltip>Delete</q-tooltip>-->
-                <!--                </q-btn>-->
+                <q-btn
+                  flat
+                  outline
+                  color="negative"
+                  icon="delete"
+                  @click="setIdToDeleteAndopenDeleteDialog(props.row.id)"
+                >
+                  <q-tooltip>Delete</q-tooltip>
+                </q-btn>
               </template>
 
               <template v-else-if="col.name === 'created_by'">
@@ -211,13 +211,13 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import type { QTableColumn } from 'quasar';
 import { computed, onMounted, ref } from 'vue';
-import TriggerQualityControlSettingsDialog from 'components/TriggerQualityControlSettingsDialog.vue';
-import type { QualityControlSettingPublic } from 'src/services/quality_control_setting/types';
+import TriggerQualityControlSettingsDialog from '@/components/TriggerQualityControlSettingsDialog.vue';
+import type { QualityControlSettingPublic } from '@/services/quality_control_setting/types';
 import { useQuasar } from 'quasar';
-import QcSettingOverviewFilter from 'components/QCSettingOverviewFilter.vue';
+import QcSettingOverviewFilter from '@/components/QCSettingOverviewFilter.vue';
 
 const { t } = useI18n();
 const $q = useQuasar();
@@ -275,10 +275,10 @@ const openTriggerDialog = () => {
   showTriggerDialog.value = true;
 };
 
-// const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
-//   idToDelete.value = id;
-//   deleteDialog.value = true;
-// };
+const setIdToDeleteAndopenDeleteDialog = (id: number | null) => {
+  idToDelete.value = id;
+  deleteDialog.value = true;
+};
 
 const deleteItem = async () => {
   if (!idToDelete.value) {

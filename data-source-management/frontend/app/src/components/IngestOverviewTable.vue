@@ -191,12 +191,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
-import type { QTableRequestProp, QTableRequestPropPagination } from 'src/services/types';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import {
   default_ingest_columns,
   generateIngestPath,
   formatExternalApiType,
-} from 'src/utils/pagination_utils';
+} from '@/utils/pagination_utils';
 import { copyToClipboard, useQuasar } from 'quasar';
 
 defineProps({

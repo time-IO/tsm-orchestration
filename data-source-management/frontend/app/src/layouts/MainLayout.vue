@@ -140,10 +140,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuthStore } from 'stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
 import { useQuasar } from 'quasar';
-import TheFooter from 'components/TheFooter.vue';
+import TheFooter from '@/components/TheFooter.vue';
 
 const { t } = useI18n();
 const leftDrawerOpen = ref(false);
@@ -210,6 +210,8 @@ const topNavigation: NavEntry[] = [
       { label: 'SFTP/S3', route: '/ingest/new/sftp' },
       { label: 'External SFTP', route: '/ingest/new/external-sftp' },
       { label: 'MQTT', route: '/ingest/new/mqtt' },
+      { label: 'External MQTT', route: '/ingest/new/external-mqtt' },
+      { label: 'HTTP', route: '/ingest/new/http' },
       { separator: true, label: 'External API' },
       { label: 'Bosch IoT', route: '/ingest/new/external-api/bosch' },
       { label: 'Deutscher Wetterdienst', route: '/ingest/new/external-api/dwd' },

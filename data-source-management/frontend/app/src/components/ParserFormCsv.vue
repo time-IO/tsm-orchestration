@@ -245,14 +245,14 @@
 
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { CsvParserCreate, CsvParserUpdate } from 'src/services/parser_csv/types';
-import ParserEncodingSelect from 'components/ParserEncodingSelect.vue';
-import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
-import ParserValidateCsv from 'components/ParserValidateCsv.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
+import ParserEncodingSelect from '@/components/ParserEncodingSelect.vue';
+import ParserTimezoneSelect from '@/components/ParserTimezoneSelect.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
+import ParserValidateCsv from '@/components/ParserValidateCsv.vue';
 import { QForm } from 'quasar';
-import { toNullableNumber } from 'src/utils/string_utils';
+import { toNullableNumber } from '@/utils/string_utils';
 
 type CsvParserFormData = CsvParserUpdate & {
   permission_group_id?: number | null;
@@ -279,12 +279,12 @@ defineEmits<{
 }>();
 
 const formData = defineModel<CsvParserFormData>({
-  default: {
+  default: () => ({
     permission_group_id: null,
     name: null,
     description: null,
     delimiter: null,
-    headlines_to_exclude: 0,
+    headlines_to_exclude: null,
     footlines_to_exclude: 0,
     pandas_read_csv: null,
     timestamp_columns: [],
@@ -292,7 +292,7 @@ const formData = defineModel<CsvParserFormData>({
     header: null,
     timezone: null,
     encoding: null,
-  },
+  }),
 });
 
 const FORM_REF_NAME = 'formRef';

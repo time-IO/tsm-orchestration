@@ -3,9 +3,9 @@ import type {
   IngestExternalApiBoschCreate,
   IngestExternalApiBoschPublic,
   IngestExternalApiBoschUpdate,
-} from 'src/services/ingest_external_api_bosch/types';
-import { API } from 'src/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+} from '@/services/ingest_external_api_bosch/types';
+import { API } from '@/services';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestExternalApiBoschStore = createIngestStore<
   IngestExternalApiBoschPublic,

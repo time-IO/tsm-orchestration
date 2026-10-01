@@ -4,13 +4,13 @@ import type {
   CsvParserPublic,
   CsvParserCreate,
   CsvParserValidate,
-} from 'src/services/parser_csv/types';
+} from '@/services/parser_csv/types';
 import type {
   JsonParserCreate,
   JsonParserValidate,
   JsonParserPublic,
   JsonParserUpdate,
-} from 'src/services/parser_json/types';
+} from '@/services/parser_json/types';
 
 export interface PaginatedResponse<T> {
   items: T[];

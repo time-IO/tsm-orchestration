@@ -206,11 +206,11 @@
 
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { JsonParserCreate, JsonParserUpdate } from 'src/services/parser_json/types.ts';
-import ParserTimezoneSelect from 'components/ParserTimezoneSelect.vue';
-import { rules } from 'src/utils/validation/rules';
-import ParserValidateJson from 'components/ParserValidateJson.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import type { JsonParserCreate, JsonParserUpdate } from '@/services/parser_json/types.ts';
+import ParserTimezoneSelect from '@/components/ParserTimezoneSelect.vue';
+import { rules } from '@/utils/validation/rules';
+import ParserValidateJson from '@/components/ParserValidateJson.vue';
 import { QForm } from 'quasar';
 
 type JsonParserFormData = JsonParserUpdate & {
@@ -237,7 +237,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<JsonParserFormData>({
-  default: {
+  default: () => ({
     name: null,
     permission_group_id: null,
     description: null,
@@ -246,7 +246,7 @@ const formData = defineModel<JsonParserFormData>({
     measurement_key: null,
     excluded_keys: [],
     timezone: null,
-  },
+  }),
 });
 
 const FORM_REF_NAME = 'formRef';

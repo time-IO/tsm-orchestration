@@ -78,8 +78,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { SoilcanParserUpdate } from 'src/services/parser_soilcan/types';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import type { SoilcanParserUpdate } from '@/services/parser_soilcan/types';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 
 type SoilcanParserFormData = SoilcanParserUpdate & {
   permission_group_id?: number | null;
@@ -103,13 +103,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<SoilcanParserFormData>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
     type: '',
     header: false,
-  },
+  }),
 });
 
 const permissionGroupModel = computed({

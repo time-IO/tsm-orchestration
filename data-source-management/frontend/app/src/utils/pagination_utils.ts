@@ -1,7 +1,7 @@
-import type { QTableRequestPropPagination } from 'src/services/types';
+import type { QTableRequestPropPagination } from '@/services/types';
 import type { QTableColumn } from 'quasar';
-import type { IngestWithApiInfoRead } from 'src/services/ingest/types';
-import type { ParserDetailedRead } from 'src/services/parser_detailed/types';
+import type { IngestWithApiInfoRead } from '@/services/ingest/types';
+import type { ParserDetailedRead } from '@/services/parser_detailed/types';
 
 export const defaultPagination: QTableRequestPropPagination = {
   sortBy: 'name',
@@ -46,6 +46,10 @@ export const default_ingest_columns: QTableColumn[] = [
           return 'MQTT';
         case 'external_sftp':
           return 'External SFTP';
+        case 'external_mqtt':
+          return 'External MQTT';
+        case 'http':
+          return 'HTTP';
         case 'sensoto':
           return 'Sensoto';
         default:
@@ -236,6 +240,10 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
       return `/ingest/mqtt/${val.id}`;
     case 'external_sftp':
       return `/ingest/external-sftp/${val.id}`;
+    case 'external_mqtt':
+      return `/ingest/external-mqtt/${val.id}`;
+    case 'http':
+      return `/ingest/http/${val.id}`;
     default:
       return '';
   }

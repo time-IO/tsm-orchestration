@@ -103,13 +103,13 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiSensotoCreate,
   IngestExternalApiSensotoUpdate,
 } from '../services/ingest_external_api_sensoto/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -123,7 +123,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiSensotoUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -131,7 +131,7 @@ const formData = defineModel<IngestExternalApiSensotoCreate | IngestExternalApiS
     device: null,
     sync_enabled: false,
     sync_interval_in_minutes: null,
-  },
+  }),
 });
 </script>
 

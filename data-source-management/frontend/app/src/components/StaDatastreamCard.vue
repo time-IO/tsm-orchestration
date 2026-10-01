@@ -29,8 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import StaDatastreamSelectionView from 'components/StaDatastreamSelectionView.vue';
-import type { Datastream } from 'src/services/sta/types';
+import StaDatastreamSelectionView from '@/components/StaDatastreamSelectionView.vue';
+import type { Datastream } from '@/services/sta/types';
 
 const props = withDefaults(
   defineProps<{

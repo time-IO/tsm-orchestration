@@ -1,4 +1,4 @@
-import { isIsoDate } from 'src/utils/validation/validators';
+import { isIsoDate } from '@/utils/validation/validators';
 
 /**
  * Truncates a string to the specified length.

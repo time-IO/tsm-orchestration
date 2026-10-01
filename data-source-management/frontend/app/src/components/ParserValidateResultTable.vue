@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { QTableColumn } from 'quasar';
-import { unknownToString } from 'src/utils/string_utils';
+import { unknownToString } from '@/utils/string_utils';
 
 const props = defineProps<{
   data: Record<string, unknown>[];

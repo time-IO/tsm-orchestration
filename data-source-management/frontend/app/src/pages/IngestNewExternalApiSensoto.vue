@@ -10,11 +10,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { IngestExternalApiSensotoCreate } from 'src/services/ingest_external_api_sensoto/types';
+import type { IngestExternalApiSensotoCreate } from '@/services/ingest_external_api_sensoto/types';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useIngestExternalApiSensotoStore } from 'stores/ingestExternalApiSensotoStore';
-import IngestFormExternalApiSensoto from 'components/IngestFormExternalApiSensoto.vue';
+import { useIngestExternalApiSensotoStore } from '@/stores/ingestExternalApiSensotoStore';
+import IngestFormExternalApiSensoto from '@/components/IngestFormExternalApiSensoto.vue';
 
 const sensStore = useIngestExternalApiSensotoStore();
 const $q = useQuasar();

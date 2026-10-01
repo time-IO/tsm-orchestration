@@ -156,6 +156,14 @@ With this setup, you could access the sms under `<my-fancy-domain>/data-source-m
 
 ## Development
 
+### Frontend Tests
+
+Run the Vitest test suite from the repository root:
+
+```bash
+./dc-with-dev.sh run --rm -u "$UID" dsm-frontend npm test
+```
+
 ### Formatting
 
 #### Api

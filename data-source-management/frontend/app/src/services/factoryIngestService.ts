@@ -2,8 +2,8 @@ import type {
   DefaultFilter,
   PaginatedResponse,
   QTableRequestPropPagination,
-} from 'src/services/types';
-import { axiosInstance } from 'boot/axios';
+} from '@/services/types';
+import { axiosInstance } from '@/boot/axios';
 
 export function createIngestApiService<TPublic, TCreate, TUpdate>(apiPath: string) {
   function prepareParams(pagination: QTableRequestPropPagination, filters: DefaultFilter) {

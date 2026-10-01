@@ -3,9 +3,9 @@ import type {
   IngestSftpCreate,
   IngestSftpPublic,
   IngestSftpUpdate,
-} from 'src/services/ingest_sftp/types';
-import { API } from 'src/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+} from '@/services/ingest_sftp/types';
+import { API } from '@/services';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useIngestSftpStore = createIngestStore<
   IngestSftpPublic,

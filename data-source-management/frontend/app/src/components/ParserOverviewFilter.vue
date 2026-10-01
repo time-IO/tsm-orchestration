@@ -61,9 +61,9 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import DateTimePicker from 'components/DateTimePicker.vue';
-import ParserTypeSelect from 'components/ParserTypeSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
+import ParserTypeSelect from '@/components/ParserTypeSelect.vue';
 
 const name = defineModel<string | undefined>('name', { default: undefined });
 const uuid = defineModel<string | undefined>('uuid', { default: undefined });

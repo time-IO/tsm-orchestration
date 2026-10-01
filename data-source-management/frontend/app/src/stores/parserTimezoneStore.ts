@@ -1,4 +1,4 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
 
 export const useParserTimezoneStore = defineStore('parserTimezoneStore', {

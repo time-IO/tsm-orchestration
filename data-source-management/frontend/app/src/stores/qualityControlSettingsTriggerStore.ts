@@ -1,9 +1,9 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { API } from 'src/services';
+import { API } from '@/services';
 import type {
   TriggerQCSBase,
   TriggerQCSResponse,
-} from 'src/services/quality_control_settings_trigger/types';
+} from '@/services/quality_control_settings_trigger/types';
 
 export const useTriggerQCSStore = defineStore('triggerQCSStore', {
   state: () => ({}),

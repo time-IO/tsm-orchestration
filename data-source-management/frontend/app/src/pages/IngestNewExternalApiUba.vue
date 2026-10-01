@@ -10,11 +10,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { IngestExternalApiUbaCreate } from 'src/services/ingest_external_api_uba/types';
-import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import type { IngestExternalApiUbaCreate } from '@/services/ingest_external_api_uba/types';
+import { useIngestExternalApiUbaStore } from '@/stores/ingestExternalApiUbaStore';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import IngestFormExternalApiUba from 'components/IngestFormExternalApiUba.vue';
+import IngestFormExternalApiUba from '@/components/IngestFormExternalApiUba.vue';
 
 const ubaStore = useIngestExternalApiUbaStore();
 const $q = useQuasar();

@@ -77,11 +77,11 @@
 </template>
 
 <script setup lang="ts">
-import { truncateText } from 'src/utils/string_utils';
+import { truncateText } from '@/utils/string_utils';
 import { ref } from 'vue';
-import type { QuasarPaginationInterface, StaDatastream } from 'src/services/sta/types';
+import type { QuasarPaginationInterface, StaDatastream } from '@/services/sta/types';
 import type { QTableColumn } from 'quasar';
-import type { QuasarTableOnRequestInterface } from 'src/services/sta/types';
+import type { QuasarTableOnRequestInterface } from '@/services/sta/types';
 
 const filter = defineModel<string>('filter', { default: '' });
 const paginationSta = defineModel<QuasarPaginationInterface>('paginationSta');

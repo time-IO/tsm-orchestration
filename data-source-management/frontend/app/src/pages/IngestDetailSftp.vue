@@ -177,11 +177,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
-import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
-import { API } from 'src/services';
+import type { IngestSftpPublic } from '@/services/ingest_sftp/types';
+import { useIngestSftpStore } from '@/stores/ingestSftpStore';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import { API } from '@/services';
 
 const $q = useQuasar();
 const route = useRoute();

@@ -126,7 +126,7 @@
           <q-space />
           <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
           <q-space />
-          <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
+          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>
         </q-card-actions>
       </q-card>
     </div>
@@ -157,11 +157,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import { useRoute, useRouter } from 'vue-router';
-import type { QualityControlSettingPublic } from 'src/services/quality_control_setting/types';
-import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
-import TriggerQualityControlSettingsDialog from 'components/TriggerQualityControlSettingsDialog.vue';
+import type { QualityControlSettingPublic } from '@/services/quality_control_setting/types';
+import QcFunctionArgListView from '@/components/QcFunctionArgListView.vue';
+import TriggerQualityControlSettingsDialog from '@/components/TriggerQualityControlSettingsDialog.vue';
 
 const $q = useQuasar();
 const store = useQualityControlSettingStore();
@@ -210,10 +210,10 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-//
-// const openDeleteDialog = () => {
-//   deleteDialog.value = true;
-// };
+
+const openDeleteDialog = () => {
+  deleteDialog.value = true;
+};
 
 const openTriggerDialog = () => {
   showTriggerDialog.value = true;

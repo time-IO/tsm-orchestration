@@ -1,4 +1,4 @@
-import { axiosInstance } from 'src/boot/axios';
+import { axiosInstance } from '@/boot/axios';
 import type { TriggerSyncExtApiBase, TriggerSyncExtApiResponse } from './types.ts';
 
 async function trigger_api_generic(input: TriggerSyncExtApiBase) {

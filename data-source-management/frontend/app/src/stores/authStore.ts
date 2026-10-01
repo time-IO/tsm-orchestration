@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import type { User } from 'oidc-client-ts';
-import { userManager } from 'src/auth/oidcConfig';
-import { API } from 'src/services';
-import type { UserPublic } from 'src/services/user/types';
+import { userManager } from '@/auth/oidcConfig';
+import { API } from '@/services';
+import type { UserPublic } from '@/services/user/types';
 
 /**
  * Prevent multiple event registrations (HMR, multi-import)

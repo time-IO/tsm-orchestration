@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { markRaw } from 'vue';
-import { defaultPagination } from 'src/utils/pagination_utils';
+import { defaultPagination } from '@/utils/pagination_utils';
 import type {
   DefaultFilter,
   ParserApiService,
@@ -11,7 +11,7 @@ import type {
   ParsingResult,
   QTableRequestProp,
   QTableRequestPropPagination,
-} from 'src/services/types';
+} from '@/services/types';
 
 export function createParserStore<
   TPublic extends ParserPayloadPublic,
