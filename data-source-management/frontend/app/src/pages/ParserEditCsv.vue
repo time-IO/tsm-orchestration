@@ -3,7 +3,6 @@
     title="Edit CSV Parser"
     :is-loading="isLoading"
     :back-route="detailRoute"
-    :permission-group-id="permissionGroupId"
     disable-permission-group
     v-model="formData"
     @save="save"
@@ -11,27 +10,25 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
-import {useQuasar} from 'quasar';
-import {useRoute, useRouter} from 'vue-router';
-import type {CsvParserCreate, CsvParserUpdate} from '@/services/parser_csv/types';
-import {useCsvParserStore} from '@/stores/parserCsvStore';
+import { computed, onMounted, ref } from 'vue';
+import { useQuasar } from 'quasar';
+import { useRoute, useRouter } from 'vue-router';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
-import {useUnsavedChanges} from '@/composables/useUnsavedChanges';
-import {parseJsonField} from "@/utils/string_utils";
-
-type CsvParserEditFormData = CsvParserUpdate & {
-  permission_group_id?: number | null;
-  timestamp_columns: CsvParserCreate['timestamp_columns'];
-  comment: string[];
-};
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
+import {
+  apiToForm,
+  formToApi,
+  type CsvParserFormData,
+} from '@/utils/parser_csv_utils';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<CsvParserEditFormData>({
+const formData = ref<CsvParserFormData>({
+  permission_group_id: null,
   name: null,
   description: null,
   delimiter: null,
@@ -44,12 +41,10 @@ const formData = ref<CsvParserEditFormData>({
   timezone: null,
   encoding: null,
 });
-const permissionGroupId = ref<number | null>(null);
-
 const isLoading = ref(false);
 const isSaving = ref(false);
 
-const initialFormData = ref<CsvParserUpdate | null>(null);
+const initialFormData = ref<CsvParserFormData | null>(null);
 
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
@@ -71,7 +66,6 @@ onMounted(async () => {
       const loadedData = apiToForm(data);
 
       formData.value = loadedData;
-      permissionGroupId.value = data.permission_group_id;
       initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
@@ -97,7 +91,7 @@ async function save() {
   try {
     const id = Number(route.params.id);
 
-    const data: CsvParserUpdate = formToApi(formData.value);
+    const data = formToApi(formData.value);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -123,8 +117,7 @@ async function save() {
           icon: 'close',
           color: 'white',
           round: true,
-          handler: () => {
-          },
+          handler: () => {},
         },
       ],
       message: 'Failed to update parser',
@@ -134,52 +127,6 @@ async function save() {
     isLoading.value = false;
   }
 }
-
-function apiToForm(data: CsvParserUpdate): CsvParserEditFormData {
-  return {
-    name: data.name || null,
-    description: data.description || null,
-    delimiter: data.delimiter || null,
-
-    headlines_to_exclude:
-      data.headlines_to_exclude !== null &&
-      data.headlines_to_exclude !== undefined
-        ? data.headlines_to_exclude
-        : null,
-
-    footlines_to_exclude:
-      data.footlines_to_exclude !== null &&
-      data.footlines_to_exclude !== undefined
-        ? data.footlines_to_exclude
-        : null,
-
-    pandas_read_csv: data.pandas_read_csv
-      ? JSON.stringify(data.pandas_read_csv, null, 2)
-      : '',
-
-    timestamp_columns: data.timestamp_columns || [],
-
-    header:
-      data.header !== null && data.header !== undefined
-        ? data.header
-        : null,
-
-    comment: [...(data.comment || [])],
-    timezone: data.timezone || null,
-    encoding: data.encoding || null,
-  };
-}
-
-function formToApi(data: CsvParserEditFormData): CsvParserUpdate {
-  return {
-    ...data,
-
-    pandas_read_csv: data.pandas_read_csv
-      ? parseJsonField(data.pandas_read_csv)
-      : null,
-  };
-}
-
 </script>
 
 <style scoped></style>

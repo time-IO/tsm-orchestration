@@ -185,7 +185,12 @@
       </q-card>
     </q-dialog>
   </q-page>
-  <parser-validate-csv v-if="item" v-model="showValidationDialog" :form-data="item" overlay />
+  <parser-validate-csv
+    v-if="validationFormData"
+    v-model="showValidationDialog"
+    :form-data="validationFormData"
+    overlay
+  />
 </template>
 
 <script lang="ts" setup>
@@ -195,6 +200,7 @@ import { useQuasar } from 'quasar';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import type { CsvParserPublic } from '@/services/parser_csv/types';
 import ParserValidateCsv from '@/components/ParserValidateCsv.vue';
+import { apiToForm } from '@/utils/parser_csv_utils';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -205,6 +211,7 @@ const item = ref<CsvParserPublic | null>(null);
 const deleteDialog = ref(false);
 const showValidationDialog = ref(false);
 const isLoading = ref(false);
+const validationFormData = computed(() => (item.value ? apiToForm(item.value) : null));
 
 onMounted(async () => {
   try {

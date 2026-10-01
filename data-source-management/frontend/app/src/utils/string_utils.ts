@@ -75,13 +75,19 @@ export function toNullableNumber(value: string | number | null): number | null {
  * @return {object | null} The parsed JSON object or null if the input is falsy.
  * @throws {Error} Throws an error if the value cannot be parsed as JSON.
  */
-export function parseJsonField(value: string | object | null | undefined) {
-  if (!value) return null
-  if (typeof value === 'object') return value
+export function parseJsonField(
+  value: string | Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
+  if (!value) return null;
+  if (typeof value === 'object') return value;
 
   try {
-    return JSON.parse(value)
+    const parsed: unknown = JSON.parse(value);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      throw new Error();
+    }
+    return parsed as Record<string, unknown>;
   } catch {
-    throw new Error('Pandas read csv must contain valid JSON')
+    throw new Error('Pandas read csv must contain a valid JSON object');
   }
 }

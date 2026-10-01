@@ -9,21 +9,24 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
-import {useQuasar} from 'quasar';
-import {useRoute, useRouter} from 'vue-router';
-import type {CsvParserCreate} from '@/services/parser_csv/types';
-import {useCsvParserStore} from '@/stores/parserCsvStore';
+import { computed, onMounted, ref } from 'vue';
+import { useQuasar } from 'quasar';
+import { useRoute, useRouter } from 'vue-router';
+import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
-import {useUnsavedChanges} from '@/composables/useUnsavedChanges';
-import {parseJsonField} from "@/utils/string_utils";
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
+import {
+  apiToForm,
+  formToApi,
+  type CsvParserFormData,
+} from '@/utils/parser_csv_utils';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<CsvParserCreate>({
+const formData = ref<CsvParserFormData>({
   permission_group_id: null,
   name: null,
   description: null,
@@ -40,7 +43,7 @@ const formData = ref<CsvParserCreate>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<CsvParserCreate | null>(null);
+const initialFormData = ref<CsvParserFormData | null>(null);
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
@@ -87,7 +90,7 @@ const detailRoute = computed(() => {
 
 async function save() {
   try {
-    const data: CsvParserCreate = formToApi(formData.value);
+    const data = formToApi(formData.value, true);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -113,8 +116,7 @@ async function save() {
           icon: 'close',
           color: 'white',
           round: true,
-          handler: () => {
-          },
+          handler: () => {},
         },
       ],
       message: 'Failed to create parser',
@@ -123,78 +125,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function apiToForm(data: CsvParserCreate): CsvParserCreate {
-  return {
-    permission_group_id: data.permission_group_id,
-    name: data.name || null,
-    description: data.description || null,
-    delimiter: data.delimiter || null,
-
-    headlines_to_exclude:
-      data.headlines_to_exclude !== null &&
-      data.headlines_to_exclude !== undefined
-        ? data.headlines_to_exclude
-        : null,
-
-    footlines_to_exclude:
-      data.footlines_to_exclude !== null &&
-      data.footlines_to_exclude !== undefined
-        ? data.footlines_to_exclude
-        : null,
-
-    pandas_read_csv: data.pandas_read_csv
-      ? JSON.stringify(data.pandas_read_csv, null, 2)
-      : '',
-
-    timestamp_columns: data.timestamp_columns || [],
-    comment: [...(data.comment || [])],
-
-    header:
-      data.header !== null && data.header !== undefined
-        ? data.header
-        : null,
-
-    timezone: data.timezone || null,
-    encoding: data.encoding || null,
-  };
-}
-
-function formToApi(data: CsvParserCreate): CsvParserCreate {
-  return {
-    permission_group_id: data.permission_group_id,
-    name: data.name || null,
-    description: data.description || null,
-    delimiter: data.delimiter || null,
-
-    headlines_to_exclude:
-      data.headlines_to_exclude !== null &&
-      data.headlines_to_exclude !== undefined
-        ? data.headlines_to_exclude
-        : null,
-
-    footlines_to_exclude:
-      data.footlines_to_exclude !== null &&
-      data.footlines_to_exclude !== undefined
-        ? data.footlines_to_exclude
-        : null,
-
-    pandas_read_csv: data.pandas_read_csv
-      ? parseJsonField(data.pandas_read_csv)
-      : null,
-
-    timestamp_columns: data.timestamp_columns || [],
-    comment: [...(data.comment || [])],
-
-    header:
-      data.header !== null && data.header !== undefined
-        ? data.header
-        : null,
-
-    timezone: data.timezone || null,
-    encoding: data.encoding || null,
-  };
 }
 </script>
 

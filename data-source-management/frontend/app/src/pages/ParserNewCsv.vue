@@ -12,17 +12,16 @@
 import { computed, ref, toRaw } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { CsvParserCreate } from '@/services/parser_csv/types';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
-import {parseJsonField} from "@/utils/string_utils";
+import { formToApi, type CsvParserFormData } from '@/utils/parser_csv_utils';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 
-const formData = ref<CsvParserCreate>({
+const formData = ref<CsvParserFormData>({
   permission_group_id: null,
   name: null,
   description: null,
@@ -39,8 +38,8 @@ const formData = ref<CsvParserCreate>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<CsvParserCreate>(
-   structuredClone(toRaw(formData.value)),
+const initialFormData = ref<CsvParserFormData>(
+  structuredClone(toRaw(formData.value)),
 );
 const isSaving = ref(false);
 
@@ -55,7 +54,7 @@ useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
 
 async function save() {
   try {
-    const data: CsvParserCreate = formToApi(formData.value);
+    const data = formToApi(formData.value, true);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -95,42 +94,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function formToApi(data: CsvParserCreate): CsvParserCreate {
-  return {
-    permission_group_id: data.permission_group_id,
-    name: data.name || null,
-    description: data.description || null,
-    delimiter: data.delimiter || null,
-
-    headlines_to_exclude:
-      data.headlines_to_exclude !== null &&
-      data.headlines_to_exclude !== undefined
-        ? data.headlines_to_exclude
-        : null,
-
-    footlines_to_exclude:
-      data.footlines_to_exclude !== null &&
-      data.footlines_to_exclude !== undefined
-        ? data.footlines_to_exclude
-        : null,
-
-    pandas_read_csv: data.pandas_read_csv
-      ? parseJsonField(data.pandas_read_csv)
-      : null,
-
-    timestamp_columns: data.timestamp_columns || [],
-    comment: [...(data.comment || [])],
-
-    header:
-      data.header !== null && data.header !== undefined
-        ? data.header
-        : null,
-
-    timezone: data.timezone || null,
-    encoding: data.encoding || null,
-  };
 }
 </script>
 

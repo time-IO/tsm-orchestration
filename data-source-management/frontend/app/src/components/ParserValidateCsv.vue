@@ -9,27 +9,30 @@
 </template>
 
 <script setup lang="ts">
-import type { CsvParserValidate, CsvParserUpdate } from '@/services/parser_csv/types';
+import type { CsvParserValidate } from '@/services/parser_csv/types';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserValidateDrawer from '@/components/ParserValidateDrawer.vue';
 import type { ComputedRef } from 'vue';
 import { computed, toRaw } from 'vue';
+import { formToApi, type CsvParserFormData } from '@/utils/parser_csv_utils';
 
 const props = defineProps<{
-  formData: CsvParserUpdate;
+  formData: CsvParserFormData;
 }>();
 
 const parsingSettings: ComputedRef<CsvParserValidate> = computed(() => {
+  const apiData = formToApi(props.formData);
+
   return {
-    delimiter: toRaw(props.formData.delimiter ?? null),
-    headlines_to_exclude: toRaw(props.formData.headlines_to_exclude ?? null),
-    footlines_to_exclude: toRaw(props.formData.footlines_to_exclude ?? null),
-    pandas_read_csv: toRaw(props.formData.pandas_read_csv ?? null),
-    timestamp_columns: toRaw(props.formData.timestamp_columns ?? []),
-    comment: toRaw(props.formData.comment ?? []),
-    header: toRaw(props.formData.header ?? null),
-    timezone: toRaw(props.formData.timezone ?? null),
-    encoding: toRaw(props.formData.encoding ?? null),
+    delimiter: toRaw(apiData.delimiter ?? null),
+    headlines_to_exclude: toRaw(apiData.headlines_to_exclude ?? null),
+    footlines_to_exclude: toRaw(apiData.footlines_to_exclude ?? null),
+    pandas_read_csv: toRaw(apiData.pandas_read_csv ?? null),
+    timestamp_columns: toRaw(apiData.timestamp_columns ?? []),
+    comment: toRaw(apiData.comment ?? []),
+    header: toRaw(apiData.header ?? null),
+    timezone: toRaw(apiData.timezone ?? null),
+    encoding: toRaw(apiData.encoding ?? null),
   };
 });
 
