@@ -49,7 +49,7 @@
       :model-value="formData.thresh"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       @update:model-value="(val) => (formData.thresh = val === '' ? null : Number(val))"
-      label="thresh"
+      label="thresh (enter a floating point number)"
       hint="Maximum total change allowed per window."
     />
 
@@ -60,7 +60,7 @@
       v-model.number="formData.min_periods"
       :rules="[rules.INTEGER, ruleFactories.MIN(2)]"
       @update:model-value="(val) => (formData.min_periods = val === '' ? null : Number(val))"
-      label="min_periods"
+      label="min_periods (enter an integer number)"
       hint="Minimum number of valid timestamps required per window (>= 2)."
     />
 
