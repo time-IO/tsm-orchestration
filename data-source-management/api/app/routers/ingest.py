@@ -101,7 +101,7 @@ async def read_ingest_journal(
 
 
 @router.get("/{ingest_id}/database", tags=["ingest/database"])
-async def read_ingest_journal(
+async def read_ingest_database_name(
     ingest_id: int,
     repo: IngestRepository = Depends(get_repo_ingest),
     current_user: User = Depends(get_current_user),
