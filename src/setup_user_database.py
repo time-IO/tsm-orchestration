@@ -305,10 +305,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
-    @staticmethod
-    def escape_quote(s: str) -> str:
-        return s.replace("'", "''")
-
     def create_frost_views(self, thing):
         base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
         files = [
@@ -329,6 +325,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
         SMS_URL = os.environ.get("SMS_URL")
         CV_URL = os.environ.get("CV_URL")
 
+        def escape_quote(s: str) -> str:
+            return s.replace("'", "''")
+
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
@@ -345,9 +344,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     # full control over the values, especially that the value does not come
                     # from userinput. Additionally, we escape single quotes, prevent closing
                     # the outer quotes in the file.
-                    view = view.replace("{tsm_schema}", f"{self.escape_quote(schema)}")
-                    view = view.replace("{sms_url}", f"{self.escape_quote(SMS_URL)}")
-                    view = view.replace("{cv_url}", f"{self.escape_quote(CV_URL)}")
+                    view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
+                    view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
+                    view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                     c.execute(view)
 
     def create_internal_frost_views(self, thing):
@@ -371,6 +370,9 @@ class CreateThingInPostgresHandler(AbstractHandler):
         SMS_URL = os.environ.get("SMS_URL")
         CV_URL = os.environ.get("CV_URL")
 
+        def escape_quote(s: str) -> str:
+            return s.replace("'", "''")
+
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 c.execute(sql.SQL("SET search_path TO {target}").format(target=target))
@@ -383,12 +385,12 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     # and single quotes are escaped. {tsm_schema} is the project
                     # schema (raw observation + datasource_id); {target_schema} is
                     # the internal schema (feature.sql existence check).
-                    view = view.replace("{tsm_schema}", f"{self.escape_quote(schema)}")
+                    view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
                     view = view.replace(
-                        "{target_schema}", f"{self.escape_quote(int_schema)}"
+                        "{target_schema}", f"{escape_quote(int_schema)}"
                     )
-                    view = view.replace("{sms_url}", f"{self.escape_quote(SMS_URL)}")
-                    view = view.replace("{cv_url}", f"{self.escape_quote(CV_URL)}")
+                    view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
+                    view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
                     c.execute(view)
 
     def create_grafana_views(self, thing):
