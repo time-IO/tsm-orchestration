@@ -13,6 +13,14 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
+- Quality control setting 'flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
+
+### Changed
+- STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
+
+## [2026-09-30]
+
+### Added
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
 - Grafana ingest dashboards show linked STA datastreams in their own row, with a link to manage datastream linkings in the SMS ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
