@@ -21,7 +21,7 @@ When adding a changelog entry, ensure the following:
 - Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 
 ### Fixed
-- CSV parser pandas options are consistently converted between form data and API JSON ([Merge Request](<will-be-inserted>))
+- CSV parser pandas options are consistently converted between form data and API JSON ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/740))
 
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
