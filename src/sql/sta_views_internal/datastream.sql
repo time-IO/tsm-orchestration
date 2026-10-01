@@ -128,7 +128,7 @@ LEFT JOIN LATERAL (
     SELECT result_time FROM "{tsm_schema}".observation o
     WHERE o.datastream_id = dsl.datastream_id
     AND o.result_time >= dsl.begin_date
-    AND (dsl.end_date IS NULL OR o.result_time <= dsl.end_date)
+    AND o.result_time <= coalesce(dsl.end_date, 'infinity'::timestamptz)
     ORDER BY result_time DESC
     LIMIT 1
 ) last_obs ON true
