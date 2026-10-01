@@ -20,6 +20,7 @@ When adding a changelog entry, ensure the following:
 - Support for External MQTT and HTTP ingest types via bento ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/549))
 - Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 - Quality control setting 'flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
+- Links to linked SMS Configurations from ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/722))
 
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
