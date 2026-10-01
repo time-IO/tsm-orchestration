@@ -9,9 +9,12 @@ import ingestExternalApiZentraController from '@/services/ingest_external_api_ze
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
 import ingestSftpController from '@/services/ingest_sftp';
+import ingestHttpController from '@/services/ingest_http';
+import ingestHttpStorageController from '@/services/ingest_http_storage';
 import ingestSftpStorageController from '@/services/ingest_sftp_storage';
 import ingestExternalSftpController from '@/services/ingest_external_sftp';
 import ingestExternalSftpStorageController from '@/services/ingest_external_sftp_storage';
+import ingestExternalMqttController from '@/services/ingest_external_mqtt';
 import triggerExternalApiGenController from '@/services/trigger_external_api_generic';
 import triggerExternalSftpController from '@/services/trigger_external_sftp';
 import permissionGroupController from '@/services/permission_group';
@@ -67,4 +70,7 @@ export const API = {
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
+  ingestHttp: ingestHttpController,
+  ingestHttpStorage: ingestHttpStorageController,
+  ingestExternalMqtt: ingestExternalMqttController,
 };

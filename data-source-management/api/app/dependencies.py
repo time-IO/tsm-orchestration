@@ -36,8 +36,10 @@ from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
 from repositories.ingest_external_api_sensoto import IngestExternalApiSensotoRepository
 from repositories.ingest_external_api_zentra import IngestExternalApiZentraRepository
 from repositories.ingest_external_sftp import IngestExternalSftpRepository
+from repositories.ingest_external_mqtt import IngestExternalMqttRepository
 from repositories.ingest_mqtt import IngestMqttRepository
 from repositories.ingest_sftp import IngestSftpRepository
+from repositories.ingest_http import IngestHttpRepository
 from repositories.parser_csv import ParserCsvRepository
 from repositories.parser_json import ParserJsonRepository
 from repositories.parser_detailed import ParserDetailedRepository
@@ -276,6 +278,14 @@ def get_repo_ingest_mqtt(session=Depends(get_session)):
 
 def get_repo_ingest_sftp(session=Depends(get_session)):
     return IngestSftpRepository(session)
+
+
+def get_repo_ingest_external_mqtt(session=Depends(get_session)):
+    return IngestExternalMqttRepository(session)
+
+
+def get_repo_ingest_http(session=Depends(get_session)):
+    return IngestHttpRepository(session)
 
 
 def get_repo_parser_detailed(session=Depends(get_session)):

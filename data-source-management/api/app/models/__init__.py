@@ -29,6 +29,8 @@ from .ingest_external_api_uba import IngestExternalApiUba
 from .ingest_external_api_sensoto import IngestExternalApiSensoto
 from .ingest_external_api_zentra import IngestExternalApiZentra
 from .ingest_external_sftp import IngestExternalSftp
+from .ingest_external_mqtt import IngestExternalMqtt
+from .ingest_http import IngestHttp
 from .ingest_mqtt import IngestMqtt
 from .ingest_sftp import IngestSftp
 
@@ -67,6 +69,8 @@ __all__ = [
     "IngestExternalApiSensoto",
     "IngestExternalApiZentra",
     "IngestExternalSftp",
+    "IngestExternalMqtt",
+    "IngestHttp",
     "IngestMqtt",
     "IngestSftp",
     "Parser",
