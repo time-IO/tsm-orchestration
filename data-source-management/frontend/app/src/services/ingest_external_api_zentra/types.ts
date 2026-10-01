@@ -38,5 +38,5 @@ export type IngestExternalApiZentraUpdate = {
   units?: 'metric' | 'imperial' | null;
   sync_enabled?: boolean;
   sync_interval_in_minutes?: number | null;
-  api_key?: string |null;
+  api_key?: string | null;
 };

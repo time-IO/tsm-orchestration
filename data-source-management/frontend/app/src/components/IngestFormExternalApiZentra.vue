@@ -9,7 +9,8 @@
     </div>
     <div class="text-caption text-grey">
       For more information on Zentra API properties, visit the API documentation
-      <a href="https://docs.zentracloud.io/l/en/article/st68yxb51l-api-v-3-0-eu" target="_blank">here</a
+      <a href="https://docs.zentracloud.io/l/en/article/st68yxb51l-api-v-3-0-eu" target="_blank"
+        >here</a
       >.
     </div>
 
@@ -77,7 +78,7 @@
             class="q-mb-md"
             v-model.number="formData.period_in_minutes"
             label="Period (in minutes) *"
-             hint="Determines the time window fetched per sync (up to 2,000 readings per request, Zentra's limit). Should roughly match your sync interval to avoid gaps or overlaps."
+            hint="Determines the time window fetched per sync (up to 2,000 readings per request, Zentra's limit). Should roughly match your sync interval to avoid gaps or overlaps."
             :rules="[
               (val) => !!val || 'Period is required',
               (val) =>

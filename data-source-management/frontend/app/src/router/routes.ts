@@ -241,7 +241,7 @@ const routes: RouteRecordRaw[] = [
     component: IngestEditExternalApiTSystems,
     meta: { requiresAuth: true, constrainWidth: true },
   },
-    {
+  {
     path: '/ingest/external-api/zentra/:id/edit',
     component: IngestEditExternalApiZentra,
     meta: { requiresAuth: true, constrainWidth: true },

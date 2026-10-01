@@ -261,6 +261,7 @@ def get_repo_ingest_external_api_the_things_network(session=Depends(get_session)
 def get_repo_ingest_external_api_tsystems(session=Depends(get_session)):
     return IngestExternalApiTSystemsRepository(session)
 
+
 def get_repo_ingest_external_api_zentra(session=Depends(get_session)):
     return IngestExternalApiZentraRepository(session)
 

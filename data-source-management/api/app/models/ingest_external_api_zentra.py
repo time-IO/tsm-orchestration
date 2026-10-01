@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column
 from typing import Optional, Literal
 from enum import Enum
 
@@ -9,6 +9,7 @@ from .ingest_external_api import (
     IngestExternalApiCreate,
     IngestExternalApiUpdate,
 )
+from encryption import EncryptedType
 
 
 class UnitsEnum(str, Enum):
@@ -21,7 +22,7 @@ class IngestExternalApiZentraRead(IngestExternalApiRead):
     period_in_minutes: int
     units: Optional[Literal["metric", "imperial"]] = "metric"
     api_key: str
-    last_mrid: Optional[str] = None #Last Measurement Record ID
+    last_mrid: Optional[str] = None  # Last Measurement Record ID
 
 
 class IngestExternalApiZentraCreate(IngestExternalApiCreate):
@@ -48,7 +49,7 @@ class IngestExternalApiZentra(SQLModel, table=True):
     device_sn: str
     period_in_minutes: int
     units: Optional[UnitsEnum] = UnitsEnum.METRIC
-    api_key: str
+    api_key: str = Field(sa_column=Column("api_key", EncryptedType, nullable=False))
     last_mrid: Optional[str] = None
     external_api: IngestExternalApi = Relationship(back_populates="zentra_detail")
 
