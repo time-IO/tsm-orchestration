@@ -13,7 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
-- QC-Functions within a QC Setting can be reordered via drag & drop, determining their execution order ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
+- QC-Functions within a QC Setting can be reordered via drag & drop, determining their execution order ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/686))
 ### Fixed
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
 - Grafana ingest dashboards show linked STA datastreams in their own row, with a link to manage datastream linkings in the SMS ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
