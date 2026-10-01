@@ -38,16 +38,11 @@ const formData = ref<CsvParserFormData>({
 
 const isLoading = ref(false);
 
-const initialFormData = ref<CsvParserFormData>(
-  structuredClone(toRaw(formData.value)),
-);
+const initialFormData = ref<CsvParserFormData>(structuredClone(toRaw(formData.value)));
 const isSaving = ref(false);
 
 const hasUnsavedChanges = computed(() => {
-  return (
-    JSON.stringify(formData.value) !==
-    JSON.stringify(initialFormData.value)
-  );
+  return JSON.stringify(formData.value) !== JSON.stringify(initialFormData.value);
 });
 
 useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);

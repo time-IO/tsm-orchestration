@@ -15,11 +15,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
-import {
-  apiToForm,
-  formToApi,
-  type CsvParserFormData,
-} from '@/utils/parser_csv_utils';
+import { apiToForm, formToApi, type CsvParserFormData } from '@/utils/parser_csv_utils';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
@@ -49,10 +45,7 @@ const isSaving = ref(false);
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
 
-  return (
-    JSON.stringify(formData.value) !==
-    JSON.stringify(initialFormData.value)
-  );
+  return JSON.stringify(formData.value) !== JSON.stringify(initialFormData.value);
 });
 
 useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
