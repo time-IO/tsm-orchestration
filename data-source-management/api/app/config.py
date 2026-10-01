@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     INGEST_MQTT_BROKER_URI: str
     DB_API_BASE_URL: str = ""
     DB_API_AUTH_TOKEN: str = ""
-    SMS_ROOT_URL: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property
