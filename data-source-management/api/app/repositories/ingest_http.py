@@ -1,0 +1,308 @@
+from constants import IngestType
+from models import IngestHttp, Ingest
+from models.ingest_http import (
+    IngestHttpCreate,
+    IngestHttpUpdate,
+    IngestHttpRead,
+)
+from sqlmodel import Session, func
+
+from sqlalchemy.orm import joinedload
+from sqlalchemy import select
+from fastapi import HTTPException
+from typing import Optional
+import uuid as uuid_pkg
+from access_scope import AccessScope
+
+from models.filters import IngestFilter
+
+from sorting import apply_sort_list
+from fastapi_filters.ext.sqlalchemy import apply_filters
+
+from validation import RepositoryValidator
+
+UUID_PATH_ERROR = (
+    "This path for posts is the UUID of another HTTP ingest and cannot be used."
+)
+
+
+class IngestHttpRepository:
+    def __init__(self, session: Session):
+        self.model = IngestHttp
+        self.session = session
+
+    def find_one(
+        self,
+        id: int,
+        access_scope: AccessScope,
+    ) -> IngestHttp:
+        statement = (
+            select(self.model)
+            .join(self.model.ingest)
+            .where(self.model.ingest_id == id)
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+        )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
+
+        entity = self.session.exec(statement).unique().scalar_one_or_none()
+        if not entity:
+            raise HTTPException(status_code=404, detail="Not found")
+        return entity
+
+    def find_all(
+        self,
+        access_scope: AccessScope,
+        sort_by: Optional[str] = None,
+        filters: Optional[IngestFilter] = None,
+    ):
+        statement = (
+            select(self.model)
+            .join(self.model.ingest)
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+        )
+
+        if not access_scope.is_superuser:
+            statement = statement.where(
+                Ingest.permission_group_id.in_(access_scope.permission_group_ids)
+            )
+
+        if filters:
+            statement = apply_filters(statement, filters)
+
+        results = self.session.exec(statement).unique().scalars().all()
+        flatt_list = [self.to_flat(item) for item in results]
+        return apply_sort_list(flatt_list, sort_by) if sort_by else flatt_list
+
+    def create(
+        self,
+        payload: IngestHttpCreate,
+        extra_data,
+        access_scope: AccessScope,
+    ) -> IngestHttp:
+
+        RepositoryValidator.check_payload_access_scope(
+            payload.permission_group_id, access_scope
+        )
+
+        self.check_for_existing_name_create(payload.name, payload.permission_group_id)
+        self.check_for_existing_path_create(payload.path_for_posts)
+
+        try:
+            extra_data["ingest_type"] = IngestType.HTTP
+
+            ingest = Ingest.model_validate(payload, update=extra_data)
+
+            self.session.add(ingest)
+            self.session.flush()
+
+            extra_data["ingest_id"] = ingest.id
+
+            ingest_http = IngestHttp.model_validate(payload, update=extra_data)
+
+            self.session.add(ingest_http)
+
+            self.session.commit()
+
+            return ingest_http
+
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to create.")
+
+    def update(
+        self,
+        ingest_id: int,
+        payload: IngestHttpUpdate,
+        access_scope: AccessScope,
+    ) -> IngestHttp:
+
+        if payload.permission_group_id is not None:
+            RepositoryValidator.check_payload_access_scope(
+                payload.permission_group_id, access_scope
+            )
+
+        entity = self.find_one(ingest_id, access_scope=access_scope)
+
+        ingest = entity.ingest
+
+        self.check_for_existing_name_update(
+            payload.name, ingest.permission_group_id, ingest.id
+        )
+        self.check_for_existing_path_update(payload.path_for_posts, ingest_id)
+
+        try:
+
+            data = payload.model_dump(exclude_unset=True)
+
+            # Update each entity with only its relevant fields
+            ingest.sqlmodel_update(
+                {
+                    k: v
+                    for k, v in data.items()
+                    if k in {"name", "description", "permission_group_id", "parser_id"}
+                }
+            )
+
+            entity.sqlmodel_update(
+                {
+                    k: v
+                    for k, v in data.items()
+                    if k
+                    not in {"name", "description", "permission_group_id", "parser_id"}
+                }
+            )
+
+            self.session.add(ingest)
+            self.session.commit()
+            self.session.refresh(ingest)
+            self.session.refresh(entity)
+
+            return entity
+
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to update.")
+
+    def delete(self, ingest_id: int, access_scope: AccessScope):
+        entity = self.find_one(ingest_id, access_scope=access_scope)
+
+        # workaround as cascade delete doesn't seem to work currently
+        ing = entity.ingest
+        try:
+            self.session.delete(entity)
+            self.session.delete(ing)
+            self.session.commit()
+            return {"ok": True}
+        except Exception as e:
+            print(str(e))
+            self.session.rollback()
+            raise HTTPException(status_code=400, detail="Failed to delete.")
+
+    def check_for_existing_name_create(self, name_to_check, permission_group_id):
+
+        statement = (
+            select(self.model)
+            .join(self.model.ingest)
+            .where(
+                Ingest.permission_group_id == permission_group_id,
+                func.lower(Ingest.name) == func.lower(str(name_to_check)),
+            )
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
+    def check_for_existing_name_update(
+        self, name_to_check, permission_group_id, entity_id
+    ):
+
+        statement = (
+            select(self.model)
+            .join(self.model.ingest)
+            .where(
+                Ingest.permission_group_id == permission_group_id,
+                func.lower(Ingest.name) == func.lower(str(name_to_check)),
+                Ingest.id != entity_id,
+            )
+            .options(joinedload(self.model.ingest).joinedload(Ingest.permission_group))
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(status_code=400, detail="This name already exists.")
+
+    def _path_matches_ingest_uuid(self, path_for_posts, exclude_ingest_id=None):
+        # Ingests without a path_for_posts are served at /http-ingest/{uuid},
+        # so a custom path equal to an existing ingest's UUID would collide.
+        try:
+            parsed = uuid_pkg.UUID(path_for_posts)
+        except ValueError:
+            return False
+        if str(parsed) != path_for_posts:
+            return False
+
+        statement = (
+            select(self.model).join(self.model.ingest).where(Ingest.uuid == parsed)
+        )
+        if exclude_ingest_id is not None:
+            statement = statement.where(self.model.ingest_id != exclude_ingest_id)
+        return self.session.exec(statement).first() is not None
+
+    def check_for_existing_path_create(self, path_for_posts):
+        # path_for_posts feeds the global Bento HTTP route, so - unlike name -
+        # this check is instance-wide, not scoped to a permission group, and
+        # exact-match (case-sensitive), matching how the route is compared.
+        if not path_for_posts:
+            return
+
+        statement = select(self.model).where(
+            self.model.path_for_posts == path_for_posts
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="This path for posts is already in use."
+            )
+        if self._path_matches_ingest_uuid(path_for_posts):
+            raise HTTPException(status_code=400, detail=UUID_PATH_ERROR)
+
+    def check_for_existing_path_update(self, path_for_posts, entity_id):
+        if not path_for_posts:
+            return
+
+        statement = select(self.model).where(
+            self.model.path_for_posts == path_for_posts,
+            self.model.ingest_id != entity_id,
+        )
+
+        existing = self.session.exec(statement).scalar_one_or_none()
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="This path for posts is already in use."
+            )
+        if self._path_matches_ingest_uuid(path_for_posts, entity_id):
+            raise HTTPException(status_code=400, detail=UUID_PATH_ERROR)
+
+    def to_flat(self, entity: IngestHttp) -> IngestHttpRead:
+        ing = entity.ingest
+        permission_group = ing.permission_group
+
+        parser = ing.parser
+
+        return IngestHttpRead(
+            # Ingest
+            id=ing.id,
+            uuid=ing.uuid,
+            created_at=ing.created_at,
+            ingest_type=ing.ingest_type,
+            name=ing.name,
+            permission_group_id=ing.permission_group_id,
+            description=ing.description,
+            created_by_id=ing.created_by_id,
+            parser_id=ing.parser_id,
+            # http
+            path_for_posts=entity.path_for_posts,
+            file_type=entity.file_type,
+            api_key=entity.api_key,
+            enabled=entity.enabled,
+            bucket_name=entity.bucket_name,
+            bucket_username=entity.bucket_username,
+            bucket_password=entity.bucket_password,
+            # Permission Group
+            permission_group={
+                "id": permission_group.id,
+                "uuid": permission_group.uuid,
+                "name": permission_group.name,
+            },
+            # Parser
+            parser={**parser.parser_info},
+        )

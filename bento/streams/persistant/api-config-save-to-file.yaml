@@ -1,0 +1,127 @@
+## HTTP - INPUT
+## Allows Bento to save stream-configs - in case of restart, ...
+
+# All config fields, showing default values
+input:
+  http_server:
+    address: "0.0.0.0:4200"
+    path: /streams/
+    # expects somthing like /streams/{ingest-type}/{thing-uuid}
+    ws_path: /streams/ws
+    ws_welcome_message: ""
+    ws_rate_limit_message: ""
+    allowed_verbs:
+      - POST
+      - PUT
+      - DELETE
+    timeout: 5s
+    rate_limit: ""
+    cert_file: ""
+    key_file: ""
+    cors:
+      enabled: false
+      allowed_origins: []
+    sync_response:
+      status: "200"
+      headers:
+        Content-Type: application/octet-stream
+      metadata_headers:
+        include_prefixes: []
+        include_patterns: []
+
+buffer:
+  type: none
+
+pipeline:
+  processors:
+    - mapping: |
+        root = content()
+        let verb = metadata("http_server_verb")              # POST / PUT / DELETE
+        let req_path = metadata("http_server_request_path") # /streams/...
+        meta verb = $verb
+        meta req_path = $req_path
+        # same path you used to persist
+        meta file_path = "/data" + $req_path + ".json"
+
+    - switch:
+        - check: 'meta("verb") == "DELETE"'
+          processors:
+            - file:
+                operation: delete
+                path: '${! meta("file_path") }'
+        - check: ""
+          processors:
+            # replace your file output with a file processor write
+            - file:
+                operation: write
+                path: '${! meta("file_path") }'
+
+    - switch:
+        - check: errored()
+          processors:
+            - log:
+                level: ERROR
+                message: '${! "Failed to " + meta("verb") + " persisted stream file " + meta("file_path") + ": " + error() }'
+        - check: ""
+          processors:
+            - log:
+                level: INFO
+                message: '${! (if meta("verb") == "DELETE" { "Deleted" } else { "Wrote" }) + " persisted stream file " + meta("file_path") }'
+
+    - mapping: |
+        root = content()
+        # Bento's own dynamic-streams API only takes a single-segment stream
+        # ID (/streams/{id}), so strip the leading /streams/{ingest-type}/
+        # segment before forwarding, e.g. /streams/external_mqtt/{uuid} ->
+        # /streams/{uuid}.
+        meta path_for_api = metadata("http_server_request_path").re_replace_all("^/streams/[^/]+/", "/streams/")
+
+output:
+  # http_client's "verb" field doesn't support interpolation, so route per verb instead.
+  switch:
+    cases:
+      - check: 'meta("verb") == "POST"'
+        output:
+          http_client:
+            url: 'http://localhost:4195${! metadata("path_for_api") }'
+            verb: POST
+            headers: {}
+            rate_limit: "" # No default (optional)
+            timeout: 5s
+            max_in_flight: 64
+            batching:
+              count: 0
+              byte_size: 0
+              period: ""
+              jitter: 0
+              check: ""
+      - check: 'meta("verb") == "PUT"'
+        output:
+          http_client:
+            url: 'http://localhost:4195${! metadata("path_for_api") }'
+            verb: PUT
+            headers: {}
+            rate_limit: "" # No default (optional)
+            timeout: 5s
+            max_in_flight: 64
+            batching:
+              count: 0
+              byte_size: 0
+              period: ""
+              jitter: 0
+              check: ""
+      - check: 'meta("verb") == "DELETE"'
+        output:
+          http_client:
+            url: 'http://localhost:4195${! metadata("path_for_api") }'
+            verb: DELETE
+            headers: {}
+            rate_limit: "" # No default (optional)
+            timeout: 5s
+            max_in_flight: 64
+            batching:
+              count: 0
+              byte_size: 0
+              period: ""
+              jitter: 0
+              check: ""

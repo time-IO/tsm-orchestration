@@ -133,7 +133,7 @@ class TestQualityControlConstraintsGetAvailableFunctions:
         assert "flagJumps" in result
         assert "flagRange" in result
         assert "rolling" in result
-        assert len(result) == 15
+        assert len(result) == 16
 
     def test_returns_string_names(self):
         result = QualityControlConstraints.get_available_functions()

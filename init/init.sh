@@ -25,6 +25,7 @@ mkdir -p /tmp/volume/mqtt/auth
 mkdir -p /tmp/volume/mqtt/data
 mkdir -p /tmp/volume/cron
 mkdir -p /tmp/volume/database/pgdata
+mkdir -p /tmp/volume/bento/streams
 
 ####################
 #  object-storage  #
@@ -162,7 +163,8 @@ if [ "${USE_CHOWN}" == "true" ]; then
         /tmp/volume/cron \
         /tmp/volume/database \
         /tmp/volume/visualization \
-        /tmp/volume/tomcat
+        /tmp/volume/tomcat \
+        /tmp/volume/bento
 else
     echo "Skipping chown of volume directories as USE_CHOWN is not set to 'true'."
 fi
@@ -181,7 +183,8 @@ fi
 #      /tmp/volume/cron \
 #      /tmp/volume/database \
 #      /tmp/volume/visualization \
-#      /tmp/volume/tomcat
+#      /tmp/volume/tomcat \
+#      /tmp/volume/bento
 
 
 ###########################################
