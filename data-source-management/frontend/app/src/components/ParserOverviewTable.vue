@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import type { QTableRequestPropPagination } from '@/services/types';
 import { default_parser_columns, generateParserPath } from '@/utils/pagination_utils';
-import OverviewTableBase from "@/components/OverviewTableBase.vue";
+import OverviewTableBase from '@/components/OverviewTableBase.vue';
 
 defineProps<{ rows: unknown[]; loading: boolean }>();
 const pagination = defineModel<QTableRequestPropPagination>('pagination');

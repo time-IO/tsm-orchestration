@@ -39,7 +39,7 @@ import {
   generateIngestPath,
   formatExternalApiType,
 } from '@/utils/pagination_utils';
-import OverviewTableBase from "@/components/OverviewTableBase.vue";
+import OverviewTableBase from '@/components/OverviewTableBase.vue';
 
 defineProps<{ rows: unknown[]; loading: boolean }>();
 const pagination = defineModel<QTableRequestPropPagination>('pagination');

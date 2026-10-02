@@ -5,7 +5,7 @@
       <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
           <q-list style="min-width: 180px">
-   <!--            select all-->
+            <!--            select all-->
             <q-item dense clickable @click="toggleAll">
               <q-item-section side>
                 <q-checkbox
@@ -18,7 +18,7 @@
               <q-item-section><strong>All</strong></q-item-section>
             </q-item>
             <q-separator />
-   <!--            select individually-->
+            <!--            select individually-->
             <q-item
               v-for="opt in columnOptions"
               :key="opt.value"
@@ -134,7 +134,6 @@
     </q-table>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useAttrs } from 'vue';
