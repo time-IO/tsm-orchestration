@@ -43,24 +43,20 @@
     </div>
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
+      v-model="formData.flag"
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
@@ -74,7 +70,8 @@ import type { QualityControlFunctionArgumentBase } from '@/services/quality_cont
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import { nullableNumber, toNumberOrNull } from '@/utils/quality_control_function_utils';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;

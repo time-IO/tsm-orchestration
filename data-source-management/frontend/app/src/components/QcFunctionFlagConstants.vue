@@ -43,47 +43,39 @@
     />
 
     <!-- thresh     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.thresh"
+      v-model="formData.thresh"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.thresh = val === '' ? null : Number(val))"
-      label="thresh (enter a floating point number)"
+      label="thresh"
       hint="Maximum total change allowed per window."
     />
 
     <!-- min_periods     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.min_periods"
+      v-model="formData.min_periods"
       :rules="[rules.INTEGER, ruleFactories.MIN(2)]"
-      @update:model-value="(val) => (formData.min_periods = val === '' ? null : Number(val))"
-      label="min_periods (enter an integer number)"
+      label="min_periods"
       hint="Minimum number of valid timestamps required per window (>= 2)."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
-      label="Flag (enter a floating point number)"
-      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.flag = val === '' ? null : Number(val))"
-      hint="Flag assigned to values identified by this function."
+      v-model="formData.flag"
+      label="Flag"
+      :rules="[ruleFactories.MIN(0)]"
+      hint="Enter a floating point number. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
-      @update:model-value="(val) => (formData.dfilter = val === '' ? 0 : Number(val))"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -97,6 +89,8 @@ import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 import QcFunctionFormIntOffsetInput from '@/components/QcFunctionFormIntOffsetInput.vue';
+import QcNumberInput from '@/components/QcNumberInput.vue';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -107,22 +101,14 @@ const label = defineModel<string | undefined>('label');
 const emit = defineEmits(['submit', 'remove']);
 const current_window_type = ref(POSSIBLE_QC_FUNCTION_TYPES.INT);
 
-const formData = ref<{
-  field: Datastream[];
-  target: Datastream[];
-  window: number | null;
-  thresh: number | null;
-  min_periods: number | null;
-  flag: number | null;
-  dfilter: number;
-}>({
-  field: [],
-  target: [],
-  window: null,
-  thresh: 0,
-  min_periods: null,
-  flag: 255.0,
-  dfilter: 0,
+const formData = ref({
+  field: [] as Datastream[],
+  target: [] as Datastream[],
+  window: null as number | null,
+  thresh: nullableNumber(0),
+  min_periods: null as number | null,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {

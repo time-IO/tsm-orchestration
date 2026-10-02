@@ -54,38 +54,29 @@
     />
 
     <!--    thresh-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.thresh"
+      v-model="formData.thresh"
       label="thresh (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      @update:model-value="(val) => (formData.thresh = toNumberOrNull(val))"
       hint="Z-score threshold."
     />
-
     <!--    min_residuals-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.min_residuals"
+      v-model="formData.min_residuals"
       label="min_residuals (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      @update:model-value="(val) => (formData.min_residuals = toNumberOrNull(val))"
       hint="Minimum residual to consider a point as outlier."
     />
-
     <!--    min_periods-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.min_periods"
+      v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
-      @update:model-value="(val) => (formData.min_periods = toNumberOrNull(val))"
       hint="Minimum valid points in a window."
     />
-
     <!--    center-->
     <div class="q-mb-md">
       <q-item tag="label" v-ripple>
@@ -98,37 +89,30 @@
         </q-item-section>
       </q-item>
     </div>
-
     <!--    axis-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.axis"
+      v-model="formData.axis"
       label="axis (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0), ruleFactories.MAX(1)]"
-      @update:model-value="(val) => (formData.axis = toNumberOrNull(val))"
       hint="Axis along which scoring is applied."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
+      v-model="formData.flag"
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
@@ -143,7 +127,8 @@ import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
-import { toNumberOrNull, nullableNumber } from '@/utils/quality_control_function_utils';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;

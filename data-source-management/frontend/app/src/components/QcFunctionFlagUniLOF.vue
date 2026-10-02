@@ -32,20 +32,18 @@
     </div>
 
     <!--    n-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.n"
+      v-model="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.n = toNumberOrNull(val))"
       hint="Number of periods to include in LOF calculation."
     />
 
     <!--thresh-->
     <qc-function-form-float-enum-input
       class="q-mb-md"
-      v-model:input.number="formData.thresh"
+      v-model:input="formData.thresh"
       v-model:current_type="current_thresh_type"
       label="thresh"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -55,13 +53,11 @@
     />
 
     <!--probability-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.probability"
+      v-model="formData.probability"
       label="probability (enter a floating point number)"
       :rules="[ruleFactories.RANGE(0, 1), rules.FLOAT]"
-      @update:model-value="(val) => (formData.probability = toNumberOrNull(val))"
       hint="Outlier probability cutoff."
     />
 
@@ -69,7 +65,7 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input.number="formData.corruption"
+      v-model:input="formData.corruption"
       v-model:current_type="current_corruption_type"
       :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
       :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
@@ -88,19 +84,17 @@
     />
 
     <!--p-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.p"
+      v-model="formData.p"
       label="p (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
-      @update:model-value="(val) => (formData.p = toNumberOrNull(val))"
       hint="Minkowski metric degree."
     />
 
     <!--density-->
     <qc-function-form-float-enum-input
-      v-model:input.number="formData.density"
+      v-model:input="formData.density"
       v-model:current_type="current_density_type"
       label="density"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -136,35 +130,29 @@
     </div>
 
     <!--min_offset-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.min_offset"
+      v-model="formData.min_offset"
       label="min_offset (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      @update:model-value="(val) => (formData.min_offset = toNumberOrNull(val))"
       hint="Minimum value jump before and after clusters to flag."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
+      v-model="formData.flag"
       label="Flag (enter a floating point number)"
-      :rules="[ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
+      :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
@@ -180,7 +168,8 @@ import QcFunctionFormFloatEnumInput from '@/components/QcFunctionFormFloatEnumIn
 import QcFunctionFormFloatIntInput from '@/components/QcFunctionFormFloatIntInput.vue';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import { nullableNumber, toNumberOrNull } from '@/utils/quality_control_function_utils';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;

@@ -67,42 +67,37 @@
       hint="Window size for sub-chunks."
     />
     <!--    sub_thresh-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.sub_thresh"
+      v-model="formData.sub_thresh"
       label="sub_thresh (enter a floating point number)"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.sub_thresh = toNumberOrNull(val))"
       hint="Threshold for sub-chunk deviation."
     />
     <!--    min_periods-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.min_periods"
+      v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.min_periods = toNumberOrNull(val))"
       hint="Minimum points required in a chunk."
     />
+
+    />
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
+      v-model="formData.flag"
       label="Flag"
       :rules="[ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
       hint="Enter a floating point number. Defaults to 255 if left empty."
     />
+
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
-      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
@@ -118,7 +113,8 @@ import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vu
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import { toNumberOrNull, nullableNumber } from '@/utils/quality_control_function_utils';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;

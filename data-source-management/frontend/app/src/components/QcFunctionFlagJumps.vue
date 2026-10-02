@@ -51,33 +51,28 @@
       hint="Size of the rolling windows used to calculate the mean."
     />
 
-    <!--    min_periods-->
-    <q-input
+    <!-- min_periods        -->
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.min_periods"
+      v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.min_periods = toNumberOrNull(val))"
-      hint="Minimum points required in a chunk."
+      hint="Minimum observations required for a valid mean calculation."
     />
+
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.flag"
-      label="Flag"
-      :rules="[ruleFactories.MIN(0)]"
-      @update:model-value="(val) => (formData.flag = toNumberOrNull(val))"
-      hint="Enter a floating point number. Defaults to 255 if left empty."
+      v-model="formData.flag"
+      label="Flag (enter a floating point number)"
+      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      :model-value="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
-      @update:model-value="(val) => (formData.dfilter = toNumberOrNull(val))"
       label="dfilter (enter a floating point number)"
       hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
@@ -93,7 +88,8 @@ import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
-import { toNumberOrNull, nullableNumber } from '@/utils/quality_control_function_utils';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
