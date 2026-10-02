@@ -65,6 +65,7 @@
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
+            :data-col="col.name"
             :class="col.name === 'action' ? 'text-center' : 'text-left'"
             :style="`width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}; position: relative; user-select: none;`"
           >
@@ -240,17 +241,25 @@ const colWidths = ref<Record<string, number>>(
     : { ...props.defaultColWidths },
 );
 
+const minWidthOf = (colName: string) => props.colMinWidths[colName] ?? 50;
+
 // functions for setting a new col-widths per mousemove
 let resizingCol: string | null = null;
 let startX = 0;
-let startWidth = 0;
+let startWidths: Record<string, number> = {};
+let otherCols: string[] = [];
 
 function startResize(e: MouseEvent, colName: string) {
   resizingCol = colName;
   startX = e.clientX;
 
-  const th = (e.target as HTMLElement).closest('th');
-  startWidth = th ? th.offsetWidth : (colWidths.value[colName] ?? 100);
+  const headerRow = (e.target as HTMLElement).closest('tr');
+  const ths = headerRow ? Array.from(headerRow.querySelectorAll<HTMLElement>('th[data-col]')) : [];
+  ths.forEach((th) => {
+    colWidths.value[th.dataset.col!] = th.getBoundingClientRect().width;
+  });
+  startWidths = { ...colWidths.value };
+  otherCols = ths.map((th) => th.dataset.col!).filter((c) => c !== colName);
 
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
@@ -259,8 +268,17 @@ function startResize(e: MouseEvent, colName: string) {
 function onResize(e: MouseEvent) {
   if (!resizingCol) return;
   const diff = e.clientX - startX;
-  const min = props.colMinWidths[resizingCol] ?? 50;
-  colWidths.value[resizingCol] = Math.max(min, startWidth + diff);
+  colWidths.value = { ...startWidths };
+  const startWidth = startWidths[resizingCol] ?? 100;
+  const newWidth = Math.max(minWidthOf(resizingCol), startWidth + diff);
+  colWidths.value[resizingCol] = newWidth;
+
+  const widthDelta = newWidth - startWidth;
+  if (widthDelta > 0) {
+    reclaimWidth(widthDelta, otherCols);
+  } else {
+    distributeWidth(Math.abs(widthDelta), otherCols);
+  }
 }
 
 function stopResize() {
@@ -287,13 +305,58 @@ const visibleColumns = ref<string[]>(
   savedColumns ? JSON.parse(savedColumns) : props.columns.map((c) => c.name),
 );
 
+const sumWidths = (colNames: string[]) =>
+  colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
+
+const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
+
+function distributeWidth(amount: number, receivers: string[]) {
+  const targets = withWidth(receivers);
+  if (amount <= 0 || targets.length === 0) return;
+  const share = amount / targets.length;
+  targets.forEach((c) => {
+    if (!colWidths.value[c]) {
+      return;
+    }
+    colWidths.value[c] += share;
+  });
+}
+
+// looping through remaining cols and remaining with to evenly distribute space
+function reclaimWidth(amount: number, donors: string[]) {
+  let remaining = amount;
+  const hasBuffer = (c: string) => colWidths.value[c]! > minWidthOf(c) + 0.5;
+  let candidates = withWidth(donors).filter(hasBuffer);
+  while (remaining > 0.5 && candidates.length > 0) {
+    const share = remaining / candidates.length;
+    for (const c of candidates) {
+      const take = Math.min(share, colWidths.value[c]! - minWidthOf(c));
+      colWidths.value[c] = colWidths.value[c]! - take;
+      remaining -= take;
+    }
+    candidates = candidates.filter(hasBuffer);
+  }
+}
+
+function setVisibleColumns(newVisibleColumns: string[]) {
+  const hidden = visibleColumns.value.filter((c) => !newVisibleColumns.includes(c));
+  const shown = newVisibleColumns.filter((c) => !visibleColumns.value.includes(c));
+  const remaining = visibleColumns.value.filter((c) => newVisibleColumns.includes(c));
+
+  distributeWidth(sumWidths(hidden), remaining);
+  reclaimWidth(sumWidths(shown), remaining);
+
+  visibleColumns.value = newVisibleColumns;
+  sessionStorage.setItem(visibleColumnsStorageKey, JSON.stringify(visibleColumns.value));
+  sessionStorage.setItem(colWidthsStorageKey, JSON.stringify(colWidths.value));
+}
+
 function toggleColumn(colName: string) {
   if (visibleColumns.value.includes(colName)) {
-    visibleColumns.value = visibleColumns.value.filter((c) => c !== colName);
+    setVisibleColumns(visibleColumns.value.filter((c) => c !== colName));
   } else {
-    visibleColumns.value = [...visibleColumns.value, colName];
+    setVisibleColumns([...visibleColumns.value, colName]);
   }
-  sessionStorage.setItem(visibleColumnsStorageKey, JSON.stringify(visibleColumns.value));
 }
 
 const allVisible = computed(() =>
@@ -302,11 +365,10 @@ const allVisible = computed(() =>
 
 function toggleAll() {
   if (allVisible.value) {
-    visibleColumns.value = ['action'];
+    setVisibleColumns(['action']);
   } else {
-    visibleColumns.value = props.columns.map((c) => c.name);
+    setVisibleColumns(props.columns.map((c) => c.name));
   }
-  sessionStorage.setItem(visibleColumnsStorageKey, JSON.stringify(visibleColumns.value));
 }
 </script>
 
