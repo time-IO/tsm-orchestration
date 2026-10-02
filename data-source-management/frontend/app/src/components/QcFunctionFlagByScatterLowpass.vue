@@ -83,14 +83,13 @@
       hint="Minimum points required in a chunk."
     />
 
-    />
     <!-- flag     -->
     <qc-number-input
       class="q-mb-md"
       v-model="formData.flag"
-      label="Flag"
+      label="Flag (enter a floating point number) "
       :rules="[ruleFactories.MIN(0)]"
-      hint="Enter a floating point number. Defaults to 255 if left empty."
+      hint="Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->

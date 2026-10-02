@@ -47,7 +47,7 @@
       class="q-mb-md"
       v-model="formData.thresh"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
-      label="thresh"
+      label="thresh (enter a floating point number)"
       hint="Maximum total change allowed per window."
     />
 
@@ -56,7 +56,7 @@
       class="q-mb-md"
       v-model="formData.min_periods"
       :rules="[rules.INTEGER, ruleFactories.MIN(2)]"
-      label="min_periods"
+      label="min_periods (enter an integer number)"
       hint="Minimum number of valid timestamps required per window (>= 2)."
     />
 
@@ -64,9 +64,9 @@
     <qc-number-input
       class="q-mb-md"
       v-model="formData.flag"
-      label="Flag"
+      label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
-      hint="Enter a floating point number. Defaults to 255 if left empty."
+      hint="Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
