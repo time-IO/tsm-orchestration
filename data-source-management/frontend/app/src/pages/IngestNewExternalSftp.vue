@@ -5,6 +5,7 @@
     :back-route="backRoute"
     v-model="formData"
     :item-parser="itemParser"
+    :item-permission-group="itemPermissionGroup"
     @save="save"
   />
 </template>
@@ -16,10 +17,9 @@ import { useRoute, useRouter } from 'vue-router';
 import type { IngestExternalSftpCreate } from '@/services/ingest_external_sftp/types';
 import type { ParserRead } from '@/services/types';
 import { useIngestExternalSftpStore } from '@/stores/ingestExternalSftpStore';
-import { useCsvParserStore } from '@/stores/parserCsvStore';
-import { useJsonParserStore } from '@/stores/parserJsonStore';
-import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
+import { useParserStoreByType } from '@/composables/useParserStoreByType';
 import IngestFormExternalSftp from '@/components/IngestFormExternalSftp.vue';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 const ingestExternalSftpStore = useIngestExternalSftpStore();
 const $q = useQuasar();
@@ -42,19 +42,8 @@ const formData = ref<IngestExternalSftpCreate>({
 
 const isLoading = ref(false);
 const itemParser = ref<ParserRead | null>(null);
-
-const csvParserStore = useCsvParserStore();
-const jsonParserStore = useJsonParserStore();
-const soilcanParserStore = useSoilcanParserStore();
-
-const parserStoresByType: Record<
-  string,
-  typeof csvParserStore | typeof jsonParserStore | typeof soilcanParserStore
-> = {
-  csv: csvParserStore,
-  json: jsonParserStore,
-  soilcan: soilcanParserStore,
-};
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const { parserStoresByType } = useParserStoreByType();
 
 onMounted(async () => {
   const parserId = route.query.parserId;
@@ -66,6 +55,7 @@ onMounted(async () => {
       itemParser.value = { ...parser, parser_type: parserType };
       formData.value.parser_id = parser.id;
       formData.value.permission_group_id = parser.permission_group_id ?? null;
+      itemPermissionGroup.value = parser.permission_group ?? null;
     } catch {
       $q.notify({
         position: 'top',
