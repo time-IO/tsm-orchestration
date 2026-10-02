@@ -65,7 +65,7 @@ class Ingest(SQLModel, table=True):
             unique=True,
         ),
         CheckConstraint(
-            "ingest_type IN ('mqtt','sftp','external_api', 'external_sftp')",
+            "ingest_type IN ('mqtt','sftp','external_api', 'external_sftp', 'external_mqtt', 'http')",
             name="ck_ingest_type",
         ),
     )
@@ -104,5 +104,11 @@ class Ingest(SQLModel, table=True):
         back_populates="ingest", cascade_delete=True
     )
     external_api_detail: Optional["IngestExternalApi"] = Relationship(
+        back_populates="ingest", cascade_delete=True
+    )
+    http_detail: Optional["IngestHttp"] = Relationship(
+        back_populates="ingest", cascade_delete=True
+    )
+    external_mqtt_detail: Optional["IngestExternalMqtt"] = Relationship(
         back_populates="ingest", cascade_delete=True
     )

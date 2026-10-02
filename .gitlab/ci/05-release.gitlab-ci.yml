@@ -15,6 +15,7 @@ stage-tag-images-in-registry:
         - src/**/*
         - dispatcher/**/*
         - init/**/*
+        - flyway/**/*
         - tomcat/**/*
         - data-source-management/**/*
       when: always
@@ -32,6 +33,7 @@ stage-tag-images-in-registry:
     - export BRANCH_NAME=$(git log --merges -1 --pretty=format:'%s' | sed "s/Merge branch '\(.*\)' into 'main'/\1/")
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
+      echo "TIMEIO_FLYWAY_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$BRANCH_NAME" >> .env

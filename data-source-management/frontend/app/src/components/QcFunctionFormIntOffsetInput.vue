@@ -3,7 +3,7 @@
     v-if="current_type === POSSIBLE_QC_FUNCTION_TYPES.INT"
     :model-value="input"
     filled
-    :label="`${label} (enter a integer number)`"
+    :label="`${label} (enter an integer number)`"
     :rules="rules_int"
     @update:model-value="(val) => (input = toNumberOrNull(val))"
     :hint="hint"
