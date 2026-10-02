@@ -59,9 +59,17 @@ onMounted(async () => {
       data.name = `${data.name} - Copy`;
 
       const loadedData = normalizeFormData(data);
-
+      // Backfill a stable client-side id for drag & drop. `normalizeFormData`
+      // strips the real `id`, so we re-attach it here using the original,
+      // un-normalized `data` (order is preserved, so indices still line up).
+      loadedData.quality_control_functions = loadedData.quality_control_functions.map(
+        (func, idx) => ({
+          ...func,
+          _clientId: `id-${data.quality_control_functions[idx]!.id}`,
+        }),
+      );
       formData.value = loadedData;
-      initialFormData.value = structuredClone(loadedData);
+      initialFormData.value = structuredClone(normalizeFormData(loadedData));
     } catch {
       $q.notify({
         type: 'negative',
