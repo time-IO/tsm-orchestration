@@ -2,23 +2,29 @@
   <ingest-form-sftp
     title="New SFTP Ingest"
     :is-loading="isLoading"
-    back-route="/ingest/new"
+    :back-route="backRoute"
     v-model="formData"
+    :item-parser="itemParser"
+    :item-permission-group="itemPermissionGroup"
     @save="save"
   />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import type { ParserRead } from '@/services/types';
 import type { IngestSftpCreate } from '@/services/ingest_sftp/types';
+import { useParserStoreByType } from '@/composables/useParserStoreByType';
 import { useIngestSftpStore } from '@/stores/ingestSftpStore';
 import IngestFormSftp from '@/components/IngestFormSftp.vue';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 const sftpStore = useIngestSftpStore();
 const $q = useQuasar();
 const router = useRouter();
+const route = useRoute();
 
 const formData = ref<IngestSftpCreate>({
   permission_group_id: null,
@@ -29,6 +35,40 @@ const formData = ref<IngestSftpCreate>({
 });
 
 const isLoading = ref(false);
+const itemParser = ref<ParserRead | null>(null);
+const itemPermissionGroup = ref<PermissionGroup | null>(null);
+const { parserStoresByType } = useParserStoreByType();
+
+const backRoute = computed(() => {
+  const parserId = route.query.parserId as string | undefined;
+  const parserType = route.query.parserType as string | undefined;
+
+  if (parserId && parserType) {
+    return `/parser/${parserType}/${parserId}`;
+  }
+  return '/ingest/new';
+});
+
+onMounted(async () => {
+  const parserId = route.query.parserId;
+  const parserType = route.query.parserType as string | undefined;
+
+  if (parserId && parserType && parserStoresByType[parserType]) {
+    try {
+      const parser = await parserStoresByType[parserType].dispatchGetOne(Number(parserId));
+      itemParser.value = { ...parser, parser_type: parserType };
+      formData.value.parser_id = parser.id;
+      formData.value.permission_group_id = parser.permission_group_id ?? null;
+      itemPermissionGroup.value = parser.permission_group ?? null;
+    } catch {
+      $q.notify({
+        position: 'top',
+        type: 'negative',
+        message: 'Failed to preselect parser',
+      });
+    }
+  }
+});
 
 async function save() {
   const data: IngestSftpCreate = {

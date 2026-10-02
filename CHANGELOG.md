@@ -25,6 +25,7 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
+- Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
 - Grafana ingest dashboards show linked STA datastreams in their own row, with a link to manage datastream linkings in the SMS ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
