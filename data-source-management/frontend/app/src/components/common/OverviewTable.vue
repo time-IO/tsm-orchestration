@@ -100,28 +100,30 @@
             </template>
 
             <template v-else>
-              <span
+              <div
                 v-if="col.value !== null && col.value !== undefined && col.value !== ''"
-                :style="`display: inline-flex; align-items: center; max-width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}`"
+                :style="colWidths[col.name] ? 'width: 0; min-width: 100%' : ''"
               >
-                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
-                  {{ col.value }}
-                  <q-tooltip>
-                    <slot name="value-tooltip" :col="col" :row="props.row">{{ col.value }}</slot>
-                  </q-tooltip>
+                <span style="display: inline-flex; align-items: center; max-width: 100%">
+                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+                    {{ col.value }}
+                    <q-tooltip>
+                      <slot name="value-tooltip" :col="col" :row="props.row">{{ col.value }}</slot>
+                    </q-tooltip>
+                  </span>
+                  <q-btn
+                    v-if="col.name === 'uuid'"
+                    flat
+                    round
+                    icon="content_copy"
+                    size="xs"
+                    text-color="grey"
+                    @click="copyClipboard(props.row.uuid)"
+                  >
+                    <q-tooltip>Copy UUID</q-tooltip>
+                  </q-btn>
                 </span>
-                <q-btn
-                  v-if="col.name === 'uuid'"
-                  flat
-                  round
-                  icon="content_copy"
-                  size="xs"
-                  text-color="grey"
-                  @click="copyClipboard(props.row.uuid)"
-                >
-                  <q-tooltip>Copy UUID</q-tooltip>
-                </q-btn>
-              </span>
+              </div>
               <span v-else class="text-grey-6"> N/A </span>
             </template>
           </q-td>
