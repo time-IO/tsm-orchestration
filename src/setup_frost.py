@@ -33,6 +33,17 @@ class CreateFrostInstanceHandler(AbstractHandler):
             db_url=thing.database.ro_url,
             tomcat_proxy_url=self.tomcat_proxy_url,
         )
+        # Internal FROST: connecting as the sti_ user
+        # (see setup_user_database.py), whose search_path
+        # points at the project's internal schema.
+        frost.write_context_file(
+            schema=thing.database.schema,
+            user=f"sti_{thing.database.ro_username.lower()}",
+            password=thing.database.ro_password,
+            db_url=thing.database.ro_url,
+            tomcat_proxy_url=self.tomcat_internal_proxy_url,
+            context_dir=frost.INTERNAL_CONTEXT_FILES_DIR,
+        )
 
 
 if __name__ == "__main__":
