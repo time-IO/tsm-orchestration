@@ -14,6 +14,7 @@ type EndpointState = {
   endpoints: FrostEndpoint[];
   loading: boolean;
   filters: EndpointFilters;
+  selectedEndpoint: FrostEndpoint | null;
 };
 
 export const useEndpointStore = defineStore('endpoint', {
@@ -24,6 +25,7 @@ export const useEndpointStore = defineStore('endpoint', {
       q: '',
       ingest: null,
     },
+    selectedEndpoint: null,
   }),
 
   getters: {
@@ -31,6 +33,10 @@ export const useEndpointStore = defineStore('endpoint', {
   },
 
   actions: {
+    selectEndpoint(endpoint: FrostEndpoint | null) {
+      this.selectedEndpoint = endpoint;
+    },
+
     resetFilters() {
       this.filters.q = '';
       this.filters.ingest = null;

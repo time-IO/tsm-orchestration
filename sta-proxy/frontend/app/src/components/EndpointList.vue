@@ -40,17 +40,15 @@
       <template #body="props">
         <q-tr
           :props="props"
-          class="endpoint-row"
-          :class="{ 'endpoint-row--loading': endpointStore.loading }"
+          class="endpoint-row cursor-pointer"
+          :class="{
+            'endpoint-row--loading': endpointStore.loading,
+            'endpoint-row--selected': props.row.name === endpointStore.selectedEndpoint?.name,
+          }"
+          @click="endpointStore.selectEndpoint(props.row)"
         >
           <q-td key="visibility" :props="props" auto-width>
-            <q-icon
-              :name="props.row.is_internal ? 'lock_open' : 'visibility'"
-              :color="props.row.is_internal ? 'orange' : 'green'"
-              size="sm"
-            >
-              <q-tooltip>{{ props.row.is_internal ? 'Internal' : 'Public' }}</q-tooltip>
-            </q-icon>
+            <visibility-badge :visibility="endpointVisibility(props.row)" class="full-width" />
           </q-td>
 
           <q-td key="name" :props="props">
@@ -59,9 +57,7 @@
           </q-td>
 
           <q-td key="actions" :props="props" auto-width>
-            <q-btn flat round dense icon="content_copy" @click="copyUrl(props.row.url)">
-              <q-tooltip>Copy URI</q-tooltip>
-            </q-btn>
+            <copy-button dense :text="props.row.url" />
             <q-btn
               flat
               round
@@ -70,6 +66,7 @@
               :href="props.row.url"
               target="_blank"
               rel="noopener noreferrer"
+              @click.stop
             >
               <q-tooltip>Open in new tab</q-tooltip>
             </q-btn>
@@ -82,17 +79,17 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
-import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableColumn } from 'quasar';
 import type { FrostEndpoint } from '@/services/endpoints/types';
+import CopyButton from '@/components/common/CopyButton.vue';
 import { useEndpointStore } from '@/stores/endpointStore';
+import { endpointVisibility } from '@/utils/visibility';
+import VisibilityBadge from "@/components/common/VisibilityBadge.vue";
 
 const SKELETON_ROWS = 10;
 const SKELETON_DELAY_MS = 1000;
 
-const $q = useQuasar();
 const endpointStore = useEndpointStore();
-
 const columns: QTableColumn<FrostEndpoint>[] = [
   { name: 'visibility', label: 'Visibility', field: 'is_internal', align: 'center' },
   { name: 'name', label: 'Name', field: 'display_name', align: 'left' },
@@ -101,8 +98,6 @@ const columns: QTableColumn<FrostEndpoint>[] = [
 
 const pagination = ref({ page: 1, rowsPerPage: 25 });
 
-// The skeleton is only shown for the initial load, and only if it takes
-// longer than SKELETON_DELAY_MS. Later refreshes grey out the current rows.
 const showSkeleton = ref(false);
 let skeletonTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -128,20 +123,15 @@ watch(
 );
 
 onBeforeUnmount(clearSkeletonTimer);
-
-async function copyUrl(url: string) {
-  try {
-    await copyToClipboard(url);
-    $q.notify({ position: 'top', type: 'positive', message: 'URI copied to clipboard' });
-  } catch {
-    $q.notify({ position: 'top', type: 'negative', message: 'Failed to copy URI' });
-  }
-}
 </script>
 
 <style scoped>
 .endpoint-row {
   transition: opacity 0.2s;
+}
+
+.endpoint-row--selected {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .endpoint-row--loading {
