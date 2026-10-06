@@ -20,6 +20,9 @@ When adding a changelog entry, ensure the following:
 - Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
 - Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
 
+### Fixed
+- The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
+
 ### Changed
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
