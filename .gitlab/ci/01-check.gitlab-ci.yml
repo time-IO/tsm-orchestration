@@ -204,7 +204,7 @@ unit-test-sta-proxy-api:
   image: python:3.13-slim
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends python3-tk tk
-    - pip install -r data-source-management/api/requirements.txt
+    - pip install -r sta-proxy/api/requirements.txt
   script:
     - pytest sta-proxy/api/app/tests/unit_tests -v
   rules:

@@ -613,7 +613,7 @@ services:
       - build # activate profile to build
     image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-proxy-frontend-rootless:${STA_PROXY_FRONTEND_IMAGE_TAG}
     build:
-      context: ./data-source-management/frontend
+      context: ./sta-proxy/frontend
       dockerfile: docker/generic-image/Dockerfile-rootless
     restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
