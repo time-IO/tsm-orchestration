@@ -11,6 +11,7 @@ build-and-push-images:
     - cp .env.example .env
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
+      echo "TIMEIO_FLYWAY_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$CI_COMMIT_REF_NAME" >> .env

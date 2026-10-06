@@ -1,13 +1,44 @@
 <template>
-  <q-list separator class="rounded-borders q-mt-sm q-ml-sm">
+  <q-list ref="listRef" separator class="rounded-borders q-mt-sm q-ml-sm">
     <q-expansion-item
-      v-for="(item, i) in quality_control_functions"
-      :key="i"
+      v-for="(item, i) in localFunctions"
+      :key="item._clientId"
       :model-value="expandAll ?? false"
       style="border: 1px solid #cfd8dc; border-radius: 4px"
       class="q-mb-md"
     >
       <template #header>
+        <q-item-section v-if="removable" side class="q-pr-none">
+          <div class="column items-center">
+            <q-btn
+              flat
+              round
+              dense
+              size="sm"
+              icon="arrow_upward"
+              :disable="i === 0"
+              aria-label="Move function up"
+              @click.stop="moveUp(i)"
+            />
+            <q-icon
+              name="drag_indicator"
+              size="1.4em"
+              class="drag-handle cursor-move text-grey-6"
+              @click.stop
+            />
+            <q-btn
+              flat
+              round
+              dense
+              size="sm"
+              icon="arrow_downward"
+              :disable="i === localFunctions.length - 1"
+              aria-label="Move function down"
+              @click.stop="moveDown(i)"
+            />
+          </div>
+        </q-item-section>
+
         <q-item-section>
           <div class="text-weight-medium text-subtitle1">
             {{ item.name }}
@@ -22,18 +53,9 @@
               <span class="text-blue-9 q-mx-xs"> | </span>
               Target: {{ getAlias(item, 'target', getAlias(item, 'field')).join(', ') }}
             </template>
-            <span
-              v-if="
-                item.quality_control_function_arguments.filter((a) => !isDatastreamType(a)).length >
-                0
-              "
-              class="text-blue-9 q-mx-xs"
-            >
-              |
-            </span>
+            <span v-if="nonDatastreamArgs(item).length > 0" class="text-blue-9 q-mx-xs"> | </span>
             {{
-              item.quality_control_function_arguments
-                .filter((a) => !isDatastreamType(a))
+              nonDatastreamArgs(item)
                 .map((a) => `${a.name}: ${a.input.value}`)
                 .join(' | ')
             }}
@@ -64,7 +86,10 @@
       </template>
 
       <q-list dense>
-        <template v-for="(arg, j) in item.quality_control_function_arguments" :key="`${i}-${j}`">
+        <template
+          v-for="(arg, j) in item.quality_control_function_arguments"
+          :key="`${item._clientId}-${j}`"
+        >
           <q-item v-if="isDatastreamType(arg)">
             <q-item-section>
               <sta-datastream-card
@@ -73,8 +98,8 @@
                 :removable="removable === true"
                 :addable="removable === true"
                 :hide-thing-name="true"
-                @add="onAddDatastream(i, j)"
-                @remove="removeDatastream(i, j, $event)"
+                @add="onAddDatastream(i, Number(j))"
+                @remove="removeDatastream(i, Number(j), $event)"
               />
             </q-item-section>
           </q-item>
@@ -87,14 +112,25 @@
 <script setup lang="ts">
 import { isDatastreamType } from '@/utils/quality_control_utils';
 import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import Sortable from 'sortablejs';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionPublic,
   QualityControlFunctionUpdate,
+  QualityControlFunctionArgumentCreate,
+  QualityControlFunctionArgumentPublic,
 } from '@/services/quality_control_setting/types';
 import type { Datastream } from '@/services/sta/types';
 
-defineProps<{
+type FunctionWithClientId = (
+  QualityControlFunctionCreate | QualityControlFunctionPublic | QualityControlFunctionUpdate
+) & { _clientId: string };
+
+type QcFunctionArgument =
+  QualityControlFunctionArgumentCreate | QualityControlFunctionArgumentPublic;
+
+const props = defineProps<{
   removable?: boolean;
   expandAll?: boolean;
   quality_control_functions:
@@ -103,7 +139,60 @@ defineProps<{
     | QualityControlFunctionUpdate[];
 }>();
 
-const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream', 'edit']);
+const emit = defineEmits(['remove', 'remove-datastream', 'add-datastream', 'edit', 'reorder']);
+
+const localFunctions = computed<FunctionWithClientId[]>(() => {
+  return props.quality_control_functions.map((item) => ({
+    ...item,
+    _clientId:
+      '_clientId' in item && item._clientId
+        ? item._clientId
+        : 'id' in item && item.id != null
+          ? `id-${item.id}`
+          : `unstable-${item.name}`,
+  }));
+});
+
+const listRef = ref<{ $el: HTMLElement } | HTMLElement | null>(null);
+let sortable: Sortable | null = null;
+
+function resolveListEl(): HTMLElement | null {
+  const el = listRef.value as unknown;
+  if (!el) return null;
+  return (el as { $el?: HTMLElement }).$el ?? (el as HTMLElement);
+}
+
+function initSortable() {
+  const el = resolveListEl();
+  if (!el || !removable.value) return;
+  sortable = new Sortable(el, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd(evt) {
+      const oldIndex = evt.oldIndex;
+      const newIndex = evt.newIndex;
+      if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+      emit('reorder', { oldIndex, newIndex });
+    },
+  });
+}
+
+const removable = computed(() => props.removable ?? false);
+
+onMounted(initSortable);
+
+watch(removable, (val) => {
+  if (val && !sortable) initSortable();
+  if (!val && sortable) {
+    sortable.destroy();
+    sortable = null;
+  }
+});
+
+onBeforeUnmount(() => {
+  sortable?.destroy();
+  sortable = null;
+});
 
 function removeFunction(index: number | string) {
   emit('remove', index);
@@ -133,6 +222,26 @@ function onAddDatastream(funcIndex: number, argIndex: number) {
 function editFunction(index: number) {
   emit('edit', index);
 }
+
+function nonDatastreamArgs(item: FunctionWithClientId) {
+  return item.quality_control_function_arguments.filter(
+    (a: QcFunctionArgument) => !isDatastreamType(a),
+  );
+}
+
+function moveUp(index: number) {
+  if (index === 0) return;
+  emit('reorder', { oldIndex: index, newIndex: index - 1 });
+}
+
+function moveDown(index: number) {
+  if (index === localFunctions.value.length - 1) return;
+  emit('reorder', { oldIndex: index, newIndex: index + 1 });
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+.drag-ghost {
+  opacity: 0.4;
+}
+</style>

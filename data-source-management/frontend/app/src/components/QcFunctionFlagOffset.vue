@@ -52,10 +52,9 @@
     />
 
     <!--        thresh-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.thresh"
+      v-model="formData.thresh"
       label="thresh (enter a floating point number)"
       :rules="[ruleFactories.MIN(0)]"
       hint="Minimum absolute difference to consider a sequence as an offset."
@@ -63,33 +62,30 @@
 
     <!--        thresh_relative-->
 
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.thresh_relative"
+      v-model="formData.thresh_relative"
       label="thresh_relative (enter a floating point number)"
       :rules="[rules.FLOAT]"
       hint="Minimum relative change to consider a sequence as an offset."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.flag"
-      label="Flag"
-      :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
-      hint="Flag assigned to values identified by this function."
+      v-model="formData.flag"
+      label="Flag (enter a floating point number)"
+      :rules="[ruleFactories.MIN(0)]"
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -103,6 +99,8 @@ import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -116,8 +114,8 @@ const formData = ref({
   window: null as number | null,
   thresh: null as number | null,
   thresh_relative: null as number | null,
-  flag: 255.0,
-  dfilter: 0,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 const label = defineModel<string | undefined>('label');
@@ -140,8 +138,8 @@ function loadInitialData() {
   formData.value.window = (windowArg?.input.value as number) ?? null;
   formData.value.thresh = (threshArg?.input.value as number) ?? null;
   formData.value.thresh_relative = (thresh_relativeArg?.input.value as number) ?? null;
-  formData.value.flag = (flagArg?.input.value as number) ?? null;
-  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? 255.0;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? 0;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -179,12 +177,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter },
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 
