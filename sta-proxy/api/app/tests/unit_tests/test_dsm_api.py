@@ -5,10 +5,7 @@ import pytest
 
 import services.dsm_api as dsm_api
 from services.dsm_api import fetch_dsm_api
-from services.permission_groups import (
-    fetch_own_database_usernames,
-    search_own_ingests,
-)
+from services.permission_groups import fetch_own_permission_groups
 
 
 def test_forwards_authorization_and_params(dsm_requests):
@@ -16,7 +13,7 @@ def test_forwards_authorization_and_params(dsm_requests):
         fetch_dsm_api("/ingest/", "Bearer valid", params={"name[ilike]": "%x%"})
     )
 
-    assert data == {"items": [{"id": 10, "permission_group_id": 1}]}
+    assert data == {"items": []}
     request = dsm_requests[-1]
     assert request.headers["authorization"] == "Bearer valid"
     assert request.headers["accept"] == "application/json"
@@ -63,30 +60,14 @@ def test_get_me_dsm_timeout(client, monkeypatch):
     assert response.status_code == 504
 
 
-def test_fetch_own_database_usernames():
-    usernames = asyncio.run(fetch_own_database_usernames("Bearer valid"))
+def test_fetch_own_permission_groups():
+    permission_groups = asyncio.run(fetch_own_permission_groups("Bearer valid"))
 
-    assert usernames == {
-        "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb",
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+    assert {k: v["name"] for k, v in permission_groups.items()} == {
+        "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb": "UFZ-TSM:Group One",
+        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0": "UFZ-TSM:Sub:Group Three",
     }
 
 
-def test_fetch_own_database_usernames_on_error_is_empty():
-    assert asyncio.run(fetch_own_database_usernames("Bearer invalid")) == set()
-
-
-def test_search_own_ingests():
-    usernames = asyncio.run(search_own_ingests("Bearer valid", "x"))
-
-    assert usernames == {"vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"}
-
-
-def test_endpoints_marks_own_and_adds_missing(client):
-    response = client.get("/endpoints", headers={"authorization": "Bearer valid"})
-
-    endpoints = response.json()["endpoints"]
-    assert [e["name"] for e in endpoints if e["is_own"]] == [
-        "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb",
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
-    ]
+def test_fetch_own_permission_groups_on_error_is_empty():
+    assert asyncio.run(fetch_own_permission_groups("Bearer invalid")) == {}

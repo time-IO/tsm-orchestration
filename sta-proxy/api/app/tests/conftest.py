@@ -45,13 +45,46 @@ DSM_PERMISSION_GROUPS = {
     "items": [
         {
             "id": 1,
+            "name": "UFZ-TSM:Group One",
             "database_username": "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb",
         },
-        {"id": 2, "database_username": "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0"},
+        {
+            "id": 2,
+            "name": "UFZ-TSM:Sub:Group Three",
+            "database_username": "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        },
     ]
 }
 
-DSM_INGESTS = {"items": [{"id": 10, "permission_group_id": 1}]}
+DSM_INGESTS = [
+    {
+        "id": 10,
+        "uuid": "6f1c0e3a-2b5d-4c8e-9a7f-1d2e3f4a5b6c",
+        "name": "Weather Station",
+        "permission_group_id": 1,
+        "permission_group": {"id": 1, "name": "Group One"},
+    },
+    {
+        "id": 11,
+        "uuid": "0a9b8c7d-6e5f-4a3b-2c1d-0e9f8a7b6c5d",
+        "name": "Soil Moisture 10",
+        "permission_group_id": 2,
+        "permission_group": {"id": 2, "name": "Group Three"},
+    },
+]
+
+
+def filter_ingests(params: httpx.QueryParams) -> list[dict]:
+    """Minimal emulation of the DSM API ingest filters (combined with AND)."""
+    items = DSM_INGESTS
+    if "id[eq]" in params:
+        items = [i for i in items if str(i["id"]) == params["id[eq]"]]
+    if "uuid[eq]" in params:
+        items = [i for i in items if i["uuid"] == params["uuid[eq]"]]
+    if "name[ilike]" in params:
+        needle = params["name[ilike]"].strip("%").lower()
+        items = [i for i in items if needle in i["name"].lower()]
+    return items
 
 
 @pytest.fixture
@@ -71,7 +104,9 @@ def dsm_client(dsm_requests, monkeypatch):
         if request.url.path == "/permission-group/":
             return httpx.Response(200, json=DSM_PERMISSION_GROUPS)
         if request.url.path == "/ingest/":
-            return httpx.Response(200, json=DSM_INGESTS)
+            return httpx.Response(
+                200, json={"items": filter_ingests(request.url.params)}
+            )
         return httpx.Response(404, json={"detail": "Not Found"})
 
     mock_client = httpx.AsyncClient(
