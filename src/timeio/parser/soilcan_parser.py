@@ -83,7 +83,7 @@ class SoilcanParser(PandasParser):
             b for b in re.split(r"(?m)(?=^[^\d])", dumped_data.strip()) if b.strip()
         ]
         if len(blocks) != 3:
-            raise ParsingError(f"Insuffient number of DBD file blocks: expected 3, got {len(blocks)}")
+            raise ParsingError(f"Incorrect number of DBD file blocks: expected 3, got {len(blocks)}")
 
         parser = CsvParser(self.settings)
         df = parser.do_parse(
