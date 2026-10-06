@@ -84,7 +84,7 @@ import type { FrostEndpoint } from '@/services/endpoints/types';
 import CopyButton from '@/components/common/CopyButton.vue';
 import { useEndpointStore } from '@/stores/endpointStore';
 import { endpointVisibility } from '@/utils/visibility';
-import VisibilityBadge from "@/components/common/VisibilityBadge.vue";
+import VisibilityBadge from '@/components/common/VisibilityBadge.vue';
 
 const SKELETON_ROWS = 10;
 const SKELETON_DELAY_MS = 1000;
