@@ -1,6 +1,6 @@
 <template>
   <ingest-form-external-sftp
-    title="Edit External SFTP Ingest"
+    title="Edit External FTP/SFTP Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
