@@ -3,7 +3,6 @@
     title="Edit CSV Parser"
     :is-loading="isLoading"
     :back-route="detailRoute"
-    :permission-group-id="permissionGroupId"
     disable-permission-group
     v-model="formData"
     @save="save"
@@ -14,23 +13,18 @@
 import { computed, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
 import { useCsvParserStore } from '@/stores/parserCsvStore';
 import ParserFormCsv from '@/components/ParserFormCsv.vue';
 import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
-
-type CsvParserEditFormData = CsvParserUpdate & {
-  permission_group_id?: number | null;
-  timestamp_columns: CsvParserCreate['timestamp_columns'];
-  comment: string[];
-};
+import { apiToForm, formToApi, type CsvParserFormData } from '@/utils/parser_csv_utils';
 
 const csvParserStore = useCsvParserStore();
 const $q = useQuasar();
 const router = useRouter();
 const route = useRoute();
 
-const formData = ref<CsvParserEditFormData>({
+const formData = ref<CsvParserFormData>({
+  permission_group_id: null,
   name: null,
   description: null,
   delimiter: null,
@@ -43,18 +37,15 @@ const formData = ref<CsvParserEditFormData>({
   timezone: null,
   encoding: null,
 });
-const permissionGroupId = ref<number | null>(null);
-
 const isLoading = ref(false);
 const isSaving = ref(false);
 
-const initialFormData = ref<CsvParserUpdate | null>(null);
+const initialFormData = ref<CsvParserFormData | null>(null);
 
 const hasUnsavedChanges = computed(() => {
   if (!initialFormData.value) return false;
-  return (
-    JSON.stringify(normalizeFormData(formData.value)) !== JSON.stringify(initialFormData.value)
-  );
+
+  return JSON.stringify(formData.value) !== JSON.stringify(initialFormData.value);
 });
 
 useUnsavedChanges(() => hasUnsavedChanges.value && !isSaving.value);
@@ -65,10 +56,9 @@ onMounted(async () => {
       const id = Number(route.params.id);
       const data = await csvParserStore.dispatchGetOne(id);
 
-      const loadedData = normalizeFormData(data);
+      const loadedData = apiToForm(data);
 
       formData.value = loadedData;
-      permissionGroupId.value = data.permission_group_id;
       initialFormData.value = structuredClone(loadedData);
     } catch {
       $q.notify({
@@ -94,7 +84,7 @@ async function save() {
   try {
     const id = Number(route.params.id);
 
-    const data: CsvParserUpdate = normalizeFormData(formData.value);
+    const data = formToApi(formData.value);
 
     isLoading.value = true;
     isSaving.value = true;
@@ -129,28 +119,6 @@ async function save() {
   } finally {
     isLoading.value = false;
   }
-}
-
-function normalizeFormData(data: CsvParserUpdate): CsvParserEditFormData {
-  return {
-    name: data.name || null,
-    description: data.description || null,
-    delimiter: data.delimiter || null,
-    headlines_to_exclude:
-      data.headlines_to_exclude !== null && data.headlines_to_exclude !== undefined
-        ? data.headlines_to_exclude
-        : null,
-    footlines_to_exclude:
-      !!data.footlines_to_exclude || data.footlines_to_exclude === 0
-        ? data.footlines_to_exclude
-        : null,
-    pandas_read_csv: data.pandas_read_csv || null,
-    timestamp_columns: data.timestamp_columns || [],
-    header: !!data.header || data.header === 0 ? data.header : null,
-    comment: [...(data.comment || [])],
-    timezone: data.timezone || null,
-    encoding: data.encoding || null,
-  };
 }
 </script>
 
