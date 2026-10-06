@@ -656,7 +656,7 @@ class QAQC(Base):
     )
 
     def get_functions(self) -> list[QAQCTest]:
-        query = f"select * from {self._schema}.quality_control_function where quality_control_setting_id = %s"
+        query = f"select * from {self._schema}.quality_control_function where quality_control_setting_id = %s order by position"
         conn = self._conn
         return [
             QAQCTest._from_parent(attr, self)

@@ -389,10 +389,17 @@ services:
   # ===========
   # TODO
   flyway:
-    image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
+    image: "${TIMEIO_IMAGE_REGISTRY}/flyway:${TIMEIO_FLYWAY_IMAGE_TAG}"
+    build:
+      context: flyway
+      args:
+        BASE_IMAGE_REGISTRY: "${FLYWAY_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${FLYWAY_IMAGE_TAG}"
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate repair migrate
     volumes:
+      # The image contains these files as well; mounting the working tree keeps
+      # migrations editable without rebuilding the image.
       - ./flyway/migrations/public:/flyway/sql
       - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
     environment:
