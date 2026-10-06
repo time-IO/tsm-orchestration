@@ -5,7 +5,7 @@ from pydantic import computed_field
 class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = ""
     FROST_URL: str = "http://frost:8080"
-    FROST_TIMEOUT: float = 30.0
+    FROST_TIMEOUT: float = 120.0
     FROST_ENDPOINTS_PATH: str = "/"
     BASE_URL: str = "http://localhost"
     DSM_API_URL: str = "http://dsm-api:8000"
