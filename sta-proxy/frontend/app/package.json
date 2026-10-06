@@ -2,7 +2,7 @@
   "name": "sta-proxy-frontend",
   "version": "0.0.1",
   "description": "STA Proxy Frontend for time.IO",
-  "productName": "STA Proxy Frontend",
+  "productName": "STA Hub",
   "author": "kuhnert",
   "type": "module",
   "private": true,
