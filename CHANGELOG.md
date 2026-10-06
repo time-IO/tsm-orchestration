@@ -14,6 +14,7 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Quality control setting `flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
+- Internal STA view schema per project in preparation of protected STA endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/733))
 - QC-Functions within a QC Setting can be reordered via drag & drop, determining their execution order ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/686))
 - QC function forms: optional numeric fields no longer send an empty string to the backend when cleared, which previously caused validation errors on submit. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/730))
 - Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
