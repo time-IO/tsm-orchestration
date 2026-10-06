@@ -22,6 +22,8 @@ When adding a changelog entry, ensure the following:
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
 
+### Fixed
+- Soilcan parser was parsing corrupted files leading to corrupted data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/743))
 
 ## [2026-09-30]
 
