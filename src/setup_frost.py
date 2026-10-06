@@ -41,7 +41,7 @@ class CreateFrostInstanceHandler(AbstractHandler):
             user=f"sti_{thing.database.ro_username.lower()}",
             password=thing.database.ro_password,
             db_url=thing.database.ro_url,
-            tomcat_proxy_url=self.tomcat_internal_proxy_url,
+            tomcat_proxy_url=self.tomcat_proxy_url,
             context_dir=frost.INTERNAL_CONTEXT_FILES_DIR,
         )
 
