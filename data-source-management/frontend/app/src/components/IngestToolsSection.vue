@@ -152,7 +152,7 @@ const visualizationUrl = computed(() =>
 const TRIGGER_DESCRIPTIONS: Record<TriggerType, string> = {
   'external-api': "Manually (re)synchronise this ingest's historic data for a chosen time range.",
   'external-sftp':
-    "Manually (re)synchronise files from the external SFTP storage into this ingest's internal S3 bucket for a chosen time range.",
+    "Manually (re)synchronise files from the external FTP/SFTP storage into this ingest's internal S3 bucket for a chosen time range.",
 };
 
 const triggerDescription = computed(() => (triggerType ? TRIGGER_DESCRIPTIONS[triggerType] : ''));
