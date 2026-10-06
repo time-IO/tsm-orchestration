@@ -21,7 +21,7 @@ When adding a changelog entry, ensure the following:
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
 
 ### Fixed
-- Dragging columns overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))
+- Dragging columns in overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))
 
 ## [2026-09-30]
 
