@@ -58,7 +58,7 @@
         <q-tr :props="props">
           <!-- Selection / Checkbox Header -->
           <q-th v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" :indeterminate="props.selected === null" />
+            <q-checkbox v-model="selected" :indeterminate="selected === null" />
           </q-th>
 
           <q-th
@@ -82,7 +82,7 @@
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
           <q-td v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" />
+            <q-checkbox v-model="selected" />
           </q-td>
           <q-td
             v-for="col in props.cols"
@@ -138,7 +138,7 @@
         <h6 class="q-mt-none">Confirm Delete</h6>
       </q-card-section>
 
-      <q-card-section> Are you sure you want to delete this item? </q-card-section>
+      <q-card-section> Are you sure you want to delete this item?</q-card-section>
 
       <q-card-actions align="right">
         <q-btn color="primary" flat label="Cancel" @click="closeDeleteDialog" />
@@ -155,19 +155,24 @@ import type { QTableColumn } from 'quasar';
 import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 
-const props = withDefaults(
-  defineProps<{
-    rows: Row[];
-    loading: boolean;
-    columns: QTableColumn[];
-    // prefix of the sessionStorage keys for column widths and visibility
-    storageKey: string;
-    colMinWidths: Record<string, number>;
-    defaultColWidths: Record<string, number>;
-    selectable?: boolean;
-  }>(),
-  { selectable: false },
-);
+const {
+  rows,
+  loading,
+  columns,
+  storageKey,
+  colMinWidths,
+  defaultColWidths,
+  selectable = false,
+} = defineProps<{
+  rows: Row[];
+  loading: boolean;
+  columns: QTableColumn[];
+  // prefix of the sessionStorage keys for column widths and visibility
+  storageKey: string;
+  colMinWidths: Record<string, number>;
+  defaultColWidths: Record<string, number>;
+  selectable?: boolean;
+}>();
 
 const pagination = defineModel<QTableRequestPropPagination | undefined>('pagination');
 const selected = defineModel<Row[] | undefined>('selected');
@@ -227,8 +232,8 @@ const copyClipboard = (text: string | null) => {
     });
 };
 
-const colWidthsStorageKey = `${props.storageKey}-col-widths`;
-const visibleColumnsStorageKey = `${props.storageKey}-visible-columns`;
+const colWidthsStorageKey = `${storageKey}-col-widths`;
+const visibleColumnsStorageKey = `${storageKey}-visible-columns`;
 
 // loading the 'Usersettings'
 const savedColWidths = sessionStorage.getItem(colWidthsStorageKey);
@@ -238,10 +243,10 @@ const colWidths = ref<Record<string, number>>(
     ? Object.fromEntries(
         Object.entries(JSON.parse(savedColWidths)).map(([key, value]) => [key, Number(value)]),
       )
-    : { ...props.defaultColWidths },
+    : { ...defaultColWidths },
 );
 
-const minWidthOf = (colName: string) => props.colMinWidths[colName] ?? 50;
+const minWidthOf = (colName: string) => colMinWidths[colName] ?? 50;
 
 // functions for setting a new col-widths per mousemove
 let resizingCol: string | null = null;
@@ -296,13 +301,13 @@ function stopResize() {
 // to select the visibility of the columns
 // except actions
 const columnOptions = computed(() =>
-  props.columns.filter((c) => c.name !== 'action').map((c) => ({ label: c.label, value: c.name })),
+  columns.filter((c) => c.name !== 'action').map((c) => ({ label: c.label, value: c.name })),
 );
 
 const savedColumns = sessionStorage.getItem(visibleColumnsStorageKey);
 
 const visibleColumns = ref<string[]>(
-  savedColumns ? JSON.parse(savedColumns) : props.columns.map((c) => c.name),
+  savedColumns ? JSON.parse(savedColumns) : columns.map((c) => c.name),
 );
 
 const sumWidths = (colNames: string[]) =>
@@ -367,7 +372,7 @@ function toggleAll() {
   if (allVisible.value) {
     setVisibleColumns(['action']);
   } else {
-    setVisibleColumns(props.columns.map((c) => c.name));
+    setVisibleColumns(columns.map((c) => c.name));
   }
 }
 </script>
