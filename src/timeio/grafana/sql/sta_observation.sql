@@ -1,6 +1,6 @@
--- Observations of one STA datastream, read from the "OBSERVATIONS" view (which
--- already clamps them to the link validity window). Repeats over $sta_datastream
--- (one panel per datastream).
+-- Observations of one STA datastream from the "OBSERVATIONS" view, which already
+-- clamps them to the link and location validity windows, like FROST. Repeats over
+-- $sta_datastream (one panel per datastream).
 WITH sel AS (
     SELECT sta_datastream_id AS id
     FROM sta_datastream_links

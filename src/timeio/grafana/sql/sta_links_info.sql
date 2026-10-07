@@ -1,5 +1,5 @@
--- Always a "Manage linkings in the SMS" link; prefixed with "No STA datastreams
--- available." when this thing has none in the STA views (same source as $sta_datastream)
+-- Always a "Manage linkings in the SMS" link; prefixed with "No public STA
+-- datastreams." when this thing has none in the STA views (same source as $sta_datastream)
 SELECT
     CASE WHEN EXISTS (
             SELECT 1 FROM "DATASTREAMS"
@@ -10,5 +10,5 @@ SELECT
             ))
          )
          THEN ''
-         ELSE 'No STA datastreams available. '
+         ELSE 'No public STA datastreams. '
     END || '[Manage datastream linkings in the SMS]({sms_url})' AS msg

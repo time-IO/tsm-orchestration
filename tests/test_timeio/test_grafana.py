@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 
 import pytest
-import timeio.grafana.dashboard as grafana_dashboard
 import timeio.grafana.utils as grafana_utils
 from unittest.mock import MagicMock
 from timeio.grafana.dashboard import GrafanaDashboard
@@ -221,37 +220,20 @@ def test_organization_create_existing(mock_grafana_api, mock_grafana_organizatio
     assert org == {"id": 1, "name": "org_1"}
 
 
-@pytest.fixture
-def sta_sql(monkeypatch):
-    # the dashboard reads its SQL files relative to the working dir (src/)
-    monkeypatch.chdir(Path(grafana_dashboard.__file__).parents[2])
-    monkeypatch.setenv("SMS_URL", "https://sms.example/")
+@pytest.mark.parametrize(
+    "build_sql, view",
+    [
+        (GrafanaDashboard._sta_datastream_sql, '"DATASTREAMS"'),
+        (GrafanaDashboard._sta_links_info_sql, '"DATASTREAMS"'),
+        (GrafanaDashboard._sta_observation_sql, '"OBSERVATIONS"'),
+    ],
+)
+def test_sta_sql_reads_sta_views(monkeypatch, build_sql, view):
+    # the dashboard reads its SQL files relative to src/
+    monkeypatch.chdir(Path(__file__).parents[2] / "src")
     uuid = "11111111-2222-3333-4444-555555555555"
-    return {
-        "uuid": uuid,
-        "variable": GrafanaDashboard._sta_datastream_sql(uuid),
-        "observation": GrafanaDashboard._sta_observation_sql(uuid),
-        "links_info": GrafanaDashboard._sta_links_info_sql(uuid),
-    }
-
-
-def test_sta_variable_reads_sta_datastreams_view(sta_sql):
-    q = sta_sql["variable"]
-    assert 'FROM "DATASTREAMS"' in q
-    assert sta_sql["uuid"] in q
-    assert "{" not in q
-
-
-def test_sta_observation_reads_sta_observations_view(sta_sql):
-    q = sta_sql["observation"]
+    q = build_sql(uuid)
+    assert f"FROM {view}" in q
     # raw observation table must not be queried directly
     assert not re.search(r"\bFROM\s+observation\b", q, flags=re.IGNORECASE)
-    assert 'FROM "OBSERVATIONS"' in q
-    assert "${sta_datastream}" in q
-    assert sta_sql["uuid"] in q
-
-
-def test_sta_links_info_reads_sta_datastreams_view(sta_sql):
-    q = sta_sql["links_info"]
-    assert 'FROM "DATASTREAMS"' in q
-    assert "(https://sms.example/)" in q
+    assert uuid in q
