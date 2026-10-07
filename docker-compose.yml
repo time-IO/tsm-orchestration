@@ -1199,7 +1199,12 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   keycloak:
-    image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/keycloak:${TIMEIO_KEYCLOAK_IMAGE_TAG}"
+    build:
+      context: keycloak
+      args:
+        BASE_IMAGE_REGISTRY: "${KEYCLOAK_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${KEYCLOAK_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
@@ -1262,6 +1267,9 @@ services:
       retries: 30
       start_period: 30s
     volumes:
+      # The image contains these files as well; mounting the working tree keeps
+      # the realm import, themes and providers editable without rebuilding the
+      # image.
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
       - "./keycloak/plugins:/opt/keycloak/providers"
