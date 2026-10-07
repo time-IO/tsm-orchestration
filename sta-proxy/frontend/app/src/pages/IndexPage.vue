@@ -5,35 +5,26 @@
       <endpoint-list />
     </div>
 
-    <q-drawer
-      v-model="drawerOpen"
-      side="right"
-      show-if-above
-      bordered
-      :width="500"
-      :breakpoint="DRAWER_BREAKPOINT"
-    >
+    <side-drawer v-model="drawerOpen">
       <endpoint-info
         v-if="endpointStore.selectedEndpoint"
         :endpoint="endpointStore.selectedEndpoint"
         @close="closeDrawer"
       />
       <welcome-text v-else />
-    </q-drawer>
+    </side-drawer>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
+import SideDrawer from '@/components/common/SideDrawer.vue';
 import EndpointFilter from '@/components/EndpointFilter.vue';
 import EndpointInfo from '@/components/EndpointInfo.vue';
 import EndpointList from '@/components/EndpointList.vue';
 import WelcomeText from '@/components/WelcomeText.vue';
 import { useEndpointStore } from '@/stores/endpointStore';
-
-// below this width the drawer is an overlay and not opened initially
-const DRAWER_BREAKPOINT = 1024;
 
 const $q = useQuasar();
 const endpointStore = useEndpointStore();
