@@ -19,6 +19,7 @@ When adding a changelog entry, ensure the following:
 - QC function forms: optional numeric fields no longer send an empty string to the backend when cleared, which previously caused validation errors on submit. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/730))
 - Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
 - Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
+- New STA-Hub offers filtering for endpoints and preparation for authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 
 ### Fixed
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
