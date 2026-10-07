@@ -21,6 +21,7 @@ When adding a changelog entry, ensure the following:
 - Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
 
 ### Fixed
+- Grafana STA panels read the datastream selection and the observations from the STA views (`"DATASTREAMS"`, `"OBSERVATIONS"`), so they show the same data as FROST ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
 
 ### Changed
