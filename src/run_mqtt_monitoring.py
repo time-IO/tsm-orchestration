@@ -88,19 +88,33 @@ class MqttMonitoringHandler(AbstractHandler):
         return parsed_message
 
     def write_into_db(self, parsed_message):
-        columns = list(parsed_message.keys())
         table_name = "mqtt_broker"
-
-        query = sql.SQL("INSERT INTO {}.{} ({}) VALUES ({})").format(
-            sql.Identifier(self.monitoring_schema),
-            sql.Identifier(table_name),
-            sql.SQL(", ").join(map(sql.Identifier, columns)),
-            sql.SQL(", ").join(sql.Placeholder(k) for k in columns),
-        )
 
         with psycopg.connect(self.dsn) as conn:
             with conn.cursor() as cur:
-                cur.execute(query, parsed_message)
+                cur.execute(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema = %s AND table_name = %s",
+                    (self.monitoring_schema, table_name),
+                )
+                known = {row[0] for row in cur.fetchall()}
+
+                unknown = sorted(set(parsed_message) - known)
+                if unknown:
+                    logger.warning(
+                        f"Ignoring mqtt broker metrics without a column in "
+                        f"{self.monitoring_schema}.{table_name}: {unknown}"
+                    )
+                data = {k: v for k, v in parsed_message.items() if k in known}
+
+                columns = list(data.keys())
+                query = sql.SQL("INSERT INTO {}.{} ({}) VALUES ({})").format(
+                    sql.Identifier(self.monitoring_schema),
+                    sql.Identifier(table_name),
+                    sql.SQL(",").join(map(sql.Identifier, columns)),
+                    sql.SQL(",").join(sql.Placeholder(k) for k in columns),
+                )
+                cur.execute(query, data)
 
 
 if __name__ == "__main__":
