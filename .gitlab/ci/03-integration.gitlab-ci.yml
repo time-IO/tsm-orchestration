@@ -43,7 +43,7 @@ mqtt-service-test:
     - "export PAHO_MQTT=$(grep 'paho-mqtt' src/requirements.txt)"
     - "python3 -m pip install $PAHO_MQTT"
     - "docker compose up -d"
-    - "sleep 20"
+    - "docker compose up -d --no-deps --wait --wait-timeout 300 mqtt-broker"
   script:
     - ".gitlab/ci/py/mqtt-service-test.py || exit 1"
     - "docker compose logs mqtt-cat"
