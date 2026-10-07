@@ -62,6 +62,7 @@ class ParseMqttDataHandler(AbstractHandler):
             data = parser.do_parse(content, origin)
             observations = parser.to_observations(data, thing_uuid)
         except Exception as e:
+            journal.error(f"Parsing data failed: {e}", thing_uuid)
             raise UserInputError("Parsing data failed") from e
 
         logger.info(f"store observations")

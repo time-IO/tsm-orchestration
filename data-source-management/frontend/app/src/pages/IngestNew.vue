@@ -91,9 +91,9 @@ const data = [
   {
     name: 'ext_sftp',
     icon: 'folder_special',
-    label: 'External SFTP',
+    label: 'External FTP/SFTP',
     description:
-      'Sync external SFTP folders into a new S3 bucket with a fitting file format and parser',
+      'Sync external FTP/SFTP folders into a new S3 bucket with a fitting file format and parser',
     path: '/ingest/new/external-sftp',
   },
   {
@@ -102,6 +102,21 @@ const data = [
     label: 'MQTT',
     description: 'Create an Ingest topic on the time.IO MQTT broker with a fitting MQTT Parser.',
     path: '/ingest/new/mqtt',
+  },
+  {
+    name: 'ext_mqtt',
+    icon: 'cell_tower',
+    label: 'External MQTT',
+    description: 'Subscribe to topics on an external MQTT broker with a fitting MQTT parser.',
+    path: '/ingest/new/external-mqtt',
+  },
+  {
+    name: 'http',
+    icon: 'upload_file',
+    label: 'HTTP',
+    description:
+      'Create an HTTP POST endpoint for ingesting files into a new object storage bucket.',
+    path: '/ingest/new/http',
   },
 ];
 

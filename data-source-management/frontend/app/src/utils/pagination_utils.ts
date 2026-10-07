@@ -45,7 +45,11 @@ export const default_ingest_columns: QTableColumn[] = [
         case 'mqtt':
           return 'MQTT';
         case 'external_sftp':
-          return 'External SFTP';
+          return 'External FTP/SFTP';
+        case 'external_mqtt':
+          return 'External MQTT';
+        case 'http':
+          return 'HTTP';
         case 'sensoto':
           return 'Sensoto';
         default:
@@ -236,6 +240,10 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
       return `/ingest/mqtt/${val.id}`;
     case 'external_sftp':
       return `/ingest/external-sftp/${val.id}`;
+    case 'external_mqtt':
+      return `/ingest/external-mqtt/${val.id}`;
+    case 'http':
+      return `/ingest/http/${val.id}`;
     default:
       return '';
   }

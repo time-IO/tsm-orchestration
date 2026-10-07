@@ -31,6 +31,7 @@ services:
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/volume/mqtt"
       - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/tmp/volume/visualization"
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/tmp/volume/tomcat"
+      - "${BENTO_PERSISTENCE_VOLUME:-bento}:/tmp/volume/bento"
       # Mount local MinIO FTP TLS certificate and SSH host key
       - "${OBJECT_STORAGE_FTP_TLS_CRT}:/tmp/bind/minio/minio-ftp.crt:ro"
       - "${OBJECT_STORAGE_FTP_TLS_KEY}:/tmp/bind/minio/minio-ftp.key:ro"
@@ -388,10 +389,17 @@ services:
   # ===========
   # TODO
   flyway:
-    image: ${FLYWAY_IMAGE_REGISTRY}:${FLYWAY_IMAGE_TAG}
+    image: "${TIMEIO_IMAGE_REGISTRY}/flyway:${TIMEIO_FLYWAY_IMAGE_TAG}"
+    build:
+      context: flyway
+      args:
+        BASE_IMAGE_REGISTRY: "${FLYWAY_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${FLYWAY_IMAGE_TAG}"
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate repair migrate
     volumes:
+      # The image contains these files as well; mounting the working tree keeps
+      # migrations editable without rebuilding the image.
       - ./flyway/migrations/public:/flyway/sql
       - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
     environment:
@@ -668,6 +676,8 @@ services:
         condition: service_started
       keycloak:
         condition: service_healthy
+      bento:
+        condition: service_started
       init:
         condition: service_completed_successfully
     healthcheck:
@@ -719,6 +729,10 @@ services:
       GRAFANA_USER: "${VISUALIZATION_USER}"
       GRAFANA_PASSWORD: "${VISUALIZATION_PASSWORD}"
       GRAFANA_DEFAULT_DATASOURCE_SSLMODE: "${VISUALIZATION_DEFAULT_DATASOURCE_SSLMODE}"
+      # internal only, always this fixed URL - not deployment-specific
+      BENTO_API_URL: http://bento:4195
+      BENTO_API_URL_POST: http://bento:4200
+      S3_REGION: "${DSM_S3_REGION}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_ADMIN}"
       JOURNALING: "${JOURNALING}"
@@ -1208,6 +1222,20 @@ services:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
+  bento:
+    image: ghcr.io/warpstreamlabs/bento:latest
+    container_name: bento
+    user: "${UID}:${GID}"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    volumes:
+      - ./bento/resources/:/resources
+      - ./bento/streams/:/streams
+      - ./bento/main.yaml:/bento.yaml
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
+      - "${BENTO_PERSISTENCE_VOLUME:-bento}:/data"
+    entrypoint: ["/entrypoint.sh"]
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
@@ -1257,7 +1285,12 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   keycloak:
-    image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/keycloak:${TIMEIO_KEYCLOAK_IMAGE_TAG}"
+    build:
+      context: keycloak
+      args:
+        BASE_IMAGE_REGISTRY: "${KEYCLOAK_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${KEYCLOAK_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
@@ -1320,6 +1353,9 @@ services:
       retries: 30
       start_period: 30s
     volumes:
+      # The image contains these files as well; mounting the working tree keeps
+      # the realm import, themes and providers editable without rebuilding the
+      # image.
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
       - "./keycloak/plugins:/opt/keycloak/providers"
@@ -1370,3 +1406,4 @@ volumes:
   mqtt-broker:
   object-storage:
   crontab:
+  bento:
