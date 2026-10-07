@@ -52,7 +52,7 @@
           </q-td>
 
           <q-td key="name" :props="props">
-            <div>{{ props.row.display_name }}</div>
+            <div class="text-weight-medium">{{ props.row.display_name }}</div>
             <div class="text-caption text-grey-7">{{ props.row.url }}</div>
           </q-td>
 
