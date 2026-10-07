@@ -56,9 +56,8 @@
     >
       <template v-slot:header="props">
         <q-tr :props="props">
-          <!-- Selection / Checkbox Header -->
           <q-th v-if="selectable" auto-width>
-            <q-checkbox v-model="selected" :indeterminate="selected === null" />
+            <q-checkbox v-model="props.selected" />
           </q-th>
 
           <q-th
@@ -82,7 +81,7 @@
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
           <q-td v-if="selectable" auto-width>
-            <q-checkbox v-model="selected" />
+            <q-checkbox v-model="props.selected" />
           </q-td>
           <q-td
             v-for="col in props.cols"
