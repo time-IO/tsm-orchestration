@@ -27,7 +27,7 @@ from models.database import Database
 from config import settings
 from main import app
 from dependencies import engine, get_current_user
-from ..utils.db_api import FakeDbApi
+from ..utils.db_api_mock import FakeDbApi
 from ..utils.user_proxy import UserProxy
 
 

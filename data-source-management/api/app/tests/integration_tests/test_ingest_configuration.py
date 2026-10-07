@@ -8,7 +8,7 @@ check); only the external timeio-db-api is replaced by FakeDbApi.
 import pytest
 
 from config import settings
-from ..utils.db_api import thing_path
+from ..utils.db_api_mock import thing_path
 
 SMS_ROOT_URL = "https://sms.example.com/"
 DB_API_CONFIGURATIONS = [

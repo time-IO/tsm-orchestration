@@ -1,4 +1,4 @@
-from ..utils.db_api import thing_path
+from ..utils.db_api_mock import thing_path
 
 JOURNAL = {"journal_entries": [{"id": 1, "level": "INFO"}]}
 
