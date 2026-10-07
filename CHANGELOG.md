@@ -22,7 +22,7 @@ When adding a changelog entry, ensure the following:
 
 ### Fixed
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
-
+- Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request]())
 ### Changed
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
