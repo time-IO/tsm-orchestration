@@ -5,7 +5,6 @@ from models import FrostEndpoint
 from services.frost_endpoints import (
     endpoint_from_frost,
     matches_query,
-    parse_frost_name,
     rewrite_endpoint_url,
 )
 
@@ -40,13 +39,12 @@ def test_rewrite_strips_frost_url_prefix(monkeypatch):
     )
 
 
-def test_endpoints_marks_internal_and_adds_missing(client):
+def test_endpoints_marks_internal(client):
     response = client.get("/endpoints", headers={"authorization": "Bearer valid"})
 
     internal = [e for e in response.json()["endpoints"] if e["is_internal"]]
     assert [e["name"] for e in internal] == [
         "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb",
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0",
     ]
 
 
@@ -65,33 +63,30 @@ def test_endpoints_display_name_is_same_for_internal_and_public(client):
     assert names == {
         "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb": ("GROUP1", True),
         "vo_group2_86ebe19a704a496ca2c8053c2c6c3c17": ("GROUP2", False),
-        # not listed by FROST yet, added from the user's permission groups
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0": ("GROUP3", True),
     }
 
 
-def test_endpoints_q_matches_added_internal_endpoint(client):
+def test_endpoints_filtered_by_ingest_id(client):
     response = client.get(
         "/endpoints",
-        params={"q": "group_3"},
+        params={"ingest_id": 10},
         headers={"authorization": "Bearer valid"},
     )
 
     assert [e["name"] for e in response.json()["endpoints"]] == [
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"
     ]
 
 
-def test_endpoints_filtered_by_ingest_id(client):
+def test_endpoints_not_listed_by_frost_are_not_added(client):
+    # ingest 11 belongs to a permission group without a FROST endpoint
     response = client.get(
         "/endpoints",
         params={"ingest_id": 11},
         headers={"authorization": "Bearer valid"},
     )
 
-    assert [e["name"] for e in response.json()["endpoints"]] == [
-        "vo_group3_0f1e2d3c4b5a69788796a5b4c3d2e1f0"
-    ]
+    assert response.json()["endpoints"] == []
 
 
 def test_endpoints_filtered_by_unknown_ingest_id_is_empty(client):
@@ -133,14 +128,6 @@ def test_endpoints_q_is_fuzzy(client):
     assert [e["name"] for e in response.json()["endpoints"]] == [
         "vo_group2_86ebe19a704a496ca2c8053c2c6c3c17"
     ]
-
-
-def test_parse_frost_name_uses_uppercase_group():
-    endpoint = parse_frost_name("vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb")
-
-    assert endpoint.display_name == "GROUP1"
-    assert endpoint.group == "vo"
-    assert endpoint.project == "group1"
 
 
 def test_endpoint_from_frost_ignores_frost_display_name():

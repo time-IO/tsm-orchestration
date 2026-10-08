@@ -38,21 +38,9 @@ async def close_frost_client() -> None:
         _client = None
 
 
-async def frost_proxy_service(
-    endpoint: str,
-    query: str = "",
-    accept: str | None = None,
-) -> Response:
-    # Keep the raw query string so FROST parameters like
-    # $filter / $expand arrive exactly as the client sent them.
-    url = "/" + endpoint
-    if query:
-        url += "?" + query
-
-    headers = {"accept": accept} if accept else {}
-
+async def fetch_from_frost(url: str, headers: dict[str, str]) -> httpx.Response:
     try:
-        upstream = await get_frost_client().get(url, headers=headers)
+        return await get_frost_client().get(url, headers=headers)
     except httpx.TimeoutException:
         logger.warning("Timeout for FROST request %s", url)
         raise HTTPException(status_code=504, detail="FROST server timeout")
@@ -60,7 +48,9 @@ async def frost_proxy_service(
         logger.error("FROST request %s failed: %s", url, e)
         raise HTTPException(status_code=502, detail="FROST server not reachable")
 
-    logger.debug("FROST responded with %s for %s", upstream.status_code, url)
+
+def to_response(upstream: httpx.Response) -> Response:
+    """Pass the FROST response through, minus hop-by-hop/resolved headers."""
     response_headers = {
         k: v
         for k, v in upstream.headers.items()
@@ -71,3 +61,18 @@ async def frost_proxy_service(
         status_code=upstream.status_code,
         headers=response_headers,
     )
+
+
+async def frost_proxy_service(
+    endpoint: str,
+    query: str = "",
+    accept: str | None = None,
+) -> Response:
+    url = "/" + endpoint
+    if query:
+        url += "?" + query
+
+    headers = {"accept": accept} if accept else {}
+    upstream = await fetch_from_frost(url, headers)
+    logger.debug("FROST responded with %s for %s", upstream.status_code, url)
+    return to_response(upstream)

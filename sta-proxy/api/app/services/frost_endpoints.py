@@ -53,31 +53,8 @@ def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
     return normalize_search(q) in normalize_search(endpoint.display_name)
 
 
-def parse_frost_name(name: str) -> FrostEndpoint:
-    first = name.find("_")
-    second = name.find("_", first + 1) if first != -1 else -1
-
-    group = name[:first] if first != -1 else name
-    project = name[first + 1 : second] if second != -1 else None
-    display_name = frost_display_name(group, project)
-
-    url = f"{settings.BASE_URL.rstrip('/')}/sta/{name}/v1.1"
-
-    return FrostEndpoint(
-        name=name,
-        display_name=display_name,
-        group=group,
-        project=project,
-        url=url,
-        is_internal=True,
-    )
-
-
-async def frost_endpoints_service(
-    q: str | None = None,
-    authorization: str | None = None,
-    ingest_id: int | None = None,
-) -> FrostEndpointsResponse:
+async def fetch_frost_endpoints() -> list[FrostEndpoint]:
+    """Fetch the public endpoint listing from FROST."""
     try:
         upstream = await get_frost_client().get(
             settings.FROST_ENDPOINTS_PATH,
@@ -87,7 +64,7 @@ async def frost_endpoints_service(
         upstream.raise_for_status()
         data = upstream.json()
         raw_endpoints = data.get("endpoints", []) if isinstance(data, dict) else []
-        endpoints = [endpoint_from_frost(e) for e in raw_endpoints]
+        return [endpoint_from_frost(e) for e in raw_endpoints]
     except httpx.TimeoutException:
         logger.warning("Timeout while fetching FROST endpoints")
         raise HTTPException(status_code=504, detail="FROST server timeout")
@@ -95,31 +72,51 @@ async def frost_endpoints_service(
         logger.error("Fetching FROST endpoints failed: %s", e)
         raise HTTPException(status_code=502, detail="FROST endpoints not available")
 
+
+def mark_internal_endpoints(
+    endpoints: list[FrostEndpoint], permission_groups: dict[str, dict]
+) -> list[FrostEndpoint]:
+    """Mark endpoints the user has a permission group for as internal and
+    show them first."""
+    for endpoint in endpoints:
+        if endpoint.name in permission_groups:
+            endpoint.is_internal = True
+    return sorted(endpoints, key=lambda e: not e.is_internal)
+
+
+async def filter_by_ingest(
+    endpoints: list[FrostEndpoint],
+    permission_groups: dict[str, dict],
+    authorization: str,
+    ingest_id: int,
+) -> list[FrostEndpoint]:
+    """Keep only the endpoint belonging to the permission group of the ingest."""
+    permission_group_id = await fetch_ingest_permission_group_id(
+        authorization, ingest_id
+    )
+    if permission_group_id is None:
+        return []
+    return [
+        e
+        for e in endpoints
+        if permission_groups.get(e.name, {}).get("id") == permission_group_id
+    ]
+
+
+async def frost_endpoints_service(
+    q: str | None = None,
+    authorization: str | None = None,
+    ingest_id: int | None = None,
+) -> FrostEndpointsResponse:
+    endpoints = await fetch_frost_endpoints()
+
     if authorization:
         permission_groups = await fetch_own_permission_groups(authorization)
-        existing_names = {endpoint.name for endpoint in endpoints}
-
-        for username in permission_groups:
-            if username not in existing_names:
-                endpoints.append(parse_frost_name(username))
-
-        for endpoint in endpoints:
-            if endpoint.name in permission_groups:
-                endpoint.is_internal = True
-
-        # show internal endpoints first
-        endpoints.sort(key=lambda e: not e.is_internal)
-
+        endpoints = mark_internal_endpoints(endpoints, permission_groups)
         if ingest_id is not None:
-            permission_group_id = await fetch_ingest_permission_group_id(
-                authorization, ingest_id
+            endpoints = await filter_by_ingest(
+                endpoints, permission_groups, authorization, ingest_id
             )
-            endpoints = [
-                e
-                for e in endpoints
-                if permission_group_id is not None
-                and permission_groups.get(e.name, {}).get("id") == permission_group_id
-            ]
 
     if q:
         endpoints = [e for e in endpoints if matches_query(e, q)]

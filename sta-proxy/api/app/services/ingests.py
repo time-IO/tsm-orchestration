@@ -46,16 +46,23 @@ def build_search_params(q: str) -> list[dict[str, str | int]]:
 async def search_ingests_service(
     authorization: str | None, q: str | None = None
 ) -> IngestsResponse:
-    """Search the user's ingests by name, id or uuid. Exact id/uuid
-    matches come first."""
+    """Search the user's ingests by name, id or uuid. All run async."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
+    results = await run_ingest_searches(authorization, build_search_params(q or ""))
+    return IngestsResponse(items=merge_ingests(results)[:SEARCH_LIMIT])
+
+
+async def run_ingest_searches(
+    authorization: str, searches: list[dict[str, str | int]]
+) -> list:
+    """Run all searches against the DSM API in parallel."""
     try:
-        results = await asyncio.gather(
+        return await asyncio.gather(
             *(
                 fetch_dsm_api("/ingest/", authorization, params=params)
-                for params in build_search_params(q or "")
+                for params in searches
             )
         )
     except httpx.TimeoutException:
@@ -65,13 +72,15 @@ async def search_ingests_service(
         logger.error("Searching ingests in DSM API failed: %s", e)
         raise HTTPException(status_code=502, detail="Ingests not available")
 
+
+def merge_ingests(results: list) -> list[Ingest]:
+    """Combine the search results in order, dropping duplicates."""
     ingests: dict[int, Ingest] = {}
     for data in results:
         for item in data.get("items", []) if isinstance(data, dict) else []:
             if item["id"] not in ingests:
                 ingests[item["id"]] = to_ingest(item)
-
-    return IngestsResponse(items=list(ingests.values())[:SEARCH_LIMIT])
+    return list(ingests.values())
 
 
 async def fetch_ingest_permission_group_id(
