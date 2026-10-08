@@ -125,7 +125,7 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
         for stream, df in streams.items():
             if df.empty:
                 continue
-            # observations without a value (e.g. empty bins of a resampling)
+            # nan-observations (e.g. empty bins of a resampling)
             # can't be stored, so we don't upload them
             field = get_result_field_name(df["result_type"].iat[0], errors="raise")
             empty = df[field].isna()
