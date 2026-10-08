@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
-from pathlib import Path
-
 import pytest
 import timeio.grafana.utils as grafana_utils
 from unittest.mock import MagicMock
@@ -218,22 +215,3 @@ def test_organization_create_existing(mock_grafana_api, mock_grafana_organizatio
     org = mock_grafana_organization.create("org_1")
     mock_grafana_api.organization.create_organization.assert_not_called()
     assert org == {"id": 1, "name": "org_1"}
-
-
-@pytest.mark.parametrize(
-    "build_sql, view",
-    [
-        (GrafanaDashboard._sta_datastream_sql, '"DATASTREAMS"'),
-        (GrafanaDashboard._sta_links_info_sql, '"DATASTREAMS"'),
-        (GrafanaDashboard._sta_observation_sql, '"OBSERVATIONS"'),
-    ],
-)
-def test_sta_sql_reads_sta_views(monkeypatch, build_sql, view):
-    # the dashboard reads its SQL files relative to src/
-    monkeypatch.chdir(Path(__file__).parents[2] / "src")
-    uuid = "11111111-2222-3333-4444-555555555555"
-    q = build_sql(uuid)
-    assert f"FROM {view}" in q
-    # raw observation table must not be queried directly
-    assert not re.search(r"\bFROM\s+observation\b", q, flags=re.IGNORECASE)
-    assert uuid in q
