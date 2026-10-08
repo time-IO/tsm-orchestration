@@ -1,33 +1,30 @@
--- Observations for one STA linking, clamped to its validity window. Repeats over
--- $sta_datastream (one panel per linking).
-WITH lnk AS (
-    SELECT ds_id, begin_date, end_date
+-- Observations of one STA datastream from the "OBSERVATIONS" view, which already
+-- clamps them to the link and location validity windows, like FROST. Repeats over
+-- $sta_datastream (one panel per datastream).
+WITH sel AS (
+    SELECT sta_datastream_id AS id
     FROM sta_datastream_links
-    -- NULLIF guards the empty-variable phantom panel (no linkings) from erroring
-    WHERE link_id = NULLIF('${{sta_datastream}}', '') :: int
+    -- NULLIF guards the empty-variable phantom panel (no datastreams) from erroring
+    WHERE sta_datastream_id = NULLIF('${{sta_datastream}}', '') :: int
     AND t_uuid :: text = '{uuid}'
 ),
 date_filtered AS (
     SELECT
-        o.result_time AS "time",
-        o.result_number AS "value"
-    FROM observation o CROSS JOIN lnk
-    WHERE $__timeFilter(o.result_time)
-    AND o.datastream_id = lnk.ds_id
-    AND o.result_time >= lnk.begin_date
-    AND (lnk.end_date IS NULL OR o.result_time <= lnk.end_date)
-    ORDER BY o.result_time DESC
+        o."PHENOMENON_TIME_START" AS "time",
+        o."RESULT_NUMBER" AS "value"
+    FROM "OBSERVATIONS" o
+    WHERE $__timeFilter(o."PHENOMENON_TIME_START")
+    AND o."DATASTREAM_ID" = (SELECT id FROM sel)
+    ORDER BY o."PHENOMENON_TIME_START" DESC
     LIMIT 1000000
 ),
 fallback AS (
     SELECT
-        o.result_time AS "time",
-        o.result_number AS "value"
-    FROM observation o CROSS JOIN lnk
-    WHERE o.datastream_id = lnk.ds_id
-    AND o.result_time >= lnk.begin_date
-    AND (lnk.end_date IS NULL OR o.result_time <= lnk.end_date)
-    ORDER BY o.result_time DESC
+        o."PHENOMENON_TIME_START" AS "time",
+        o."RESULT_NUMBER" AS "value"
+    FROM "OBSERVATIONS" o
+    WHERE o."DATASTREAM_ID" = (SELECT id FROM sel)
+    ORDER BY o."PHENOMENON_TIME_START" DESC
     LIMIT 10000
 )
 -- fallback (most recent 10k) only when date_filtered is empty -> "Zoom to Data" button
