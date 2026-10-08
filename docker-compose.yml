@@ -1175,9 +1175,6 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/keycloak:${TIMEIO_KEYCLOAK_IMAGE_TAG}"
     build:
       context: keycloak
-      args:
-        BASE_IMAGE_REGISTRY: "${KEYCLOAK_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${KEYCLOAK_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:

@@ -33,7 +33,7 @@ When adding a changelog entry, ensure the following:
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
 - The `keycloak` service is built into a time.IO image that contains the realm import, themes and MQTT notifier provider, so deployments without this repository (Helm) run the same configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/746))
-- Self-built images pin their base images to exact version tags in the Dockerfiles, and the `*_BASE_IMAGE_*` build overrides are removed; frost moves from Tomcat 10 to 11 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/739))
+- Self-built images pin their base images to exact version tags in the Dockerfiles, and the `*_BASE_IMAGE_*` and `KEYCLOAK_IMAGE_*` build overrides are removed; frost moves from Tomcat 10 to 11 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/739))
 
 
 ## [2026-09-30]
