@@ -35,6 +35,7 @@ def setup_test_env() -> None:
     os.environ.setdefault("MINIO_SFTP_PORT", "8022")
     os.environ.setdefault("PROXY_URL", "http://localhost")
     os.environ.setdefault("FERNET_ENCRYPTION_SECRET", Fernet.generate_key().decode())
+    os.environ.setdefault("SMS_ROOT_URL", "http://localhost/sms")
     os.environ.setdefault("STA_ROOT_URL", "http://localhost/sta")
     os.environ.setdefault("STA_VERSION", "v1.1")
     os.environ.setdefault("MQTT_BROKER_HOST", "localhost")
