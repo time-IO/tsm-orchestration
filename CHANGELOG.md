@@ -22,6 +22,7 @@ When adding a changelog entry, ensure the following:
 - Links to linked SMS Configurations from ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/722))
 
 ### Fixed
+- Grafana STA panels show the same data as FROST ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/747))
 - QC journal entries only list the QC settings that were actually executed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/749))
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
 - Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request]())

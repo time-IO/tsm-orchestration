@@ -113,7 +113,7 @@ class GrafanaDashboard:
     def _sta_links_info_templating(self, thing, datasource) -> dict:
         return {
             "datasource": datasource,
-            # hidden helper: SMS link, prefixed with a note when no linkings exist
+            # hidden helper: SMS link, prefixed with a note when no STA datastreams exist
             "hide": 2,
             "includeAll": False,
             "label": "STA Links Info",
@@ -234,7 +234,7 @@ class GrafanaDashboard:
 
     @staticmethod
     def _sta_links_info_panel(datasource: DatasourceT) -> dict:
-        # Renders sta_links_info: SMS link, prefixed when no linkings exist
+        # Renders sta_links_info: SMS link, prefixed when no STA datastreams exist
         return {
             "datasource": datasource,
             "gridPos": {"h": 2, "w": 24},
