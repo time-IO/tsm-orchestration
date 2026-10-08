@@ -29,6 +29,7 @@ When adding a changelog entry, ensure the following:
 - Soilcan parser was parsing corrupted files leading to corrupted data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/743))
 - QC: false `ImmutableDatastreamError` and NaN upload error when processing functions write to a new datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/750))
 - Dragging columns in overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))
+- External-MQTT ingests use the configured `MQTT_BROKER` instead of a hardcoded host ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/751))
 
 ### Changed
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
