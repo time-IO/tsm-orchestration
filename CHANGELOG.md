@@ -26,6 +26,7 @@ When adding a changelog entry, ensure the following:
 - QC journal entries only list the QC settings that were actually executed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/749))
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
 - Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request]())
+- Soilcan parser was parsing corrupted files leading to corrupted data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/743))
 - QC: false `ImmutableDatastreamError` and NaN upload error when processing functions write to a new datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/750))
 - Dragging columns in overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))
 
