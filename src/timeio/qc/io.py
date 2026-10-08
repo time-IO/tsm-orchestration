@@ -123,8 +123,18 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
     def prepare_upload(streams: StreamsT) -> dict[str, pd.DataFrame]:
         tmp = defaultdict(list)
         for stream, df in streams.items():
-            df["datastream_id"] = stream.db_stream_id
-            tmp[stream.thing_uuid].append(df)
+            if df.empty:
+                continue
+            # nan-observations (e.g. empty bins of a resampling)
+            # can't be stored, so we don't upload them
+            field = get_result_field_name(df["result_type"].iat[0], errors="raise")
+            empty = df[field].isna()
+            if empty.any():
+                logger.debug(f"skipping {empty.sum()} empty values of {stream}")
+                df = df[~empty]
+                if df.empty:
+                    continue
+            tmp[stream.thing_uuid].append(df.assign(datastream_id=stream.db_stream_id))
         return {uuid: pd.concat(dfs) for uuid, dfs in tmp.items()}
 
     streams = prepare_dataframes(qc.data)
