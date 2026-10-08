@@ -16,6 +16,7 @@ stage-tag-images-in-registry:
         - dispatcher/**/*
         - init/**/*
         - flyway/**/*
+        - keycloak/**/*
         - tomcat/**/*
         - data-source-management/**/*
       when: always
@@ -34,6 +35,7 @@ stage-tag-images-in-registry:
     - |
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FLYWAY_IMAGE_TAG=$BRANCH_NAME" >> .env
+      echo "TIMEIO_KEYCLOAK_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$BRANCH_NAME" >> .env

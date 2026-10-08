@@ -79,12 +79,14 @@ class QcFunction:
         fields: list[QcFunctionStream],
         params: dict[str, Any],
         targets: list[QcFunctionStream] | None = None,
+        setting_name: str | None = None,
     ):
         self.name = name
         self.func_name: str = func_name
         self.fields = fields
         self.params = params
         self.targets = targets or [f.to_target() for f in fields]
+        self.setting_name = setting_name
 
     def __repr__(self):
         return f"QcFunction({self.name}, field={self.field_names}, target={self.target_names}, func={self.func_name}, params={self.params})"
@@ -121,6 +123,7 @@ def get_qc_functions(qc_settings: list[feta.QAQC]) -> list[QcFunction]:
                 fields=[s for s in streams if s.key == "field"],
                 targets=[s for s in streams if s.key == "target"],
                 params=func.args,
+                setting_name=setting.name,
             )
             out.append(qctest)
     return out
