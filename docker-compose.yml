@@ -490,6 +490,7 @@ services:
       S3_ENDPOINT: "${DSM_S3_ENDPOINT}"
       S3_SECURE: "${DSM_S3_SECURE}"
       S3_REGION: "${DSM_S3_REGION}"
+      SMS_ROOT_URL: "${SMS_URL}"
       STA_ROOT_URL: "${DSM_API_STA_ROOT_URL}"
       STA_VERSION: "${DSM_API_STA_VERSION}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
@@ -527,6 +528,7 @@ services:
       ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
 
 
   dsm-frontend-rootless:
@@ -548,6 +550,7 @@ services:
       ENV_OIDC_SCOPE_PLACEHOLDER: "${DSM_FRONTEND_OIDC_SCOPE}"
       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
 
 
   # Summary
@@ -1199,7 +1202,12 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   keycloak:
-    image: "${KEYCLOAK_IMAGE_REGISTRY}:${KEYCLOAK_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/keycloak:${TIMEIO_KEYCLOAK_IMAGE_TAG}"
+    build:
+      context: keycloak
+      args:
+        BASE_IMAGE_REGISTRY: "${KEYCLOAK_IMAGE_REGISTRY}"
+        BASE_IMAGE_TAG: "${KEYCLOAK_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
@@ -1262,6 +1270,9 @@ services:
       retries: 30
       start_period: 30s
     volumes:
+      # The image contains these files as well; mounting the working tree keeps
+      # the realm import, themes and providers editable without rebuilding the
+      # image.
       - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
       - "./keycloak/themes:/opt/keycloak/themes"
       - "./keycloak/plugins:/opt/keycloak/providers"
