@@ -7,8 +7,6 @@ from config import settings
 
 logger = logging.getLogger("app.services.frost_proxy")
 
-# Response headers that must not be passed through 1:1
-# (hop-by-hop headers, or headers httpx has already resolved, e.g. gzip).
 EXCLUDED_RESPONSE_HEADERS = {
     "connection",
     "keep-alive",

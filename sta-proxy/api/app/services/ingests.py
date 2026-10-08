@@ -25,15 +25,14 @@ def to_ingest(item: dict) -> Ingest:
 
 
 def build_search_params(q: str) -> list[dict[str, str | int]]:
-    """The DSM API combines filters with AND, so a search for name OR id
-    OR uuid needs one request per field. id and uuid only match exactly
-    (PostgreSQL has no ILIKE on uuid columns), so those requests are only
-    sent if the query can be one."""
     q = q.strip()
     if not q:
         return [{"size": SEARCH_LIMIT}]
 
     searches: list[dict[str, str | int]] = []
+    # search is a list since we need multiple requests to filter for the different properties.
+    # DSM API does not offer disjunction search (combined with or) at the moment.
+
     if q.isdigit():
         searches.append({"id[eq]": int(q)})
     try:

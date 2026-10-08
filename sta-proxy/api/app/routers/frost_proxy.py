@@ -20,8 +20,6 @@ async def proxy_to_frost(endpoint: str, request: Request) -> Response:
     if ".." in endpoint.split("/"):
         raise HTTPException(status_code=400, detail="Invalid path")
 
-    # The FROST root (e.g. /sta) lists all endpoints with internal urls.
-    # It is not exposed directly, use /endpoints instead.
     if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
         raise HTTPException(status_code=404, detail="Not Found")
 

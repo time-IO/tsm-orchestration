@@ -14,12 +14,10 @@ logger = logging.getLogger("app.services.frost_endpoints")
 
 def rewrite_endpoint_url(url: str) -> str:
     """Replace the internal FROST host with the public base URL of this API.
-
     "http://frost.:8080/sta/<name>/v1.1" -> "<BASE_URL>/sta/<name>/v1.1"
     """
     path = httpx.URL(url).raw_path.decode()
-    # strip a possible path prefix of FROST_URL (e.g. "/FROST-Server"),
-    # because the proxy route adds it again when forwarding
+    # strip possible path prefix of FROST_URL as proxy route adds it when forwarding
     frost_prefix = httpx.URL(settings.FROST_URL).path.rstrip("/")
     if frost_prefix and path.startswith(frost_prefix + "/"):
         path = path[len(frost_prefix) :]
@@ -31,8 +29,7 @@ def frost_display_name(group: str, project: str | None) -> str:
 
 
 def endpoint_from_frost(raw: dict) -> FrostEndpoint:
-    """Build a FrostEndpoint from an entry of the FROST endpoints listing.
-    FROST's own "displayName" is ignored, the display name is derived."""
+    """Build a FrostEndpoint from an entry of the FROST endpoints listing."""
     group = raw.get("group")
     project = raw.get("project")
     endpoint = FrostEndpoint.model_validate(
