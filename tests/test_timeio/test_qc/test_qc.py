@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
 import random
 import urllib
 
@@ -330,6 +331,46 @@ def test_immutable_stream_as_processing_field(mock_dbapi, dtype):
 
     mock_dbapi.insert_datastreams = lambda **kwargs: [{"id": "1"}]
     write_qc_data(dbapi=mock_dbapi, qc=qc)
+
+
+def test_empty_values_are_not_uploaded(mock_dbapi):
+    # resampling data with a gap results in empty (NaN) values,
+    # which can't be serialized as JSON
+    index = pd.date_range(
+        "2025-03-17 00:00", "2025-03-17 09:40", freq="20min", tz="UTC"
+    )
+    index = index[(index.hour < 3) | (index.hour > 5)]
+    data = {T1S33: pd.DataFrame({"data": 1000.0, "quality": None}, index=index)}
+
+    target = NEW.to_target()
+    func = QcFunction(
+        "",
+        func_name="processGeneric",
+        fields=[T1S33],
+        targets=[target],
+        params={"function": "T1S33.resample('1h').mean()"},
+    )
+    qc = SaQCWrapper(data)
+    qc.execute(func)
+
+    uploads = {}
+
+    def upload(name):
+        def inner(thing_uuid, **kwargs):
+            # requests serializes the payload in the same way
+            json.dumps(kwargs, allow_nan=False)
+            uploads[name] = next(iter(kwargs.values()))
+
+        return inner
+
+    mock_dbapi.insert_datastreams = lambda **kwargs: [{"id": "1"}]
+    mock_dbapi.upsert_observations = upload("observations")
+    mock_dbapi.upsert_qc_labels = upload("labels")
+    write_qc_data(dbapi=mock_dbapi, qc=qc)
+
+    # 10 hourly bins, 3 of them without data
+    assert len(uploads["observations"]) == 7
+    assert {o["datastream_pos"] for o in uploads["observations"]} == {"NEW"}
 
 
 def test_context_window(mock_dbapi):
