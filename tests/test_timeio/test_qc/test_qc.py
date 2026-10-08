@@ -309,6 +309,29 @@ def test_immutable_stream_overwrite(mock_dbapi):
         write_qc_data(dbapi=mock_dbapi, qc=qc)
 
 
+@pytest.mark.parametrize("dtype", [float, int])
+def test_immutable_stream_as_processing_field(mock_dbapi, dtype):
+    # processing functions writing to a different target must not
+    # count as a modification of their (immutable) field
+    target = NEW.to_target()
+    func = QcFunction(
+        "",
+        func_name="processGeneric",
+        fields=[T1S33],
+        targets=[target],
+        params={"function": "T1S33 * 2"},
+    )
+
+    data = read_stream_data(mock_dbapi, streams=[T1S33])
+    data[T1S33]["data"] = data[T1S33]["data"].astype(dtype)
+    qc = SaQCWrapper(data)
+    qc.execute(func)
+    assert not qc.data_is_modified(T1S33)
+
+    mock_dbapi.insert_datastreams = lambda **kwargs: [{"id": "1"}]
+    write_qc_data(dbapi=mock_dbapi, qc=qc)
+
+
 def test_context_window(mock_dbapi):
     start_date = pd.Timestamp("2021-03-06", tz="UTC")
     data = read_stream_data(
