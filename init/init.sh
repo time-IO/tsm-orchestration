@@ -164,6 +164,7 @@ if [ "${USE_CHOWN}" == "true" ]; then
         /tmp/volume/database \
         /tmp/volume/visualization \
         /tmp/volume/tomcat \
+        /tmp/volume/tomcat-internal \
         /tmp/volume/bento
 else
     echo "Skipping chown of volume directories as USE_CHOWN is not set to 'true'."
@@ -184,6 +185,7 @@ fi
 #      /tmp/volume/database \
 #      /tmp/volume/visualization \
 #      /tmp/volume/tomcat \
+#      /tmp/volume/tomcat-internal \
 #      /tmp/volume/bento
 
 

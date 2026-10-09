@@ -1,195 +1,69 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>TSM FROST-Server</title>
-    </head>
-    <body>
-        <div id="main-container">
-            <h1 id="title">STA<br>Endpoints</h1>
-            <ul class="endpoint-list">
-                <%
-                    String webappsDir = "/usr/local/tomcat/webapps/";
-                    String scheme = request.getScheme();
-                    String serverName = request.getServerName();
-                    int serverPort = request.getServerPort();
-                    java.io.File[] webapps = new java.io.File(webappsDir).listFiles();
-
-                    int datasourceNumber = 0;
-                    for (java.io.File webapp : webapps) {
-                        if (webapp.isDirectory() && !webapp.getName().equals("ROOT")) {
-                            datasourceNumber += 1;
-                            String webappName = webapp.getName();
-                            int firstIdx = webappName.indexOf("_");
-                            int secondIdx = webappName.indexOf("_", firstIdx + 1);
-                            String groupName, projectName, endpointDisplayName;
-                            if (secondIdx == -1) {
-                                groupName = webappName.substring(0, firstIdx);
-                                endpointDisplayName = groupName;
-                            } else {
-                                groupName = webappName.substring(0, firstIdx);
-                                projectName = webappName.substring(firstIdx + 1, secondIdx);
-                                endpointDisplayName = groupName + " " + projectName;
-                            }
-                            String webappURL = String.format(
-                                "%s://%s:%s/sta/%s/v1.1",
-                                scheme, serverName, serverPort, webappName
-                            );
-                %>
-                <li class="endpoint-item-wrapper" style="animation-duration: <%= (datasourceNumber + 3) * 0.1 %>s;">
-                    <a href="<%=webappURL%>">
-                        <div class="endpoint-item">
-                            <span class="endpoint-title"><%=endpointDisplayName%></span>
-                            <span class="endpoint-subtitle"><%=webappName%></span>
-                        </div>
-                    </a>
-                </li>
-                <%
-                        }
-                    }
-                    if (datasourceNumber == 0) {
-                %>
-                <span id="no-endpoints-text">No endpoints available.</span>
-                <%
-                    }
-                %>
-            </ul>
-        </div>
-        <style>
-            body {
-                height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                font-size: 1.5em;
-                font-family: Tahoma, Verdana, Arial, sans-serif;
+<%@ page contentType="application/json; charset=UTF-8" session="false" trimDirectiveWhitespaces="true" %>
+<%@ page import="java.io.File" %>
+<%@ page import="java.util.Arrays" %>
+<%!
+    private static String esc(String s) {
+        StringBuilder sb = new StringBuilder(s.length() + 8);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '"':  sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\n': sb.append("\\n");  break;
+                case '\r': sb.append("\\r");  break;
+                case '\t': sb.append("\\t");  break;
+                default:
+                    if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
+                    else sb.append(c);
             }
+        }
+        return sb.toString();
+    }
+%>
+<%
+    out.clearBuffer();
 
-            #main-container {
-                width: 80%;
-                display: flex;
-                animation: fadeIn .4s ease-out;
-                position: relative;
-            }
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Cache-Control", "no-cache, no-store");
 
-            #main-container::after {
-                content: " ";
-                display: block;
-                background-image: linear-gradient(to top, rgba(255,255,255, 1), rgba(255,255,255, 0));
-                height: 100px;
-                width: 100%;
-                pointer-events: none;
-                position: absolute;
-                bottom: 20px;
-                right: 20px;
-            }
+    final String webappsDir = "/usr/local/tomcat/webapps/";
 
-            #title {
-                font-size: 1.5em;
-                margin-top: 1.5em;
-                text-transform: uppercase;
-                font-weight: 100;
-                text-align: center;
-                letter-spacing: 1px;
-            }
+    File[] webapps = new File(webappsDir).listFiles();
+    if (webapps == null) {
+        webapps = new File[0];   // Verzeichnis fehlt / nicht lesbar
+    }
+    Arrays.sort(webapps);
 
-            .endpoint-list {
-                height: 80vh;
-                list-style-type: none;
-                overflow-y: auto;
-                overflow-x: hidden;
-                padding: 0;
-            }
+    String base = String.format("%s://%s:%d",
+        request.getScheme(), request.getServerName(), request.getServerPort());
 
-            .endpoint-item-wrapper {
-                display: absolute;
-                margin: .3em 1em;
-                background-image: linear-gradient(to right, rgba(0,0,50,0.05), rgba(0,0,50,0));
-                border-radius: .4em;
-                transition: all .1s;
-                animation: cardFadeIn 1s ease-out;
-            }
+    StringBuilder sb = new StringBuilder("{\"endpoints\":[");
+    boolean first = true;
 
-            .endpoint-item-wrapper:last-of-type {
-                margin-bottom: 60px;
-            }
+    for (File webapp : webapps) {
+        if (!webapp.isDirectory() || "ROOT".equals(webapp.getName())) {
+            continue;
+        }
 
-            .endpoint-item-wrapper:hover {
-                background-image: linear-gradient(to right, rgba(0,0,50,0.1), rgba(0,0,50,0));
-                transform: scale(1.025);
-            }
+        String name = webapp.getName();
 
-            .endpoint-item-wrapper a {
-                text-decoration: none;
-                color: #333;
-            }
+        int i1 = name.indexOf('_');
+        int i2 = (i1 < 0) ? -1 : name.indexOf('_', i1 + 1);
+        String group   = (i1 < 0) ? name : name.substring(0, i1);
+        String project = (i2 < 0) ? null : name.substring(i1 + 1, i2);
+        String display = (project == null) ? group : group + " " + project;
 
-            .endpoint-item {
-                padding: 1.5em;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
+        if (!first) sb.append(',');
+        first = false;
 
-            .endpoint-title {
-                text-transform: uppercase;
-                font-weight: 600;
-            }
+        sb.append("{\"name\":\"").append(esc(name)).append('"')
+          .append(",\"displayName\":\"").append(esc(display)).append('"')
+          .append(",\"group\":\"").append(esc(group)).append('"')
+          .append(",\"project\":")
+          .append(project == null ? "null" : "\"" + esc(project) + "\"")
+          .append(",\"url\":\"").append(esc(base + "/sta/" + name + "/v1.1")).append("\"}");
+    }
 
-            .endpoint-subtitle {
-                color: #555;
-                font-size: .7em;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-
-            #no-endpoints-text {
-                text-align: left;
-                font-weight: 600;
-                top: 2em;
-                position: relative;
-            }
-
-            /* keyframes */
-
-            @keyframes cardFadeIn {
-                0% {left: 1em; opacity: 0;}
-                50% {left: .9em; opacity: 0;}
-                100% {left: 0em; opacity: 1;}
-            }
-
-            @keyframes fadeIn {
-                0% { opacity: 0;}
-                100% { opacity: 1;}
-            }
-
-            /* mobile breakpoints */
-
-            @media (max-width: 1000px) {
-                #main-container {
-                    flex-direction: column;
-                }
-            }
-
-            @media (min-width: 1000px) {
-                #title {
-                    margin-right: 2em;
-                    text-align: right;
-                }
-
-                .endpoint-list {
-                    border-left: 2px solid #eee;
-                    padding-left: 2em;
-                }
-
-                #no-endpoints-text {
-                    padding-left: 2em;
-                }
-            }
-        </style>
-    </body>
-</html>
+    sb.append("]}");
+    out.print(sb);
+%>
