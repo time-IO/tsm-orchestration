@@ -22,7 +22,7 @@
           v-model:was-file-rejected="wasFileRejected"
           :is-validating="isValidating"
           :is-already-validated="isAlreadyValidated"
-          :allowed-file-type="allowedFileType"
+          :allowed-file-types="allowedFileTypes"
           :allowed-file-type-name="allowedFileTypeName"
           @change="handleFileChange"
           @validate="validate"
@@ -71,7 +71,7 @@ const props = withDefaults(
   defineProps<{
     parsingSettings: T;
     parseAction: ParseAction<T>;
-    allowedFileType: string;
+    allowedFileTypes: string[];
     allowedFileTypeName: string;
     parserType: string;
     overlay?: boolean;

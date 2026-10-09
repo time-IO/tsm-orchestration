@@ -5,7 +5,7 @@
         :model-value="file"
         filled
         :label="`${allowedFileTypeName} file`"
-        :accept="allowedFileType"
+        :accept="accept"
         clearable
         :disable="isValidating"
         @update:model-value="handleFileChange"
@@ -13,7 +13,7 @@
         :max-files="1"
         @rejected="wasFileRejected = true"
         :error="wasFileRejected"
-        error-message="File type is invalid or file is too large"
+        error-message="File is too large"
         hint="Maximum allowed size is 10 MB."
       >
         <template #prepend>
@@ -36,15 +36,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+
 const file = defineModel<File | null>('file', { default: null });
 const wasFileRejected = defineModel<boolean>('wasFileRejected', { default: false });
 
-defineProps<{
+const props = defineProps<{
   isValidating: boolean;
   isAlreadyValidated: boolean;
-  allowedFileType: string;
+  allowedFileTypes: string[];
   allowedFileTypeName: string;
 }>();
+
+const ACCEPT_ANY_FILE = '*'
+const accept = computed(() => [...props.allowedFileTypes, ACCEPT_ANY_FILE].join(','));
 
 const emit = defineEmits<{
   change: [file: File | null];

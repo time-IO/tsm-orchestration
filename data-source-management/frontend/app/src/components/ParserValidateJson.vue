@@ -1,6 +1,6 @@
 <template>
   <parser-validate-drawer
-    allowed-file-type=".json,text/json`"
+    :allowed-file-types="JSON_PARSER_FILE_TYPES"
     allowed-file-type-name="JSON"
     parser-type="JSON"
     :parsing-settings="parsingSettings"
@@ -12,6 +12,7 @@
 import type { JsonParserValidate, JsonParserUpdate } from '@/services/parser_json/types';
 import { useJsonParserStore } from '@/stores/parserJsonStore';
 import ParserValidateDrawer from '@/components/ParserValidateDrawer.vue';
+import { JSON_PARSER_FILE_TYPES } from '@/utils/file_utils';
 import type { ComputedRef } from 'vue';
 import { toRaw } from 'vue';
 import { computed } from 'vue';
