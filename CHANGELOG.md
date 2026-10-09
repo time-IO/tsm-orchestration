@@ -35,6 +35,7 @@ When adding a changelog entry, ensure the following:
 - STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
 - The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
 - The `keycloak` service is built into a time.IO image that contains the realm import, themes and MQTT notifier provider, so deployments without this repository (Helm) run the same configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/746))
+- Parser validation file picker suggests more common file types while accepting files of any type ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/752))
 
 ## [2026-09-30]
 
