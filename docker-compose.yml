@@ -18,8 +18,6 @@ services:
       context: init
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${INIT_ALPINE_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${INIT_ALPINE_BASE_IMAGE_TAG}"
     restart: no
     user: "root"
     volumes:
@@ -366,8 +364,6 @@ services:
     build:
       context: tomcat
       args:
-        BASE_IMAGE_REGISTRY: "${FROST_TOMCAT_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${FROST_TOMCAT_BASE_IMAGE_TAG}"
         FROST_VERSION: "${STA_FROST_VERSION}"
         UID: "${UID}"
         GID: "${GID}"
@@ -648,8 +644,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -710,8 +704,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -756,8 +748,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -802,8 +792,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -840,8 +828,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -878,8 +864,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -921,8 +905,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -969,8 +951,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -1009,8 +989,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -1055,8 +1033,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -1103,8 +1079,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -1144,8 +1118,6 @@ services:
       dockerfile: dispatcher/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${DISPATCHER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_WORKER_RESTART_POLICY}"
     depends_on:
       mqtt-broker:
@@ -1193,8 +1165,6 @@ services:
       dockerfile: cron/Dockerfile
       args:
         UID: "${UID}"
-        BASE_IMAGE_REGISTRY: "${DISPATCHER_DEBIAN_BASE_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${CRON_SCHEDULER_DEBIAN_BASE_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     # Prevent blocking/slowing-down of other services if many scheduler jobs occur at
     # the same time. Cap the processing power to equivalent of one CPU of the system.
@@ -1237,9 +1207,6 @@ services:
     image: "${TIMEIO_IMAGE_REGISTRY}/keycloak:${TIMEIO_KEYCLOAK_IMAGE_TAG}"
     build:
       context: keycloak
-      args:
-        BASE_IMAGE_REGISTRY: "${KEYCLOAK_IMAGE_REGISTRY}"
-        BASE_IMAGE_TAG: "${KEYCLOAK_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
     user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
     depends_on:
