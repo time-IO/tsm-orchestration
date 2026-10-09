@@ -49,6 +49,8 @@ services:
       - ./src:/home/appuser/app/src
 
   visualization:
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
       - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
