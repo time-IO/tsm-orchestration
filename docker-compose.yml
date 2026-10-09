@@ -175,7 +175,7 @@ services:
   # =======
   # brief: central mqtt message bus / broker
   # dir: mosquitto
-  # see also: mosquitto/docker-entrypoint.sh
+  # see also: mosquitto/docker-entrypoint.sh, mosquitto/Dockerfile
   #
   # Description
   # ===========
@@ -183,15 +183,12 @@ services:
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "${MQTT_BROKER_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/mqtt-broker:${TIMEIO_MQTT_BROKER_IMAGE_TAG}"
+    build:
+      context: mosquitto
     depends_on:
       flyway:
         condition: service_completed_successfully
-    command: >
-      /usr/sbin/mosquitto
-      -c /var/lib/mosquitto/mosquitto.conf
-    entrypoint:
-      - /docker-entrypoint.sh
     user: "${UID}:${GID}"
     environment:
       MQTT_USER: "${MQTT_USER}"
@@ -204,14 +201,17 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
+      MQTT_TLS_ENABLED: "${MQTT_TLS_ENABLED}"
     ports:
       - "${MQTT_PORT}:1883"
       - "${MQTT_PORT_SECURE}:8883"
     volumes:
-      - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
-      - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mosquitto/"
-      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh
+      # The image contains these files as well; mounting the working tree keeps
+      # the configuration and entrypoint editable without rebuilding the image.
+      - ./mosquitto/mosquitto.conf:/etc/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/mosquitto.tls.conf:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro
+      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh:ro
     tmpfs:
       - /var/lib/mosquitto/:uid=${UID}
     healthcheck:
