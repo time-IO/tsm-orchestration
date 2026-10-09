@@ -48,7 +48,7 @@ const props = defineProps<{
   allowedFileTypeName: string;
 }>();
 
-const ACCEPT_ANY_FILE = '*'
+const ACCEPT_ANY_FILE = '*';
 const accept = computed(() => [...props.allowedFileTypes, ACCEPT_ANY_FILE].join(','));
 
 const emit = defineEmits<{
