@@ -46,9 +46,19 @@ CONTEXT_FILES_DIR = (
     .resolve()
     .parent.parent.joinpath("frost_context_files")
 )
+# Context files of the internal FROST server (service `frost-internal`),
+# which has its own tomcat container and persistence volume.
+INTERNAL_CONTEXT_FILES_DIR = (
+    # tsm-orchestration/src/frost_context_files_internal
+    pathlib.Path(__file__)
+    .resolve()
+    .parent.parent.joinpath("frost_context_files_internal")
+)
 
 
-def write_context_file(schema, user, password, db_url, tomcat_proxy_url) -> None:
+def write_context_file(
+    schema, user, password, db_url, tomcat_proxy_url, context_dir=CONTEXT_FILES_DIR
+) -> None:
     parts = urlparse(db_url)
     hostname = parts.hostname
     if parts.port:
@@ -62,7 +72,7 @@ def write_context_file(schema, user, password, db_url, tomcat_proxy_url) -> None
         tomcat_proxy_url=tomcat_proxy_url,
     ).strip()
 
-    path = f"{CONTEXT_FILES_DIR}/{schema}.xml"
+    path = f"{context_dir}/{schema}.xml"
     logger.debug(f"write tomcat context file {path!r}")
     with open(path, "wb") as fh:
         fh.write(ET.tostring(ET.XML(content)))
