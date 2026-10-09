@@ -1,42 +1,42 @@
-import {installQuasarPlugin} from "@quasar/quasar-app-extension-testing-unit-vitest";
-import {mount} from '@vue/test-utils';
-import{QBtn, QDialog} from 'quasar';
-import {describe, expect, it} from 'vitest';
+import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
+import { mount } from '@vue/test-utils';
+import { QBtn, QDialog } from 'quasar';
+import { describe, expect, it } from 'vitest';
 
-import HelpButton from "@/components/HelpButton.vue";
+import HelpButton from '@/components/HelpButton.vue';
 
 installQuasarPlugin();
 
 const mountHelpButton = (
-  props: {titleHelp?: string; textHelp?:string; termHelp?: string} = {},
+  props: { titleHelp?: string; textHelp?: string; termHelp?: string } = {},
 ) =>
   mount(HelpButton, {
     props,
     global: {
       stubs: {
-        QDialog:{
-          props:['modelValue'],
+        QDialog: {
+          props: ['modelValue'],
           emits: ['update:modelValue'],
           template: '<div v-if="modelValue" class="dialog"><slot/></div>',
         },
-        QTooltip:{template: '<div class="tooltip"><slot/></div>'}
+        QTooltip: { template: '<div class="tooltip"><slot/></div>' },
       },
     },
-  })
+  });
 
 const openDialog = async (wrapper: ReturnType<typeof mountHelpButton>) => {
   await wrapper.findComponent(QBtn).trigger('click');
 };
 
 describe('HelpButton', () => {
-  it('keeps the dialog clossed initially', () =>{
-    const wrapper = mountHelpButton({titleHelp: 'Title', textHelp: 'Text'});
+  it('keeps the dialog clossed initially', () => {
+    const wrapper = mountHelpButton({ titleHelp: 'Title', textHelp: 'Text' });
 
     expect(wrapper.find('.dialog').exists()).toBe(false);
   });
 
   it('opens the dialog when the helpButton is clicked', async () => {
-    const wrapper = mountHelpButton({titleHelp: 'Title', textHelp: 'Text'});
+    const wrapper = mountHelpButton({ titleHelp: 'Title', textHelp: 'Text' });
 
     await openDialog(wrapper);
 
@@ -44,7 +44,7 @@ describe('HelpButton', () => {
   });
 
   it('closes the dialog when the dialog emits update:modelValue false', async () => {
-    const wrapper = mountHelpButton({titleHelp: 'Title', textHelp: 'Text'});
+    const wrapper = mountHelpButton({ titleHelp: 'Title', textHelp: 'Text' });
     await openDialog(wrapper);
 
     wrapper.findComponent(QDialog).vm.$emit('update:modelValue', false);
@@ -53,8 +53,8 @@ describe('HelpButton', () => {
     expect(wrapper.find('.dialog').exists()).toBe(false);
   });
 
-  it('shows titleHelp and textHelp in the dialog', async () =>{
-    const wrapper = mountHelpButton({titleHelp: 'Some Help', textHelp: 'this helps'});
+  it('shows titleHelp and textHelp in the dialog', async () => {
+    const wrapper = mountHelpButton({ titleHelp: 'Some Help', textHelp: 'this helps' });
     await openDialog(wrapper);
 
     expect(wrapper.find('.text-h6').text()).toBe('Some Help');
@@ -62,10 +62,10 @@ describe('HelpButton', () => {
   });
 
   it('updates the dialog content when the props change', async () => {
-     const wrapper = mountHelpButton({ titleHelp: 'Old title', textHelp: 'Old text' });
-     await openDialog(wrapper);
+    const wrapper = mountHelpButton({ titleHelp: 'Old title', textHelp: 'Old text' });
+    await openDialog(wrapper);
 
-     await wrapper.setProps({titleHelp: 'New title', textHelp: 'New text'});
+    await wrapper.setProps({ titleHelp: 'New title', textHelp: 'New text' });
 
     expect(wrapper.find('.text-h6').text()).toBe('New title');
     expect(wrapper.find('.dialog').text()).toContain('New text');
@@ -83,7 +83,7 @@ describe('HelpButton', () => {
       text: 'Number of minutes to look back during each synchronization',
     },
   ])('shows the predefined text for termHelp $term', async (testCase) => {
-    const wrapper = mountHelpButton({termHelp: testCase.term});
+    const wrapper = mountHelpButton({ termHelp: testCase.term });
 
     await openDialog(wrapper);
 
@@ -116,25 +116,4 @@ describe('HelpButton', () => {
     expect(wrapper.find('.text-h6').text()).toBe('Fallback title');
     expect(wrapper.find('.dialog').text()).toContain('Fallback text');
   });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 });

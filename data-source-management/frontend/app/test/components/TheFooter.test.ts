@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import TheFooter from '@/components/TheFooter.vue'; // adjust path
 
 vi.mock('@/utils/public_asset', () => ({
-  publicAsset: (path:string) => `/base/${path}`,
+  publicAsset: (path: string) => `/base/${path}`,
 }));
 
 installQuasarPlugin();
@@ -15,7 +15,7 @@ const stubs = {
   RouterLink: RouterLinkStub,
 };
 
-const mountFooter = () => mount(TheFooter, {global: {stubs}});
+const mountFooter = () => mount(TheFooter, { global: { stubs } });
 
 describe('TheFooter', () => {
   it.for([
@@ -29,13 +29,13 @@ describe('TheFooter', () => {
       href: 'https://www.ufz.de/index.php?de=45348',
       src: '/base/images/259253_RDM_subline_fullcolor_rgb.png',
     },
-    ])('renders the $alt logo with its asset path inside the correct link', (testCase) => {
-      const wrapper = mountFooter();
+  ])('renders the $alt logo with its asset path inside the correct link', (testCase) => {
+    const wrapper = mountFooter();
 
-      const img = wrapper.find(`a[href="${testCase.href}"]`).find('img');
+    const img = wrapper.find(`a[href="${testCase.href}"]`).find('img');
 
-      expect(img.attributes('alt')).toBe(testCase.alt);
-      expect(img.attributes('src')).toBe(testCase.src);
+    expect(img.attributes('alt')).toBe(testCase.alt);
+    expect(img.attributes('src')).toBe(testCase.src);
   });
 
   it('it links to the legal notice and terms of use routes', () => {
@@ -46,8 +46,8 @@ describe('TheFooter', () => {
       .map((link) => [link.text(), link.props('to')]);
 
     expect(links).toEqual([
-      ['Legal Notice', {name: 'legal_notice'}],
-      ['Terms of Use', {name: 'terms_of_use'}],
+      ['Legal Notice', { name: 'legal_notice' }],
+      ['Terms of Use', { name: 'terms_of_use' }],
     ]);
   });
 
@@ -75,8 +75,5 @@ describe('TheFooter', () => {
 
     expect(link.attributes('href')).toBe(testCase.href);
     expect(link.attributes('target')).toBe('_blank');
-  })
-
-
-
-})
+  });
+});

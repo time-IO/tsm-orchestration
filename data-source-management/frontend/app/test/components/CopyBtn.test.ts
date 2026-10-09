@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CopyBtn from '@/components/CopyBtn.vue'; // adjust path
 
-
 const { copyToClipboardMock, notifyMock } = vi.hoisted(() => ({
   copyToClipboardMock: vi.fn(),
   notifyMock: vi.fn(),
@@ -45,7 +44,7 @@ describe('CopyBtn', () => {
   it('updates the tooltip when the title prop changes', async () => {
     const wrapper = mountCopyBtn({ textToCopy: 'abc', title: 'Copy ID' });
 
-    await wrapper.setProps({ title: 'Copy URL' } as Record<string, unknown>)
+    await wrapper.setProps({ title: 'Copy URL' } as Record<string, unknown>);
 
     expect(wrapper.find('.tooltip').text()).toBe('Copy URL');
   });
@@ -90,16 +89,13 @@ describe('CopyBtn', () => {
     });
   });
 
-  it.each([null, ''])(
-    'does nothing when textToCopy is %j',
-    async (value) => {
-      const wrapper = mountCopyBtn({ textToCopy: value });
+  it.each([null, ''])('does nothing when textToCopy is %j', async (value) => {
+    const wrapper = mountCopyBtn({ textToCopy: value });
 
-      await wrapper.trigger('click');
-      await flushPromises();
+    await wrapper.trigger('click');
+    await flushPromises();
 
-      expect(copyToClipboardMock).not.toHaveBeenCalled();
-      expect(notifyMock).not.toHaveBeenCalled();
-    },
-  );
+    expect(copyToClipboardMock).not.toHaveBeenCalled();
+    expect(notifyMock).not.toHaveBeenCalled();
+  });
 });

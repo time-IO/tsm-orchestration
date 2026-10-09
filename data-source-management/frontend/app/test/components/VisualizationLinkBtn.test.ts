@@ -6,7 +6,8 @@ import VisualizationLinkBtn from '@/components/VisualizationLinkBtn.vue'; // adj
 
 installQuasarPlugin();
 
-const mountBtn = (uuid?: string | null ) => mount(VisualizationLinkBtn, { props: uuid === undefined ? {} : {uuid}, });
+const mountBtn = (uuid?: string | null) =>
+  mount(VisualizationLinkBtn, { props: uuid === undefined ? {} : { uuid } });
 
 describe('VisualizationBtn', () => {
   it.for([undefined, null, ''])('renders no link when uuid is %j', (uuid) => {
@@ -20,7 +21,7 @@ describe('VisualizationBtn', () => {
 
     expect(wrapper.find('a').attributes('href')).toBe(
       `${window.location.origin}/visualization/d/abc-123?orgId=1`,
-      );
+    );
   });
 
   it('url-encodes the uuid', () => {
@@ -39,7 +40,7 @@ describe('VisualizationBtn', () => {
   });
 
   it('shows the button label', () => {
-    const wrapper = mountBtn('abc-123' );
+    const wrapper = mountBtn('abc-123');
 
     expect(wrapper.find('a').text()).toContain('Open Visualization');
   });
