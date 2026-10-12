@@ -6,7 +6,6 @@ import re
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
