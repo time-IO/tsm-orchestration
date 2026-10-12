@@ -3,7 +3,7 @@ import {
   datastreamAliasRegex,
   httpsUrlRegex,
   isoDateRegex,
-} from 'src/utils/validation/regex';
+} from '@/utils/validation/regex';
 
 /**
  * Checks if a value is a valid datastream alias.

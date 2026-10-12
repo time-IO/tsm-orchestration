@@ -1,0 +1,32 @@
+---
+
+# After new main-branch images are tagged in the registry, advance the TimeIO
+# web-intern-TEST GitOps wrapper (ufz-tsm/ufz-deployment) to the newest build.
+#
+# ufz-deployment lives on the same GitLab instance as this project
+# (codebase.helmholtz.cloud), so this is a native multi-project trigger with no
+# token: authorization is granted by ufz-deployment's CI job-token allowlist.
+# The downstream `bump-timeio-images-test` job keys on TIMEIO_IMAGE_BUMP=test.
+# web-intern-STAGE stays behind ufz-deployment's manual promotion gate.
+#
+# We forward the exact build tag (dotenv TIMEIO_BUILD_TAG from the release job)
+# plus this commit's identity and timestamp. The downstream tool pins that exact
+# tag and only advances test forward by SOURCE COMMIT time, so a build that
+# finishes late for an older commit cannot regress test (out-of-order builds).
+trigger-k8s-test-image-bump:
+  stage: notify
+  needs:
+    - job: "stage-tag-images-in-registry"
+      artifacts: true
+  variables:
+    TIMEIO_IMAGE_BUMP: "test"
+    TIMEIO_IMAGE_TAG: "$TIMEIO_BUILD_TAG"
+    TIMEIO_COMMIT_SHA: "$CI_COMMIT_SHA"
+    TIMEIO_COMMIT_TIMESTAMP: "$CI_COMMIT_TIMESTAMP"
+  trigger:
+    project: "ufz-tsm/ufz-deployment"
+    branch: "main"
+  rules:
+    # Run if pipeline is triggered by a push on main and image tagging succeeded.
+    - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
+      when: on_success

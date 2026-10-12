@@ -11,13 +11,13 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import type { QualityControlSettingUpdate } from 'src/services/quality_control_setting/types';
-import { useQualityControlSettingStore } from 'stores/qualityControlSettingStore';
+import type { QualityControlSettingUpdate } from '@/services/quality_control_setting/types';
+import { useQualityControlSettingStore } from '@/stores/qualityControlSettingStore';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
-import QcSettingForm from 'components/QcSettingForm.vue';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import { useUnsavedChanges } from 'src/composables/useUnsavedChanges';
+import QcSettingForm from '@/components/QcSettingForm.vue';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import { useUnsavedChanges } from '@/composables/useUnsavedChanges';
 
 const qualityControlSettingStore = useQualityControlSettingStore();
 const $q = useQuasar();
@@ -57,9 +57,17 @@ onMounted(async () => {
       itemPermissionGroup.value = data.permission_group;
 
       const loadedData = normalizeFormData(data);
-
+      // Backfill a stable client-side id for drag & drop. `normalizeFormData`
+      // strips the real `id`, so we re-attach it here using the original,
+      // un-normalized `data` (order is preserved, so indices still line up).
+      loadedData.quality_control_functions = loadedData.quality_control_functions!.map(
+        (func, idx) => ({
+          ...func,
+          _clientId: `id-${data.quality_control_functions[idx]!.id}`,
+        }),
+      );
       formData.value = loadedData;
-      initialFormData.value = structuredClone(loadedData);
+      initialFormData.value = structuredClone(normalizeFormData(loadedData));
     } catch {
       $q.notify({
         type: 'negative',

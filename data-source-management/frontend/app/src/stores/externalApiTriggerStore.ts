@@ -1,9 +1,9 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { API } from 'src/services';
+import { API } from '@/services';
 import type {
   TriggerSyncExtApiBase,
   TriggerSyncExtApiResponse,
-} from 'src/services/trigger_external_api_generic/types';
+} from '@/services/trigger_external_api_generic/types';
 
 export const useTriggerExternalGenericApiStore = defineStore('triggerExternalApiStore', {
   state: () => ({

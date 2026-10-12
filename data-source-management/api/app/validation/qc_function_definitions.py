@@ -562,4 +562,37 @@ _definition = {
             DFILTER_ARG,
         ],
     },
+    "flagConstants": {
+        "description": "Flag constant data values.",
+        "arguments": [
+            FIELD_ARG,
+            TARGET_ARG_SIMPLE,
+            {
+                "name": "window",
+                "description": "Size of the rolling window. Integer (number of timestamps) or offset string (temporal extent).",
+                "optional": False,
+                "default_value": None,
+                "types": [
+                    {"type": "int", "constraint": {"min": 1}},
+                    OFFSET_TYPE,
+                ],
+            },
+            {
+                "name": "thresh",
+                "description": "Maximum total change allowed per window.",
+                "optional": True,
+                "default_value": 0,
+                "types": [{"type": "float", "constraint": {"min": 0}}],
+            },
+            {
+                "name": "min_periods",
+                "description": "Minimum number of valid timestamps required in a window.",
+                "optional": True,
+                "default_value": 2,
+                "types": [{"type": "int", "constraint": {"min": 2}}],
+            },
+            FLAG_ARG,
+            DFILTER_ARG,
+        ],
+    },
 }

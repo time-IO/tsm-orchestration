@@ -2,8 +2,8 @@ import type {
   QualityControlSettingPublic,
   QualityControlSettingCreate,
   QualityControlSettingUpdate,
-} from 'src/services/quality_control_setting/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/quality_control_setting/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = '/quality-control-setting/';
 

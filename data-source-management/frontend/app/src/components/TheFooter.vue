@@ -92,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { publicAsset } from 'src/utils/public_asset';
+import { publicAsset } from '@/utils/public_asset';
 
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN.png');
 const rdmLogoSrc = publicAsset('images/259253_RDM_subline_fullcolor_rgb.png');

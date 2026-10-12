@@ -1,4 +1,4 @@
-import { i18n } from 'boot/i18n';
+import { i18n } from '@/boot/i18n';
 import type { AxiosError } from 'axios';
 
 /**
@@ -43,4 +43,16 @@ export function getErrorTextByStatusCode(code?: number | null, keyword?: string 
 export function getErrorTextByAxiosError(error: AxiosError, keyword?: string): string {
   const status = error.response?.status ?? null;
   return getErrorTextByStatusCode(status, keyword);
+}
+
+/**
+ * Returns generic error message for fetching a resource.
+ *
+ * @param resourceToFetch - The name of the resource that will appear in the message.
+ * @returns {string} The error message.
+ */
+export function getGenericFetchingError(resourceToFetch: string): string {
+  const tPath = 'axios.errors';
+  const genericErrorKey = `${tPath}.generic.failedToFetch`;
+  return i18n.global.t(genericErrorKey, { resource: resourceToFetch });
 }

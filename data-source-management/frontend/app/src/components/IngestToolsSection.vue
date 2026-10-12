@@ -120,13 +120,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { IngestStorageService } from 'src/services/factoryIngestStorageService';
-import { publicAsset } from 'src/utils/public_asset';
-import S3ExplorerDialog from 'components/S3ExplorerDialog.vue';
-import MqttClientDialog from 'components/MqttClientDialog.vue';
-import JournalDialog from 'components/JournalDialog.vue';
-import TriggerExternalApiDialog from 'components/TriggerExternalApiDialog.vue';
-import TriggerExternalSftpDialog from 'components/TriggerExternalSftpDialog.vue';
+import type { IngestStorageService } from '@/services/factoryIngestStorageService';
+import { publicAsset } from '@/utils/public_asset';
+import S3ExplorerDialog from '@/components/S3ExplorerDialog.vue';
+import MqttClientDialog from '@/components/MqttClientDialog.vue';
+import JournalDialog from '@/components/JournalDialog.vue';
+import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
+import TriggerExternalSftpDialog from '@/components/TriggerExternalSftpDialog.vue';
 
 type TriggerType = 'external-api' | 'external-sftp';
 
@@ -152,7 +152,7 @@ const visualizationUrl = computed(() =>
 const TRIGGER_DESCRIPTIONS: Record<TriggerType, string> = {
   'external-api': "Manually (re)synchronise this ingest's historic data for a chosen time range.",
   'external-sftp':
-    "Manually (re)synchronise files from the external SFTP storage into this ingest's internal S3 bucket for a chosen time range.",
+    "Manually (re)synchronise files from the external FTP/SFTP storage into this ingest's internal S3 bucket for a chosen time range.",
 };
 
 const triggerDescription = computed(() => (triggerType ? TRIGGER_DESCRIPTIONS[triggerType] : ''));

@@ -20,9 +20,9 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import { usePermissionGroupStore } from 'stores/permissionGroupStore';
+import { usePermissionGroupStore } from '@/stores/permissionGroupStore';
 import { QSelect, useQuasar } from 'quasar';
-import type { PermissionGroup } from 'src/services/permission_group/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
 
 const permissionGroupStore = usePermissionGroupStore();
 const $q = useQuasar();

@@ -1,5 +1,5 @@
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { ParserRead } from 'src/services/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { ParserRead } from '@/services/types';
 
 export type IngestExternalSftpPublic = {
   id: number;

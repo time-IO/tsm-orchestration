@@ -51,6 +51,13 @@ def access_from_external_sftp(entity) -> BucketAccess:
     )
 
 
+def access_from_http(entity) -> BucketAccess:
+    """Build bucket access for an ``ingest_http`` entity."""
+    return BucketAccess(
+        entity.bucket_name, entity.bucket_username, entity.bucket_password
+    )
+
+
 def _endpoint_url() -> str:
     """Build the S3 endpoint URL from settings.
 

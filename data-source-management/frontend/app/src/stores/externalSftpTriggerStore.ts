@@ -1,9 +1,9 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { API } from 'src/services';
+import { API } from '@/services';
 import type {
   TriggerSyncExtSftpBase,
   TriggerSyncExtSftpResponse,
-} from 'src/services/trigger_external_sftp/types';
+} from '@/services/trigger_external_sftp/types';
 
 export const useTriggerExternalSftpStore = defineStore('triggerExternalSftpStore', {
   state: () => ({

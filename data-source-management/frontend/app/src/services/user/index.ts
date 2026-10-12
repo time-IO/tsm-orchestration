@@ -1,5 +1,5 @@
-import { axiosInstance } from 'boot/axios';
-import type { UserPublic } from 'src/services/user/types';
+import { axiosInstance } from '@/boot/axios';
+import type { UserPublic } from '@/services/user/types';
 
 const apiPath = 'me/';
 

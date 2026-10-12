@@ -14,6 +14,7 @@ from setup_mqtt_user import CreateMqttUserHandler
 from setup_grafana_dashboard import CreateThingInGrafanaHandler
 from setup_frost import CreateFrostInstanceHandler
 from setup_crontab import CreateThingInCrontabHandler
+from setup_bento import CreateThingInBentoHandler
 
 logger = logging.getLogger("thing-setup")
 
@@ -28,6 +29,7 @@ class SetupThingHandler(AbstractHandler):
         "grafana": CreateThingInGrafanaHandler,
         "frost": CreateFrostInstanceHandler,
         "crontab": CreateThingInCrontabHandler,
+        "bento": CreateThingInBentoHandler,
     }
 
     def __init__(self, actions: list[str]):
@@ -118,7 +120,7 @@ def main(actions: tuple[str, ...]):
       grafana   - Grafana dashboard and organization
       frost     - FROST-Server instance
       crontab   - Scheduled job entry
-
+      bento     - Bento stream configuration
     \b
     Examples:
       setup_thing.py                      # Run all actions

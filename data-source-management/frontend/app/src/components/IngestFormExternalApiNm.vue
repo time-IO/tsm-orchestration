@@ -104,16 +104,16 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import NeutronMonitorStationSelect from 'components/NeutronMonitorStationSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import NeutronMonitorStationSelect from '@/components/NeutronMonitorStationSelect.vue';
 import type {
   IngestExternalApiNeutronMonitorCreate,
   IngestExternalApiNeutronMonitorUpdate,
-} from 'src/services/ingest_external_api_neutron_monitor/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/services/ingest_external_api_neutron_monitor/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -130,7 +130,7 @@ defineEmits<{
 const formData = defineModel<
   IngestExternalApiNeutronMonitorCreate | IngestExternalApiNeutronMonitorUpdate
 >({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -138,7 +138,7 @@ const formData = defineModel<
     sync_enabled: false,
     sync_interval_in_minutes: null,
     time_resolution_in_minutes: null,
-  },
+  }),
 });
 
 const timeResolutionOptions = [

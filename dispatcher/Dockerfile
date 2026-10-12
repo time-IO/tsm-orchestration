@@ -1,10 +1,9 @@
-ARG BASE_IMAGE_REGISTRY=debian
-ARG BASE_IMAGE_TAG=stable-slim
 # which python version is supported by the version:
 # -> https://wiki.debian.org/Python#Supported_Python_Versions
 # debian-trixie contains python 3.13
-
-FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG} AS base
+# Base image: exact version tag, never a floating one (latest, major-only,
+# trixie-slim, ...). Bump it deliberately in a merge request.
+FROM debian:trixie-20260918-slim AS base
 
 ARG BUILD_DATE
 ARG VCS_REF

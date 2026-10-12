@@ -181,9 +181,9 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { useUsageStatisticsStore } from 'src/stores/usageStatisticsStore';
-import { publicAsset } from 'src/utils/public_asset';
-import { useAuthStore } from 'src/stores/authStore';
+import { useUsageStatisticsStore } from '@/stores/usageStatisticsStore';
+import { publicAsset } from '@/utils/public_asset';
+import { useAuthStore } from '@/stores/authStore';
 
 const authStore = useAuthStore();
 

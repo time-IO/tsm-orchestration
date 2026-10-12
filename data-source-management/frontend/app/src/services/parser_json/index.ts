@@ -3,8 +3,8 @@ import type {
   JsonParserCreate,
   JsonParserUpdate,
   JsonParserValidate,
-} from 'src/services/parser_json/types';
-import { createParserApiService } from 'src/services/factoryParserService';
+} from '@/services/parser_json/types';
+import { createParserApiService } from '@/services/factoryParserService';
 
 const apiPath = 'parser/json/';
 

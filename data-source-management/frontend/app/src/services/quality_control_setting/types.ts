@@ -1,5 +1,5 @@
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { Datastream } from 'src/services/sta/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { Datastream } from '@/services/sta/types';
 
 export type QualityControlFunctionArgumentBase = {
   name: string;
@@ -26,12 +26,14 @@ export type QualityControlFunctionPublic = {
 export type QualityControlFunctionCreate = {
   name: string;
   label?: string | null | undefined;
+  _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentCreate[];
 };
 
 export type QualityControlFunctionUpdate = {
   name: string;
   label?: string | null | undefined;
+  _clientId?: string;
   quality_control_function_arguments: QualityControlFunctionArgumentUpdate[];
 };
 

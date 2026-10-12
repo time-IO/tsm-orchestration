@@ -1,12 +1,8 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type {
-  IngestFilter,
-  QTableRequestProp,
-  QTableRequestPropPagination,
-} from 'src/services/types';
-import { defaultPagination } from 'src/utils/pagination_utils';
-import type { IngestWithApiInfoRead } from 'src/services/ingest/types';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
+import { defaultPagination } from '@/utils/pagination_utils';
+import type { IngestWithApiInfoRead } from '@/services/ingest/types';
 
 export const useIngestStore = defineStore('ingestStore', {
   state: () => ({
@@ -19,7 +15,7 @@ export const useIngestStore = defineStore('ingestStore', {
       permission_group_id: undefined,
       date_from: undefined,
       date_to: undefined,
-    } as IngestFilter,
+    },
     loading: false,
   }),
 

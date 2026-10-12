@@ -76,7 +76,11 @@
 
         <div class="row">
           <div class="col-12">
-            <div class="row items-center justify-end q-mb-sm">
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="text-caption text-grey-7">
+                <q-icon name="drag_indicator" size="1.2em" class="q-mr-xs" />
+                Drag functions by their handle to reorder — this determines execution order.
+              </div>
               <q-btn
                 flat
                 dense
@@ -95,6 +99,7 @@
               @remove-datastream="handleRemoveDatastream"
               @add-datastream="handleAddDatastream"
               @edit="handleEditFunction"
+              @reorder="handleReorder"
             />
           </div>
         </div>
@@ -183,38 +188,38 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import { QForm } from 'quasar';
-import QcFunctionArgListView from 'components/QcFunctionArgListView.vue';
-import QcSettingFunctionSelectionDialog from 'components/QcSettingFunctionSelectionDialog.vue';
-import StaDatastreamSelectionDialog from 'components/StaDatastreamSelection.vue';
+import QcFunctionArgListView from '@/components/QcFunctionArgListView.vue';
+import QcSettingFunctionSelectionDialog from '@/components/QcSettingFunctionSelectionDialog.vue';
+import StaDatastreamSelectionDialog from '@/components/StaDatastreamSelection.vue';
 import { computed, type Ref, ref } from 'vue';
 import type {
   QualityControlFunctionCreate,
   QualityControlFunctionArgumentCreate,
   QualityControlSettingCreate,
   QualityControlSettingUpdate,
-} from 'src/services/quality_control_setting/types';
-import type { FunctionOption } from 'src/utils/quality_control_utils';
+} from '@/services/quality_control_setting/types';
+import type { FunctionOption } from '@/utils/quality_control_utils';
 import {
   getQcFunctionComponent,
   type QcFunctionName,
-} from 'src/utils/quality_control_function_utils';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import type { Datastream } from 'src/services/sta/types';
-import { isDatastreamType, showContextDocumentation } from 'src/utils/quality_control_utils';
-import { FUNCTIONS_WITH_REQUIRED_TARGET } from 'src/utils/quality_control_utils';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/utils/quality_control_function_utils';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import type { Datastream } from '@/services/sta/types';
+import { isDatastreamType, showContextDocumentation } from '@/utils/quality_control_utils';
+import { FUNCTIONS_WITH_REQUIRED_TARGET } from '@/utils/quality_control_utils';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 const formData = defineModel<QualityControlSettingCreate | QualityControlSettingUpdate>({
-  default: {
+  default: () => ({
     name: null,
     context_window: null,
     is_active: true,
     description: null,
     permission_group_id: null,
     quality_control_functions: [],
-  },
+  }),
 });
 
 defineProps<{
@@ -327,9 +332,11 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
 
   if (editingIndex.value !== null) {
     // Edit mode: replace existing function
+    const existing = formData.value.quality_control_functions![editingIndex.value];
     formData.value.quality_control_functions![editingIndex.value] = {
       name: selectedFunctionName.value,
       label: functionLabel.value,
+      _clientId: existing?._clientId ?? crypto.randomUUID(),
       quality_control_function_arguments: submittedData,
     };
     editingIndex.value = null;
@@ -338,6 +345,7 @@ function handleFunctionFormSubmit(submittedData: QualityControlFunctionArgumentC
     formData.value.quality_control_functions!.push({
       name: selectedFunctionName.value,
       label: functionLabel.value,
+      _clientId: crypto.randomUUID(),
       quality_control_function_arguments: submittedData,
     });
   }
@@ -398,6 +406,13 @@ function handleRemove() {
   selectedFunctionName.value = null;
   editingIndex.value = null;
   functionFormDialog.value = false;
+}
+function handleReorder({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) {
+  const functions = formData.value.quality_control_functions!;
+  const [moved] = functions.splice(oldIndex, 1);
+  if (moved) {
+    functions.splice(newIndex, 0, moved);
+  }
 }
 
 function removeFunction(index: number) {

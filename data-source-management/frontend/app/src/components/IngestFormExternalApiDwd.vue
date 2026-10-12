@@ -117,14 +117,14 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiDwdCreate,
   IngestExternalApiDwdUpdate,
-} from 'src/services/ingest_external_api_dwd/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/services/ingest_external_api_dwd/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -138,7 +138,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: '',
@@ -146,7 +146,7 @@ const formData = defineModel<IngestExternalApiDwdCreate | IngestExternalApiDwdUp
     sync_enabled: false,
     sync_interval_in_minutes: null,
     period_in_minutes: null,
-  },
+  }),
 });
 
 function openDwdDocs() {

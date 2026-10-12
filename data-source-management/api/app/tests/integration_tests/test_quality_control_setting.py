@@ -7,11 +7,15 @@ itself. This tests the full stack: router -> repository -> database.
 """
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 from main import app
 from dependencies import engine, get_current_user
 from ..utils.user_proxy import UserProxy
 from models import User
+from models.quality_control_setting import (
+    QualityControlFunction,
+    QualityControlFunctionArgument,
+)
 
 BASE_PATH = "/quality-control-setting"
 
@@ -100,6 +104,52 @@ def test_create_and_delete(client, base_data):
     assert response.json() == {"ok": True}
 
     response = client.get(f"{BASE_PATH}/{qc_id}")
+    assert response.status_code == 404
+
+
+def test_delete_cascades_functions_and_arguments(client, base_data):
+    payload = _qc_payload(base_data, name="QC Setting Cascade Delete")
+    response = client.post(f"{BASE_PATH}/", json=payload)
+    assert response.status_code == 200
+    created = response.json()
+    qc_id = created["id"]
+    function_id = created["quality_control_functions"][0]["id"]
+    argument_ids = [
+        arg["id"]
+        for arg in created["quality_control_functions"][0][
+            "quality_control_function_arguments"
+        ]
+    ]
+
+    response = client.delete(f"{BASE_PATH}/{qc_id}")
+    assert response.status_code == 200
+
+    with Session(engine) as s:
+        assert s.get(QualityControlFunction, function_id) is None
+        for arg_id in argument_ids:
+            assert s.get(QualityControlFunctionArgument, arg_id) is None
+
+
+def test_delete_not_found(client):
+    response = client.delete(f"{BASE_PATH}/99999")
+    assert response.status_code == 404
+
+
+def test_delete_unauthenticated(client_no_auth):
+    response = client_no_auth.delete(f"{BASE_PATH}/1")
+    assert response.status_code == 401
+
+
+def test_delete_wrong_group_returns_404(client, base_data, other_group_data):
+    created = client.post(f"{BASE_PATH}/", json=_qc_payload(base_data))
+    qc_id = created.json()["id"]
+
+    with Session(engine) as s:
+        other_user = s.get(User, other_group_data["user_id"])
+        proxy = UserProxy(other_user, [other_group_data["permission_group_id"]])
+    app.dependency_overrides[get_current_user] = lambda: proxy
+
+    response = client.delete(f"{BASE_PATH}/{qc_id}")
     assert response.status_code == 404
 
 

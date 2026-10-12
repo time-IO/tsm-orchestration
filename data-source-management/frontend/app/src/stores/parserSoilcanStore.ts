@@ -3,9 +3,9 @@ import type {
   SoilcanParserCreate,
   SoilcanParserPublic,
   SoilcanParserUpdate,
-} from 'src/services/parser_soilcan/types';
-import { API } from 'src/services';
-import { createIngestStore } from 'stores/factoryIngestStore';
+} from '@/services/parser_soilcan/types';
+import { API } from '@/services';
+import { createIngestStore } from '@/stores/factoryIngestStore';
 
 export const useSoilcanParserStore = createIngestStore<
   SoilcanParserPublic,

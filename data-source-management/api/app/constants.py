@@ -6,6 +6,8 @@ class IngestType(str, Enum):
     SFTP = "sftp"
     MQTT = "mqtt"
     EXTERNAL_SFTP = "external_sftp"
+    EXTERNAL_MQTT = "external_mqtt"
+    HTTP = "http"
 
     @classmethod
     def from_string(cls, value: str) -> "IngestType":

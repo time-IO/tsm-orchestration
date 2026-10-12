@@ -73,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import DateTimePicker from 'components/DateTimePicker.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
 
 const name = defineModel<string | undefined>('name', { default: undefined });
 const uuid = defineModel<string | undefined>('uuid', { default: undefined });

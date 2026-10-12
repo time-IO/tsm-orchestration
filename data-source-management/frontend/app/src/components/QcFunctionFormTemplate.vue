@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import SaqcInfoIcon from 'components/SaqcInfoIcon.vue';
+import SaqcInfoIcon from '@/components/SaqcInfoIcon.vue';
 
 defineProps<{
   functionTitle: string;

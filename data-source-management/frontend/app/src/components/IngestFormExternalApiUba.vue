@@ -111,11 +111,11 @@
 import type {
   IngestExternalApiUbaCreate,
   IngestExternalApiUbaUpdate,
-} from 'src/services/ingest_external_api_uba/types';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/services/ingest_external_api_uba/types';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -129,13 +129,13 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiUbaCreate | IngestExternalApiUbaUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: '',
     station_id: null,
     sync_enabled: false,
-  },
+  }),
 });
 
 function openUbaDocs() {

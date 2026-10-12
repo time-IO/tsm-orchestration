@@ -135,14 +135,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiTSystemsCreate,
   IngestExternalApiTSystemsUpdate,
-} from 'src/services/ingest_external_api_tsystems/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+} from '@/services/ingest_external_api_tsystems/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -156,7 +156,7 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApiTSystemsUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -166,7 +166,7 @@ const formData = defineModel<IngestExternalApiTSystemsCreate | IngestExternalApi
     station_id: null,
     tsystems_username: null,
     tsystems_password: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

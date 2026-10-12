@@ -70,11 +70,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import MqttParserSelect from 'components/MqttParserSelect.vue';
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
-import type { IngestMqttCreate, IngestMqttUpdate } from 'src/services/ingest_mqtt/types';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import MqttParserSelect from '@/components/MqttParserSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
+import type { IngestMqttCreate, IngestMqttUpdate } from '@/services/ingest_mqtt/types';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -90,12 +90,12 @@ defineEmits<{
 }>();
 
 const formData = defineModel<IngestMqttCreate | IngestMqttUpdate>({
-  default: {
+  default: () => ({
     name: null,
     permission_group_id: null,
     description: null,
     parser_id: null,
-  },
+  }),
 });
 
 const usernameModel = computed({

@@ -53,10 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import DateTimePicker from 'components/DateTimePicker.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
-import type { TriggerSyncExtSftpBase } from 'src/services/trigger_external_sftp/types';
-import { useTriggerExternalSftpStore } from 'stores/externalSftpTriggerStore';
+import type { TriggerSyncExtSftpBase } from '@/services/trigger_external_sftp/types';
+import { useTriggerExternalSftpStore } from '@/stores/externalSftpTriggerStore';
 import { date, useQuasar } from 'quasar';
 
 const showDialog = defineModel<boolean | null>({ default: false });
@@ -105,14 +105,14 @@ async function triggerSftp() {
     $q.notify({
       type: 'positive',
       position: 'top',
-      message: 'External SFTP sync was successfully triggered.',
+      message: 'External FTP/SFTP sync was successfully triggered.',
     });
     emit('success');
   } catch {
     $q.notify({
       type: 'negative',
       position: 'top',
-      message: 'Failed to trigger external SFTP sync.',
+      message: 'Failed to trigger external FTP/SFTP sync.',
     });
   } finally {
     submitting.value = false;

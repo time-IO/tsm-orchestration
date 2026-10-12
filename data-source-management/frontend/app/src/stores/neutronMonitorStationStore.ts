@@ -1,6 +1,6 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { NeutronMonitorStation } from 'src/services/neutron_monitor_stations/types';
+import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
 
 export const useNeutronMonitorStationStore = defineStore('neutronMonitorStationStore', {
   state: () => ({}),

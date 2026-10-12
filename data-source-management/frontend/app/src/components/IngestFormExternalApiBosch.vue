@@ -146,15 +146,15 @@
 </template>
 
 <script setup lang="ts">
-import PermissionGroupSelect from 'components/PermissionGroupSelect.vue';
+import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 import type {
   IngestExternalApiBoschCreate,
   IngestExternalApiBoschUpdate,
-} from 'src/services/ingest_external_api_bosch/types';
+} from '@/services/ingest_external_api_bosch/types';
 import { ref } from 'vue';
-import type { PermissionGroup } from 'src/services/permission_group/types';
-import HelpButton from 'components/HelpButton.vue';
-import { ruleFactories, rules } from 'src/utils/validation/rules';
+import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -167,7 +167,7 @@ defineEmits<{
   save: [];
 }>();
 const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBoschUpdate>({
-  default: {
+  default: () => ({
     name: '',
     permission_group_id: null,
     description: null,
@@ -178,7 +178,7 @@ const formData = defineModel<IngestExternalApiBoschCreate | IngestExternalApiBos
     bosch_username: null,
     bosch_password: null,
     period_in_minutes: null,
-  },
+  }),
 });
 
 const isPwd = ref(true);

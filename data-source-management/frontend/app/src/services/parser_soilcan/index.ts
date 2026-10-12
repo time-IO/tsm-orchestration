@@ -2,8 +2,8 @@ import type {
   SoilcanParserPublic,
   SoilcanParserCreate,
   SoilcanParserUpdate,
-} from 'src/services/parser_soilcan/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/parser_soilcan/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = 'parser/soilcan/';
 

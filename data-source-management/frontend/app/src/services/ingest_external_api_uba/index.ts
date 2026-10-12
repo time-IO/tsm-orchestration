@@ -2,8 +2,8 @@ import type {
   IngestExternalApiUbaPublic,
   IngestExternalApiUbaCreate,
   IngestExternalApiUbaUpdate,
-} from 'src/services/ingest_external_api_uba/types';
-import { createIngestApiService } from 'src/services/factoryIngestService';
+} from '@/services/ingest_external_api_uba/types';
+import { createIngestApiService } from '@/services/factoryIngestService';
 
 const apiPath = 'ingest/external-api/uba/';
 

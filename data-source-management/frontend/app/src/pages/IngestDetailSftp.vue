@@ -147,12 +147,20 @@
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section
-        :uuid="item.uuid"
-        :ingest-id="item.id"
-        :service="API.ingestSftpStorage"
-        :bucket-name="item.bucket_name"
-      />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            :service="API.ingestSftpStorage"
+            :bucket-name="item.bucket_name"
+          />
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -177,11 +185,12 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestSftpPublic } from 'src/services/ingest_sftp/types';
-import { useIngestSftpStore } from 'stores/ingestSftpStore';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
-import { API } from 'src/services';
+import type { IngestSftpPublic } from '@/services/ingest_sftp/types';
+import { useIngestSftpStore } from '@/stores/ingestSftpStore';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import { API } from '@/services';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

@@ -12,9 +12,9 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import { useIngestExternalApiTheThingsNetworkStore } from 'stores/ingestExternalApiTheThingsNetworkStore';
-import type { IngestExternalApiTheThingsNetworkCreate } from 'src/services/ingest_external_api_the_things_network/types';
-import IngestFormExternalApiTtn from 'components/IngestFormExternalApiTtn.vue';
+import { useIngestExternalApiTheThingsNetworkStore } from '@/stores/ingestExternalApiTheThingsNetworkStore';
+import type { IngestExternalApiTheThingsNetworkCreate } from '@/services/ingest_external_api_the_things_network/types';
+import IngestFormExternalApiTtn from '@/components/IngestFormExternalApiTtn.vue';
 
 const ttnStore = useIngestExternalApiTheThingsNetworkStore();
 const $q = useQuasar();

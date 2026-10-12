@@ -1,5 +1,5 @@
-import type { QualityControlFunctionArgumentBase } from 'src/services/quality_control_setting/types';
-import type { Datastream } from 'src/services/sta/types';
+import type { QualityControlFunctionArgumentBase } from '@/services/quality_control_setting/types';
+import type { Datastream } from '@/services/sta/types';
 
 export const POSSIBLE_QC_FUNCTION_TYPES = {
   INT: 'int',

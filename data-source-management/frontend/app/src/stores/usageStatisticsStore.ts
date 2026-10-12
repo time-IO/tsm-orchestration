@@ -1,6 +1,6 @@
-import { API } from 'src/services';
+import { API } from '@/services';
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { UsageStatisticsCounts } from 'src/services/usage_statistics/types';
+import type { UsageStatisticsCounts } from '@/services/usage_statistics/types';
 
 export const useUsageStatisticsStore = defineStore('usageStatisticsStore', {
   state: () => ({

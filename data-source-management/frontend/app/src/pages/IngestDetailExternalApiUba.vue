@@ -105,7 +105,19 @@
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" trigger-type="external-api" />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            trigger-type="external-api"
+          />
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -128,12 +140,13 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import { useIngestExternalApiUbaStore } from 'stores/ingestExternalApiUbaStore';
+import { useIngestExternalApiUbaStore } from '@/stores/ingestExternalApiUbaStore';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { IngestExternalApiUbaPublic } from 'src/services/ingest_external_api_uba/types';
-import CopyBtn from 'components/CopyBtn.vue';
-import IngestToolsSection from 'components/IngestToolsSection.vue';
+import type { IngestExternalApiUbaPublic } from '@/services/ingest_external_api_uba/types';
+import CopyBtn from '@/components/CopyBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();

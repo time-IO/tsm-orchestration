@@ -1,0 +1,50 @@
+## Main YAML that defines Bento API, Streams to make configuration persistant 
+
+# Config for API - HTTP
+http:
+  address: 0.0.0.0:4195
+  enabled: true
+  root_path: /bento
+  debug_endpoints: false
+  cert_file: ""
+  key_file: ""
+  cors:
+    enabled: false
+    allowed_origins: []
+  basic_auth:
+    enabled: false
+    username: ""
+    password_hash: ""
+    algorithm: "sha256"
+    salt: ""
+
+# Monitoring via Prometheus
+metrics:
+  prometheus:
+    use_histogram_timing: false
+    histogram_buckets: []
+    summary_quantiles_objectives:
+      - quantile: 0.5
+        error: 0.05
+      - quantile: 0.9
+        error: 0.01
+      - quantile: 0.99
+        error: 0.001
+    add_process_metrics: false
+    add_go_metrics: false
+    push_url: "" # No default (optional)
+    push_interval: "" # No default (optional)
+    push_job_name: bento_push
+    push_basic_auth:
+      username: ""
+      password: ""
+    file_output_path: ""
+  mapping: ""
+
+# Logger to stdout
+logger:
+  level: INFO
+  format: logfmt
+  add_timestamp: false
+  static_fields:
+    '@service': bento

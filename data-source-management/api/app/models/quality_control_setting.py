@@ -51,17 +51,20 @@ class QualityControlFunctionBase(SQLModel):
         foreign_key="quality_control_setting.id", ondelete="CASCADE"
     )
     name: str
+    position: int = Field(default=0)
     label: str | None = None
 
 
 class QualityControlFunctionCreate(SQLModel):
     name: str
     label: str | None = None
+    position: int = 0
     quality_control_function_arguments: list[QualityControlFunctionArgumentCreate]
 
 
 class QualityControlFunctionUpdate(SQLModel):
     name: str | None = None
+    position: int | None = None
     label: str | None = None
     quality_control_function_arguments: (
         list[QualityControlFunctionArgumentUpdate] | None
@@ -72,6 +75,7 @@ class QualityControlFunctionPublic(SQLModel):
     id: int
     name: str
     label: str | None = None
+    position: int
     quality_control_function_arguments: list[QualityControlFunctionArgumentPublic]
 
 
@@ -137,7 +141,9 @@ class QualityControlSetting(QualityControlSettingBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
     quality_control_functions: list[QualityControlFunction] = Relationship(
-        back_populates="quality_control_setting", cascade_delete=True
+        back_populates="quality_control_setting",
+        cascade_delete=True,
+        sa_relationship_kwargs={"order_by": "QualityControlFunction.position"},
     )
     permission_group: "PermissionGroup" = Relationship(
         back_populates="quality_control_setting"
