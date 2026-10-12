@@ -9,9 +9,12 @@ from dotenv import dotenv_values
 
 
 def get_dotenv_vars(path: str) -> list:
-    """Reads all keys of an .env file into a list"""
+    """
+    Reads all keys of an .env file into a list. Keys starting with an
+    underscore are helpers for interpolation only and are skipped.
+    """
     env_vars = dotenv_values(path)
-    env_vars_list = [k for k, _ in env_vars.items()]
+    env_vars_list = [k for k in env_vars if not k.startswith("_")]
     return env_vars_list
 
 
