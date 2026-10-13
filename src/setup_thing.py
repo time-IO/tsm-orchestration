@@ -5,6 +5,7 @@ import click
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.common import get_envvar, setup_logging
+from timeio.journaling import Journal
 from timeio.typehints import MqttPayload
 
 # Import individual action handlers
@@ -17,6 +18,7 @@ from setup_crontab import CreateThingInCrontabHandler
 from setup_bento import CreateThingInBentoHandler
 
 logger = logging.getLogger("thing-setup")
+journal = Journal("System", errors="warn")
 
 
 class SetupThingHandler(AbstractHandler):
@@ -88,6 +90,12 @@ class SetupThingHandler(AbstractHandler):
             except Exception as e:
                 logger.error(f"✗ {action_name}: {e}", exc_info=True)
                 failed.append(action_name)
+                # details stay in the log, they may contain internal information
+                journal.error(
+                    f"Setup step '{action_name}' failed ({type(e).__name__}). "
+                    f"Saving the thing again retries the setup.",
+                    thing_uuid,
+                )
 
         # Summary
         if failed:
