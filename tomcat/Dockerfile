@@ -1,7 +1,6 @@
-ARG BASE_IMAGE_REGISTRY=tomcat
-ARG BASE_IMAGE_TAG=11
-
-FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
+# Base image: exact version tag, never a floating one (latest, major-only,
+# trixie-slim, ...). Bump it deliberately in a merge request.
+FROM tomcat:11.0.26-jdk25-temurin
 
 ARG BUILD_DATE=""
 ARG VCS_REF=""
