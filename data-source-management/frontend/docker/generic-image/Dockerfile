@@ -1,3 +1,5 @@
+# Base image: exact version tag, never a floating one (latest, major-only,
+# trixie-slim, ...). Bump it deliberately in a merge request.
 FROM node:24.21.0-slim AS js-builder
 
 RUN mkdir /datasourcefrontend
@@ -8,7 +10,7 @@ WORKDIR /datasourcefrontend
 RUN npm ci
 RUN npm run build
 
-FROM nginx:1.29-alpine AS webserver
+FROM nginx:1.29.8-alpine AS webserver
 
 # Pull latest security-fixed Alpine packages for runtime image.
 RUN apk upgrade --no-cache libexpat zlib

@@ -85,9 +85,9 @@
                   <q-item-section>
                     <q-item-label>MQTT Username</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{
-                        item.external_mqtt_username || 'N/A'
-                      }}</q-item-label>
+                      <q-item-label caption
+                        >{{ item.external_mqtt_username || 'N/A' }}
+                      </q-item-label>
                       <copy-btn
                         v-if="item.external_mqtt_username"
                         title="Copy MQTT username"
@@ -129,9 +129,9 @@
                   <q-item-section>
                     <q-item-label>CA Certificate</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{
-                        shortenText(item.external_mqtt_ca_cert) || 'Not set'
-                      }}</q-item-label>
+                      <q-item-label caption
+                        >{{ shortenText(item.external_mqtt_ca_cert) || 'Not set' }}
+                      </q-item-label>
                       <copy-btn
                         v-if="item.external_mqtt_ca_cert"
                         title="Copy CA certificate"
@@ -145,9 +145,9 @@
                   <q-item-section>
                     <q-item-label>Client Certificate</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{
-                        shortenText(item.external_mqtt_client_cert) || 'Not set'
-                      }}</q-item-label>
+                      <q-item-label caption
+                        >{{ shortenText(item.external_mqtt_client_cert) || 'Not set' }}
+                      </q-item-label>
                       <copy-btn
                         v-if="item.external_mqtt_client_cert"
                         title="Copy client certificate"
@@ -161,9 +161,9 @@
                   <q-item-section>
                     <q-item-label>Client Key</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{
-                        shortenText(item.external_mqtt_client_key) || 'Not set'
-                      }}</q-item-label>
+                      <q-item-label caption
+                        >{{ shortenText(item.external_mqtt_client_key) || 'Not set' }}
+                      </q-item-label>
                       <copy-btn
                         v-if="item.external_mqtt_client_key"
                         title="Copy client key"
@@ -190,7 +190,7 @@
                     <q-item-label caption>
                       {{ item.parser.name }}
                       <q-icon name="launch" class="cursor-pointer" @click="openParser">
-                        <q-tooltip> Open in new window </q-tooltip>
+                        <q-tooltip> Open in new window</q-tooltip>
                       </q-icon>
                     </q-item-label>
                   </q-item-section>
@@ -214,19 +214,27 @@
         <q-separator />
 
         <q-card-actions>
-          <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
+          <q-btn :to="editRoute" color="primary" flat> Edit</q-btn>
           <q-space />
-          <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
+          <q-btn :to="copyRoute" color="black" flat> Copy</q-btn>
           <q-space />
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section
-        :uuid="item.uuid"
-        :ingest-id="item.id"
-        :mqtt-topic="item.internal_mqtt_topic ?? undefined"
-      />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            :mqtt-topic="item.internal_mqtt_topic ?? undefined"
+          />
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -235,7 +243,7 @@
           <h6 class="q-mt-none">Confirm Delete</h6>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to delete this item? </q-card-section>
+        <q-card-section> Are you sure you want to delete this item?</q-card-section>
 
         <q-card-actions align="right">
           <q-btn v-close-popup color="primary" flat label="Cancel" />
@@ -255,6 +263,7 @@ import type { IngestExternalMqttPublic } from '@/services/ingest_external_mqtt/t
 import { useIngestExternalMqttStore } from '@/stores/ingestExternalMqttStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();
