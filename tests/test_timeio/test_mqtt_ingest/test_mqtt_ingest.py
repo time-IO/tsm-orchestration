@@ -36,6 +36,8 @@ def test_act_parses_and_publishes(mock_get_parser, mock_Thing, mock_DBapi, mock_
     parser_instance = MagicMock()
     parser_instance.do_parse.return_value = ["parsed"]
     parser_instance.to_observations.return_value = [{"result_number": 1}]
+    parser_instance.start_date = "2025-01-01T00:00:00+00:00"
+    parser_instance.end_date = "2025-01-01T01:00:00+00:00"
     mock_get_parser.return_value = parser_instance
 
     handler.dbapi.upsert_observations = MagicMock()
