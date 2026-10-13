@@ -137,7 +137,7 @@ class CreateThingInBentoHandler(AbstractHandler):
                 },
                 "output": {
                     "mqtt": {
-                        "urls": ["mqtt-broker:1883"],
+                        "urls": [self.mqtt_broker],
                         "client_id": f"timeio-int-{thing.uuid}",
                         "user": thing.mqtt.user,
                         "password": self.dec(thing.mqtt.password),

@@ -152,11 +152,16 @@ class QcHandler(AbstractHandler):
             write_qc_data(self.dbapi, qc)
 
         # push journal entries
-        config_names = [c.name for c in qc_settings]
+        config_names = list(dict.fromkeys(f.setting_name for f in qc_funcs))
+        if thing is not None:
+            trigger = f"triggered by new data on '{thing.name}'"
+        else:
+            trigger = "triggered by user (or scheduled)"
         for uuid in things:
             journal.info(
                 f"Successfully executed the following QC Setups: {config_names} "
-                f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds",
+                f"in {round((datetime.now() - t0).total_seconds(), 2)} seconds "
+                f"({trigger})",
                 uuid,
             )
 
