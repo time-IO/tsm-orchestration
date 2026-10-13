@@ -135,7 +135,7 @@ def check_database():
 def check_frost_via_sta_proxy(db_username):
     url = f"http://{host}/sta/{db_username}/"
     response = requests.options(url)
-    if response.status_code != 200:
+    if response.status_code != 204:
         log(f"FROST check failed: {response.status_code}")
         sys.exit(1)
     log("FROST check: OK")
