@@ -132,9 +132,9 @@ def check_database():
     return username
 
 
-def check_frost(db_username):
+def check_frost_via_sta_proxy(db_username):
     url = f"http://{host}/sta/{db_username}/"
-    response = requests.head(url)
+    response = requests.options(url)
     if response.status_code != 200:
         log(f"FROST check failed: {response.status_code}")
         sys.exit(1)
@@ -170,6 +170,6 @@ def check_minio():
 if __name__ == "__main__":
     check_grafana_dashboard()
     db_username = check_database()
-    check_frost(db_username)
+    check_frost_via_sta_proxy(db_username)
     check_minio()
     log("All checks passed")
