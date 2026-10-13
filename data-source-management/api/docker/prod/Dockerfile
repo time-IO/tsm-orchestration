@@ -1,8 +1,7 @@
-ARG BASE_IMAGE_REGISTRY=python
-ARG BASE_IMAGE_TAG=3.13-slim
-
 # See https://hub.docker.com/_/python/
-FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG} AS base
+# Base image: exact version tag, never a floating one (latest, major-only,
+# trixie-slim, ...). Bump it deliberately in a merge request.
+FROM python:3.13.15-slim-trixie AS base
 
 # Install Tkinter runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \

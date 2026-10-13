@@ -30,7 +30,7 @@
 
     File[] webapps = new File(webappsDir).listFiles();
     if (webapps == null) {
-        webapps = new File[0];   // Verzeichnis fehlt / nicht lesbar
+        webapps = new File[0];
     }
     Arrays.sort(webapps);
 

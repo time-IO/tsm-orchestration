@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     S3_REGION: str = "eu-central-1"
     PROXY_URL: str
     FERNET_ENCRYPTION_SECRET: str
+    SMS_ROOT_URL: str
     STA_ROOT_URL: str
     STA_VERSION: str
     MQTT_BROKER_HOST: str
