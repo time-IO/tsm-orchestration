@@ -30,7 +30,7 @@ SQL_DIR = Path(__file__).parent / "sql"
 VIEW_DIRS = ("sta_views", "sta_views_internal", "grafana_views")
 # Bump to force a view redeploy after changes outside the SQL files.
 VIEWS_REVISION = 1
-VIEWS_STAMP_PREFIX = "tsm-views:"
+VIEWS_STAMP_PREFIX = "frost-views:"
 
 
 def compute_views_version() -> str:
