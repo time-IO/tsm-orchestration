@@ -16,7 +16,7 @@ When adding a changelog entry, ensure the following:
 - Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
 
 ### Changed
-- `bento` is built into a time.IO image containing its configuration; base pinned to 1.22.0 instead of `latest` ([Merge Request]())
+- `bento` is built into a time.IO image containing its configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/770))
 
 ## [2026-10-14]
 
