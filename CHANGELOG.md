@@ -12,14 +12,51 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-10-14]
+
+### Added
+- Quality control setting `flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
+- Internal STA view schema per project in preparation of protected STA endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/733))
+- Internal FROST server (`frost-internal`) serving the internal STA views under the same endpoint names as the public ones; not yet exposed by the proxy ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/745))
+- QC-Functions within a QC Setting can be reordered via drag & drop, determining their execution order ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/686))
+- QC function forms: optional numeric fields no longer send an empty string to the backend when cleared, which previously caused validation errors on submit. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/730))
+- Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
+- Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
+- component_tests for CopyBtn, DateTimePicker, HelpButton, VisualizationLinkBtn, TheFooter ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/754))
+- Links to linked SMS Configurations from ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/722))
+
+### Fixed
+- Grafana STA panels show the same data as FROST ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/747))
+- QC journal entries only list the QC settings that were actually executed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/749))
+- The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
+- Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request]())
+- Soilcan parser was parsing corrupted files leading to corrupted data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/743))
+- QC: false `ImmutableDatastreamError` and NaN upload error when processing functions write to a new datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/750))
+- Dragging columns in overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))
+- External-MQTT ingests use the configured `MQTT_BROKER` instead of a hardcoded host ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/751))
+- correct timezone handling of UBA data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/755))
+
+### Changed
+- STA Views to improve performance ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/741))
+- The `flyway` service is built into a time.IO image that contains the migrations and is released with the other images, so deployments without this repository (Helm) run the same migration set ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/735))
+- The `keycloak` service is built into a time.IO image that contains the realm import, themes and MQTT notifier provider, so deployments without this repository (Helm) run the same configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/746))
+- Parser validation file picker suggests more common file types while accepting files of any type ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/752))
+- Self-built images pin their base images to exact version tags in the Dockerfiles, and the `*_BASE_IMAGE_*` and `KEYCLOAK_IMAGE_*` build overrides are removed; frost moves from Tomcat 10 to 11 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/739))
+
+## [2026-09-30]
+
 ### Added
 - Changelog checks in pipeline ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/708))
+- Parser detail pages (CSV/JSON/Soilcan) now offer a "Create Ingest" action that opens the SFTP/External-SFTP ingest creation form with the parser preselected. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/729))
 - Grafana ingest dashboards show linked STA datastreams in their own row, with a link to manage datastream linkings in the SMS ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
 - Support for External MQTT and HTTP ingest types via bento ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/549))
 - ./Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 - Add token, organization (for proteced endpoints) and period_in_minutes to Sensoto external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/734))
+
+### Fixed
+- CSV parser pandas options are consistently converted between form data and API JSON ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/740))
 
 ### Changed
 - Grafana raw-data panels now show the time.IO datastream name only; SMS metadata enrichment was removed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/728))

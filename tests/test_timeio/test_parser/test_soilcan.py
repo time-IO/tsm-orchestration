@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-import pandas as pd
 
 from timeio.parser.soilcan_parser import SoilcanParser
 

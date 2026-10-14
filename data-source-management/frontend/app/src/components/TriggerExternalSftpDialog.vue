@@ -105,14 +105,14 @@ async function triggerSftp() {
     $q.notify({
       type: 'positive',
       position: 'top',
-      message: 'External SFTP sync was successfully triggered.',
+      message: 'External FTP/SFTP sync was successfully triggered.',
     });
     emit('success');
   } catch {
     $q.notify({
       type: 'negative',
       position: 'top',
-      message: 'Failed to trigger external SFTP sync.',
+      message: 'Failed to trigger external FTP/SFTP sync.',
     });
   } finally {
     submitting.value = false;

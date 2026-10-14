@@ -30,6 +30,7 @@
         :showTempCreateBtn="true"
       />
     </div>
+
     <!--    method-->
     <q-select
       v-model="formData.method"
@@ -40,9 +41,10 @@
       hint="'standard' or 'modified' Z-score calculation."
       filled
     />
+
     <!--    window-->
     <qc-function-form-int-offset-input
-      label="window * "
+      label="window"
       class="q-mb-md"
       :rules_int="[rules.INTEGER, ruleFactories.MIN(1)]"
       :rules_offset="[rules.CONTEXT_WINDOW]"
@@ -50,29 +52,27 @@
       v-model:input="formData.window"
       hint="Rolling window size."
     />
+
     <!--    thresh-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.thresh"
-      label="thresh * (enter a floating point number)"
+      v-model="formData.thresh"
+      label="thresh (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Z-score threshold."
     />
     <!--    min_residuals-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.min_residuals"
-      label="min_residuals * (enter a floating point number)"
+      v-model="formData.min_residuals"
+      label="min_residuals (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum residual to consider a point as outlier."
     />
     <!--    min_periods-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.min_periods"
+      v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minimum valid points in a window."
@@ -90,33 +90,30 @@
       </q-item>
     </div>
     <!--    axis-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.axis"
+      v-model="formData.axis"
       label="axis (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0), ruleFactories.MAX(1)]"
       hint="Axis along which scoring is applied."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.flag"
+      v-model="formData.flag"
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      hint="Flag assigned to values identified by this function."
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -130,6 +127,8 @@ import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 import QcFunctionFormTemplate from '@/components/QcFunctionFormTemplate.vue';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -145,15 +144,15 @@ const methodOptions: Array<string> = ['standard', 'modified'];
 const formData = ref({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  method: null as number | null,
+  method: null as string | null,
   window: null as number | null,
   thresh: null as number | null,
   min_residuals: null as number | null,
   min_periods: null as number | null,
   center: true,
   axis: null as number | null,
-  flag: 255.0,
-  dfilter: 0,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {
@@ -173,15 +172,15 @@ function loadInitialData() {
 
   formData.value.field = (fieldArg?.input.value as Datastream[]) ?? [];
   formData.value.target = (targetArg?.input.value as Datastream[]) ?? [];
-  formData.value.method = (methodArg?.input.value as number) ?? null;
+  formData.value.method = (methodArg?.input.value as string) ?? null;
   formData.value.window = (windowArg?.input.value as number) ?? null;
   formData.value.thresh = (threshArg?.input.value as number) ?? null;
   formData.value.min_residuals = (min_residualsArg?.input.value as number) ?? null;
   formData.value.min_periods = (min_periodsArg?.input.value as number) ?? null;
   formData.value.center = (centerArg?.input.value as boolean) ?? true;
   formData.value.axis = (axisArg?.input.value as number) ?? null;
-  formData.value.flag = (flagArg?.input.value as number) ?? null;
-  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? 255.0;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? 0;
 }
 
 watch(() => props.initialData, loadInitialData, { immediate: true });
@@ -234,12 +233,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter },
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 
@@ -257,7 +256,7 @@ const formDataWithTypes = computed(() => {
   if (formData.value.method !== null) {
     returnArray.push(methodObject);
   }
-  if (formData.value.window !== null) {
+  if (formData.value.window !== null && String(formData.value.window) !== '') {
     returnArray.push(windowObject);
   }
   if (formData.value.thresh !== null) {

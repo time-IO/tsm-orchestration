@@ -1,5 +1,7 @@
 import type { PermissionGroup } from '@/services/permission_group/types';
 
+export type CsvParserPandasReadCsv = Record<string, unknown>;
+
 export type CsvParserTimestampColumnCreate = {
   column: number | null;
   timestamp_format: string | null;
@@ -25,7 +27,7 @@ export type CsvParserPublic = {
   delimiter: string;
   headlines_to_exclude: string | null;
   footlines_to_exclude: number | null;
-  pandas_read_csv: string | null;
+  pandas_read_csv: CsvParserPandasReadCsv | null;
   timestamp_columns: Array<CsvParserTimestampColumnPublic>;
   permission_group: PermissionGroup;
   comment: string[];
@@ -41,7 +43,7 @@ export type CsvParserCreate = {
   delimiter: string | null;
   headlines_to_exclude: string | null;
   footlines_to_exclude: number | null;
-  pandas_read_csv: string | null;
+  pandas_read_csv: CsvParserPandasReadCsv | null;
   timestamp_columns: Array<CsvParserTimestampColumnCreate>;
   comment: string[];
   header: number | null;
@@ -55,7 +57,7 @@ export type CsvParserUpdate = {
   delimiter?: string | null;
   headlines_to_exclude?: string | null;
   footlines_to_exclude?: number | null;
-  pandas_read_csv?: string | null;
+  pandas_read_csv?: CsvParserPandasReadCsv | null;
   timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
   header?: number | null;
   comment?: string[];
@@ -67,7 +69,7 @@ export type CsvParserValidate = {
   delimiter?: string | null;
   headlines_to_exclude?: string | null;
   footlines_to_exclude?: number | null;
-  pandas_read_csv?: string | null;
+  pandas_read_csv?: CsvParserPandasReadCsv | null;
   timestamp_columns?: Array<CsvParserTimestampColumnUpdate>;
   header?: number | null;
   comment?: string[];

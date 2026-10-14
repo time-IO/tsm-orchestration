@@ -173,12 +173,18 @@ class SaQCWrapper:
         )
 
     def data_is_modified(self, stream: QcFunctionStream) -> bool:
-        if stream in self._input_data:
-            called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
-            for func_name in called_qc_funcs:
-                if func_name in PROCESSING_FUNCTIONS:
-                    return True
-        return False
+        if stream not in self._input_data:
+            return False
+        called_qc_funcs = [e["func"] for e in self._qc._history[stream.alias].meta]
+        if not PROCESSING_FUNCTIONS.intersection(called_qc_funcs):
+            return False
+        # NOTE:
+        # SaQC also records processing functions in the history of their
+        # `field`, even if the results are written to a different `target`.
+        # So we need to check, if the data actually changed.
+        if self.index_is_modified(stream):
+            return True
+        return not self._qc.data[stream.alias].equals(self._input_data[stream]["data"])
 
     def index_is_modified(self, stream: QcFunctionStream) -> bool:
         return not self._qc._data[stream.alias].index.equals(

@@ -78,6 +78,9 @@ export default {
         parse: 'An error occurred trying to parse the file content.',
       },
       unknown: 'An error occurred.',
+      generic: {
+        failedToFetch: 'Failed to fetch {resource}.',
+      },
     },
   },
 };

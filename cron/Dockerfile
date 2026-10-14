@@ -1,7 +1,6 @@
-ARG BASE_IMAGE_REGISTRY=debian
-ARG BASE_IMAGE_TAG=stable-slim
-
-FROM ${BASE_IMAGE_REGISTRY}:${BASE_IMAGE_TAG}
+# Base image: exact version tag, never a floating one (latest, major-only,
+# trixie-slim, ...). Bump it deliberately in a merge request.
+FROM debian:trixie-20260918-slim
 
 ARG BUILD_DATE
 ARG VCS_REF

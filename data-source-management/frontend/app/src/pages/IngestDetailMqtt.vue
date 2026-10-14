@@ -130,15 +130,23 @@
         <q-separator />
 
         <q-card-actions>
-          <q-btn :to="editRoute" color="primary" flat> Edit </q-btn>
+          <q-btn :to="editRoute" color="primary" flat> Edit</q-btn>
           <q-space />
-          <q-btn :to="copyRoute" color="black" flat> Copy </q-btn>
+          <q-btn :to="copyRoute" color="black" flat> Copy</q-btn>
           <q-space />
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
 
-      <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" :mqtt-topic="item.topic" />
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section :uuid="item.uuid" :ingest-id="item.id" :mqtt-topic="item.topic" />
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -147,7 +155,7 @@
           <h6 class="q-mt-none">Confirm Delete</h6>
         </q-card-section>
 
-        <q-card-section> Are you sure you want to delete this item? </q-card-section>
+        <q-card-section> Are you sure you want to delete this item?</q-card-section>
 
         <q-card-actions align="right">
           <q-btn v-close-popup color="primary" flat label="Cancel" />
@@ -167,6 +175,7 @@ import type { IngestMqttPublic } from '@/services/ingest_mqtt/types';
 import { useIngestMqttStore } from '@/stores/ingestMqttStore';
 import CopyBtn from '@/components/CopyBtn.vue';
 import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();
