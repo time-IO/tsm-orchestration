@@ -15,6 +15,9 @@ When adding a changelog entry, ensure the following:
 ### Fixed
 - Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
 
+### Changed
+- `mqtt-broker` is built into a time.IO image containing its configuration; `MQTT_TLS_ENABLED` replaces `MQTT_MOSQUITTO_TLS_CONFIG` ([Merge Request]())
+
 ## [2026-10-14]
 
 ### Added
@@ -45,7 +48,6 @@ When adding a changelog entry, ensure the following:
 - The `keycloak` service is built into a time.IO image that contains the realm import, themes and MQTT notifier provider, so deployments without this repository (Helm) run the same configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/746))
 - Parser validation file picker suggests more common file types while accepting files of any type ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/752))
 - Self-built images pin their base images to exact version tags in the Dockerfiles, and the `*_BASE_IMAGE_*` and `KEYCLOAK_IMAGE_*` build overrides are removed; frost moves from Tomcat 10 to 11 ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/739))
-- `mqtt-broker` is built into a time.IO image containing its configuration; `MQTT_TLS_ENABLED` replaces `MQTT_MOSQUITTO_TLS_CONFIG` ([Merge Request]())
 
 ## [2026-09-30]
 
