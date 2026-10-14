@@ -15,6 +15,9 @@ When adding a changelog entry, ensure the following:
 ### Added
 - Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
 
+### Fixed
+- Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
+
 ## [2026-10-14]
 
 ### Added
