@@ -32,9 +32,11 @@ const formData = ref<Partial<IngestExternalApiSensotoUpdate>>({
   description: '',
   network: '',
   device: '',
+  organization: 'open',
   sync_enabled: false,
   sync_interval_in_minutes: null,
   period_in_minutes: null,
+  token: null,
 });
 const itemPermissionGroup = ref<PermissionGroup | null>(null);
 
@@ -52,9 +54,11 @@ onMounted(async () => {
         description: data.description || '',
         network: data.network || '',
         device: data.device || '',
+        organization: data.organization || 'open',
         sync_enabled: data.sync_enabled || false,
         sync_interval_in_minutes: data.sync_interval_in_minutes || null,
         period_in_minutes: data.period_in_minutes || null,
+        token: data.token || null,
       };
     } catch {
       $q.notify({
@@ -86,9 +90,11 @@ async function save() {
       description: formData.value.description || '',
       network: formData.value.network || '',
       device: formData.value.device || '',
+      organization: formData.value.organization || 'open',
       sync_enabled: formData.value.sync_enabled || false,
       sync_interval_in_minutes: formData.value.sync_interval_in_minutes || null,
       period_in_minutes: formData.value.period_in_minutes || null,
+      token: formData.value.token || null,
     };
 
     isLoading.value = true;
