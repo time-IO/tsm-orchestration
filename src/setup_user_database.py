@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
+from pathlib import Path
 
 import psycopg
 from psycopg import sql
@@ -24,6 +26,25 @@ GRF_PREFIX = "grf_"
 
 INTERNAL_SCHEMA_SUFFIX = "_int"
 
+SQL_DIR = Path(__file__).parent / "sql"
+VIEW_DIRS = ("sta_views", "sta_views_internal", "grafana_views")
+# Bump to force a view redeploy after changes outside the SQL files.
+VIEWS_REVISION = 1
+VIEWS_STAMP_PREFIX = "tsm-views:"
+
+
+def compute_views_version() -> str:
+    """Hash of the view SQL files, SMS_URL, CV_URL and VIEWS_REVISION."""
+    h = hashlib.sha256()
+    h.update(
+        f"{VIEWS_REVISION}|{os.environ.get('SMS_URL')}|{os.environ.get('CV_URL')}".encode()
+    )
+    for d in VIEW_DIRS:
+        for f in sorted((SQL_DIR / d).rglob("*.sql")):
+            h.update(f.relative_to(SQL_DIR).as_posix().encode())
+            h.update(f.read_bytes())
+    return h.hexdigest()[:16]
+
 
 class CreateThingInPostgresHandler(AbstractHandler):
     def __init__(self):
@@ -38,6 +59,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
+        self.views_version = compute_views_version()
 
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -80,20 +102,46 @@ class CreateThingInPostgresHandler(AbstractHandler):
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        logger.debug("create/refresh public frost views")
-        self.create_frost_views(thing)
+        schema = thing.database.username.lower()
+        if self.get_views_stamp(schema) != self.views_version:
+            logger.debug("create/refresh public frost views")
+            self.create_frost_views(thing)
+            logger.debug("create/refresh internal frost views")
+            self.create_internal_frost_views(thing)
+            logger.debug("create/refresh grafana views")
+            self.create_grafana_views(thing)
+            # Only stamp after all views succeeded.
+            self.set_views_stamp(schema, self.views_version)
+        else:
+            logger.debug(f"views are up to date ({self.views_version})")
+
         logger.debug(f"grant public frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
-
-        logger.debug("create/refresh internal frost views")
-        self.create_internal_frost_views(thing)
         logger.debug(f"grant internal frost view privileges to {sta_internal_user}")
         self.grant_sta_select(thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema)
-
-        logger.debug("create/refresh grafana views")
-        self.create_grafana_views(thing)
         logger.debug(f"grant grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
+
+    def get_views_stamp(self, schema: str) -> str | None:
+        with self.db.connection() as conn:
+            row = conn.execute(
+                "SELECT obj_description(oid, 'pg_namespace') "
+                "FROM pg_namespace WHERE nspname = %s",
+                [schema],
+            ).fetchone()
+        comment = row[0] if row else None
+        if comment and comment.startswith(VIEWS_STAMP_PREFIX):
+            return comment[len(VIEWS_STAMP_PREFIX) :]
+        return None
+
+    def set_views_stamp(self, schema: str, version: str):
+        with self.db.connection() as conn:
+            conn.execute(
+                sql.SQL("COMMENT ON SCHEMA {schema} IS {comment}").format(
+                    schema=sql.Identifier(schema),
+                    comment=sql.Literal(VIEWS_STAMP_PREFIX + version),
+                )
+            )
 
     def create_user(self, thing):
 
