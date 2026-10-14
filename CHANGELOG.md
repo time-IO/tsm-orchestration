@@ -12,6 +12,8 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-10-14]
+
 ### Added
 - Quality control setting `flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
 - Internal STA view schema per project in preparation of protected STA endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/733))
