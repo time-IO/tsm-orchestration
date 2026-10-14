@@ -594,7 +594,7 @@ services:
   proxy:
     image: "${PROXY_NGINX_IMAGE_REGISTRY}:${PROXY_NGINX_IMAGE_TAG}"
     restart: "${SERVICE_RESTART_POLICY}"
-    user: "${UID}:${GID}"
+    user: "${UID}:${LOCAL_GID}"
     ports:
       - "${PROXY_PLAIN_PORT_MAPPING}"
       - "${PROXY_TLS_PORT_MAPPING}"
@@ -1144,7 +1144,7 @@ services:
   bento:
     image: ghcr.io/warpstreamlabs/bento:latest
     container_name: bento
-    user: "${UID}:${GID}"
+    user: "${UID}:${LOCAL_GID}"
     depends_on:
       init:
         condition: service_completed_successfully
@@ -1206,7 +1206,7 @@ services:
     build:
       context: keycloak
     restart: "${SERVICE_RESTART_POLICY}"
-    user: "${KEYCLOAK_UID:-1000}:${KEYCLOAK_GID:-1000}"
+    user: "${KEYCLOAK_UID:-1000}:${LOCAL_GID:-1000}"
     depends_on:
       flyway:
         condition: service_completed_successfully
