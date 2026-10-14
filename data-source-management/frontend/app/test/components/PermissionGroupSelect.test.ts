@@ -161,6 +161,7 @@ describe('PermissionGroupSelect', () => {
       const wrapper = await mountSelect();
 
       const update = emitFilter(wrapper, 'ALPHA');
+      await wrapper.vm.$nextTick();
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(getOptions(wrapper).map((o) => o.id)).toEqual([1,3]);
@@ -169,9 +170,11 @@ describe('PermissionGroupSelect', () => {
     it('shows all options again for an empty search term', async () => {
       const wrapper = await mountSelect();
       emitFilter(wrapper, 'beta');
+      await wrapper.vm.$nextTick();
       expect(getOptions(wrapper)).toHaveLength(1);
 
       emitFilter(wrapper, '');
+      await wrapper.vm.$nextTick();
 
       expect(getOptions(wrapper)).toHaveLength(3);
     });
@@ -180,6 +183,7 @@ describe('PermissionGroupSelect', () => {
       const wrapper = await mountSelect();
 
       emitFilter(wrapper, 'does_not_exist');
+      await wrapper.vm.$nextTick();
 
       expect(getOptions(wrapper)).toEqual([]);
     });
@@ -230,12 +234,56 @@ describe('PermissionGroupSelect', () => {
       expect(dispatchGetListMock).toHaveBeenLastCalledWith(2, PAGE_SIZE);
       expect(getOptions(wrapper)).toHaveLength(60);
       expect(refresh).toHaveBeenCalledTimes(1);
+    });
 
-    })
-  })
+    it('does not fetch when the scroll position is far from the end', async () => {
+      const wrapper = await mountSelect();
 
+      scroll(wrapper, 10);
+      await flushPromises();
 
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(1);
+    });
 
+    it('does not add items that are already loaded', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({
+        total: 60,
+        items: makeGroups(10, 50), // id 50 already exists
+      });
+      const wrapper = await mountSelect();
 
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
 
+      expect(getOptions(wrapper)).toHaveLength(59);
+    });
+
+    it('stops fetching after a page with fewer items than the page size', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({ total: 60, items: makeGroups(10, 51) });
+      const wrapper = await mountSelect();
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(2);
+
+      scroll(wrapper, 59);
+      await flushPromises();
+
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('notifies when fetching the next page fails', async () => {
+      dispatchGetListMock.mockRejectedValueOnce(new Error('network'));
+      const wrapper = await mountSelect();
+
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+
+      expect(notifyMock).toHaveBeenCalledWith({
+        position: 'top',
+        type: 'negative',
+        message: 'Failed to fetch permission groups',
+      });
+      expect(getOptions(wrapper)).toHaveLength(PAGE_SIZE);
+    });
+  });
 });
