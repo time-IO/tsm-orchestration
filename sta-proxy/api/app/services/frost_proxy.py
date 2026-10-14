@@ -21,88 +21,106 @@ EXCLUDED_RESPONSE_HEADERS = {
     "date",
 }
 
-_client: httpx.AsyncClient | None = None
-_internal_client: httpx.AsyncClient | None = None
 
+class FrostServer:
+    def __init__(self, name: str, base_url: str):
+        self.name = name
+        self.base_url = base_url.rstrip("/")
+        self._client: httpx.AsyncClient | None = None
 
-def get_frost_client() -> httpx.AsyncClient:
-    """Shared client for all requests (connection pooling), created lazily."""
-    global _client
-    if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(
-            base_url=settings.FROST_URL.rstrip("/"),
-            timeout=settings.FROST_TIMEOUT,
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.base_url!r})"
+
+    @property
+    def client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                base_url=self.base_url, timeout=settings.FROST_TIMEOUT
+            )
+        return self._client
+
+    async def close(self) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
+    async def fetch(self, url: str, headers: dict[str, str]) -> httpx.Response:
+        try:
+            return await self.client.get(url, headers=headers)
+        except httpx.TimeoutException:
+            logger.warning("Timeout for %s FROST request %s", self.name, url)
+            raise HTTPException(status_code=504, detail="FROST server timeout")
+        except httpx.RequestError as e:
+            logger.error("%s FROST request %s failed: %s", self.name, url, e)
+            raise HTTPException(status_code=502, detail="FROST server not reachable")
+
+    def get_filtered_headers(self, upstream: httpx.Response) -> dict[str, str]:
+        filtered_response_headers = {
+            k: v
+            for k, v in upstream.headers.items()
+            if k.lower() not in EXCLUDED_RESPONSE_HEADERS
+        }
+
+        # vary-header manages caching depending on public/internal access
+        # see https://developer.mozilla.org/de/docs/Web/HTTP/Reference/Headers/Vary
+        filtered_response_headers["vary"] = ", ".join(
+            v
+            for v in (
+                filtered_response_headers.pop("vary", None),
+                "Authorization",
+            )
+            if v
         )
-    return _client
 
+        return filtered_response_headers
 
-def get_frost_internal_client() -> httpx.AsyncClient:
-    """Shared client for requests to the internal FROST, created lazily."""
-    global _internal_client
-    if _internal_client is None or _internal_client.is_closed:
-        _internal_client = httpx.AsyncClient(
-            base_url=settings.FROST_INTERNAL_URL.rstrip("/"),
-            timeout=settings.FROST_TIMEOUT,
+    def get_filtered_headers_response(self, upstream: httpx.Response) -> Response:
+        return Response(
+            content=upstream.content,
+            status_code=upstream.status_code,
+            headers=self.get_filtered_headers(upstream),
         )
-    return _internal_client
+
+    async def forward(self, url: str, headers: dict[str, str]) -> Response:
+        upstream = await self.fetch(url, headers)
+        logger.debug(
+            "%s FROST responded with %s for %s", self.name, upstream.status_code, url
+        )
+        return self.get_filtered_headers_response(upstream)
 
 
-async def close_frost_client() -> None:
-    global _client, _internal_client
-    if _client is not None:
-        await _client.aclose()
-        _client = None
-    if _internal_client is not None:
-        await _internal_client.aclose()
-        _internal_client = None
+class InternalFrostServer(FrostServer):
+    def get_filtered_headers(self, upstream: httpx.Response) -> dict[str, str]:
+        filtered_response_headers = super().get_filtered_headers(upstream)
+        # no cache serving internal data
+        filtered_response_headers["cache-control"] = "private, no-store"
+        return filtered_response_headers
 
 
-async def select_frost_client(
-    endpoint: str, authorization: str | None
-) -> tuple[httpx.AsyncClient, bool]:
+public_frost = FrostServer("public", settings.FROST_URL)
+internal_frost = InternalFrostServer("internal", settings.FROST_INTERNAL_URL)
+all_frost_servers = [public_frost, internal_frost]
 
+
+async def close_frost_clients() -> None:
+    for server in all_frost_servers:
+        await server.close()
+
+
+def get_endpoint_name_from_proxied_path(endpoint: str) -> str:
+    return endpoint.strip("/").split("/", 1)[0]
+
+
+async def select_frost_server(endpoint: str, authorization: str | None) -> FrostServer:
     if authorization:
-        name = endpoint.strip("/").split("/", 1)[0]
+        endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
         permission_groups = await fetch_own_permission_groups(authorization)
-        if has_internal_access(name, permission_groups):
-            logger.debug("Forwarding %s to internal FROST", endpoint)
-            return get_frost_internal_client(), True
-    return get_frost_client(), False
-
-
-async def fetch_from_frost(
-    url: str, headers: dict[str, str], client: httpx.AsyncClient | None = None
-) -> httpx.Response:
-    client = client or get_frost_client()
-    try:
-        return await client.get(url, headers=headers)
-    except httpx.TimeoutException:
-        logger.warning("Timeout for FROST request %s", url)
-        raise HTTPException(status_code=504, detail="FROST server timeout")
-    except httpx.RequestError as e:
-        logger.error("FROST request %s failed: %s", url, e)
-        raise HTTPException(status_code=502, detail="FROST server not reachable")
-
-
-def to_response(upstream: httpx.Response, internal: bool = False) -> Response:
-    """Pass the FROST response through, minus hop-by-hop/resolved headers."""
-    response_headers = {
-        k: v
-        for k, v in upstream.headers.items()
-        if k.lower() not in EXCLUDED_RESPONSE_HEADERS
-    }
-    # the response depends on who is asking (internal vs. public FROST)
-    response_headers["vary"] = ", ".join(
-        v for v in (response_headers.pop("vary", None), "Authorization") if v
-    )
-    if internal:
-        # never let shared caches serve internal data to someone else
-        response_headers["cache-control"] = "private, no-store"
-    return Response(
-        content=upstream.content,
-        status_code=upstream.status_code,
-        headers=response_headers,
-    )
+        if has_internal_access(endpoint_name, permission_groups):
+            # user is authorized and has required permission group
+            logger.debug("Forwarding %s to %s FROST", endpoint, internal_frost.name)
+            return internal_frost
+    logger.debug("Forwarding %s to %s FROST", endpoint, public_frost.name)
+    return public_frost
 
 
 async def frost_proxy_service(
@@ -116,7 +134,5 @@ async def frost_proxy_service(
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
-    client, internal = await select_frost_client(endpoint, authorization)
-    upstream = await fetch_from_frost(url, headers, client)
-    logger.debug("FROST responded with %s for %s", upstream.status_code, url)
-    return to_response(upstream, internal)
+    server = await select_frost_server(endpoint, authorization)
+    return await server.forward(url, headers)

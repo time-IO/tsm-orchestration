@@ -1,6 +1,8 @@
 import httpx
+import pytest
 
 import services.frost_proxy as frost_proxy
+from services.frost_proxy import get_endpoint_name_from_proxied_path
 
 
 def test_forwards_path(client, frost_requests):
@@ -40,7 +42,7 @@ def test_frost_not_reachable(client, monkeypatch):
         raise httpx.ConnectError("connection refused")
 
     monkeypatch.setattr(
-        frost_proxy,
+        frost_proxy.public_frost,
         "_client",
         httpx.AsyncClient(
             transport=httpx.MockTransport(handler), base_url="http://frost"
@@ -128,8 +130,8 @@ def test_internal_frost_not_reachable(client, monkeypatch, frost_requests):
         raise httpx.ConnectError("connection refused")
 
     monkeypatch.setattr(
-        frost_proxy,
-        "_internal_client",
+        frost_proxy.internal_frost,
+        "_client",
         httpx.AsyncClient(
             transport=httpx.MockTransport(handler), base_url="http://frost-internal"
         ),
@@ -140,3 +142,30 @@ def test_internal_frost_not_reachable(client, monkeypatch, frost_requests):
     # no silent fallback to the public data
     assert response.status_code == 502
     assert frost_requests == []
+
+
+@pytest.mark.parametrize(
+    "endpoint, expected",
+    [
+        (f"{OWN_ENDPOINT}/v1.1/Things", OWN_ENDPOINT),
+        (f"/{OWN_ENDPOINT}/v1.1", OWN_ENDPOINT),
+        (f"{OWN_ENDPOINT}/", OWN_ENDPOINT),
+        (OWN_ENDPOINT, OWN_ENDPOINT),
+        ("", ""),
+    ],
+)
+def test_get_endpoint_name(endpoint, expected):
+    assert get_endpoint_name_from_proxied_path(endpoint) == expected
+
+
+def test_public_response_is_cacheable(client):
+    response = client.get(f"/{OWN_ENDPOINT}/v1.1")
+    assert "cache-control" not in response.headers
+    assert "authorization" in response.headers["vary"].lower()
+
+
+def test_internal_response_is_private(client):
+    response = client.get(
+        f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"}
+    )
+    assert response.headers["cache-control"] == "private, no-store"

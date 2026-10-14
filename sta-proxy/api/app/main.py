@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from routers import frost_endpoints, frost_proxy, ingests, user
-from services import close_dsm_client, close_frost_client
+from services import close_dsm_client, close_frost_clients
 from config import settings
 
 API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
@@ -13,7 +13,7 @@ API_ROOT_PATH = os.environ.get("API_ROOT_PATH", "/api")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     yield
-    await close_frost_client()
+    await close_frost_clients()
     await close_dsm_client()
 
 

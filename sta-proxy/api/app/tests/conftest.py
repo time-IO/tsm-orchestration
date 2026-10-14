@@ -137,15 +137,15 @@ def client(frost_requests, frost_internal_requests, monkeypatch):
         transport=httpx.MockTransport(handler),
         base_url="http://frost:8080",
     )
-    monkeypatch.setattr(frost_proxy, "_client", mock_client)
+    monkeypatch.setattr(frost_proxy.public_frost, "_client", mock_client)
 
     def internal_handler(request: httpx.Request) -> httpx.Response:
         frost_internal_requests.append(request)
         return httpx.Response(200, json={"value": [], "internal": True})
 
     monkeypatch.setattr(
-        frost_proxy,
-        "_internal_client",
+        frost_proxy.internal_frost,
+        "_client",
         httpx.AsyncClient(
             transport=httpx.MockTransport(internal_handler),
             base_url="http://frost-internal:8080",
