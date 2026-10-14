@@ -15,6 +15,8 @@ When adding a changelog entry, ensure the following:
 ### Added
 - Add token, organization (for proteced endpoints) and period_in_minutes to Sensoto external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/734))
 
+## [2026-10-15]
+
 ### Fixed
 - Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
 
