@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from routers import frost_endpoints, frost_proxy, ingests, user
+from routers import frost_endpoints, frost_proxy, ingests, session, user
 from services import close_dsm_client, close_frost_clients
 from config import settings
 
@@ -38,4 +38,5 @@ logging.getLogger("app.main").info(
 app.include_router(frost_endpoints.router)
 app.include_router(ingests.router)
 app.include_router(user.router)
+app.include_router(session.router)
 app.include_router(frost_proxy.router)

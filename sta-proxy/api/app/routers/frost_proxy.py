@@ -23,6 +23,13 @@ async def proxy_to_frost(
 ) -> Response:
     validate_proxied_path(endpoint)
 
+    # opening an endpoint URL cannot send the bearer token,
+    # instead it uses the session cookie
+    if not authorization:
+        token = request.cookies.get(settings.SESSION_COOKIE_NAME)
+        if token:
+            authorization = f"Bearer {token}"
+
     logger.debug("Proxy request for endpoint=%s query=%s", endpoint, request.url.query)
     return await frost_proxy_service(
         endpoint=endpoint,

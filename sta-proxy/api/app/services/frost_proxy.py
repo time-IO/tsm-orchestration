@@ -67,7 +67,7 @@ class FrostServer:
             v
             for v in (
                 filtered_response_headers.pop("vary", None),
-                "Authorization",
+                "Authorization, Cookie",
             )
             if v
         )

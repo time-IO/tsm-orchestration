@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     BASE_URL: str = "http://localhost"
     DSM_API_URL: str = "http://dsm-api:8000"
     DSM_API_TIMEOUT: float = 30.0
+    SESSION_COOKIE_NAME: str = "sta_session"
+    SESSION_COOKIE_PATH: str = "/sta/"
 
 
 settings = Settings()  # type: ignore
