@@ -1,7 +1,7 @@
 """add period_in_minutes to sensoto
 
 Revision ID: 7573ab5032f3
-Revises: d404a0156749
+Revises: 4e4465cdc4ba
 Create Date: 2026-09-29 08:51:21.721077
 
 """

@@ -153,3 +153,54 @@ def test_sensoto_organization_in_url(
     assert mock_request.call_count == 3
     for call in mock_request.call_args_list:
         assert f"/organizations/{expected}/networks/" in call.args[1]
+
+
+@patch("timeio.ext_api.requests.request")
+def test_request_with_handling_masks_token(mock_req):
+    import requests
+    mock_req.side_effect = requests.exceptions.ConnectionError(
+        "Max retries exceeded with url: /x?token=tk1.secret&start=1"
+    )
+    with pytest.raises(ext_api.ExtApiRequestError) as exc:
+        ext_api.request_with_handling("GET", "https://example.org/x")
+    assert "tk1.secret" not in str(exc.value)
+    assert "token=***" in str(exc.value)
+
+
+@pytest.mark.parametrize("bad", ["", ".", ".."])
+def test_sensoto_seg_rejects_invalid(bad):
+    with pytest.raises(ext_api.ExtApiRequestError):
+        ext_api.SensotoApiSyncer._seg(bad)
+
+
+@patch("timeio.ext_api.request_with_handling")
+def test_sensoto_fetch_quotes_url_segments(mock_request, mock_response, mock_thing):
+    thing = mock_thing(
+        {
+            **SENSOTO_SETTINGS,
+            "organization": "org/x",
+            "network": "net/../1",
+            "device": "dev?1",
+        }
+    )
+    mock_request.side_effect = [
+        mock_response(data={"items": [{"name": "s1"}]}),
+        mock_response(data={"phenomenon": {"aggregation": "avg"}}),
+        mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 1.1}]),
+    ]
+
+    data = ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
+
+    expected_prefix = (
+        "https://api.sensoto.io/v1/organizations/org%2Fx/networks/"
+        "net%2F..%2F1/devices/dev%3F1/sensors"
+    )
+    assert mock_request.call_count == 3
+    for call in mock_request.call_args_list:
+        url = call.args[1]
+        assert url.startswith(expected_prefix)
+        assert "?" not in url
+        assert "/../" not in url
+
+    assert data[0]["network"] == "net/../1"
+    assert data[0]["device"] == "dev?1"

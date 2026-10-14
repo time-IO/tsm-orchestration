@@ -4,12 +4,11 @@ import base64
 import re
 
 from abc import ABC, abstractmethod
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
-from timeio.grafana import organization
 from timeio.typehints import MqttPayload
 from timeio.crypto import decrypt, get_crypt_key
 
@@ -82,7 +81,8 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         else:
             raise ExtApiRequestError("HTTP request failed", status_code)
     except requests.exceptions.RequestException as e:
-        raise ExtApiRequestError(f"Network error: {e}")
+        msg = re.sub(r"(token=)[^&\s'\"]+", r"\1***", str(e))
+        raise ExtApiRequestError(f"Network error: {msg}")
 
 
 def dynamic_parameter_mapping(v):
@@ -686,8 +686,16 @@ class SensotoApiSyncer(ExtApiSyncer):
     organizations_url = "https://api.sensoto.io/v1/organizations"
     default_organization = "open"
 
+    @staticmethod
+    def _seg(value) -> str:
+        """Make a value safe for use as a single URL path segment."""
+        value = str(value)
+        if value in {"", ".", ".."}:
+            raise ExtApiRequestError(f"Invalid Sensoto path segment: {value!r}")
+        return quote(value, safe="")
+
     def _networks_url(self, organization):
-        return f"{self.organizations_url}/{organization}/networks"
+        return f"{self.organizations_url}/{self._seg(organization)}/networks"
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -697,6 +705,7 @@ class SensotoApiSyncer(ExtApiSyncer):
         )
         organization = settings.get("organization") or self.default_organization
         networks_url = self._networks_url(organization)
+        net, dev = self._seg(network), self._seg(device)
 
         auth_params = {}
         if token_enc := settings.get("token"):
@@ -715,7 +724,7 @@ class SensotoApiSyncer(ExtApiSyncer):
         for s in sensor_data:
             res = request_with_handling(
                 "GET",
-                f"{networks_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s['sensor'])}/measurements/raw",
                 params=params,
             )
             api_data = res.json()
@@ -748,17 +757,18 @@ class SensotoApiSyncer(ExtApiSyncer):
 
     def get_sensor_data(self, network, device, params=None, organization=None):
         networks_url = self._networks_url(organization or self.default_organization)
+        net, dev = self._seg(network), self._seg(device)
         sensor_data = list()
         sensors_resp = request_with_handling(
             "GET",
-            f"{networks_url}/{network}/devices/{device}/sensors",
+            f"{networks_url}/{net}/devices/{dev}/sensors",
             params=params,
         )
         sensors = [i["name"] for i in sensors_resp.json()["items"]]
         for s in sensors:
             agg_resp = request_with_handling(
                 "GET",
-                f"{networks_url}/{network}/devices/{device}/sensors/{s}",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s)}",
                 params=params,
             )
             agg = agg_resp.json()["phenomenon"]["aggregation"]
