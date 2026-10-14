@@ -11,8 +11,8 @@ interface Encoding {
   languages: string[];
 }
 
-const {storeMock, notifyMock} = vi.hoisted(() => ({
-  storeMock: { rows: [] as unknown[], dispatchGetList: vi.fn()},
+const { storeMock, notifyMock } = vi.hoisted(() => ({
+  storeMock: { rows: [] as unknown[], dispatchGetList: vi.fn() },
   notifyMock: vi.fn(),
 }));
 
@@ -24,7 +24,7 @@ vi.mock('quasar', async (importOriginal) => {
   const actual = await importOriginal<typeof import('quasar')>();
   return {
     ...actual,
-    useQuasar: () => ({notify: notifyMock}),
+    useQuasar: () => ({ notify: notifyMock }),
   };
 });
 
@@ -40,10 +40,10 @@ const mountSelect = async (
   props: {
     modelValue?: unknown;
     label?: string;
-    rules?: Array<(val:unknown) => string | boolean>;
+    rules?: Array<(val: unknown) => string | boolean>;
   } = {},
 ) => {
-  const wrapper = mount(ParserEncodingSelect, {props});
+  const wrapper = mount(ParserEncodingSelect, { props });
   await flushPromises();
   return wrapper;
 };
@@ -153,7 +153,7 @@ describe('ParserEncodingSelect', () => {
       { case: 'codec (case-insensitive)', needle: 'UTF', expected: ['utf-8'] },
       { case: 'alias (case-insensitive)', needle: 'ISO-8859', expected: ['latin_1'] },
       { case: 'language (case-insensitive)', needle: 'WESTERN', expected: ['latin_1'] },
-    ])('matches by $case', async ({needle, expected}) => {
+    ])('matches by $case', async ({ needle, expected }) => {
       const wrapper = await mountSelect();
 
       const update = emitFilter(wrapper, needle);

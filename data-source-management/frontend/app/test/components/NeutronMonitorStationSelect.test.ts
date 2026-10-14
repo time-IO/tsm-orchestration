@@ -47,7 +47,8 @@ const mountSelect = async (
 type Wrapper = Awaited<ReturnType<typeof mountSelect>>;
 
 const getSelect = (wrapper: Wrapper) => wrapper.findComponent(QSelect);
-const getOptions = (wrapper: Wrapper) => getSelect(wrapper).props('options') as NeutronMonitorStation[];
+const getOptions = (wrapper: Wrapper) =>
+  getSelect(wrapper).props('options') as NeutronMonitorStation[];
 const getIds = (wrapper: Wrapper) => getOptions(wrapper).map((o) => o.id);
 
 describe('NeutronMonitorStationSelect', () => {

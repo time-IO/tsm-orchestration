@@ -144,7 +144,11 @@ describe('MqttParserSelect', () => {
     beforeEach(() => {
       dispatchGetListMock.mockResolvedValue({
         total: 3,
-        items: [makeParser(1, 'Campbell Logger'), makeParser(2, 'Zentra ZL6'), makeParser(3, 'campbell-2')],
+        items: [
+          makeParser(1, 'Campbell Logger'),
+          makeParser(2, 'Zentra ZL6'),
+          makeParser(3, 'campbell-2'),
+        ],
       });
     });
 
