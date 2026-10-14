@@ -44,7 +44,10 @@
         </div>
       </div>
 
-      <div class="col-auto row q-gutter-x-md">
+      <div class="col-auto row items-center q-gutter-x-md">
+        <span class="text-caption text-grey-6">
+          Version: {{ appVersion }} | API: {{ apiVersion }}
+        </span>
         <a
           href="https://codebase.helmholtz.cloud/ufz-tsm"
           target="_blank"
@@ -92,9 +95,23 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import versionService from '@/services/version';
 import { publicAsset } from '@/utils/public_asset';
 
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN.png');
 const rdmLogoSrc = publicAsset('images/259253_RDM_subline_fullcolor_rgb.png');
 const apiDocsHref = publicAsset('api/docs');
+
+const appVersion = import.meta.env.APP_VERSION || 'unknown';
+const apiVersion = ref('unknown');
+
+onMounted(async () => {
+  try {
+    const { data } = await versionService.getVersion();
+    apiVersion.value = data.version || 'unknown';
+  } catch {
+    // footer info only; keep 'unknown'
+  }
+});
 </script>
