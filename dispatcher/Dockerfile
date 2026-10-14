@@ -3,7 +3,7 @@
 # debian-trixie contains python 3.13
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM debian:trixie-20260918-slim AS base
+FROM debian:trixie-20261005-slim AS base
 
 ARG BUILD_DATE
 ARG VCS_REF

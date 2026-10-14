@@ -10,10 +10,10 @@ WORKDIR /datasourcefrontend
 RUN npm ci
 RUN npm run build
 
-FROM nginx:1.29.8-alpine AS webserver
+FROM nginx:1.31.6-alpine AS webserver
 
 # Pull latest security-fixed Alpine packages for runtime image.
-RUN apk upgrade --no-cache libexpat zlib
+RUN apk upgrade --no-cache libexpat pcre2 tiff zlib
 
 COPY --from=js-builder /datasourcefrontend/dist/spa /usr/share/nginx/html
 COPY ./docker/generic-image/default.conf /etc/nginx/conf.d/default.conf
