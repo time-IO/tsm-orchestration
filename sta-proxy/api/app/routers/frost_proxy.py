@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Header, Request, Response, HTTPException
 from config import settings
 from services import frost_proxy_service
 
@@ -21,11 +21,7 @@ async def proxy_to_frost(
     request: Request,
     authorization: str | None = Header(default=None),
 ) -> Response:
-    if ".." in endpoint.split("/"):
-        raise HTTPException(status_code=400, detail="Invalid path")
-
-    if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
-        raise HTTPException(status_code=404, detail="Not Found")
+    validate_proxied_path(endpoint)
 
     logger.debug("Proxy request for endpoint=%s query=%s", endpoint, request.url.query)
     return await frost_proxy_service(
@@ -34,3 +30,13 @@ async def proxy_to_frost(
         accept=request.headers.get("accept"),
         authorization=authorization,
     )
+
+
+def validate_proxied_path(endpoint: str) -> None:
+    # reject path traversal
+    if ".." in endpoint.split("/"):
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    # hide FROST endpoint listing
+    if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
+        raise HTTPException(status_code=404, detail="Not Found")
