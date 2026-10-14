@@ -158,6 +158,7 @@ def test_sensoto_organization_in_url(
 @patch("timeio.ext_api.requests.request")
 def test_request_with_handling_masks_token(mock_req):
     import requests
+
     mock_req.side_effect = requests.exceptions.ConnectionError(
         "Max retries exceeded with url: /x?token=tk1.secret&start=1"
     )
