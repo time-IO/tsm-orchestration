@@ -15,6 +15,9 @@ When adding a changelog entry, ensure the following:
 ### Added
 - Add token, organization (for proteced endpoints) and period_in_minutes to Sensoto external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/734))
 
+### Fixed
+- Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
+
 ## [2026-10-14]
 
 ### Added
@@ -55,8 +58,7 @@ When adding a changelog entry, ensure the following:
 - Test setup for frontend of data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/718))
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
 - Support for External MQTT and HTTP ingest types via bento ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/549))
-- ./Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
-- Add token, organization (for proteced endpoints) and period_in_minutes to Sensoto external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/734))
+- Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
 
 ### Fixed
 - CSV parser pandas options are consistently converted between form data and API JSON ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/740))
