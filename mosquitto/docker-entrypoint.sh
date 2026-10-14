@@ -8,8 +8,7 @@ if [ "$user" = '0' ]; then
   [ -d "/mosquitto" ] && chown -R mosquitto:mosquitto /mosquitto || true
 fi
 
-# the persistence volume is prepared by init/init.sh in Compose; create the
-# directories here as well, so the image also starts without it
+# also start without the init-prepared volume
 mkdir -p /tmp/mosquitto/auth /tmp/mosquitto/data
 
 # create password db when not present
@@ -38,7 +37,6 @@ mkdir -p /var/lib/mosquitto/tls
 # substitute env vars in config template
 ( echo "cat <<EOF" ; cat /etc/mosquitto/config/mosquitto.conf ; echo EOF ) | sh > /var/lib/mosquitto/mosquitto.conf
 
-# the TLS listener expects its certificates in /tmp/mosquitto/certs
 if [ "${MQTT_TLS_ENABLED:-false}" = "true" ]; then
   ( echo "cat <<EOF" ; cat /etc/mosquitto/config/tls/mosquitto.tls.conf ; echo EOF ) | sh > /var/lib/mosquitto/tls/mosquitto.tls.conf
 else
