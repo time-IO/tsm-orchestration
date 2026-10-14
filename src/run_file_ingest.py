@@ -165,9 +165,14 @@ class ParserJobHandler(AbstractHandler):
         """Search the latest object that was parsed successful and return its tags.
         If no object version was parsed successful or no tags exist, return None.
         """
-        versions = list(
-            self.minio.list_objects(bucket_name, prefix=filename, include_version=True)
-        )
+        # Prefix matching also returns other keys, such as filename.bak.
+        versions = [
+            obj
+            for obj in self.minio.list_objects(
+                bucket_name, prefix=filename, include_version=True
+            )
+            if obj.object_name == filename
+        ]
         if not versions:
             return None
         versions.sort(key=lambda v: v.last_modified, reverse=True)
