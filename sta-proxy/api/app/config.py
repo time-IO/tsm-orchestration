@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     FROST_URL: str = "http://frost:8080"
+    FROST_INTERNAL_URL: str = "http://frost-internal:8080"
     FROST_TIMEOUT: float = 120.0
     FROST_ENDPOINTS_PATH: str = "/"
     BASE_URL: str = "http://localhost"

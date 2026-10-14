@@ -20,3 +20,7 @@ async def fetch_own_permission_groups(authorization: str) -> dict[str, dict]:
         for item in items
         if item.get("database_username")
     }
+
+
+def has_internal_access(endpoint_name: str, permission_groups: dict[str, dict]) -> bool:
+    return endpoint_name in permission_groups

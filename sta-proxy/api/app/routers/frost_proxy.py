@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Request, Response
 from config import settings
 from services import frost_proxy_service
 
@@ -14,9 +14,13 @@ router = APIRouter(
 
 @router.get(
     "/{endpoint:path}",
-    summary="Forwards GET /<endpoint>?<query> to the FROST server",
+    summary="Forwards GET /<endpoint>?<query> to the respective FROST server",
 )
-async def proxy_to_frost(endpoint: str, request: Request) -> Response:
+async def proxy_to_frost(
+    endpoint: str,
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> Response:
     if ".." in endpoint.split("/"):
         raise HTTPException(status_code=400, detail="Invalid path")
 
@@ -28,4 +32,5 @@ async def proxy_to_frost(endpoint: str, request: Request) -> Response:
         endpoint=endpoint,
         query=request.url.query,
         accept=request.headers.get("accept"),
+        authorization=authorization,
     )

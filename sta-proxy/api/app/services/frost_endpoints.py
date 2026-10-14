@@ -7,7 +7,10 @@ from config import settings
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import get_frost_client
 from services.ingests import fetch_ingest_permission_group_id
-from services.permission_groups import fetch_own_permission_groups
+from services.permission_groups import (
+    fetch_own_permission_groups,
+    has_internal_access,
+)
 
 logger = logging.getLogger("app.services.frost_endpoints")
 
@@ -79,7 +82,7 @@ def mark_internal_endpoints(
     """Mark endpoints the user has a permission group for as internal and
     show them first."""
     for endpoint in endpoints:
-        if endpoint.name in permission_groups:
+        if has_internal_access(endpoint.name, permission_groups):
             endpoint.is_internal = True
     return sorted(endpoints, key=lambda e: not e.is_internal)
 

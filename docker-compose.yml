@@ -608,6 +608,7 @@ services:
       OIDC_ISSUER: "${STA_PROXY_API_OIDC_ISSUER}"
       OIDC_AUDIENCE: "${STA_PROXY_API_OIDC_AUDIENCE}"
       FROST_URL: "http://frost:8080/"
+      FROST_INTERNAL_URL: "http://frost-internal:8080/"
 
 
   # Summary

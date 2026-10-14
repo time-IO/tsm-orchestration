@@ -61,3 +61,82 @@ def test_sta_endpoint_is_forwarded(client, frost_requests):
     assert frost_requests[0].url.path == (
         "/sta/vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb/v1.1/Things"
     )
+
+
+OWN_ENDPOINT = "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"
+FOREIGN_ENDPOINT = "vo_group2_86ebe19a704a496ca2c8053c2c6c3c17"
+
+
+def test_owner_is_forwarded_to_internal_frost(
+    client, frost_requests, frost_internal_requests
+):
+    response = client.get(
+        f"/{OWN_ENDPOINT}/v1.1/Things?$top=1",
+        headers={"authorization": "Bearer valid"},
+    )
+    assert response.status_code == 200
+    assert response.json()["internal"] is True
+    assert frost_requests == []
+    assert frost_internal_requests[0].url.raw_path.decode() == (
+        f"/{OWN_ENDPOINT}/v1.1/Things?$top=1"
+    )
+
+
+def test_authorization_is_not_forwarded_to_frost(client, frost_internal_requests):
+    client.get(f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"})
+    assert "authorization" not in frost_internal_requests[0].headers
+
+
+def test_anonymous_is_forwarded_to_public_frost(
+    client, frost_requests, frost_internal_requests, dsm_requests
+):
+    client.get(f"/{OWN_ENDPOINT}/v1.1/Things")
+    assert frost_internal_requests == []
+    assert frost_requests[0].url.path == f"/{OWN_ENDPOINT}/v1.1/Things"
+    assert dsm_requests == []
+
+
+def test_invalid_token_is_forwarded_to_public_frost(
+    client, frost_requests, frost_internal_requests
+):
+    client.get(f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer invalid"})
+    assert frost_internal_requests == []
+    assert len(frost_requests) == 1
+
+
+def test_non_owner_is_forwarded_to_public_frost(
+    client, frost_requests, frost_internal_requests
+):
+    client.get(f"/{FOREIGN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"})
+    assert frost_internal_requests == []
+    assert frost_requests[0].url.path == f"/{FOREIGN_ENDPOINT}/v1.1"
+
+
+def test_endpoint_name_must_match_exactly(client, frost_internal_requests):
+    client.get(f"/{OWN_ENDPOINT}x/v1.1", headers={"authorization": "Bearer valid"})
+    client.get(f"/x/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"})
+    assert frost_internal_requests == []
+
+
+def test_response_varies_by_authorization(client):
+    response = client.get(f"/{OWN_ENDPOINT}/v1.1")
+    assert "authorization" in response.headers["vary"].lower()
+
+
+def test_internal_frost_not_reachable(client, monkeypatch, frost_requests):
+    def handler(request):
+        raise httpx.ConnectError("connection refused")
+
+    monkeypatch.setattr(
+        frost_proxy,
+        "_internal_client",
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="http://frost-internal"
+        ),
+    )
+    response = client.get(
+        f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"}
+    )
+    # no silent fallback to the public data
+    assert response.status_code == 502
+    assert frost_requests == []

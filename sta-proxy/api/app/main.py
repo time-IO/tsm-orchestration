@@ -28,10 +28,11 @@ if log_level == "TRACE":
 logging.getLogger().setLevel(log_level)
 logging.getLogger("app").setLevel(log_level)
 logging.getLogger("app.main").info(
-    "API startup configured with LOG_LEVEL=%s, API_ROOT_PATH=%s and FROST_URL=%s",
+    "API startup configured with LOG_LEVEL=%s, API_ROOT_PATH=%s, FROST_URL=%s, FROST_INTERNAL_URL=%s",
     log_level,
     API_ROOT_PATH,
     settings.FROST_URL,
+    settings.FROST_INTERNAL_URL,
 )
 
 app.include_router(frost_endpoints.router)

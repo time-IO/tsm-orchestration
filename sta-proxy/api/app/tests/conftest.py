@@ -31,6 +31,12 @@ def frost_requests():
     return []
 
 
+@pytest.fixture
+def frost_internal_requests():
+    """Collects the requests that reached the mocked internal FROST server."""
+    return []
+
+
 DSM_ME = {
     "id": 1,
     "username": "jdoe",
@@ -118,7 +124,7 @@ def dsm_client(dsm_requests, monkeypatch):
 
 
 @pytest.fixture
-def client(frost_requests, monkeypatch):
+def client(frost_requests, frost_internal_requests, monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
         frost_requests.append(request)
         if request.url.path == "/":
@@ -132,6 +138,19 @@ def client(frost_requests, monkeypatch):
         base_url="http://frost:8080",
     )
     monkeypatch.setattr(frost_proxy, "_client", mock_client)
+
+    def internal_handler(request: httpx.Request) -> httpx.Response:
+        frost_internal_requests.append(request)
+        return httpx.Response(200, json={"value": [], "internal": True})
+
+    monkeypatch.setattr(
+        frost_proxy,
+        "_internal_client",
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(internal_handler),
+            base_url="http://frost-internal:8080",
+        ),
+    )
 
     from main import app
 
