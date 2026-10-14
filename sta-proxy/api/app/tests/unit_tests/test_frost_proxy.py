@@ -1,7 +1,9 @@
 import httpx
 import pytest
+from fastapi import HTTPException
 
 import services.frost_proxy as frost_proxy
+from routers.frost_proxy import validate_proxied_path
 from services.frost_proxy import get_endpoint_name_from_proxied_path
 
 
@@ -169,3 +171,27 @@ def test_internal_response_is_private(client):
         f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"}
     )
     assert response.headers["cache-control"] == "private, no-store"
+
+
+@pytest.mark.parametrize(
+    "endpoint, status_code",
+    [
+        ("..", 400),
+        ("a/../b", 400),
+        ("a/b/..", 400),
+        ("", 404),
+        ("/", 404),
+    ],
+)
+def test_validate_proxied_path_rejects(endpoint, status_code):
+    with pytest.raises(HTTPException) as exc:
+        validate_proxied_path(endpoint)
+    assert exc.value.status_code == status_code
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [f"{OWN_ENDPOINT}/v1.1/Things", f"{OWN_ENDPOINT}/v1.1", "a..b/v1.1"],
+)
+def test_validate_proxied_path_accepts(endpoint):
+    validate_proxied_path(endpoint)
