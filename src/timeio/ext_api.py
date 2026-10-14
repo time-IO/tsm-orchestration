@@ -6,7 +6,6 @@ import re
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -411,7 +410,7 @@ class UbaApiSyncer(ExtApiSyncer):
     def cet_to_utc(dt_string):
         # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
         dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
-        dt_cet = dt.replace(tzinfo=ZoneInfo("CET"))
+        dt_cet = dt.replace(tzinfo=timezone(timedelta(hours=1)))
         dt_utc = dt_cet.astimezone(timezone.utc)
 
         return dt_utc.isoformat()
