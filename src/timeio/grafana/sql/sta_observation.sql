@@ -5,7 +5,7 @@ WITH sel AS (
     SELECT sta_datastream_id AS id
     FROM sta_datastream_links
     -- NULLIF guards the empty-variable phantom panel (no datastreams) from erroring
-    WHERE sta_datastream_id = NULLIF('${{sta_datastream}}', '') :: int
+    WHERE sta_datastream_id = NULLIF('${{sta_datastream:raw}}', '') :: int
     AND t_uuid :: text = '{uuid}'
 ),
 date_filtered AS (
