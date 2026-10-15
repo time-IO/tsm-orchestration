@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- Data ingested via MQTT now gets quality control: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
+
 ## [2026-10-15]
 
 ### Added
