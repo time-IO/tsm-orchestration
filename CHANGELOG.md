@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- Uploads to the bucket of a deleted ingest no longer crash the file ingest worker ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/762))
+
 ## [2026-10-15]
 
 ### Added
