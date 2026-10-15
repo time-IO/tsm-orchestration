@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- Failed setup steps of a thing are shown in its journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/763))
+
 ## [2026-10-15]
 
 ### Added
