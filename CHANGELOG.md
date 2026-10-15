@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- CompTest for ParserFormCsv/Json/Soilcan([Merge Request]())
+
 ## [2026-10-15]
 
 ### Added
