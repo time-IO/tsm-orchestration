@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- Things created via the data-source-management are shown in the "last observations" monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/761))
+
 ## [2026-10-15]
 
 ### Added
