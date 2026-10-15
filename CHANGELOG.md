@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- External API sync publishes `data_parsed` to the topic configured in `TOPIC_DATA_PARSED` instead of a hardcoded one ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/760))
+
 ## [2026-10-15]
 
 ### Added
