@@ -7,6 +7,17 @@ import { defineComponent, h, reactive } from 'vue';
 import ParserFormCsv from '@/components/ParserFormCsv.vue'; // adjust path
 import type { CsvParserFormData } from '@/utils/parser_csv_utils';
 import { rules } from '@/utils/validation/rules';
+import {
+  findBtn,
+  findBtnsByIcon,
+  findInput,
+  findInputs,
+  getBtn,
+  nativeValue,
+  QPageStub,
+  submit,
+  typeInto,
+} from './utils/TestUtilsParser';
 
 const { parseJsonFieldMock, toNullableNumberMock } = vi.hoisted(() => ({
   parseJsonFieldMock: vi.fn(),
@@ -27,15 +38,6 @@ installQuasarPlugin();
 // ---------------------------------------------------------------------------
 // Stubs
 // ---------------------------------------------------------------------------
-
-// QPage needs a QLayout as parent and renders nothing without one -> replace it with a div.
-const QPageStub = defineComponent({
-  name: 'QPage',
-  setup:
-    (_, { slots }) => //slot is a placeholder into which the parent content (New, Edit, Copy) reaches
-    () =>
-      h('div', { class: 'q-page-stub' }, slots.default?.()), // h stands for hyperscript, creates a VNode (arg: tag, attr, childs)
-});
 
 // QTooltip normally renders in a portal on hover only
 const QTooltipStub = defineComponent({
@@ -129,38 +131,6 @@ function mountForm({ model, props }: MountOptions = {}) {
   });
   return { wrapper, formData };
 }
-
-const findInputs = (wrapper: VueWrapper, label: string) =>
-  wrapper.findAllComponents(QInput).filter((i) => String(i.props('label')).startsWith(label));
-
-const findInput = (wrapper: VueWrapper, label: string) => {
-  const [first] = findInputs(wrapper, label);
-  if (!first) throw new Error(`QInput with label "${label}" not found`);
-  return first;
-};
-
-const nativeValue = (input: ReturnType<typeof findInput>) =>
-  input.find<HTMLInputElement>('.q-field__native').element.value;
-
-const typeInto = (input: ReturnType<typeof findInput>, value: string) =>
-  input.find<HTMLInputElement>('.q-field__native').setValue(value);
-
-const findBtn = (wrapper: VueWrapper, label: string) =>
-  wrapper.findAllComponents(QBtn).find((b) => b.props('label') === label);
-
-const getBtn = (wrapper: VueWrapper, label: string) => {
-  const btn = findBtn(wrapper, label);
-  if (!btn) throw new Error(`QBtn with label "${label}" not found`);
-  return btn;
-};
-
-const findBtnsByIcon = (wrapper: VueWrapper, icon: string) =>
-  wrapper.findAllComponents(QBtn).filter((b) => b.props('icon') === icon);
-
-const submit = async (wrapper: VueWrapper) => {
-  await wrapper.find('form').trigger('submit');
-  await flushPromises();
-};
 
 const validatedData = (wrapper: VueWrapper) =>
   wrapper.findComponent(ParserValidateCsvStub).props('formData') as CsvParserFormData;
@@ -327,7 +297,9 @@ describe('ParserFormCsv', () => {
     it('writes timezone and encoding from the selects back to the model', async () => {
       const { wrapper, formData } = mountForm();
 
-      wrapper.findComponent(ParserTimezoneSelectStub).vm.$emit('update:modelValue', 'Europe/Berlin');
+      wrapper
+        .findComponent(ParserTimezoneSelectStub)
+        .vm.$emit('update:modelValue', 'Europe/Berlin');
       wrapper.findComponent(ParserEncodingSelectStub).vm.$emit('update:modelValue', 'latin-1');
 
       expect(formData.timezone).toBe('Europe/Berlin');
@@ -499,10 +471,7 @@ describe('ParserFormCsv', () => {
       ['name is empty', { name: '' }],
       ['name is longer than 80 characters', { name: 'a'.repeat(81) }],
       ['delimiter is empty', { delimiter: '' }],
-      [
-        'a timestamp format is empty',
-        { timestamp_columns: [{ column: 1, timestamp_format: '' }] },
-      ],
+      ['a timestamp format is empty', { timestamp_columns: [{ column: 1, timestamp_format: '' }] }],
       [
         'a timestamp column index is missing',
         { timestamp_columns: [{ column: null, timestamp_format: TIMESTAMP_FORMAT }] },
@@ -517,7 +486,10 @@ describe('ParserFormCsv', () => {
 
     it('accepts 0 as timestamp column index and as header row', async () => {
       const { wrapper } = mountForm({
-        model: { header: 0, timestamp_columns: [{ column: 0, timestamp_format: TIMESTAMP_FORMAT }] },
+        model: {
+          header: 0,
+          timestamp_columns: [{ column: 0, timestamp_format: TIMESTAMP_FORMAT }],
+        },
       });
 
       await submit(wrapper);
