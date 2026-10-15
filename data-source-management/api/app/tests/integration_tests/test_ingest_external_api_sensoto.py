@@ -29,6 +29,7 @@ def _sensoto_payload(base_data, **overrides):
         "sync_interval_in_minutes": 15,
         "network": "network-1",
         "device": "device-1",
+        "period_in_minutes": 15,
     }
     payload.update(overrides)
     return payload
@@ -43,7 +44,9 @@ def test_create_and_read(client, base_data):
     assert created["network"] == "network-1"
     assert created["device"] == "device-1"
     assert created["api_type"] == "sensoto"
+    assert created["period_in_minutes"] == 15
     ingest_id = created["id"]
+    assert created["organization"] == "open"
 
     # read back
     response = client.get(f"{BASE_PATH}/{ingest_id}")
@@ -60,6 +63,10 @@ def test_create_and_update(client, base_data):
     response = client.patch(f"{BASE_PATH}/{ingest_id}", json={"device": "device-2"})
     assert response.status_code == 200
     assert response.json()["device"] == "device-2"
+
+    response = client.patch(f"{BASE_PATH}/{ingest_id}", json={"period_in_minutes": 30})
+    assert response.status_code == 200
+    assert response.json()["period_in_minutes"] == 30
 
 
 def test_create_and_delete(client, base_data):
@@ -90,9 +97,52 @@ def test_read_not_found(client):
     assert response.status_code == 404
 
 
+def test_create_with_token(client, base_data):
+    payload = _sensoto_payload(
+        base_data, name="Sensoto With Token", token="secret-token"
+    )
+    response = client.post(f"{BASE_PATH}", json=payload)
+    assert response.status_code == 200
+    assert response.json()["token"] == "secret-token"
+
+
+def test_update_token(client, base_data):
+    payload = _sensoto_payload(base_data, name="Sensoto Token Update")
+    ingest_id = client.post(f"{BASE_PATH}", json=payload).json()["id"]
+
+    response = client.patch(f"{BASE_PATH}/{ingest_id}", json={"token": "new-token"})
+    assert response.status_code == 200
+    assert response.json()["token"] == "new-token"
+
+
+def test_create_without_token_returns_none(client, base_data):
+    response = client.post(f"{BASE_PATH}", json=_sensoto_payload(base_data))
+    assert response.status_code == 200
+    assert response.json()["token"] is None
+
+
+def test_create_with_organization(client, base_data):
+    payload = _sensoto_payload(base_data, name="Sensoto Org", organization="valigruen")
+    response = client.post(f"{BASE_PATH}", json=payload)
+    assert response.status_code == 200
+    ingest_id = response.json()["id"]
+    assert response.json()["organization"] == "valigruen"
+
+    response = client.patch(f"{BASE_PATH}/{ingest_id}", json={"organization": "klips"})
+    assert response.status_code == 200
+    assert response.json()["organization"] == "klips"
+
+
+def test_clear_token(client, base_data):
+    payload = _sensoto_payload(base_data, name="Sensoto Clear Token", token="secret")
+    ingest_id = client.post(f"{BASE_PATH}", json=payload).json()["id"]
+
+    response = client.patch(f"{BASE_PATH}/{ingest_id}", json={"token": None})
+    assert response.status_code == 200
+    assert response.json()["token"] is None
+
+
 # --- auth / permission tests ---
-
-
 def test_read_list_unauthenticated(client_no_auth):
     response = client_no_auth.get(f"{BASE_PATH}/")
     assert response.status_code == 401
