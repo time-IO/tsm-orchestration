@@ -1,6 +1,6 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { QBtn} from 'quasar';
+import { QBtn } from 'quasar';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 
@@ -156,7 +156,10 @@ describe('ParserFilter', () => {
 
       wrapper.findComponent(PermissionGroupSelectStub).vm.$emit('update:modelValue', 5);
       wrapper.findComponent(ParserTypeSelectStub).vm.$emit('update:modelValue', 'soilcan');
-      getDatePicker(wrapper, 'Created at from').vm.$emit('update:modelValue', '2026-02-01T00:00:00');
+      getDatePicker(wrapper, 'Created at from').vm.$emit(
+        'update:modelValue',
+        '2026-02-01T00:00:00',
+      );
       getDatePicker(wrapper, 'Created at to').vm.$emit('update:modelValue', '2026-03-01T00:00:00');
       await flushPromises();
 
