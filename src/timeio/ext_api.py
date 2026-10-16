@@ -773,7 +773,7 @@ class ZentraApiSyncer(ExtApiSyncer):
             source = {
                 "device_name": data["metadata"]["device_name"],
                 "sensor_name": data["metadata"]["sensor_name"],
-                "units": data["metadata"]["units"],
+                "units": data["metadata"]["units"].lstrip(),
             }
             for entry in data["readings"]:
                 if entry["value"] is not None:
