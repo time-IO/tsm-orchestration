@@ -13,7 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
-- Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([MergeRequest](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/781))
+- Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/781))
 
 ## [2026-10-15]
 
