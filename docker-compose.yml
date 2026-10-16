@@ -1142,7 +1142,7 @@ services:
     build:
       context: bento
     container_name: bento
-    user: "${UID}:${LOCAL_GID}"
+    user: "${UID}:${GID}"
     depends_on:
       init:
         condition: service_completed_successfully
@@ -1199,7 +1199,7 @@ services:
     build:
       context: keycloak
     restart: "${SERVICE_RESTART_POLICY}"
-    user: "${KEYCLOAK_UID:-1000}:${LOCAL_GID:-1000}"
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       flyway:
         condition: service_completed_successfully
