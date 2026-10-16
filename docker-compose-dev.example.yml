@@ -16,6 +16,12 @@ services:
       - ./bento/main.yaml:/bento.yaml:ro
       - ./bento/entrypoint.sh:/entrypoint.sh:ro
 
+  mqtt-broker:
+    volumes:
+      - ./mosquitto/mosquitto.conf:/etc/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/mosquitto.tls.conf:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro
+      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+
   worker-thing-setup:
     volumes:
       - ./src:/home/appuser/app/src
