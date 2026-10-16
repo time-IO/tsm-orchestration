@@ -17,11 +17,7 @@ router = APIRouter(
     summary="Forwards GET /<endpoint>?<query> to the FROST server",
 )
 async def proxy_to_frost(endpoint: str, request: Request) -> Response:
-    if ".." in endpoint.split("/"):
-        raise HTTPException(status_code=400, detail="Invalid path")
-
-    if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
-        raise HTTPException(status_code=404, detail="Not Found")
+    validate_proxied_path(endpoint)
 
     logger.debug("Proxy request for endpoint=%s query=%s", endpoint, request.url.query)
     return await frost_proxy_service(
@@ -29,3 +25,13 @@ async def proxy_to_frost(endpoint: str, request: Request) -> Response:
         query=request.url.query,
         accept=request.headers.get("accept"),
     )
+
+
+def validate_proxied_path(endpoint: str) -> None:
+    # reject path traversal
+    if ".." in endpoint.split("/"):
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    # hide FROST endpoint listing
+    if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
+        raise HTTPException(status_code=404, detail="Not Found")

@@ -17,50 +17,68 @@ EXCLUDED_RESPONSE_HEADERS = {
     "date",
 }
 
-_client: httpx.AsyncClient | None = None
 
+class FrostServer:
+    def __init__(self, name: str, base_url: str):
+        self.name = name
+        self.base_url = base_url.rstrip("/")
+        self._client: httpx.AsyncClient | None = None
 
-def get_frost_client() -> httpx.AsyncClient:
-    """Shared client for all requests (connection pooling), created lazily."""
-    global _client
-    if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(
-            base_url=settings.FROST_URL.rstrip("/"),
-            timeout=settings.FROST_TIMEOUT,
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.name!r}, {self.base_url!r})"
+
+    @property
+    def client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                base_url=self.base_url, timeout=settings.FROST_TIMEOUT
+            )
+        return self._client
+
+    async def close(self) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
+    async def fetch(self, url: str, headers: dict[str, str]) -> httpx.Response:
+        try:
+            return await self.client.get(url, headers=headers)
+        except httpx.TimeoutException:
+            logger.warning("Timeout for %s FROST request %s", self.name, url)
+            raise HTTPException(status_code=504, detail="FROST server timeout")
+        except httpx.RequestError as e:
+            logger.error("%s FROST request %s failed: %s", self.name, url, e)
+            raise HTTPException(status_code=502, detail="FROST server not reachable")
+
+    def get_filtered_headers(self, upstream: httpx.Response) -> dict[str, str]:
+        return {
+            k: v
+            for k, v in upstream.headers.items()
+            if k.lower() not in EXCLUDED_RESPONSE_HEADERS
+        }
+
+    def get_filtered_headers_response(self, upstream: httpx.Response) -> Response:
+        return Response(
+            content=upstream.content,
+            status_code=upstream.status_code,
+            headers=self.get_filtered_headers(upstream),
         )
-    return _client
+
+    async def forward(self, url: str, headers: dict[str, str]) -> Response:
+        upstream = await self.fetch(url, headers)
+        logger.debug(
+            "%s FROST responded with %s for %s", self.name, upstream.status_code, url
+        )
+        return self.get_filtered_headers_response(upstream)
 
 
-async def close_frost_client() -> None:
-    global _client
-    if _client is not None:
-        await _client.aclose()
-        _client = None
+public_frost = FrostServer("public", settings.FROST_URL)
+all_frost_servers = [public_frost]
 
 
-async def fetch_from_frost(url: str, headers: dict[str, str]) -> httpx.Response:
-    try:
-        return await get_frost_client().get(url, headers=headers)
-    except httpx.TimeoutException:
-        logger.warning("Timeout for FROST request %s", url)
-        raise HTTPException(status_code=504, detail="FROST server timeout")
-    except httpx.RequestError as e:
-        logger.error("FROST request %s failed: %s", url, e)
-        raise HTTPException(status_code=502, detail="FROST server not reachable")
-
-
-def to_response(upstream: httpx.Response) -> Response:
-    """Pass the FROST response through, minus hop-by-hop/resolved headers."""
-    response_headers = {
-        k: v
-        for k, v in upstream.headers.items()
-        if k.lower() not in EXCLUDED_RESPONSE_HEADERS
-    }
-    return Response(
-        content=upstream.content,
-        status_code=upstream.status_code,
-        headers=response_headers,
-    )
+async def close_frost_clients() -> None:
+    for server in all_frost_servers:
+        await server.close()
 
 
 async def frost_proxy_service(
@@ -73,6 +91,4 @@ async def frost_proxy_service(
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
-    upstream = await fetch_from_frost(url, headers)
-    logger.debug("FROST responded with %s for %s", upstream.status_code, url)
-    return to_response(upstream)
+    return await public_frost.forward(url, headers)

@@ -40,7 +40,7 @@ def test_frost_not_reachable(client, monkeypatch):
         raise httpx.ConnectError("connection refused")
 
     monkeypatch.setattr(
-        frost_proxy,
+        frost_proxy.public_frost,
         "_client",
         httpx.AsyncClient(
             transport=httpx.MockTransport(handler), base_url="http://frost"

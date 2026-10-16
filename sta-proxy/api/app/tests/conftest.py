@@ -131,7 +131,7 @@ def client(frost_requests, monkeypatch):
         transport=httpx.MockTransport(handler),
         base_url="http://frost:8080",
     )
-    monkeypatch.setattr(frost_proxy, "_client", mock_client)
+    monkeypatch.setattr(frost_proxy.public_frost, "_client", mock_client)
 
     from main import app
 

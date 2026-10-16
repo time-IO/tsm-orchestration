@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from config import settings
 from models import FrostEndpoint, FrostEndpointsResponse
-from services.frost_proxy import get_frost_client
+from services.frost_proxy import public_frost
 from services.ingests import fetch_ingest_permission_group_id
 from services.permission_groups import fetch_own_permission_groups
 
@@ -56,7 +56,7 @@ def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
 async def fetch_frost_endpoints() -> list[FrostEndpoint]:
     """Fetch the public endpoint listing from FROST."""
     try:
-        upstream = await get_frost_client().get(
+        upstream = await public_frost.client.get(
             settings.FROST_ENDPOINTS_PATH,
             headers={"accept": "application/json"},
             follow_redirects=True,
