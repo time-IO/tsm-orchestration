@@ -13,7 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
-- Component Test: IngestTypeSelect.vue, IngestExternalApiTypeSelect.vue,IngestFormExternalSftp.vue,IngestFormMqtt.vue,IngestFormSftp.vue
+- Component Test: IngestTypeSelect.vue, IngestExternalApiTypeSelect.vue,IngestFormExternalSftp.vue,IngestFormMqtt.vue,IngestFormSftp.vue. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/784))
 
 ## [2026-10-15]
 
