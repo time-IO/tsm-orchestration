@@ -8,14 +8,7 @@ import type { IngestSftpCreate } from '@/services/ingest_sftp/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
 import type { ParserRead } from '@/services/types';
 import { rules } from '@/utils/validation/rules';
-import {
-  findInput,
-  getBtn,
-  nativeValue,
-  QPageStub,
-  submit,
-  typeInto,
-} from './utils/TestUtils';
+import { findInput, getBtn, nativeValue, QPageStub, submit, typeInto } from './utils/TestUtils';
 
 installQuasarPlugin();
 
