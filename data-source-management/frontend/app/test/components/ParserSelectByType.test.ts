@@ -41,8 +41,10 @@ const QDialogStub = defineComponent({
   name: 'QDialog',
   props: ['modelValue'],
   emits: ['update:modelValue'],
-  setup: (props, { slots }) => () =>
-    props.modelValue ? h('div', { class: 'dialog-stub' }, slots.default?.()) : null,
+  setup:
+    (props, { slots }) =>
+    () =>
+      props.modelValue ? h('div', { class: 'dialog-stub' }, slots.default?.()) : null,
 });
 
 const QTooltipStub = defineComponent({
@@ -181,7 +183,9 @@ describe('ParserSelectByType', () => {
 
     it('truncates long parser names to 50 characters', () => {
       const longName = 'x'.repeat(80);
-      const wrapper = mountParserSelectByType({ preselectedParser: makeParser({ ...csvParser, name: longName }) });
+      const wrapper = mountParserSelectByType({
+        preselectedParser: makeParser({ ...csvParser, name: longName }),
+      });
 
       expect(chipTexts(wrapper)[0]).toBe(truncateText(longName, 50));
     });
@@ -191,7 +195,13 @@ describe('ParserSelectByType', () => {
     it('shows name, type, delimiter and every timestamp column for a csv parser', () => {
       const wrapper = mountParserSelectByType({ preselectedParser: csvParser });
 
-      expect(chipTexts(wrapper)).toEqual(['My CSV parser', 'csv', ';', 'ts:%Y-%m-%d', 'time:%H:%M']);
+      expect(chipTexts(wrapper)).toEqual([
+        'My CSV parser',
+        'csv',
+        ';',
+        'ts:%Y-%m-%d',
+        'time:%H:%M',
+      ]);
       expect(wrapper.text()).toContain('Delimiter:');
       expect(wrapper.text()).toContain('Timestamp Column:');
     });
@@ -244,7 +254,10 @@ describe('ParserSelectByType', () => {
     });
 
     it('resets the selection when the permission group changes from one group to another', async () => {
-      const wrapper = mountParserSelectByType({ permissionGroupId: 1, preselectedParser: csvParser });
+      const wrapper = mountParserSelectByType({
+        permissionGroupId: 1,
+        preselectedParser: csvParser,
+      });
 
       await wrapper.setProps({ permissionGroupId: 2 } as never);
 
@@ -255,14 +268,20 @@ describe('ParserSelectByType', () => {
     it.each([
       ['undefined to a group', undefined, 2],
       ['null to a group', null, 2],
-    ])('keeps the selection when the permission group changes from %s', async (_label, from, to) => {
-      const wrapper = mountParserSelectByType({ permissionGroupId: from, preselectedParser: csvParser });
+    ])(
+      'keeps the selection when the permission group changes from %s',
+      async (_label, from, to) => {
+        const wrapper = mountParserSelectByType({
+          permissionGroupId: from,
+          preselectedParser: csvParser,
+        });
 
-      await wrapper.setProps({ permissionGroupId: to } as never);
+        await wrapper.setProps({ permissionGroupId: to } as never);
 
-      expect(chipTexts(wrapper)).toContain('My CSV parser');
-      expect(lastEmitted(wrapper)).toEqual([5]);
-    });
+        expect(chipTexts(wrapper)).toContain('My CSV parser');
+        expect(lastEmitted(wrapper)).toEqual([5]);
+      },
+    );
   });
 
   describe('selection dialog', () => {
@@ -298,7 +317,10 @@ describe('ParserSelectByType', () => {
     });
 
     it('passes type, permission group, preselected id and disable to the parser select', async () => {
-      const wrapper = mountParserSelectByType({ permissionGroupId: 3, preselectedParser: csvParser });
+      const wrapper = mountParserSelectByType({
+        permissionGroupId: 3,
+        preselectedParser: csvParser,
+      });
       await openDialog(wrapper);
 
       const select = wrapper.findComponent(ParserSelectStub);

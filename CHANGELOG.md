@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([MegreRequest]())
+
 ## [2026-10-15]
 
 ### Added

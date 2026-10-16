@@ -466,7 +466,9 @@ describe('ParserSelect', () => {
 
     it('shows timestamp keys for a json parser', async () => {
       stores.json.rows = [
-        makeParser(1, { timestamp_keys: [{ id: 1, key: 'Datetime', format: '%Y-%m-%dT%H:%M:%S' }] }),
+        makeParser(1, {
+          timestamp_keys: [{ id: 1, key: 'Datetime', format: '%Y-%m-%dT%H:%M:%S' }],
+        }),
       ];
 
       const w = await mountOptionList({ parser_type: 'json' });

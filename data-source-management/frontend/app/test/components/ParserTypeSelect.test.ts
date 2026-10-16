@@ -23,7 +23,10 @@ const getSelect = (w: ReturnType<typeof mountParsertypeSelect>) => w.findCompone
 describe('ParserTypeSelect', () => {
   describe('initialization', () => {
     it('offers exactly the types csv, json and soilcan', () => {
-      const options = getSelect(mountParsertypeSelect()).props('options') as { id: string; name: string }[];
+      const options = getSelect(mountParsertypeSelect()).props('options') as {
+        id: string;
+        name: string;
+      }[];
       expect(options).toEqual([
         { id: 'csv', name: 'CSV' },
         { id: 'json', name: 'JSON' },
