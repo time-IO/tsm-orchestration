@@ -78,10 +78,21 @@ class ParseMqttDataHandler(AbstractHandler):
             raise ProcessingError("Storing observations failed") from e
         journal.info(f"parsed mqtt data from {origin}", thing_uuid)
 
+        # QC needs the time range of the new data (see DataParsedV1)
+        if parser.start_date is None or parser.end_date is None:
+            logger.info("no time range for parsed data, not sending data_parsed")
+            return
+
         logger.info(f"send mqtt message")
         self.mqtt_client.publish(
             topic=self.pub_topic,
-            payload=json.dumps({"thing_uuid": str(thing_uuid)}),
+            payload=json.dumps(
+                {
+                    "thing_uuid": str(thing_uuid),
+                    "start_date": parser.start_date,
+                    "end_date": parser.end_date,
+                }
+            ),
             qos=self.mqtt_qos,
         )
 
