@@ -206,10 +206,6 @@ services:
       - "${MQTT_PORT_SECURE}:8883"
     volumes:
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mosquitto/"
-      # Overrides the image's copies for editing without rebuild.
-      - ./mosquitto/mosquitto.conf:/etc/mosquitto/config/mosquitto.conf:ro
-      - ./mosquitto/mosquitto.tls.conf:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro
-      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh:ro
     tmpfs:
       - /var/lib/mosquitto/:uid=${UID}
     healthcheck:
