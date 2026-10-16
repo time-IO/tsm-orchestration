@@ -1,6 +1,21 @@
 ---
 services:
 
+  init:
+    volumes:
+      - ./init/init.sh:/init.sh:ro
+
+  flyway:
+    volumes:
+      - ./flyway/migrations/public:/flyway/sql
+      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
+
+  bento:
+    volumes:
+      - ./bento/streams/:/streams:ro
+      - ./bento/main.yaml:/bento.yaml:ro
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
+
   worker-thing-setup:
     volumes:
       - ./src:/home/appuser/app/src
@@ -49,6 +64,8 @@ services:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
+      - "./keycloak/plugins:/opt/keycloak/providers"
 
   dsm-api:
     image: timeio-dsm-api-local:dev
