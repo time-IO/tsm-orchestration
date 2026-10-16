@@ -1,10 +1,11 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { QBtn, QInput } from 'quasar';
+import { QBtn} from 'quasar';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import ParserOverviewFilter from '@/components/ParserOverviewFilter.vue'; // adjust path
+import { findInput, nativeValue, typeInto } from './utils/TestUtilsParser';
 
 installQuasarPlugin();
 
@@ -69,18 +70,6 @@ const mountParserFilter = (props: Record<string, unknown> = {}) =>
     props: { ...props },
     global: globalOptions,
   });
-
-const findInput = (wrapper: VueWrapper, label: string) => {
-  const input = wrapper.findAllComponents(QInput).find((i) => i.props('label') === label);
-  if (!input) throw new Error(`QInput with label "${label}" not found`);
-  return input;
-};
-
-const nativeValue = (input: ReturnType<typeof findInput>) =>
-  input.find<HTMLInputElement>('.q-field__native').element.value;
-
-const typeInto = (input: ReturnType<typeof findInput>, value: string) =>
-  input.find<HTMLInputElement>('.q-field__native').setValue(value);
 
 const getBtn = (wrapper: VueWrapper, text: string) => {
   const btn = wrapper.findAllComponents(QBtn).find((b) => b.text() === text);
