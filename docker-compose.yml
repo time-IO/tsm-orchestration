@@ -1144,19 +1144,22 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   bento:
-    image: ghcr.io/warpstreamlabs/bento:latest
+    image: "${TIMEIO_IMAGE_REGISTRY}/bento:${TIMEIO_BENTO_IMAGE_TAG}"
+    build:
+      context: bento
     container_name: bento
     user: "${UID}:${LOCAL_GID}"
     depends_on:
       init:
         condition: service_completed_successfully
     volumes:
-      - ./bento/resources/:/resources
-      - ./bento/streams/:/streams
-      - ./bento/main.yaml:/bento.yaml
-      - ./bento/entrypoint.sh:/entrypoint.sh:ro
       - "${BENTO_PERSISTENCE_VOLUME:-bento}:/data"
-    entrypoint: ["/entrypoint.sh"]
+      # The image contains these files as well; mounting the working tree keeps
+      # the configuration, static streams and entrypoint editable without
+      # rebuilding the image.
+      - ./bento/streams/:/streams:ro
+      - ./bento/main.yaml:/bento.yaml:ro
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
