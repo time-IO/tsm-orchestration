@@ -14,6 +14,7 @@ When adding a changelog entry, ensure the following:
 
 ### Fixed
 - Enable automatic QC for MQTT ingest: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
+- Things created via the data-source-management are shown in the "last observations" monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/761))
 - Failed setup steps of a thing are shown in its journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/763))
 - External API sync publishes `data_parsed` to the topic configured in `TOPIC_DATA_PARSED` instead of a hardcoded one ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/760))
 - MQTT ingest reported success and triggered QC although storing the data failed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/758))
