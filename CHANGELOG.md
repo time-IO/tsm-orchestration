@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- Component Tests: ParserOverviewFilter, ParserOverviewTable ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/782))
+
 ## [2026-10-15]
 
 ### Added
