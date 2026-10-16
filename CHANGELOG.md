@@ -13,6 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Fixed
+- Failed setup steps of a thing are shown in its journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/763))
 - MQTT ingest reported success and triggered QC although storing the data failed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/758))
 - A single MQTT message that is not valid UTF-8 crashed the worker; it is now logged and dropped ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/757))
 
