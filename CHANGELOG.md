@@ -23,6 +23,8 @@ When adding a changelog entry, ensure the following:
 ### Changed
 - `bento` is built into a time.IO image containing its configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/770))
 - `visualization` is built into a time.IO image containing its provisioning ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/787))
+- `mqtt-broker` is built into a time.IO image containing its configuration([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/769))
+
 
 ## [2026-10-15]
 
@@ -31,9 +33,6 @@ When adding a changelog entry, ensure the following:
 
 ### Fixed
 - Prefix based S3 file listings. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/767))
-
-### Changed
-- `mqtt-broker` is built into a time.IO image containing its configuration; `MQTT_TLS_ENABLED` replaces `MQTT_MOSQUITTO_TLS_CONFIG` ([Merge Request]())
 
 ## [2026-10-14]
 
