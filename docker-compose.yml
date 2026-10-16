@@ -236,7 +236,7 @@ services:
   # =======
   # brief: visualisation of observations stored in the -> database
   # dir: grafana
-  # see also: none
+  # see also: grafana/Dockerfile
   # admin login:
   #     -> http://localhost/visualization/login
   #     -> user, pass: $GRAFANA_USER, $GRAFANA_PASSWORD  (default: grafana)
@@ -246,7 +246,9 @@ services:
   # This visualize observations of a group or project that are stored in the database.
   visualization:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "${VISUALIZATION_GRAFANA_IMAGE_REGISTRY}:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/visualization:${TIMEIO_VISUALIZATION_IMAGE_TAG}"
+    build:
+      context: grafana
     user: "${UID}:${GID}"
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
@@ -279,7 +281,6 @@ services:
       MONITORING_DATABASE_SSLMODE: "${MONITORING_DATABASE_SSLMODE}"
     volumes:
       - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/var/lib/grafana"
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
