@@ -5,6 +5,7 @@ from datetime import datetime
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
+from timeio.errors import ParsingError
 from timeio.parser import get_parser
 
 
@@ -138,3 +139,23 @@ def test_device_parsers_report_date_range(parser_type, raw, start, end):
     assert observations
     assert parser.start_date == start
     assert parser.end_date == end
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, match",
+    [
+        ("campbell_cr6", {"properties": {"observations": {}}}, "observationNames"),
+        ("chirpstack_generic", {"object": {"temp": 1}}, "'time' and 'object'"),
+        ("ydoc_ml417", {"foo": 1}, "'data'"),
+        ("quaesta", {"type": "dataCRNS", "P1_mb": 1.0}, "timestampISO8601"),
+        (
+            "quaesta",
+            {"type": "dataCRNS", "timestampISO8601": "yesterday"},
+            "Invalid 'timestampISO8601'",
+        ),
+    ],
+)
+def test_device_parsers_raise_meaningful_error(parser_type, raw, match):
+    parser = get_parser(parser_type, None)
+    with pytest.raises(ParsingError, match=match):
+        parser.do_parse(raw, "data/jsn")

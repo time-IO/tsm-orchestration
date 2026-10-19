@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from timeio.errors import ParsingError
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
@@ -22,11 +23,18 @@ class CampbellCr6Parser(MqttParser):
         if properties is None:
             return []
 
+        try:
+            names = properties["observationNames"]
+            observations = properties["observations"].items()
+        except (KeyError, TypeError, AttributeError) as e:
+            raise ParsingError(
+                "Message must contain 'properties.observationNames' "
+                "and 'properties.observations'"
+            ) from e
+
         out = []
-        for timestamp, values in properties["observations"].items():
-            for i, (key, value) in enumerate(
-                zip(properties["observationNames"], values)
-            ):
+        for timestamp, values in observations:
+            for i, (key, value) in enumerate(zip(names, values)):
                 out.append(
                     Observation(
                         timestamp=timestamp,

@@ -10,7 +10,7 @@ from paho.mqtt.client import MQTTMessage
 
 from timeio.mqtt import AbstractHandler
 from timeio.common import get_envvar, setup_logging
-from timeio.errors import ProcessingError, UserInputError
+from timeio.errors import ParsingError, ProcessingError, UserInputError
 from timeio.journaling import Journal
 from timeio.databases import DBapi
 from timeio.feta import Thing
@@ -38,6 +38,14 @@ class ParseMqttDataHandler(AbstractHandler):
         )
         self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
 
+    @staticmethod
+    def describe_error(e: Exception) -> str:
+        if isinstance(e, ParsingError):
+            return str(e)
+        if isinstance(e, KeyError):
+            return f"missing key {e}"
+        return f"{type(e).__name__}: {e}"
+
     def act(self, content: typing.Any, message: MQTTMessage):
         origin = f"{self.mqtt_broker}/{message.topic}"
 
@@ -52,18 +60,40 @@ class ParseMqttDataHandler(AbstractHandler):
         thing_uuid = thing.uuid
 
         logger.info("persisting rawdata")
-        self.dbapi.insert_mqtt_message(thing_uuid, content)
+        try:
+            self.dbapi.insert_mqtt_message(thing_uuid, content)
+        except Exception:
+            journal.error(
+                "Storing raw message failed",
+                thing_uuid,
+            )
+            raise
 
         logger.info(f"get parser")
-        parser: MqttParser = get_parser(thing.mqtt.mqtt_device_type.name, None)
+        device_type = thing.mqtt.mqtt_device_type.name
+        try:
+            parser: MqttParser = get_parser(device_type, None)
+        except Exception:
+            journal.error(
+                f"Parsing failed: no parser for device type {device_type!r}",
+                thing_uuid,
+            )
+            raise
 
         logger.info(f"parsing rawdata")
         try:
             data = parser.do_parse(content, origin)
             observations = parser.to_observations(data, thing_uuid)
         except Exception as e:
-            journal.error(f"Parsing data failed: {e}", thing_uuid)
+            journal.error(
+                f"Parsing failed: {self.describe_error(e)}",
+                thing_uuid,
+            )
             raise UserInputError("Parsing data failed") from e
+
+        if not observations:
+            journal.warning("Parsing finished, but no observations found", thing_uuid)
+            return
 
         logger.info(f"store observations")
         try:
@@ -76,7 +106,10 @@ class ParseMqttDataHandler(AbstractHandler):
                 thing_uuid,
             )
             raise ProcessingError("Storing observations failed") from e
-        journal.info(f"parsed mqtt data from {origin}", thing_uuid)
+        journal.info(
+            f"Parsing successful, stored observations: {len(observations)}",
+            thing_uuid,
+        )
 
         # QC needs the time range of the new data (see DataParsedV1)
         if parser.start_date is None or parser.end_date is None:
