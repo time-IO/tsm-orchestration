@@ -3,7 +3,15 @@ import { QIcon, QToggle, QField } from 'quasar';
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, reactive, type Component } from 'vue';
 
-import { findInput, findInputs, getBtn, nativeValue, QPageStub, submit, typeInto } from './TestUtils';
+import {
+  findInput,
+  findInputs,
+  getBtn,
+  nativeValue,
+  QPageStub,
+  submit,
+  typeInto,
+} from './TestUtils';
 
 type Model = Record<string, unknown>;
 

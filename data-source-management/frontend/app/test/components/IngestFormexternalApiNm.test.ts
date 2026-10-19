@@ -41,7 +41,7 @@ const makeModel: ModelFactory = (overrides = {}) => ({
 const mountForm = (options: MountOptions = {}) =>
   mountIngestForm(IngestFormNeutronMonitor, makeModel, { ...options, stubs });
 
-describeExternalApiIngestForm(IngestFormNeutronMonitor, makeModel, {stubs});
+describeExternalApiIngestForm(IngestFormNeutronMonitor, makeModel, { stubs });
 
 describe('IngestFormNeutronMonitor (Neutron Monitor specific)', () => {
   describe('station select', () => {
