@@ -13,6 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Fixed
+- Uploads to the bucket of a deleted ingest no longer crash the file ingest worker ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/762))
 - Enable automatic QC for MQTT ingest: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
 - Things created via the data-source-management are shown in the "last observations" monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/761))
 - Failed setup steps of a thing are shown in its journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/763))
