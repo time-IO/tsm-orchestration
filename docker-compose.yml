@@ -1139,6 +1139,7 @@ services:
       context: bento
     container_name: bento
     user: "${UID}:${GID}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       init:
         condition: service_completed_successfully
