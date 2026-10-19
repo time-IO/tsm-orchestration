@@ -96,6 +96,7 @@ async function triggerExtApi() {
       position: 'top',
       message: 'Please provide valid dates in the format YYYY-MM-DD HH:MM:SS.',
     });
+    return;
   }
   const data: TriggerSyncExtApiBase = {
     ingest_ids: ids_to_trigger,
@@ -122,7 +123,7 @@ async function triggerExtApi() {
 }
 
 function triggerExtApiIfValid() {
-  if (validationError.value) {
+  if (!validationError.value) {
     void triggerExtApi();
   }
 }
