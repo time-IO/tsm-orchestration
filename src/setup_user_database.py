@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import os
-import re
 from pathlib import Path
 
 import psycopg
@@ -50,10 +49,6 @@ VIEW_FILES = {
 # Bump to force a view redeploy after changes not covered by the version hash.
 VIEWS_REVISION = 1
 
-_CREATE_VIEW_RE = re.compile(
-    r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+("?)(\w+)\1', re.IGNORECASE | re.M
-)
-
 
 def hash_view_files(files: list[Path]) -> str:
     h = hashlib.sha256()
@@ -71,15 +66,6 @@ def compute_views_version(files_digest: str, flyway_rank: int) -> str:
     return hashlib.sha256(key.encode()).hexdigest()[:16]
 
 
-def parse_view_names(files: list[Path]) -> list[str]:
-    names = set()
-    for f in files:
-        for quote, name in _CREATE_VIEW_RE.findall(f.read_text()):
-            # Postgres folds unquoted identifiers to lower case.
-            names.add(name if quote else name.lower())
-    return sorted(names)
-
-
 class CreateThingInPostgresHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
@@ -94,7 +80,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.views_digests = {k: hash_view_files(f) for k, f in VIEW_FILES.items()}
-        self.expected_views = {k: parse_view_names(f) for k, f in VIEW_FILES.items()}
 
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -171,27 +156,30 @@ class CreateThingInPostgresHandler(AbstractHandler):
         return row[0]
 
     def views_up_to_date(self, schema: str, kind: str, version: str) -> bool:
-        names = self.expected_views[kind]
         with self.db.connection() as conn:
             row = conn.execute(
                 "SELECT EXISTS ("
-                "  SELECT 1 FROM public.views_deploy_state"
-                "  WHERE schema = %s AND kind = %s AND version = %s"
-                ") AND ("
-                "  SELECT count(*) FROM pg_views"
-                "  WHERE schemaname = %s AND viewname = ANY(%s)"
-                ") = %s",
-                [schema, kind, version, schema, names, len(names)],
+                "  SELECT 1 FROM public.views_deploy_state s"
+                "  WHERE s.schema = %s AND s.kind = %s AND s.version = %s"
+                "  AND s.views <@ ARRAY("
+                "    SELECT viewname::text FROM pg_views WHERE schemaname = s.schema"
+                "  )"
+                ")",
+                [schema, kind, version],
             ).fetchone()
         return row[0]
 
     def set_views_stamp(self, schema: str, kind: str, version: str):
+        # Snapshot the schema's views so a later drop invalidates the stamp.
         with self.db.connection() as conn:
             conn.execute(
-                "INSERT INTO public.views_deploy_state (schema, kind, version) "
-                "VALUES (%s, %s, %s) ON CONFLICT (schema, kind) DO UPDATE SET "
-                "version = EXCLUDED.version, deployed_at = now()",
-                [schema, kind, version],
+                "INSERT INTO public.views_deploy_state (schema, kind, version, views) "
+                "SELECT %s, %s, %s, ARRAY("
+                "  SELECT viewname::text FROM pg_views WHERE schemaname = %s"
+                ") ON CONFLICT (schema, kind) DO UPDATE SET "
+                "version = EXCLUDED.version, views = EXCLUDED.views, "
+                "deployed_at = now()",
+                [schema, kind, version, schema],
             )
 
     def create_user(self, thing):
