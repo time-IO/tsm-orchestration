@@ -2,14 +2,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from timeio.errors import ParsingError
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class ChirpStackGenericParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
-        timestamp = rawdata["time"]
+        try:
+            timestamp = rawdata["time"]
+            items = rawdata["object"].items()
+        except (KeyError, TypeError, AttributeError) as e:
+            raise ParsingError(
+                "Message must contain the fields 'time' and 'object'"
+            ) from e
         out = []
-        for key, value in rawdata["object"].items():
+        for key, value in items:
             if key == "Data_time":
                 # this is a timestamp, we ignore it
                 continue

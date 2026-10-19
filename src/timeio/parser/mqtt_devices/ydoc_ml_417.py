@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 from datetime import datetime
 
+from timeio.errors import ParsingError
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
@@ -31,8 +32,13 @@ class YdocMl417Parser(MqttParser):
             return []
 
         # data = payload['data'][1]
+        try:
+            rows = rawdata["data"]
+        except (KeyError, TypeError) as e:
+            raise ParsingError("Message must contain the field 'data'") from e
+
         ret = []
-        for data in rawdata["data"]:
+        for data in rows:
             try:
                 ts = datetime.strptime(str(data["$ts"]), "%y%m%d%H%M%S")
                 ob0 = Observation(ts, data["MINVi"], origin, 0, header="MINVi")
