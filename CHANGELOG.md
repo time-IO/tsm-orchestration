@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- New STA Hub offers filtering for endpoints and preparation for authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
+
 ### Fixed
 - Enable automatic QC for MQTT ingest: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
 - Things created via the data-source-management are shown in the "last observations" monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/761))
@@ -46,7 +49,6 @@ When adding a changelog entry, ensure the following:
 - Add switch for either FTP or SFTP sync to set protocol prefix ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/721))
 - component_tests for CopyBtn, DateTimePicker, HelpButton, VisualizationLinkBtn, TheFooter ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/754))
 - Links to linked SMS Configurations from ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/722))
-- New STA-Hub offers filtering for endpoints and preparation for authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 
 ### Fixed
 - Grafana STA panels show the same data as FROST ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/747))
