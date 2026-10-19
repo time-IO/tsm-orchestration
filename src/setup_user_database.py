@@ -46,6 +46,7 @@ VIEW_FILES = {
     "sti": [SQL_DIR / "sta_views_internal" / f for f in STA_VIEW_FILES],
     "grf": [SQL_DIR / "grafana_views" / f for f in GRAFANA_VIEW_FILES],
 }
+VIEW_LOCK_TIMEOUT = {"sta": "30s", "sti": "30s", "grf": "10s"}
 # Bump to force a view redeploy after changes not covered by the version hash.
 VIEWS_REVISION = 1
 
@@ -134,11 +135,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
     def deploy_views(self, thing, int_schema: str):
         schema = thing.database.username.lower()
         flyway_rank = self.get_flyway_rank()
-        for kind, target, deploy in (
-            ("sta", schema, self.create_frost_views),
-            ("sti", int_schema, self.create_internal_frost_views),
-            ("grf", schema, self.create_grafana_views),
-        ):
+        for kind, target in (("sta", schema), ("sti", int_schema), ("grf", schema)):
             version = compute_views_version(self.views_digests[kind], flyway_rank)
             if self.views_up_to_date(target, kind, version):
                 logger.debug(f"{kind} views in {target} are up to date ({version})")
@@ -146,7 +143,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
             logger.debug(f"create/refresh {kind} views in {target}")
             with self.db.connection() as conn:
                 with conn.cursor() as c:
-                    deploy(c, thing)
+                    self.deploy_view_files(c, thing, kind, target)
                     self.set_views_stamp(c, target, kind, version)
 
     def get_flyway_rank(self) -> int:
@@ -395,72 +392,24 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
-    def create_frost_views(self, c, thing):
-        files = VIEW_FILES["sta"]
-        schema = thing.database.schema.lower()
-        user = sql.Identifier(thing.database.username.lower())
-        SMS_URL = os.environ.get("SMS_URL")
-        CV_URL = os.environ.get("CV_URL")
-
-        def escape_quote(s: str) -> str:
-            return s.replace("'", "''")
-
-        c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
-        # The DROP/CREATE below needs an ACCESS EXCLUSIVE lock on each
-        # view and would otherwise queue indefinitely behind a reader,
-        # blocking further queries in the meantime. Fail fast instead:
-        # give up waiting for the lock after 30s.
-        c.execute("SET lock_timeout TO '30s'")
-        for file in files:
+    def deploy_view_files(self, c, thing, kind: str, target: str):
+        replacements = {
+            "{tsm_schema}": thing.database.schema.lower(),
+            "{target_schema}": target,
+            "{sms_url}": os.environ.get("SMS_URL"),
+            "{cv_url}": os.environ.get("CV_URL"),
+        }
+        c.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(target)))
+        # Fail fast instead of queueing the DROP/CREATE behind readers of the views.
+        c.execute(f"SET lock_timeout TO '{VIEW_LOCK_TIMEOUT[kind]}'")
+        for file in VIEW_FILES[kind]:
             logger.debug(f"deploy file: {file}")
-            with open(file) as fh:
-                view = fh.read()
-            # This is a possible entry point for SQL injections. Ensure that we have
-            # full control over the values, especially that the value does not come
-            # from userinput. Additionally, we escape single quotes, prevent closing
-            # the outer quotes in the file.
-            view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
-            view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
-            view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
+            view = file.read_text()
+            # Values are trusted config (no user input); quotes are escaped.
+            for key, value in replacements.items():
+                if key in view:
+                    view = view.replace(key, value.replace("'", "''"))
             c.execute(view)
-
-    def create_internal_frost_views(self, c, thing):
-        files = VIEW_FILES["sti"]
-        schema = thing.database.schema.lower()
-        int_schema = schema + INTERNAL_SCHEMA_SUFFIX
-        target = sql.Identifier(int_schema)
-        SMS_URL = os.environ.get("SMS_URL")
-        CV_URL = os.environ.get("CV_URL")
-
-        def escape_quote(s: str) -> str:
-            return s.replace("'", "''")
-
-        c.execute(sql.SQL("SET search_path TO {target}").format(target=target))
-        c.execute("SET lock_timeout TO '30s'")
-        for file in files:
-            logger.debug(f"deploy file: {file}")
-            with open(file) as fh:
-                view = fh.read()
-            # See create_frost_views: values are trusted (no user input)
-            # and single quotes are escaped. {tsm_schema} is the project
-            # schema (raw observation + datasource_id); {target_schema} is
-            # the internal schema (feature.sql existence check).
-            view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
-            view = view.replace("{target_schema}", f"{escape_quote(int_schema)}")
-            view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
-            view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
-            c.execute(view)
-
-    def create_grafana_views(self, c, thing):
-        files = VIEW_FILES["grf"]
-        user = sql.Identifier(thing.database.username.lower())
-        c.execute(sql.SQL("SET search_path TO {0}").format(user))
-        # Same rationale as create_frost_views: fail fast rather than
-        # queue the DROP/CREATE behind a reader holding the view lock.
-        c.execute("SET lock_timeout TO '10s'")
-        for file in files:
-            with open(file) as fh:
-                c.execute(fh.read())
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""
