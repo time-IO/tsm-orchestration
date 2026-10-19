@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -74,6 +74,7 @@ def handler(monkeypatch):
     h = object.__new__(CreateThingInPostgresHandler)
     h.dsmdb_dsn = "dsn"
     h.views_digests = {"sta": "d-sta", "sti": "d-sti", "grf": "d-grf"}
+    h.db = MagicMock()
 
     thing = MagicMock()
     thing.database.username = "User_1"
@@ -135,7 +136,7 @@ def test_act_redeploys_only_stale_kind(handler):
     handler.create_internal_frost_views.assert_called_once()
     handler.create_grafana_views.assert_not_called()
     handler.set_views_stamp.assert_called_once_with(
-        "user_1_int", "sti", sud.compute_views_version("d-sti", 7)
+        ANY, "user_1_int", "sti", sud.compute_views_version("d-sti", 7)
     )
 
 
@@ -147,8 +148,17 @@ def test_act_redeploys_all_when_stale(handler):
     handler.create_frost_views.assert_called_once()
     handler.create_internal_frost_views.assert_called_once()
     handler.create_grafana_views.assert_called_once()
-    stamped = [c.args[:2] for c in handler.set_views_stamp.call_args_list]
+    stamped = [c.args[1:3] for c in handler.set_views_stamp.call_args_list]
     assert stamped == [("user_1", "sta"), ("user_1_int", "sti"), ("user_1", "grf")]
+
+
+def test_act_stamps_in_deploy_transaction(handler):
+    handler.views_up_to_date.side_effect = lambda schema, kind, version: kind != "grf"
+
+    run_act(handler)
+
+    deploy_cursor = handler.create_grafana_views.call_args.args[0]
+    assert handler.set_views_stamp.call_args.args[0] is deploy_cursor
 
 
 def test_act_does_not_stamp_failed_deploy(handler):
@@ -158,6 +168,6 @@ def test_act_does_not_stamp_failed_deploy(handler):
     with pytest.raises(RuntimeError):
         run_act(handler)
 
-    stamped = [c.args[:2] for c in handler.set_views_stamp.call_args_list]
+    stamped = [c.args[1:3] for c in handler.set_views_stamp.call_args_list]
     assert stamped == [("user_1", "sta")]
     handler.create_grafana_views.assert_not_called()
