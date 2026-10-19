@@ -1,6 +1,27 @@
 ---
 services:
 
+  init:
+    volumes:
+      - ./init/init.sh:/init.sh:ro
+
+  flyway:
+    volumes:
+      - ./flyway/migrations/public:/flyway/sql
+      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
+
+  bento:
+    volumes:
+      - ./bento/streams/:/streams:ro
+      - ./bento/main.yaml:/bento.yaml:ro
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
+
+  mqtt-broker:
+    volumes:
+      - ./mosquitto/mosquitto.conf:/etc/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/mosquitto.tls.conf:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro
+      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+
   worker-thing-setup:
     volumes:
       - ./src:/home/appuser/app/src
@@ -34,6 +55,8 @@ services:
       - ./src:/home/appuser/app/src
 
   visualization:
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
       - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
@@ -49,6 +72,8 @@ services:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
+      - "./keycloak/plugins:/opt/keycloak/providers"
 
   dsm-api:
     image: timeio-dsm-api-local:dev
