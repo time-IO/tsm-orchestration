@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+
+from unittest.mock import MagicMock
+
+import pytest
+
+import setup_user_database as sud
+from setup_user_database import CreateThingInPostgresHandler
+
+
+@pytest.fixture
+def sql_dir(tmp_path, monkeypatch):
+    (tmp_path / "views").mkdir()
+    (tmp_path / "postgres-ddl.sql").write_text("CREATE TABLE thing (id int);")
+    monkeypatch.setattr(sud, "SQL_DIR", tmp_path)
+    monkeypatch.setattr(sud, "DDL_FILE", tmp_path / "postgres-ddl.sql")
+    return tmp_path
+
+
+def write(path, text):
+    path.write_text(text)
+    return path
+
+
+def test_compute_views_version_stable(sql_dir):
+    f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
+    digest = sud.hash_view_files([f])
+    assert sud.compute_views_version(digest, 1) == sud.compute_views_version(
+        sud.hash_view_files([f]), 1
+    )
+
+
+def test_compute_views_version_changes(sql_dir, monkeypatch):
+    f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
+    monkeypatch.setenv("SMS_URL", "https://sms")
+    monkeypatch.setenv("CV_URL", "https://cv")
+    base = sud.compute_views_version(sud.hash_view_files([f]), 1)
+
+    assert sud.compute_views_version(sud.hash_view_files([f]), 2) != base
+
+    monkeypatch.setenv("SMS_URL", "https://other")
+    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+    monkeypatch.setenv("SMS_URL", "https://sms")
+
+    monkeypatch.setenv("CV_URL", "https://other")
+    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+    monkeypatch.setenv("CV_URL", "https://cv")
+
+    monkeypatch.setattr(sud, "VIEWS_REVISION", sud.VIEWS_REVISION + 1)
+    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+
+
+def test_hash_view_files_tracks_content_and_ddl(sql_dir):
+    f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
+    base = sud.hash_view_files([f])
+
+    write(f, "CREATE VIEW a AS SELECT 2;")
+    changed = sud.hash_view_files([f])
+    assert changed != base
+
+    write(sql_dir / "postgres-ddl.sql", "CREATE TABLE thing (id bigint);")
+    assert sud.hash_view_files([f]) != changed
+
+
+def test_parse_view_names(sql_dir):
+    f = write(
+        sql_dir / "views" / "a.sql",
+        "--- CREATE VIEW COMMENTED ---\n"
+        '-- CREATE VIEW "ALSO_COMMENTED" AS\n'
+        'DROP VIEW IF EXISTS "THINGS" CASCADE;\n'
+        'CREATE VIEW "THINGS" AS SELECT 1;\n'
+        "  create or replace view helper_View AS SELECT 1;\n",
+    )
+    assert sud.parse_view_names([f]) == ["THINGS", "helper_view"]
+
+
+def test_parse_view_names_real_files():
+    for kind, files in sud.VIEW_FILES.items():
+        assert sud.parse_view_names(files), kind
+    assert "OBSERVATIONS" in sud.parse_view_names(sud.VIEW_FILES["sta"])
+    assert "sta_datastream_links" in sud.parse_view_names(sud.VIEW_FILES["grf"])
+
+
+@pytest.fixture
+def handler(monkeypatch):
+    h = object.__new__(CreateThingInPostgresHandler)
+    h.dsmdb_dsn = "dsn"
+    h.views_digests = {"sta": "d-sta", "sti": "d-sti", "grf": "d-grf"}
+    h.expected_views = {"sta": ["THINGS"], "sti": ["THINGS"], "grf": ["x"]}
+
+    thing = MagicMock()
+    thing.database.username = "User_1"
+    thing.database.ro_username = "ro_user_1"
+    monkeypatch.setattr(sud.Thing, "from_uuid", MagicMock(return_value=thing))
+    monkeypatch.setattr(sud, "journal", MagicMock())
+
+    for name in (
+        "upsert_schema_thing_mapping",
+        "upsert_thing",
+        "create_frost_views",
+        "create_internal_frost_views",
+        "create_grafana_views",
+        "set_views_stamp",
+        "grant_sta_select",
+        "grant_grafana_select",
+    ):
+        setattr(h, name, MagicMock())
+    h.user_exists = MagicMock(return_value=True)
+    h.get_flyway_rank = MagicMock(return_value=7)
+    h.views_up_to_date = MagicMock(return_value=True)
+    return h
+
+
+def run_act(h):
+    h.act({"thing": "uuid"}, MagicMock())
+
+
+def test_act_skips_up_to_date_views_but_grants(handler):
+    run_act(handler)
+
+    handler.create_frost_views.assert_not_called()
+    handler.create_internal_frost_views.assert_not_called()
+    handler.create_grafana_views.assert_not_called()
+    handler.set_views_stamp.assert_not_called()
+    assert handler.grant_sta_select.call_count == 2
+    handler.grant_grafana_select.assert_called_once()
+
+
+def test_act_checks_each_kind_in_its_schema(handler):
+    run_act(handler)
+
+    calls = [c.args for c in handler.views_up_to_date.call_args_list]
+    assert [(s, k) for s, k, _ in calls] == [
+        ("user_1", "sta"),
+        ("user_1_int", "sti"),
+        ("user_1", "grf"),
+    ]
+    expected = sud.compute_views_version("d-sti", 7)
+    assert calls[1][2] == expected
+
+
+def test_act_redeploys_only_stale_kind(handler):
+    handler.views_up_to_date.side_effect = lambda schema, kind, version: kind != "sti"
+
+    run_act(handler)
+
+    handler.create_frost_views.assert_not_called()
+    handler.create_internal_frost_views.assert_called_once()
+    handler.create_grafana_views.assert_not_called()
+    handler.set_views_stamp.assert_called_once_with(
+        "user_1_int", "sti", sud.compute_views_version("d-sti", 7)
+    )
+
+
+def test_act_redeploys_all_when_stale(handler):
+    handler.views_up_to_date.return_value = False
+
+    run_act(handler)
+
+    handler.create_frost_views.assert_called_once()
+    handler.create_internal_frost_views.assert_called_once()
+    handler.create_grafana_views.assert_called_once()
+    stamped = [c.args[:2] for c in handler.set_views_stamp.call_args_list]
+    assert stamped == [("user_1", "sta"), ("user_1_int", "sti"), ("user_1", "grf")]
+
+
+def test_act_does_not_stamp_failed_deploy(handler):
+    handler.views_up_to_date.return_value = False
+    handler.create_internal_frost_views.side_effect = RuntimeError("lock timeout")
+
+    with pytest.raises(RuntimeError):
+        run_act(handler)
+
+    stamped = [c.args[:2] for c in handler.set_views_stamp.call_args_list]
+    assert stamped == [("user_1", "sta")]
+    handler.create_grafana_views.assert_not_called()

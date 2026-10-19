@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 from pathlib import Path
 
 import psycopg
@@ -27,23 +28,56 @@ GRF_PREFIX = "grf_"
 INTERNAL_SCHEMA_SUFFIX = "_int"
 
 SQL_DIR = Path(__file__).parent / "sql"
-VIEW_DIRS = ("sta_views", "sta_views_internal", "grafana_views")
-# Bump to force a view redeploy after changes outside the SQL files.
+DDL_FILE = SQL_DIR / "postgres-ddl.sql"
+STA_VIEW_FILES = (
+    "schema_context.sql",
+    "thing.sql",
+    "location.sql",
+    "sensor.sql",
+    "observed_property.sql",
+    "datastream.sql",
+    "helper_views/foi_ts_action_type_coord.sql",
+    "helper_views/obs_ts_action_type_coord.sql",
+    "feature.sql",
+    "observation.sql",
+)
+GRAFANA_VIEW_FILES = ("datastream_properties.sql", "sta_datastream_links.sql")
+VIEW_FILES = {
+    "sta": [SQL_DIR / "sta_views" / f for f in STA_VIEW_FILES],
+    "sti": [SQL_DIR / "sta_views_internal" / f for f in STA_VIEW_FILES],
+    "grf": [SQL_DIR / "grafana_views" / f for f in GRAFANA_VIEW_FILES],
+}
+# Bump to force a view redeploy after changes not covered by the version hash.
 VIEWS_REVISION = 1
-VIEWS_STAMP_PREFIX = "tsm-views:"
+
+_CREATE_VIEW_RE = re.compile(
+    r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+("?)(\w+)\1', re.IGNORECASE | re.M
+)
 
 
-def compute_views_version() -> str:
-    """Hash of the view SQL files, SMS_URL, CV_URL and VIEWS_REVISION."""
+def hash_view_files(files: list[Path]) -> str:
     h = hashlib.sha256()
-    h.update(
-        f"{VIEWS_REVISION}|{os.environ.get('SMS_URL')}|{os.environ.get('CV_URL')}".encode()
+    for f in [DDL_FILE, *files]:
+        h.update(f.relative_to(SQL_DIR).as_posix().encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def compute_views_version(files_digest: str, flyway_rank: int) -> str:
+    key = (
+        f"{VIEWS_REVISION}|{flyway_rank}|{os.environ.get('SMS_URL')}|"
+        f"{os.environ.get('CV_URL')}|{files_digest}"
     )
-    for d in VIEW_DIRS:
-        for f in sorted((SQL_DIR / d).rglob("*.sql")):
-            h.update(f.relative_to(SQL_DIR).as_posix().encode())
-            h.update(f.read_bytes())
-    return h.hexdigest()[:16]
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+
+def parse_view_names(files: list[Path]) -> list[str]:
+    names = set()
+    for f in files:
+        for quote, name in _CREATE_VIEW_RE.findall(f.read_text()):
+            # Postgres folds unquoted identifiers to lower case.
+            names.add(name if quote else name.lower())
+    return sorted(names)
 
 
 class CreateThingInPostgresHandler(AbstractHandler):
@@ -59,7 +93,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
-        self.views_version = compute_views_version()
+        self.views_digests = {k: hash_view_files(f) for k, f in VIEW_FILES.items()}
+        self.expected_views = {k: parse_view_names(f) for k, f in VIEW_FILES.items()}
 
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -102,18 +137,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        schema = thing.database.username.lower()
-        if self.get_views_stamp(schema) != self.views_version:
-            logger.debug("create/refresh public frost views")
-            self.create_frost_views(thing)
-            logger.debug("create/refresh internal frost views")
-            self.create_internal_frost_views(thing)
-            logger.debug("create/refresh grafana views")
-            self.create_grafana_views(thing)
-            # Only stamp after all views succeeded.
-            self.set_views_stamp(schema, self.views_version)
-        else:
-            logger.debug(f"views are up to date ({self.views_version})")
+        self.deploy_views(thing, int_schema)
 
         logger.debug(f"grant public frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
@@ -122,25 +146,52 @@ class CreateThingInPostgresHandler(AbstractHandler):
         logger.debug(f"grant grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
-    def get_views_stamp(self, schema: str) -> str | None:
+    def deploy_views(self, thing, int_schema: str):
+        schema = thing.database.username.lower()
+        flyway_rank = self.get_flyway_rank()
+        for kind, target, deploy in (
+            ("sta", schema, self.create_frost_views),
+            ("sti", int_schema, self.create_internal_frost_views),
+            ("grf", schema, self.create_grafana_views),
+        ):
+            version = compute_views_version(self.views_digests[kind], flyway_rank)
+            if self.views_up_to_date(target, kind, version):
+                logger.debug(f"{kind} views in {target} are up to date ({version})")
+                continue
+            logger.debug(f"create/refresh {kind} views in {target}")
+            deploy(thing)
+            self.set_views_stamp(target, kind, version)
+
+    def get_flyway_rank(self) -> int:
         with self.db.connection() as conn:
             row = conn.execute(
-                "SELECT obj_description(oid, 'pg_namespace') "
-                "FROM pg_namespace WHERE nspname = %s",
-                [schema],
+                "SELECT coalesce(max(installed_rank), 0) "
+                "FROM public.flyway_schema_history"
             ).fetchone()
-        comment = row[0] if row else None
-        if comment and comment.startswith(VIEWS_STAMP_PREFIX):
-            return comment[len(VIEWS_STAMP_PREFIX) :]
-        return None
+        return row[0]
 
-    def set_views_stamp(self, schema: str, version: str):
+    def views_up_to_date(self, schema: str, kind: str, version: str) -> bool:
+        names = self.expected_views[kind]
+        with self.db.connection() as conn:
+            row = conn.execute(
+                "SELECT EXISTS ("
+                "  SELECT 1 FROM public.views_deploy_state"
+                "  WHERE schema = %s AND kind = %s AND version = %s"
+                ") AND ("
+                "  SELECT count(*) FROM pg_views"
+                "  WHERE schemaname = %s AND viewname = ANY(%s)"
+                ") = %s",
+                [schema, kind, version, schema, names, len(names)],
+            ).fetchone()
+        return row[0]
+
+    def set_views_stamp(self, schema: str, kind: str, version: str):
         with self.db.connection() as conn:
             conn.execute(
-                sql.SQL("COMMENT ON SCHEMA {schema} IS {comment}").format(
-                    schema=sql.Identifier(schema),
-                    comment=sql.Literal(VIEWS_STAMP_PREFIX + version),
-                )
+                "INSERT INTO public.views_deploy_state (schema, kind, version) "
+                "VALUES (%s, %s, %s) ON CONFLICT (schema, kind) DO UPDATE SET "
+                "version = EXCLUDED.version, deployed_at = now()",
+                [schema, kind, version],
             )
 
     def create_user(self, thing):
@@ -354,20 +405,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 )
 
     def create_frost_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
-        files = [
-            os.path.join(base_path, "schema_context.sql"),
-            os.path.join(base_path, "thing.sql"),
-            os.path.join(base_path, "location.sql"),
-            os.path.join(base_path, "sensor.sql"),
-            os.path.join(base_path, "observed_property.sql"),
-            os.path.join(base_path, "datastream.sql"),
-            os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
-            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
-            os.path.join(base_path, "feature.sql"),
-            os.path.join(base_path, "observation.sql"),
-        ]
-
+        files = VIEW_FILES["sta"]
         schema = thing.database.schema.lower()
         user = sql.Identifier(thing.database.username.lower())
         SMS_URL = os.environ.get("SMS_URL")
@@ -398,20 +436,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     c.execute(view)
 
     def create_internal_frost_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views_internal")
-        files = [
-            os.path.join(base_path, "schema_context.sql"),
-            os.path.join(base_path, "thing.sql"),
-            os.path.join(base_path, "location.sql"),
-            os.path.join(base_path, "sensor.sql"),
-            os.path.join(base_path, "observed_property.sql"),
-            os.path.join(base_path, "datastream.sql"),
-            os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
-            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
-            os.path.join(base_path, "feature.sql"),
-            os.path.join(base_path, "observation.sql"),
-        ]
-
+        files = VIEW_FILES["sti"]
         schema = thing.database.schema.lower()
         int_schema = schema + INTERNAL_SCHEMA_SUFFIX
         target = sql.Identifier(int_schema)
@@ -442,11 +467,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     c.execute(view)
 
     def create_grafana_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "grafana_views")
-        files = [
-            os.path.join(base_path, "datastream_properties.sql"),
-            os.path.join(base_path, "sta_datastream_links.sql"),
-        ]
+        files = VIEW_FILES["grf"]
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 user = sql.Identifier(thing.database.username.lower())
