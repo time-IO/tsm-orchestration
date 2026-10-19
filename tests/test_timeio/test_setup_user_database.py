@@ -62,23 +62,11 @@ def test_hash_view_files_tracks_content_and_ddl(sql_dir):
     assert sud.hash_view_files([f]) != changed
 
 
-def test_parse_view_names(sql_dir):
-    f = write(
-        sql_dir / "views" / "a.sql",
-        "--- CREATE VIEW COMMENTED ---\n"
-        '-- CREATE VIEW "ALSO_COMMENTED" AS\n'
-        'DROP VIEW IF EXISTS "THINGS" CASCADE;\n'
-        'CREATE VIEW "THINGS" AS SELECT 1;\n'
-        "  create or replace view helper_View AS SELECT 1;\n",
-    )
-    assert sud.parse_view_names([f]) == ["THINGS", "helper_view"]
-
-
-def test_parse_view_names_real_files():
+def test_view_files_exist():
     for kind, files in sud.VIEW_FILES.items():
-        assert sud.parse_view_names(files), kind
-    assert "OBSERVATIONS" in sud.parse_view_names(sud.VIEW_FILES["sta"])
-    assert "sta_datastream_links" in sud.parse_view_names(sud.VIEW_FILES["grf"])
+        assert files, kind
+        for f in files:
+            assert f.is_file(), f
 
 
 @pytest.fixture
@@ -86,7 +74,6 @@ def handler(monkeypatch):
     h = object.__new__(CreateThingInPostgresHandler)
     h.dsmdb_dsn = "dsn"
     h.views_digests = {"sta": "d-sta", "sti": "d-sti", "grf": "d-grf"}
-    h.expected_views = {"sta": ["THINGS"], "sti": ["THINGS"], "grf": ["x"]}
 
     thing = MagicMock()
     thing.database.username = "User_1"
