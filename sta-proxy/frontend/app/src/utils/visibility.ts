@@ -1,6 +1,6 @@
 import type { FrostEndpoint } from '@/services/endpoints/types';
 
-export type VisibilityName = 'public' | 'internal'
+export type VisibilityName = 'public' | 'internal';
 
 export type Visibility = {
   label: string;
