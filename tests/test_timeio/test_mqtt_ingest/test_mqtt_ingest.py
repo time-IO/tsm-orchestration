@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from paho.mqtt.client import MQTTMessage
 from run_mqtt_ingest import ParseMqttDataHandler
-from timeio.errors import ProcessingError
+from timeio.errors import ProcessingError, UserInputError
 
 
 @pytest.fixture
@@ -83,3 +83,89 @@ def test_act_store_failure_raises_and_does_not_publish(
     handler.mqtt_client.publish.assert_not_called()
     mock_journal.error.assert_called_once()
     mock_journal.info.assert_not_called()
+
+
+def _handler_with_thing(mock_Thing, mock_get_parser, parser):
+    handler = ParseMqttDataHandler()
+    mock_Thing.from_mqtt_user_name.return_value = MagicMock(uuid="UUID")
+    mock_get_parser.return_value = parser
+    handler.mqtt_client = MagicMock()
+    msg = MQTTMessage(topic=b"mqtt_ingest/user/topic")
+    return handler, msg
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_journals_observation_count(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    parser = MagicMock(start_date=None, end_date=None)
+    parser.to_observations.return_value = [{"a": 1}, {"a": 2}, {"a": 3}]
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, parser)
+
+    handler.act({}, msg)
+
+    mock_journal.info.assert_called_once()
+    assert "stored observations: 3" in mock_journal.info.call_args.args[0]
+    mock_journal.warning.assert_not_called()
+    mock_journal.error.assert_not_called()
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_journals_warning_without_observations(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    parser = MagicMock(start_date=None, end_date=None)
+    parser.to_observations.return_value = []
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, parser)
+
+    handler.act({}, msg)
+
+    mock_journal.warning.assert_called_once()
+    assert "no observations" in mock_journal.warning.call_args.args[0]
+    mock_journal.info.assert_not_called()
+    mock_journal.error.assert_not_called()
+    handler.dbapi.upsert_observations_and_datastreams.assert_not_called()
+    handler.mqtt_client.publish.assert_not_called()
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_journals_parsing_error_detail(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    parser = MagicMock()
+    parser.do_parse.side_effect = KeyError("time")
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, parser)
+
+    with pytest.raises(UserInputError):
+        handler.act({}, msg)
+
+    mock_journal.error.assert_called_once()
+    text = mock_journal.error.call_args.args[0]
+    assert text == "Parsing failed: missing key 'time'"
+    mock_journal.info.assert_not_called()
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_journals_unknown_device_type(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, MagicMock())
+    mock_Thing.from_mqtt_user_name.return_value.mqtt.mqtt_device_type.name = "foo"
+    mock_get_parser.side_effect = NotImplementedError("parser 'foo' not known")
+
+    with pytest.raises(NotImplementedError):
+        handler.act({}, msg)
+
+    assert "'foo'" in mock_journal.error.call_args.args[0]
