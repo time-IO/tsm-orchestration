@@ -67,40 +67,38 @@
       hint="Window size for sub-chunks."
     />
     <!--    sub_thresh-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.sub_thresh"
+      v-model="formData.sub_thresh"
       label="sub_thresh (enter a floating point number)"
       :rules="[rules.FLOAT, ruleFactories.MIN(0)]"
       hint="Threshold for sub-chunk deviation."
     />
     <!--    min_periods-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.min_periods"
+      v-model="formData.min_periods"
       label="min_periods (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Minimum points required in a chunk."
     />
+
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.flag"
-      label="Flag"
+      v-model="formData.flag"
+      label="Flag (enter a floating point number) "
       :rules="[ruleFactories.MIN(0)]"
-      hint="Enter a floating point number"
+      hint="Defaults to 255 if left empty."
     />
+
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -114,6 +112,8 @@ import QcFunctionFormOffsetInput from '@/components/QcFunctionFormOffsetInput.vu
 import { POSSIBLE_QC_FUNCTION_TYPES } from '@/utils/quality_control_utils';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -134,8 +134,8 @@ const formData = ref({
   sub_window: null as number | null,
   sub_thresh: null as number | null,
   min_periods: null as number | null,
-  flag: 255.0,
-  dfilter: 0,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {
@@ -160,8 +160,8 @@ function loadInitialData() {
   formData.value.sub_window = (subWindowArg?.input.value as number) ?? null;
   formData.value.sub_thresh = (subThreshArg?.input.value as number) ?? null;
   formData.value.min_periods = (minPeriodsArg?.input.value as number) ?? null;
-  formData.value.flag = (flagArg?.input.value as number) ?? null;
-  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? 255.0;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? 0;
 }
 watch(() => props.initialData, loadInitialData, { immediate: true });
 
@@ -208,12 +208,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter },
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 
@@ -230,7 +230,7 @@ const formDataWithTypes = computed(() => {
   if (formData.value.target.length > 0) {
     returnArray.push(targetObject);
   }
-  if (formData.value.sub_window !== null) {
+  if (formData.value.sub_window !== null && String(formData.value.sub_window) !== '') {
     returnArray.push(sub_windowObject);
   }
   if (formData.value.sub_thresh !== null) {

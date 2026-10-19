@@ -32,10 +32,9 @@
     </div>
 
     <!--    n-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.n"
+      v-model="formData.n"
       label="n (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(0)]"
       hint="Number of periods to include in LOF calculation."
@@ -44,7 +43,7 @@
     <!--thresh-->
     <qc-function-form-float-enum-input
       class="q-mb-md"
-      v-model:input.number="formData.thresh"
+      v-model:input="formData.thresh"
       v-model:current_type="current_thresh_type"
       label="thresh"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -54,10 +53,9 @@
     />
 
     <!--probability-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.probability"
+      v-model="formData.probability"
       label="probability (enter a floating point number)"
       :rules="[ruleFactories.RANGE(0, 1), rules.FLOAT]"
       hint="Outlier probability cutoff."
@@ -67,7 +65,7 @@
     <qc-function-form-float-int-input
       label="corruption"
       class="q-mb-md"
-      v-model:input.number="formData.corruption"
+      v-model:input="formData.corruption"
       v-model:current_type="current_corruption_type"
       :rules_float="[rules.FLOAT, ruleFactories.RANGE(0, 1)]"
       :rules_int="[rules.INTEGER, ruleFactories.MIN(0)]"
@@ -86,10 +84,9 @@
     />
 
     <!--p-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.p"
+      v-model="formData.p"
       label="p (enter a integer number)"
       :rules="[rules.INTEGER, ruleFactories.MIN(1)]"
       hint="Minkowski metric degree."
@@ -97,7 +94,7 @@
 
     <!--density-->
     <qc-function-form-float-enum-input
-      v-model:input.number="formData.density"
+      v-model:input="formData.density"
       v-model:current_type="current_density_type"
       label="density"
       :rules_float="[ruleFactories.MIN(0)]"
@@ -133,33 +130,30 @@
     </div>
 
     <!--min_offset-->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.min_offset"
+      v-model="formData.min_offset"
       label="min_offset (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
       hint="Minimum value jump before and after clusters to flag."
     />
 
     <!-- flag     -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.flag"
+      v-model="formData.flag"
       label="Flag (enter a floating point number)"
       :rules="[ruleFactories.MIN(0), rules.FLOAT]"
-      hint="Flag assigned to values identified by this function."
+      hint="Flag assigned to values identified by this function. Defaults to 255 if left empty."
     />
 
     <!-- dfilter    -->
-    <q-input
+    <qc-number-input
       class="q-mb-md"
-      filled
-      v-model.number="formData.dfilter"
+      v-model="formData.dfilter"
       :rules="[rules.FLOAT]"
       label="dfilter (enter a floating point number)"
-      hint="Values with flags greater than or equal to this threshold are treated as missing during processing."
+      hint="Values with flags greater than or equal to this threshold are treated as missing during processing. Defaults to 0 if left empty."
     />
   </qc-function-form-template>
 </template>
@@ -174,6 +168,8 @@ import QcFunctionFormFloatEnumInput from '@/components/QcFunctionFormFloatEnumIn
 import QcFunctionFormFloatIntInput from '@/components/QcFunctionFormFloatIntInput.vue';
 import type { Datastream } from '@/services/sta/types';
 import { ruleFactories, rules } from '@/utils/validation/rules';
+import { nullableNumber } from '@/utils/quality_control_function_utils';
+import QcNumberInput from '@/components/QcNumberInput.vue';
 
 const props = defineProps<{
   permission_group_id: number;
@@ -192,35 +188,35 @@ const algorithmOptions = ['ball_tree', 'kd_tree', 'brute', 'auto'];
 type UniLofFormData = {
   field: Datastream[];
   target: Datastream[];
-  n: number;
+  n: number | null;
   thresh: string | number;
   probability: number | null;
   corruption: number | null;
   algorithm: string;
-  p: number;
+  p: number | null;
   density: string | number;
   fill_na: boolean;
   slope_correct: boolean;
   min_offset: number | null;
-  flag: number;
-  dfilter: number;
+  flag: number | null;
+  dfilter: number | null;
 };
 
 const formData = ref<UniLofFormData>({
   field: [] as Datastream[],
   target: [] as Datastream[],
-  n: 20,
+  n: nullableNumber(20),
   thresh: 'auto',
   probability: null as number | null,
   corruption: null as number | null,
   algorithm: 'ball_tree',
-  p: 1,
+  p: nullableNumber(1),
   density: 'auto',
   fill_na: true,
   slope_correct: true,
   min_offset: null as number | null,
-  flag: 255.0,
-  dfilter: 0,
+  flag: nullableNumber(255.0),
+  dfilter: nullableNumber(0),
 });
 
 function loadInitialData() {
@@ -255,8 +251,8 @@ function loadInitialData() {
   formData.value.fill_na = (fillNaArg?.input.value as boolean) ?? true;
   formData.value.slope_correct = (slopeCorrectArg?.input.value as boolean) ?? true;
   formData.value.min_offset = (minOffsetArg?.input.value as number) ?? null;
-  formData.value.flag = (flagArg?.input.value as number) ?? null;
-  formData.value.dfilter = (dfilterArg?.input.value as number) ?? null;
+  formData.value.flag = (flagArg?.input.value as number) ?? 255.0;
+  formData.value.dfilter = (dfilterArg?.input.value as number) ?? 0;
 
   if (threshArg) {
     current_thresh_type.value = threshArg.type;
@@ -341,12 +337,12 @@ const formDataWithTypes = computed(() => {
   };
   const flagObject = {
     name: 'flag',
-    input: { value: formData.value.flag },
+    input: { value: formData.value.flag ?? 255 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
   const dfilterObject = {
     name: 'dfilter',
-    input: { value: formData.value.dfilter },
+    input: { value: formData.value.dfilter ?? 0 },
     type: POSSIBLE_QC_FUNCTION_TYPES.FLOAT,
   };
 

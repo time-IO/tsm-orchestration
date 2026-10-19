@@ -4,9 +4,8 @@ import base64
 import re
 
 from abc import ABC, abstractmethod
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 
 from timeio.feta import Thing
 from timeio.typehints import MqttPayload
@@ -81,7 +80,8 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         else:
             raise ExtApiRequestError("HTTP request failed", status_code)
     except requests.exceptions.RequestException as e:
-        raise ExtApiRequestError(f"Network error: {e}")
+        msg = re.sub(r"(token=)[^&\s'\"]+", r"\1***", str(e))
+        raise ExtApiRequestError(f"Network error: {msg}")
 
 
 def dynamic_parameter_mapping(v):
@@ -411,7 +411,7 @@ class UbaApiSyncer(ExtApiSyncer):
     def cet_to_utc(dt_string):
         # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
         dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
-        dt_cet = dt.replace(tzinfo=ZoneInfo("CET"))
+        dt_cet = dt.replace(tzinfo=timezone(timedelta(hours=1)))
         dt_utc = dt_cet.astimezone(timezone.utc)
 
         return dt_utc.isoformat()
@@ -682,7 +682,19 @@ class NmApiSyncer(ExtApiSyncer):
 
 
 class SensotoApiSyncer(ExtApiSyncer):
-    base_url = "https://api.sensoto.io/v1/organizations/open/networks"
+    organizations_url = "https://api.sensoto.io/v1/organizations"
+    default_organization = "open"
+
+    @staticmethod
+    def _seg(value) -> str:
+        """Make a value safe for use as a single URL path segment."""
+        value = str(value)
+        if value in {"", ".", ".."}:
+            raise ExtApiRequestError(f"Invalid Sensoto path segment: {value!r}")
+        return quote(value, safe="")
+
+    def _networks_url(self, organization):
+        return f"{self.organizations_url}/{self._seg(organization)}/networks"
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -690,17 +702,28 @@ class SensotoApiSyncer(ExtApiSyncer):
             settings["network"],
             settings["device"],
         )
-        sensor_data = self.get_sensor_data(network, device)
+        organization = settings.get("organization") or self.default_organization
+        networks_url = self._networks_url(organization)
+        net, dev = self._seg(network), self._seg(device)
+
+        auth_params = {}
+        if token_enc := settings.get("token"):
+            auth_params["token"] = decrypt(token_enc, get_crypt_key())
+
+        sensor_data = self.get_sensor_data(
+            network, device, auth_params, organization=organization
+        )
         api_response = list()
         params = {
             "start": content["datetime_from"],
             "end": content["datetime_to"],
             "timeFormat": "interval",
+            **auth_params,
         }
         for s in sensor_data:
             res = request_with_handling(
                 "GET",
-                f"{self.base_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s['sensor'])}/measurements/raw",
                 params=params,
             )
             api_data = res.json()
@@ -731,15 +754,21 @@ class SensotoApiSyncer(ExtApiSyncer):
 
         return bodies
 
-    def get_sensor_data(self, network, device):
+    def get_sensor_data(self, network, device, params=None, organization=None):
+        networks_url = self._networks_url(organization or self.default_organization)
+        net, dev = self._seg(network), self._seg(device)
         sensor_data = list()
         sensors_resp = request_with_handling(
-            "GET", f"{self.base_url}/{network}/devices/{device}/sensors"
+            "GET",
+            f"{networks_url}/{net}/devices/{dev}/sensors",
+            params=params,
         )
         sensors = [i["name"] for i in sensors_resp.json()["items"]]
         for s in sensors:
             agg_resp = request_with_handling(
-                "GET", f"{self.base_url}/{network}/devices/{device}/sensors/{s}"
+                "GET",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s)}",
+                params=params,
             )
             agg = agg_resp.json()["phenomenon"]["aggregation"]
             sensor_data.append({"sensor": s, "aggregation": agg})

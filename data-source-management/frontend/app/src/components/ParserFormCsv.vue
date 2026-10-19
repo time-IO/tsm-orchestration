@@ -195,6 +195,7 @@
             type="textarea"
             rows="3"
             hint="additional JSON to configure pandas"
+            :rules="[validatePandasReadCsv]"
           />
 
           <!-- Action Buttons -->
@@ -246,19 +247,13 @@
 <script setup lang="ts">
 import { computed, ref, toRaw, useTemplateRef, watch } from 'vue';
 import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
-import type { CsvParserCreate, CsvParserUpdate } from '@/services/parser_csv/types';
 import ParserEncodingSelect from '@/components/ParserEncodingSelect.vue';
 import ParserTimezoneSelect from '@/components/ParserTimezoneSelect.vue';
 import { ruleFactories, rules } from '@/utils/validation/rules';
 import ParserValidateCsv from '@/components/ParserValidateCsv.vue';
 import { QForm } from 'quasar';
-import { toNullableNumber } from '@/utils/string_utils';
-
-type CsvParserFormData = CsvParserUpdate & {
-  permission_group_id?: number | null;
-  timestamp_columns: CsvParserCreate['timestamp_columns'];
-  comment: string[];
-};
+import { parseJsonField, toNullableNumber } from '@/utils/string_utils';
+import type { CsvParserFormData } from '@/utils/parser_csv_utils';
 
 const props = withDefaults(
   defineProps<{
@@ -266,11 +261,9 @@ const props = withDefaults(
     isLoading: boolean;
     backRoute: string;
     disablePermissionGroup?: boolean;
-    permissionGroupId?: number | null;
   }>(),
   {
     disablePermissionGroup: false,
-    permissionGroupId: null,
   },
 );
 
@@ -325,7 +318,7 @@ watch(
 
 const permissionGroupModel = computed({
   get() {
-    return formData.value.permission_group_id ?? props.permissionGroupId;
+    return formData.value.permission_group_id;
   },
   set(value: number | null) {
     if (!props.disablePermissionGroup) {
@@ -359,6 +352,15 @@ const showDocs = () => {
 
 function trimHeadlines(value: string | number | null) {
   formData.value.headlines_to_exclude = String(value ?? '').trim();
+}
+
+function validatePandasReadCsv(value: string | null): true | string {
+  try {
+    parseJsonField(value);
+    return true;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Pandas read csv must contain valid JSON';
+  }
 }
 </script>
 

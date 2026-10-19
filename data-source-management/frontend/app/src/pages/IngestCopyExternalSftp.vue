@@ -1,6 +1,6 @@
 <template>
   <ingest-form-external-sftp
-    title="Copy External SFTP Ingest"
+    title="Copy External FTP/SFTP Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"

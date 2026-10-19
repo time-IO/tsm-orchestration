@@ -8,6 +8,7 @@ import ingestExternalApiSensotoController from '@/services/ingest_external_api_s
 import ingestExternalApiZentraController from '@/services/ingest_external_api_zentra';
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
+import ingestDatabaseController from '@/services/ingest_database';
 import ingestSftpController from '@/services/ingest_sftp';
 import ingestHttpController from '@/services/ingest_http';
 import ingestHttpStorageController from '@/services/ingest_http_storage';
@@ -27,6 +28,7 @@ import soilcanParserController from '@/services/parser_soilcan';
 import qualityControlSettingController from '@/services/quality_control_setting';
 import staController from '@/services/sta';
 import qualityControlSettingsTriggerController from '@/services/quality_control_settings_trigger';
+import smsConfigurationsController from '@/services/sms_configurations';
 
 import parserTimezoneController from '@/services/parser_timezone';
 import parserEncodingController from '@/services/parser_encoding';
@@ -73,4 +75,6 @@ export const API = {
   ingestHttp: ingestHttpController,
   ingestHttpStorage: ingestHttpStorageController,
   ingestExternalMqtt: ingestExternalMqttController,
+  smsConfigurations: smsConfigurationsController,
+  ingestDatabase: ingestDatabaseController,
 };
