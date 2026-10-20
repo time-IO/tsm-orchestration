@@ -11,4 +11,4 @@ router = APIRouter(
 
 @router.get("/", response_model=Version, summary="Get the deployed API version")
 def get_version():
-    return {"version": settings.APP_VERSION}
+    return {"version": settings.API_VERSION}
