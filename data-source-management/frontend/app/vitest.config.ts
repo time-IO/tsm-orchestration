@@ -14,6 +14,15 @@ export default defineConfig(async () =>
         'test/vitest/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
         'test/components/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       ],
+      coverage: {
+          provider: 'v8',
+          reporter: ['text', 'html'],
+          include: ['src/**/*.{ts,vue}'],
+          exclude: [
+            'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+            'src/**/*.d.ts',
+          ],
+      },
     },
   }),
 );
