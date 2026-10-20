@@ -20,6 +20,7 @@ When adding a changelog entry, ensure the following:
 - External API sync publishes `data_parsed` to the topic configured in `TOPIC_DATA_PARSED` instead of a hardcoded one ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/760))
 - MQTT ingest reported success and triggered QC although storing the data failed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/758))
 - A single MQTT message that is not valid UTF-8 crashed the worker; it is now logged and dropped ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/757))
+- Validation of flagByScatterLowpass ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/794))
 
 ### Changed
 - `bento` is built into a time.IO image containing its configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/770))
