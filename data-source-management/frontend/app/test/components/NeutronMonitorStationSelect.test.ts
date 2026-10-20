@@ -2,6 +2,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { flushPromises, mount } from '@vue/test-utils';
 import { QSelect } from 'quasar';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
 
 import NeutronMonitorStationSelect from '@/components/NeutronMonitorStationSelect.vue';
 import type { NeutronMonitorStation } from '@/services/neutron_monitor_stations/types';
@@ -26,6 +27,34 @@ vi.mock('quasar', async (importOriginal) => {
 installQuasarPlugin();
 
 const PAGE_SIZE = 50;
+
+// The option slots of a real QSelect only render inside a popup menu.
+// This stub renders them inline, so the slot content can be tested.
+const QSelectStub = defineComponent({
+  name: 'QSelect',
+  inheritAttrs: false,
+  props: ['options', 'modelValue'],
+  setup:
+    (props, { slots }) =>
+    () =>
+      h(
+        'div',
+        { class: 'q-select-stub' },
+        props.options?.length
+          ? (props.options as unknown[]).map((opt) =>
+              h('div', { class: 'option' }, slots.option?.({ opt, itemProps: {} })),
+            )
+          : slots['no-option']?.(),
+      ),
+});
+
+const mountOptionList = async () => {
+  const wrapper = mount(NeutronMonitorStationSelect, {
+    global: { stubs: { QSelect: QSelectStub } },
+  });
+  await flushPromises();
+  return wrapper;
+};
 
 const makeStation = (id: number, stationId: string, description = `Description ${id}`) =>
   ({ id, station_id: stationId, description }) as NeutronMonitorStation;
@@ -228,6 +257,15 @@ describe('NeutronMonitorStationSelect', () => {
 
       expect(getIds(wrapper)).toEqual([1, 2]);
     });
+
+    it('keeps the options when the preselected item is cleared', async () => {
+      const wrapper = await mountSelect();
+      await wrapper.setProps({ preselectedItem: makeStation(99, 'EXTRA') });
+
+      await wrapper.setProps({ preselectedItem: null });
+
+      expect(getIds(wrapper)).toEqual([1, 2, 99]);
+    });
   });
 
   describe('pagination via virtual scroll', () => {
@@ -307,5 +345,70 @@ describe('NeutronMonitorStationSelect', () => {
       });
       expect(getOptions(wrapper)).toHaveLength(PAGE_SIZE);
     });
+
+    it('does not fail when the virtual scroll event has no ref', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({ total: 60, items: makeStations(10, 51) });
+      const wrapper = await mountSelect();
+
+      getSelect(wrapper).vm.$emit('virtual-scroll', { to: PAGE_SIZE - 1 });
+      await flushPromises();
+
+      expect(getOptions(wrapper)).toHaveLength(60);
+    });
+
+    it('ignores a scroll while the previous fetch is still running', async () => {
+      let finishFetch!: (value: unknown) => void;
+      dispatchGetListMock.mockReturnValueOnce(new Promise((resolve) => (finishFetch = resolve)));
+      const wrapper = await mountSelect();
+
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(2);
+      finishFetch({ total: 60, items: makeStations(10, 51) });
+      await flushPromises();
+    });
+
+    it('lets only one fetch run when two scrolls arrive at once', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({ total: 60, items: makeStations(10, 51) });
+      const wrapper = await mountSelect();
+
+      scroll(wrapper, PAGE_SIZE - 1);
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(2);
+      expect(getOptions(wrapper)).toHaveLength(60);
+    });
   });
+
+
+  describe('option rendering', () => {
+    it('shows station_id and description of every option', async () => {
+      dispatchGetListMock.mockResolvedValue({
+        total: 2,
+        items: [makeStation(1, 'JUNG', 'Jungfraujoch'), makeStation(2, 'KIEL', 'Kiel')],
+      });
+
+      const wrapper = await mountOptionList();
+      const options = wrapper.findAll('.option');
+
+      expect(options).toHaveLength(2);
+      expect(options[0]!.text()).toContain('JUNG');
+      expect(options[0]!.text()).toContain('Jungfraujoch');
+      expect(options[1]!.text()).toContain('KIEL');
+    });
+
+    it('shows "No results" when there are no options', async () => {
+      dispatchGetListMock.mockResolvedValue({ total: 0, items: [] });
+
+      const wrapper = await mountOptionList();
+
+      expect(wrapper.find('.option').exists()).toBe(false);
+      expect(wrapper.text()).toContain('No results');
+    });
+  });
+
 });

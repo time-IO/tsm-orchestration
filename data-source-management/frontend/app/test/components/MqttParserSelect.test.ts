@@ -2,6 +2,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { flushPromises, mount } from '@vue/test-utils';
 import { QSelect } from 'quasar';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
 
 import MqttParserSelect from '@/components/MqttParserSelect.vue';
 import type { MqttParser } from '@/services/parser_mqtt/types';
@@ -31,6 +32,22 @@ vi.mock('quasar', async (importOriginal) => {
 installQuasarPlugin();
 
 const PAGE_SIZE = 50;
+
+// The no-option slot of a real QSelect only renders inside a popup menu.
+// This stub renders it inline when there are no options.
+const QSelectStub = defineComponent({
+  name: 'QSelect',
+  inheritAttrs: false,
+  props: ['options', 'modelValue'],
+  setup:
+    (props, { slots }) =>
+    () =>
+      h(
+        'div',
+        { class: 'q-select-stub' },
+        props.options?.length ? 'has options' : slots['no-option']?.(),
+      ),
+});
 
 const makeParser = (id: number, name = `Parser ${id}`) => ({ id, name }) as MqttParser;
 
@@ -292,6 +309,57 @@ describe('MqttParserSelect', () => {
         message: 'Failed to fetch parser',
       });
       expect(getOptions(wrapper)).toHaveLength(PAGE_SIZE);
+    });
+
+    it('does not fail when the virtual scroll event has no ref', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({ total: 60, items: makeParsers(10, 51) });
+      const wrapper = await mountSelect();
+
+      getSelect(wrapper).vm.$emit('virtual-scroll', { to: PAGE_SIZE - 1 });
+      await flushPromises();
+
+      expect(getOptions(wrapper)).toHaveLength(60);
+    });
+
+    it('lets only one fetch run when two scrolls arrive at once', async () => {
+      dispatchGetListMock.mockResolvedValueOnce({ total: 60, items: makeParsers(10, 51) });
+      const wrapper = await mountSelect();
+
+      scroll(wrapper, PAGE_SIZE - 1);
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(2);
+      expect(getOptions(wrapper)).toHaveLength(60);
+    });
+
+    it('keeps fetching after a full second page', async () => {
+      dispatchGetListMock
+        .mockResolvedValueOnce({ total: 120, items: makeParsers(PAGE_SIZE, 51) })
+        .mockResolvedValueOnce({ total: 120, items: makeParsers(10, 101) });
+      const wrapper = await mountSelect();
+
+      scroll(wrapper, PAGE_SIZE - 1);
+      await flushPromises();
+      scroll(wrapper, 2 * PAGE_SIZE - 1);
+      await flushPromises();
+
+      expect(dispatchGetListMock).toHaveBeenCalledTimes(3);
+      expect(dispatchGetListMock).toHaveBeenLastCalledWith(3, PAGE_SIZE);
+      expect(getOptions(wrapper)).toHaveLength(110);
+     });
+  });
+
+  describe('no-option slot', () => {
+    it('shows "No results" when there are no options', async () => {
+      dispatchGetListMock.mockResolvedValue({ total: 0, items: [] });
+
+      const wrapper = mount(MqttParserSelect, {
+        global: { stubs: { QSelect: QSelectStub } },
+      });
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('No results');
     });
   });
 });

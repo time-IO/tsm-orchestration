@@ -2,6 +2,7 @@ import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-v
 import { flushPromises, mount } from '@vue/test-utils';
 import { QSelect } from 'quasar';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
 
 import ParserEncodingSelect from '@/components/ParserEncodingSelect.vue';
 
@@ -35,6 +36,34 @@ const ENCODINGS: Encoding[] = [
   { codec: 'latin_1', aliases: ['iso-8859-1', 'l1'], languages: ['Western Europe'] },
   { codec: 'cp1251', aliases: ['windows-1251'], languages: ['Bulgarian', 'Russian'] },
 ];
+
+// The option slots of a real QSelect only render inside a popup menu.
+// This stub renders them inline, so the slot content can be tested.
+const QSelectStub = defineComponent({
+  name: 'QSelect',
+  inheritAttrs: false,
+  props: ['options', 'modelValue'],
+  setup:
+    (props, { slots }) =>
+    () =>
+      h(
+        'div',
+        { class: 'q-select-stub' },
+        props.options?.length
+          ? (props.options as unknown[]).map((opt) =>
+              h('div', { class: 'option' }, slots.option?.({ opt, itemProps: {} })),
+            )
+          : slots['no-option']?.(),
+      ),
+});
+
+const mountOptionList = async () => {
+  const wrapper = mount(ParserEncodingSelect, {
+    global: { stubs: { QSelect: QSelectStub } },
+  });
+  await flushPromises();
+  return wrapper;
+};
 
 const mountSelect = async (
   props: {
@@ -193,6 +222,29 @@ describe('ParserEncodingSelect', () => {
       await wrapper.vm.$nextTick();
 
       expect(getOptions(wrapper)).toEqual([]);
+    });
+  });
+
+  describe('option rendering', () => {
+    it('shows codec, aliases and languages of every option', async () => {
+      const wrapper = await mountOptionList();
+
+      const options = wrapper.findAll('.option');
+
+      expect(options).toHaveLength(3);
+      expect(options[0]!.text()).toContain('utf-8');
+      expect(options[0]!.text()).toContain('aliases: u8,utf8');
+      expect(options[0]!.text()).toContain('languages: all languages');
+      expect(options[2]!.text()).toContain('languages: Bulgarian,Russian');
+    });
+
+    it('shows "No results" when there are no options', async () => {
+      storeMock.rows = [];
+
+      const wrapper = await mountOptionList();
+
+      expect(wrapper.find('.option').exists()).toBe(false);
+      expect(wrapper.text()).toContain('No results');
     });
   });
 });

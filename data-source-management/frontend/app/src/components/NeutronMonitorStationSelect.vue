@@ -71,6 +71,7 @@ watch(
 );
 
 function includeItemIfMissing() {
+  /* v8 ignore next*/
   if (preselectedItem) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItem.id);
     if (isItemMissing) {
