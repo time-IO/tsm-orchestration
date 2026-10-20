@@ -8,18 +8,17 @@
 import { computed } from 'vue';
 import { VISIBILITIES, type VisibilityName } from '@/utils/visibility';
 
-const props = withDefaults(
-  defineProps<{
-    visibility: VisibilityName;
-    color?: string;
-    size?: string;
-    tooltip?: boolean;
-  }>(),
-  {
-    size: 'sm',
-    tooltip: true,
-  },
-);
+const {
+  visibility,
+  color,
+  size = 'sm',
+  tooltip = true,
+} = defineProps<{
+  visibility: VisibilityName;
+  color?: string;
+  size?: string;
+  tooltip?: boolean;
+}>();
 
-const definition = computed(() => VISIBILITIES[props.visibility]);
+const definition = computed(() => VISIBILITIES[visibility]);
 </script>

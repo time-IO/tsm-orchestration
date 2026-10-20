@@ -18,6 +18,9 @@ stage-tag-images-in-registry:
         - init/**/*
         - flyway/**/*
         - keycloak/**/*
+        - mosquitto/**/*
+        - bento/**/*
+        - grafana/**/*
         - tomcat/**/*
         - data-source-management/**/*
         - sta-proxy/**/*
@@ -38,6 +41,9 @@ stage-tag-images-in-registry:
       echo "TIMEIO_INIT_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FLYWAY_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_KEYCLOAK_IMAGE_TAG=$BRANCH_NAME" >> .env
+      echo "TIMEIO_MQTT_BROKER_IMAGE_TAG=$BRANCH_NAME" >> .env
+      echo "TIMEIO_BENTO_IMAGE_TAG=$BRANCH_NAME" >> .env
+      echo "TIMEIO_VISUALIZATION_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_FROST_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_CRON_SCHEDULER_IMAGE_TAG=$BRANCH_NAME" >> .env
       echo "TIMEIO_DISPATCHER_IMAGE_TAG=$BRANCH_NAME" >> .env

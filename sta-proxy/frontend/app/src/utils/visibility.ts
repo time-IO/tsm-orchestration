@@ -1,8 +1,6 @@
 import type { FrostEndpoint } from '@/services/endpoints/types';
 
-export const VISIBILITY_NAMES = ['public', 'internal'] as const;
-
-export type VisibilityName = (typeof VISIBILITY_NAMES)[number];
+export type VisibilityName = 'public' | 'internal';
 
 export type Visibility = {
   label: string;
