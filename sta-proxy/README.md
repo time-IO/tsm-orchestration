@@ -1,89 +1,139 @@
 # STA Proxy
 
-## Session handling
+## Setup
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as User
-    participant FE as sta-proxy-frontend
-    participant KC as Keycloak
-    participant N as nginx
-    participant API as sta-proxy-api
-    participant DSM as DSM API
+Build Docker images (from the repository root)
 
-    U->>FE: login
-    FE->>KC: OIDC authorization code flow
-    KC-->>FE: access token (+ silent renew)
-
-    Note over FE,API: on login and on every token refresh
-    FE->>N: PUT /sta/session<br/>Authorization: Bearer TOKEN
-    N->>API: PUT /session
-    API->>API: check Origin == BASE_URL origin (else 403)
-    API->>DSM: GET /me/<br/>Authorization: Bearer TOKEN
-    Note over DSM: handling token and mapping to permission groups
-    alt token accepted
-        DSM-->>API: 200 user
-        API-->>FE: 204 Set-Cookie sta_session=TOKEN<br/>HttpOnly, Path=/sta/, SameSite=Lax, Secure (https)<br/>no Max-Age, ends with the browser session
-    else token rejected
-        DSM-->>API: 401
-        API-->>FE: 401, no cookie
-    end
-
-    Note over FE,API: on logout, token expiry or sign-out at Keycloak
-    FE->>N: DELETE /sta/session
-    N->>API: DELETE /session
-    API-->>FE: 204 Set-Cookie sta_session="" Max-Age=0
+```
+./dc.sh build sta-proxy-api sta-proxy-frontend
 ```
 
-## Request workflow
+## Run
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant C as Client<br/>(browser tab or script)
-    participant N as nginx
-    participant API as sta-proxy-api
-    participant DSM as DSM API
-    participant FP as frost<br/>(public)
-    participant FI as frost-internal
-
-    C->>N: GET /sta/{endpoint}/v1.1/...<br/>Authorization header (scripts)<br/>or sta_session cookie (browser)<br/>or nothing (anonymous)
-    Note right of N: CORS: Access-Control-Allow-Origin *<br/>never Allow-Credentials
-    N->>API: GET /{endpoint}/v1.1/... (/sta/ stripped)
-    API->>API: validate_proxied_path<br/>".." gives 400, FROST listing gives 404
-
-    opt no Authorization header
-        API->>API: use sta_session cookie as Bearer token, if present
-    end
-
-    alt any token present
-        API->>DSM: GET /permission-group/<br/>Authorization: Bearer TOKEN
-        Note over API,DSM: ANY kind of token is passed to the DSM API as is.<br/>The DSM API alone decides which user and permission groups it belongs to.<br/>Today: Keycloak access token (JWT).<br/>Possible later: script access token mapped to a user<br/>and its permission groups. sta-proxy needs no change for that.
-        alt token accepted
-            DSM-->>API: own permission groups
-        else token rejected or DSM error
-            DSM-->>API: 401 / error
-            API->>API: treat as no permission groups
-        end
-    end
-
-    alt endpoint name in own permission groups
-        API->>FI: GET /{endpoint}/v1.1/... (Accept only, no token, no cookie)
-        FI-->>API: internal data
-        API-->>C: response<br/>Vary: Authorization, Cookie<br/>Cache-Control: private, no-store
-    else anonymous, invalid token or not a member
-        API->>FP: GET /{endpoint}/v1.1/... (Accept only)
-        FP-->>API: public data
-        API-->>C: response<br/>Vary: Authorization, Cookie
-    end
-
-    Note over C,API: GET /sta/endpoints/ uses the same rule to mark endpoints as is_internal
+Run with the time.IO orchestration setup.
 ```
+./up.sh
+```
+
+For development:
+```
+./up-with-dev.sh
+```
+
+### Frontend
+
+- visit: http://localhost/sta-proxy (or http://localhost/sta)
+
+### Api
+
+- available under http://localhost/sta (STA endpoints, e.g. `http://localhost/sta/<endpoint>/v1.1`)
+- the frontend uses the same base URL (`/sta/endpoints`, `/sta/ingests`, `/sta/me`, `/sta/session`)
+
+## Authentication
+
+- The frontend application authenticates against Keycloak using authorization code flow with pkce, see `frontend/app/src/stores/authStore.ts`
+- The access token is used as a bearer token in the authorization header in each request to the api
+- On login and on every token refresh, the frontend stores the access token in the HttpOnly session cookie `sta_session` (`PUT /sta/session`)
+  - A browser tab opening an endpoint URL cannot send a bearer token, so the api uses the cookie instead
+- Scripts send the token in the authorization header, anonymous requests send nothing
+- The api does not verify tokens itself, it passes them as is to the DSM API (`/me/`, `/permission-group/`)
+  - **Currently, the DSM API alone decides which user and permission groups a token belongs to**
+
+## Permission Groups
+
+- Permission groups and memberships are managed by the DSM API, see [data-source-management/README.md](../data-source-management/README.md)
+- Every FROST endpoint belongs to a permission group, the endpoint name equals the `database_username` of the group
+- A user may read the internal data of an endpoint, if the endpoint belongs to one of the user's permission groups
+- The permission groups of a token are cached for 60 seconds (`PERMISSION_GROUPS_CACHE_TTL`), so pagination does not query the DSM API for every page
+
+## Generic Frontend Image
+
+### Description
+
+To provide the possibility to set the environment variables for the frontend during runtime we provide a `generic frontend image`.
+
+### How it works
+
+The key to the solution is how the environment variables in frontend are declared, e.g. `const ENV_API_BASE_URL = import.meta.env.API_BASE_URL || 'ENV_API_BASE_URL_PLACEHOLDER'`.
+With `import.meta.env.API_BASE_URL` environment variables can be directly passed. This is useful for development.
+
+During build time no environment variables are passed, therefore all variables will have the `<..._PLACEHOLDER>` string as values, e.g. `const ENV_API_BASE_URL = 'ENV_API_BASE_URL_PLACEHOLDER'`.
+
+The Dockerfile has an entrypoint script, that searches for these placeholder strings and replaces them with the actual values passed to the container during runtime.
+
+The image comes with a minimal `default.conf` for the nginx (`frontend/docker/generic-image/`), which can be replaced by volume mounts.
+
+### How to use it
+
+See the `sta-proxy-frontend` service in `docker-compose.yml`, which passes the `ENV_..._PLACEHOLDER` variables, and the `/sta-proxy/` location in `nginx/locations/locations.conf`.
+
+## Development
+
+### Api Tests
+
+Run the api unit tests from the repository root:
+
+```bash
+python3 -m pytest sta-proxy/api/app/tests/unit_tests
+```
+
+### Formatting
+
+#### Api
+
+- To format the python files of the api using the black formatter, you can use the following docker command (from `sta-proxy/`):
+
+```
+docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
+```
+
+#### Frontend
+
+- To **check** the .vue and javascript/typescript files using prettier, you can use the following command (from the repository root):
+
+```
+./dc-with-dev.sh run --rm sta-proxy-frontend npx prettier --check .
+```
+
+- To **format** the .vue and javascript/typescript files using prettier, you can use the following command:
+
+```
+./dc-with-dev.sh run --rm sta-proxy-frontend npx prettier --write .
+```
+
+### Environment Variables API
+
+- Environment Variables must be defined in `api/app/config.py` > `Settings` class
+- Environment Variables must be used, using the `settings` instance (instantiated at the end of `api/app/config.py`)
+
+### Environment Variables Frontend
+
+- Environment Variables must be defined in
+  - `frontend/app/quasar.config.ts` > `build` > `defineEnv`
+  - `frontend/docker/generic-image/entrypoint.sh` --> the placeholder string must be added to `environmentPlaceholders`
+  - always follow the existing naming structure, e.g. `const ENV_SMS_URL = import.meta.env.SMS_URL || 'ENV_SMS_URL_PLACEHOLDER'`
+- afterward they can be used with `import.meta.env.<KEY>`
+  - e.g. if you need an example look in the `frontend/app/src/boot/axios.ts`
+
+### Auth
+
+- Keycloak
+  - accessible at http://localhost/keycloak
+  - well known: http://localhost/keycloak/realms/timeio/.well-known/openid-configuration
+
+### Browser View for Logs
+
+- We've added [dozzle](https://dozzle.dev/) to the development setup
+- To view the container+logs, go to:
+  - http://localhost/dozzle
+
+## Workflows
+
+The components, the layers of the api and the main workflows are shown in [docs/sequence-diagrams.md](docs/sequence-diagrams.md).
 
 ### Explicit routes
 
-Besides `/sta/{endpoint}/v1.1/...`, which selects the FROST server as shown above, two routes pin the target:
+Besides `/sta/{endpoint}/v1.1/...`, which selects the FROST server by the token, two routes pin the target:
 
 | Route | Target | Checks |
 |---|---|---|
