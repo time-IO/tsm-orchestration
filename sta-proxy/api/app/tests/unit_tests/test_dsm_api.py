@@ -45,6 +45,20 @@ def test_get_me_without_authorization(client, dsm_requests):
 def test_get_me_rejected_by_dsm(client):
     response = client.get("/me", headers={"authorization": "Bearer invalid"})
 
+    assert response.status_code == 401
+
+
+def test_get_me_dsm_not_reachable(client, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused", request=request)
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    response = client.get("/me", headers={"authorization": "Bearer valid"})
+
     assert response.status_code == 502
 
 

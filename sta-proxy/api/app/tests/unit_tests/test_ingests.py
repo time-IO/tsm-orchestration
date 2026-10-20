@@ -1,5 +1,7 @@
+import httpx
 import pytest
 
+import services.dsm_api as dsm_api
 from services.ingests import build_search_params
 
 
@@ -73,7 +75,21 @@ def test_build_search_params(q, expected):
     assert build_search_params(q) == expected
 
 
-def test_dsm_error_is_bad_gateway(client):
+def test_rejected_token_is_unauthorized(client):
     response = client.get("/ingests", headers={"authorization": "Bearer invalid"})
+
+    assert response.status_code == 401
+
+
+def test_dsm_error_is_bad_gateway(client, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"detail": "Internal Server Error"})
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    response = client.get("/ingests", headers={"authorization": "Bearer valid"})
 
     assert response.status_code == 502
