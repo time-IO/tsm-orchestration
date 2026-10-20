@@ -125,16 +125,25 @@ async def select_frost_server_by_authorization(
     return public_frost
 
 
-async def frost_proxy_service(
+async def forward_to_frost(
+    server: FrostServer,
     endpoint: str,
-    query: str = "",
-    accept: str | None = None,
-    authorization: str | None = None,
+    query: str,
+    accept: str | None,
 ) -> Response:
     url = "/" + endpoint
     if query:
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
-    server = await select_frost_server_by_authorization(endpoint, authorization)
     return await server.forward(url, headers)
+
+
+async def frost_proxy_service(
+    endpoint: str,
+    query: str = "",
+    accept: str | None = None,
+    authorization: str | None = None,
+) -> Response:
+    server = await select_frost_server_by_authorization(endpoint, authorization)
+    return await forward_to_frost(server, endpoint, query, accept)
