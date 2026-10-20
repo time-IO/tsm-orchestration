@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Changed
+- CVE scan jobs print a compact report of fixable CRITICAL/HIGH CVEs per image and package with the version to upgrade to, instead of storing raw Trivy output as artifacts ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
+
 ## [2026-10-21]
 
 ### Added
