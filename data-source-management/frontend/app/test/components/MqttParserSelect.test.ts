@@ -347,7 +347,7 @@ describe('MqttParserSelect', () => {
       expect(dispatchGetListMock).toHaveBeenCalledTimes(3);
       expect(dispatchGetListMock).toHaveBeenLastCalledWith(3, PAGE_SIZE);
       expect(getOptions(wrapper)).toHaveLength(110);
-     });
+    });
   });
 
   describe('no-option slot', () => {

@@ -63,7 +63,7 @@ watch(
 );
 
 async function includeItemIfMissing() {
-    /* v8 ignore next */
+  /* v8 ignore next */
   if (preselectedItemId) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItemId);
     if (isItemMissing) {

@@ -384,7 +384,6 @@ describe('NeutronMonitorStationSelect', () => {
     });
   });
 
-
   describe('option rendering', () => {
     it('shows station_id and description of every option', async () => {
       dispatchGetListMock.mockResolvedValue({
@@ -410,5 +409,4 @@ describe('NeutronMonitorStationSelect', () => {
       expect(wrapper.text()).toContain('No results');
     });
   });
-
 });
