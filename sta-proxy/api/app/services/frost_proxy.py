@@ -1,5 +1,6 @@
 import logging
 
+import anyio
 import httpx
 from fastapi import HTTPException, Response
 
@@ -21,6 +22,19 @@ EXCLUDED_RESPONSE_HEADERS = {
     "server",
     "date",
 }
+
+# rewriting larger bodies in a worker thread keeps the event loop responsive
+REWRITE_IN_THREAD_MIN_SIZE = 1_000_000
+
+
+def is_json_response(upstream: httpx.Response) -> bool:
+    return "json" in upstream.headers.get("content-type", "").lower()
+
+
+async def rewrite_links(content: bytes, old: bytes, new: bytes) -> bytes:
+    if len(content) < REWRITE_IN_THREAD_MIN_SIZE:
+        return content.replace(old, new)
+    return await anyio.to_thread.run_sync(content.replace, old, new)
 
 
 class FrostServer:
@@ -75,19 +89,29 @@ class FrostServer:
 
         return filtered_response_headers
 
-    def get_filtered_headers_response(self, upstream: httpx.Response) -> Response:
+    def get_filtered_headers_response(
+        self, upstream: httpx.Response, content: bytes
+    ) -> Response:
         return Response(
-            content=upstream.content,
+            content=content,
             status_code=upstream.status_code,
             headers=self.get_filtered_headers(upstream),
         )
 
-    async def forward(self, url: str, headers: dict[str, str]) -> Response:
+    async def forward(
+        self,
+        url: str,
+        headers: dict[str, str],
+        link_rewrite: tuple[bytes, bytes] | None = None,
+    ) -> Response:
         upstream = await self.fetch(url, headers)
         logger.debug(
             "%s FROST responded with %s for %s", self.name, upstream.status_code, url
         )
-        return self.get_filtered_headers_response(upstream)
+        content = upstream.content
+        if link_rewrite and is_json_response(upstream):
+            content = await rewrite_links(content, *link_rewrite)
+        return self.get_filtered_headers_response(upstream, content)
 
 
 class InternalFrostServer(FrostServer):
@@ -110,6 +134,18 @@ async def close_frost_clients() -> None:
 
 def get_endpoint_name_from_proxied_path(endpoint: str) -> str:
     return endpoint.strip("/").split("/", 1)[0]
+
+
+def get_link_rewrite(endpoint: str, route: str) -> tuple[bytes, bytes]:
+    """FROST links point to the automatic route, keep clients on the explicit one.
+    "<STA_PROXY_URL><name>/" -> "<STA_PROXY_URL><route>/<name>/"
+    """
+    root = settings.STA_PROXY_URL.rstrip("/") + "/"
+    endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
+    return (
+        f"{root}{endpoint_name}/".encode(),
+        f"{root}{route}/{endpoint_name}/".encode(),
+    )
 
 
 async def select_frost_server_by_authorization(
@@ -141,13 +177,14 @@ async def forward_to_frost(
     endpoint: str,
     query: str,
     accept: str | None,
+    link_rewrite: tuple[bytes, bytes] | None = None,
 ) -> Response:
     url = "/" + endpoint
     if query:
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
-    return await server.forward(url, headers)
+    return await server.forward(url, headers, link_rewrite)
 
 
 async def frost_proxy_service(
@@ -164,7 +201,9 @@ async def public_frost_proxy_service(
     endpoint: str, query: str = "", accept: str | None = None
 ) -> Response:
     logger.debug("Forwarding %s to %s FROST", endpoint, public_frost.name)
-    return await forward_to_frost(public_frost, endpoint, query, accept)
+    return await forward_to_frost(
+        public_frost, endpoint, query, accept, get_link_rewrite(endpoint, "public")
+    )
 
 
 async def internal_frost_proxy_service(
@@ -175,4 +214,6 @@ async def internal_frost_proxy_service(
 ) -> Response:
     await require_internal_access(endpoint, authorization)
     logger.debug("Forwarding %s to %s FROST", endpoint, internal_frost.name)
-    return await forward_to_frost(internal_frost, endpoint, query, accept)
+    return await forward_to_frost(
+        internal_frost, endpoint, query, accept, get_link_rewrite(endpoint, "internal")
+    )

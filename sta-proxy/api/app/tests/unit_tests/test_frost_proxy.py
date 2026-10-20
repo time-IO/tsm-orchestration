@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 from cachetools import TTLCache
@@ -333,3 +335,89 @@ def test_explicit_routes_validate_path(
     assert response.status_code == status_code
     assert frost_requests == []
     assert frost_internal_requests == []
+
+
+STA_ROOT = "http://localhost/sta/"
+
+
+def frost_with_links(monkeypatch, server, content_type="application/json"):
+    def handler(request: httpx.Request) -> httpx.Response:
+        root = f"{STA_ROOT}{OWN_ENDPOINT}/v1.1"
+        body = json.dumps(
+            {
+                "@iot.nextLink": f"{root}/Things?$skip=100",
+                "value": [
+                    {
+                        "@iot.selfLink": f"{root}/Things(1)",
+                        "Datastreams@iot.navigationLink": f"{root}/Things(1)/Datastreams",
+                        "properties": {"other": f"{STA_ROOT}{OWN_ENDPOINT}x/v1.1"},
+                    }
+                ],
+            }
+        )
+        return httpx.Response(
+            200, content=body.encode(), headers={"content-type": content_type}
+        )
+
+    monkeypatch.setattr(
+        server,
+        "_client",
+        httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://x"),
+    )
+
+
+@pytest.mark.parametrize(
+    "route, server",
+    [("public", frost_proxy.public_frost), ("internal", frost_proxy.internal_frost)],
+)
+def test_explicit_routes_rewrite_links(client, monkeypatch, route, server):
+    frost_with_links(monkeypatch, server)
+    response = client.get(
+        f"/{route}/{OWN_ENDPOINT}/v1.1/Things",
+        headers={"authorization": "Bearer valid"},
+    )
+    root = f"{STA_ROOT}{route}/{OWN_ENDPOINT}/v1.1"
+    data = response.json()
+    assert data["@iot.nextLink"] == f"{root}/Things?$skip=100"
+    assert data["value"][0]["@iot.selfLink"] == f"{root}/Things(1)"
+    assert data["value"][0]["Datastreams@iot.navigationLink"] == (
+        f"{root}/Things(1)/Datastreams"
+    )
+    # other endpoints sharing the name as prefix are untouched
+    assert data["value"][0]["properties"]["other"] == f"{STA_ROOT}{OWN_ENDPOINT}x/v1.1"
+    assert int(response.headers["content-length"]) == len(response.content)
+
+
+def test_automatic_route_does_not_rewrite_links(client, monkeypatch):
+    frost_with_links(monkeypatch, frost_proxy.internal_frost)
+    response = client.get(
+        f"/{OWN_ENDPOINT}/v1.1/Things", headers={"authorization": "Bearer valid"}
+    )
+    assert response.json()["@iot.nextLink"] == (
+        f"{STA_ROOT}{OWN_ENDPOINT}/v1.1/Things?$skip=100"
+    )
+
+
+def test_non_json_response_is_not_rewritten(client, monkeypatch):
+    frost_with_links(monkeypatch, frost_proxy.public_frost, "text/csv")
+    response = client.get(f"/public/{OWN_ENDPOINT}/v1.1/Things")
+    assert f"{STA_ROOT}{OWN_ENDPOINT}/v1.1" in response.text
+    assert "/public/" not in response.text
+
+
+def test_large_response_is_rewritten_in_thread(client, monkeypatch):
+    monkeypatch.setattr(frost_proxy, "REWRITE_IN_THREAD_MIN_SIZE", 0)
+    frost_with_links(monkeypatch, frost_proxy.public_frost)
+    response = client.get(f"/public/{OWN_ENDPOINT}/v1.1/Things")
+    assert response.json()["@iot.nextLink"] == (
+        f"{STA_ROOT}public/{OWN_ENDPOINT}/v1.1/Things?$skip=100"
+    )
+
+
+@pytest.mark.parametrize("sta_proxy_url", ["http://host/sta", "http://host/sta/"])
+def test_get_link_rewrite(monkeypatch, sta_proxy_url):
+    monkeypatch.setattr(frost_proxy.settings, "STA_PROXY_URL", sta_proxy_url)
+    assert frost_proxy.get_link_rewrite(f"{OWN_ENDPOINT}/v1.1/Things", "internal") == (
+        f"http://host/sta/{OWN_ENDPOINT}/".encode(),
+        f"http://host/sta/internal/{OWN_ENDPOINT}/".encode(),
+    )

@@ -95,3 +95,7 @@ The internal route never falls back to public data:
 - no token, or a token the DSM API rejects: `401`
 - user is not in the endpoint's permission group: `403`
 - DSM API not reachable: `502`, timeout: `504`
+
+FROST builds its links (`@iot.nextLink`, `@iot.selfLink`, `…@iot.navigationLink`) from its `serviceRootUrl`, which is `STA_PROXY_URL` plus the endpoint name, i.e. the automatic route.
+The explicit routes rewrite these links in JSON responses to `<STA_PROXY_URL>public/<endpoint>/` or `<STA_PROXY_URL>internal/<endpoint>/`, so pagination stays on the chosen route.
+Bodies of 1 MB and more are rewritten in a worker thread to keep the event loop responsive.
