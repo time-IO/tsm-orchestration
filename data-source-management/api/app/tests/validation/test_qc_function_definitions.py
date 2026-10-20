@@ -85,6 +85,22 @@ class TestDefinition:
         assert "window" in arg_names
         assert "func" in arg_names
 
+    def test_flagByScatterLowpass_windows_require_offset_units(self):
+        import re
+
+        arguments = {
+            argument["name"]: argument
+            for argument in _definition["flagByScatterLowpass"]["arguments"]
+        }
+
+        for argument_name in ("window", "sub_window"):
+            argument_type = arguments[argument_name]["types"][0]
+            assert argument_type["type"] == "offset"
+
+            regex = argument_type["constraint"]["regex"]
+            assert re.fullmatch(regex, "10min") is not None
+            assert re.fullmatch(regex, "10") is None
+
     def test_no_duplicate_argument_names_within_function(self):
         for func_name, func_def in _definition.items():
             arg_names = [a["name"] for a in func_def["arguments"]]

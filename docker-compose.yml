@@ -21,7 +21,6 @@ services:
     restart: no
     user: "root"
     volumes:
-      - ./init/init.sh:/init.sh:ro
       # Mount Persistence Volumes to set ownership and permissions
       - "${OBJECT_STORAGE_PERSISTENCE_VOLUME:-object-storage}:/tmp/volume/minio"
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/volume/cron"
@@ -175,7 +174,7 @@ services:
   # =======
   # brief: central mqtt message bus / broker
   # dir: mosquitto
-  # see also: mosquitto/docker-entrypoint.sh
+  # see also: mosquitto/docker-entrypoint.sh, mosquitto/Dockerfile
   #
   # Description
   # ===========
@@ -183,15 +182,12 @@ services:
   # subscribe to topics and will receive messages that was sent to them.
   mqtt-broker:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "${MQTT_BROKER_MOSQUITTO_IMAGE_REGISTRY}:${MQTT_BROKER_MOSQUITTO_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/mqtt-broker:${TIMEIO_MQTT_BROKER_IMAGE_TAG}"
+    build:
+      context: mosquitto
     depends_on:
       flyway:
         condition: service_completed_successfully
-    command: >
-      /usr/sbin/mosquitto
-      -c /var/lib/mosquitto/mosquitto.conf
-    entrypoint:
-      - /docker-entrypoint.sh
     user: "${UID}:${GID}"
     environment:
       MQTT_USER: "${MQTT_USER}"
@@ -204,14 +200,12 @@ services:
       MQTT_AUTH_POSTGRES_PASS: "${MQTT_AUTH_POSTGRES_PASS}"
       MQTT_AUTH_POSTGRES_DB: "${MQTT_AUTH_POSTGRES_DB}"
       MQTT_AUTH_PG_TLSMODE: "${MQTT_AUTH_PG_TLSMODE}"
+      MQTT_TLS_ENABLED: "${MQTT_TLS_ENABLED}"
     ports:
       - "${MQTT_PORT}:1883"
       - "${MQTT_PORT_SECURE}:8883"
     volumes:
-      - "${MQTT_MOSQUITTO_CONFIG}:/etc/mosquitto/config/mosquitto.conf:ro"
-      - "${MQTT_MOSQUITTO_TLS_CONFIG}:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro"
       - "${MQTT_PERSISTENCE_VOLUME:-mqtt-broker}:/tmp/mosquitto/"
-      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh
     tmpfs:
       - /var/lib/mosquitto/:uid=${UID}
     healthcheck:
@@ -237,7 +231,7 @@ services:
   # =======
   # brief: visualisation of observations stored in the -> database
   # dir: grafana
-  # see also: none
+  # see also: grafana/Dockerfile
   # admin login:
   #     -> http://localhost/visualization/login
   #     -> user, pass: $GRAFANA_USER, $GRAFANA_PASSWORD  (default: grafana)
@@ -247,7 +241,9 @@ services:
   # This visualize observations of a group or project that are stored in the database.
   visualization:
     restart: "${SERVICE_RESTART_POLICY}"
-    image: "${VISUALIZATION_GRAFANA_IMAGE_REGISTRY}:${VISUALIZATION_GRAFANA_IMAGE_TAG}"
+    image: "${TIMEIO_IMAGE_REGISTRY}/visualization:${TIMEIO_VISUALIZATION_IMAGE_TAG}"
+    build:
+      context: grafana
     user: "${UID}:${GID}"
     environment:
       GF_SECURITY_ADMIN_USER: "${VISUALIZATION_USER}"
@@ -280,7 +276,6 @@ services:
       MONITORING_DATABASE_SSLMODE: "${MONITORING_DATABASE_SSLMODE}"
     volumes:
       - "${VISUALIZATION_PERSISTENCE_VOLUME:-visualization}:/var/lib/grafana"
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     healthcheck:
       test:  ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       start_period: 10s
@@ -422,11 +417,6 @@ services:
         BASE_IMAGE_TAG: "${FLYWAY_IMAGE_TAG}"
     user: "${UID}:${UID}"
     command: -configFiles=/flyway/conf/flyway.conf -skipCheckForUpdate repair migrate
-    volumes:
-      # The image contains these files as well; mounting the working tree keeps
-      # migrations editable without rebuilding the image.
-      - ./flyway/migrations/public:/flyway/sql
-      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
     environment:
       FLYWAY_URL: "jdbc:postgresql://${DATABASE_ADMIN_HOST}/${DATABASE_ADMIN_DB_NAME}"
       FLYWAY_USER: "${DATABASE_ADMIN_USER}"
@@ -520,6 +510,7 @@ services:
       STA_VERSION: "${DSM_API_STA_VERSION}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
+      API_VERSION: "${DSM_API_IMAGE_TAG}"
 
 
   # Summary
@@ -554,6 +545,7 @@ services:
       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
       ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
+      ENV_APP_VERSION_PLACEHOLDER: "${DSM_FRONTEND_IMAGE_TAG}"
 
 
   dsm-frontend-rootless:
@@ -576,6 +568,7 @@ services:
       ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${DSM_FRONTEND_APP_URL}"
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
       ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
+      ENV_APP_VERSION_PLACEHOLDER: "${DSM_FRONTEND_IMAGE_TAG}"
 
 
   # Summary
@@ -966,6 +959,7 @@ services:
       MQTT_CLIENT_ID: sync-ext-apis
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
@@ -1004,6 +998,7 @@ services:
       MQTT_CLIENT_ID: sync-ext-apis-triggered
       MQTT_CLEAN_SESSION: "${MQTT_CLEAN_SESSION}"
       MQTT_QOS: "${MQTT_QOS}"
+      TOPIC_DATA_PARSED: "${TOPIC_DATA_PARSED}"
       DB_API_BASE_URL: "${DB_API_BASE_URL}"
       DB_API_AUTH_TOKEN: "${DB_API_AUTH_TOKEN_INGEST}"
       JOURNALING: "${JOURNALING}"
@@ -1142,19 +1137,17 @@ services:
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
 
   bento:
-    image: ghcr.io/warpstreamlabs/bento:latest
+    image: "${TIMEIO_IMAGE_REGISTRY}/bento:${TIMEIO_BENTO_IMAGE_TAG}"
+    build:
+      context: bento
     container_name: bento
-    user: "${UID}:${LOCAL_GID}"
+    user: "${UID}:${GID}"
+    restart: "${SERVICE_RESTART_POLICY}"
     depends_on:
       init:
         condition: service_completed_successfully
     volumes:
-      - ./bento/resources/:/resources
-      - ./bento/streams/:/streams
-      - ./bento/main.yaml:/bento.yaml
-      - ./bento/entrypoint.sh:/entrypoint.sh:ro
       - "${BENTO_PERSISTENCE_VOLUME:-bento}:/data"
-    entrypoint: ["/entrypoint.sh"]
 
   cron-scheduler:
     image: "${TIMEIO_IMAGE_REGISTRY}/cron-scheduler:${TIMEIO_CRON_SCHEDULER_IMAGE_TAG}"
@@ -1206,7 +1199,7 @@ services:
     build:
       context: keycloak
     restart: "${SERVICE_RESTART_POLICY}"
-    user: "${KEYCLOAK_UID:-1000}:${LOCAL_GID:-1000}"
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       flyway:
         condition: service_completed_successfully
@@ -1266,13 +1259,6 @@ services:
       timeout: 2s
       retries: 30
       start_period: 30s
-    volumes:
-      # The image contains these files as well; mounting the working tree keeps
-      # the realm import, themes and providers editable without rebuilding the
-      # image.
-      - "./keycloak/keycloak-init.template.json:/opt/keycloak/data/import/keycloak-init.json"
-      - "./keycloak/themes:/opt/keycloak/themes"
-      - "./keycloak/plugins:/opt/keycloak/providers"
     command:
       - ${KEYCLOAK_START_COMMAND}
       - --import-realm

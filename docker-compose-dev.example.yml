@@ -1,6 +1,27 @@
 ---
 services:
 
+  init:
+    volumes:
+      - ./init/init.sh:/init.sh:ro
+
+  flyway:
+    volumes:
+      - ./flyway/migrations/public:/flyway/sql
+      - ./flyway/flyway-public.conf:/flyway/conf/flyway.conf
+
+  bento:
+    volumes:
+      - ./bento/streams/:/streams:ro
+      - ./bento/main.yaml:/bento.yaml:ro
+      - ./bento/entrypoint.sh:/entrypoint.sh:ro
+
+  mqtt-broker:
+    volumes:
+      - ./mosquitto/mosquitto.conf:/etc/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/mosquitto.tls.conf:/etc/mosquitto/config/tls/mosquitto.tls.conf:ro
+      - ./mosquitto/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+
   worker-thing-setup:
     volumes:
       - ./src:/home/appuser/app/src
@@ -34,6 +55,8 @@ services:
       - ./src:/home/appuser/app/src
 
   visualization:
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       - "GF_AUTH_GENERIC_OAUTH_SCOPES=openid email profile eduperson_principal_name"
       - "GF_AUTH_GENERIC_OAUTH_CLIENT_ID=${THING_MANAGEMENT_DJANGO_HELMHOLTZ_CLIENT_ID:-timeIO-client}"
@@ -49,6 +72,8 @@ services:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     volumes:
       - "./keycloak/keycloak-init-dev.template.json:/opt/keycloak/data/import/keycloak-init.json"
+      - "./keycloak/themes:/opt/keycloak/themes"
+      - "./keycloak/plugins:/opt/keycloak/providers"
 
   dsm-api:
     image: timeio-dsm-api-local:dev
@@ -56,6 +81,8 @@ services:
       context: .
       dockerfile: ./data-source-management/api/docker/Dockerfile-Dev
     working_dir: /app
+    environment:
+      APP_VERSION: "dev"
     volumes:
       - ./data-source-management/api/app:/app:rw
       - ./src/timeio:/app/timeio:rw
@@ -99,6 +126,7 @@ services:
       OIDC_POST_LOGOUT_REDIRECT_URI: "${DSM_FRONTEND_APP_URL:-http://localhost/data-source-management}"
       BASE_URL: "${DSM_FRONTEND_RELATIVE_PATH:-/data-source-management/}"
       SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
+      APP_VERSION: "dev"
     command: "quasar dev"
 
   timeio-db-api:
