@@ -81,7 +81,6 @@ class CreateThingInBentoHandler(AbstractHandler):
         return decrypt(v, self.crypt_key) if v else v
 
     def prepare_stream_config(self, thing: Thing, ingest_type: str):
-        # fmt: off
         bento_timestamp = "${!now().ts_format(\"20060102_150405\")}"
 
         # Create Bento stream configuration
@@ -226,8 +225,6 @@ class CreateThingInBentoHandler(AbstractHandler):
         else:
             raise ValueError(f"Unsupported ingest_type: {ingest_type}")
         return stream_config
-
-    # fmt: on
 
     def create_or_update_stream(self, stream_config, thing: Thing, ingest_type: str):
         """Create or update a Bento stream via JSON API"""
