@@ -14,15 +14,17 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Add Zentra external API integration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/623))
-
+- Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
 
 ### Fixed
+- Uploads to the bucket of a deleted ingest no longer crash the file ingest worker ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/762))
 - Enable automatic QC for MQTT ingest: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
 - Things created via the data-source-management are shown in the "last observations" monitoring dashboard ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/761))
 - Failed setup steps of a thing are shown in its journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/763))
 - External API sync publishes `data_parsed` to the topic configured in `TOPIC_DATA_PARSED` instead of a hardcoded one ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/760))
 - MQTT ingest reported success and triggered QC although storing the data failed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/758))
 - A single MQTT message that is not valid UTF-8 crashed the worker; it is now logged and dropped ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/757))
+- Validation of flagByScatterLowpass ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/794))
 
 ### Changed
 - `bento` is built into a time.IO image containing its configuration ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/770))
@@ -79,8 +81,6 @@ When adding a changelog entry, ensure the following:
 - Added possiblity to delete Quality Control Settings ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/724))
 - Support for External MQTT and HTTP ingest types via bento ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/549))
 - Backend CLI command for ops to manually resync an ext-api ingest over a custom look-back window ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/731))
-- Quality control setting 'flagConstants` (frontend form + backend argument validation) to flag plateaus of constant data values within a rolling window.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/723))
-
 
 ### Fixed
 - CSV parser pandas options are consistently converted between form data and API JSON ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/740))

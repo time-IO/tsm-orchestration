@@ -15,6 +15,7 @@ from psycopg import Connection, sql
 from psycopg.rows import dict_row
 import pandas as pd
 
+from timeio.errors import DataNotFoundError
 from timeio.typehints import JsonObjectT, TimestampT
 
 logger = logging.getLogger("feta")
@@ -53,8 +54,12 @@ class QcStreamT(TypedDict):
     end_date: TimestampT | None
 
 
-class ObjectNotFound(Exception):
-    pass
+class ObjectNotFound(DataNotFoundError):
+    """
+    No object matches the lookup, e.g. a thing that was deleted in the DSM.
+    A DataNotFoundError, so the MQTT handlers log it and drop the message
+    instead of exiting.
+    """
 
 
 def _prop(f):
