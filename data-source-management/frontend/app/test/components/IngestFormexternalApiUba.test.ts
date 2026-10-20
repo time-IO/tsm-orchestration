@@ -1,5 +1,6 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { config } from '@vue/test-utils';
 
 import IngestFormUba from '@/components/IngestFormExternalApiUba.vue'; // adjust path
 import {
@@ -67,6 +68,29 @@ describe('IngestFormUba (UBA specific)', () => {
       await submit(wrapper);
 
       expect(wrapper.emitted('save')).toBeUndefined();
+    });
+  })
+
+  describe('station id tooltip', () => {
+    const originalStubs = config.global.stubs;
+
+    beforeEach(() => {
+      config.global.stubs = {
+        ...originalStubs,
+        QTooltip: { template: '<i class="tooltip"><slot/></i>' },
+      };
+    });
+
+    afterEach(() => {
+      config.global.stubs = originalStubs;
+    });
+
+    it('explains where to find the station id', () => {
+      const { wrapper } = mountForm();
+
+      const texts = wrapper.findAll('.tooltip').map((t) => t.text());
+
+      expect(texts).toContain('View UBA station list (use "station id")');
     });
   });
 });
