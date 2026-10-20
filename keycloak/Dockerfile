@@ -1,6 +1,6 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM quay.io/keycloak/keycloak:26.6.1
+FROM quay.io/keycloak/keycloak:26.6.7
 
 ARG BUILD_DATE
 ARG VCS_REF
