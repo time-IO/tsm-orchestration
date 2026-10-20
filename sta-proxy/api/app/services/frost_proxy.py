@@ -111,7 +111,9 @@ def get_endpoint_name_from_proxied_path(endpoint: str) -> str:
     return endpoint.strip("/").split("/", 1)[0]
 
 
-async def select_frost_server(endpoint: str, authorization: str | None) -> FrostServer:
+async def select_frost_server_by_authorization(
+    endpoint: str, authorization: str | None
+) -> FrostServer:
     if authorization:
         endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
         permission_groups = await fetch_own_permission_groups(authorization)
@@ -134,5 +136,5 @@ async def frost_proxy_service(
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
-    server = await select_frost_server(endpoint, authorization)
+    server = await select_frost_server_by_authorization(endpoint, authorization)
     return await server.forward(url, headers)
