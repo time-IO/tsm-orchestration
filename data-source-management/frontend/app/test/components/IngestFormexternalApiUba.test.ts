@@ -69,7 +69,7 @@ describe('IngestFormUba (UBA specific)', () => {
 
       expect(wrapper.emitted('save')).toBeUndefined();
     });
-  })
+  });
 
   describe('station id tooltip', () => {
     const originalStubs = config.global.stubs;
