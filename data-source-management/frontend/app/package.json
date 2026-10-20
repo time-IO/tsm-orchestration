@@ -35,6 +35,7 @@
     "@quasar/quasar-app-extension-testing-unit-vitest": "^3.0.0",
     "@types/node": "^24.13.4",
     "@types/sortablejs": "^1.15.9",
+    "@vitest/coverage-v8": "^4.1.12",
     "@vue/eslint-config-prettier": "^10.1.0",
     "@vue/eslint-config-typescript": "^14.4.0",
     "@vue/test-utils": "^2.4.11",
