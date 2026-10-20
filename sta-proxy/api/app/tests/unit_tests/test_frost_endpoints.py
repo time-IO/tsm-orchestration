@@ -150,3 +150,12 @@ def test_endpoint_from_frost_ignores_frost_display_name():
 def test_endpoint_from_frost_rejects_missing_url():
     with pytest.raises(ValueError):
         endpoint_from_frost({"name": "vo_group1", "group": "vo"})
+
+
+def test_endpoints_search_reuses_cached_permission_groups(client, dsm_requests):
+    for q in ("g", "gr", "group"):
+        response = client.get(
+            "/endpoints", params={"q": q}, headers={"authorization": "Bearer valid"}
+        )
+        assert response.status_code == 200
+    assert [r.url.path for r in dsm_requests] == ["/permission-group/"]

@@ -2,8 +2,10 @@ import asyncio
 
 import httpx
 import pytest
+from cachetools import TTLCache
 
 import services.dsm_api as dsm_api
+import services.permission_groups as permission_groups
 from services.dsm_api import fetch_dsm_api
 from services.permission_groups import fetch_own_permission_groups
 
@@ -43,6 +45,20 @@ def test_get_me_without_authorization(client, dsm_requests):
 def test_get_me_rejected_by_dsm(client):
     response = client.get("/me", headers={"authorization": "Bearer invalid"})
 
+    assert response.status_code == 401
+
+
+def test_get_me_dsm_not_reachable(client, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection refused", request=request)
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    response = client.get("/me", headers={"authorization": "Bearer valid"})
+
     assert response.status_code == 502
 
 
@@ -71,3 +87,27 @@ def test_fetch_own_permission_groups():
 
 def test_fetch_own_permission_groups_on_error_is_empty():
     assert asyncio.run(fetch_own_permission_groups("Bearer invalid")) == {}
+
+
+def test_fetch_own_permission_groups_is_cached_per_token(dsm_requests):
+    for _ in range(3):
+        asyncio.run(fetch_own_permission_groups("Bearer valid"))
+    assert len(dsm_requests) == 1
+
+
+def test_fetch_own_permission_groups_cache_expires(dsm_requests, monkeypatch):
+    now = [0.0]
+    monkeypatch.setattr(permission_groups, "_cache", TTLCache(8, 60, lambda: now[0]))
+    asyncio.run(fetch_own_permission_groups("Bearer valid"))
+    now[0] = 59
+    asyncio.run(fetch_own_permission_groups("Bearer valid"))
+    assert len(dsm_requests) == 1
+    now[0] = 61
+    asyncio.run(fetch_own_permission_groups("Bearer valid"))
+    assert len(dsm_requests) == 2
+
+
+def test_failed_fetch_own_permission_groups_is_not_cached(dsm_requests):
+    for _ in range(2):
+        assert asyncio.run(fetch_own_permission_groups("Bearer invalid")) == {}
+    assert len(dsm_requests) == 2

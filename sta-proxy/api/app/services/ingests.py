@@ -6,7 +6,7 @@ import httpx
 from fastapi import HTTPException
 
 from models import Ingest, IngestsResponse
-from services.dsm_api import fetch_dsm_api
+from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
 
 logger = logging.getLogger("app.services.ingests")
 
@@ -65,11 +65,10 @@ async def run_ingest_searches(
                 for params in searches
             )
         )
-    except httpx.TimeoutException:
-        logger.warning("Timeout while searching ingests in DSM API")
-        raise HTTPException(status_code=504, detail="DSM API timeout")
-    except (httpx.HTTPError, ValueError) as e:
-        logger.error("Searching ingests in DSM API failed: %s", e)
+    except httpx.HTTPError as e:
+        raise dsm_error_to_http_exception(e, "searching ingests")
+    except ValueError as e:
+        logger.error("DSM API returned invalid ingests: %s", e)
         raise HTTPException(status_code=502, detail="Ingests not available")
 
 
