@@ -14,8 +14,6 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Component Test: IngestTypeSelect.vue, IngestExternalApiTypeSelect.vue,IngestFormExternalSftp.vue,IngestFormMqtt.vue,IngestFormSftp.vue. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/784))
-
-### Added
 - Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
 
 ### Fixed
