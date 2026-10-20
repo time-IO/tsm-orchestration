@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     BASE_URL: str = "http://localhost"
     DSM_API_URL: str = "http://dsm-api:8000"
     DSM_API_TIMEOUT: float = 30.0
+    PERMISSION_GROUPS_CACHE_TTL: float = 60.0
+    PERMISSION_GROUPS_CACHE_SIZE: int = 1024
 
 
 settings = Settings()  # type: ignore
