@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import versionService from '@/services/version';
+import { API } from '@/services';
 import { publicAsset } from '@/utils/public_asset';
 
 const ufzLogoSrc = publicAsset('images/UFZ_Logo_RGB_EN.png');
@@ -108,7 +108,7 @@ const apiVersion = ref('unknown');
 
 onMounted(async () => {
   try {
-    const { data } = await versionService.getVersion();
+    const { data } = await API.version.getVersion();
     apiVersion.value = data.version || 'unknown';
   } catch {
     // footer info only; keep 'unknown'
