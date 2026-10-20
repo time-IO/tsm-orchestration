@@ -102,6 +102,21 @@ const mountOptionList = async (props: Record<string, unknown> = {}) => {
   return wrapper;
 };
 
+// Same as mountOptionList, but tooltips render their content inline
+const mountOptionListWithTooltips = async (props: Record<string, unknown> = {}) => {
+  const wrapper = mount(ParserSelect, {
+    props: { modelValue: null, permission_group_id: 1, parser_type: 'csv', ...props },
+    global: {
+      stubs: {
+        QSelect: QSelectStub,
+        QTooltip: { template: '<i class="tooltip"><slot/></i>' },
+      },
+    },
+  });
+  await flushPromises();
+  return wrapper;
+};
+
 const getSelect = (w: VueWrapper) => w.findComponent(QSelect);
 
 const optionIds = (w: VueWrapper) =>
@@ -296,6 +311,23 @@ describe('ParserSelect', () => {
 
       expect(stores.csv.dispatchGetOne).toHaveBeenCalledTimes(1);
     });
+
+    it('ignores a second fetch while the first one is still running', async () => {
+      let finishFetch!: () => void;
+      stores.csv.dispatchGetList.mockReturnValue(
+        new Promise<void>((resolve) => {
+          finishFetch = resolve;
+        }),
+      );
+      const w = await mountParserSelect({ permission_group_id: 1 });
+
+      await w.setProps({ permission_group_id: 2 });
+      await flushPromises();
+
+      expect(stores.csv.dispatchGetList).toHaveBeenCalledTimes(1);
+      finishFetch();
+      await flushPromises();
+    });
   });
 
   describe('preselected item', () => {
@@ -331,6 +363,15 @@ describe('ParserSelect', () => {
         expect(store.dispatchGetOne).not.toHaveBeenCalled();
       }
     });
+
+     it('offers no options and fetches no item for an unknown parser type', async () => {
+        const w = await mountParserSelect({ parser_type: 'xml', preselected_item_id: 5 });
+
+        for (const store of Object.values(stores)) {
+          expect(store.dispatchGetOne).not.toHaveBeenCalled();
+        }
+        expect(optionIds(w)).toEqual([]);
+      });
   });
 
   describe('error states', () => {
@@ -494,6 +535,14 @@ describe('ParserSelect', () => {
 
       expect(w.text()).toContain('No results');
     });
+
+    it('renders a json parser without timestamp keys', async () => {
+      stores.json.rows = [makeParser(1)];
+
+      const w = await mountOptionList({ parser_type: 'json' });
+
+      expect(chipTexts(w.find('.option'))).toEqual(['json']);
+    });
   });
 
   describe('browser effects', () => {
@@ -532,6 +581,33 @@ describe('ParserSelect', () => {
       // control: clicking the option itself does select it
       await w.find('.option').trigger('click');
       expect(w.emitted('update:modelValue')).toHaveLength(1);
+    });
+
+    it.for([
+    {
+      type: 'csv',
+      row: {
+        delimiter: ';',
+        timestamp_columns: [{ id: 1, column: 'ts', timestamp_format: '%Y' }],
+      },
+      tooltips: ['Open in new window', 'delimiter', 'timestamp columns'],
+    },
+    {
+      type: 'json',
+      row: { timestamp_keys: [{ id: 1, key: 'Datetime', format: '%Y' }] },
+      tooltips: ['Open in new window', 'timestamp keys'],
+    },
+    {
+      type: 'soilcan',
+      row: { type: 'type-a', header: true },
+      tooltips: ['Open in new window', 'type', 'header'],
+    },
+    ])('renders the tooltips of a $type parser', async (testCase) => {
+      stores[testCase.type as keyof typeof stores].rows = [makeParser(1, testCase.row)];
+
+      const w = await mountOptionListWithTooltips({ parser_type: testCase.type });
+
+      expect(w.findAll('.tooltip').map((t) => t.text())).toEqual(testCase.tooltips);
     });
   });
 });
