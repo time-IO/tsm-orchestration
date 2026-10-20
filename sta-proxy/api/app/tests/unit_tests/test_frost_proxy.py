@@ -3,6 +3,7 @@ import pytest
 from cachetools import TTLCache
 from fastapi import HTTPException
 
+import services.dsm_api as dsm_api
 import services.frost_proxy as frost_proxy
 import services.permission_groups as permission_groups
 from routers.frost_proxy import validate_proxied_path
@@ -229,3 +230,106 @@ def test_failed_permission_groups_lookup_is_not_cached(
     assert len(dsm_requests) == 2
     assert frost_internal_requests == []
     assert len(frost_requests) == 2
+
+
+def test_public_route_forwards_to_public_frost_without_dsm_check(
+    client, frost_requests, frost_internal_requests, dsm_requests
+):
+    response = client.get(
+        f"/public/{OWN_ENDPOINT}/v1.1/Things?$top=1",
+        headers={"authorization": "Bearer valid"},
+    )
+    assert response.status_code == 200
+    assert "cache-control" not in response.headers
+    assert frost_requests[0].url.raw_path.decode() == (
+        f"/{OWN_ENDPOINT}/v1.1/Things?$top=1"
+    )
+    assert "authorization" not in frost_requests[0].headers
+    assert frost_internal_requests == []
+    assert dsm_requests == []
+
+
+def test_internal_route_forwards_owner_to_internal_frost(
+    client, frost_requests, frost_internal_requests
+):
+    response = client.get(
+        f"/internal/{OWN_ENDPOINT}/v1.1/Things?$top=1",
+        headers={"authorization": "Bearer valid"},
+    )
+    assert response.status_code == 200
+    assert response.json()["internal"] is True
+    assert response.headers["cache-control"] == "private, no-store"
+    assert frost_internal_requests[0].url.raw_path.decode() == (
+        f"/{OWN_ENDPOINT}/v1.1/Things?$top=1"
+    )
+    assert "authorization" not in frost_internal_requests[0].headers
+    assert frost_requests == []
+
+
+def test_internal_route_accepts_session_cookie(client, frost_internal_requests):
+    client.cookies.set("sta_session", "valid")
+    response = client.get(f"/internal/{OWN_ENDPOINT}/v1.1")
+    assert response.status_code == 200
+    assert len(frost_internal_requests) == 1
+
+
+@pytest.mark.parametrize(
+    "endpoint, headers, status_code",
+    [
+        (OWN_ENDPOINT, {}, 401),
+        (OWN_ENDPOINT, {"authorization": "Bearer invalid"}, 401),
+        (FOREIGN_ENDPOINT, {"authorization": "Bearer valid"}, 403),
+        (f"{OWN_ENDPOINT}x", {"authorization": "Bearer valid"}, 403),
+    ],
+)
+def test_internal_route_rejects_without_access(
+    client, frost_requests, frost_internal_requests, endpoint, headers, status_code
+):
+    response = client.get(f"/internal/{endpoint}/v1.1", headers=headers)
+    assert response.status_code == status_code
+    assert frost_requests == []
+    assert frost_internal_requests == []
+
+
+@pytest.mark.parametrize(
+    "error, status_code",
+    [
+        (httpx.ConnectError("connection refused"), 502),
+        (httpx.ReadTimeout("timeout"), 504),
+    ],
+)
+def test_internal_route_dsm_not_available(
+    client, monkeypatch, frost_requests, frost_internal_requests, error, status_code
+):
+    def handler(request):
+        raise error
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="http://dsm-api"
+        ),
+    )
+    response = client.get(
+        f"/internal/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer valid"}
+    )
+    # no silent fallback to the public data
+    assert response.status_code == status_code
+    assert frost_requests == []
+    assert frost_internal_requests == []
+
+
+@pytest.mark.parametrize("prefix", ["public", "internal"])
+@pytest.mark.parametrize(
+    "endpoint, status_code", [("", 404), ("a/%2E%2E/%2E%2E/x", 400)]
+)
+def test_explicit_routes_validate_path(
+    client, frost_requests, frost_internal_requests, prefix, endpoint, status_code
+):
+    response = client.get(
+        f"/{prefix}/{endpoint}", headers={"authorization": "Bearer valid"}
+    )
+    assert response.status_code == status_code
+    assert frost_requests == []
+    assert frost_internal_requests == []

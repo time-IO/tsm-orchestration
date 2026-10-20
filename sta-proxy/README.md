@@ -80,3 +80,18 @@ sequenceDiagram
 
     Note over C,API: GET /sta/endpoints/ uses the same rule to mark endpoints as is_internal
 ```
+
+### Explicit routes
+
+Besides `/sta/{endpoint}/v1.1/...`, which selects the FROST server as shown above, two routes pin the target:
+
+| Route | Target | Checks |
+|---|---|---|
+| `GET /sta/public/{endpoint}/v1.1/...` | public FROST | none, token and cookie are ignored |
+| `GET /sta/internal/{endpoint}/v1.1/...` | internal FROST | token (header or `sta_session` cookie) and permission group |
+
+The internal route never falls back to public data:
+
+- no token, or a token the DSM API rejects: `401`
+- user is not in the endpoint's permission group: `403`
+- DSM API not reachable: `502`, timeout: `504`
