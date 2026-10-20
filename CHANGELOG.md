@@ -12,6 +12,8 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-10-21]
+
 ### Added
 - Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
 
