@@ -1,7 +1,7 @@
 # See https://hub.docker.com/_/python/
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM python:3.13.16-slim-trixie AS base
+FROM python:3.13.15-slim-trixie AS base
 
 # Install Tkinter runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
