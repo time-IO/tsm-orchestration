@@ -364,14 +364,14 @@ describe('ParserSelect', () => {
       }
     });
 
-     it('offers no options and fetches no item for an unknown parser type', async () => {
-        const w = await mountParserSelect({ parser_type: 'xml', preselected_item_id: 5 });
+    it('offers no options and fetches no item for an unknown parser type', async () => {
+      const w = await mountParserSelect({ parser_type: 'xml', preselected_item_id: 5 });
 
-        for (const store of Object.values(stores)) {
-          expect(store.dispatchGetOne).not.toHaveBeenCalled();
-        }
-        expect(optionIds(w)).toEqual([]);
-      });
+      for (const store of Object.values(stores)) {
+        expect(store.dispatchGetOne).not.toHaveBeenCalled();
+      }
+      expect(optionIds(w)).toEqual([]);
+    });
   });
 
   describe('error states', () => {
@@ -584,24 +584,24 @@ describe('ParserSelect', () => {
     });
 
     it.for([
-    {
-      type: 'csv',
-      row: {
-        delimiter: ';',
-        timestamp_columns: [{ id: 1, column: 'ts', timestamp_format: '%Y' }],
+      {
+        type: 'csv',
+        row: {
+          delimiter: ';',
+          timestamp_columns: [{ id: 1, column: 'ts', timestamp_format: '%Y' }],
+        },
+        tooltips: ['Open in new window', 'delimiter', 'timestamp columns'],
       },
-      tooltips: ['Open in new window', 'delimiter', 'timestamp columns'],
-    },
-    {
-      type: 'json',
-      row: { timestamp_keys: [{ id: 1, key: 'Datetime', format: '%Y' }] },
-      tooltips: ['Open in new window', 'timestamp keys'],
-    },
-    {
-      type: 'soilcan',
-      row: { type: 'type-a', header: true },
-      tooltips: ['Open in new window', 'type', 'header'],
-    },
+      {
+        type: 'json',
+        row: { timestamp_keys: [{ id: 1, key: 'Datetime', format: '%Y' }] },
+        tooltips: ['Open in new window', 'timestamp keys'],
+      },
+      {
+        type: 'soilcan',
+        row: { type: 'type-a', header: true },
+        tooltips: ['Open in new window', 'type', 'header'],
+      },
     ])('renders the tooltips of a $type parser', async (testCase) => {
       stores[testCase.type as keyof typeof stores].rows = [makeParser(1, testCase.row)];
 
