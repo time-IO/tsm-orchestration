@@ -24,9 +24,11 @@ def write(path, text):
 
 def test_compute_views_version_stable(sql_dir):
     f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
-    digest = sud.hash_view_files([f])
-    assert sud.compute_views_version(digest, 1) == sud.compute_views_version(
-        sud.hash_view_files([f]), 1
+    digest = CreateThingInPostgresHandler.hash_view_files([f])
+    assert CreateThingInPostgresHandler.compute_views_version(
+        digest, 1
+    ) == CreateThingInPostgresHandler.compute_views_version(
+        CreateThingInPostgresHandler.hash_view_files([f]), 1
     )
 
 
@@ -34,32 +36,54 @@ def test_compute_views_version_changes(sql_dir, monkeypatch):
     f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
     monkeypatch.setenv("SMS_URL", "https://sms")
     monkeypatch.setenv("CV_URL", "https://cv")
-    base = sud.compute_views_version(sud.hash_view_files([f]), 1)
+    base = CreateThingInPostgresHandler.compute_views_version(
+        CreateThingInPostgresHandler.hash_view_files([f]), 1
+    )
 
-    assert sud.compute_views_version(sud.hash_view_files([f]), 2) != base
+    assert (
+        CreateThingInPostgresHandler.compute_views_version(
+            CreateThingInPostgresHandler.hash_view_files([f]), 2
+        )
+        != base
+    )
 
     monkeypatch.setenv("SMS_URL", "https://other")
-    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+    assert (
+        CreateThingInPostgresHandler.compute_views_version(
+            CreateThingInPostgresHandler.hash_view_files([f]), 1
+        )
+        != base
+    )
     monkeypatch.setenv("SMS_URL", "https://sms")
 
     monkeypatch.setenv("CV_URL", "https://other")
-    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+    assert (
+        CreateThingInPostgresHandler.compute_views_version(
+            CreateThingInPostgresHandler.hash_view_files([f]), 1
+        )
+        != base
+    )
     monkeypatch.setenv("CV_URL", "https://cv")
 
     monkeypatch.setattr(sud, "VIEWS_REVISION", sud.VIEWS_REVISION + 1)
-    assert sud.compute_views_version(sud.hash_view_files([f]), 1) != base
+    assert (
+        CreateThingInPostgresHandler.compute_views_version(
+            CreateThingInPostgresHandler.hash_view_files([f]), 1
+        )
+        != base
+    )
 
 
 def test_hash_view_files_tracks_content_and_ddl(sql_dir):
     f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
-    base = sud.hash_view_files([f])
+    base = CreateThingInPostgresHandler.hash_view_files([f])
 
     write(f, "CREATE VIEW a AS SELECT 2;")
-    changed = sud.hash_view_files([f])
+    changed = CreateThingInPostgresHandler.hash_view_files([f])
     assert changed != base
 
     write(sql_dir / "postgres-ddl.sql", "CREATE TABLE thing (id bigint);")
-    assert sud.hash_view_files([f]) != changed
+    assert CreateThingInPostgresHandler.hash_view_files([f]) != changed
 
 
 def test_view_files_exist():
@@ -127,7 +151,7 @@ def test_act_checks_each_kind_in_its_schema(handler):
         ("user_1_int", "sti"),
         ("user_1", "grf"),
     ]
-    expected = sud.compute_views_version("d-sti", 7)
+    expected = CreateThingInPostgresHandler.compute_views_version("d-sti", 7)
     assert calls[1][2] == expected
 
 
@@ -138,7 +162,10 @@ def test_act_redeploys_only_stale_kind(handler):
 
     assert deployed(handler) == [("sti", "user_1_int")]
     handler.set_views_stamp.assert_called_once_with(
-        ANY, "user_1_int", "sti", sud.compute_views_version("d-sti", 7)
+        ANY,
+        "user_1_int",
+        "sti",
+        CreateThingInPostgresHandler.compute_views_version("d-sti", 7),
     )
 
 

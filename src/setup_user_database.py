@@ -51,22 +51,6 @@ VIEW_LOCK_TIMEOUT = {"sta": "30s", "sti": "30s", "grf": "10s"}
 VIEWS_REVISION = 1
 
 
-def hash_view_files(files: list[Path]) -> str:
-    h = hashlib.sha256()
-    for f in [DDL_FILE, *files]:
-        h.update(f.relative_to(SQL_DIR).as_posix().encode())
-        h.update(f.read_bytes())
-    return h.hexdigest()
-
-
-def compute_views_version(files_digest: str, flyway_rank: int) -> str:
-    key = (
-        f"{VIEWS_REVISION}|{flyway_rank}|{os.environ.get('SMS_URL')}|"
-        f"{os.environ.get('CV_URL')}|{files_digest}"
-    )
-    return hashlib.sha256(key.encode()).hexdigest()[:16]
-
-
 class CreateThingInPostgresHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
@@ -80,7 +64,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
-        self.views_digests = {k: hash_view_files(f) for k, f in VIEW_FILES.items()}
+        self.views_digests = {k: self.hash_view_files(f) for k, f in VIEW_FILES.items()}
 
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -132,11 +116,27 @@ class CreateThingInPostgresHandler(AbstractHandler):
         logger.debug(f"grant grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
 
+    @staticmethod
+    def hash_view_files(files: list[Path]) -> str:
+        h = hashlib.sha256()
+        for f in [DDL_FILE, *files]:
+            h.update(f.relative_to(SQL_DIR).as_posix().encode())
+            h.update(f.read_bytes())
+        return h.hexdigest()
+
+    @staticmethod
+    def compute_views_version(files_digest: str, flyway_rank: int) -> str:
+        key = (
+            f"{VIEWS_REVISION}|{flyway_rank}|{os.environ.get('SMS_URL')}|"
+            f"{os.environ.get('CV_URL')}|{files_digest}"
+        )
+        return hashlib.sha256(key.encode()).hexdigest()[:16]
+
     def deploy_views(self, thing, int_schema: str):
         schema = thing.database.username.lower()
         flyway_rank = self.get_flyway_rank()
         for kind, target in (("sta", schema), ("sti", int_schema), ("grf", schema)):
-            version = compute_views_version(self.views_digests[kind], flyway_rank)
+            version = self.compute_views_version(self.views_digests[kind], flyway_rank)
             if self.views_up_to_date(target, kind, version):
                 logger.debug(f"{kind} views in {target} are up to date ({version})")
                 continue
