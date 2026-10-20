@@ -3,27 +3,21 @@
     <span :class="{ 'text-weight-bold': boldText }">
       <slot>{{ text }}</slot>
     </span>
-    <q-btn
+    <open-in-new-tab-button
       v-if="!hideButton"
-      flat
       dense
-      round
       size="xs"
-      icon="open_in_new"
       color="grey-7"
       class="q-ml-xs"
-      type="a"
       :href="href"
-      target="_blank"
-      rel="noopener noreferrer"
-      :aria-label="tooltip"
-    >
-      <q-tooltip>{{ tooltip }}</q-tooltip>
-    </q-btn>
+      :tooltip="tooltip"
+    />
   </span>
 </template>
 
 <script setup lang="ts">
+import OpenInNewTabButton from '@/components/common/OpenInNewTabButton.vue';
+
 const {
   href,
   text = '',
