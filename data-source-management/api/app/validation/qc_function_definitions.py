@@ -12,7 +12,10 @@ OFFSET_REGEX = r"^(?!$)(?:\d+)?(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)?$"
 OFFSET_REGEX_NO_SINGLE_NUMBER = r"^\d*(?:B|D|W|M|Q|Y|h|min|s|ms|us|ns)$"
 
 OFFSET_TYPE = {"type": "offset", "constraint": {"regex": OFFSET_REGEX}}
-OFFSET_TYPE_NO_SINGLE_NUMBER = {"type": "offset", "constraint": {"regex": OFFSET_REGEX_NO_SINGLE_NUMBER}}
+OFFSET_TYPE_NO_SINGLE_NUMBER = {
+    "type": "offset",
+    "constraint": {"regex": OFFSET_REGEX_NO_SINGLE_NUMBER},
+}
 
 DATASTREAM_TYPE = {"type": "datastream", "constraint": {"min": 1}}
 
