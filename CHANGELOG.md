@@ -13,7 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
-- Component Tests: IngestOverviewExternalApiFilter, IngestOverviewExternalApiTable, IngestOverviewFilter, IngestOverviewTable and TriggerExternalApiDialog ([Merge request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/792))
+- Component Tests: IngestOverviewExternalApiFilter, IngestOverviewExternalApiTable, IngestOverviewFilter, IngestOverviewTable and TriggerExternalApiDialog ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/792))
 
 ### Fixed
 - Enable automatic QC for MQTT ingest: `data_parsed` messages from MQTT ingest carry the time range of the data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/759))
