@@ -12,6 +12,8 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-10-21]
+
 ### Added
 - Component Tests: ParserOverviewFilter, ParserOverviewTable ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/782))
 - Component Test: IngestTypeSelect.vue, IngestExternalApiTypeSelect.vue,IngestFormExternalSftp.vue,IngestFormMqtt.vue,IngestFormSftp.vue. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/784))
