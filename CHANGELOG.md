@@ -14,6 +14,8 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Component Tests: ParserOverviewFilter, ParserOverviewTable ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/782))
+- Component Test: IngestTypeSelect.vue, IngestExternalApiTypeSelect.vue,IngestFormExternalSftp.vue,IngestFormMqtt.vue,IngestFormSftp.vue. ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/784))
+- CompTest for ParserFormCsv/Json/Soilcan([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/779))
 - Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/781))
 - Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
 
