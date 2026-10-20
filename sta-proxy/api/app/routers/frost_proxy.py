@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Header, Request, Response, HTTPException
+from fastapi import APIRouter, Depends, Header, Request, Response, HTTPException
 from config import settings
 from services import frost_proxy_service
 
@@ -12,6 +12,19 @@ router = APIRouter(
 )
 
 
+def get_authorization(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> str | None:
+    # opening an endpoint URL cannot send the bearer token,
+    # instead it uses the session cookie
+    if not authorization:
+        token = request.cookies.get(settings.SESSION_COOKIE_NAME)
+        if token:
+            authorization = f"Bearer {token}"
+    return authorization
+
+
 @router.get(
     "/{endpoint:path}",
     summary="Forwards GET /<endpoint>?<query> to the respective FROST server",
@@ -19,16 +32,9 @@ router = APIRouter(
 async def proxy_to_frost(
     endpoint: str,
     request: Request,
-    authorization: str | None = Header(default=None),
+    authorization: str | None = Depends(get_authorization),
 ) -> Response:
     validate_proxied_path(endpoint)
-
-    # opening an endpoint URL cannot send the bearer token,
-    # instead it uses the session cookie
-    if not authorization:
-        token = request.cookies.get(settings.SESSION_COOKIE_NAME)
-        if token:
-            authorization = f"Bearer {token}"
 
     logger.debug("Proxy request for endpoint=%s query=%s", endpoint, request.url.query)
     return await frost_proxy_service(
