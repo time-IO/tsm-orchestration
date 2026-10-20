@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
-from services.dsm_api import fetch_dsm_api
+from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
 
 logger = logging.getLogger("app.services.session")
 
@@ -43,17 +43,8 @@ def is_cookie_secure() -> bool:
 async def validate_token(authorization: str) -> None:
     try:
         await fetch_dsm_api("/me/", authorization)
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code in (401, 403):
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        logger.error("Validating token with DSM API failed: %s", e)
-        raise HTTPException(status_code=502, detail="DSM API not available")
-    except httpx.TimeoutException:
-        logger.warning("Timeout while validating token with DSM API")
-        raise HTTPException(status_code=504, detail="DSM API timeout")
     except httpx.HTTPError as e:
-        logger.error("Validating token with DSM API failed: %s", e)
-        raise HTTPException(status_code=502, detail="DSM API not available")
+        raise dsm_error_to_http_exception(e, "validating token")
 
 
 async def set_session_service(

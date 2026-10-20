@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 import httpx
+from fastapi import HTTPException
 
 from config import settings
 
@@ -40,3 +41,13 @@ async def fetch_dsm_api(
     logger.debug("DSM API responded with %s for %s", response.status_code, path)
     response.raise_for_status()
     return response.json()
+
+
+def dsm_error_to_http_exception(e: Exception, action: str) -> HTTPException:
+    if isinstance(e, httpx.HTTPStatusError) and e.response.status_code in (401, 403):
+        return HTTPException(status_code=401, detail="Not authenticated")
+    if isinstance(e, httpx.TimeoutException):
+        logger.warning("Timeout while %s with DSM API", action)
+        return HTTPException(status_code=504, detail="DSM API timeout")
+    logger.error("%s with DSM API failed: %s", action.capitalize(), e)
+    return HTTPException(status_code=502, detail="DSM API not available")
