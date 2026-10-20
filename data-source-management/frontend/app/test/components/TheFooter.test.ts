@@ -1,6 +1,7 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { mount, RouterLinkStub } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
+import { Screen } from 'quasar';
 
 import TheFooter from '@/components/TheFooter.vue'; // adjust path
 
@@ -75,5 +76,28 @@ describe('TheFooter', () => {
 
     expect(link.attributes('href')).toBe(testCase.href);
     expect(link.attributes('target')).toBe('_blank');
+  });
+
+  describe('icon size', () => {
+    const originalLtMd = Screen.lt.md;
+
+    afterEach(() => {
+      Screen.lt.md = originalLtMd;
+    });
+
+    it.for([
+      { ltMd: true, expected: '1.2rem' },
+      { ltMd: false, expected: '1.5rem' },
+    ])('uses icon size $expected when screen.lt.md is $ltMd', (testCase) => {
+      Screen.lt.md = testCase.ltMd;
+
+      const wrapper = mountFooter();
+
+      const icons = wrapper.findAll('a[title] i');
+      expect(icons).toHaveLength(4);
+      for (const icon of icons) {
+        expect(icon.attributes('style')).toContain(`font-size: ${testCase.expected}`);
+      }
+    });
   });
 });

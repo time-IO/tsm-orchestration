@@ -390,5 +390,85 @@ describe('IngestExternalApiOverviewTable', () => {
 
       expect(onClick).toHaveBeenCalledTimes(1);
     });
+
+    it('uses 50px as minimum width for columns without a configured minimum', async () => {
+      const wrapper = mountTable();
+
+      await headerCell(wrapper, 'action').find('.col-resize-handle').trigger('mousedown', { clientX: 100 });
+      await move(-400);
+
+      expect(widthOf(wrapper, 'action')).toBe('50px');
+    });
+
+    it('falls back to the stored width when the handle is not inside a th', async () => {
+      const wrapper = mountTable();
+      const handle = headerCell(wrapper, 'id').find('.col-resize-handle');
+      vi.spyOn(handle.element, 'closest').mockReturnValue(null);
+
+      await handle.trigger('mousedown', { clientX: 100 });
+      await move(150);
+
+      // stored width of id is 60px, plus the dragged 50px
+      expect(widthOf(wrapper, 'id')).toBe('110px');
+    });
+
+    it('falls back to 100px when the column has no stored width and no th', async () => {
+      const wrapper = mountTable();
+      const handle = headerCell(wrapper, 'action').find('.col-resize-handle');
+      vi.spyOn(handle.element, 'closest').mockReturnValue(null);
+
+      await handle.trigger('mousedown', { clientX: 100 });
+      await move(150);
+
+      expect(widthOf(wrapper, 'action')).toBe('150px');
+    });
+  });
+
+  describe('selection', () => {
+    it('shows a header checkbox only for multiple selection', () => {
+      const rows = [{ id: 1 }];
+
+      const multiple = mountTable({ rows }, { selection: 'multiple' });
+      const single = mountTable({ rows }, { selection: 'single' });
+
+      expect(multiple.find('thead').findComponent(QCheckbox).exists()).toBe(true);
+      expect(single.find('thead').findComponent(QCheckbox).exists()).toBe(false);
+    });
+
+    it.for([
+      { selection: 'multiple', expected: true },
+      { selection: 'single', expected: true },
+      { selection: undefined, expected: false },
+    ])('row checkbox exists: $expected for selection $selection', (testCase) => {
+        const wrapper = mountTable({ rows: [{ id: 1 }] }, { selection: testCase.selection });
+
+        expect(wrapper.find('tbody').findComponent(QCheckbox).exists()).toBe(testCase.expected);
+    });
+  });
+
+  describe('cell tooltip', () => {
+    it('renders the cell value as tooltip content', () => {
+      const wrapper = mount(IngestExternalApiOverviewTable, {
+        props: { rows: [{ id: 1, name: 'First' }], loading: false },
+        global: {
+          stubs: {
+            QMenu: QMenuStub,
+            QTooltip: { template: '<i class="tooltip"><slot/></i>' },
+          },
+        },
+      });
+
+      expect(wrapper.findAll('tbody .tooltip').map((t) => t.text())).toEqual(['1', 'First']);
+    });
+  });
+
+  describe('cell content', () => {
+    it('renders a value for a column without a configured width', () => {
+      const wrapper = mountTable({ rows: [{ id: 1, action: 'open' }] });
+
+      const cells = wrapper.findAll('tbody td').map((td) => td.text());
+
+      expect(cells).toContain('open');
+    });
   });
 });

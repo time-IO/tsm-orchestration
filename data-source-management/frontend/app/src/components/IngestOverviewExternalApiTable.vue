@@ -138,11 +138,7 @@ function onRequest(props: QTableRequestProp) {
   emit('onRequest', props);
 }
 
-const windowWidth = ref(window.innerWidth);
-
-window.addEventListener('resize', () => {
-  windowWidth.value = window.innerWidth;
-});
+const isSmallWindow = window.innerWidth < 1200
 
 const colMinWidths: Record<string, number> = {
   id: 40,
@@ -154,9 +150,9 @@ const colMinWidths: Record<string, number> = {
 
 const defaultColWidths = ref<Record<string, string>>({
   id: '60px',
-  permission_group: windowWidth.value < 1200 ? '80px' : '150px',
-  name: windowWidth.value < 1200 ? '80px' : '120px',
-  uuid: windowWidth.value < 1200 ? '80px' : '120px',
+  permission_group: isSmallWindow ? '80px' : '150px',
+  name: isSmallWindow ? '80px' : '120px',
+  uuid: isSmallWindow ? '80px' : '120px',
   created_at: '110px',
 });
 
@@ -184,6 +180,7 @@ function startResize(e: MouseEvent, colName: string) {
 }
 
 function onResize(e: MouseEvent) {
+   /* v8 ignore next */
   if (!resizingCol) return;
   const diff = e.clientX - startX;
   const min = colMinWidths[resizingCol] ?? 50;

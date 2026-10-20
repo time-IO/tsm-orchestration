@@ -55,7 +55,8 @@ const OverviewTableStub = defineComponent({
 
 // QBtn is stubbed so "to" does not need a router; the stub keeps the props
 const globalOptions = {
-  stubs: { OverviewTable: OverviewTableStub, QBtn: true },
+  stubs: { OverviewTable: OverviewTableStub, QBtn: true, QTooltip: true },
+  renderStubDefaultSlot: true,
 };
 
 // ---------------------------------------------------------------------------
