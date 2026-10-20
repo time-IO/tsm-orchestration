@@ -14,6 +14,7 @@ const ENV_OIDC_POST_LOGOUT_REDIRECT_URI =
   import.meta.env.OIDC_POST_LOGOUT_REDIRECT_URI || 'ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER';
 const ENV_BASE_URL = import.meta.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER';
 const ENV_SMS_URL = import.meta.env.SMS_URL || 'ENV_SMS_URL_PLACEHOLDER';
+const ENV_APP_VERSION = import.meta.env.APP_VERSION || 'ENV_APP_VERSION_PLACEHOLDER';
 
 export default defineConfig((ctx) => {
   return {
@@ -72,6 +73,7 @@ export default defineConfig((ctx) => {
         OIDC_SCOPE: ENV_OIDC_SCOPE,
         OIDC_POST_LOGOUT_REDIRECT_URI: ENV_OIDC_POST_LOGOUT_REDIRECT_URI,
         SMS_URL: ENV_SMS_URL,
+        APP_VERSION: ENV_APP_VERSION,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

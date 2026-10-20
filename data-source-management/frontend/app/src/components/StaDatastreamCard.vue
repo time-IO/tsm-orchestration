@@ -17,11 +17,11 @@
     </q-card-section>
     <q-card-section class="q-pa-sm">
       <sta-datastream-selection-view
-        :selected="props.selected"
+        :selected="selected"
         :default-opened="true"
-        :removable="props.removable"
-        :hide-thing-name="props.hideThingName"
-        :hide-open-button="props.hideOpenButton"
+        :removable="removable"
+        :hide-thing-name="hideThingName"
+        :hide-open-button="hideOpenButton"
         @remove="(ds) => emit('remove', ds)"
       />
     </q-card-section>
@@ -32,22 +32,21 @@
 import StaDatastreamSelectionView from '@/components/StaDatastreamSelectionView.vue';
 import type { Datastream } from '@/services/sta/types';
 
-const props = withDefaults(
-  defineProps<{
-    label: string;
-    selected: Datastream[];
-    removable?: boolean;
-    addable?: boolean;
-    hideThingName?: boolean;
-    hideOpenButton?: boolean;
-  }>(),
-  {
-    removable: false,
-    addable: false,
-    hideThingName: false,
-    hideOpenButton: false,
-  },
-);
+const {
+  label,
+  selected,
+  removable = false,
+  addable = false,
+  hideThingName = false,
+  hideOpenButton = false,
+} = defineProps<{
+  label: string;
+  selected: Datastream[];
+  removable?: boolean;
+  addable?: boolean;
+  hideThingName?: boolean;
+  hideOpenButton?: boolean;
+}>();
 
 const emit = defineEmits<{
   (e: 'add'): void;

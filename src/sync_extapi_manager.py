@@ -44,6 +44,7 @@ class SyncExtApiManager(AbstractHandler):
             get_envvar("DB_API_BASE_URL"), get_envvar("DB_API_AUTH_TOKEN")
         )
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
+        self.pub_topic = get_envvar("TOPIC_DATA_PARSED")
         self.sync_handlers: dict[str, ExtApiSyncer] = {
             "tsystems": TsystemsApiSyncer(),
             "bosch": BoschApiSyncer(),
@@ -87,7 +88,7 @@ class SyncExtApiManager(AbstractHandler):
             raise e
 
         self.mqtt_client.publish(
-            topic="data_parsed",
+            topic=self.pub_topic,
             payload=json.dumps(
                 {
                     "thing_uuid": thing.uuid,

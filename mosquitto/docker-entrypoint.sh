@@ -8,6 +8,9 @@ if [ "$user" = '0' ]; then
   [ -d "/mosquitto" ] && chown -R mosquitto:mosquitto /mosquitto || true
 fi
 
+# also start without the init-prepared volume
+mkdir -p /tmp/mosquitto/auth /tmp/mosquitto/data
+
 # create password db when not present
 if [ ! -f "/tmp/mosquitto/auth/mosquitto.passwd" ]; then
   echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd &&
@@ -29,13 +32,15 @@ fi
   echo "topic readwrite health/#"
 } >/tmp/mosquitto/auth/mosquitto.acl
 
-if [ ! -d "/var/lib/mosquitto/tls" ]
-then
-    mkdir ./var/lib/mosquitto/tls
-fi
+mkdir -p /var/lib/mosquitto/tls
 
 # substitute env vars in config template
 ( echo "cat <<EOF" ; cat /etc/mosquitto/config/mosquitto.conf ; echo EOF ) | sh > /var/lib/mosquitto/mosquitto.conf
-( echo "cat <<EOF" ; cat /etc/mosquitto/config/tls/mosquitto.tls.conf ; echo EOF ) | sh > /var/lib/mosquitto/tls/mosquitto.tls.conf
+
+if [ "${MQTT_TLS_ENABLED:-false}" = "true" ]; then
+  ( echo "cat <<EOF" ; cat /etc/mosquitto/config/tls/mosquitto.tls.conf ; echo EOF ) | sh > /var/lib/mosquitto/tls/mosquitto.tls.conf
+else
+  rm -f /var/lib/mosquitto/tls/mosquitto.tls.conf
+fi
 echo "$@"
 exec "$@"
