@@ -394,7 +394,9 @@ describe('IngestExternalApiOverviewTable', () => {
     it('uses 50px as minimum width for columns without a configured minimum', async () => {
       const wrapper = mountTable();
 
-      await headerCell(wrapper, 'action').find('.col-resize-handle').trigger('mousedown', { clientX: 100 });
+      await headerCell(wrapper, 'action')
+        .find('.col-resize-handle')
+        .trigger('mousedown', { clientX: 100 });
       await move(-400);
 
       expect(widthOf(wrapper, 'action')).toBe('50px');
@@ -440,9 +442,9 @@ describe('IngestExternalApiOverviewTable', () => {
       { selection: 'single', expected: true },
       { selection: undefined, expected: false },
     ])('row checkbox exists: $expected for selection $selection', (testCase) => {
-        const wrapper = mountTable({ rows: [{ id: 1 }] }, { selection: testCase.selection });
+      const wrapper = mountTable({ rows: [{ id: 1 }] }, { selection: testCase.selection });
 
-        expect(wrapper.find('tbody').findComponent(QCheckbox).exists()).toBe(testCase.expected);
+      expect(wrapper.find('tbody').findComponent(QCheckbox).exists()).toBe(testCase.expected);
     });
   });
 
