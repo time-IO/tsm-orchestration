@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 import services.dsm_api as dsm_api
 import services.frost_proxy as frost_proxy
+from services.permission_groups import clear_permission_groups_cache
 
 FROST_ENDPOINTS = {
     "endpoints": [
@@ -97,6 +98,13 @@ def filter_ingests(params: httpx.QueryParams) -> list[dict]:
 def dsm_requests():
     """Collects the requests that reached the mocked DSM API."""
     return []
+
+
+@pytest.fixture(autouse=True)
+def permission_groups_cache():
+    clear_permission_groups_cache()
+    yield
+    clear_permission_groups_cache()
 
 
 @pytest.fixture(autouse=True)

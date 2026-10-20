@@ -1,8 +1,10 @@
 import httpx
 import pytest
+from cachetools import TTLCache
 from fastapi import HTTPException
 
 import services.frost_proxy as frost_proxy
+import services.permission_groups as permission_groups
 from routers.frost_proxy import validate_proxied_path
 from services.frost_proxy import get_endpoint_name_from_proxied_path
 
@@ -195,3 +197,35 @@ def test_validate_proxied_path_rejects(endpoint, status_code):
 )
 def test_validate_proxied_path_accepts(endpoint):
     validate_proxied_path(endpoint)
+
+
+def test_permission_groups_are_cached_per_token(client, dsm_requests):
+    for skip in (0, 100, 200):
+        client.get(
+            f"/{OWN_ENDPOINT}/v1.1/Things?$skip={skip}",
+            headers={"authorization": "Bearer valid"},
+        )
+    assert len(dsm_requests) == 1
+
+
+def test_permission_groups_cache_expires(client, dsm_requests, monkeypatch):
+    now = [0.0]
+    monkeypatch.setattr(permission_groups, "_cache", TTLCache(8, 60, lambda: now[0]))
+    headers = {"authorization": "Bearer valid"}
+    client.get(f"/{OWN_ENDPOINT}/v1.1", headers=headers)
+    now[0] = 59
+    client.get(f"/{OWN_ENDPOINT}/v1.1", headers=headers)
+    assert len(dsm_requests) == 1
+    now[0] = 61
+    client.get(f"/{OWN_ENDPOINT}/v1.1", headers=headers)
+    assert len(dsm_requests) == 2
+
+
+def test_failed_permission_groups_lookup_is_not_cached(
+    client, dsm_requests, frost_requests, frost_internal_requests
+):
+    for _ in range(2):
+        client.get(f"/{OWN_ENDPOINT}/v1.1", headers={"authorization": "Bearer invalid"})
+    assert len(dsm_requests) == 2
+    assert frost_internal_requests == []
+    assert len(frost_requests) == 2
