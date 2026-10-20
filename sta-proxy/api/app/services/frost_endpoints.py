@@ -27,6 +27,10 @@ def rewrite_endpoint_url(url: str) -> str:
     return settings.BASE_URL.rstrip("/") + path
 
 
+def explicit_route_url(url: str, name: str, route: str) -> str:
+    return url.replace(f"/{name}/", f"/{route}/{name}/", 1)
+
+
 def frost_display_name(group: str, project: str | None) -> str:
     return (project or group).upper()
 
@@ -45,6 +49,8 @@ def endpoint_from_frost(raw: dict) -> FrostEndpoint:
         }
     )
     endpoint.url = rewrite_endpoint_url(endpoint.url)
+    endpoint.public_url = explicit_route_url(endpoint.url, endpoint.name, "public")
+    endpoint.internal_url = explicit_route_url(endpoint.url, endpoint.name, "internal")
     return endpoint
 
 
