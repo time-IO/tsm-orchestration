@@ -3,7 +3,6 @@
 playwright-static:
   stage: "check"
   image: "node:24-alpine"
-  needs: []
   before_script:
     - "cd tests/playwright"
     - "npm ci --ignore-scripts"
@@ -21,7 +20,6 @@ playwright-static:
 playwright-smoke:
   stage: "end-to-end"
   image: "mcr.microsoft.com/playwright:v1.62.0-noble"
-  needs: []
   variables:
     TIMEIO_BASE_URL: "https://timeio.web-intern-stage.app.ufz.de"
     TIMEIO_FRONTEND_PATH: "/data-source-management/"

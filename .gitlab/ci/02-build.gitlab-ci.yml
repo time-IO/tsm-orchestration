@@ -3,7 +3,6 @@
 build-and-push-images:
   stage: build
   image: "docker:${DOCKER_IMAGE_TAG}"
-  needs: []
   before_script:
     # Prepare .env file to use the branch name as image tag
     # This .env file is used in subequent jobs that have a line of dependency back to this job.
