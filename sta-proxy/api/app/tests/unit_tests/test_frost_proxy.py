@@ -184,6 +184,11 @@ def test_internal_response_is_private(client):
         ("..", 400),
         ("a/../b", 400),
         ("a/b/..", 400),
+        ("a/./b", 400),
+        ("a/..;/b", 400),
+        ("a/..;x=1/b", 400),
+        ("a/%2e%2e/b", 400),
+        ("a\\..\\b", 400),
         ("", 404),
         ("/", 404),
     ],
@@ -319,6 +324,25 @@ def test_internal_route_dsm_not_available(
     )
     # no silent fallback to the public data
     assert response.status_code == status_code
+    assert frost_requests == []
+    assert frost_internal_requests == []
+
+
+@pytest.mark.parametrize("prefix", ["", "public/", "internal/"])
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        f"{OWN_ENDPOINT}/..;/{FOREIGN_ENDPOINT}/v1.1",
+        f"{OWN_ENDPOINT}/%252e%252e/{FOREIGN_ENDPOINT}/v1.1",
+    ],
+)
+def test_ambiguous_path_does_not_reach_frost(
+    client, frost_requests, frost_internal_requests, prefix, endpoint
+):
+    response = client.get(
+        f"/{prefix}{endpoint}", headers={"authorization": "Bearer valid"}
+    )
+    assert response.status_code == 400
     assert frost_requests == []
     assert frost_internal_requests == []
 

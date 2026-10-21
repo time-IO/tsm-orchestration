@@ -90,9 +90,15 @@ async def proxy_to_frost(
     )
 
 
+AMBIGUOUS_PATH_CHARS = (";", "%", "\\")
+
+
 def validate_proxied_path(endpoint: str) -> None:
     # reject path traversal
-    if ".." in endpoint.split("/"):
+    segments = endpoint.split("/")
+    if any(s in (".", "..") for s in segments) or any(
+        c in endpoint for c in AMBIGUOUS_PATH_CHARS
+    ):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     # hide FROST endpoint listing
