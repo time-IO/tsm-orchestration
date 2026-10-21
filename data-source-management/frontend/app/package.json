@@ -15,7 +15,7 @@
     "test:watch": "vitest",
     "dev": "quasar dev",
     "build": "quasar build",
-    "postinstall": "quasar prepare",
+    "postinstall": "quasar prepare"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
