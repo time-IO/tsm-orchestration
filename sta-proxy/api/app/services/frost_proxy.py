@@ -5,11 +5,7 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
-from services.permission_groups import (
-    fetch_own_permission_groups,
-    get_own_permission_groups,
-    has_internal_access,
-)
+from services.permission_groups import get_own_permission_groups, has_internal_access
 
 logger = logging.getLogger("app.services.frost_proxy")
 
@@ -148,21 +144,8 @@ def get_link_rewrite(endpoint: str, route: str) -> tuple[bytes, bytes]:
     )
 
 
-async def select_frost_server_by_authorization(
-    endpoint: str, authorization: str | None
-) -> FrostServer:
-    if authorization:
-        endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
-        permission_groups = await fetch_own_permission_groups(authorization)
-        if has_internal_access(endpoint_name, permission_groups):
-            # user is authorized and has required permission group
-            logger.debug("Forwarding %s to %s FROST", endpoint, internal_frost.name)
-            return internal_frost
-    logger.debug("Forwarding %s to %s FROST", endpoint, public_frost.name)
-    return public_frost
-
-
 async def require_internal_access(endpoint: str, authorization: str | None) -> None:
+    """Raises 401/403 without access, or the DSM API error if the lookup fails."""
     if not authorization:
         raise HTTPException(status_code=401, detail="Not authenticated")
     endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
@@ -170,6 +153,21 @@ async def require_internal_access(endpoint: str, authorization: str | None) -> N
     if not has_internal_access(endpoint_name, permission_groups):
         logger.debug("Denied internal access to %s", endpoint)
         raise HTTPException(status_code=403, detail="No access to internal endpoint")
+
+
+async def select_frost_server_by_authorization(
+    endpoint: str, authorization: str | None
+) -> FrostServer:
+    if not authorization:
+        return public_frost
+    try:
+        await require_internal_access(endpoint, authorization)
+    except HTTPException as e:
+        if e.status_code != 403:
+            logger.warning("Checking internal access failed: %s", e.detail)
+        return public_frost
+    # user is authorized and has required permission group
+    return internal_frost
 
 
 async def forward_to_frost(
@@ -184,6 +182,7 @@ async def forward_to_frost(
         url += "?" + query
 
     headers = {"accept": accept} if accept else {}
+    logger.debug("Forwarding %s to %s FROST", endpoint, server.name)
     return await server.forward(url, headers, link_rewrite)
 
 
@@ -200,7 +199,6 @@ async def frost_proxy_service(
 async def public_frost_proxy_service(
     endpoint: str, query: str = "", accept: str | None = None
 ) -> Response:
-    logger.debug("Forwarding %s to %s FROST", endpoint, public_frost.name)
     return await forward_to_frost(
         public_frost, endpoint, query, accept, get_link_rewrite(endpoint, "public")
     )
@@ -213,7 +211,6 @@ async def internal_frost_proxy_service(
     authorization: str | None = None,
 ) -> Response:
     await require_internal_access(endpoint, authorization)
-    logger.debug("Forwarding %s to %s FROST", endpoint, internal_frost.name)
     return await forward_to_frost(
         internal_frost, endpoint, query, accept, get_link_rewrite(endpoint, "internal")
     )
