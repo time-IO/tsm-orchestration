@@ -337,7 +337,13 @@ def test_explicit_routes_validate_path(
     assert frost_internal_requests == []
 
 
-STA_ROOT = "http://localhost/sta/"
+STA_ROOT = "http://host/sta/"
+
+
+@pytest.fixture(autouse=True)
+def sta_proxy_url(monkeypatch):
+    # independent of the STA_PROXY_URL of the environment running the tests
+    monkeypatch.setattr(frost_proxy.settings, "STA_PROXY_URL", STA_ROOT)
 
 
 def frost_with_links(monkeypatch, server, content_type="application/json"):
@@ -414,10 +420,17 @@ def test_large_response_is_rewritten_in_thread(client, monkeypatch):
     )
 
 
-@pytest.mark.parametrize("sta_proxy_url", ["http://host/sta", "http://host/sta/"])
-def test_get_link_rewrite(monkeypatch, sta_proxy_url):
+@pytest.mark.parametrize(
+    "sta_proxy_url, frost_root",
+    [
+        # FROST appends the name to STA_PROXY_URL as is
+        ("http://host/sta", f"http://host/sta{OWN_ENDPOINT}/"),
+        ("http://host/sta/", f"http://host/sta/{OWN_ENDPOINT}/"),
+    ],
+)
+def test_get_link_rewrite(monkeypatch, sta_proxy_url, frost_root):
     monkeypatch.setattr(frost_proxy.settings, "STA_PROXY_URL", sta_proxy_url)
     assert frost_proxy.get_link_rewrite(f"{OWN_ENDPOINT}/v1.1/Things", "internal") == (
-        f"http://host/sta/{OWN_ENDPOINT}/".encode(),
+        frost_root.encode(),
         f"http://host/sta/internal/{OWN_ENDPOINT}/".encode(),
     )

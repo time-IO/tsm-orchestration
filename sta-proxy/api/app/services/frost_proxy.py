@@ -132,14 +132,16 @@ def get_endpoint_name_from_proxied_path(endpoint: str) -> str:
     return endpoint.strip("/").split("/", 1)[0]
 
 
+def frost_service_root_url(endpoint_name: str) -> str:
+    return f"{settings.STA_PROXY_URL}{endpoint_name}"
+
+
 def get_link_rewrite(endpoint: str, route: str) -> tuple[bytes, bytes]:
-    """FROST links point to the automatic route, keep clients on the explicit one.
-    "<STA_PROXY_URL><name>/" -> "<STA_PROXY_URL><route>/<name>/"
-    """
+    """Adjust generated FROST navigation links to explicit routes."""
     root = settings.STA_PROXY_URL.rstrip("/") + "/"
     endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
     return (
-        f"{root}{endpoint_name}/".encode(),
+        f"{frost_service_root_url(endpoint_name)}/".encode(),
         f"{root}{route}/{endpoint_name}/".encode(),
     )
 
