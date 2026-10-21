@@ -11,13 +11,11 @@
     "lint:ts": "vue-tsc --noEmit",
     "lint:all": "npm run lint && npm run lint:ts",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"See package.json => scripts for available tests.\" && exit 0",
+    "test": "vitest run",
     "test:watch": "vitest",
     "dev": "quasar dev",
     "build": "quasar build",
     "postinstall": "quasar prepare",
-    "test:unit": "vitest",
-    "test:unit:ci": "vitest run"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
