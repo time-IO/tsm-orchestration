@@ -13,6 +13,7 @@ from dependencies import (
     get_repo_ingest_external_api_the_things_network,
     get_repo_ingest_external_api_tsystems,
     get_repo_ingest_external_api_uba,
+    get_repo_ingest_external_api_zentra,
 )
 from repositories.ingest_external_api_dwd import IngestExternalApiDwdRepository
 from repositories.ingest_external_api_neutron_monitor import (
@@ -28,6 +29,9 @@ from repositories.ingest_external_api_tsystems import (
     IngestExternalApiTSystemsRepository,
 )
 from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
+from repositories.ingest_external_api_zentra import (
+    IngestExternalApiZentraRepository,
+)
 from routers import (
     ingest_external_api_dwd,
     ingest_external_api_neutron_monitor,
@@ -35,6 +39,7 @@ from routers import (
     ingest_external_api_the_things_network,
     ingest_external_api_tsystems,
     ingest_external_api_uba,
+    ingest_external_api_zentra,
 )
 
 LIST_CASES = (
@@ -51,6 +56,7 @@ LIST_CASES = (
     ),
     ("/ingest/external-api/tsystems/", get_repo_ingest_external_api_tsystems),
     ("/ingest/external-api/uba/", get_repo_ingest_external_api_uba),
+    ("/ingest/external-api/zentra/", get_repo_ingest_external_api_zentra),
 )
 
 PROVIDER_CASES = (
@@ -66,6 +72,7 @@ PROVIDER_CASES = (
     ),
     (ingest_external_api_tsystems, IngestExternalApiTSystemsRepository),
     (ingest_external_api_uba, IngestExternalApiUbaRepository),
+    (ingest_external_api_zentra, IngestExternalApiZentraRepository),
 )
 REPOSITORY_CLASSES = tuple(repository_class for _, repository_class in PROVIDER_CASES)
 

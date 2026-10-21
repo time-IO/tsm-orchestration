@@ -57,6 +57,12 @@ PROTECTED_ENDPOINTS = [
     ("POST", "/ingest/external-api/uba/"),
     ("PATCH", "/ingest/external-api/uba/1"),
     ("DELETE", "/ingest/external-api/uba/1"),
+    # ingest/external-api/zentra
+    ("GET", "/ingest/external-api/zentra/"),
+    ("GET", "/ingest/external-api/zentra/1"),
+    ("POST", "/ingest/external-api/zentra/"),
+    ("PATCH", "/ingest/external-api/zentra/1"),
+    ("DELETE", "/ingest/external-api/zentra/1"),
     # ingest/external-sftp
     ("GET", "/ingest/external-sftp/"),
     ("GET", "/ingest/external-sftp/1"),
