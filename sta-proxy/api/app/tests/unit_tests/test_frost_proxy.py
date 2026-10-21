@@ -243,6 +243,7 @@ def test_public_route_forwards_to_public_frost_without_dsm_check(
     )
     assert response.status_code == 200
     assert "cache-control" not in response.headers
+    assert "vary" not in response.headers
     assert frost_requests[0].url.raw_path.decode() == (
         f"/{OWN_ENDPOINT}/v1.1/Things?$top=1"
     )

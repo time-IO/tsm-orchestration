@@ -66,24 +66,11 @@ class FrostServer:
             raise HTTPException(status_code=502, detail="FROST server not reachable")
 
     def get_filtered_headers(self, upstream: httpx.Response) -> dict[str, str]:
-        filtered_response_headers = {
+        return {
             k: v
             for k, v in upstream.headers.items()
             if k.lower() not in EXCLUDED_RESPONSE_HEADERS
         }
-
-        # vary-header manages caching depending on public/internal access
-        # see https://developer.mozilla.org/de/docs/Web/HTTP/Reference/Headers/Vary
-        filtered_response_headers["vary"] = ", ".join(
-            v
-            for v in (
-                filtered_response_headers.pop("vary", None),
-                "Authorization, Cookie",
-            )
-            if v
-        )
-
-        return filtered_response_headers
 
     def get_filtered_headers_response(
         self, upstream: httpx.Response, content: bytes
@@ -195,7 +182,13 @@ async def frost_proxy_service(
     authorization: str | None = None,
 ) -> Response:
     server = await select_frost_server_by_authorization(endpoint, authorization)
-    return await forward_to_frost(server, endpoint, query, accept)
+    response = await forward_to_frost(server, endpoint, query, accept)
+    # the selected server depends on the authorization, caches must respect it
+    # see https://developer.mozilla.org/de/docs/Web/HTTP/Reference/Headers/Vary
+    response.headers["vary"] = ", ".join(
+        v for v in (response.headers.get("vary"), "Authorization, Cookie") if v
+    )
+    return response
 
 
 async def public_frost_proxy_service(
