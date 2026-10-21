@@ -1,5 +1,7 @@
+import httpx
 import pytest
 
+import services.dsm_api as dsm_api
 from config import settings
 
 OWN_ENDPOINT = "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"
@@ -38,6 +40,22 @@ def test_put_session_requires_token(client):
 def test_put_session_rejects_invalid_token(client):
     response = client.put("/session", headers={"authorization": "Bearer invalid"})
     assert response.status_code == 401
+    assert "set-cookie" not in response.headers
+
+
+def test_put_session_dsm_returns_invalid_json(client, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html>maintenance</html>")
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(handler), base_url="http://dsm-api"
+        ),
+    )
+    response = client.put("/session", headers={"authorization": "Bearer valid"})
+    assert response.status_code == 502
     assert "set-cookie" not in response.headers
 
 

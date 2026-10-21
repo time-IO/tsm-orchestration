@@ -43,7 +43,7 @@ def is_cookie_secure() -> bool:
 async def validate_token(authorization: str) -> None:
     try:
         await fetch_dsm_api("/me/", authorization)
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, ValueError) as e:
         raise dsm_error_to_http_exception(e, "validating token")
 
 
