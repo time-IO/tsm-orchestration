@@ -19,7 +19,7 @@ ARG UID=1000
 ARG GID=1000
 ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/$FROST_VERSION/FROST-Server.HTTP-$FROST_VERSION.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2025.1.1/postgis-jdbc-2025.1.1.jar
-ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.9/postgresql-42.7.9.jar
+ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.14/postgresql-42.7.14.jar
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO FROST-Server Image" \
