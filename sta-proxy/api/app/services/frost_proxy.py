@@ -166,7 +166,7 @@ async def forward_to_frost(
     accept: str | None,
     link_rewrite: tuple[bytes, bytes] | None = None,
 ) -> Response:
-    url = "/" + endpoint
+    url = "/" + endpoint.lstrip("/")
     if query:
         url += "?" + query
 

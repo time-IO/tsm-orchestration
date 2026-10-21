@@ -347,6 +347,20 @@ def test_ambiguous_path_does_not_reach_frost(
     assert frost_internal_requests == []
 
 
+@pytest.mark.parametrize("prefix", ["", "internal/"])
+def test_leading_slash_does_not_change_forwarded_endpoint(
+    client, frost_internal_requests, prefix
+):
+    response = client.get(
+        f"http://testserver/{prefix}/{OWN_ENDPOINT}/{FOREIGN_ENDPOINT}/v1.1",
+        headers={"authorization": "Bearer valid"},
+    )
+    assert response.status_code == 200
+    assert frost_internal_requests[0].url.raw_path.decode() == (
+        f"/{OWN_ENDPOINT}/{FOREIGN_ENDPOINT}/v1.1"
+    )
+
+
 @pytest.mark.parametrize("prefix", ["public", "internal"])
 @pytest.mark.parametrize(
     "endpoint, status_code", [("", 404), ("a/%2E%2E/%2E%2E/x", 400)]
