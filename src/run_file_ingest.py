@@ -68,17 +68,25 @@ class ParserJobHandler(AbstractHandler):
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
             return
-        tags = self.get_parser_tags(bucket_name, filename)
-        if tags is not None:
-            parser_uuid = tags["parser_id"]
-            logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
+        if content.get("reparsing"):
+            if requested_uuid := content.get("parser_uuid"):
+                pobj = FileParser.from_uuid(requested_uuid, dsn = self.dsmdb_dsn)
+            else:
+                pobj = thing.s3_store.file_parser
+            parser_uuid = pobj.uuid
+            logger.info(f"Reparsing file with parser {parser_uuid}")
         else:
-            parser_uuid = file_parser.uuid
-            logger.info(f"No parser file tag found, using default parser {parser_uuid}")
+            tags = self.get_parser_tags(bucket_name, filename)
+            if tags is not None:
+                parser_uuid = tags["parser_id"]
+                logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
+            else:
+                parser_uuid = file_parser.uuid
+                logger.info(f"No parser file tag found, using default parser {parser_uuid}")
+            pobj = thing.s3_store.file_parser
 
         source_uri = f"{bucket_name}/{filename}"
 
-        pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
         encoding = pobj.params.pop("encoding", None) or "utf-8"
