@@ -23,7 +23,7 @@ stage-tag-images-in-registry:
         - grafana/**/*
         - tomcat/**/*
         - data-source-management/**/*
-      when: always
+      when: on_success
     # Run manually if pipeline is triggered by a push on main
     - if: "$CI_COMMIT_BRANCH == 'main' && $CI_PIPELINE_SOURCE == 'push'"
       when: manual
