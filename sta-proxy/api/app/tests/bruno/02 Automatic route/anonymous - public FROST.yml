@@ -1,0 +1,31 @@
+info:
+  name: anonymous - public FROST
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/{{endpointGroup1}}/v1.1"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("public FROST, cacheable", function () {
+          expect(res.getHeader("cache-control")).to.be.undefined;
+        });
+
+        test("varies by authorization", function () {
+          expect(res.getHeader("vary")).to.include("Authorization");
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

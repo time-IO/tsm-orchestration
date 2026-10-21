@@ -1,0 +1,31 @@
+info:
+  name: user1 - own ingests
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta-proxy/api/ingests"
+  headers:
+    - name: X-Test-User
+      value: user1
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("StaticIngest and DynamicIngest of VO:Group1", function () {
+          const names = res.getBody().items.filter((i) => i.permission_group_name === "VO:Group1").map((i) => i.name);
+          expect(names).to.include.members(["StaticIngest", "DynamicIngest"]);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

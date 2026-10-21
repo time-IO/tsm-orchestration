@@ -1,0 +1,16 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost
+  - name: keycloakUrl
+    value: http://localhost/keycloak
+  - name: password
+    value: password
+  - name: endpointGroup1
+    value: vo_group1_96b545f87d03486aa115e147d2102501
+  - name: endpointGroup2
+    value: vo_group2_4e358197125c46629487457be40de13b
+  - name: ingestStatic
+    value: "1"
+  - name: ingestDynamic
+    value: "2"

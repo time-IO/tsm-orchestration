@@ -1,0 +1,33 @@
+info:
+  name: set session - user2
+  type: http
+  seq: 1
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/sta/session"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("HttpOnly cookie for /sta/", function () {
+          const cookie = [].concat(res.getHeader("set-cookie")).join(";");
+          expect(cookie).to.include("sta_session=");
+          expect(cookie).to.match(/httponly/i);
+          expect(cookie).to.match(/path=\/sta\//i);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "204"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

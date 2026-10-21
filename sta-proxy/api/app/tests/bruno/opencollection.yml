@@ -1,0 +1,51 @@
+opencollection: 1.0.0
+
+info:
+  name: STA Proxy
+  version: "1"
+
+request:
+  scripts:
+    - type: before-request
+      code: |-
+        const user = req.getHeader("X-Test-User");
+        if (user) {
+          const headers = req.getHeaders();
+          for (const name of Object.keys(headers)) {
+            if (name.toLowerCase() === "x-test-user") delete headers[name];
+          }
+          req.setHeaders(headers);
+          if (user === "invalid") {
+            req.setHeader("Authorization", "Bearer invalid");
+          } else {
+            const key = `token_${user}`;
+            let token = bru.getVar(key);
+            if (!token || Date.now() > (bru.getVar(`${key}_expires`) || 0)) {
+              const res = await bru.sendRequest({
+                method: "POST",
+                url: `${bru.getEnvVar("keycloakUrl")}/realms/timeio/protocol/openid-connect/token`,
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                data: Object.entries({
+                  grant_type: "password",
+                  client_id: "timeIO-client",
+                  username: user,
+                  password: bru.getEnvVar("password"),
+                  scope: "openid",
+                })
+                  .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                  .join("&"),
+              });
+              token = res.data.access_token;
+              bru.setVar(key, token);
+              bru.setVar(`${key}_expires`, Date.now() + (res.data.expires_in - 30) * 1000);
+            }
+            req.setHeader("Authorization", `Bearer ${token}`);
+          }
+        }
+
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

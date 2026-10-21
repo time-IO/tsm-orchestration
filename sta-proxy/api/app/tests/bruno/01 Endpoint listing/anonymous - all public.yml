@@ -1,0 +1,36 @@
+info:
+  name: anonymous - all public
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta-proxy/api/endpoints"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("is_internal per endpoint", function () {
+          const internal = Object.fromEntries(res.getBody().endpoints.map((e) => [e.name, e.is_internal]));
+          expect(internal[bru.interpolate("{{endpointGroup1}}")]).to.equal(false);
+          expect(internal[bru.interpolate("{{endpointGroup2}}")]).to.equal(false);
+        });
+
+        test("explicit route urls", function () {
+          for (const e of res.getBody().endpoints) {
+            expect(e.public_url).to.include("/sta/public/" + e.name + "/");
+            expect(e.internal_url).to.include("/sta/internal/" + e.name + "/");
+          }
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
