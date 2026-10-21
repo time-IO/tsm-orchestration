@@ -14,9 +14,13 @@ FROM base AS build
 COPY ./data-source-management/api/requirements.txt /tmp/requirements.txt
 
 RUN python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \
+    /opt/venv/bin/pip uninstall -y pip
 
 FROM base AS dist
+
+# pip is not needed at runtime and its vendored packages carry CVEs
+RUN python -m pip uninstall -y pip
 
 # Copy the virtual environment from the build stage
 COPY --from=build /opt/venv /opt/venv
