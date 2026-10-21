@@ -46,9 +46,9 @@
     "prettier": "^3.3.3",
     "typescript": "^5.9.2",
     "vite-plugin-checker": "^0.11.0",
-    "vitest": "^4.1.11",
     "vue-eslint-parser": "^10.2.0",
-    "vue-tsc": "^3.0.7"
+    "vue-tsc": "^3.0.7",
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": "^22.12.0 || >=24.0.0",

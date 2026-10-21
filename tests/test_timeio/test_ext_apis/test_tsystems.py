@@ -9,10 +9,9 @@ from timeio import ext_api
 
 
 def test_tsystems_unix_ts_to_str():
-    syncer = ext_api.TsystemsApiSyncer()
     ts = 1735689600
-    result = syncer.unix_ts_to_str(ts)
-    assert result == "2025-01-01 00:00:00"
+    result = ext_api.unix_ts_to_str(ts)
+    assert result == "2025-01-01 00:00:00+0000"
 
 
 @patch("timeio.ext_api.request_with_handling")
