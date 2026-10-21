@@ -26,7 +26,7 @@ const options = [
   { id: 'tsystems', name: 'TSystems' },
   { id: 'uba', name: 'Umweltbundesamt (UBA) Air Data' },
   { id: 'sensoto', name: 'Sensoto' },
-  { id: 'zentra', name: 'Zenra' },
+  { id: 'zentra', name: 'Zentra' },
 ];
 </script>
 
