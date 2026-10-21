@@ -1,13 +1,24 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
-import { mount, RouterLinkStub } from '@vue/test-utils';
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils';
 import { Screen } from 'quasar';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import TheFooter from '@/components/TheFooter.vue'; // adjust path
 
 vi.mock('@/utils/public_asset', () => ({
   publicAsset: (path: string) => `/base/${path}`,
 }));
+
+const { getVersion } = vi.hoisted(() => ({ getVersion: vi.fn() }));
+
+vi.mock('@/services', () => ({
+  API: { version: { getVersion } },
+}));
+
+beforeEach(() => {
+  getVersion.mockReset();
+  getVersion.mockResolvedValue({ data: { version: '1.0.0' } });
+});
 
 installQuasarPlugin();
 
@@ -99,5 +110,56 @@ describe('icon size', () => {
     for (const icon of icons) {
       expect(icon.attributes('style')).toContain(`font-size: ${testCase.expected}`);
     }
+  });
+});
+describe('version info', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('shows the app version from the build environment', async () => {
+    vi.stubEnv('APP_VERSION', '1.2.3');
+
+    const wrapper = mountFooter();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Version: 1.2.3');
+  });
+
+  it('falls back to "unknown" when no app version is set', async () => {
+    vi.stubEnv('APP_VERSION', '');
+
+    const wrapper = mountFooter();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Version: unknown');
+  });
+
+  it('shows the API version returned by the backend', async () => {
+    getVersion.mockResolvedValue({ data: { version: '2.0.1' } });
+
+    const wrapper = mountFooter();
+    await flushPromises();
+
+    expect(getVersion).toHaveBeenCalledOnce();
+    expect(wrapper.text()).toContain('API: 2.0.1');
+  });
+
+  it('falls back to "unknown" when the backend returns no version', async () => {
+    getVersion.mockResolvedValue({ data: {} });
+
+    const wrapper = mountFooter();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('API: unknown');
+  });
+
+  it('keeps "unknown" when the version request fails', async () => {
+    getVersion.mockRejectedValue(new Error('network'));
+
+    const wrapper = mountFooter();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('API: unknown');
   });
 });
