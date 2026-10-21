@@ -37,6 +37,7 @@ import parserDetailedController from '@/services/parser_detailed';
 import ingestExternalApiController from '@/services/ingest_external_api';
 
 import usageStatisticsController from '@/services/usage_statistics';
+import versionController from '@/services/version';
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -67,6 +68,7 @@ export const API = {
   parserTimezone: parserTimezoneController,
   parserEncoding: parserEncodingController,
   usageStatistics: usageStatisticsController,
+  version: versionController,
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
