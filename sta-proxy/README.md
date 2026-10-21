@@ -77,6 +77,24 @@ Run the api unit tests from the repository root:
 python3 -m pytest sta-proxy/api/app/tests/unit_tests
 ```
 
+### Bruno Tests
+
+[`api/app/tests/bruno/`](api/app/tests/bruno) is a [Bruno](https://www.usebruno.com/) collection with happy and sad paths of all api routes, run against a local stack.
+
+Prerequisites:
+
+- the orchestration setup is running with the development Keycloak realm (use `./provision-keycloak-with-dev-users.sh` if not)
+- the test data of the `dsm_*` scripts of `tsm-dev-tools` is loaded
+- an ingest in `VO:Group2` exists, so that both FROST endpoints are listed (the scripts currently only create ingests in `VO:Group1`)
+
+Run all requests from the repository root:
+
+```bash
+cd sta-proxy/api/app/tests/bruno && npx @usebruno/cli@3 run --env local
+```
+
+Or open the folder in Bruno with *Open Collection* and select the environment `local`.
+
 ### Formatting
 
 #### Api
@@ -149,3 +167,17 @@ The internal route never falls back to public data:
 FROST builds its links (`@iot.nextLink`, `@iot.selfLink`, `…@iot.navigationLink`) from its `serviceRootUrl`, which is `STA_PROXY_URL` plus the endpoint name, i.e. the automatic route.
 The explicit routes rewrite these links in JSON responses to `<STA_PROXY_URL>public/<endpoint>/` or `<STA_PROXY_URL>internal/<endpoint>/`, so pagination stays on the chosen route.
 Bodies of 1 MB and more are rewritten in a worker thread to keep the event loop responsive.
+
+### Access matrix
+
+Detailed happy/unhappy paths partially covered by unit tests (indicated by ✅) and/or Bruno tests.
+
+| Actor | `GET /sta/{endpoint}/v1.1/...` (automatic) | `GET /sta/public/{endpoint}/v1.1/...` | `GET /sta/internal/{endpoint}/v1.1/...` | `GET /sta/endpoints` | `GET /sta/ingests` | `GET /sta/me` | `PUT /sta/session` |
+|---|---|---|---|---|---|---|---|
+| Anonymous (no token, no cookie) | `200`, public data ✅ | `200`, public data ✅ | `401` ✅ | `200`, all `is_internal: false` ✅ | `401` ✅ | `401` ✅ | `401`, no cookie ✅ |
+| Invalid or expired token | `200`, public data ✅ | `200`, public data, token ignored | `401` ✅ | `200`, all `is_internal: false` | `401` ✅ | `401` ✅ | `401`, no cookie ✅ |
+| Invalid or expired `sta_session` cookie | `200`, public data ✅ | `200`, public data, cookie ignored | `401` | cookie ignored, as anonymous | cookie ignored, `401` | cookie ignored, `401` | cookie ignored, `401` |
+| Valid token, not a member | `200`, public data ✅ | `200`, public data, no DSM API request ✅ | `403` ✅ | `200`, `is_internal: false` for this endpoint ✅ | `200`, own ingests ✅ | `200`, own user ✅ | `204`, sets HttpOnly cookie ✅ |
+| Valid token, member | `200`, internal data, `private, no-store` ✅ | `200`, public data, no DSM API request ✅ | `200`, internal data, `private, no-store` ✅ | `200`, `is_internal: true` for this endpoint ✅ | `200`, own ingests ✅ | `200`, own user ✅ | `204`, sets HttpOnly cookie ✅ |
+| Member, `sta_session` cookie only | `200`, internal data ✅ | `200`, public data, cookie ignored | `200`, internal data ✅ | cookie ignored, as anonymous | cookie ignored, `401` | cookie ignored, `401` | cookie ignored, `401` |
+| Valid token, DSM API not available | `200`, public data | `200`, public data, no DSM API request ✅ | `502`, timeout `504` ✅ | `200`, all `is_internal: false` | `502` ✅ | `502`, timeout `504` ✅ | `502`, no cookie ✅ |
