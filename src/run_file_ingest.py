@@ -12,7 +12,7 @@ from minio.commonconfig import Tags
 
 from timeio.common import get_envvar, setup_logging
 from timeio.errors import UserInputError, ParsingError, ParsingWarning, EmptyDataError
-from timeio.feta import Thing, FileParser
+from timeio.feta import Thing, FileParser, ObjectNotFound
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
@@ -70,7 +70,16 @@ class ParserJobHandler(AbstractHandler):
             return
         if content.get("reparsing"):
             if requested_uuid := content.get("parser_uuid"):
-                pobj = FileParser.from_uuid(requested_uuid, dsn = self.dsmdb_dsn)
+                try:
+                    pobj = FileParser.from_uuid(requested_uuid, dsn=self.dsmdb_dsn)
+                except ObjectNotFound:
+                    msg = (
+                        f"File {filename!r} not reparsed: "
+                        f"parser {requested_uuid} does not exist."
+                    )
+                    logger.warning(msg)
+                    journal.warning(msg, thing_uuid)
+                    return
             else:
                 pobj = thing.s3_store.file_parser
             parser_uuid = pobj.uuid
@@ -82,7 +91,9 @@ class ParserJobHandler(AbstractHandler):
                 logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
             else:
                 parser_uuid = file_parser.uuid
-                logger.info(f"No parser file tag found, using default parser {parser_uuid}")
+                logger.info(
+                    f"No parser file tag found, using default parser {parser_uuid}"
+                )
             pobj = thing.s3_store.file_parser
 
         source_uri = f"{bucket_name}/{filename}"
