@@ -13,7 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Changed
-- Keycloak 26.8.1; existing deployments must recreate the `timeio` realm or disable lightweight access tokens for `timeIO-client`, see `keycloak/README.md` ([Merge Request]())
+- update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))
 - CVE scan lists fixable critical/high CVEs per image and package with fix version ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/797))
 
 ## [2026-10-21]
