@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.example</groupId>
     <artifactId>keycloak-userinfo-mqtt-notifier</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
-        <keycloak.version>26.6.1</keycloak.version>
+        <keycloak.version>26.8.1</keycloak.version>
     </properties>
 
     <dependencies>
