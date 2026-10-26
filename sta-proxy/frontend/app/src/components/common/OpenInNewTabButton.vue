@@ -7,31 +7,30 @@
     :color="color"
     icon="open_in_new"
     type="a"
-    :href="disabledHint ? undefined : href"
-    :class="{ 'open-in-new-tab-button--disabled': disabledHint }"
-    :aria-disabled="!!disabledHint"
-    :aria-label="disabledHint ?? tooltip"
+    :href="disabled ? undefined : href"
+    :class="{ 'open-in-new-tab-button--disabled': disabled }"
+    :aria-disabled="disabled"
+    :aria-label="tooltipText"
     target="_blank"
     rel="noopener noreferrer"
   >
-    <q-tooltip>{{ disabledHint ?? tooltip }}</q-tooltip>
+    <q-tooltip>{{ tooltipText }}</q-tooltip>
   </q-btn>
 </template>
 
 <script setup lang="ts">
 const {
   href,
-  tooltip = 'Open in new tab',
-  disabledHint = null,
+  tooltipText = 'Open in new tab',
+  disabled = false,
   size,
   color,
   dense = false,
   round = true,
 } = defineProps<{
   href: string;
-  tooltip?: string;
-  // disables the button (no link, so no click opens it) and is shown as its tooltip instead
-  disabledHint?: string | null;
+  tooltipText?: string | undefined;
+  disabled?: boolean;
   size?: string;
   color?: string;
   dense?: boolean;

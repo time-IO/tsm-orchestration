@@ -15,7 +15,12 @@
           <copy-button size="sm" :text="link.url" />
         </td>
         <td class="endpoint-url-table__action">
-          <open-in-new-tab-button size="sm" :href="link.url" :disabled-hint="link.hint" />
+          <open-in-new-tab-button
+            size="sm"
+            :href="link.url"
+            :disabled="!!link.hint"
+            :tooltip-text="link.hint ?? undefined"
+          />
         </td>
       </tr>
     </tbody>
