@@ -715,8 +715,8 @@ class SensotoApiSyncer(ExtApiSyncer):
         )
         api_response = list()
         params = {
-            "start": content["datetime_from"],
-            "end": content["datetime_to"],
+            "start": self.normalize_datetime(content["datetime_from"]),
+            "end": self.normalize_datetime(content["datetime_to"]),
             "timeFormat": "interval",
             **auth_params,
         }

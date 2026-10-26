@@ -45,8 +45,8 @@ def test_sensoto_fetch_api_data(mock_request, mock_response, mock_thing):
 
     # verify measurement requests used the correct time window and params
     last_call = mock_request.call_args_list[-1]
-    assert last_call.kwargs["params"]["start"] == CONTENT["datetime_from"]
-    assert last_call.kwargs["params"]["end"] == CONTENT["datetime_to"]
+    assert last_call.kwargs["params"]["start"] == "2025-01-01T00:00:00Z"
+    assert last_call.kwargs["params"]["end"] == "2025-01-01T01:00:00Z"
 
 
 @patch("timeio.ext_api.request_with_handling")
