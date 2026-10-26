@@ -39,7 +39,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   Router.beforeEach(async (to) => {
     const authStore = useAuthStore();
 
-    if (!authStore.user) {
+    if (!authStore.initialized) {
       await authStore.init();
     }
 

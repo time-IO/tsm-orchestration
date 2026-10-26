@@ -14,6 +14,7 @@ export const useAuthStore = defineStore('auth', {
     user: null as User | null,
     userInfo: null as UserPublic | null,
     loading: false,
+    initialized: false,
   }),
 
   getters: {
@@ -35,6 +36,7 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async init() {
+      this.initialized = true;
       this.loading = true;
       try {
         this.user = await userManager.getUser();
