@@ -107,6 +107,8 @@ export const useAuthStore = defineStore('auth', {
         console.info('OIDC: user loaded / updated');
         this.user = user;
         await this.syncSession();
+        // Only fetch additional user info if authenticated
+        // Only if it is null
         if (this.isAuthenticated && this.userInfo === null) {
           await this.fetchUserInfo();
         }

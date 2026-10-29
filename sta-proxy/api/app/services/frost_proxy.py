@@ -187,7 +187,8 @@ async def frost_proxy_service(
 ) -> Response:
     server = await select_frost_server_by_authorization(endpoint, authorization)
     response = await forward_to_frost(server, endpoint, query, accept)
-    # response depends on credentials, so caches must vary on them
+    # the selected server depends on the authorization, caches must respect it
+    # see https://developer.mozilla.org/de/docs/Web/HTTP/Reference/Headers/Vary
     response.headers["vary"] = ", ".join(
         v for v in (response.headers.get("vary"), "Authorization, Cookie") if v
     )

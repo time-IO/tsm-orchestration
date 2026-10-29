@@ -34,7 +34,8 @@ def build_search_params(q: str) -> list[dict[str, str | int]]:
     if not q:
         return [{"size": SEARCH_LIMIT}]
 
-    # DSM API has no OR filter: one request per searched property
+    # search is a list since we need multiple requests to filter for the different properties.
+    # DSM API does not offer disjunction search (combined with or) at the moment.
     searches: list[dict[str, str | int]] = []
     if q.isdigit():
         searches.append({"id[eq]": int(q)})
