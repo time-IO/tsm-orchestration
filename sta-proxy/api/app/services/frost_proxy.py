@@ -55,9 +55,13 @@ class FrostServer:
             await self._client.aclose()
             self._client = None
 
-    async def fetch(self, url: str, headers: dict[str, str]) -> httpx.Response:
+    async def fetch(
+        self, url: str, headers: dict[str, str], follow_redirects: bool = False
+    ) -> httpx.Response:
         try:
-            return await self.client.get(url, headers=headers)
+            return await self.client.get(
+                url, headers=headers, follow_redirects=follow_redirects
+            )
         except httpx.TimeoutException:
             logger.warning("Timeout for %s FROST request %s", self.name, url)
             raise HTTPException(status_code=504, detail="FROST server timeout")

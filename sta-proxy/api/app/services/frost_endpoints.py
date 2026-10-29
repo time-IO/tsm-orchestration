@@ -62,20 +62,17 @@ def matches_query(endpoint: FrostEndpoint, q: str) -> bool:
 
 async def fetch_frost_endpoints() -> list[FrostEndpoint]:
     """Fetch the public endpoint listing from FROST."""
+    upstream = await public_frost.fetch(
+        settings.FROST_ENDPOINTS_PATH,
+        headers={"accept": "application/json"},
+        follow_redirects=True,
+    )
     try:
-        upstream = await public_frost.client.get(
-            settings.FROST_ENDPOINTS_PATH,
-            headers={"accept": "application/json"},
-            follow_redirects=True,
-        )
         upstream.raise_for_status()
         data = upstream.json()
         raw_endpoints = data.get("endpoints", []) if isinstance(data, dict) else []
         return [endpoint_from_frost(e) for e in raw_endpoints]
-    except httpx.TimeoutException:
-        logger.warning("Timeout while fetching FROST endpoints")
-        raise HTTPException(status_code=504, detail="FROST server timeout")
-    except (httpx.HTTPError, ValueError) as e:
+    except (httpx.HTTPStatusError, ValueError, AttributeError) as e:
         logger.error("Fetching FROST endpoints failed: %s", e)
         raise HTTPException(status_code=502, detail="FROST endpoints not available")
 
