@@ -93,3 +93,17 @@ def test_dsm_error_is_bad_gateway(client, monkeypatch):
     response = client.get("/ingests", headers={"authorization": "Bearer valid"})
 
     assert response.status_code == 502
+
+
+def test_malformed_dsm_ingest_is_bad_gateway(client, monkeypatch):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"items": [{"id": 1, "name": "x"}]})
+
+    monkeypatch.setattr(
+        dsm_api,
+        "_client",
+        httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    response = client.get("/ingests", headers={"authorization": "Bearer valid"})
+
+    assert response.status_code == 502

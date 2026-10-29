@@ -51,3 +51,30 @@ def dsm_error_to_http_exception(e: Exception, action: str) -> HTTPException:
         return HTTPException(status_code=504, detail="DSM API timeout")
     logger.error("%s with DSM API failed: %s", action.capitalize(), e)
     return HTTPException(status_code=502, detail="DSM API not available")
+
+
+def require_authorization(authorization: str | None) -> str:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return authorization
+
+
+async def fetch_dsm_api_or_raise(
+    path: str,
+    authorization: str,
+    action: str,
+    params: dict[str, Any] | None = None,
+) -> Any:
+    """fetch_dsm_api, raising DSM API errors as HTTPException."""
+    try:
+        return await fetch_dsm_api(path, authorization, params)
+    except (httpx.HTTPError, ValueError) as e:
+        raise dsm_error_to_http_exception(e, action)
+
+
+def get_items(data: Any) -> list[dict]:
+    """Return the dict items of a paginated DSM API response."""
+    items = data.get("items") if isinstance(data, dict) else None
+    if not isinstance(items, list):
+        return []
+    return [item for item in items if isinstance(item, dict)]

@@ -1,12 +1,11 @@
 import hashlib
 import logging
 
-import httpx
 from cachetools import TTLCache
 from fastapi import HTTPException
 
 from config import settings
-from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
+from services.dsm_api import fetch_dsm_api_or_raise, get_items
 
 logger = logging.getLogger("app.services.permission_groups")
 
@@ -31,18 +30,12 @@ async def get_own_permission_groups(authorization: str) -> dict[str, dict]:
         logger.debug("Using cached permission groups")
         return cached
 
-    try:
-        data = await fetch_dsm_api("/permission-group/", authorization)
-    except httpx.HTTPError as e:
-        raise dsm_error_to_http_exception(e, "fetching own permission groups")
-    except ValueError as e:
-        logger.error("DSM API returned invalid permission groups: %s", e)
-        raise HTTPException(status_code=502, detail="DSM API not available")
-
-    items = data.get("items", []) if isinstance(data, dict) else []
+    data = await fetch_dsm_api_or_raise(
+        "/permission-group/", authorization, "fetching own permission groups"
+    )
     permission_groups = {
         item["database_username"]: item
-        for item in items
+        for item in get_items(data)
         if item.get("database_username")
     }
     _cache[key] = permission_groups

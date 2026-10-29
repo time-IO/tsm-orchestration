@@ -3,10 +3,15 @@ import logging
 from uuid import UUID
 
 import httpx
-from fastapi import HTTPException
 
 from models import Ingest, IngestsResponse
-from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
+from services.dsm_api import (
+    dsm_error_to_http_exception,
+    fetch_dsm_api,
+    fetch_dsm_api_or_raise,
+    get_items,
+    require_authorization,
+)
 
 logger = logging.getLogger("app.services.ingests")
 
@@ -47,36 +52,34 @@ async def search_ingests_service(
     authorization: str | None, q: str | None = None
 ) -> IngestsResponse:
     """Search the user's ingests by name, id or uuid. All run async."""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
+    authorization = require_authorization(authorization)
     results = await run_ingest_searches(authorization, build_search_params(q or ""))
-    return IngestsResponse(items=merge_ingests(results)[:SEARCH_LIMIT])
+    try:
+        ingests = merge_ingests(results)
+    except (KeyError, ValueError) as e:
+        raise dsm_error_to_http_exception(e, "searching ingests")
+    return IngestsResponse(items=ingests[:SEARCH_LIMIT])
 
 
 async def run_ingest_searches(
     authorization: str, searches: list[dict[str, str | int]]
 ) -> list:
     """Run all searches against the DSM API in parallel."""
-    try:
-        return await asyncio.gather(
-            *(
-                fetch_dsm_api("/ingest/", authorization, params=params)
-                for params in searches
+    return await asyncio.gather(
+        *(
+            fetch_dsm_api_or_raise(
+                "/ingest/", authorization, "searching ingests", params=params
             )
+            for params in searches
         )
-    except httpx.HTTPError as e:
-        raise dsm_error_to_http_exception(e, "searching ingests")
-    except ValueError as e:
-        logger.error("DSM API returned invalid ingests: %s", e)
-        raise HTTPException(status_code=502, detail="Ingests not available")
+    )
 
 
 def merge_ingests(results: list) -> list[Ingest]:
     """Combine the search results in order, dropping duplicates."""
     ingests: dict[int, Ingest] = {}
     for data in results:
-        for item in data.get("items", []) if isinstance(data, dict) else []:
+        for item in get_items(data):
             if item["id"] not in ingests:
                 ingests[item["id"]] = to_ingest(item)
     return list(ingests.values())
@@ -95,5 +98,5 @@ async def fetch_ingest_permission_group_id(
         logger.warning("Fetching ingest %s failed: %s", ingest_id, e)
         return None
 
-    items = data.get("items", []) if isinstance(data, dict) else []
-    return items[0]["permission_group_id"] if items else None
+    items = get_items(data)
+    return items[0].get("permission_group_id") if items else None

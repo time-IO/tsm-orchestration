@@ -1,22 +1,17 @@
-import logging
-
-import httpx
-from fastapi import HTTPException
-
-from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
+from services.dsm_api import (
+    dsm_error_to_http_exception,
+    fetch_dsm_api_or_raise,
+    require_authorization,
+)
 from models.user import UserPublic
 
-logger = logging.getLogger("app.services.user")
+ACTION = "fetching user info"
 
 
 async def get_me_service(authorization: str | None) -> UserPublic:
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
+    authorization = require_authorization(authorization)
+    data = await fetch_dsm_api_or_raise("/me/", authorization, ACTION)
     try:
-        return UserPublic.model_validate(await fetch_dsm_api("/me/", authorization))
-    except httpx.HTTPError as e:
-        raise dsm_error_to_http_exception(e, "fetching user info")
+        return UserPublic.model_validate(data)
     except ValueError as e:
-        logger.error("DSM API returned invalid user info: %s", e)
-        raise HTTPException(status_code=502, detail="User info not available")
+        raise dsm_error_to_http_exception(e, ACTION)

@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
-from services.dsm_api import dsm_error_to_http_exception, fetch_dsm_api
+from services.dsm_api import fetch_dsm_api_or_raise
 
 logger = logging.getLogger("app.services.session")
 
@@ -41,10 +41,7 @@ def is_cookie_secure() -> bool:
 
 
 async def validate_token(authorization: str) -> None:
-    try:
-        await fetch_dsm_api("/me/", authorization)
-    except (httpx.HTTPError, ValueError) as e:
-        raise dsm_error_to_http_exception(e, "validating token")
+    await fetch_dsm_api_or_raise("/me/", authorization, "validating token")
 
 
 async def set_session_service(
