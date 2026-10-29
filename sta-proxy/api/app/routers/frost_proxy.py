@@ -20,8 +20,7 @@ def get_authorization(
     request: Request,
     authorization: str | None = Header(default=None),
 ) -> str | None:
-    # opening an endpoint URL cannot send the bearer token,
-    # instead it uses the session cookie
+    # browser navigation cannot send a bearer token; fall back to the session cookie
     if not authorization:
         token = request.cookies.get(settings.SESSION_COOKIE_NAME)
         if token:

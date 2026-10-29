@@ -16,9 +16,7 @@ logger = logging.getLogger("app.services.frost_endpoints")
 
 
 def rewrite_endpoint_url(url: str) -> str:
-    """Replace the internal FROST host with the public base URL of this API.
-    "http://frost.:8080/sta/<name>/v1.1" -> "<BASE_URL>/sta/<name>/v1.1"
-    """
+    """Point a FROST listing URL at BASE_URL."""
     path = httpx.URL(url).raw_path.decode()
     # strip possible path prefix of FROST_URL as proxy route adds it when forwarding
     frost_prefix = httpx.URL(settings.FROST_URL).path.rstrip("/")
