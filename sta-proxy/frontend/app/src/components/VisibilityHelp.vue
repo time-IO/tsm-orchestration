@@ -1,8 +1,6 @@
 <template>
   <help-dialog title="Access">
-    <p class="text-caption">
-      Every STA endpoint serves a public and an internal access.
-    </p>
+    <p class="text-caption">Every STA endpoint serves a public and an internal access.</p>
 
     <q-markup-table flat bordered separator="cell" class="visibility-help__table">
       <tbody>
