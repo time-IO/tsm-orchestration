@@ -7,7 +7,7 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import { useAuthStore } from '@/stores/authStore';
-import { Notify } from 'quasar';
+import { notifyError } from '@/utils/notify';
 
 /*
  * If not building with SSR mode, you can
@@ -45,11 +45,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
     // If route requires authentication and user is not authenticated
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-      Notify.create({
-        position: 'top',
-        type: 'negative',
-        message: 'Authentication required! Please login.',
-      });
+      notifyError('Authentication required! Please login.');
 
       return '/';
     }

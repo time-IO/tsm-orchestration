@@ -34,13 +34,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useQuasar } from 'quasar';
 import { API } from '@/services';
 import type { Ingest } from '@/services/ingests/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useEndpointStore } from '@/stores/endpointStore';
+import { notifyError } from '@/utils/notify';
 
-const $q = useQuasar();
 const authStore = useAuthStore();
 const endpointStore = useEndpointStore();
 
@@ -59,11 +58,7 @@ async function onFilter(value: string, update: (callback: () => void) => void, a
     });
   } catch {
     abort();
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch ingests',
-    });
+    notifyError('Failed to fetch ingests');
   } finally {
     if (requestId === latestRequestId) {
       loading.value = false;
