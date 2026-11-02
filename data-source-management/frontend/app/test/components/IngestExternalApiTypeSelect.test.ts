@@ -14,6 +14,7 @@ const API_TYPES = [
   { id: 'tsystems', name: 'TSystems' },
   { id: 'uba', name: 'Umweltbundesamt (UBA) Air Data' },
   { id: 'sensoto', name: 'Sensoto' },
+  { id: 'zentra', name: 'Zentra' },
 ];
 
 function mountIngestExternalApiTypeSelect(props: Record<string, unknown> = {}) {
