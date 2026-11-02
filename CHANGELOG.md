@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
+
 ### Changed
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))
 - update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))

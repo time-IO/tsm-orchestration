@@ -120,7 +120,11 @@
                 label="Sync Interval (in minutes) *"
                 type="number"
                 :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
-              />
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
