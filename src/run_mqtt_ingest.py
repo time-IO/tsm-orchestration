@@ -60,25 +60,19 @@ class ParseMqttDataHandler(AbstractHandler):
         thing_uuid = thing.uuid
 
         logger.info("persisting rawdata")
-        try:
-            self.dbapi.insert_mqtt_message(thing_uuid, content)
-        except Exception:
-            journal.error(
-                "Storing raw message failed",
-                thing_uuid,
-            )
-            raise
+        self.dbapi.insert_mqtt_message(thing_uuid, content)
 
         logger.info(f"get parser")
-        device_type = thing.mqtt.mqtt_device_type.name
+        mqtt_device_type = thing.mqtt.mqtt_device_type
+        device_type = mqtt_device_type.name if mqtt_device_type else None
         try:
             parser: MqttParser = get_parser(device_type, None)
-        except Exception:
+        except NotImplementedError as e:
             journal.error(
                 f"Parsing failed: no parser for device type {device_type!r}",
                 thing_uuid,
             )
-            raise
+            raise UserInputError("No parser for device type") from e
 
         logger.info(f"parsing rawdata")
         try:
@@ -92,7 +86,7 @@ class ParseMqttDataHandler(AbstractHandler):
             raise UserInputError("Parsing data failed") from e
 
         if not observations:
-            journal.warning("Parsing finished, but no observations found", thing_uuid)
+            journal.info("Parsing finished, but no observations found", thing_uuid)
             return
 
         logger.info(f"store observations")

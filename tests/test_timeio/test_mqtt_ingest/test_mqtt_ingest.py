@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from paho.mqtt.client import MQTTMessage
 from run_mqtt_ingest import ParseMqttDataHandler
-from timeio.errors import ProcessingError, UserInputError
+from timeio.errors import ParsingError, ProcessingError, UserInputError
 
 
 @pytest.fixture
@@ -126,9 +126,9 @@ def test_act_journals_warning_without_observations(
 
     handler.act({}, msg)
 
-    mock_journal.warning.assert_called_once()
-    assert "no observations" in mock_journal.warning.call_args.args[0]
-    mock_journal.info.assert_not_called()
+    mock_journal.info.assert_called_once()
+    assert "no observations" in mock_journal.info.call_args.args[0]
+    mock_journal.warning.assert_not_called()
     mock_journal.error.assert_not_called()
     handler.dbapi.upsert_observations_and_datastreams.assert_not_called()
     handler.mqtt_client.publish.assert_not_called()
@@ -165,7 +165,58 @@ def test_act_journals_unknown_device_type(
     mock_Thing.from_mqtt_user_name.return_value.mqtt.mqtt_device_type.name = "foo"
     mock_get_parser.side_effect = NotImplementedError("parser 'foo' not known")
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(UserInputError):
         handler.act({}, msg)
 
     assert "'foo'" in mock_journal.error.call_args.args[0]
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+def test_act_journals_missing_device_type(
+    mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    handler, msg = _handler_with_thing(mock_Thing, MagicMock(), MagicMock())
+    mock_Thing.from_mqtt_user_name.return_value.mqtt.mqtt_device_type = None
+
+    with pytest.raises(UserInputError):
+        handler.act({}, msg)
+
+    assert "None" in mock_journal.error.call_args.args[0]
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_raw_insert_failure_raises_before_parsing(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    parser = MagicMock()
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, parser)
+    handler.dbapi.insert_mqtt_message.side_effect = RuntimeError("db api down")
+
+    with pytest.raises(RuntimeError, match="db api down"):
+        handler.act({}, msg)
+
+    parser.do_parse.assert_not_called()
+    mock_journal.error.assert_not_called()
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_journals_parsing_error_message(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    parser = MagicMock()
+    parser.do_parse.side_effect = ParsingError("Message must contain 'x'")
+    handler, msg = _handler_with_thing(mock_Thing, mock_get_parser, parser)
+
+    with pytest.raises(UserInputError):
+        handler.act({}, msg)
+
+    text = mock_journal.error.call_args.args[0]
+    assert text == "Parsing failed: Message must contain 'x'"

@@ -36,6 +36,8 @@ class YdocMl417Parser(MqttParser):
             rows = rawdata["data"]
         except (KeyError, TypeError) as e:
             raise ParsingError("Message must contain the field 'data'") from e
+        if not isinstance(rows, list):
+            raise ParsingError("Field 'data' must be a list")
 
         ret = []
         for data in rows:
@@ -49,7 +51,7 @@ class YdocMl417Parser(MqttParser):
                 ob5 = Observation(ts, data["P3"], origin, 5, header="P3")
                 ob6 = Observation(ts, data["P4"], origin, 6, header="P4")
                 ret.extend([ob0, ob1, ob2, ob3, ob4, ob5, ob6])
-            except KeyError:
+            except (KeyError, TypeError):
                 # we ignore data that not have all keys
                 # see also the example above the function at (*)
                 pass

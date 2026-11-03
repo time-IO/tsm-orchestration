@@ -146,7 +146,10 @@ def test_device_parsers_report_date_range(parser_type, raw, start, end):
     [
         ("campbell_cr6", {"properties": {"observations": {}}}, "observationNames"),
         ("chirpstack_generic", {"object": {"temp": 1}}, "'time' and 'object'"),
+        ("chirpstack_generic", {"time": "t", "object": None}, "payload codec"),
         ("ydoc_ml417", {"foo": 1}, "'data'"),
+        ("ydoc_ml417", {"data": None}, "'data' must be a list"),
+        ("quaesta", [1, 2], "JSON object"),
         ("quaesta", {"type": "dataCRNS", "P1_mb": 1.0}, "timestampISO8601"),
         (
             "quaesta",
