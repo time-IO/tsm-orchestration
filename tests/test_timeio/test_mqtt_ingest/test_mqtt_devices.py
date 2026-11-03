@@ -184,3 +184,62 @@ def test_device_parsers_raise_meaningful_error(parser_type, raw, match):
     parser = get_parser(parser_type, None)
     with pytest.raises(ParsingError, match=match):
         parser.do_parse(raw, "data/jsn")
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, origin, reason",
+    [
+        ("campbell_cr6", {"type": "Feature"}, "x", "'properties'"),
+        ("ydoc_ml417", {"data": []}, "status", "'data/jsn'"),
+        ("quaesta", {"type": "status"}, "x", "'status'"),
+    ],
+)
+def test_device_parsers_report_ignored_reason(parser_type, raw, origin, reason):
+    parser = get_parser(parser_type, None)
+    assert parser.do_parse(raw, origin) == []
+    assert reason in parser.ignored_reason
+
+
+def test_parsers_count_skipped_parts():
+    cr6 = CampbellCr6Parser()
+    raw = {"properties": {"observationNames": ["a", "b"], "observations": {}}}
+    raw["properties"]["observations"] = {"t1": [1, None, 3], "t2": [4]}
+    cr6.do_parse(raw, "x")
+    assert cr6.skipped_summary() == (
+        "1 values without name, 1 empty values, 1 missing values"
+    )
+
+    ydoc = YdocMl417Parser()
+    rows = [{"$ts": 230116110002, "$msg": "WDT;pr2_1"}, {}]
+    ydoc.do_parse({"data": rows}, "data/jsn")
+    assert ydoc.skipped_summary() == "2 incomplete rows"
+    assert ydoc.ignored_reason is None
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, match",
+    [
+        ("campbell_cr6", [1], "JSON object"),
+        (
+            "campbell_cr6",
+            {"properties": {"observationNames": "a", "observations": {}}},
+            "must be a list",
+        ),
+        (
+            "campbell_cr6",
+            {"properties": {"observationNames": ["a"], "observations": {"t": 5}}},
+            "list of values",
+        ),
+        (
+            "ydoc_ml417",
+            {"data": [{"$ts": "now", **{h: 1 for h in YdocMl417Parser.HEADERS}}]},
+            "Invalid '\\$ts'",
+        ),
+        ("chirpstack_generic", {"time": None, "object": {"a": 1}}, "Invalid 'time'"),
+        ("chirpstack_generic", {"time": "today", "object": {"a": 1}}, "ISO 8601"),
+    ],
+)
+def test_device_parsers_raise_on_invalid_values(parser_type, raw, match):
+    parser = get_parser(parser_type, None)
+    with pytest.raises(ParsingError, match=match):
+        parser.do_parse(raw, "data/jsn")

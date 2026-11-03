@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from timeio.errors import ParsingError
@@ -19,6 +20,12 @@ class ChirpStackGenericParser(MqttParser):
             raise ParsingError(
                 "Field 'object' must be a JSON object (is a payload codec configured?)"
             )
+        try:
+            datetime.fromisoformat(timestamp)
+        except (ValueError, TypeError) as e:
+            raise ParsingError(
+                f"Invalid 'time' {timestamp!r}, expected an ISO 8601 timestamp"
+            ) from e
         out = []
         for key, value in obj.items():
             if key == "Data_time":
@@ -35,6 +42,5 @@ class ChirpStackGenericParser(MqttParser):
                     )
                 )
             except ValueError:
-                # value is NaN or None
-                continue
+                self.skip("empty values")
         return out

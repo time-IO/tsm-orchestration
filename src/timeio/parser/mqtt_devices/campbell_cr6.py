@@ -19,9 +19,11 @@ class CampbellCr6Parser(MqttParser):
     # }
 
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        if not isinstance(rawdata, dict):
+            raise ParsingError("Message must be a JSON object")
         properties = rawdata.get("properties")
         if properties is None:
-            return []
+            return self.ignore("message has no 'properties'")
 
         try:
             names = properties["observationNames"]
@@ -31,9 +33,19 @@ class CampbellCr6Parser(MqttParser):
                 "Message must contain 'properties.observationNames' "
                 "and 'properties.observations'"
             ) from e
+        if not isinstance(names, list):
+            raise ParsingError("Field 'properties.observationNames' must be a list")
 
         out = []
         for timestamp, values in observations:
+            if not isinstance(values, list):
+                raise ParsingError(
+                    f"Observations at {timestamp!r} must be a list of values"
+                )
+            if len(values) > len(names):
+                self.skip("values without name", len(values) - len(names))
+            elif len(values) < len(names):
+                self.skip("missing values", len(names) - len(values))
             for i, (key, value) in enumerate(zip(names, values)):
                 try:
                     out.append(
@@ -46,6 +58,5 @@ class CampbellCr6Parser(MqttParser):
                         )
                     )
                 except ValueError:
-                    # value is NaN or None
-                    continue
+                    self.skip("empty values")
         return out

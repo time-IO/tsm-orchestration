@@ -47,8 +47,8 @@ class QuaestaParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         if not isinstance(rawdata, dict):
             raise ParsingError("Message must be a JSON object")
-        if rawdata.get("type") != "dataCRNS":
-            return []
+        if (msg_type := rawdata.get("type")) != "dataCRNS":
+            return self.ignore(f"message type is {msg_type!r}, not 'dataCRNS'")
         try:
             timestamp = datetime.strptime(
                 rawdata.pop("timestampISO8601"), "%Y-%m-%dT%H:%M:%SZ"
@@ -83,6 +83,5 @@ class QuaestaParser(MqttParser):
                     )
                 )
             except ValueError:
-                # value is NaN or None
-                continue
+                self.skip("empty values")
         return out
