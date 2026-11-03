@@ -31,7 +31,7 @@ class YdocMl417Parser(MqttParser):
 
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         if "data/jsn" not in origin:
-            return []
+            return self.ignore("only topics with 'data/jsn' contain data")
 
         # data = payload['data'][1]
         try:
@@ -44,16 +44,21 @@ class YdocMl417Parser(MqttParser):
         ret = []
         for data in rows:
             try:
-                ts = datetime.strptime(str(data["$ts"]), "%y%m%d%H%M%S")
+                raw_ts = data["$ts"]
                 values = [data[h] for h in self.HEADERS]
             except (KeyError, TypeError):
-                # we ignore data that not have all keys
-                # see also the example above the function at (*)
+                # rows without all keys, see the example above (*)
+                self.skip("incomplete rows")
                 continue
+            try:
+                ts = datetime.strptime(str(raw_ts), "%y%m%d%H%M%S")
+            except ValueError as e:
+                raise ParsingError(
+                    f"Invalid '$ts' {raw_ts!r}, expected format 'YYMMDDhhmmss'"
+                ) from e
             for pos, (header, value) in enumerate(zip(self.HEADERS, values)):
                 try:
                     ret.append(Observation(ts, value, origin, pos, header=header))
                 except ValueError:
-                    # value is NaN or None
-                    continue
+                    self.skip("empty values")
         return ret

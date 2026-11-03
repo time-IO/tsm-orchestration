@@ -85,8 +85,15 @@ class ParseMqttDataHandler(AbstractHandler):
             )
             raise UserInputError("Parsing data failed") from e
 
+        skipped = parser.skipped_summary()
         if not observations:
-            journal.info("Parsing finished, but no observations found", thing_uuid)
+            if parser.ignored_reason:
+                msg = f"Message ignored: {parser.ignored_reason}"
+            else:
+                msg = "Parsing finished, but no observations found"
+                if skipped:
+                    msg += f" (skipped: {skipped})"
+            journal.info(msg, thing_uuid)
             return
 
         logger.info(f"store observations")
@@ -100,10 +107,10 @@ class ParseMqttDataHandler(AbstractHandler):
                 thing_uuid,
             )
             raise ProcessingError("Storing observations failed") from e
-        journal.info(
-            f"Parsing successful, stored observations: {len(observations)}",
-            thing_uuid,
-        )
+        msg = f"Parsing successful, stored observations: {len(observations)}"
+        if skipped:
+            msg += f", skipped: {skipped}"
+        journal.info(msg, thing_uuid)
 
         # QC needs the time range of the new data (see DataParsedV1)
         if parser.start_date is None or parser.end_date is None:
