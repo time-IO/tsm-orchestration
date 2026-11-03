@@ -10,13 +10,17 @@ class ChirpStackGenericParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         try:
             timestamp = rawdata["time"]
-            items = rawdata["object"].items()
-        except (KeyError, TypeError, AttributeError) as e:
+            obj = rawdata["object"]
+        except (KeyError, TypeError) as e:
             raise ParsingError(
                 "Message must contain the fields 'time' and 'object'"
             ) from e
+        if not isinstance(obj, dict):
+            raise ParsingError(
+                "Field 'object' must be a JSON object (is a payload codec configured?)"
+            )
         out = []
-        for key, value in items:
+        for key, value in obj.items():
             if key == "Data_time":
                 # this is a timestamp, we ignore it
                 continue

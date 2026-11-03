@@ -45,6 +45,8 @@ RecordNum should not be stored, DateTimeUTC should be transformed into datetime.
 
 class QuaestaParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
+        if not isinstance(rawdata, dict):
+            raise ParsingError("Message must be a JSON object")
         if rawdata.get("type") != "dataCRNS":
             return []
         try:
