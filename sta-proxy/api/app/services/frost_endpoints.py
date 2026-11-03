@@ -4,6 +4,7 @@ import httpx
 from fastapi import HTTPException
 
 from config import settings
+from utils import remove_trailing_slash
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import public_frost
 from services.ingests import fetch_ingest_permission_group_id
@@ -19,10 +20,10 @@ def rewrite_endpoint_url(url: str) -> str:
     """Point a FROST listing URL at BASE_URL."""
     path = httpx.URL(url).raw_path.decode()
     # strip possible path prefix of FROST_URL as proxy route adds it when forwarding
-    frost_prefix = httpx.URL(settings.FROST_URL).path.rstrip("/")
+    frost_prefix = remove_trailing_slash(httpx.URL(settings.FROST_URL).path)
     if frost_prefix and path.startswith(frost_prefix + "/"):
         path = path[len(frost_prefix) :]
-    return settings.BASE_URL.rstrip("/") + path
+    return remove_trailing_slash(settings.BASE_URL) + path
 
 
 def explicit_route_url(url: str, name: str, route: str) -> str:

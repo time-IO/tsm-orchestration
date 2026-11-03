@@ -5,6 +5,7 @@ import httpx
 from fastapi import HTTPException
 
 from config import settings
+from utils import remove_trailing_slash
 
 logger = logging.getLogger("app.services.dsm_api")
 
@@ -15,7 +16,7 @@ def get_dsm_client() -> httpx.AsyncClient:
     global _client
     if _client is None or _client.is_closed:
         _client = httpx.AsyncClient(
-            base_url=settings.DSM_API_URL.rstrip("/"),
+            base_url=remove_trailing_slash(settings.DSM_API_URL),
             timeout=settings.DSM_API_TIMEOUT,
         )
     return _client

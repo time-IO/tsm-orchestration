@@ -5,6 +5,7 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
+from utils import remove_trailing_slash
 from services.permission_groups import get_own_permission_groups, has_internal_access
 
 logger = logging.getLogger("app.services.frost_proxy")
@@ -36,7 +37,7 @@ async def rewrite_links(content: bytes, old: bytes, new: bytes) -> bytes:
 class FrostServer:
     def __init__(self, name: str, base_url: str):
         self.name = name
-        self.base_url = base_url.rstrip("/")
+        self.base_url = remove_trailing_slash(base_url)
         self._client: httpx.AsyncClient | None = None
 
     def __repr__(self) -> str:
@@ -129,7 +130,7 @@ def frost_service_root_url(endpoint_name: str) -> str:
 
 def get_link_rewrite(endpoint: str, route: str) -> tuple[bytes, bytes]:
     """Adjust generated FROST navigation links to explicit routes."""
-    root = settings.STA_PROXY_URL.rstrip("/") + "/"
+    root = remove_trailing_slash(settings.STA_PROXY_URL) + "/"
     endpoint_name = get_endpoint_name_from_proxied_path(endpoint)
     return (
         f"{frost_service_root_url(endpoint_name)}/".encode(),

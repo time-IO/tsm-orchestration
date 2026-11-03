@@ -16,3 +16,10 @@ def validate_proxied_path(endpoint: str) -> None:
     # hide FROST endpoint listing
     if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
         raise HTTPException(status_code=404, detail="Not Found")
+
+
+def remove_trailing_slash(value: str) -> str:
+    """Remove a single trailing slash from a string, if present."""
+    if value.endswith("/"):
+        return value[:-1]
+    return value
