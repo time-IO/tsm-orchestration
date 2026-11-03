@@ -127,6 +127,19 @@ def test_endpoint_name_must_match_exactly(client, frost_internal_requests):
     assert frost_internal_requests == []
 
 
+@pytest.mark.parametrize("prefix", ["", "internal/"])
+def test_leading_double_slash_cannot_bypass_access_check(
+    client, frost_requests, frost_internal_requests, prefix
+):
+    response = client.get(
+        f"http://testserver/{prefix}//{OWN_ENDPOINT}/{FOREIGN_ENDPOINT}/v1.1",
+        headers={"authorization": "Bearer valid"},
+    )
+    assert response.status_code == 400
+    assert frost_requests == []
+    assert frost_internal_requests == []
+
+
 def test_response_varies_by_authorization(client):
     response = client.get(f"/{OWN_ENDPOINT}/v1.1")
     assert "authorization" in response.headers["vary"].lower()
@@ -189,6 +202,8 @@ def test_internal_response_is_private(client):
         ("a/..;x=1/b", 400),
         ("a/%2e%2e/b", 400),
         ("a\\..\\b", 400),
+        ("//a/b", 400),
+        ("a//b", 400),
         ("", 404),
         ("/", 404),
     ],
@@ -201,7 +216,13 @@ def test_validate_proxied_path_rejects(endpoint, status_code):
 
 @pytest.mark.parametrize(
     "endpoint",
-    [f"{OWN_ENDPOINT}/v1.1/Things", f"{OWN_ENDPOINT}/v1.1", "a..b/v1.1"],
+    [
+        f"{OWN_ENDPOINT}/v1.1/Things",
+        f"{OWN_ENDPOINT}/v1.1",
+        f"{OWN_ENDPOINT}/v1.1/",
+        f"/{OWN_ENDPOINT}/v1.1",
+        "a..b/v1.1",
+    ],
 )
 def test_validate_proxied_path_accepts(endpoint):
     validate_proxied_path(endpoint)

@@ -5,7 +5,11 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
-from utils import ensure_trailing_slash, remove_trailing_slash
+from utils import (
+    ensure_leading_slash,
+    ensure_trailing_slash,
+    remove_trailing_slash,
+)
 from services.permission_groups import get_own_permission_groups, has_internal_access
 
 logger = logging.getLogger("app.services.frost_proxy")
@@ -171,7 +175,7 @@ async def forward_to_frost(
     accept: str | None,
     link_rewrite: tuple[bytes, bytes] | None = None,
 ) -> Response:
-    url = "/" + endpoint.lstrip("/")
+    url = ensure_leading_slash(endpoint)
     if query:
         url += "?" + query
 

@@ -17,6 +17,10 @@ def validate_proxied_path(endpoint: str) -> None:
     if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
         raise HTTPException(status_code=404, detail="Not Found")
 
+    # reject inner empty segments (e.g. "//a/b")
+    if "" in segments[1:-1]:
+        raise HTTPException(status_code=400, detail="Invalid path")
+
 
 def remove_trailing_slash(value: str) -> str:
     """Remove a single trailing slash from a string, if present."""
@@ -30,3 +34,10 @@ def ensure_trailing_slash(value: str) -> str:
     if value.endswith("/"):
         return value
     return value + "/"
+
+
+def ensure_leading_slash(value: str) -> str:
+    """Prepend a leading slash to a string, if missing."""
+    if value.startswith("/"):
+        return value
+    return "/" + value
