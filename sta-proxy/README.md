@@ -34,17 +34,17 @@ For development:
 - The frontend application authenticates against Keycloak using authorization code flow with pkce, see `frontend/app/src/stores/authStore.ts`
 - The access token is used as a bearer token in the authorization header in each request to the api
 - On login and on every token refresh, the frontend stores the access token in the HttpOnly session cookie `sta_session` (`PUT /sta/session`)
-  - A browser tab opening an endpoint URL cannot send a bearer token, so the api uses the cookie instead
+  - A browser tab opening an endpoint URL cannot send a bearer token, so the API uses the session cookie instead
 - Scripts send the token in the authorization header, anonymous requests send nothing
 - The api does not verify tokens itself, it passes them as is to the DSM API (`/me/`, `/permission-group/`)
   - **Currently, the DSM API alone decides which user and permission groups a token belongs to**
 
 ## Permission Groups
 
-- Permission groups and memberships are managed by the DSM API, see [data-source-management/README.md](../data-source-management/README.md)
+- As said, permission groups and memberships are managed by the DSM API, see [data-source-management/README.md](../data-source-management/README.md)
 - Every FROST endpoint belongs to a permission group, the endpoint name equals the `database_username` of the group
-- A user may read the internal data of an endpoint, if the endpoint belongs to one of the user's permission groups
-- The permission groups of a token are cached for 60 seconds (`PERMISSION_GROUPS_CACHE_TTL`), so pagination does not query the DSM API for every page
+- A user may read the internal data of an endpoint, if the endpoint belongs to one of the user's permission groups (see [Access matrix](#access-matrix))
+- The permission groups of a token are **cached** for 60 seconds (`PERMISSION_GROUPS_CACHE_TTL`), so pagination does not query the DSM API for every page
 
 ## Generic Frontend Image
 
@@ -69,7 +69,7 @@ See the `sta-proxy-frontend` service in `docker-compose.yml`, which passes the `
 
 ## Development
 
-### Api Tests
+### API Unit Tests
 
 Run the api unit tests from the repository root:
 
@@ -83,8 +83,9 @@ python3 -m pytest sta-proxy/api/app/tests/unit_tests
 
 Prerequisites:
 
-- the orchestration setup is running with the development Keycloak realm (use `./provision-keycloak-with-dev-users.sh` if not)
-- the test data of the `dsm_*` scripts of `tsm-dev-tools` is loaded for `VO:Group1` and `VO:Group2` (the default), so that both FROST endpoints are listed
+- the orchestration setup is running with the development Keycloak realm
+  - (use `./provision-keycloak-with-dev-users.sh` if not)
+- load the test data by running `./tsm-workflow.sh dsm` in your `tsm-dev-tools` root directory
 
 Run all requests from the repository root:
 
@@ -97,9 +98,9 @@ Then right-click the collection and select *Run*.
 
 ### Formatting
 
-#### Api
+#### API
 
-- To format the python files of the api using the black formatter, you can use the following docker command (from `sta-proxy/`):
+- To format the Python files of the API using the black formatter, you can use the following docker command (from `sta-proxy/`):
 
 ```
 docker run --rm --volume $(pwd)/api/app:/src --workdir /src pyfound/black:latest_release black .
@@ -166,7 +167,6 @@ The internal route never falls back to public data:
 
 FROST builds its links (`@iot.nextLink`, `@iot.selfLink`, `…@iot.navigationLink`) from its `serviceRootUrl`, which is `STA_PROXY_URL` plus the endpoint name, i.e. the automatic route.
 The explicit routes rewrite these links in JSON responses to `<STA_PROXY_URL>public/<endpoint>/` or `<STA_PROXY_URL>internal/<endpoint>/`, so pagination stays on the chosen route.
-Bodies of 1 MB and more are rewritten in a worker thread to keep the event loop responsive.
 
 ### Access matrix
 
