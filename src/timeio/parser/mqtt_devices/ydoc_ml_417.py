@@ -8,6 +8,8 @@ from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class YdocMl417Parser(MqttParser):
+    HEADERS = ("MINVi", "AVGVi", "AVGCi", "P1*", "P2", "P3", "P4")
+
     # mqtt_ingest/test-logger-pb/test/data/jsn
     # {
     # "device":
@@ -43,16 +45,15 @@ class YdocMl417Parser(MqttParser):
         for data in rows:
             try:
                 ts = datetime.strptime(str(data["$ts"]), "%y%m%d%H%M%S")
-                ob0 = Observation(ts, data["MINVi"], origin, 0, header="MINVi")
-                ob1 = Observation(ts, data["AVGVi"], origin, 1, header="AVGCi")
-                ob2 = Observation(ts, data["AVGCi"], origin, 2, header="AVGCi")
-                ob3 = Observation(ts, data["P1*"], origin, 3, header="P1*")
-                ob4 = Observation(ts, data["P2"], origin, 4, header="P2")
-                ob5 = Observation(ts, data["P3"], origin, 5, header="P3")
-                ob6 = Observation(ts, data["P4"], origin, 6, header="P4")
-                ret.extend([ob0, ob1, ob2, ob3, ob4, ob5, ob6])
+                values = [data[h] for h in self.HEADERS]
             except (KeyError, TypeError):
                 # we ignore data that not have all keys
                 # see also the example above the function at (*)
-                pass
+                continue
+            for pos, (header, value) in enumerate(zip(self.HEADERS, values)):
+                try:
+                    ret.append(Observation(ts, value, origin, pos, header=header))
+                except ValueError:
+                    # value is NaN or None
+                    continue
         return ret

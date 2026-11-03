@@ -59,6 +59,28 @@ def test_ydoc_ml417_parser_valid():
     obs = parser.do_parse(raw, origin="data/jsn")
     assert len(obs) == 7
     assert isinstance(obs[0].timestamp, datetime)
+    assert [o.header for o in obs] == list(YdocMl417Parser.HEADERS)
+    assert obs[1].value == 3 and obs[1].header == "AVGVi"
+
+
+def test_ydoc_ml417_parser_skips_null_values():
+    parser = YdocMl417Parser()
+    row = {"$ts": 250101000000, "MINVi": 1.0, "AVGVi": None, "AVGCi": 100}
+    row.update({"P1*": "a", "P2": "b", "P3": float("nan"), "P4": "d"})
+    obs = parser.do_parse({"data": [row]}, origin="data/jsn")
+    assert [o.position for o in obs] == [0, 2, 3, 4, 6]
+
+
+def test_campbell_parser_skips_null_values():
+    parser = CampbellCr6Parser()
+    raw = {
+        "properties": {
+            "observationNames": ["a", "b", "c"],
+            "observations": {"2022-05-24T08:53:00Z": [11.9, None, float("nan")]},
+        }
+    }
+    obs = parser.do_parse(raw, origin="device/topic")
+    assert [(o.position, o.value) for o in obs] == [(0, 11.9)]
 
 
 @pytest.mark.parametrize(
