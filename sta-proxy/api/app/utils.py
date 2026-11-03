@@ -23,3 +23,10 @@ def remove_trailing_slash(value: str) -> str:
     if value.endswith("/"):
         return value[:-1]
     return value
+
+
+def ensure_trailing_slash(value: str) -> str:
+    """Append a trailing slash to a string, if missing."""
+    if value.endswith("/"):
+        return value
+    return value + "/"
