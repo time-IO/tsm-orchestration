@@ -8,7 +8,7 @@ from fastapi import HTTPException
 import services.dsm_api as dsm_api
 import services.frost_proxy as frost_proxy
 import services.permission_groups as permission_groups
-from routers.frost_proxy import validate_proxied_path
+from utils import validate_proxied_path
 from services.frost_proxy import get_endpoint_name_from_proxied_path
 
 

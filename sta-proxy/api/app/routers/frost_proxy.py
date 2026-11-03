@@ -1,8 +1,8 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request, Response, HTTPException
-from config import settings
+from fastapi import APIRouter, Depends, Request, Response
 from dependencies import get_authorization
+from utils import validate_proxied_path
 from services import (
     frost_proxy_service,
     internal_frost_proxy_service,
@@ -76,19 +76,3 @@ async def proxy_to_frost(
         accept=request.headers.get("accept"),
         authorization=authorization,
     )
-
-
-AMBIGUOUS_PATH_CHARS = (";", "%", "\\")
-
-
-def validate_proxied_path(endpoint: str) -> None:
-    # reject path traversal
-    segments = endpoint.split("/")
-    if any(s in (".", "..") for s in segments) or any(
-        c in endpoint for c in AMBIGUOUS_PATH_CHARS
-    ):
-        raise HTTPException(status_code=400, detail="Invalid path")
-
-    # hide FROST endpoint listing
-    if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
-        raise HTTPException(status_code=404, detail="Not Found")
