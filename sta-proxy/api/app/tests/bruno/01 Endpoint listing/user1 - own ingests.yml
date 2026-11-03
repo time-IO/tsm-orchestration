@@ -14,10 +14,12 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("StaticIngest and DynamicIngest of VO:Group1", function () {
-          const names = res.getBody().items.filter((i) => i.permission_group_name === "VO:Group1").map((i) => i.name);
-          expect(names).to.include.members(["StaticIngest", "DynamicIngest"]);
-        });
+        for (const group of ["VO:Group1", "VO:Group2"]) {
+          test(`StaticIngest and DynamicIngest of ${group}`, function () {
+            const names = res.getBody().items.filter((i) => i.permission_group_name === group).map((i) => i.name);
+            expect(names).to.include.members(["StaticIngest", "DynamicIngest"]);
+          });
+        }
   assertions:
     - expression: res.status
       operator: eq

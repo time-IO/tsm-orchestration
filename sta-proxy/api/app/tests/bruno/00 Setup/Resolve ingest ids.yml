@@ -1,0 +1,35 @@
+info:
+  name: Resolve ingest ids
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta-proxy/api/ingests"
+  headers:
+    - name: X-Test-User
+      value: user1
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        const items = res.getBody().items;
+        for (const [group, variable] of [["VO:Group1", "ingestStaticGroup1"], ["VO:Group2", "ingestStaticGroup2"]]) {
+          const ingest = items.find((i) => i.permission_group_name === group && i.name === "StaticIngest");
+          test(`StaticIngest of ${group} exists`, function () {
+            expect(ingest).to.not.be.undefined;
+          });
+          if (ingest) bru.setVar(variable, ingest.id);
+        }
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

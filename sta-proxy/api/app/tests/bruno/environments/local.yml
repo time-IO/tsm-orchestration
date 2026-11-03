@@ -10,7 +10,7 @@ variables:
     value: vo_group1_96b545f87d03486aa115e147d2102501
   - name: endpointGroup2
     value: vo_group2_4e358197125c46629487457be40de13b
-  - name: ingestStatic
+  - name: ingestStaticGroup1
     value: "1"
-  - name: ingestDynamic
-    value: "2"
+  - name: ingestStaticGroup2
+    value: "3"
