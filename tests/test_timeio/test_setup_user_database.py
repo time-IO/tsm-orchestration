@@ -239,3 +239,16 @@ def test_deploy_view_files_ignores_unused_missing_env(sql_dir, monkeypatch):
     executed = [call.args[0] for call in c.execute.call_args_list]
     assert executed[1] == "SET lock_timeout TO '10s'"
     assert executed[-1] == "CREATE VIEW g AS SELECT 1;"
+
+
+@pytest.mark.parametrize("rowcount, warned", [(1, False), (0, True)])
+def test_set_views_stamp_warns_on_empty_capture(monkeypatch, rowcount, warned):
+    log = MagicMock()
+    monkeypatch.setattr(sud, "logger", log)
+    h = object.__new__(CreateThingInPostgresHandler)
+    c = MagicMock(rowcount=rowcount)
+
+    h.set_views_stamp(c, "user_1", "sta", "v1")
+
+    assert c.execute.call_args.args[1] == ["user_1", "user_1", "sta", "v1"]
+    assert log.warning.called is warned

@@ -171,16 +171,21 @@ class CreateThingInPostgresHandler(AbstractHandler):
     def set_views_stamp(self, c, schema: str, kind: str, version: str):
         # Must run in the deploy transaction: xmin picks the views it created.
         c.execute(
-            "INSERT INTO public.views_deploy_state (schema, kind, version, views) "
-            "SELECT %s, %s, %s, ARRAY("
-            "  SELECT relname::text FROM pg_class"
+            "WITH v AS ("
+            "  SELECT array_agg(relname::text) AS views FROM pg_class"
             "  WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = %s)"
             "  AND relkind = 'v' AND xmin = pg_current_xact_id()::xid"
-            ") ON CONFLICT (schema, kind) DO UPDATE SET "
+            ") "
+            "INSERT INTO public.views_deploy_state (schema, kind, version, views) "
+            "SELECT %s, %s, %s, views FROM v WHERE views IS NOT NULL "
+            "ON CONFLICT (schema, kind) DO UPDATE SET "
             "version = EXCLUDED.version, views = EXCLUDED.views, "
             "deployed_at = now()",
-            [schema, kind, version, schema],
+            [schema, schema, kind, version],
         )
+        if c.rowcount == 0:
+            # An empty stamp would make the existence check vacuous.
+            logger.warning(f"captured no {kind} views in {schema}; not stamping")
 
     def create_user(self, thing):
 
