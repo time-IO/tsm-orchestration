@@ -35,13 +35,17 @@ class CampbellCr6Parser(MqttParser):
         out = []
         for timestamp, values in observations:
             for i, (key, value) in enumerate(zip(names, values)):
-                out.append(
-                    Observation(
-                        timestamp=timestamp,
-                        value=value,
-                        position=i,
-                        origin=origin,
-                        header=key,
+                try:
+                    out.append(
+                        Observation(
+                            timestamp=timestamp,
+                            value=value,
+                            position=i,
+                            origin=origin,
+                            header=key,
+                        )
                     )
-                )
+                except ValueError:
+                    # value is NaN or None
+                    continue
         return out
