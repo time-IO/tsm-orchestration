@@ -15,7 +15,7 @@
       :disable="!authStore.isAuthenticated"
       :loading="loading"
       placeholder="Search by ingest..."
-      hint="Find and Ingest by its name, ID or UUID"
+      hint="Find an Ingest by its name, ID or UUID"
       @filter="onFilter"
     >
       <template #prepend>
