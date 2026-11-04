@@ -12,6 +12,10 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+
+- TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
+
 ## [2026-10-14]
 
 ### Added
