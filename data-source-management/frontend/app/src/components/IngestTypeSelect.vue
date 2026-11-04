@@ -8,6 +8,7 @@
     :options="options"
     clearable
     emit-value
+    map-options
     label="Ingest type"
     hint="Select the Ingest type"
   />

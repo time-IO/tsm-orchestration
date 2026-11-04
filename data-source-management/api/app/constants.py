@@ -37,6 +37,7 @@ class ApiType(str, Enum):
     TSYSTEMS = "tsystems"
     UBA = "uba"
     SENSOTO = "sensoto"
+    ZENTRA = "zentra"
 
     @classmethod
     def from_string(cls, value: str) -> "ApiType":

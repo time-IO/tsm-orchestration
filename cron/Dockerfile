@@ -1,10 +1,10 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM debian:trixie-20260918-slim
+FROM debian:trixie-20261005-slim
 
 ARG BUILD_DATE
 ARG VCS_REF
-ARG SUPERCRONIC_VERSION=0.2.33
+ARG SUPERCRONIC_VERSION=0.2.50
 ARG UID=1000
 ARG USER=tsm
 

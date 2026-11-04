@@ -4,7 +4,7 @@ import base64
 import re
 
 from abc import ABC, abstractmethod
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from datetime import datetime, timezone, timedelta
 
 from timeio.feta import Thing
@@ -80,7 +80,8 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         else:
             raise ExtApiRequestError("HTTP request failed", status_code)
     except requests.exceptions.RequestException as e:
-        raise ExtApiRequestError(f"Network error: {e}")
+        msg = re.sub(r"(token=)[^&\s'\"]+", r"\1***", str(e))
+        raise ExtApiRequestError(f"Network error: {msg}")
 
 
 def dynamic_parameter_mapping(v):
@@ -96,6 +97,13 @@ def dynamic_parameter_mapping(v):
         raise ExtApiRequestError(
             f"Could not map parameter type of {repr(v)} to number, string, boolean or json!"
         )
+
+
+def unix_ts_to_str(ts_unix: int) -> str:
+    """Convert unix timestamp to datetime string"""
+    dt = datetime.fromtimestamp(ts_unix, tz=timezone.utc)
+    ts_str = dt.strftime("%Y-%m-%d %H:%M:%S%z")
+    return ts_str
 
 
 RESULT_TYPE_MAPPING = {
@@ -211,7 +219,7 @@ class TsystemsApiSyncer(ExtApiSyncer):
                 if value is not None:
                     result_type = dynamic_parameter_mapping(value)
                     body = {
-                        "result_time": self.unix_ts_to_str(
+                        "result_time": unix_ts_to_str(
                             timestamp
                         ),  # unix ts is converted to UTC datetime string
                         "result_type": result_type,
@@ -224,13 +232,6 @@ class TsystemsApiSyncer(ExtApiSyncer):
                     bodies.append(body)
 
         return bodies
-
-    @staticmethod
-    def unix_ts_to_str(ts_unix: int) -> str:
-        """Convert unix timestamp to datetime string"""
-        dt = datetime.fromtimestamp(ts_unix, tz=timezone.utc)
-        ts_str = dt.strftime("%Y-%m-%d %H:%M:%S")
-        return ts_str
 
     def get_bearer_token(self, username: str, password: str) -> str:
         """Get bearer token for API authentication"""
@@ -681,7 +682,19 @@ class NmApiSyncer(ExtApiSyncer):
 
 
 class SensotoApiSyncer(ExtApiSyncer):
-    base_url = "https://api.sensoto.io/v1/organizations/open/networks"
+    organizations_url = "https://api.sensoto.io/v1/organizations"
+    default_organization = "open"
+
+    @staticmethod
+    def _seg(value) -> str:
+        """Make a value safe for use as a single URL path segment."""
+        value = str(value)
+        if value in {"", ".", ".."}:
+            raise ExtApiRequestError(f"Invalid Sensoto path segment: {value!r}")
+        return quote(value, safe="")
+
+    def _networks_url(self, organization):
+        return f"{self.organizations_url}/{self._seg(organization)}/networks"
 
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
@@ -689,17 +702,28 @@ class SensotoApiSyncer(ExtApiSyncer):
             settings["network"],
             settings["device"],
         )
-        sensor_data = self.get_sensor_data(network, device)
+        organization = settings.get("organization") or self.default_organization
+        networks_url = self._networks_url(organization)
+        net, dev = self._seg(network), self._seg(device)
+
+        auth_params = {}
+        if token_enc := settings.get("token"):
+            auth_params["token"] = decrypt(token_enc, get_crypt_key())
+
+        sensor_data = self.get_sensor_data(
+            network, device, auth_params, organization=organization
+        )
         api_response = list()
         params = {
             "start": content["datetime_from"],
             "end": content["datetime_to"],
             "timeFormat": "interval",
+            **auth_params,
         }
         for s in sensor_data:
             res = request_with_handling(
                 "GET",
-                f"{self.base_url}/{network}/devices/{device}/sensors/{s['sensor']}/measurements/raw",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s['sensor'])}/measurements/raw",
                 params=params,
             )
             api_data = res.json()
@@ -730,16 +754,70 @@ class SensotoApiSyncer(ExtApiSyncer):
 
         return bodies
 
-    def get_sensor_data(self, network, device):
+    def get_sensor_data(self, network, device, params=None, organization=None):
+        networks_url = self._networks_url(organization or self.default_organization)
+        net, dev = self._seg(network), self._seg(device)
         sensor_data = list()
         sensors_resp = request_with_handling(
-            "GET", f"{self.base_url}/{network}/devices/{device}/sensors"
+            "GET",
+            f"{networks_url}/{net}/devices/{dev}/sensors",
+            params=params,
         )
         sensors = [i["name"] for i in sensors_resp.json()["items"]]
         for s in sensors:
             agg_resp = request_with_handling(
-                "GET", f"{self.base_url}/{network}/devices/{device}/sensors/{s}"
+                "GET",
+                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s)}",
+                params=params,
             )
             agg = agg_resp.json()["phenomenon"]["aggregation"]
             sensor_data.append({"sensor": s, "aggregation": agg})
         return sensor_data
+
+
+class ZentraApiSyncer(ExtApiSyncer):
+    base_url = "https://zentracloud.com/api/v3/get_readings/"
+
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+        settings = thing.ext_api.settings
+        params = {
+            "device_sn": settings["device_sn"],
+            "start_date": content["datetime_from"],
+            "end_date": content["datetime_to"],
+            "output_format": "json",
+            "per_page": 2000,
+        }
+        token = f"Token {decrypt(settings['api_key'], get_crypt_key())}"
+        headers = {"Authorization": token}
+        response = request_with_handling(
+            "GET", self.base_url, params=params, headers=headers
+        )
+
+        return response.json()
+
+    def do_parse(self, api_response):
+        bodies = []
+        for param, v in api_response["data"].items():
+            data = v[0]
+            source = {
+                "device_name": data["metadata"]["device_name"],
+                "sensor_name": data["metadata"]["sensor_name"],
+                "units": data["metadata"]["units"].lstrip(),
+            }
+            for entry in data["readings"]:
+                if entry["value"] is not None:
+                    result_type = dynamic_parameter_mapping(entry["value"])
+                    body = {
+                        "result_time": unix_ts_to_str(
+                            entry["timestamp_utc"]
+                        ),  # timestamp is UTC aware
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: entry["value"],
+                        "datastream_pos": param,
+                        "parameters": json.dumps(
+                            {"origin": "zentra_api", "column_header": source},
+                            ensure_ascii=False,
+                        ),
+                    }
+                    bodies.append(body)
+        return bodies

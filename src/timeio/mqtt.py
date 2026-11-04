@@ -115,6 +115,17 @@ class AbstractHandler(ABC):
 
         try:
             content = self._decode(message)
+        except UnicodeDecodeError:
+            # A single malformed message (e.g. a device publishing binary data)
+            # must not take down a worker that serves all things.
+            logger.error(
+                f"\n======================== USER ERROR ========================\n"
+                f"Status: ERROR  (Payload is not valid UTF-8, message dropped)\n"
+                f"Payload (first 500 bytes):\n{message.payload[:500]!r}\n"
+                f"{traceback.format_exc()}"
+                f"======================== USER ERROR ========================\n",
+            )
+            return
         except Exception:
             logger.critical(
                 f"\n====================== CRITICAL ERROR ======================\n"
