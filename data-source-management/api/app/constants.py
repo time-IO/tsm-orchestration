@@ -28,9 +28,11 @@ class IngestType(str, Enum):
         """Return the underlying string representation."""
         return self.value
 
+
 REPARSABLE_INGEST_TYPES = frozenset(
     {IngestType.SFTP, IngestType.EXTERNAL_SFTP, IngestType.HTTP}
 )
+
 
 class ApiType(str, Enum):
     BOSCH = "bosch"

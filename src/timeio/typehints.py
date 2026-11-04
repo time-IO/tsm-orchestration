@@ -79,6 +79,16 @@ class MqttPayload:
         datetime_from: _t.NotRequired[str]  # optional lower mtime bound (UTC)
         datetime_to: _t.NotRequired[str]  # optional upper mtime bound (UTC)
 
+    class ReparsesFiles(_t.TypedDict):
+        version: _t.Literal[1]
+        thing: str
+        include_parsed: bool
+        parsed_files_parser: _t.Literal["current", "original"]
+        start_date: _t.NotRequired[str]
+        end_date: _t.NotRequired[str]
+        filename_pattern: _t.NotRequired[str]
+        parser_uuid: _t.NotRequired[str]
+
     class SyncSmsT(_t.TypedDict):
         origin: str  # sms backend data or sms cv data
 

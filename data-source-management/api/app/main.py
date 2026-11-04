@@ -35,6 +35,7 @@ from routers import (
     trigger_quality_control,
     trigger_ext_api,
     trigger_ext_sftp,
+    trigger_reparse,
     parser_timezone,
     parser_encoding,
     ingest,
@@ -103,6 +104,7 @@ app.include_router(sta_proxy.router)
 app.include_router(trigger_quality_control.router)
 app.include_router(trigger_ext_api.router)
 app.include_router(trigger_ext_sftp.router)
+app.include_router(trigger_reparse.router)
 app.include_router(parser_timezone.router)
 app.include_router(parser_encoding.router)
 app.include_router(parser_detailed.router)

@@ -47,3 +47,29 @@ def create_qc_settings_msg(qc_setting):
         "functions": qc_setting.mqtt_information,
     }
     return msg
+
+
+def create_reparse_files_msg(
+    ingest_uuid,
+    start_date,
+    end_date,
+    filename_pattern,
+    parser_uuid,
+    include_parsed,
+    parsed_files_parser,
+):
+    msg = {
+        "version": 1,
+        "thing": str(ingest_uuid),
+        "include_parsed": include_parsed,
+        "parsed_files_parser": parsed_files_parser,
+    }
+    for key, value in (
+        ("start_date", start_date),
+        ("end_date", end_date),
+        ("filename_pattern", filename_pattern),
+        ("parser_uuid", parser_uuid),
+    ):
+        if value is not None:
+            msg[key] = value
+    return msg
