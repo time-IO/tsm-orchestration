@@ -7,10 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -28,7 +26,6 @@ public class ContextApiServlet extends HttpServlet {
     // No dots, slashes or '#' (Tomcat maps '#' in descriptor names to '/').
     private static final Pattern SCHEMA = Pattern.compile("[A-Za-z0-9_-]+");
 
-    private final Object lock = new Object();
     private byte[] token;
     private Path contextDir;
 
@@ -86,10 +83,7 @@ public class ContextApiServlet extends HttpServlet {
             reply(resp, 400, "{\"error\":\"body must be a <Context> XML document\"}");
             return;
         }
-        boolean changed;
-        synchronized (lock) {
-            changed = write(contextDir.resolve(schema + ".xml"), body);
-        }
+        boolean changed = write(contextDir.resolve(schema + ".xml"), body);
         reply(resp, 200, "{\"changed\":" + changed + "}");
     }
 
@@ -100,10 +94,7 @@ public class ContextApiServlet extends HttpServlet {
             reply(resp, 400, "{\"error\":\"invalid schema name\"}");
             return;
         }
-        boolean existed;
-        synchronized (lock) {
-            existed = Files.deleteIfExists(contextDir.resolve(schema + ".xml"));
-        }
+        boolean existed = Files.deleteIfExists(contextDir.resolve(schema + ".xml"));
         reply(resp, 200, "{\"changed\":" + existed + "}");
     }
 
@@ -125,25 +116,14 @@ public class ContextApiServlet extends HttpServlet {
         return SCHEMA.matcher(schema).matches() ? schema : null;
     }
 
-    /** Writes via temp file and atomic move; returns false if the content is unchanged. */
-    private boolean write(Path target, byte[] content) throws IOException {
+    /** Returns false if the content is unchanged. */
+    private static boolean write(Path target, byte[] content) throws IOException {
         // Rewriting identical content would make Tomcat redeploy the context.
         if (Files.exists(target) && Arrays.equals(Files.readAllBytes(target), content)) {
             return false;
         }
-        // Not a *.xml name, so Tomcat's auto-deploy ignores it.
-        Path tmp = Files.createTempFile(contextDir, ".tmp-", ".part",
-                PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
-        try {
-            Files.write(tmp, content);
-            try {
-                Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } finally {
-            Files.deleteIfExists(tmp);
-        }
+        Files.write(target, content);
+        Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("rw-------"));
         return true;
     }
 
