@@ -58,7 +58,7 @@
                       <q-item-label caption>{{ item.path_for_posts || item.uuid }}</q-item-label>
                       <copy-btn
                         title="Copy path for posts"
-                        :text-to-copy="item.path_for_posts || item.uuid"
+                        :text-to-copy="httpIngestFullUrl"
                       />
                     </div>
                     <q-item-label v-if="!item.path_for_posts" caption class="text-grey-7">
@@ -272,6 +272,17 @@ const basePath = '/ingest/http/';
 const apiKey = computed({
   get: () => item.value?.api_key || '',
   set: () => {},
+});
+
+const httpIngestFullUrl = computed(() => {
+
+  const pathEnd = item.value?.path_for_posts || item.value?.uuid
+  const path = `${import.meta.env.BENTO_HTTP_BASE_URL}${pathEnd}`
+
+  if (item.value?.id) {
+    return path;
+  }
+  return '';
 });
 
 const editRoute = computed(() => {
