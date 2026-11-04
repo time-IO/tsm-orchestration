@@ -55,7 +55,12 @@
                   <q-item-section>
                     <q-item-label>Path for Posts</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ item.path_for_posts || item.uuid }}</q-item-label>
+                      <q-item-label caption>
+                        {{ item.path_for_posts || item.uuid }}
+                        <q-tooltip>
+                          {{httpIngestFullUrl}}
+                        </q-tooltip>
+                      </q-item-label>
                       <copy-btn
                         title="Copy path for posts"
                         :text-to-copy="httpIngestFullUrl"
@@ -76,7 +81,14 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>API Key</q-item-label>
+                    <q-item-label>
+                      API Key
+                      <q-icon size="xs" name="help_outline" color="grey-7">
+                        <q-tooltip class="text-body2">
+                          Must be used in the <b>X-Api-Key</b> header of the request.
+                        </q-tooltip>
+                      </q-icon>
+                    </q-item-label>
                     <div class="row items-center">
                       <q-item-label caption class="col-2">
                         <q-input borderless v-model="apiKey" :type="isPwd ? 'password' : 'text'">
