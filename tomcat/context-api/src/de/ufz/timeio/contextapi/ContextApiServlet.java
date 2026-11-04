@@ -12,14 +12,11 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Element;
 
-/** Manages the Tomcat context descriptors of FROST instances: PUT/DELETE /contexts/{schema}, GET /contexts. */
+/** Writes Tomcat context descriptors of FROST instances: PUT /contexts/{schema}. */
 public class ContextApiServlet extends HttpServlet {
 
     private static final int MAX_BODY = 64 * 1024;
@@ -50,23 +47,6 @@ public class ContextApiServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if (req.getPathInfo() != null && !req.getPathInfo().equals("/")) {
-            reply(resp, 404, "{\"error\":\"not found\"}");
-            return;
-        }
-        try (Stream<Path> files = Files.list(contextDir)) {
-            List<String> names = files.map(p -> p.getFileName().toString())
-                    .filter(n -> n.endsWith(".xml"))
-                    .map(n -> n.substring(0, n.length() - 4))
-                    .filter(n -> SCHEMA.matcher(n).matches())
-                    .sorted()
-                    .toList();
-            reply(resp, 200, names.stream().map(n -> "\"" + n + "\"").collect(Collectors.joining(",", "[", "]")));
-        }
-    }
-
-    @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String schema = schemaOf(req);
         if (schema == null) {
@@ -85,17 +65,6 @@ public class ContextApiServlet extends HttpServlet {
         }
         boolean changed = write(contextDir.resolve(schema + ".xml"), body);
         reply(resp, 200, "{\"changed\":" + changed + "}");
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String schema = schemaOf(req);
-        if (schema == null) {
-            reply(resp, 400, "{\"error\":\"invalid schema name\"}");
-            return;
-        }
-        boolean existed = Files.deleteIfExists(contextDir.resolve(schema + ".xml"));
-        reply(resp, 200, "{\"changed\":" + existed + "}");
     }
 
     private boolean authorized(HttpServletRequest req) {

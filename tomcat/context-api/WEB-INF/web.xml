@@ -6,7 +6,6 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>contexts</servlet-name>
-    <url-pattern>/contexts</url-pattern>
     <url-pattern>/contexts/*</url-pattern>
   </servlet-mapping>
 </web-app>
