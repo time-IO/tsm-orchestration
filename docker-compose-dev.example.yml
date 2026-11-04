@@ -46,6 +46,10 @@ services:
     volumes:
       - ./src:/home/appuser/app/src
 
+  worker-reparse-files:
+    volumes:
+      - ./src:/home/appuser/app/src
+
   worker-sync-extapis:
     volumes:
       - ./src:/home/appuser/app/src
@@ -148,4 +152,3 @@ volumes:
   keycloak-data:
   npm:
   dsm-api-data-test:
-
