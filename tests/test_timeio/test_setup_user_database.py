@@ -22,56 +22,32 @@ def write(path, text):
     return path
 
 
+def version_of(f):
+    digest = CreateThingInPostgresHandler.hash_view_files([f])
+    return CreateThingInPostgresHandler.compute_views_version(digest)
+
+
 def test_compute_views_version_stable(sql_dir):
     f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
-    digest = CreateThingInPostgresHandler.hash_view_files([f])
-    assert CreateThingInPostgresHandler.compute_views_version(
-        digest, 1
-    ) == CreateThingInPostgresHandler.compute_views_version(
-        CreateThingInPostgresHandler.hash_view_files([f]), 1
-    )
+    assert version_of(f) == version_of(f)
 
 
 def test_compute_views_version_changes(sql_dir, monkeypatch):
     f = write(sql_dir / "views" / "a.sql", "CREATE VIEW a AS SELECT 1;")
     monkeypatch.setenv("SMS_URL", "https://sms")
     monkeypatch.setenv("CV_URL", "https://cv")
-    base = CreateThingInPostgresHandler.compute_views_version(
-        CreateThingInPostgresHandler.hash_view_files([f]), 1
-    )
-
-    assert (
-        CreateThingInPostgresHandler.compute_views_version(
-            CreateThingInPostgresHandler.hash_view_files([f]), 2
-        )
-        != base
-    )
+    base = version_of(f)
 
     monkeypatch.setenv("SMS_URL", "https://other")
-    assert (
-        CreateThingInPostgresHandler.compute_views_version(
-            CreateThingInPostgresHandler.hash_view_files([f]), 1
-        )
-        != base
-    )
+    assert version_of(f) != base
     monkeypatch.setenv("SMS_URL", "https://sms")
 
     monkeypatch.setenv("CV_URL", "https://other")
-    assert (
-        CreateThingInPostgresHandler.compute_views_version(
-            CreateThingInPostgresHandler.hash_view_files([f]), 1
-        )
-        != base
-    )
+    assert version_of(f) != base
     monkeypatch.setenv("CV_URL", "https://cv")
 
     monkeypatch.setattr(sud, "VIEWS_REVISION", sud.VIEWS_REVISION + 1)
-    assert (
-        CreateThingInPostgresHandler.compute_views_version(
-            CreateThingInPostgresHandler.hash_view_files([f]), 1
-        )
-        != base
-    )
+    assert version_of(f) != base
 
 
 def test_hash_view_files_tracks_content_and_ddl(sql_dir):
@@ -116,7 +92,6 @@ def handler(monkeypatch):
     ):
         setattr(h, name, MagicMock())
     h.user_exists = MagicMock(return_value=True)
-    h.get_flyway_rank = MagicMock(return_value=7)
     h.views_up_to_date = MagicMock(return_value=True)
     return h
 
@@ -151,7 +126,7 @@ def test_act_checks_each_kind_in_its_schema(handler):
         ("user_1_int", "sti"),
         ("user_1", "grf"),
     ]
-    expected = CreateThingInPostgresHandler.compute_views_version("d-sti", 7)
+    expected = CreateThingInPostgresHandler.compute_views_version("d-sti")
     assert calls[1][2] == expected
 
 
@@ -165,7 +140,7 @@ def test_act_redeploys_only_stale_kind(handler):
         ANY,
         "user_1_int",
         "sti",
-        CreateThingInPostgresHandler.compute_views_version("d-sti", 7),
+        CreateThingInPostgresHandler.compute_views_version("d-sti"),
     )
 
 

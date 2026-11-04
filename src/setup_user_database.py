@@ -85,7 +85,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         self.upsert_schema_thing_mapping(thing)
 
-        int_schema = thing.database.username.lower() + INTERNAL_SCHEMA_SUFFIX
+        schema = user
+        int_schema = schema + INTERNAL_SCHEMA_SUFFIX
 
         if not self.user_exists(sta_internal_user := STA_INTERNAL_PREFIX + ro_user):
             logger.debug(f"create sta-internal read-only user {sta_internal_user}")
@@ -107,7 +108,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        self.deploy_views(thing, int_schema)
+        self.deploy_views(thing, schema, int_schema)
 
         logger.debug(f"grant public frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
@@ -125,18 +126,16 @@ class CreateThingInPostgresHandler(AbstractHandler):
         return h.hexdigest()
 
     @staticmethod
-    def compute_views_version(files_digest: str, flyway_rank: int) -> str:
+    def compute_views_version(files_digest: str) -> str:
         key = (
-            f"{VIEWS_REVISION}|{flyway_rank}|{os.environ.get('SMS_URL')}|"
+            f"{VIEWS_REVISION}|{os.environ.get('SMS_URL')}|"
             f"{os.environ.get('CV_URL')}|{files_digest}"
         )
         return hashlib.sha256(key.encode()).hexdigest()[:16]
 
-    def deploy_views(self, thing, int_schema: str):
-        schema = thing.database.username.lower()
-        flyway_rank = self.get_flyway_rank()
+    def deploy_views(self, thing, schema: str, int_schema: str):
         for kind, target in (("sta", schema), ("sti", int_schema), ("grf", schema)):
-            version = self.compute_views_version(self.views_digests[kind], flyway_rank)
+            version = self.compute_views_version(self.views_digests[kind])
             if self.views_up_to_date(target, kind, version):
                 logger.debug(f"{kind} views in {target} are up to date ({version})")
                 continue
@@ -145,14 +144,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 with conn.cursor() as c:
                     self.deploy_view_files(c, thing, kind, target)
                     self.set_views_stamp(c, target, kind, version)
-
-    def get_flyway_rank(self) -> int:
-        with self.db.connection() as conn:
-            row = conn.execute(
-                "SELECT coalesce(max(installed_rank), 0) "
-                "FROM public.flyway_schema_history"
-            ).fetchone()
-        return row[0]
 
     def views_up_to_date(self, schema: str, kind: str, version: str) -> bool:
         with self.db.connection() as conn:
