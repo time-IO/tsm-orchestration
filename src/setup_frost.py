@@ -23,27 +23,34 @@ class CreateFrostInstanceHandler(AbstractHandler):
         )
         self.tomcat_proxy_url = get_envvar("TOMCAT_PROXY_URL")
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
+        self.api_url = get_envvar("FROST_CONTEXT_API_URL")
+        self.internal_api_url = get_envvar("FROST_INTERNAL_CONTEXT_API_URL")
+        self.api_token = get_envvar("FROST_CONTEXT_API_TOKEN")
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
-        frost.write_context_file(
-            schema=thing.database.schema,
-            user=f"sta_{thing.database.ro_username.lower()}",
-            password=thing.database.ro_password,
-            db_url=thing.database.ro_url,
-            tomcat_proxy_url=self.tomcat_proxy_url,
-        )
-        # Internal FROST: connecting as the sti_ user
-        # (see setup_user_database.py), whose search_path
-        # points at the project's internal schema.
-        frost.write_context_file(
-            schema=thing.database.schema,
-            user=f"sti_{thing.database.ro_username.lower()}",
-            password=thing.database.ro_password,
-            db_url=thing.database.ro_url,
-            tomcat_proxy_url=self.tomcat_proxy_url,
-            context_dir=frost.INTERNAL_CONTEXT_FILES_DIR,
-        )
+        db = thing.database
+        # sti_ user's search_path points at the internal schema (setup_user_database.py)
+        targets = [
+            ("public", self.api_url, "sta_"),
+            ("internal", self.internal_api_url, "sti_"),
+        ]
+        failed = []
+        for name, api_url, prefix in targets:
+            try:
+                xml = frost.render_context(
+                    schema=db.schema,
+                    user=f"{prefix}{db.ro_username.lower()}",
+                    password=db.ro_password,
+                    db_url=db.ro_url,
+                    tomcat_proxy_url=self.tomcat_proxy_url,
+                )
+                frost.push_context(api_url, self.api_token, db.schema, xml)
+            except Exception as e:
+                logger.error(f"FROST {name} context push failed: {e}")
+                failed.append(name)
+        if failed:
+            raise RuntimeError(f"FROST context push failed for: {', '.join(failed)}")
 
 
 if __name__ == "__main__":

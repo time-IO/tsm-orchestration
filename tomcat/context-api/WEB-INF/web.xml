@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" version="6.1" metadata-complete="true">
+  <servlet>
+    <servlet-name>contexts</servlet-name>
+    <servlet-class>de.ufz.timeio.contextapi.ContextApiServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>contexts</servlet-name>
+    <url-pattern>/contexts</url-pattern>
+    <url-pattern>/contexts/*</url-pattern>
+  </servlet-mapping>
+</web-app>

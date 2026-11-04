@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import logging
-import pathlib
 import xml.etree.ElementTree as ET  # noqa
 from urllib.parse import urlparse, urlunparse
+
+import requests
 
 from timeio.crypto import decrypt, get_crypt_key
 
@@ -40,25 +41,10 @@ _TEMPLATE = """\
     />
 </Context>
 """
-CONTEXT_FILES_DIR = (
-    # tsm-orchestration/src/frost_context_files
-    pathlib.Path(__file__)
-    .resolve()
-    .parent.parent.joinpath("frost_context_files")
-)
-# Context files of the internal FROST server (service `frost-internal`),
-# which has its own tomcat container and persistence volume.
-INTERNAL_CONTEXT_FILES_DIR = (
-    # tsm-orchestration/src/frost_context_files_internal
-    pathlib.Path(__file__)
-    .resolve()
-    .parent.parent.joinpath("frost_context_files_internal")
-)
 
 
-def write_context_file(
-    schema, user, password, db_url, tomcat_proxy_url, context_dir=CONTEXT_FILES_DIR
-) -> None:
+def render_context(schema, user, password, db_url, tomcat_proxy_url) -> bytes:
+    """Render the Tomcat context XML; `password` is the encrypted one."""
     parts = urlparse(db_url)
     hostname = parts.hostname
     if parts.port:
@@ -71,8 +57,29 @@ def write_context_file(
         password=decrypt(password, get_crypt_key()),
         tomcat_proxy_url=tomcat_proxy_url,
     ).strip()
+    return ET.tostring(ET.XML(content))
 
-    path = f"{context_dir}/{schema}.xml"
-    logger.debug(f"write tomcat context file {path!r}")
-    with open(path, "wb") as fh:
-        fh.write(ET.tostring(ET.XML(content)))
+
+def push_context(api_url: str, token: str, schema: str, xml: bytes, timeout=30) -> None:
+    """PUT the context XML to the context API of a FROST instance."""
+    url = f"{api_url.rstrip('/')}/contexts/{schema}"
+    logger.debug(f"push tomcat context {schema!r} to {url!r}")
+    try:
+        response = requests.put(
+            url,
+            data=xml,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/xml",
+            },
+            timeout=timeout,
+        )
+    except requests.RequestException as e:
+        # Not chained: the exception text may contain request details.
+        raise RuntimeError(
+            f"pushing context {schema!r} to {url!r} failed: {type(e).__name__}"
+        ) from None
+    if not response.ok:
+        raise RuntimeError(
+            f"pushing context {schema!r} to {url!r} failed: HTTP {response.status_code}"
+        )

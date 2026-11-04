@@ -1,0 +1,9 @@
+<!-- Context API on its own connector, host and appBase; unreachable via 8080 -->
+<Service name="ContextApi">
+  <Connector port="8081" protocol="HTTP/1.1" connectionTimeout="20000" />
+  <Engine name="ContextApi" defaultHost="localhost">
+    <Host name="localhost" appBase="api-webapps" unpackWARs="false" autoDeploy="false" deployOnStartup="true">
+      <Valve className="org.apache.catalina.valves.ErrorReportValve" showReport="false" showServerInfo="false" />
+    </Host>
+  </Engine>
+</Service>
