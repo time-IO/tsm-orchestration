@@ -6,7 +6,7 @@ import pytest
 from timeio.parser import (
     get_parser,
     CsvParser,
-    NutNetSoilParser,
+    TrueLog100Parser,
     JsonParser,
     CampbellCr6Parser,
     YdocMl417Parser,
@@ -21,7 +21,7 @@ from timeio.parser.json_parser import DEFAULT_SETTINGS as JSON_DEFAULT_SETTINGS
     "parser_type, expected_type, expected_attrs",
     [
         ("csv", CsvParser, {"settings": dict}),
-        ("nutnet_soil", NutNetSoilParser, {"settings": dict}),
+        ("truelog100", TrueLog100Parser, {"settings": dict}),
         ("json", JsonParser, {"settings": dict, "normalize_kws": dict}),
         ("campbell_cr6", CampbellCr6Parser, {}),
         ("ydoc_ml417", YdocMl417Parser, {}),

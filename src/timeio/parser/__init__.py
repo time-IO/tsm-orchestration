@@ -5,7 +5,7 @@ from typing import Any
 from timeio.parser.abc_parser import AbcParser
 from timeio.parser.pandas_parser import PandasParser
 from timeio.parser.csv_parser import CsvParser
-from timeio.parser.nutnet_soil_parser import NutNetSoilParser
+from timeio.parser.truelog100_parser import TrueLog100Parser
 from timeio.parser.json_parser import JsonParser
 from timeio.parser.soilcan_parser import SoilcanParser
 from timeio.parser.mqtt_parser import MqttParser
@@ -16,7 +16,7 @@ from timeio.parser.mqtt_devices.quaesta import QuaestaParser
 
 _parser_map = {
     "csv": CsvParser,
-    "nutnet_soil": NutNetSoilParser,
+    "truelog100": TrueLog100Parser,
     "json": JsonParser,
     "soilcan": SoilcanParser,
     # MQTT
@@ -36,7 +36,7 @@ def get_parser(
     if klass is None:
         raise NotImplementedError(f"parser {parser_type!r} not known")
 
-    if klass is NutNetSoilParser:
+    if klass is TrueLog100Parser:
         return klass()
 
     if issubclass(klass, PandasParser):

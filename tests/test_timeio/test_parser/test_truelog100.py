@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from timeio.errors import EmptyDataError, ParsingError
-from timeio.parser import CsvParser, NutNetSoilParser, get_parser
+from timeio.parser import CsvParser, TrueLog100Parser, get_parser
 
 SETTINGS = {
     "timezone": "Etc/GMT-1",
@@ -48,14 +48,14 @@ def test_parsing_output():
         ),
     )
 
-    actual = NutNetSoilParser().do_parse(rawdata, "project", "thing")
+    actual = TrueLog100Parser().do_parse(rawdata, "project", "thing")
 
     pd.testing.assert_frame_equal(actual, expected, check_exact=True)
 
 
 def test_fixed_settings_ignore_factory_parameters():
     parser = get_parser(
-        "nutnet_soil", {"delimiter": ";", "header": 0, "timezone": "UTC"}
+        "truelog100", {"delimiter": ";", "header": 0, "timezone": "UTC"}
     )
     df = parser.do_parse(TIMESTAMP + ",1.25" * 60, "project", "thing")
     assert df.shape == (1, 60)
@@ -66,14 +66,14 @@ def test_fixed_settings_ignore_factory_parameters():
 
 def test_constructor_accepts_no_user_settings():
     with pytest.raises(TypeError):
-        NutNetSoilParser({"timezone": "UTC"})
+        TrueLog100Parser({"timezone": "UTC"})
 
 
 def test_settings_are_independent():
-    parser = NutNetSoilParser()
+    parser = TrueLog100Parser()
     parser.settings["timestamp_columns"][0]["format"] = "changed"
     assert (
-        NutNetSoilParser().settings["timestamp_columns"]
+        TrueLog100Parser().settings["timestamp_columns"]
         == SETTINGS["timestamp_columns"]
     )
 
@@ -91,9 +91,9 @@ def test_missing_sensor_groups(missing):
     rawdata = ",".join(raw_fields)
     expected = ",".join(expected_fields)
 
-    assert NutNetSoilParser._cleanup(rawdata) == expected
-    assert NutNetSoilParser._cleanup(expected) == expected
-    parser = get_parser("nutnet_soil", None)
+    assert TrueLog100Parser._cleanup(rawdata) == expected
+    assert TrueLog100Parser._cleanup(expected) == expected
+    parser = get_parser("truelog100", None)
     actual = parser.do_parse(rawdata, "project", "thing")
     pd.testing.assert_frame_equal(
         actual, CsvParser(SETTINGS).do_parse(expected, "project", "thing")
@@ -105,13 +105,13 @@ def test_missing_sensor_groups(missing):
 def test_blank_lines_and_complete_rows():
     complete = TIMESTAMP + ",1" * 60
     rawdata = f"\n\n \t\n{complete}\r\n\r\n{complete}  \n\n"
-    assert NutNetSoilParser._cleanup(rawdata) == f"{complete}\n{complete}"
+    assert TrueLog100Parser._cleanup(rawdata) == f"{complete}\n{complete}"
 
 
 @pytest.mark.parametrize("rawdata", ["", "\n\n \t\n"])
 def test_empty_data(rawdata):
     with pytest.raises(EmptyDataError):
-        NutNetSoilParser().do_parse(rawdata, "project", "thing")
+        TrueLog100Parser().do_parse(rawdata, "project", "thing")
 
 
 @pytest.mark.parametrize(
@@ -124,19 +124,19 @@ def test_empty_data(rawdata):
 )
 def test_unrepairable_rows_raise(row):
     with pytest.raises(ParsingError, match="line 2: cannot repair row"):
-        NutNetSoilParser().do_parse("\n" + row, "project", "thing")
+        TrueLog100Parser().do_parse("\n" + row, "project", "thing")
 
 
 def test_attached_sample():
     rawdata = (
         Path(__file__).parent / "fixtures" / "B7P4IF_example_columnshifts.txt"
     ).read_text()
-    cleaned = NutNetSoilParser._cleanup(rawdata)
+    cleaned = TrueLog100Parser._cleanup(rawdata)
     assert len(cleaned.splitlines()) == 69
     assert all(line.count(",") == 60 for line in cleaned.splitlines())
-    assert NutNetSoilParser._cleanup(cleaned) == cleaned
+    assert TrueLog100Parser._cleanup(cleaned) == cleaned
 
-    parser = NutNetSoilParser()
+    parser = TrueLog100Parser()
     df = parser.do_parse(rawdata, "project", "thing")
     assert df.shape == (69, 60)
     assert list(df.columns) == list(range(1, 61))
@@ -154,7 +154,7 @@ def test_fixed_timezone_in_winter_and_summer():
         timestamp + ",1" * 60
         for timestamp in ("15.01.2025 12:00:00", "15.07.2025 12:00:00")
     )
-    df = NutNetSoilParser().do_parse(rawdata, "project", "thing")
+    df = TrueLog100Parser().do_parse(rawdata, "project", "thing")
     assert [timestamp.isoformat() for timestamp in df.index] == [
         "2025-01-15T12:00:00+01:00",
         "2025-07-15T12:00:00+01:00",

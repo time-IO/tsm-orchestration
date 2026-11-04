@@ -26,8 +26,8 @@ DEFAULT_SETTINGS = {
 }
 
 
-class NutNetSoilParser(CsvParser):
-    """Repair NutNet soil rows and parse them with fixed CSV settings.
+class TrueLog100Parser(CsvParser):
+    """Repair TrueLog100 rows and parse them with fixed CSV settings.
 
     Rows contain a timestamp and twelve five-value sensor groups (60 commas).
     A missing group may be written as just one empty field. On short rows,
@@ -64,7 +64,7 @@ class NutNetSoilParser(CsvParser):
 
             if missing_fields:
                 raise ParsingError(
-                    f"NutNet soil line {line_number}: cannot repair row to "
+                    f"TrueLog100 line {line_number}: cannot repair row to "
                     f"{EXPECTED_FIELD_COUNT} fields "
                     f"(found {len(repaired)} after cleanup)"
                 )
