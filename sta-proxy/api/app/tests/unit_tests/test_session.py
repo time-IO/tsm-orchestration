@@ -7,14 +7,14 @@ from config import settings
 OWN_ENDPOINT = "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"
 
 
-def set_cookie_header(response) -> str:
+def get_lowered_cookie_content_from_response_header(response) -> str:
     return response.headers["set-cookie"].lower()
 
 
 def test_put_session_sets_httponly_cookie(client):
     response = client.put("/session", headers={"authorization": "Bearer valid"})
     assert response.status_code == 204
-    cookie = set_cookie_header(response)
+    cookie = get_lowered_cookie_content_from_response_header(response)
     assert cookie.startswith(f"{settings.SESSION_COOKIE_NAME}=valid")
     assert "httponly" in cookie
     assert "samesite=lax" in cookie
@@ -28,7 +28,7 @@ def test_put_session_is_secure_for_https(client, monkeypatch):
         headers={"authorization": "Bearer valid", "origin": "https://example.org"},
     )
     assert response.status_code == 204
-    assert "secure" in set_cookie_header(response)
+    assert "secure" in get_lowered_cookie_content_from_response_header(response)
 
 
 def test_put_session_requires_token(client):
@@ -72,7 +72,7 @@ def test_session_rejects_foreign_origin(client, method):
 def test_delete_session_clears_cookie(client):
     response = client.delete("/session")
     assert response.status_code == 204
-    cookie = set_cookie_header(response)
+    cookie = get_lowered_cookie_content_from_response_header(response)
     assert cookie.startswith(f'{settings.SESSION_COOKIE_NAME}=""')
     assert "max-age=0" in cookie
 
@@ -117,6 +117,6 @@ def test_header_takes_precedence_over_cookie(
 
 def test_session_cookie_ends_with_browser_session(client):
     response = client.put("/session", headers={"authorization": "Bearer valid"})
-    cookie = set_cookie_header(response)
+    cookie = get_lowered_cookie_content_from_response_header(response)
     assert "max-age" not in cookie
     assert "expires" not in cookie
