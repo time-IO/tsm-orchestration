@@ -58,13 +58,10 @@
                       <q-item-label caption>
                         {{ item.path_for_posts || item.uuid }}
                         <q-tooltip>
-                          {{httpIngestFullUrl}}
+                          {{ httpIngestFullUrl }}
                         </q-tooltip>
                       </q-item-label>
-                      <copy-btn
-                        title="Copy path for posts"
-                        :text-to-copy="httpIngestFullUrl"
-                      />
+                      <copy-btn title="Copy path for posts" :text-to-copy="httpIngestFullUrl" />
                     </div>
                     <q-item-label v-if="!item.path_for_posts" caption class="text-grey-7">
                       No path set — the ingest's UUID is used instead.
@@ -287,9 +284,8 @@ const apiKey = computed({
 });
 
 const httpIngestFullUrl = computed(() => {
-
-  const pathEnd = item.value?.path_for_posts || item.value?.uuid
-  const path = `${import.meta.env.BENTO_HTTP_BASE_URL}${pathEnd}`
+  const pathEnd = item.value?.path_for_posts || item.value?.uuid;
+  const path = `${import.meta.env.BENTO_HTTP_BASE_URL}${pathEnd}`;
 
   if (item.value?.id) {
     return path;

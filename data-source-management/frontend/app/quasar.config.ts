@@ -15,7 +15,8 @@ const ENV_OIDC_POST_LOGOUT_REDIRECT_URI =
 const ENV_BASE_URL = import.meta.env.BASE_URL || 'ENV_BASE_URL_PLACEHOLDER';
 const ENV_SMS_URL = import.meta.env.SMS_URL || 'ENV_SMS_URL_PLACEHOLDER';
 const ENV_APP_VERSION = import.meta.env.APP_VERSION || 'ENV_APP_VERSION_PLACEHOLDER';
-const ENV_BENTO_HTTP_BASE_URL = import.meta.env.BENTO_HTTP_BASE_URL || 'ENV_BENTO_HTTP_BASE_URL_PLACEHOLDER';
+const ENV_BENTO_HTTP_BASE_URL =
+  import.meta.env.BENTO_HTTP_BASE_URL || 'ENV_BENTO_HTTP_BASE_URL_PLACEHOLDER';
 
 export default defineConfig((ctx) => {
   return {
