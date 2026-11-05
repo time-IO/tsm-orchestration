@@ -180,7 +180,9 @@ def test_get_endpoint_name(endpoint, expected):
 
 def test_public_response_has_no_cache_restriction(client):
     response = client.get(f"/{OWN_ENDPOINT}/v1.1")
-    assert "cache-control" not in response.headers # absence of this header allows caching
+    assert (
+        "cache-control" not in response.headers
+    )  # absence of this header allows caching
     assert "authorization" in response.headers["vary"].lower()
 
 
