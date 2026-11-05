@@ -8,7 +8,7 @@ from fastapi import HTTPException
 import services.dsm_api as dsm_api
 import services.frost_proxy as frost_proxy
 import services.permission_groups as permission_groups
-from utils import validate_proxied_path
+from utils import validate_proxied_path_or_raise
 from services.frost_proxy import get_endpoint_name_from_proxied_path
 
 
@@ -210,7 +210,7 @@ def test_internal_response_is_private(client):
 )
 def test_validate_proxied_path_rejects(endpoint, status_code):
     with pytest.raises(HTTPException) as exc:
-        validate_proxied_path(endpoint)
+        validate_proxied_path_or_raise(endpoint)
     assert exc.value.status_code == status_code
 
 
@@ -225,7 +225,7 @@ def test_validate_proxied_path_rejects(endpoint, status_code):
     ],
 )
 def test_validate_proxied_path_accepts(endpoint):
-    validate_proxied_path(endpoint)
+    validate_proxied_path_or_raise(endpoint)
 
 
 def test_permission_groups_are_cached_per_token(client, dsm_requests):

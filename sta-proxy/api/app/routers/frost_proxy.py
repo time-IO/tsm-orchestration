@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, Request, Response
 from dependencies import get_authorization
-from utils import validate_proxied_path
+from utils import validate_proxied_path_or_raise
 from services import (
     frost_proxy_service,
     internal_frost_proxy_service,
@@ -22,7 +22,7 @@ router = APIRouter(
     summary="Forwards GET /public/<endpoint>?<query> directly to the public FROST server",
 )
 async def proxy_to_public_frost(endpoint: str, request: Request) -> Response:
-    validate_proxied_path(endpoint)
+    validate_proxied_path_or_raise(endpoint)
     logger.debug(
         "Public proxy request for endpoint=%s query=%s", endpoint, request.url.query
     )
@@ -46,7 +46,7 @@ async def proxy_to_internal_frost(
     request: Request,
     authorization: str | None = Depends(get_authorization),
 ) -> Response:
-    validate_proxied_path(endpoint)
+    validate_proxied_path_or_raise(endpoint)
     logger.debug(
         "Internal proxy request for endpoint=%s query=%s", endpoint, request.url.query
     )
@@ -67,7 +67,7 @@ async def proxy_to_frost(
     request: Request,
     authorization: str | None = Depends(get_authorization),
 ) -> Response:
-    validate_proxied_path(endpoint)
+    validate_proxied_path_or_raise(endpoint)
 
     logger.debug("Proxy request for endpoint=%s query=%s", endpoint, request.url.query)
     return await frost_proxy_service(

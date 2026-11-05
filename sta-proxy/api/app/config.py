@@ -1,4 +1,7 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+from utils import ensure_trailing_slash
 
 
 class Settings(BaseSettings):
@@ -14,6 +17,11 @@ class Settings(BaseSettings):
     PERMISSION_GROUPS_CACHE_SIZE: int = 1024
     SESSION_COOKIE_NAME: str = "sta_session"
     SESSION_COOKIE_PATH: str = "/sta/"
+
+    @field_validator("STA_PROXY_URL")
+    @classmethod
+    def ensure_sta_proxy_url_trailing_slash(cls, value: str) -> str:
+        return ensure_trailing_slash(value)
 
 
 settings = Settings()  # type: ignore

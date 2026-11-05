@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException
 
 from config import settings
-from utils import remove_trailing_slash
+from utils import normalize_search, remove_trailing_slash
 from models import FrostEndpoint, FrostEndpointsResponse
 from services.frost_proxy import public_frost
 from services.ingests import fetch_ingest_permission_group_id
@@ -109,24 +109,6 @@ def endpoint_from_frost(raw: dict) -> FrostEndpoint:
     endpoint.public_url = explicit_route_url(endpoint.url, endpoint.name, "public")
     endpoint.internal_url = explicit_route_url(endpoint.url, endpoint.name, "internal")
     return endpoint
-
-
-def normalize_search(value: str) -> str:
-    """Normalize a string for search: drop underscores and ignore case.
-
-    Lets users find ``MY_PROJECT`` by typing ``myproject``.
-
-    Args:
-        value (str): The string to normalize.
-
-    Returns:
-        str: ``value`` without ``_``, case-folded.
-
-    Examples:
-        >>> normalize_search("My_Project")
-        'myproject'
-    """
-    return value.replace("_", "").casefold()
 
 
 def matches_query(endpoint: FrostEndpoint, q: str) -> bool:

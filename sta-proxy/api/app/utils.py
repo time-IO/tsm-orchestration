@@ -1,11 +1,9 @@
 from fastapi import HTTPException
 
-from config import settings
-
 AMBIGUOUS_PATH_CHARS = (";", "%", "\\")
 
 
-def validate_proxied_path(endpoint: str) -> None:
+def validate_proxied_path_or_raise(endpoint: str) -> None:
     """Reject proxied paths that could be interpreted differently downstream.
 
     The access check and the request forwarded to FROST must agree on which
@@ -26,12 +24,12 @@ def validate_proxied_path(endpoint: str) -> None:
             is only exposed via the dedicated endpoints route.
 
     Examples:
-        >>> validate_proxied_path("my_project/v1.1/Things")
-        >>> validate_proxied_path("my_project/../other/v1.1")
+        >>> validate_proxied_path_or_raise("my_project/v1.1/Things")
+        >>> validate_proxied_path_or_raise("my_project/../other/v1.1")
         Traceback (most recent call last):
         ...
         fastapi.exceptions.HTTPException: 400: Invalid path
-        >>> validate_proxied_path("//my_project/other/v1.1")
+        >>> validate_proxied_path_or_raise("//my_project/other/v1.1")
         Traceback (most recent call last):
         ...
         fastapi.exceptions.HTTPException: 400: Invalid path
@@ -42,6 +40,9 @@ def validate_proxied_path(endpoint: str) -> None:
         c in endpoint for c in AMBIGUOUS_PATH_CHARS
     ):
         raise HTTPException(status_code=400, detail="Invalid path")
+
+    # imported here, as config imports this module
+    from config import settings
 
     # hide FROST endpoint listing
     if endpoint.strip("/") == settings.FROST_ENDPOINTS_PATH.strip("/"):
@@ -132,3 +133,21 @@ def ensure_leading_slash(value: str) -> str:
     if value.startswith("/"):
         return value
     return "/" + value
+
+
+def normalize_search(value: str) -> str:
+    """Normalize a string for search.
+
+    Drops underscores and ignore case.
+
+    Args:
+        value (str): The string to normalize.
+
+    Returns:
+        str: ``value`` without ``_``, case-folded.
+
+    Examples:
+        >>> normalize_search("My_Project")
+        'myproject'
+    """
+    return value.replace("_", "").casefold()
