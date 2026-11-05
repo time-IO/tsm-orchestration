@@ -114,6 +114,27 @@
           :ingest_id="ingestId"
         />
       </div>
+      <div v-if="triggerType" :class="toolClass('schedule')">
+        <q-card
+          flat
+          bordered
+          class="full-height cursor-pointer column"
+          @click="scheduleOpen = true"
+        >
+          <q-card-section class="col row items-center no-wrap q-pa-md">
+            <q-avatar rounded size="2.5rem" color="orange-8" text-color="white" icon="schedule" />
+            <div class="q-ml-md">
+              <div class="text-subtitle2 text-weight-medium">Sync Schedule</div>
+              <div class="text-caption text-grey-7">
+                See when this ingest is synchronised automatically, its upcoming runs and any
+                additional scheduled jobs.
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <ingest-schedule-dialog v-model="scheduleOpen" :ingest-id="ingestId" />
+      </div>
     </q-card-section>
   </q-card>
 </template>
@@ -127,6 +148,7 @@ import MqttClientDialog from '@/components/MqttClientDialog.vue';
 import JournalDialog from '@/components/JournalDialog.vue';
 import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
 import TriggerExternalSftpDialog from '@/components/TriggerExternalSftpDialog.vue';
+import IngestScheduleDialog from '@/components/IngestScheduleDialog.vue';
 
 type TriggerType = 'external-api' | 'external-sftp';
 
@@ -143,6 +165,7 @@ const explorerOpen = ref(false);
 const mqttOpen = ref(false);
 const journalOpen = ref(false);
 const triggerOpen = ref(false);
+const scheduleOpen = ref(false);
 const grafanaLogo = publicAsset('icons/grafana_icon.png');
 
 const visualizationUrl = computed(() =>
@@ -166,7 +189,7 @@ const visibleTools = computed(() => {
   if (service) tools.push('explorer');
   if (mqttTopic) tools.push('mqtt');
   tools.push('journal');
-  if (triggerType) tools.push('trigger');
+  if (triggerType) tools.push('trigger', 'schedule');
   return tools;
 });
 

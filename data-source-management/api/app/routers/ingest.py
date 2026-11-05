@@ -8,8 +8,10 @@ from dependencies import (
 )
 from models import User
 from models.filters import IngestFilter
+from models import IngestScheduleInfoRead
 from models.ingest import IngestWithApiInfoRead
 from repositories.ingest import IngestRepository
+from services.ingest_schedule import build_schedule_info
 from services.db_api import get_ingest_configurations, get_ingest_journal
 import logging
 
@@ -98,6 +100,21 @@ async def read_ingest_journal(
         level=level,
         limit=limit,
     )
+
+
+@router.get(
+    "/{ingest_id}/schedule",
+    response_model=IngestScheduleInfoRead,
+    tags=["ingest/schedule"],
+    summary="Get the sync schedule and manual cron jobs of one ingest",
+)
+def read_ingest_schedule(
+    ingest_id: int,
+    repo: IngestRepository = Depends(get_repo_ingest),
+    current_user: User = Depends(get_current_user),
+):
+    ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
+    return build_schedule_info(*repo.find_schedule(ingest))
 
 
 @router.get("/{ingest_id}/database", tags=["ingest/database"])
