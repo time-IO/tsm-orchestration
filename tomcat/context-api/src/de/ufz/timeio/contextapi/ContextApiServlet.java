@@ -4,40 +4,72 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Element;
 
-/** Writes Tomcat context descriptors of FROST instances: PUT /contexts/{schema}. */
+/** Writes Tomcat context descriptors of FROST instances: PUT /contexts/{schema} with user, password, url. */
 public class ContextApiServlet extends HttpServlet {
 
-    private static final int MAX_BODY = 64 * 1024;
     // No dots, slashes or '#' (Tomcat maps '#' in descriptor names to '/').
     private static final Pattern SCHEMA = Pattern.compile("[A-Za-z0-9_-]+");
+    private static final Pattern USER_PATTERN = Pattern.compile("[A-Za-z0-9_]+");
+    // No query string: pgjdbc options like socketFactory instantiate arbitrary classes.
+    private static final Pattern URL_PATTERN = Pattern.compile("postgresql://[A-Za-z0-9.-]+(:[0-9]+)?/[A-Za-z0-9_-]+");
+
+    private static final String TEMPLATE = """
+            <Context docBase="/share/FROST-Server.war">
+                <Parameter override="false" name="ApiVersion" value="v1.0" description="The version tag of the API used in the URL."/>
+                <Parameter override="false" name="serviceRootUrl" value="%s" description="The base URL of the SensorThings Server without version."/>
+                <Parameter override="false" name="defaultCount" value="false" description="The default value for the $count query option."/>
+                <Parameter override="false" name="defaultTop" value="100" description="The default value for the $top query option."/>
+                <Parameter override="false" name="maxTop" value="100000" description="The maximum allowed value for the $top query option."/>
+                <Parameter override="false" name="maxDataSize" value="25000000" description="The maximum allowed estimated data size (in bytes) for responses."/>
+                <Parameter override="false" name="bus.busImplementationClass" value="de.fraunhofer.iosb.ilt.frostserver.messagebus.InternalMessageBus" description="The java class used for connecting to the message bus."/>
+                <Parameter override="false" name="persistence.persistenceManagerImplementationClass" value="de.fraunhofer.iosb.ilt.frostserver.persistence.pgjooq.imp.PostgresPersistenceManagerLong" description="The java class used for persistence (must implement PersistenceManaher interface)"/>
+                <Parameter override="false" name="persistence.idGenerationMode" value="ServerGeneratedOnly" description="Mode for id generation when using PostgresPersistenceManagerString."/>
+                <Parameter override="false" name="persistence.autoUpdateDatabase" value="false" description="Automatically apply database updates."/>
+                <Parameter override="false" name="persistence.alwaysOrderbyId" value="false" description="Always add an 'orderby=id asc' to queries to ensure consistent paging."/>
+                <Parameter override="false" name="persistence.db_jndi_datasource" value="jdbc/sensorThings" description="JNDI data source name"/>
+                <Parameter override="false" name="persistence.queryTimeout" value="120" description="The maximum duration, in seconds, that a query is allowed to take."/>
+                <Parameter override="false" name="plugins.openApi.enable" value="true" description="Toggle indicating whether the OpenAPI plugin should be enabled."/>
+                <Resource
+                    name="jdbc/sensorThings" auth="Container"
+                    type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
+                    url="jdbc:%s"
+                    username="%s" password="%s"
+                    maxTotal="20" minIdle="10" maxIdle="10" maxWaitMillis="-1"
+                    testWhileIdle="true" validationQuery="SELECT 1"
+                    timeBetweenEvictionRunsMillis="30000"
+                    minEvictableIdleTimeMillis="60000"
+                    defaultAutoCommit="false"
+                />
+            </Context>
+            """;
 
     private byte[] token;
+    private String serviceRootUrl;
     private Path contextDir;
 
     @Override
     public void init() {
         String t = System.getenv("FROST_CONTEXT_API_TOKEN");
         token = (t == null || t.isEmpty()) ? null : t.getBytes(StandardCharsets.UTF_8);
+        serviceRootUrl = System.getenv("FROST_SERVICE_ROOT_URL");
         contextDir = Path.of(System.getProperty("catalina.base"), "conf", "Catalina", "localhost")
                 .toAbsolutePath().normalize();
     }
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (token == null) {
-            reply(resp, 503, "{\"error\":\"FROST_CONTEXT_API_TOKEN is not configured\"}");
+        if (token == null || serviceRootUrl == null || serviceRootUrl.isEmpty()) {
+            reply(resp, 503, "{\"error\":\"FROST_CONTEXT_API_TOKEN or FROST_SERVICE_ROOT_URL is not configured\"}");
         } else if (!authorized(req)) {
             resp.setHeader("WWW-Authenticate", "Bearer");
             reply(resp, 401, "{\"error\":\"unauthorized\"}");
@@ -49,21 +81,21 @@ public class ContextApiServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String schema = schemaOf(req);
+        String user = req.getParameter("user");
+        String password = req.getParameter("password");
+        String url = req.getParameter("url");
         if (schema == null) {
             reply(resp, 400, "{\"error\":\"invalid schema name\"}");
             return;
         }
-        byte[] body = req.getInputStream().readNBytes(MAX_BODY + 1);
-        if (body.length > MAX_BODY) {
-            reply(resp, 413, "{\"error\":\"body too large\"}");
+        if (user == null || !USER_PATTERN.matcher(user).matches()
+                || url == null || !URL_PATTERN.matcher(url).matches()
+                || password == null || password.isEmpty()) {
+            reply(resp, 400, "{\"error\":\"user, password and url are required and must be valid\"}");
             return;
         }
-        // Keeps a working context from being replaced by garbage.
-        if (!isContextXml(body)) {
-            reply(resp, 400, "{\"error\":\"body must be a <Context> XML document\"}");
-            return;
-        }
-        boolean changed = write(contextDir.resolve(schema + ".xml"), body);
+        String xml = TEMPLATE.formatted(escape(serviceRootUrl + schema), url, user, escape(password));
+        boolean changed = write(contextDir.resolve(schema + ".xml"), xml.getBytes(StandardCharsets.UTF_8));
         reply(resp, 200, "{\"changed\":" + changed + "}");
     }
 
@@ -82,7 +114,8 @@ public class ContextApiServlet extends HttpServlet {
             return null;
         }
         String schema = info.substring(1);
-        return SCHEMA.matcher(schema).matches() ? schema : null;
+        // ROOT.xml would replace the root webapp.
+        return SCHEMA.matcher(schema).matches() && !schema.equals("ROOT") ? schema : null;
     }
 
     /** Returns false if the content is unchanged. */
@@ -91,20 +124,21 @@ public class ContextApiServlet extends HttpServlet {
         if (Files.exists(target) && Arrays.equals(Files.readAllBytes(target), content)) {
             return false;
         }
-        Files.write(target, content);
-        Files.setPosixFilePermissions(target, PosixFilePermissions.fromString("rw-------"));
+        // Non-.xml temp name + rename, so Tomcat never deploys a half-written descriptor.
+        Path tmp = Files.createTempFile(target.getParent(), ".", ".tmp",
+                PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        try {
+            Files.write(tmp, content);
+            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
         return true;
     }
 
-    private static boolean isContextXml(byte[] xml) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            Element root = factory.newDocumentBuilder().parse(new ByteArrayInputStream(xml)).getDocumentElement();
-            return root.getTagName().equals("Context");
-        } catch (Exception e) {
-            return false;
-        }
+    private static String escape(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&apos;");
     }
 
     private static void reply(HttpServletResponse resp, int status, String json) throws IOException {

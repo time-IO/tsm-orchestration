@@ -365,6 +365,7 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     environment:
       FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost"
     logging:
@@ -395,6 +396,7 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     environment:
       FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
       - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost"
     logging:
@@ -659,7 +661,6 @@ services:
       DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
-      TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
       # internal only, always these fixed URLs - not deployment-specific
       FROST_CONTEXT_API_URL: http://frost:8081
       FROST_INTERNAL_CONTEXT_API_URL: http://frost-internal:8081

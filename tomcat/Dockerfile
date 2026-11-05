@@ -1,7 +1,9 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
+ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk25-temurin
+
 # Build stage: same base, so the JDK and servlet-api.jar match the runtime.
-FROM tomcat:11.0.27-jdk25-temurin AS context-api
+FROM ${TOMCAT_IMAGE} AS context-api
 COPY context-api /build
 RUN mkdir -p /build/out/WEB-INF/classes \
     && javac -d /build/out/WEB-INF/classes -cp $CATALINA_HOME/lib/servlet-api.jar \
@@ -14,7 +16,7 @@ RUN grep -qx '</Server>' conf/server.xml \
     && cat /build/server-service.xml >> conf/server.xml \
     && echo '</Server>' >> conf/server.xml
 
-FROM tomcat:11.0.27-jdk25-temurin
+FROM ${TOMCAT_IMAGE}
 
 ARG BUILD_DATE=""
 ARG VCS_REF=""

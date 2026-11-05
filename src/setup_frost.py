@@ -21,7 +21,6 @@ class CreateFrostInstanceHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
-        self.tomcat_proxy_url = get_envvar("TOMCAT_PROXY_URL")
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
         self.api_url = get_envvar("FROST_CONTEXT_API_URL")
         self.internal_api_url = get_envvar("FROST_INTERNAL_CONTEXT_API_URL")
@@ -38,14 +37,14 @@ class CreateFrostInstanceHandler(AbstractHandler):
         failed = []
         for name, api_url, prefix in targets:
             try:
-                xml = frost.render_context(
+                frost.push_context(
+                    api_url,
+                    self.api_token,
                     schema=db.schema,
                     user=f"{prefix}{db.ro_username.lower()}",
                     password=db.ro_password,
                     db_url=db.ro_url,
-                    tomcat_proxy_url=self.tomcat_proxy_url,
                 )
-                frost.push_context(api_url, self.api_token, db.schema, xml)
             except Exception as e:
                 failed.append(f"{name}: {e}")
         if failed:
