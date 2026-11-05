@@ -92,7 +92,7 @@ def reparse_files(
     parser_cache: dict[str, bool] = {}
     summary = ReparseSummary()
 
-    for obj in minio.list_objects(bucket):
+    for obj in minio.list_objects(bucket, recursive=True):
         fname = obj.object_name
         if not fnmatch(fname, store.filename_pattern):
             continue
