@@ -90,7 +90,7 @@ Prerequisites:
 Run all requests from the repository root:
 
 ```bash
-cd sta-proxy/api/app/tests/bruno && docker run --rm --network host -v $(pwd):/bruno usebruno/cli run --env local
+docker run --rm --network host -v "$(pwd)/sta-proxy/api/app/tests/bruno":/bruno usebruno/cli run --env local
 ```
 
 Or open the folder in Bruno with *Open Collection* (select the folder `/sta-proxy/api/app/ests/bruno`) and select the environment `local`.
