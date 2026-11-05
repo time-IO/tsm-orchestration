@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from crontab import CronItem
 
 from setup_crontab import CreateThingInCrontabHandler
+from timeio import cron
 
 
 class ProjectMock:
@@ -58,7 +59,7 @@ def test_create_job(thing, expected):
     assert info == expected or info.startswith(expected)
 
 
-@pytest.mark.parametrize("uuid", ["000-001-99"])
+@pytest.mark.parametrize("uuid", ["00000000-0000-0000-0000-000000000199"])
 @pytest.mark.parametrize(
     "typ, kwargs",
     [
@@ -119,7 +120,7 @@ def test_update_prepends_sleep_offset_to_command(old_schedule):
     """An existing job whose command has no sleep offset (created before the
     jitter change) must gain the sleep offset when it is updated."""
     random.seed(42)
-    uuid_ = "0001"
+    uuid_ = "00000000-0000-0000-0000-000000000001"
     # existing crontab entry: old command WITHOUT sleep offset
     job = CronItem(
         command=f"python3 /scripts/mqtt_sync_wrapper.py sync-thing {uuid_} > $STDOUT 2> $STDERR",
@@ -195,9 +196,7 @@ def test_job_belongs_to_thing(job, thing, expected):
     ],
 )
 def test_get_current_interval(schedule, expected):
-    job = CronItem()
-    job.setall(schedule)
-    interval = CreateThingInCrontabHandler.get_current_interval(job)
+    interval = cron.get_current_interval(schedule)
     assert interval == expected
 
 
@@ -214,9 +213,7 @@ def test_get_current_interval(schedule, expected):
     ],
 )
 def test_extract_base_minute(schedule, expected_base_minute):
-    job = CronItem()
-    job.setall(schedule)
-    base_minute = CreateThingInCrontabHandler.extract_base_minute(job.slices)
+    base_minute = cron.extract_base_minute(schedule)
     assert base_minute == expected_base_minute
 
 
@@ -233,9 +230,7 @@ def test_extract_base_minute(schedule, expected_base_minute):
     ],
 )
 def test_extract_base_hour(schedule, expected_base_hour):
-    job = CronItem()
-    job.setall(schedule)
-    base_hour = CreateThingInCrontabHandler.extract_base_hour(job.slices)
+    base_hour = cron.extract_base_hour(schedule)
     assert base_hour == expected_base_hour
 
 
@@ -286,8 +281,8 @@ def test_new_schedule(interval, expected):
     # make random deterministic to ensure we always have the same test results
     random.seed(42)
 
-    schedule = CreateThingInCrontabHandler.new_schedule(interval)
-    schedule2 = CreateThingInCrontabHandler.new_schedule(interval)
+    schedule = cron.new_schedule(interval)
+    schedule2 = cron.new_schedule(interval)
     assert schedule == expected
     if interval in [0, 1]:
         return
@@ -336,7 +331,5 @@ def test_update_cron_expression(schedule, new_interval, expected):
     # make random deterministic to ensure we always have the same test results
     random.seed(42)
 
-    job = CronItem()
-    job.setall(schedule)
-    new_schedule = CreateThingInCrontabHandler.update_cron_expression(job, new_interval)
+    new_schedule = cron.update_cron_expression(schedule, new_interval)
     assert new_schedule == expected
