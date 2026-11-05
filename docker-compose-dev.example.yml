@@ -30,6 +30,10 @@ services:
     volumes:
       - ./src:/home/appuser/app/src
 
+  worker-file-ingest-triggered:
+    volumes:
+      - ./src:/home/appuser/app/src
+
   worker-run-qaqc:
     volumes:
       - ./src:/home/appuser/app/src
