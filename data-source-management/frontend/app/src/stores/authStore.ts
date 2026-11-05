@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.user && !state.user.expired,
     accessToken: (state) => state.user?.access_token ?? null,
     getUserInfo: (state) => state.user?.profile || null,
+    canReparse: (state) => !!state.userInfo?.is_superuser,
     initials(): string | null {
       if (this.isAuthenticated && this.userInfo) {
         const givenName = this.userInfo.given_name;

@@ -114,6 +114,28 @@
           :ingest_id="ingestId"
         />
       </div>
+
+      <div v-if="showReparse" :class="toolClass('reparse')">
+        <q-card flat bordered class="full-height cursor-pointer column" @click="reparseOpen = true">
+          <q-card-section class="col row items-center no-wrap q-pa-md">
+            <q-avatar rounded size="2.5rem" color="orange" text-color="white" icon="replay" />
+            <div class="q-ml-md">
+              <div class="text-subtitle2 text-weight-medium">Reparse Files</div>
+              <div class="text-caption text-grey-7">
+                Parse files of this ingest's storage bucket again for a chosen time range,
+                optionally with a different parser.
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <trigger-reparse-dialog
+          v-model="reparseOpen"
+          :ingest_id="ingestId"
+          :permission-group-id="permissionGroupId"
+        />
+      </div>
+
     </q-card-section>
   </q-card>
 </template>
@@ -127,16 +149,20 @@ import MqttClientDialog from '@/components/MqttClientDialog.vue';
 import JournalDialog from '@/components/JournalDialog.vue';
 import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
 import TriggerExternalSftpDialog from '@/components/TriggerExternalSftpDialog.vue';
+import TriggerReparseDialog from '@/components/TriggerReparseDialog.vue';
+import { useAuthStore } from '@/stores/authStore';
 
 type TriggerType = 'external-api' | 'external-sftp';
 
-const { uuid, service, mqttTopic, triggerType } = defineProps<{
+const { uuid, service, mqttTopic, triggerType, reparseable, permissionGroupId } = defineProps<{
   uuid?: string | null;
   ingestId: number;
   service?: IngestStorageService | undefined;
   bucketName?: string | undefined;
   mqttTopic?: string | undefined;
   triggerType?: TriggerType;
+  reparseable?: boolean;
+  permissionGroupId?: number | null;
 }>();
 
 const explorerOpen = ref(false);
@@ -144,6 +170,10 @@ const mqttOpen = ref(false);
 const journalOpen = ref(false);
 const triggerOpen = ref(false);
 const grafanaLogo = publicAsset('icons/grafana_icon.png');
+const authStore = useAuthStore();
+const reparseOpen = ref(false);
+const showReparse = computed(() => !!reparseable && authStore.canReparse);
+
 
 const visualizationUrl = computed(() =>
   uuid ? `${window.location.origin}/visualization/d/${encodeURIComponent(uuid)}?orgId=1` : '',
@@ -167,6 +197,7 @@ const visibleTools = computed(() => {
   if (mqttTopic) tools.push('mqtt');
   tools.push('journal');
   if (triggerType) tools.push('trigger');
+  if (showReparse.value) tools.push('reparse');
   return tools;
 });
 

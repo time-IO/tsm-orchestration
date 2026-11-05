@@ -154,6 +154,8 @@
             :ingest-id="item.id"
             :service="API.ingestSftpStorage"
             :bucket-name="item.bucket_name"
+            reparseable
+            :permission-group-id="item.permission_group_id"
           />
         </div>
 

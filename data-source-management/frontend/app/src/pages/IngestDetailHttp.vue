@@ -207,6 +207,8 @@
             :ingest-id="item.id"
             :service="API.ingestHttpStorage"
             :bucket-name="item.bucket_name"
+            reparseable
+            :permission-group-id="item.permission_group_id"
           />
         </div>
 
