@@ -78,12 +78,9 @@
             class="q-mb-md"
             v-model.number="formData.period_in_minutes"
             label="Period (in minutes) *"
+            type="number"
             hint="Determines the time window fetched per sync (up to 2,000 readings per request, Zentra's limit). Should roughly match your sync interval to avoid gaps or overlaps."
-            :rules="[
-              (val) => !!val || 'Period is required',
-              (val) =>
-                (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-            ]"
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(1)]"
           >
             <template #append>
               <help-button termHelp="period" />
@@ -125,12 +122,12 @@
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
                 type="number"
-                :rules="[
-                  (val) => !!val || 'Sync intervall is required',
-                  (val) =>
-                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-                ]"
-              />
+                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -164,6 +161,7 @@ import type {
 import type { PermissionGroup } from '@/services/permission_group/types';
 import HelpButton from '@/components/HelpButton.vue';
 import { ref } from 'vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
