@@ -211,6 +211,8 @@
             :service="API.ingestExternalSftpStorage"
             :bucket-name="item.bucket_username"
             trigger-type="external-sftp"
+            reparseable
+            :permission-group-id="item.permission_group_id"
           />
         </div>
 
