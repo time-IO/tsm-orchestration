@@ -85,7 +85,7 @@ Prerequisites:
 
 - the orchestration setup is running with the development Keycloak realm
   - (use `./provision-keycloak-with-dev-users.sh` if not)
-- load the test data by running `./tsm-workflow.sh dsm` in your `tsm-dev-tools` root directory
+- load the test data by running `./tsm-workflow.sh populate sms upload` in your `tsm-dev-tools` root directory
 
 Run all requests from the repository root:
 
