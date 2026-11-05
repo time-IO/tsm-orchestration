@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException, Response
 
 from config import settings
-from services.dsm_api import fetch_dsm_api_or_raise
+from services.dsm_api import fetch_dsm_api_or_raise, require_authorization
 
 logger = logging.getLogger("app.services.session")
 
@@ -104,6 +104,7 @@ async def set_session_service(
             the DSM API fails.
     """
     check_origin(origin)
+    authorization = require_authorization(authorization)
     token = get_bearer_token(authorization)
     if token is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
