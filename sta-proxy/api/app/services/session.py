@@ -71,8 +71,11 @@ def is_cookie_secure() -> bool:
     return httpx.URL(settings.BASE_URL).scheme == "https"
 
 
-async def validate_token(authorization: str) -> None:
+async def verify_token_and_update_group_memberships_in_dsm(authorization: str) -> None:
     """Ensure the DSM API accepts the credentials by requesting ``/me/``.
+
+    Note: Calling this route also updates group memberships in the DSM database ensuring
+    the user's access to endpoints is correct.
 
     Args:
         authorization (str): The caller's ``Authorization`` value.
@@ -81,7 +84,7 @@ async def validate_token(authorization: str) -> None:
         HTTPException: 401 if the credentials are rejected, 502 or 504 if
             the DSM API fails.
     """
-    await fetch_dsm_api_or_raise("/me/", authorization, "validating token")
+    await fetch_dsm_api_or_raise("/me/", authorization, "verifying token")
 
 
 async def set_session_service(
@@ -108,7 +111,7 @@ async def set_session_service(
     token = get_bearer_token(authorization)
     if token is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    await validate_token(authorization)
+    await verify_token_and_update_group_memberships_in_dsm(authorization)
 
     if len(token) > MAX_COOKIE_VALUE_SIZE:
         logger.warning(

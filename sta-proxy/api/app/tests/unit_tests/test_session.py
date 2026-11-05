@@ -43,9 +43,9 @@ def test_put_session_rejects_invalid_token(client):
     assert "set-cookie" not in response.headers
 
 
-def test_put_session_dsm_returns_invalid_json(client, monkeypatch):
+def test_put_session_dsm_returns_invalid_response(client, monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, text="<html>maintenance</html>")
+        return httpx.Response(200, text="<html>this is not JSON</html>")
 
     monkeypatch.setattr(
         dsm_api,

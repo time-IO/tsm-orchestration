@@ -147,7 +147,7 @@ class FrostServer:
             if k.lower() not in EXCLUDED_RESPONSE_HEADERS
         }
 
-    def get_filtered_headers_response(
+    def get_response_with_filtered_headers(
         self, upstream: httpx.Response, content: bytes
     ) -> Response:
         """Build the client response from a FROST response and a body.
@@ -197,7 +197,7 @@ class FrostServer:
         content = upstream.content
         if link_rewrite and is_json_response(upstream):
             content = await rewrite_links(content, *link_rewrite)
-        return self.get_filtered_headers_response(upstream, content)
+        return self.get_response_with_filtered_headers(upstream, content)
 
 
 class InternalFrostServer(FrostServer):
