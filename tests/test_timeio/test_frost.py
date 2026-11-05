@@ -58,7 +58,6 @@ def test_internal_context_differs_from_public_only_by_user():
 
 def test_push_context_request():
     with mock.patch("timeio.frost.requests.put") as put:
-        put.return_value.ok = True
         frost.push_context("http://frost:8081/", TOKEN, SCHEMA, b"<Context/>")
 
     put.assert_called_once()
@@ -69,25 +68,11 @@ def test_push_context_request():
     assert kwargs["timeout"]
 
 
-def test_push_context_http_error_does_not_leak_body():
+def test_push_context_raises_on_http_error():
     with mock.patch("timeio.frost.requests.put") as put:
-        put.return_value.ok = False
-        put.return_value.status_code = 401
-        put.return_value.text = PASSWORD
-        with pytest.raises(RuntimeError, match="HTTP 401") as exc:
-            frost.push_context("http://frost:8081", TOKEN, SCHEMA, PASSWORD.encode())
-    assert PASSWORD not in str(exc.value)
-    assert TOKEN not in str(exc.value)
-
-
-def test_push_context_connection_error_does_not_leak_details():
-    err = requests.ConnectionError(f"boom {TOKEN} {PASSWORD}")
-    with mock.patch("timeio.frost.requests.put", side_effect=err):
-        with pytest.raises(RuntimeError, match="ConnectionError") as exc:
+        put.return_value.raise_for_status.side_effect = requests.HTTPError("401")
+        with pytest.raises(requests.HTTPError):
             frost.push_context("http://frost:8081", TOKEN, SCHEMA, b"<Context/>")
-    assert TOKEN not in str(exc.value)
-    assert PASSWORD not in str(exc.value)
-    assert exc.value.__cause__ is None
 
 
 class TestSetupFrostHandler:
@@ -128,7 +113,6 @@ class TestSetupFrostHandler:
 
     def test_pushes_both_variants(self, handler):
         with mock.patch("timeio.frost.requests.put") as put:
-            put.return_value.ok = True
             self.act(handler)
 
         urls = [c.args[0] for c in put.call_args_list]
@@ -150,7 +134,7 @@ class TestSetupFrostHandler:
             calls.append(url)
             if len(calls) - 1 == failing:
                 raise requests.ConnectionError("down")
-            return mock.Mock(ok=True)
+            return mock.Mock()
 
         with mock.patch("timeio.frost.requests.put", side_effect=put):
             with pytest.raises(RuntimeError, match="FROST context push failed"):

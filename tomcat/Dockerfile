@@ -4,10 +4,15 @@
 FROM tomcat:11.0.27-jdk25-temurin AS context-api
 COPY context-api /build
 RUN mkdir -p /build/out/WEB-INF/classes \
-    && javac --release 25 -d /build/out/WEB-INF/classes -cp $CATALINA_HOME/lib/servlet-api.jar \
+    && javac -d /build/out/WEB-INF/classes -cp $CATALINA_HOME/lib/servlet-api.jar \
         $(find /build/src -name '*.java') \
     && cp /build/WEB-INF/web.xml /build/out/WEB-INF/ \
     && jar cf /context-api.war -C /build/out .
+# Insert the API service into the base image's own server.xml; fails if its layout changes.
+RUN grep -qx '</Server>' conf/server.xml \
+    && sed -i '\#^</Server>$#d' conf/server.xml \
+    && cat /build/server-service.xml >> conf/server.xml \
+    && echo '</Server>' >> conf/server.xml
 
 FROM tomcat:11.0.27-jdk25-temurin
 
@@ -38,15 +43,8 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
-COPY context-api/server-service.xml /tmp/server-service.xml
-COPY --from=context-api --chown=${UID}:${GID} /context-api.war /usr/local/tomcat/api-webapps/ROOT.war
-
-# Insert the API service into the base image's own server.xml; fails if its layout changes.
-RUN grep -qx '</Server>' conf/server.xml \
-    && sed -i '\#^</Server>$#d' conf/server.xml \
-    && cat /tmp/server-service.xml >> conf/server.xml \
-    && echo '</Server>' >> conf/server.xml \
-    && rm /tmp/server-service.xml
+COPY --from=context-api /usr/local/tomcat/conf/server.xml /usr/local/tomcat/conf/server.xml
+COPY --from=context-api /context-api.war /usr/local/tomcat/api-webapps/ROOT.war
 
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info

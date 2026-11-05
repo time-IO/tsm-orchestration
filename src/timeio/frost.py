@@ -60,26 +60,16 @@ def render_context(schema, user, password, db_url, tomcat_proxy_url) -> bytes:
     return ET.tostring(ET.XML(content))
 
 
-def push_context(api_url: str, token: str, schema: str, xml: bytes, timeout=30) -> None:
+def push_context(api_url: str, token: str, schema: str, xml: bytes) -> None:
     """PUT the context XML to the context API of a FROST instance."""
     url = f"{api_url.rstrip('/')}/contexts/{schema}"
     logger.debug(f"push tomcat context {schema!r} to {url!r}")
-    try:
-        response = requests.put(
-            url,
-            data=xml,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/xml",
-            },
-            timeout=timeout,
-        )
-    except requests.RequestException as e:
-        # Not chained: the exception text may contain request details.
-        raise RuntimeError(
-            f"pushing context {schema!r} to {url!r} failed: {type(e).__name__}"
-        ) from None
-    if not response.ok:
-        raise RuntimeError(
-            f"pushing context {schema!r} to {url!r} failed: HTTP {response.status_code}"
-        )
+    requests.put(
+        url,
+        data=xml,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/xml",
+        },
+        timeout=30,
+    ).raise_for_status()

@@ -47,10 +47,9 @@ class CreateFrostInstanceHandler(AbstractHandler):
                 )
                 frost.push_context(api_url, self.api_token, db.schema, xml)
             except Exception as e:
-                logger.error(f"FROST {name} context push failed: {e}")
-                failed.append(name)
+                failed.append(f"{name}: {e}")
         if failed:
-            raise RuntimeError(f"FROST context push failed for: {', '.join(failed)}")
+            raise RuntimeError(f"FROST context push failed for {'; '.join(failed)}")
 
 
 if __name__ == "__main__":
