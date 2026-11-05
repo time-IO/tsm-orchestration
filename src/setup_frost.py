@@ -46,6 +46,7 @@ class CreateFrostInstanceHandler(AbstractHandler):
                     db_url=db.ro_url,
                 )
             except Exception as e:
+                logger.exception(f"FROST context push failed for {name}")
                 failed.append(f"{name}: {e}")
         if failed:
             raise RuntimeError(f"FROST context push failed for {'; '.join(failed)}")

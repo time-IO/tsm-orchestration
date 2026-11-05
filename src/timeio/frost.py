@@ -11,7 +11,9 @@ from timeio.crypto import decrypt, get_crypt_key
 logger = logging.getLogger(__name__)
 
 
-def push_context(api_url: str, token: str, schema: str, user, password, db_url) -> None:
+def push_context(
+    api_url: str, token: str, schema: str, user: str, password: str, db_url: str
+) -> None:
     """PUT a context's DB connection to a FROST context API; `password` is encrypted."""
     parts = urlparse(db_url)
     hostname = parts.hostname
@@ -19,7 +21,7 @@ def push_context(api_url: str, token: str, schema: str, user, password, db_url) 
         hostname += f":{parts.port}"
     url = f"{api_url.rstrip('/')}/contexts/{schema}"
     logger.debug(f"push tomcat context {schema!r} to {url!r}")
-    requests.put(
+    resp = requests.put(
         url,
         data={
             "user": user,
@@ -28,4 +30,10 @@ def push_context(api_url: str, token: str, schema: str, user, password, db_url) 
         },
         headers={"Authorization": f"Bearer {token}"},
         timeout=30,
-    ).raise_for_status()
+    )
+    if not resp.ok:
+        # the API's error body names the rejected field
+        raise requests.HTTPError(
+            f"{resp.status_code} {resp.reason} for {url}: {resp.text[:200]}",
+            response=resp,
+        )

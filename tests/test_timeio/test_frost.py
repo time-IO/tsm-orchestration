@@ -49,8 +49,11 @@ def test_push_context_request():
 
 def test_push_context_raises_on_http_error():
     with mock.patch("timeio.frost.requests.put") as put:
-        put.return_value.raise_for_status.side_effect = requests.HTTPError("401")
-        with pytest.raises(requests.HTTPError):
+        put.return_value.ok = False
+        put.return_value.status_code = 400
+        put.return_value.reason = "Bad Request"
+        put.return_value.text = '{"error":"invalid schema name"}'
+        with pytest.raises(requests.HTTPError, match="400 .*invalid schema name"):
             push()
 
 
