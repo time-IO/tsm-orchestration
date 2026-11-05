@@ -9,6 +9,7 @@ import ingestExternalApiZentraController from '@/services/ingest_external_api_ze
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
 import ingestDatabaseController from '@/services/ingest_database';
+import ingestScheduleController from '@/services/ingest_schedule';
 import ingestSftpController from '@/services/ingest_sftp';
 import ingestHttpController from '@/services/ingest_http';
 import ingestHttpStorageController from '@/services/ingest_http_storage';
@@ -79,4 +80,5 @@ export const API = {
   ingestExternalMqtt: ingestExternalMqttController,
   smsConfigurations: smsConfigurationsController,
   ingestDatabase: ingestDatabaseController,
+  ingestSchedule: ingestScheduleController,
 };

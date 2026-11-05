@@ -1,9 +1,9 @@
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session
 from typing import Optional
-from models import Ingest
+from models import Ingest, IngestSchedule, ScheduledJob
 from models.filters import IngestFilter
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from fastapi_filters.ext.sqlalchemy import apply_filters
 from fastapi import HTTPException
 from sqlalchemy import cast, String
@@ -40,6 +40,27 @@ class IngestRepository:
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
         return entity
+
+    def find_schedule(
+        self, ingest: Ingest
+    ) -> tuple[IngestSchedule | None, list[ScheduledJob]]:
+        """The sync schedule and the manual jobs targeting this ingest or its project."""
+        schedule = self.session.get(IngestSchedule, ingest.id)
+        jobs = (
+            self.session.exec(
+                select(ScheduledJob)
+                .where(
+                    or_(
+                        ScheduledJob.ingest_id == ingest.id,
+                        ScheduledJob.permission_group_id == ingest.permission_group_id,
+                    )
+                )
+                .order_by(ScheduledJob.id)
+            )
+            .scalars()
+            .all()
+        )
+        return schedule, list(jobs)
 
     def find_all(
         self,

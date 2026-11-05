@@ -33,6 +33,8 @@ from .ingest_external_mqtt import IngestExternalMqtt
 from .ingest_http import IngestHttp
 from .ingest_mqtt import IngestMqtt
 from .ingest_sftp import IngestSftp
+from .ingest_schedule import IngestSchedule, IngestScheduleRead
+from .scheduled_job import ScheduledJob, ScheduledJobRead, IngestScheduleInfoRead
 
 from .parser import Parser
 from .parser_detailed import ParserDetailed
