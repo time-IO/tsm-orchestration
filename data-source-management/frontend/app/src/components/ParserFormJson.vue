@@ -218,19 +218,19 @@ type JsonParserFormData = JsonParserUpdate & {
   timestamp_keys: JsonParserCreate['timestamp_keys'];
 };
 
-const props = withDefaults(
-  defineProps<{
-    title: string;
-    isLoading: boolean;
-    backRoute: string;
-    disablePermissionGroup?: boolean;
-    permissionGroupId?: number | null;
-  }>(),
-  {
-    disablePermissionGroup: false,
-    permissionGroupId: null,
-  },
-);
+const {
+  title,
+  isLoading,
+  backRoute,
+  disablePermissionGroup = false,
+  permissionGroupId = null,
+} = defineProps<{
+  title: string;
+  isLoading: boolean;
+  backRoute: string;
+  disablePermissionGroup?: boolean;
+  permissionGroupId?: number | null;
+}>();
 
 defineEmits<{
   save: [];
@@ -275,10 +275,10 @@ watch(
 
 const permissionGroupModel = computed({
   get() {
-    return formData.value.permission_group_id ?? props.permissionGroupId;
+    return formData.value.permission_group_id ?? permissionGroupId;
   },
   set(value: number | null) {
-    if (!props.disablePermissionGroup) {
+    if (!disablePermissionGroup) {
       formData.value.permission_group_id = value;
     }
   },

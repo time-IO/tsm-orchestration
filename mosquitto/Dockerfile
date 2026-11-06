@@ -14,6 +14,11 @@ COPY mosquitto.conf /etc/mosquitto/config/mosquitto.conf
 COPY mosquitto.tls.conf /etc/mosquitto/config/tls/mosquitto.tls.conf
 COPY --chmod=755 docker-entrypoint.sh /docker-entrypoint.sh
 
+# Base image is rarely rebuilt, so pull in Debian security fixes ourselves.
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && rm -rf /var/lib/apt/lists/*
+
 # Writable for any non-root UID, also without tmpfs/volume.
 RUN chmod 1777 /var/lib/mosquitto \
     && mkdir -p /tmp/mosquitto \
