@@ -15,7 +15,12 @@
 
     <p class="text-caption q-mt-md q-mb-none">
       Whether data is public or internal follows the visibility settings of the related entities in
-      the Sensor Management System (SMS), such as configurations and their devices.
+      the Sensor Management System (SMS), such as configurations and their devices. You can read
+      more about managing access control on our
+      <external-link-text
+        href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/SensorThings-API-(STA)"
+        >Wiki page</external-link-text
+      >.
     </p>
   </help-dialog>
 </template>
@@ -24,6 +29,7 @@
 import HelpDialog from '@/components/common/HelpDialog.vue';
 import VisibilityBadge from '@/components/common/VisibilityBadge.vue';
 import type { VisibilityName } from '@/utils/visibility';
+import ExternalLinkText from '@/components/common/ExternalLinkText.vue';
 
 const ROWS: { visibility: VisibilityName; description: string }[] = [
   {
