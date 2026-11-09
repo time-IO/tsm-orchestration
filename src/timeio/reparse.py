@@ -22,6 +22,7 @@ class ReparseSummary:
     published: int = 0
     skipped: int = 0
     failed: int = 0
+    already_parsed: int = 0
 
 
 def make_publisher(
@@ -105,6 +106,7 @@ def reparse_files(
 
         parsed, original_uuid = get_parse_info(minio, bucket, fname)
         if parsed and not include_parsed:
+            summary.already_parsed += 1
             logger.debug(f"skipping already parsed file: {fname}")
             continue
 
@@ -144,6 +146,11 @@ def reparse_files(
         f"Reparsing finished: {summary.published} file(s) sent for reparsing, "
         f"{summary.skipped} skipped, {summary.failed} failed to send."
     )
+    if summary.already_parsed:
+        text += (
+            f" {summary.already_parsed} file(s) were already parsed and not selected"
+            "(enable reparsing of already parsed files to include them)."
+        )
     logger.info(text)
     journal.info(text, thing.uuid)
     return summary
