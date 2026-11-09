@@ -67,19 +67,21 @@ type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
 const drawerIsOpen = defineModel<boolean>({
   default: false,
 });
-const props = withDefaults(
-  defineProps<{
-    parsingSettings: T;
-    parseAction: ParseAction<T>;
-    allowedFileTypes: string[];
-    allowedFileTypeName: string;
-    parserType: string;
-    overlay?: boolean;
-  }>(),
-  {
-    overlay: false,
-  },
-);
+const {
+  parsingSettings,
+  parseAction,
+  allowedFileTypes,
+  allowedFileTypeName,
+  parserType,
+  overlay = false,
+} = defineProps<{
+  parsingSettings: T;
+  parseAction: ParseAction<T>;
+  allowedFileTypes: string[];
+  allowedFileTypeName: string;
+  parserType: string;
+  overlay?: boolean;
+}>();
 
 const breakpoint = computed(() => $q.screen.sizes.md);
 const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
@@ -101,7 +103,7 @@ const lastValidatedFile = ref<File | null>(null);
 const autoValidate = ref(false);
 let autoValidateTimeout: ReturnType<typeof setTimeout> | null = null;
 const autoValidateCheckboxIsEnabled = computed(
-  () => $q.screen.width >= breakpoint.value && !props.overlay,
+  () => $q.screen.width >= breakpoint.value && !overlay,
 );
 
 const isAlreadyValidated = computed(() => {
@@ -110,7 +112,7 @@ const isAlreadyValidated = computed(() => {
   }
   return (
     fileMetadataIsEqual(file.value, lastValidatedFile.value) &&
-    settingsAreEqual(props.parsingSettings, lastValidatedSettings.value)
+    settingsAreEqual(parsingSettings, lastValidatedSettings.value)
   );
 });
 
@@ -118,11 +120,11 @@ const haveSettingsChanged = computed(() => {
   if (!lastValidatedSettings.value) {
     return false;
   }
-  return !settingsAreEqual(props.parsingSettings, lastValidatedSettings.value);
+  return !settingsAreEqual(parsingSettings, lastValidatedSettings.value);
 });
 
 watch(
-  () => props.parsingSettings,
+  () => parsingSettings,
   () => {
     if (!autoValidate.value || !file.value) {
       return;
@@ -166,10 +168,10 @@ async function validate() {
   }
   isValidating.value = true;
 
-  const settingsForThisRequest = structuredClone(toRaw(props.parsingSettings));
+  const settingsForThisRequest = structuredClone(toRaw(parsingSettings));
   const fileForThisRequest = file.value;
 
-  parsingResult.value = await props.parseAction(settingsForThisRequest, fileForThisRequest);
+  parsingResult.value = await parseAction(settingsForThisRequest, fileForThisRequest);
 
   lastValidatedSettings.value = settingsForThisRequest;
   lastValidatedFile.value = fileForThisRequest;

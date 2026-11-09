@@ -92,6 +92,7 @@ TIMERANGE_MAPPING = {
     "uba": get_uba_timerange,
     "nm": get_nm_timerange,
     "sensoto": get_bosch_timerange,
+    "zentra": get_bosch_timerange,
 }
 
 
