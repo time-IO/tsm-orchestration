@@ -87,7 +87,7 @@ def test_backfill_imports(tmp_path, monkeypatch):
     s = cron.backfill_from_file(f, "dsn")
     upserts = conn.sql("INSERT INTO dsm_db.ingest_schedule")
     assert [c[1] for c in upserts] == [(11, "5-59/10 * * * *", 3, True)]
-    jobs = conn.sql("INSERT INTO dsm_db.scheduled_job")
+    jobs = conn.sql("INSERT INTO dsm_db.custom_job")
     assert [c[1][0] for c in jobs] == ["resync_thing", "sync_sms"]
     assert (s.imported, s.skipped, s.orphaned, s.unknown) == (3, 1, 2, 1)
 
@@ -98,7 +98,7 @@ def test_backfill_keeps_existing_jobs(tmp_path, monkeypatch):
     conn = FakeConn({"FROM dsm_db.ingest": [(U1, 11)], "count(*)": [(4,)]})
     patch_connect(monkeypatch, cron, conn)
     cron.backfill_from_file(f, "dsn")
-    assert not conn.sql("INSERT INTO dsm_db.scheduled_job")
+    assert not conn.sql("INSERT INTO dsm_db.custom_job")
     assert len(conn.sql("INSERT INTO dsm_db.ingest_schedule")) == 1
 
 
@@ -203,7 +203,7 @@ def test_cli_add_resync_thing(monkeypatch):
     r = invoke(monkeypatch, conn, "add", "resync-thing", U1, "--days", "14",
                "--schedule", "0 3 * * 0", "--jitter", "4")  # fmt: skip
     assert r.exit_code == 0, r.output
-    args = conn.sql("INSERT INTO dsm_db.scheduled_job")[0][1]
+    args = conn.sql("INSERT INTO dsm_db.custom_job")[0][1]
     assert (
         args[0] == "resync_thing"
         and args[1] == 11

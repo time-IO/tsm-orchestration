@@ -197,3 +197,12 @@ def test_parse_legacy_accepts_days_equals_and_uppercase_uuid():
     )
     jobs = cron.parse_legacy_crontab(text).jobs
     assert [(j.target, j.days) for j in jobs] == [(U1, 30), (U2, 365)]
+
+
+def test_render_custom_sync_thing_job():
+    text = cron.render_crontab([], [job(job_type="sync_thing", params={})])
+    assert f"0 3 * * 0 sleep 0 && {CMD} sync-thing {U1} {SUFFIX}" in text
+
+
+def test_validate_params_sync_thing_has_none():
+    assert cron.validate_params("sync_thing", {"days": 3}) == {}

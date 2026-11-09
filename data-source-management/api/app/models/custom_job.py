@@ -1,31 +1,30 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel
 from sqlalchemy import CheckConstraint, Column, DateTime, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field
 
-from .ingest_schedule import IngestScheduleRead
 
+class CustomJob(SQLModel, table=True):
+    """Custom cron jobs of fixed job types, maintained by superusers, see timeio.cron."""
 
-class ScheduledJob(SQLModel, table=True):
-    """Manually maintained cron jobs with fixed job types, see timeio.cron."""
-
-    __tablename__ = "scheduled_job"
+    __tablename__ = "custom_job"
 
     __table_args__ = (
         CheckConstraint(
-            "(job_type = 'resync_thing') = (ingest_id IS NOT NULL)",
-            name="ck_scheduled_job_ingest",
+            "job_type IN ('sync_thing', 'resync_thing', 'resync_project', 'sync_sms')",
+            name="ck_custom_job_type",
+        ),
+        CheckConstraint(
+            "(job_type IN ('sync_thing', 'resync_thing')) = (ingest_id IS NOT NULL)",
+            name="ck_custom_job_ingest",
         ),
         CheckConstraint(
             "(job_type = 'resync_project') = (permission_group_id IS NOT NULL)",
-            name="ck_scheduled_job_permission_group",
+            name="ck_custom_job_permission_group",
         ),
-        CheckConstraint(
-            "jitter_seconds BETWEEN 0 AND 59", name="ck_scheduled_job_jitter"
-        ),
+        CheckConstraint("jitter_seconds BETWEEN 0 AND 59", name="ck_custom_job_jitter"),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -50,21 +49,3 @@ class ScheduledJob(SQLModel, table=True):
             DateTime(timezone=True), nullable=False, server_default=text("now()")
         ),
     )
-
-
-class ScheduledJobRead(BaseModel):
-    id: int
-    job_type: str
-    scope: str  # "ingest" or "project"
-    params: dict
-    cron_expression: str
-    jitter_seconds: int
-    enabled: bool
-    note: Optional[str]
-    updated_at: datetime
-    next_runs: list[datetime]
-
-
-class IngestScheduleInfoRead(BaseModel):
-    schedule: Optional[IngestScheduleRead] = None
-    jobs: list[ScheduledJobRead] = []
