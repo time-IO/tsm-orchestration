@@ -39,8 +39,21 @@
           </div>
         </div>
 
-        <div v-if="info.jobs.length">
-          <div class="text-subtitle2 q-mb-sm">Additional scheduled jobs</div>
+        <div v-if="info.jobs.length || isSuperuser">
+          <div class="row items-center q-mb-sm">
+            <div class="text-subtitle2">Custom jobs</div>
+            <q-space />
+            <q-btn
+              v-if="isSuperuser"
+              dense
+              flat
+              color="primary"
+              icon="add"
+              label="Add custom job"
+              @click="openForm(null)"
+            />
+          </div>
+          <div v-if="!info.jobs.length" class="text-grey-7">No custom jobs defined.</div>
           <schedule-entry
             v-for="job in info.jobs"
             :key="job.id"
@@ -48,29 +61,78 @@
             :title="jobLabel(job)"
             :subtitle="job.note"
             class="q-mb-sm"
-          />
+          >
+            <template v-if="isSuperuser && job.ingest_id !== null" #actions>
+              <q-btn dense flat round size="sm" icon="edit" @click="openForm(job)" />
+              <q-btn dense flat round size="sm" icon="delete" color="negative" @click="remove(job)" />
+            </template>
+          </schedule-entry>
         </div>
       </q-card-section>
     </q-card>
   </q-dialog>
+
+  <ingest-custom-job-dialog
+    v-if="isSuperuser"
+    v-model="formOpen"
+    :ingest-id="ingestId"
+    :job="editedJob"
+    @saved="load"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useQuasar } from 'quasar';
 import { API } from '@/services';
-import type { IngestScheduleInfo, ScheduledJob } from '@/services/ingest_schedule/types';
+import { useAuthStore } from '@/stores/authStore';
+import type { IngestScheduleInfo, CustomJob } from '@/services/ingest_schedule/types';
 import ScheduleEntry from '@/components/IngestScheduleEntry.vue';
+import IngestCustomJobDialog from '@/components/IngestCustomJobDialog.vue';
 
 const { ingestId } = defineProps<{ ingestId: number }>();
 const showDialog = defineModel<boolean>({ default: false });
+
+const $q = useQuasar();
+const isSuperuser = computed(() => useAuthStore().userInfo?.is_superuser ?? false);
+
+const formOpen = ref(false);
+const editedJob = ref<CustomJob | null>(null);
 
 const info = ref<IngestScheduleInfo | null>(null);
 const isLoading = ref(false);
 const hasError = ref(false);
 
-function jobLabel(job: ScheduledJob): string {
+function openForm(job: CustomJob | null) {
+  editedJob.value = job;
+  formOpen.value = true;
+}
+
+async function deleteJob(job: CustomJob) {
+  try {
+    await API.ingestSchedule.deleteCustomJob(ingestId, job.id);
+    await load();
+  } catch {
+    $q.notify({ type: 'negative', position: 'top', message: 'Failed to delete the custom job.' });
+  }
+}
+
+function remove(job: CustomJob) {
+  $q.dialog({
+    title: 'Delete custom job',
+    message: `Delete "${jobLabel(job)}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    void deleteJob(job);
+  });
+}
+
+function jobLabel(job: CustomJob): string {
   const days = job.params.days;
   switch (job.job_type) {
+    case 'sync_thing':
+      return 'Additional sync';
     case 'resync_thing':
       return `Resync of the last ${days} days`;
     case 'resync_project':

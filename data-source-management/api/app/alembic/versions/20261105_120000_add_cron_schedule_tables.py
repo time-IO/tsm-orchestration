@@ -43,7 +43,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("ingest_id"),
     )
     op.create_table(
-        "scheduled_job",
+        "custom_job",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("job_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("ingest_id", sa.Integer(), nullable=True),
@@ -67,15 +67,19 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "(job_type = 'resync_thing') = (ingest_id IS NOT NULL)",
-            name="ck_scheduled_job_ingest",
+            "job_type IN ('sync_thing', 'resync_thing', 'resync_project', 'sync_sms')",
+            name="ck_custom_job_type",
+        ),
+        sa.CheckConstraint(
+            "(job_type IN ('sync_thing', 'resync_thing')) = (ingest_id IS NOT NULL)",
+            name="ck_custom_job_ingest",
         ),
         sa.CheckConstraint(
             "(job_type = 'resync_project') = (permission_group_id IS NOT NULL)",
-            name="ck_scheduled_job_permission_group",
+            name="ck_custom_job_permission_group",
         ),
         sa.CheckConstraint(
-            "jitter_seconds BETWEEN 0 AND 59", name="ck_scheduled_job_jitter"
+            "jitter_seconds BETWEEN 0 AND 59", name="ck_custom_job_jitter"
         ),
         sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
@@ -87,5 +91,5 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_table("scheduled_job")
+    op.drop_table("custom_job")
     op.drop_table("ingest_schedule")

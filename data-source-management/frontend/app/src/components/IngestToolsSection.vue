@@ -127,7 +127,7 @@
               <div class="text-subtitle2 text-weight-medium">Sync Schedule</div>
               <div class="text-caption text-grey-7">
                 See when this ingest is synchronised automatically, its upcoming runs and any
-                additional scheduled jobs.
+                custom jobs.
               </div>
             </div>
           </q-card-section>

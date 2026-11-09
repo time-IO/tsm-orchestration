@@ -228,6 +228,12 @@ def json_form[T: BaseModel](model: type[T], field: str = "settings"):
     return dependency
 
 
+def get_superuser(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Superuser required")
+    return current_user
+
+
 def get_repo_ingest(session=Depends(get_session)):
     return IngestRepository(session)
 

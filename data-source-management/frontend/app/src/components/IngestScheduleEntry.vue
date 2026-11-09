@@ -7,6 +7,7 @@
           <div v-if="subtitle" class="text-caption text-grey-7">{{ subtitle }}</div>
         </div>
         <q-badge :color="entry.enabled ? 'positive' : 'grey-6'" :label="status" />
+        <slot name="actions" />
       </div>
 
       <div class="row q-col-gutter-md q-mt-none">

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Maintain the manual cron jobs (`dsm_db.scheduled_job`) of the cron-scheduler."""
+"""Maintain the custom cron jobs (`dsm_db.custom_job`) of the cron-scheduler."""
 
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ def add_sync_sms(origin, schedule, jitter, note):
 def _update(job_id: int, column: str, value) -> None:
     with _connect() as conn:
         cur = conn.execute(
-            f"UPDATE {cron.SCHEMA}.scheduled_job SET {column} = %s, updated_at = now() "
+            f"UPDATE {cron.SCHEMA}.custom_job SET {column} = %s, updated_at = now() "
             "WHERE id = %s",
             (value, job_id),
         )
@@ -162,7 +162,7 @@ def set_schedule(job_id, expression):
 def rm(job_id):
     with _connect() as conn:
         cur = conn.execute(
-            f"DELETE FROM {cron.SCHEMA}.scheduled_job WHERE id = %s", (job_id,)
+            f"DELETE FROM {cron.SCHEMA}.custom_job WHERE id = %s", (job_id,)
         )
         if cur.rowcount == 0:
             raise click.ClickException(f"No job with id {job_id}")
