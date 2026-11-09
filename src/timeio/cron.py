@@ -29,7 +29,7 @@ SYNC_JITTER_SECONDS = 30
 MAX_JITTER_SECONDS = 59
 CONNECT_TIMEOUT = 10
 
-JOB_TYPES = ("resync_thing", "resync_project", "sync_sms")
+JOB_TYPES = ("sync_thing", "resync_thing", "resync_project", "sync_sms")
 SMS_ORIGINS = ("sms_backend", "sms_cv")
 DEFAULT_RESYNC_DAYS = 7
 
@@ -202,6 +202,8 @@ def validate_expression(expression: str) -> bool:
 def validate_params(job_type: str, params: dict[str, Any] | None) -> dict[str, Any]:
     """Return the normalized params for `job_type` or raise ValueError."""
     params = params or {}
+    if job_type == "sync_thing":
+        return {}
     if job_type in ("resync_thing", "resync_project"):
         days = params.get("days", DEFAULT_RESYNC_DAYS)
         if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 365:
@@ -221,8 +223,8 @@ def build_command(
     params: dict[str, Any] | None,
     jitter: int,
 ) -> str:
-    """Build the shell command of a job. Job type `sync_thing` is the regular
-    per-thing sync of `ingest_schedule`. Raises ValueError on invalid input.
+    """Build the shell command of a job. Job type `sync_thing` is also used for
+    the regular per-thing sync of `ingest_schedule`. Raises ValueError on invalid input.
     """
     if not 0 <= jitter <= MAX_JITTER_SECONDS:
         raise ValueError(f"jitter must be in 0..{MAX_JITTER_SECONDS}, got {jitter!r}")
@@ -326,7 +328,7 @@ def render_crontab(
                 j.job_type, j.target_uuid, j.params, j.jitter_seconds
             )
         except ValueError as e:
-            skip(f"scheduled_job {j.id} ({j.job_type}): {e}")
+            skip(f"custom_job {j.id} ({j.job_type}): {e}")
             continue
         target = _clean(j.target_name or j.params.get("origin") or "")
         out.append(
@@ -523,7 +525,7 @@ def fetch_jobs(conn: psycopg.Connection) -> list[JobRow]:
                    COALESCE(i.name, p.name) AS target_name,
                    j.params, j.cron_expression, j.jitter_seconds, j.enabled,
                    j.note, j.updated_at
-            FROM {SCHEMA}.scheduled_job j
+            FROM {SCHEMA}.custom_job j
             LEFT JOIN {SCHEMA}.ingest i ON i.id = j.ingest_id
             LEFT JOIN {SCHEMA}.permission_group p ON p.id = j.permission_group_id
             ORDER BY j.id
@@ -544,7 +546,7 @@ def insert_job(
 ) -> int:
     row = conn.execute(
         f"""
-        INSERT INTO {SCHEMA}.scheduled_job
+        INSERT INTO {SCHEMA}.custom_job
             (job_type, ingest_id, permission_group_id, params, cron_expression,
              jitter_seconds, enabled, note)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -587,7 +589,7 @@ def backfill_from_file(path: str | Path, dsn: str) -> BackfillSummary | None:
     """Import schedules from the legacy crontab.txt into the DSM DB.
 
     `sync-thing` lines are upserted into `ingest_schedule` (the file wins).
-    `resync-range`/`sync-sms` lines go to `scheduled_job` but only while that
+    `resync-range`/`sync-sms` lines go to `custom_job` but only while that
     table is empty, so later consolidations are not overwritten at each start.
     Returns None if the file or the tables do not exist (yet).
     """
@@ -628,7 +630,7 @@ def backfill_from_file(path: str | Path, dsn: str) -> BackfillSummary | None:
 
             others = [j for j in legacy.jobs if j.kind in ("resync_thing", "sync_sms")]
             (count,) = conn.execute(
-                f"SELECT count(*) FROM {SCHEMA}.scheduled_job"
+                f"SELECT count(*) FROM {SCHEMA}.custom_job"
             ).fetchone()
             if count:
                 summary.skipped += len(others)

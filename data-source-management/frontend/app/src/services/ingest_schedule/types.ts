@@ -6,15 +6,41 @@ export interface IngestSchedule {
   next_runs: string[];
 }
 
-export interface ScheduledJob extends IngestSchedule {
+export interface CustomJob extends IngestSchedule {
   id: number;
   job_type: string;
-  scope: 'ingest' | 'project';
+  // null for project-wide jobs, which cannot be edited here
+  ingest_id: number | null;
   params: { days?: number; origin?: string };
   note: string | null;
 }
 
 export interface IngestScheduleInfo {
   schedule: IngestSchedule | null;
-  jobs: ScheduledJob[];
+  jobs: CustomJob[];
+}
+
+export interface CustomJobParamSpec {
+  name: string;
+  label: string;
+  type: string;
+  default: number;
+  minimum: number;
+  maximum: number;
+}
+
+export interface CustomJobSpec {
+  job_type: string;
+  label: string;
+  description: string;
+  params: CustomJobParamSpec[];
+}
+
+export interface CustomJobInput {
+  job_type?: string;
+  cron_expression: string;
+  jitter_seconds?: number | null;
+  enabled: boolean;
+  params: Record<string, number>;
+  note: string | null;
 }

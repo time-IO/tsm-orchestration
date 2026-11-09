@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
+from fastapi import HTTPException
+
 from dependencies import get_repo_ingest
-from models import IngestSchedule, ScheduledJob
+from models import IngestSchedule, CustomJob
 from services.ingest_schedule import build_schedule_info, next_runs
 
 NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -38,33 +40,31 @@ def test_build_schedule_info():
         updated_at=TS,
     )
     jobs = [
-        ScheduledJob(
+        CustomJob(
             id=1, job_type="resync_thing", ingest_id=1, params={"days": 7},
             cron_expression="0 3 * * 0", jitter_seconds=0, enabled=True, updated_at=TS,
         ),
-        ScheduledJob(
+        CustomJob(
             id=2, job_type="resync_project", permission_group_id=9, params={"days": 7},
             cron_expression="0 4 * * 0", jitter_seconds=0, enabled=False, updated_at=TS,
         ),
     ]  # fmt: skip
     info = build_schedule_info(schedule, jobs, now=NOW)
     assert info.schedule.next_runs[0].strftime("%H:%M:%S") == "12:05:03"
-    assert [(j.scope, len(j.next_runs)) for j in info.jobs] == [
-        ("ingest", 5),
-        ("project", 0),
+    assert [(j.job_type, len(j.next_runs)) for j in info.jobs] == [
+        ("resync_thing", 5),
+        ("resync_project", 0),
     ]
 
 
 def test_endpoint_returns_schedule(client, override_repo):
     repo = override_repo(get_repo_ingest)
     repo.find_one.return_value = MagicMock()
-    repo.find_schedule.return_value = (
-        IngestSchedule(
-            ingest_id=1, cron_expression="5 * * * *", jitter_seconds=3,
-            enabled=True, updated_at=TS,
-        ),
-        [],
+    repo.find_schedule.return_value = IngestSchedule(
+        ingest_id=1, cron_expression="5 * * * *", jitter_seconds=3,
+        enabled=True, updated_at=TS,
     )  # fmt: skip
+    repo.find_custom_jobs.return_value = []
 
     response = client.get("/ingest/1/schedule")
 
@@ -77,7 +77,17 @@ def test_endpoint_returns_schedule(client, override_repo):
 
 def test_endpoint_without_schedule(client, override_repo):
     repo = override_repo(get_repo_ingest)
-    repo.find_schedule.return_value = (None, [])
+    repo.find_schedule.return_value = None
+    repo.find_custom_jobs.return_value = []
     response = client.get("/ingest/1/schedule")
     assert response.status_code == 200
     assert response.json() == {"schedule": None, "jobs": []}
+
+
+def test_endpoint_without_access(client, override_repo):
+    repo = override_repo(get_repo_ingest)
+    repo.find_one.side_effect = HTTPException(status_code=404, detail="Not found")
+    response = client.get("/ingest/1/schedule")
+    assert response.status_code == 404
+    repo.find_schedule.assert_not_called()
+    repo.find_custom_jobs.assert_not_called()
