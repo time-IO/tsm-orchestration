@@ -138,7 +138,9 @@ public class ContextApiServlet extends HttpServlet {
 
     private static String escape(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&apos;");
+                .replace("\"", "&quot;").replace("'", "&apos;")
+                // Attribute-value normalization would turn these into spaces.
+                .replace("\n", "&#10;").replace("\r", "&#13;").replace("\t", "&#9;");
     }
 
     private static void reply(HttpServletResponse resp, int status, String json) throws IOException {
