@@ -312,3 +312,28 @@ class TestToUtc:
 
         assert result.utcoffset().total_seconds() == 2 * 3600
         assert result == datetime(2026, 3, 2, 10, 30, tzinfo=UTC)
+
+
+def test_already_parsed_files_are_counted_and_hinted(make_env):
+    env = make_env()
+
+    summary = env.run()
+
+    assert summary.already_parsed == 1
+    assert "1 file(s) were already parsed" in env.journal.info.call_args.args[0]
+
+
+def test_no_already_parsed_hint_when_they_are_included(make_env):
+    env = make_env()
+
+    summary = env.run(include_parsed=True)
+
+    assert summary.already_parsed == 0
+    assert "already parsed" not in env.journal.info.call_args.args[0]
+
+def test_listing_is_recursive(make_env):
+    env = make_env()
+
+    env.run()
+
+    env.minio.list_objects.assert_called_once_with("bucket", recursive=True)
