@@ -102,7 +102,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         if not self.user_exists(grf_user := GRF_PREFIX + ro_user):
             logger.debug(f"create grafana read-only user {grf_user}")
-            self.create_ro_user(thing, user_prefix=GRF_PREFIX)
+            self.create_ro_user(thing, user_prefix=GRF_PREFIX, with_public=False)
 
         logger.info("update/create thing in db")
         created = self.upsert_thing(thing)
@@ -195,7 +195,13 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_ro_user(self, thing, user_prefix: str = "", schema: str | None = None):
+    def create_ro_user(
+        self,
+        thing,
+        user_prefix: str = "",
+        schema: str | None = None,
+        with_public: bool = True,
+    ):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 ro_username = user_prefix.lower() + thing.database.ro_username.lower()
@@ -225,6 +231,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
                         ro_user=ro_user, schema=schema
+                    )
+                )
+
+                # Only at creation: PG16+ needs ADMIN OPTION to alter pre-upgrade roles
+                path = sql.SQL("{}, public" if with_public else "{}").format(schema)
+                c.execute(
+                    sql.SQL("ALTER ROLE {ro_user} SET search_path TO {path}").format(
+                        ro_user=ro_user, path=path
                     )
                 )
 
@@ -329,13 +343,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         with self.db.connection() as conn:
             with conn.cursor() as c:
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL(
-                        "ALTER ROLE {sta_user} SET search_path to {schema}, public"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
-
                 # grant read rights to newly created views in schema to user
                 c.execute(
                     sql.SQL(
@@ -361,13 +368,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 schema = sql.Identifier(thing.database.username.lower())
                 grf_user = sql.Identifier(
                     user_prefix.lower() + thing.database.ro_username.lower()
-                )
-
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL("ALTER ROLE {grf_user} SET search_path to {schema}").format(
-                        grf_user=grf_user, schema=schema
-                    )
                 )
 
                 c.execute(sql.SQL("SET search_path TO {schema}").format(schema=schema))
