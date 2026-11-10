@@ -14,6 +14,10 @@ When adding a changelog entry, ensure the following:
 
 ### Added
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
+- Timestamps in the parser test results are now displayed in the parser's configured timezone by default. Users can switch to their local timezone if preferred ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
+
+### Fixed
+- Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 
 ### Changed
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))
