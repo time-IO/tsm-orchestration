@@ -31,7 +31,8 @@
         <q-checkbox
           v-model="autoValidate"
           v-if="autoValidateCheckboxIsEnabled"
-          class="q-mt-md q-mb-mt"
+          dense
+          class="q-mt-md q-mb-sm"
           label="Auto-parse when valid changes detected"
         />
 
@@ -45,6 +46,7 @@
           class="q-mt-lg"
           :data="parsingResult.data"
           :is-stale="haveSettingsChanged"
+          :parser-timezone="lastValidatedSettings?.timezone ?? null"
         />
       </div>
     </div>
@@ -191,6 +193,7 @@ function settingsAreEqual(a: T, b: T): boolean {
 }
 
 .validation-sidebar__body {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 </style>
