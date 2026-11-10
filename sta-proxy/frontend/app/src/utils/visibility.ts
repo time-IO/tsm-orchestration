@@ -6,7 +6,6 @@ export type Visibility = {
   label: string;
   icon: string;
   color: string;
-  description: string;
 };
 
 export const VISIBILITIES: Record<VisibilityName, Visibility> = {
@@ -14,13 +13,11 @@ export const VISIBILITIES: Record<VisibilityName, Visibility> = {
     label: 'Public',
     icon: 'visibility',
     color: 'green',
-    description: 'Listed for everyone, no login required to find the endpoint.',
   },
   internal: {
     label: 'Internal',
     icon: 'lock_open',
     color: 'orange',
-    description: 'Belongs to one of your projects (permission groups). Only shown after login.',
   },
 };
 

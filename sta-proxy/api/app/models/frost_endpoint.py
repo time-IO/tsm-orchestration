@@ -7,6 +7,8 @@ class FrostEndpoint(BaseModel):
     group: str
     project: str | None = None
     url: str
+    public_url: str = ""
+    internal_url: str = ""
     is_internal: bool = False
 
 

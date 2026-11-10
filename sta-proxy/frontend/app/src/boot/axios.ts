@@ -17,18 +17,18 @@ declare module 'vue' {
 // for each client)
 const axiosInstance = axios.create({ baseURL: import.meta.env.API_BASE_URL });
 
+// registered on creation, so requests of boot files running before this one are authorized too
+axiosInstance.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
+
+  if (authStore.accessToken) {
+    config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+  }
+
+  return config;
+});
+
 export default defineBoot(({ app }) => {
-  axiosInstance.interceptors.request.use((config) => {
-    const authStore = useAuthStore();
-
-    if (authStore.accessToken) {
-      config.headers.Authorization = `Bearer ${authStore.accessToken}`;
-    }
-
-    return config;
-  });
-
-  // for use inside Vue files (Options API) through this.$axios and this.$api
   app.config.globalProperties.$axios = axios;
   // ^ ^ ^ this will allow you to use this.$axios (for Vue Options API form)
   //       so you won't necessarily have to import axios in each vue file

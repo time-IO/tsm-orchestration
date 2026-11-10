@@ -14,6 +14,7 @@ export const useAuthStore = defineStore('auth', {
     user: null as User | null,
     userInfo: null as UserPublic | null,
     loading: false,
+    initialized: false,
   }),
 
   getters: {
@@ -35,6 +36,7 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async init() {
+      this.initialized = true;
       this.loading = true;
       try {
         this.user = await userManager.getUser();
@@ -43,6 +45,19 @@ export const useAuthStore = defineStore('auth', {
       }
 
       this.bindOidcEvents();
+      await this.syncSession();
+    },
+
+    async syncSession() {
+      try {
+        if (this.isAuthenticated) {
+          await API.session.set();
+        } else {
+          await API.session.clear();
+        }
+      } catch (error) {
+        console.error('failed to sync STA session cookie:', error);
+      }
     },
 
     async fetchUserInfo() {
@@ -68,8 +83,13 @@ export const useAuthStore = defineStore('auth', {
       this.userInfo = null;
     },
 
-    async logout() {
+    async clearUserAndSession() {
       this.clearStoredUserAndInfo();
+      await this.syncSession();
+    },
+
+    async logout() {
+      await this.clearUserAndSession();
       return userManager.signoutRedirect();
     },
 
@@ -86,6 +106,7 @@ export const useAuthStore = defineStore('auth', {
       userManager.events.addUserLoaded(async (user) => {
         console.info('OIDC: user loaded / updated');
         this.user = user;
+        await this.syncSession();
         // Only fetch additional user info if authenticated
         // Only if it is null
         if (this.isAuthenticated && this.userInfo === null) {
@@ -105,7 +126,7 @@ export const useAuthStore = defineStore('auth', {
        */
       userManager.events.addAccessTokenExpired(() => {
         console.warn('OIDC: token expired');
-        this.clearStoredUserAndInfo();
+        void this.clearUserAndSession();
       });
 
       /**
@@ -120,7 +141,7 @@ export const useAuthStore = defineStore('auth', {
        */
       userManager.events.addUserSignedOut(() => {
         console.warn('OIDC: user signed out at IdP');
-        this.clearStoredUserAndInfo();
+        void this.clearUserAndSession();
       });
     },
   },

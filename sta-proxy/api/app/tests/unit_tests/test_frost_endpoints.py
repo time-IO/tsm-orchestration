@@ -4,6 +4,7 @@ from config import settings
 from models import FrostEndpoint
 from services.frost_endpoints import (
     endpoint_from_frost,
+    explicit_route_url,
     matches_query,
     rewrite_endpoint_url,
 )
@@ -159,3 +160,44 @@ def test_endpoints_search_reuses_cached_permission_groups(client, dsm_requests):
         )
         assert response.status_code == 200
     assert [r.url.path for r in dsm_requests] == ["/permission-group/"]
+
+
+OWN_ENDPOINT = "vo_group1_82ed8cbd57aa4ba6b8b12fcc01650bbb"
+FOREIGN_ENDPOINT = "vo_group2_86ebe19a704a496ca2c8053c2c6c3c17"
+
+
+def test_endpoints_include_explicit_route_urls(client):
+    response = client.get("/endpoints", headers={"authorization": "Bearer valid"})
+
+    endpoints = {e["name"]: e for e in response.json()["endpoints"]}
+    base = f"{settings.BASE_URL}/sta"
+    assert endpoints[OWN_ENDPOINT]["url"] == f"{base}/{OWN_ENDPOINT}/v1.1"
+    assert endpoints[OWN_ENDPOINT]["public_url"] == f"{base}/public/{OWN_ENDPOINT}/v1.1"
+    assert endpoints[OWN_ENDPOINT]["internal_url"] == (
+        f"{base}/internal/{OWN_ENDPOINT}/v1.1"
+    )
+    assert endpoints[FOREIGN_ENDPOINT]["public_url"] == (
+        f"{base}/public/{FOREIGN_ENDPOINT}/v1.1"
+    )
+    # listed without access as well, is_internal tells whether it is accessible
+    assert endpoints[FOREIGN_ENDPOINT]["internal_url"] == (
+        f"{base}/internal/{FOREIGN_ENDPOINT}/v1.1"
+    )
+    assert endpoints[FOREIGN_ENDPOINT]["is_internal"] is False
+
+
+def test_anonymous_endpoints_include_explicit_route_urls(client):
+    response = client.get("/endpoints")
+
+    for endpoint in response.json()["endpoints"]:
+        assert endpoint["public_url"].endswith(f"/sta/public/{endpoint['name']}/v1.1")
+        assert endpoint["internal_url"].endswith(
+            f"/sta/internal/{endpoint['name']}/v1.1"
+        )
+
+
+def test_explicit_route_url_only_replaces_endpoint_segment():
+    assert (
+        explicit_route_url("http://host/sta/x/v1.1/x/", "x", "public")
+        == "http://host/sta/public/x/v1.1/x/"
+    )

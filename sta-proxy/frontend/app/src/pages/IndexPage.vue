@@ -18,15 +18,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import { useQuasar } from 'quasar';
 import SideDrawer from '@/components/common/SideDrawer.vue';
 import EndpointFilter from '@/components/EndpointFilter.vue';
 import EndpointInfo from '@/components/EndpointInfo.vue';
 import EndpointList from '@/components/EndpointList.vue';
 import WelcomeText from '@/components/WelcomeText.vue';
 import { useEndpointStore } from '@/stores/endpointStore';
+import { notifyError } from '@/utils/notify';
 
-const $q = useQuasar();
 const endpointStore = useEndpointStore();
 
 const drawerOpen = ref(false);
@@ -54,11 +53,7 @@ async function fetchEndpoints() {
   try {
     await endpointStore.fetchEndpoints();
   } catch {
-    $q.notify({
-      position: 'top',
-      type: 'negative',
-      message: 'Failed to fetch FROST endpoints',
-    });
+    notifyError('Failed to fetch FROST endpoints');
   }
 }
 </script>
