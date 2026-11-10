@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 import requests
 from cryptography.fernet import Fernet
-from timeio import frost
+import setup_frost
 from timeio.crypto import encrypt
 
 SCHEMA = "myproject"
@@ -21,7 +21,7 @@ def create_secret():
 
 
 def push(api_url="http://frost:8081/"):
-    frost.push_context(
+    setup_frost.push_context(
         api_url,
         TOKEN,
         schema=SCHEMA,
@@ -32,7 +32,7 @@ def push(api_url="http://frost:8081/"):
 
 
 def test_push_context_request():
-    with mock.patch("timeio.frost.requests.put") as put:
+    with mock.patch("setup_frost.requests.put") as put:
         push()
 
     put.assert_called_once()
@@ -48,7 +48,7 @@ def test_push_context_request():
 
 
 def test_push_context_raises_on_http_error():
-    with mock.patch("timeio.frost.requests.put") as put:
+    with mock.patch("setup_frost.requests.put") as put:
         put.return_value.ok = False
         put.return_value.status_code = 400
         put.return_value.reason = "Bad Request"
@@ -60,8 +60,6 @@ def test_push_context_raises_on_http_error():
 class TestSetupFrostHandler:
     @pytest.fixture
     def handler(self, monkeypatch):
-        import setup_frost
-
         env = {
             "TOPIC": "t",
             "MQTT_BROKER": "b:1883",
@@ -93,7 +91,7 @@ class TestSetupFrostHandler:
         handler.act({"thing": "uuid"}, mock.Mock())
 
     def test_pushes_both_variants(self, handler):
-        with mock.patch("timeio.frost.requests.put") as put:
+        with mock.patch("setup_frost.requests.put") as put:
             self.act(handler)
 
         urls = [c.args[0] for c in put.call_args_list]
@@ -114,7 +112,7 @@ class TestSetupFrostHandler:
                 raise requests.ConnectionError("down")
             return mock.Mock()
 
-        with mock.patch("timeio.frost.requests.put", side_effect=put):
+        with mock.patch("setup_frost.requests.put", side_effect=put):
             with pytest.raises(RuntimeError, match="FROST context push failed"):
                 self.act(handler)
         assert len(calls) == 2

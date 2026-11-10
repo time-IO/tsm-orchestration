@@ -59,17 +59,19 @@ public class ContextApiServlet extends HttpServlet {
 
     @Override
     public void init() {
-        String t = System.getenv("FROST_CONTEXT_API_TOKEN");
-        token = (t == null || t.isEmpty()) ? null : t.getBytes(StandardCharsets.UTF_8);
-        serviceRootUrl = System.getenv("FROST_SERVICE_ROOT_URL");
+        String t = env("FROST_CONTEXT_API_TOKEN");
+        token = t == null ? null : t.getBytes(StandardCharsets.UTF_8);
+        serviceRootUrl = env("FROST_SERVICE_ROOT_URL");
         contextDir = Path.of(System.getProperty("catalina.base"), "conf", "Catalina", "localhost")
                 .toAbsolutePath().normalize();
     }
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (token == null || serviceRootUrl == null || serviceRootUrl.isEmpty()) {
-            reply(resp, 503, "{\"error\":\"FROST_CONTEXT_API_TOKEN or FROST_SERVICE_ROOT_URL is not configured\"}");
+        if (token == null) {
+            reply(resp, 503, "{\"error\":\"FROST_CONTEXT_API_TOKEN is not configured\"}");
+        } else if (serviceRootUrl == null) {
+            reply(resp, 503, "{\"error\":\"FROST_SERVICE_ROOT_URL is not configured\"}");
         } else if (!authorized(req)) {
             resp.setHeader("WWW-Authenticate", "Bearer");
             reply(resp, 401, "{\"error\":\"unauthorized\"}");
@@ -90,13 +92,32 @@ public class ContextApiServlet extends HttpServlet {
         }
         if (user == null || !USER_PATTERN.matcher(user).matches()
                 || url == null || !URL_PATTERN.matcher(url).matches()
-                || password == null || password.isEmpty()) {
-            reply(resp, 400, "{\"error\":\"user, password and url are required and must be valid\"}");
+                || !validPassword(password)) {
+            reply(resp, 400, "{\"schema\":\"" + schema + "\",\"error\":\"user, password and url are required and must be valid\"}");
             return;
         }
         String xml = TEMPLATE.formatted(escape(serviceRootUrl + schema), url, user, escape(password));
-        boolean changed = write(contextDir.resolve(schema + ".xml"), xml.getBytes(StandardCharsets.UTF_8));
-        reply(resp, 200, "{\"changed\":" + changed + "}");
+        boolean changed;
+        try {
+            changed = write(contextDir.resolve(schema + ".xml"), xml.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException | RuntimeException e) {
+            log("writing context " + schema + " failed", e);
+            reply(resp, 500, "{\"schema\":\"" + schema + "\",\"error\":\"writing context failed\"}");
+            return;
+        }
+        reply(resp, 200, "{\"schema\":\"" + schema + "\",\"changed\":" + changed + "}");
+    }
+
+    // XML 1.0 can't represent other control chars, even escaped; Tomcat would fail to parse the descriptor.
+    private static boolean validPassword(String password) {
+        return password != null && !password.isEmpty() && password.chars()
+                .noneMatch(c -> c < 0x20 && c != '\t' && c != '\n' && c != '\r' || c == 0xFFFE || c == 0xFFFF);
+    }
+
+    /** Returns null for unset or empty variables. */
+    private static String env(String name) {
+        String v = System.getenv(name);
+        return v == null || v.isEmpty() ? null : v;
     }
 
     private boolean authorized(HttpServletRequest req) {
