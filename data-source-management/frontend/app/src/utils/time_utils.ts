@@ -78,3 +78,27 @@ export function formatApprox(milliseconds: number): string {
 
   return prefix.replace('{unit}', unitLabel);
 }
+
+/**
+ * Formats an ISO timestamp as "YYYY-MM-DD HH:mm:ss +/-HH:MM" in the browser's timezone.
+ */
+export function formatIsoTimestampAsLocal(isoString: string): string {
+  const date = new Date(isoString);
+
+  const pad = (num: number) => String(num).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+
+  const tzOffsetMinutes = -date.getTimezoneOffset();
+  const sign = tzOffsetMinutes >= 0 ? '+' : '-';
+  const absOffset = Math.abs(tzOffsetMinutes);
+  const tzHours = pad(Math.floor(absOffset / 60));
+  const tzMinutes = pad(absOffset % 60);
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${sign}${tzHours}:${tzMinutes}`;
+}
