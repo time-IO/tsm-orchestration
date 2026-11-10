@@ -227,3 +227,44 @@ def test_set_views_stamp_warns_on_empty_capture(monkeypatch, rowcount, warned):
 
     assert c.execute.call_args.args[1] == ["user_1", "user_1", "sta", "v1"]
     assert log.warning.called is warned
+
+
+def executed_sql(h):
+    cur = h.db.connection.return_value.__enter__.return_value.cursor.return_value
+    return [
+        c.args[0].as_string(None)
+        for c in cur.__enter__.return_value.execute.call_args_list
+    ]
+
+
+@pytest.mark.parametrize(
+    "prefix, with_public, path",
+    [("sta_", True, '"user_1", public'), ("grf_", False, '"user_1"')],
+)
+def test_create_ro_user_sets_search_path(
+    handler, monkeypatch, prefix, with_public, path
+):
+    monkeypatch.setattr(sud, "decrypt", MagicMock(return_value="pw"))
+    monkeypatch.setattr(sud, "get_crypt_key", MagicMock())
+    conn = handler.db.connection.return_value.__enter__.return_value
+    conn.info.user, conn.info.dbname = "admin", "db"
+    thing = MagicMock()
+    thing.database.username = "User_1"
+    thing.database.ro_username = "ro_user_1"
+
+    handler.create_ro_user(thing, user_prefix=prefix, with_public=with_public)
+
+    assert f'ALTER ROLE "{prefix}ro_user_1" SET search_path TO {path}' in executed_sql(
+        handler
+    )
+
+
+def test_grants_do_not_alter_roles(handler):
+    thing = MagicMock()
+    thing.database.username = "User_1"
+    thing.database.ro_username = "ro_user_1"
+
+    sud.CreateThingInPostgresHandler.grant_sta_select(handler, thing, "sta_")
+    sud.CreateThingInPostgresHandler.grant_grafana_select(handler, thing, "grf_")
+
+    assert not [s for s in executed_sql(handler) if s.startswith("ALTER ROLE")]
