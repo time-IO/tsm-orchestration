@@ -1,6 +1,22 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM tomcat:11.0.27-jdk25-temurin
+ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk25-temurin
+
+# Build stage: same base, so the JDK and servlet-api.jar match the runtime.
+FROM ${TOMCAT_IMAGE} AS context-api
+COPY context-api /build
+RUN mkdir -p /build/out/WEB-INF/classes \
+    && javac -d /build/out/WEB-INF/classes -cp $CATALINA_HOME/lib/servlet-api.jar \
+        $(find /build/src -name '*.java') \
+    && cp /build/WEB-INF/web.xml /build/out/WEB-INF/ \
+    && jar cf /context-api.war -C /build/out .
+# Insert the API service into the base image's own server.xml; fails if its layout changes.
+RUN grep -qx '</Server>' conf/server.xml \
+    && sed -i '\#^</Server>$#d' conf/server.xml \
+    && cat /build/server-service.xml >> conf/server.xml \
+    && echo '</Server>' >> conf/server.xml
+
+FROM ${TOMCAT_IMAGE}
 
 ARG BUILD_DATE=""
 ARG VCS_REF=""
@@ -12,7 +28,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.revision=$VCS_REF \
     org.opencontainers.image.created=$BUILD_DATE
 
-EXPOSE 8080
+EXPOSE 8080 8081
 
 ARG FROST_VERSION=2.7.3
 ARG UID=1000
@@ -29,6 +45,8 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
+COPY --from=context-api /usr/local/tomcat/conf/server.xml /usr/local/tomcat/conf/server.xml
+COPY --from=context-api /context-api.war /usr/local/tomcat/api-webapps/ROOT.war
 
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info
