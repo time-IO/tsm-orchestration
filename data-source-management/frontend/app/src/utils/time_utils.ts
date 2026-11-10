@@ -81,6 +81,10 @@ export function formatApprox(milliseconds: number): string {
 
 /**
  * Formats an ISO timestamp as "YYYY-MM-DD HH:mm:ss +/-HH:MM" in the browser's timezone.
+ *
+ * @param isoString - The ISO timestamp (e.g. "2024-01-01T12:00:00Z")
+ * @returns The timestamp converted to the browser's timezone
+ *   (e.g. "2024-01-01 13:00:00 +01:00" in Europe/Berlin)
  */
 export function formatIsoTimestampAsLocal(isoString: string): string {
   const date = new Date(isoString);
@@ -101,4 +105,16 @@ export function formatIsoTimestampAsLocal(isoString: string): string {
   const tzMinutes = pad(absOffset % 60);
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${sign}${tzHours}:${tzMinutes}`;
+}
+
+/**
+ * Formats an ISO timestamp as "YYYY-MM-DD HH:mm:ss +/-HH:MM", keeping its own time and UTC offset.
+ *
+ * @param isoString - The ISO timestamp (e.g. "2024-01-01T12:00:00+01:00")
+ * @returns The formatted timestamp (e.g. "2024-01-01 12:00:00 +01:00")
+ */
+export function formatIsoTimestamp(isoString: string): string {
+  return isoString
+    .replace('T', ' ')
+    .replace(/(Z|[+-]\d{2}:\d{2})$/, (offset) => ` ${offset === 'Z' ? '+00:00' : offset}`);
 }

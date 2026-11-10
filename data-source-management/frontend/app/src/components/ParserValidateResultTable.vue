@@ -17,7 +17,7 @@
       <!-- append to #bottom slot -->
       <div
         v-if="timestamps.length > 0 && !timezonesAreEqual"
-        class="result-table__timezone row no-wrap items-center"
+        class="result-table__timezone full-width row no-wrap items-center justify-end"
       >
         <span class="q-table__bottom-item text-no-wrap">Displayed timezone:</span>
         <q-select
@@ -25,7 +25,7 @@
           :options="timezoneOptions"
           emit-value
           map-options
-          class="q-table__select q-table__bottom-item q-mr-lg"
+          class="q-table__select q-table__bottom-item"
           borderless
           dense
         >
@@ -33,14 +33,6 @@
             <span class="ellipsis" :title="selectedOption?.label">
               {{ selectedOption?.label }}
             </span>
-          </template>
-          <template #option="{ itemProps, opt }">
-            <q-item v-bind="itemProps">
-              <q-item-section>
-                <q-item-label>{{ opt.label }}</q-item-label>
-                <q-item-label caption>{{ opt.caption }}</q-item-label>
-              </q-item-section>
-            </q-item>
           </template>
         </q-select>
       </div>
@@ -53,7 +45,7 @@ import { computed, ref, useTemplateRef } from 'vue';
 import type { QTableColumn } from 'quasar';
 import TeleportInto from '@/components/common/TeleportInto.vue';
 import { unknownToString } from '@/utils/string_utils';
-import { formatIsoTimestampAsLocal } from '@/utils/time_utils';
+import { formatIsoTimestamp, formatIsoTimestampAsLocal } from '@/utils/time_utils';
 import { isIsoDate } from '@/utils/validation/validators';
 
 const props = defineProps<{
@@ -76,32 +68,15 @@ const timestamps = computed(() =>
 
 const timezonesAreEqual = computed(() => props.parserTimezone === browserTimezone);
 
-function formatAsParser(isoString: string): string {
-  return isoString
-    .replace('T', ' ')
-    .replace(/(Z|[+-]\d{2}:\d{2})$/, (offset) => ` ${offset === 'Z' ? '+00:00' : offset}`);
-}
-
-const formatters = { parser: formatAsParser, browser: formatIsoTimestampAsLocal };
-
-function timezoneLabel(name: string, format: (isoString: string) => string): string {
-  const offsets = new Set(
-    timestamps.value.map((v) => format(v).match(/ ([+-]\d{2}:\d{2})$/)?.[1]).filter(Boolean),
-  );
-  return offsets.size > 0 ? `${name} (${[...offsets].map((o) => `UTC${o}`).join(' / ')})` : name;
-}
+// timestamps are returned in the parser's timezone, so only the local view needs a conversion
+const formatters = { parser: formatIsoTimestamp, browser: formatIsoTimestampAsLocal };
 
 const timezoneOptions = computed(() => [
   {
     value: 'parser',
-    label: timezoneLabel('Parser time', formatters.parser),
-    caption: props.parserTimezone,
+    label: props.parserTimezone ? `Parser time (${props.parserTimezone})` : 'Parser time',
   },
-  {
-    value: 'browser',
-    label: timezoneLabel('Local time', formatters.browser),
-    caption: browserTimezone,
-  },
+  { value: 'browser', label: `Local time (${browserTimezone})` },
 ]);
 
 const selectedOption = computed(() =>
@@ -137,7 +112,7 @@ const tableColumns = computed<QTableColumn[]>(() => {
   min-height: 0;
 }
 
-/* Teleported content is appended to the footer; move it before Quasar's pagination. */
+/* move teleported content in slot before Quasar's pagination */
 .result-table__timezone {
   order: -1;
 }
