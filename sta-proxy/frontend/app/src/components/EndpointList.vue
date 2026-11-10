@@ -58,18 +58,7 @@
 
           <q-td key="actions" :props="props" auto-width>
             <copy-button dense :text="props.row.url" />
-            <q-btn
-              flat
-              round
-              dense
-              icon="open_in_new"
-              :href="props.row.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              @click.stop
-            >
-              <q-tooltip>Open in new tab</q-tooltip>
-            </q-btn>
+            <open-in-new-tab-button dense :href="props.row.url" @click.stop />
           </q-td>
         </q-tr>
       </template>
@@ -82,6 +71,7 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import type { QTableColumn } from 'quasar';
 import type { FrostEndpoint } from '@/services/endpoints/types';
 import CopyButton from '@/components/common/CopyButton.vue';
+import OpenInNewTabButton from '@/components/common/OpenInNewTabButton.vue';
 import { useEndpointStore } from '@/stores/endpointStore';
 import { endpointVisibility } from '@/utils/visibility';
 import VisibilityBadge from '@/components/common/VisibilityBadge.vue';

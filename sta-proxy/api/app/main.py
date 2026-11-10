@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from routers import frost_endpoints, frost_proxy, ingests, user
+from routers import frost_endpoints, frost_proxy, ingests, session, user
 from services import close_dsm_client, close_frost_clients
 from config import settings
 
@@ -28,13 +28,15 @@ if log_level == "TRACE":
 logging.getLogger().setLevel(log_level)
 logging.getLogger("app").setLevel(log_level)
 logging.getLogger("app.main").info(
-    "API startup configured with LOG_LEVEL=%s, API_ROOT_PATH=%s and FROST_URL=%s",
+    "API startup configured with LOG_LEVEL=%s, API_ROOT_PATH=%s, FROST_URL=%s, FROST_INTERNAL_URL=%s",
     log_level,
     API_ROOT_PATH,
     settings.FROST_URL,
+    settings.FROST_INTERNAL_URL,
 )
 
 app.include_router(frost_endpoints.router)
 app.include_router(ingests.router)
 app.include_router(user.router)
+app.include_router(session.router)
 app.include_router(frost_proxy.router)

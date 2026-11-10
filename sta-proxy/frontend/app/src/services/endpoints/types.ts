@@ -4,6 +4,8 @@ export type FrostEndpoint = {
   group: string;
   project: string | null;
   url: string;
+  public_url: string;
+  internal_url: string;
   is_internal: boolean;
 };
 

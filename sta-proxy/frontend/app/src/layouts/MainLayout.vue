@@ -40,32 +40,21 @@
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
-import { useQuasar } from 'quasar';
+import { notifyError } from '@/utils/notify';
 
 const { t } = useI18n();
 
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
-const $q = useQuasar();
 
 const handleLogin = async () => {
   try {
     await authStore.login();
   } catch {
-    $q.notify({
-      type: 'negative',
-      position: 'top',
+    notifyError('Authorization provider not reachable. Please contact an application admin.', {
       timeout: 0,
-      actions: [
-        {
-          icon: 'close',
-          color: 'white',
-          round: true,
-          handler: () => {},
-        },
-      ],
-      message: 'Authorization provider not reachable. Please contact an application admin.',
+      actions: [{ icon: 'close', color: 'white', round: true, handler: () => {} }],
     });
   }
 };

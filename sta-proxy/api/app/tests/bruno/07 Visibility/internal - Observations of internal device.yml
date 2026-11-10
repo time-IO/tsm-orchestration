@@ -1,0 +1,30 @@
+info:
+  name: internal - Observations of internal device
+  type: http
+  seq: 9
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/internal/{{endpointGroup1}}/v1.1/Observations?$filter=Datastream/Sensor/name eq 'CS215'&$select=id&$top=1&$count=true"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("internal device CS215 has observations", function () {
+          expect(res.getBody()["@iot.count"]).to.be.above(0);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

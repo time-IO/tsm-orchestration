@@ -1,0 +1,30 @@
+info:
+  name: internal - Sensors
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/internal/{{endpointGroup1}}/v1.1/Sensors?$select=name&$orderby=name"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("public and internal devices, not the private one", function () {
+          expect(res.getBody().value.map((e) => e.name)).to.deep.equal(["CRS_Dynamic", "CRS_Static", "CS215", "Internal_Extra", "Internal_Static", "Rover_GPS", "Rover_Sensor"]);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
