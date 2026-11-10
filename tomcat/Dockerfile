@@ -29,6 +29,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
+COPY --chmod=755 frost-entrypoint.sh /usr/local/bin/frost-entrypoint.sh
 
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info
@@ -54,3 +55,7 @@ RUN mkdir ${HOME}/.postgresql \
     && cp /etc/ssl/certs/ca-certificates.crt ${HOME}/.postgresql/root.crt
 
 USER ${UID}
+
+# Setting ENTRYPOINT resets the base image CMD.
+ENTRYPOINT ["/usr/local/bin/frost-entrypoint.sh"]
+CMD ["catalina.sh", "run"]

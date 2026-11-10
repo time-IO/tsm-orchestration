@@ -15,6 +15,7 @@ When adding a changelog entry, ensure the following:
 ### Added
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
 - TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
+- FROST keepalive ping via `FROST_KEEPALIVE_INTERVAL` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 
 ### Changed
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))

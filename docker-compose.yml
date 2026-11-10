@@ -365,6 +365,8 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+    environment:
+      FROST_KEEPALIVE_INTERVAL: "${FROST_KEEPALIVE_INTERVAL}"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -393,6 +395,8 @@ services:
     restart: "${SERVICE_RESTART_POLICY}"
     volumes:
       - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+    environment:
+      FROST_KEEPALIVE_INTERVAL: "${FROST_KEEPALIVE_INTERVAL}"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
