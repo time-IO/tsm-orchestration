@@ -21,6 +21,9 @@ When adding a changelog entry, ensure the following:
 - update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))
 - CVE scan lists fixable critical CVEs per image and package with fix version ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/797))
 
+### Fixed
+- CSV parser preserves observations from the repeated hour when switching from daylight saving time to standard time by inferring the correct UTC offsets ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/812))
+
 ### Removed
 - deprecated Thing Management database credentials ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/805))
 
