@@ -1,5 +1,5 @@
 <template>
-  <div class="result-table-wrap column no-wrap" :class="{ 'validation-table--stale': isStale }">
+  <div class="result-table-wrap column no-wrap">
     <q-table
       ref="table"
       flat
@@ -58,7 +58,6 @@ import { isIsoDate } from '@/utils/validation/validators';
 
 const props = defineProps<{
   data: Record<string, unknown>[];
-  isStale: boolean;
   parserTimezone: string | null;
 }>();
 
@@ -141,9 +140,5 @@ const tableColumns = computed<QTableColumn[]>(() => {
 /* Teleported content is appended to the footer; move it before Quasar's pagination. */
 .result-table__timezone {
   order: -1;
-}
-
-.validation-table--stale {
-  opacity: 0.4;
 }
 </style>

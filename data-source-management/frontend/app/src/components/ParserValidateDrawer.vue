@@ -36,18 +36,16 @@
           label="Auto-parse when valid changes detected"
         />
 
-        <parser-validate-banner
-          :parsing-result="parsingResult"
-          :have-settings-changed="haveSettingsChanged"
-        />
+        <stale-content :stale="haveSettingsChanged">
+          <parser-validate-banner :parsing-result="parsingResult" />
 
-        <parser-validate-result-table
-          v-if="parsingResult.is_valid && parsingResult.data.length > 0"
-          class="q-mt-lg"
-          :data="parsingResult.data"
-          :is-stale="haveSettingsChanged"
-          :parser-timezone="lastValidatedSettings?.timezone ?? null"
-        />
+          <parser-validate-result-table
+            v-if="parsingResult.is_valid && parsingResult.data.length > 0"
+            class="q-mt-lg"
+            :data="parsingResult.data"
+            :parser-timezone="lastValidatedSettings?.timezone ?? null"
+          />
+        </stale-content>
       </div>
     </div>
   </q-drawer>
@@ -61,6 +59,7 @@ import { fileMetadataIsEqual } from '@/utils/file_utils';
 import ParserValidateFileInput from '@/components/ParserValidateFileInput.vue';
 import ParserValidateBanner from '@/components/ParserValidateBanner.vue';
 import ParserValidateResultTable from '@/components/ParserValidateResultTable.vue';
+import StaleContent from '@/components/common/StaleContent.vue';
 
 const $q = useQuasar();
 
