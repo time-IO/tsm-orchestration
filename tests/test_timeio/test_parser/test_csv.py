@@ -314,6 +314,69 @@ def test_tz_conversion():
     assert str(df.index.tz) == "Europe/Berlin"
 
 
+@pytest.mark.parametrize("header", [None, 0])
+@pytest.mark.parametrize("split_timestamp", [False, True])
+def test_dst_fallback_preserves_repeated_hour(header, split_timestamp):
+    timestamps = [
+        "2025-10-26 01:30:00",
+        "2025-10-26 02:00:00",
+        "2025-10-26 02:30:00",
+        "2025-10-26 02:00:00",
+        "2025-10-26 02:30:00",
+        "2025-10-26 03:00:00",
+    ]
+    if split_timestamp:
+        timestamp_columns = [
+            {"column": 0, "format": "%Y-%m-%d"},
+            {"column": 1, "format": "%H:%M:%S"},
+        ]
+        timestamps = [timestamp.replace(" ", ",") for timestamp in timestamps]
+        column_names = "date,time,value\n"
+    else:
+        timestamp_columns = [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}]
+        column_names = "time,value\n"
+    rawdata = "\n".join(
+        f"{timestamp},{value}" for value, timestamp in enumerate(timestamps)
+    )
+    if header is not None:
+        rawdata = column_names + rawdata
+    parser = CsvParser(
+        {
+            "header": header,
+            "timestamp_columns": timestamp_columns,
+            "timezone": "Europe/Berlin",
+        }
+    )
+
+    df = parser.do_parse(rawdata, "project", "thing")
+
+    expected_utc = pd.to_datetime(
+        [
+            "2025-10-25 23:30:00",
+            "2025-10-26 00:00:00",
+            "2025-10-26 00:30:00",
+            "2025-10-26 01:00:00",
+            "2025-10-26 01:30:00",
+            "2025-10-26 02:00:00",
+        ],
+        utc=True,
+    )
+    assert str(df.index.tz) == "Europe/Berlin"
+    assert df.index.tz_convert("UTC").equals(expected_utc)
+    assert df.iloc[:, 0].tolist() == list(range(6))
+
+    observations = parser.to_observations(df, origin="test")
+    assert [obs["result_time"] for obs in observations] == [
+        "2025-10-26T01:30:00+02:00",
+        "2025-10-26T02:00:00+02:00",
+        "2025-10-26T02:30:00+02:00",
+        "2025-10-26T02:00:00+01:00",
+        "2025-10-26T02:30:00+01:00",
+        "2025-10-26T03:00:00+01:00",
+    ]
+    assert [obs["result_number"] for obs in observations] == list(range(6))
+
+
 RAWDATA_SKIP_WITH_HEADER = """Skipline
 #Commentline
 time,var1,var2,var3
