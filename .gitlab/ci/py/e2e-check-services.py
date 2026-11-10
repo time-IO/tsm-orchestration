@@ -132,7 +132,7 @@ def check_database():
     return username
 
 
-def check_frost_via_sta_proxy(db_username):
+def check_frost_via_sta_hub(db_username):
     url = f"http://{host}/sta/{db_username}/"
     response = requests.options(url)
     if response.status_code != 204:
@@ -170,6 +170,6 @@ def check_minio():
 if __name__ == "__main__":
     check_grafana_dashboard()
     db_username = check_database()
-    check_frost_via_sta_proxy(db_username)
+    check_frost_via_sta_hub(db_username)
     check_minio()
     log("All checks passed")

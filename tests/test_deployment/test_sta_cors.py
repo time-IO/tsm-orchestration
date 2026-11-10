@@ -14,9 +14,9 @@ FOREIGN_ORIGIN = "https://evil.example"
 
 @pytest.fixture
 def sta_url():
-    url = os.environ.get("STA_PROXY_URL")
+    url = os.environ.get("STA_HUB_URL")
     if not url:
-        pytest.fail("STA_PROXY_URL not set")
+        pytest.fail("STA_HUB_URL not set")
     return url.rstrip("/") + "/endpoints/"
 
 
