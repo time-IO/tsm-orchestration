@@ -129,32 +129,32 @@ services:
       APP_VERSION: "dev"
     command: "quasar dev"
 
-  sta-proxy-api:
-    image: timeio-sta-proxy-api-local:dev
+  sta-hub-api:
+    image: timeio-sta-hub-api-local:dev
     build:
       context: .
-      dockerfile: ./sta-proxy/api/docker/Dockerfile-Dev
+      dockerfile: ./sta-hub/api/docker/Dockerfile-Dev
     working_dir: /app
     volumes:
-      - ./sta-proxy/api/app:/app:rw
+      - ./sta-hub/api/app:/app:rw
 
-  sta-proxy-frontend:
-    image: timeio-sta-proxy-frontend-local:dev
+  sta-hub-frontend:
+    image: timeio-sta-hub-frontend-local:dev
     build:
-      context: ./sta-proxy/frontend
+      context: ./sta-hub/frontend
       dockerfile: docker/Dockerfile-Dev
     user: "node"
     working_dir: /home/node/app
     volumes:
-      - ./sta-proxy/frontend/app:/home/node/app:rw,cached
+      - ./sta-hub/frontend/app:/home/node/app:rw,cached
     environment:
-      API_BASE_URL: "${STA_PROXY_API_APP_URL:-http://localhost/sta}"
-      OIDC_CLIENT_ID: "${STA_PROXY_FRONTEND_OIDC_CLIENT_ID:-timeIO-client}"
-      OIDC_IDP_URL: "${STA_PROXY_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
-      OIDC_REDIRECT_URI: "${STA_PROXY_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/sta-proxy/login-callback}"
-      OIDC_SCOPE: "${STA_PROXY_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
-      OIDC_POST_LOGOUT_REDIRECT_URI: "${STA_PROXY_FRONTEND_APP_URL:-http://localhost/sta-proxy}"
-      BASE_URL: "${STA_PROXY_FRONTEND_RELATIVE_PATH:-/sta-proxy/}"
+      API_BASE_URL: "${STA_HUB_API_APP_URL:-http://localhost/sta}"
+      OIDC_CLIENT_ID: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID:-timeIO-client}"
+      OIDC_IDP_URL: "${STA_HUB_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
+      OIDC_REDIRECT_URI: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/sta-hub/login-callback}"
+      OIDC_SCOPE: "${STA_HUB_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "${STA_HUB_FRONTEND_APP_URL:-http://localhost/sta-hub}"
+      BASE_URL: "${STA_HUB_FRONTEND_RELATIVE_PATH:-/sta-hub/}"
       SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
     command: "quasar dev"
 
