@@ -19,6 +19,7 @@ When adding a changelog entry, ensure the following:
 ### Fixed
 - Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 - TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
+- Http Ingest: displays and copies full URL of the endpoint; additional infos how to use the api key ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/806))
 - CSV parser preserves observations from the repeated hour when switching from daylight saving time to standard time by inferring the correct UTC offsets ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/812))
 
 ### Changed
