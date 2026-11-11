@@ -127,6 +127,7 @@ services:
       BASE_URL: "${DSM_FRONTEND_RELATIVE_PATH:-/data-source-management/}"
       SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
       APP_VERSION: "dev"
+      BENTO_HTTP_BASE_URL: "${DSM_FRONTEND_BENTO_HTTP_BASE_URL:-http://localhost/http-ingest/}"
     command: "quasar dev"
 
   timeio-db-api:
