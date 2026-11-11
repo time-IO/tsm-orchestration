@@ -1,0 +1,27 @@
+info:
+  name: public - Things
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/public/{{endpointGroup1}}/v1.1/Things?$select=name&$orderby=name"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("only public configurations", function () {
+          expect(res.getBody().value.map((e) => e.name)).to.deep.equal(["CRNS - Static", "Rover - separate GPS"]);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
