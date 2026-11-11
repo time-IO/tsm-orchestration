@@ -7,6 +7,9 @@ When adding a changelog entry, ensure the following:
 - The most recent version is named `[Unreleased]` and contains no sections initially
 - See `scripts/bin/parse_changelog/__main__.py` for an overview of checks for this file
 -->
+
+<!-- BEGIN OF CHANGELOG -->
+
 ## [Unreleased]
 
 ### Fixed
