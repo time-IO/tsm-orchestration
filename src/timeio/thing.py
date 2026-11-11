@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from timeio import frost
-
 
 class Database:
     def __init__(
@@ -193,12 +191,3 @@ class Thing:
             raise ValueError(
                 f'Unable to get Thing instance from message "{message}"'
             ) from e
-
-    def setup_frost(self, tomcat_proxy_url: str):
-        frost.write_context_file(
-            schema=self.database.username.lower(),
-            user=f"sta_{self.database.ro_username.lower()}",
-            password=self.database.ro_password,
-            db_url=self.database.url,
-            tomcat_proxy_url=tomcat_proxy_url,
-        )
