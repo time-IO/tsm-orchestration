@@ -13,6 +13,8 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
+- New STA Hub offers filtering for endpoints and authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
+- New STA Hub offers filtering for endpoints and preparation for authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
 - Timestamps in the parser test results are now displayed in the parser's configured timezone by default. Users can switch to their local timezone if preferred ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 
