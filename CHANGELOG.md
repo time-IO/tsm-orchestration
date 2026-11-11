@@ -7,17 +7,19 @@ When adding a changelog entry, ensure the following:
 - The most recent version is named `[Unreleased]` and contains no sections initially
 - See `scripts/bin/parse_changelog/__main__.py` for an overview of checks for this file
 -->
-
-<!-- BEGIN OF CHANGELOG -->
-
 ## [Unreleased]
 
+### Fixed
+- Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
+
+## [2026-11-11]
+
 ### Added
+- New STA Hub offers filtering for endpoints and authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
 - Timestamps in the parser test results are now displayed in the parser's configured timezone by default. Users can switch to their local timezone if preferred ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 
 ### Fixed
-- Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
 - Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 - TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
 - Http Ingest: displays and copies full URL of the endpoint; additional infos how to use the api key ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/806))
