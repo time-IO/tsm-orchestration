@@ -1,6 +1,5 @@
 import hashlib
 import signal
-import threading
 import subprocess
 from unittest.mock import MagicMock
 
@@ -11,7 +10,6 @@ from crontab import CronTab
 
 import cron_jobs
 import cron_scheduler
-import mqtt_sync_wrapper
 import setup_crontab
 from timeio import cron
 
@@ -60,57 +58,6 @@ class FakeConn:
         return [c for c in self.calls if needle in c[0]]
 
 
-def patch_connect(monkeypatch, module, conn):
-    monkeypatch.setattr(module.psycopg, "connect", lambda *a, **k: conn)
-
-
-# ---- backfill ----
-
-LEGACY = (
-    f"5-59/10 * * * * sleep 3 && {CMD} sync-thing {U1} {SUFFIX}\n"
-    f"5-59/20 * * * * {CMD} sync-thing {U1} {SUFFIX}\n"
-    f"# 1-59/10 * * * * {CMD} sync-thing {U2} {SUFFIX}\n"
-    f"0 3 * * 0 {CMD} resync-range {U1} --days 14 {SUFFIX}\n"
-    f"0 3 * * 1 {CMD} resync-range {U2} {SUFFIX}\n"
-    f"10 * * * * {CMD} sync-sms sms_cv {SUFFIX}\n"
-    "0 0 * * * /unknown.sh\n"
-)
-
-
-def test_backfill_imports(tmp_path, monkeypatch):
-    f = tmp_path / "crontab.txt"
-    f.write_text(LEGACY)
-    conn = FakeConn(
-        {"FROM dsm_db.ingest": [(U1, 11)], "count(*)": [(0,)], "RETURNING id": [(1,)]}
-    )
-    patch_connect(monkeypatch, cron, conn)
-    s = cron.backfill_from_file(f, "dsn")
-    upserts = conn.sql("INSERT INTO dsm_db.ingest_schedule")
-    assert [c[1] for c in upserts] == [(11, "5-59/10 * * * *", 3, True)]
-    jobs = conn.sql("INSERT INTO dsm_db.custom_job")
-    assert [c[1][0] for c in jobs] == ["resync_thing", "sync_sms"]
-    assert (s.imported, s.skipped, s.orphaned, s.unknown) == (3, 1, 2, 1)
-
-
-def test_backfill_keeps_existing_jobs(tmp_path, monkeypatch):
-    f = tmp_path / "crontab.txt"
-    f.write_text(LEGACY)
-    conn = FakeConn({"FROM dsm_db.ingest": [(U1, 11)], "count(*)": [(4,)]})
-    patch_connect(monkeypatch, cron, conn)
-    cron.backfill_from_file(f, "dsn")
-    assert not conn.sql("INSERT INTO dsm_db.custom_job")
-    assert len(conn.sql("INSERT INTO dsm_db.ingest_schedule")) == 1
-
-
-def test_backfill_missing_table_or_file(tmp_path, monkeypatch):
-    assert cron.backfill_from_file(tmp_path / "nope", "dsn") is None
-    f = tmp_path / "crontab.txt"
-    f.write_text(LEGACY)
-    conn = FakeConn(raises=("FROM dsm_db.ingest", psycopg.errors.UndefinedTable()))
-    patch_connect(monkeypatch, cron, conn)
-    assert cron.backfill_from_file(f, "dsn") is None
-
-
 # ---- handler ----
 
 
@@ -132,13 +79,8 @@ def handler(tmp_path, monkeypatch):
     )
     h.tabfile = str(tmp_path / "crontab.txt")
     h.dsmdb_dsn = "dsn"
-    h._backfilled = True
-    h._lock = threading.Lock()
     (tmp_path / "crontab.txt").write_text("")
     monkeypatch.setattr(setup_crontab, "journal", MagicMock())
-    conn = FakeConn()
-    patch_connect(monkeypatch, setup_crontab, conn)
-    h.conn = conn
     return h
 
 
@@ -155,39 +97,26 @@ def test_act_creates_and_updates_keeping_jitter(handler, monkeypatch):
     thing = thing_mock(ext_api=api(10))
     run_act(handler, monkeypatch, thing)
     job = next(iter(CronTab(tabfile=handler.tabfile)))
-    expr, jitter = str(job.slices), cron.jitter_from_command(job.command)
-    assert handler.conn.sql("INSERT INTO dsm_db.ingest_schedule")[-1][1] == (
-        11, expr, jitter, True,
-    )  # fmt: skip
+    jitter = cron.jitter_from_command(job.command)
+    assert job.is_enabled()
 
     thing.ext_api = api(10, enabled=False)
     run_act(handler, monkeypatch, thing)
     jobs = list(CronTab(tabfile=handler.tabfile))
     assert len(jobs) == 1 and not jobs[0].is_enabled()
     assert cron.jitter_from_command(jobs[0].command) == jitter
-    assert handler.conn.sql("INSERT INTO dsm_db.ingest_schedule")[-1][1] == (
-        11, expr, jitter, False,
-    )  # fmt: skip
 
 
 def test_act_without_ext_creates_nothing_and_removes_existing(handler, monkeypatch):
     thing = thing_mock()
     run_act(handler, monkeypatch, thing)
     assert not list(CronTab(tabfile=handler.tabfile))
-    assert not handler.conn.sql("INSERT INTO")
 
     thing.ext_api = api()
     run_act(handler, monkeypatch, thing)
     thing.ext_api = None
     run_act(handler, monkeypatch, thing)
     assert not list(CronTab(tabfile=handler.tabfile))
-    assert handler.conn.sql("DELETE FROM dsm_db.ingest_schedule")[-1][1] == (11,)
-
-
-def test_act_db_failure_keeps_file(handler, monkeypatch):
-    handler.conn.raises = ("INSERT", psycopg.OperationalError("down"))
-    run_act(handler, monkeypatch, thing_mock(ext_api=api()))
-    assert len(list(CronTab(tabfile=handler.tabfile))) == 1
 
 
 # ---- cron_jobs CLI ----
@@ -203,11 +132,11 @@ def test_cli_add_resync_thing(monkeypatch):
     r = invoke(monkeypatch, conn, "add", "resync-thing", U1, "--days", "14",
                "--schedule", "0 3 * * 0", "--jitter", "4")  # fmt: skip
     assert r.exit_code == 0, r.output
-    args = conn.sql("INSERT INTO dsm_db.custom_job")[0][1]
+    args = conn.sql("INSERT INTO dsm_db.scheduled_job")[0][1]
     assert (
         args[0] == "resync_thing"
         and args[1] == 11
-        and args[4:7] == ("0 3 * * 0", 4, True)
+        and args[3:6] == ("0 3 * * 0", 4, True)
     )
 
 
@@ -232,79 +161,6 @@ def test_cli_unknown_thing_and_job(monkeypatch):
     )
     assert r.exit_code != 0 and "No ingest" in r.output
     assert invoke(monkeypatch, FakeConn(), "rm", "3").exit_code != 0
-
-
-# ---- resync-project ----
-
-
-def test_resync_project_only_ext_api(monkeypatch):
-    things = [thing_mock(U1, ext_api=api()), thing_mock(U2, ext_sftp=MagicMock())]
-    project = MagicMock()
-    project.get_things.return_value = things
-    monkeypatch.setattr(mqtt_sync_wrapper.Project, "from_uuid", lambda *a, **k: project)
-    published = []
-    monkeypatch.setattr(
-        mqtt_sync_wrapper, "publish_multiple", lambda t, p: published.append((t, p))
-    )
-    monkeypatch.setenv("DSMDB_DSN", "dsn")
-    monkeypatch.setenv("API_SYNC_TOPIC", "api/topic")
-    r = click.testing.CliRunner().invoke(
-        mqtt_sync_wrapper.cli, ["resync-project", "p", "--days", "2"]
-    )
-    assert r.exit_code == 0, r.output
-    assert len(published) == 1 and published[0][0] == "api/topic"
-    assert len(published[0][1]) == 1 and U1 in published[0][1][0]
-
-
-def test_resync_project_without_ext_api_publishes_nothing(monkeypatch):
-    project = MagicMock()
-    project.get_things.return_value = [thing_mock(U2)]
-    monkeypatch.setattr(mqtt_sync_wrapper.Project, "from_uuid", lambda *a, **k: project)
-    monkeypatch.setattr(
-        mqtt_sync_wrapper, "publish_multiple", MagicMock(side_effect=AssertionError)
-    )
-    monkeypatch.setenv("DSMDB_DSN", "dsn")
-    r = click.testing.CliRunner().invoke(mqtt_sync_wrapper.cli, ["resync-project", "p"])
-    assert r.exit_code == 0, r.output
-
-
-def test_publish_multiple_uses_one_connection(monkeypatch):
-    from timeio import mqtt
-
-    for k, v in {
-        "MQTT_BROKER": "h:1883", "MQTT_QOS": "1", "MQTT_USER": "u", "MQTT_PASSWORD": "p",
-    }.items():  # fmt: skip
-        monkeypatch.setenv(k, v)
-    multiple = MagicMock()
-    monkeypatch.setattr(mqtt.paho.mqtt.publish, "multiple", multiple)
-    mqtt.publish_multiple("t", ["a", "b"])
-    msgs = multiple.call_args.args[0]
-    assert [m["payload"] for m in msgs] == ["a", "b"]
-    assert all(m["topic"] == "t" and m["qos"] == 1 for m in msgs)
-    assert multiple.call_args.kwargs["hostname"] == "h"
-
-
-# ---- backfill retry ----
-
-
-def test_ensure_backfill_retries_until_tables_exist(handler, monkeypatch):
-    results = iter([None, None, cron.BackfillSummary()])
-    monkeypatch.setattr(setup_crontab, "backfill_from_file", lambda *a: next(results))
-    handler._backfilled = False
-    for expected in (False, False, True):
-        handler.ensure_backfill()
-        assert handler._backfilled is expected
-    handler.ensure_backfill()  # no further call once done
-
-
-def test_ensure_backfill_survives_errors(handler, monkeypatch):
-    def boom(*a):
-        raise psycopg.OperationalError("down")
-
-    monkeypatch.setattr(setup_crontab, "backfill_from_file", boom)
-    handler._backfilled = False
-    handler.ensure_backfill()
-    assert handler._backfilled is False
 
 
 # ---- scheduler ----

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Maintain the custom cron jobs (`dsm_db.custom_job`) of the cron-scheduler."""
+"""Maintain the scheduled cron jobs (`dsm_db.scheduled_job`) of the cron-scheduler."""
 
 from __future__ import annotations
 
@@ -98,22 +98,6 @@ def add_resync_thing(thing_uuid, days, schedule, jitter, note):
     click.echo(f"Added job {job_id}")
 
 
-@add.command("resync-project")
-@click.argument("project_uuid")
-@click.option("--days", default=cron.DEFAULT_RESYNC_DAYS, show_default=True)
-@_common
-def add_resync_project(project_uuid, days, schedule, jitter, note):
-    params = _params("resync_project", days=days)
-    expression, jitter = _schedule(schedule), _jitter(jitter)
-    with _connect() as conn:
-        pg_id, _ = _lookup(conn, "permission_group", project_uuid)
-        job_id = cron.insert_job(
-            conn, "resync_project", expression, jitter, params,
-            permission_group_id=pg_id, note=note,
-        )  # fmt: skip
-    click.echo(f"Added job {job_id}")
-
-
 @add.command("sync-sms")
 @click.argument("origin")
 @_common
@@ -130,7 +114,7 @@ def add_sync_sms(origin, schedule, jitter, note):
 def _update(job_id: int, column: str, value) -> None:
     with _connect() as conn:
         cur = conn.execute(
-            f"UPDATE {cron.SCHEMA}.custom_job SET {column} = %s, updated_at = now() "
+            f"UPDATE {cron.SCHEMA}.scheduled_job SET {column} = %s, updated_at = now() "
             "WHERE id = %s",
             (value, job_id),
         )
@@ -162,7 +146,7 @@ def set_schedule(job_id, expression):
 def rm(job_id):
     with _connect() as conn:
         cur = conn.execute(
-            f"DELETE FROM {cron.SCHEMA}.custom_job WHERE id = %s", (job_id,)
+            f"DELETE FROM {cron.SCHEMA}.scheduled_job WHERE id = %s", (job_id,)
         )
         if cur.rowcount == 0:
             raise click.ClickException(f"No job with id {job_id}")

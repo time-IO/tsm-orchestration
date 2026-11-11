@@ -34,16 +34,7 @@ from .ingest_http import IngestHttp
 from .ingest_mqtt import IngestMqtt
 from .ingest_sftp import IngestSftp
 from .ingest_schedule import IngestSchedule
-from .custom_job import CustomJob
-from .schedule_schemas import (
-    CustomJobCreate,
-    CustomJobParamSpec,
-    CustomJobSpec,
-    CustomJobUpdate,
-    IngestScheduleInfoRead,
-    IngestScheduleRead,
-    CustomJobRead,
-)
+from .scheduled_job import ScheduledJob
 
 from .parser import Parser
 from .parser_detailed import ParserDetailed

@@ -83,10 +83,3 @@ class ParserType(str, Enum):
     def __str__(self) -> str:
         """Return the underlying string representation."""
         return self.value
-
-
-class CustomJobType(str, Enum):
-    SYNC_THING = "sync_thing"
-    RESYNC_THING = "resync_thing"
-    RESYNC_PROJECT = "resync_project"
-    SYNC_SMS = "sync_sms"

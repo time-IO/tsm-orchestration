@@ -281,14 +281,3 @@ def publish_single(topic, payload: str, client_id: str = ""):
     paho.mqtt.publish.single(
         **_get_settings_from_env(), topic=topic, payload=payload, client_id=client_id
     )
-
-
-def publish_multiple(topic, payloads: list[str], client_id: str = ""):
-    """Publish several messages to one topic over a single connection."""
-    settings = _get_settings_from_env()
-    qos = settings.pop("qos")
-    paho.mqtt.publish.multiple(
-        [{"topic": topic, "payload": p, "qos": qos} for p in payloads],
-        client_id=client_id,
-        **settings,
-    )

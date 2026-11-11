@@ -5,7 +5,6 @@ import re
 import uuid as uuid_lib
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
 from random import randint
 from typing import Any, Callable
 
@@ -29,7 +28,7 @@ SYNC_JITTER_SECONDS = 30
 MAX_JITTER_SECONDS = 59
 CONNECT_TIMEOUT = 10
 
-JOB_TYPES = ("sync_thing", "resync_thing", "resync_project", "sync_sms")
+JOB_TYPES = ("resync_thing", "sync_sms")
 SMS_ORIGINS = ("sms_backend", "sms_cv")
 DEFAULT_RESYNC_DAYS = 7
 
@@ -202,9 +201,7 @@ def validate_expression(expression: str) -> bool:
 def validate_params(job_type: str, params: dict[str, Any] | None) -> dict[str, Any]:
     """Return the normalized params for `job_type` or raise ValueError."""
     params = params or {}
-    if job_type == "sync_thing":
-        return {}
-    if job_type in ("resync_thing", "resync_project"):
+    if job_type == "resync_thing":
         days = params.get("days", DEFAULT_RESYNC_DAYS)
         if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 365:
             raise ValueError(f"days must be an integer in 1..365, got {days!r}")
@@ -223,21 +220,20 @@ def build_command(
     params: dict[str, Any] | None,
     jitter: int,
 ) -> str:
-    """Build the shell command of a job. Job type `sync_thing` is also used for
-    the regular per-thing sync of `ingest_schedule`. Raises ValueError on invalid input.
+    """Build the shell command of a job. Pseudo type `sync_thing` is the regular
+    per-thing sync of `ingest_schedule`. Raises ValueError on invalid input.
     """
     if not 0 <= jitter <= MAX_JITTER_SECONDS:
         raise ValueError(f"jitter must be in 0..{MAX_JITTER_SECONDS}, got {jitter!r}")
     if job_type == "sync_sms":
         args = f"sync-sms {validate_params(job_type, params)['origin']}"
-    elif job_type in ("sync_thing", "resync_thing", "resync_project"):
+    elif job_type in ("sync_thing", "resync_thing"):
         target = str(uuid_lib.UUID(str(target_uuid)))
         if job_type == "sync_thing":
             args = f"sync-thing {target}"
         else:
             days = validate_params(job_type, params)["days"]
-            cmd = "resync-range" if job_type == "resync_thing" else "resync-project"
-            args = f"{cmd} {target} --days {days}"
+            args = f"resync-range {target} --days {days}"
     else:
         raise ValueError(f"unknown job type {job_type!r}")
     return f"sleep {jitter} && python3 {SCRIPT} {args} > $STDOUT 2> $STDERR"
@@ -322,13 +318,15 @@ def render_crontab(
         try:
             if not validate_expression(expression):
                 raise ValueError(f"invalid cron expression {j.cron_expression!r}")
+            if j.job_type not in JOB_TYPES:
+                raise ValueError(f"unknown job type {j.job_type!r}")
             if not isinstance(j.params, dict):
                 raise ValueError("params must be a JSON object")
             command = build_command(
                 j.job_type, j.target_uuid, j.params, j.jitter_seconds
             )
         except ValueError as e:
-            skip(f"custom_job {j.id} ({j.job_type}): {e}")
+            skip(f"scheduled_job {j.id} ({j.job_type}): {e}")
             continue
         target = _clean(j.target_name or j.params.get("origin") or "")
         out.append(
@@ -521,13 +519,11 @@ def fetch_jobs(conn: psycopg.Connection) -> list[JobRow]:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(f"""
             SELECT j.id, j.job_type,
-                   COALESCE(i.uuid, p.uuid)::text AS target_uuid,
-                   COALESCE(i.name, p.name) AS target_name,
+                   i.uuid::text AS target_uuid, i.name AS target_name,
                    j.params, j.cron_expression, j.jitter_seconds, j.enabled,
                    j.note, j.updated_at
-            FROM {SCHEMA}.custom_job j
+            FROM {SCHEMA}.scheduled_job j
             LEFT JOIN {SCHEMA}.ingest i ON i.id = j.ingest_id
-            LEFT JOIN {SCHEMA}.permission_group p ON p.id = j.permission_group_id
             ORDER BY j.id
             """)
         return [JobRow(**r) for r in cur.fetchall()]
@@ -540,22 +536,20 @@ def insert_job(
     jitter: int,
     params: dict[str, Any],
     ingest_id: int | None = None,
-    permission_group_id: int | None = None,
     enabled: bool = True,
     note: str | None = None,
 ) -> int:
     row = conn.execute(
         f"""
-        INSERT INTO {SCHEMA}.custom_job
-            (job_type, ingest_id, permission_group_id, params, cron_expression,
+        INSERT INTO {SCHEMA}.scheduled_job
+            (job_type, ingest_id, params, cron_expression,
              jitter_seconds, enabled, note)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
             job_type,
             ingest_id,
-            permission_group_id,
             Jsonb(params),
             cron_expression,
             jitter,
@@ -564,117 +558,3 @@ def insert_job(
         ),
     ).fetchone()
     return row[0]
-
-
-# ---------------------------------------------------------------------------
-# Backfill from the legacy crontab.txt
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class BackfillSummary:
-    imported: int = 0
-    skipped: int = 0
-    orphaned: int = 0
-    unknown: int = 0
-
-    def __str__(self) -> str:
-        return (
-            f"imported={self.imported} skipped={self.skipped} "
-            f"orphaned={self.orphaned} unknown={self.unknown}"
-        )
-
-
-def backfill_from_file(path: str | Path, dsn: str) -> BackfillSummary | None:
-    """Import schedules from the legacy crontab.txt into the DSM DB.
-
-    `sync-thing` lines are upserted into `ingest_schedule` (the file wins).
-    `resync-range`/`sync-sms` lines go to `custom_job` but only while that
-    table is empty, so later consolidations are not overwritten at each start.
-    Returns None if the file or the tables do not exist (yet).
-    """
-    try:
-        text = Path(path).read_text()
-    except FileNotFoundError:
-        logger.warning(f"backfill: {path} does not exist, skipping")
-        return None
-    legacy = parse_legacy_crontab(text)
-    summary = BackfillSummary(unknown=len(legacy.unknown))
-    for line_no, line in legacy.unknown:
-        logger.warning(f"backfill: unknown crontab line {line_no}: {line}")
-
-    try:
-        with psycopg.connect(dsn, connect_timeout=CONNECT_TIMEOUT) as conn:
-            ids = {
-                r[0]: r[1]
-                for r in conn.execute(f"SELECT uuid::text, id FROM {SCHEMA}.ingest")
-            }
-            seen: dict[str, LegacyJob] = {}
-            for job in legacy.jobs:
-                if job.kind != "sync_thing":
-                    continue
-                prev = seen.get(job.target)
-                if prev is None or (job.enabled and not prev.enabled):
-                    seen[job.target] = job
-            n_sync = sum(1 for j in legacy.jobs if j.kind == "sync_thing")
-            summary.skipped += n_sync - len(seen)
-            for uuid, job in seen.items():
-                if uuid not in ids:
-                    logger.warning(f"backfill: orphaned sync-thing job for {uuid}")
-                    summary.orphaned += 1
-                    continue
-                upsert_schedule(
-                    conn, ids[uuid], job.expression, job.jitter, job.enabled
-                )
-                summary.imported += 1
-
-            others = [j for j in legacy.jobs if j.kind in ("resync_thing", "sync_sms")]
-            (count,) = conn.execute(
-                f"SELECT count(*) FROM {SCHEMA}.custom_job"
-            ).fetchone()
-            if count:
-                summary.skipped += len(others)
-            else:
-                for job in others:
-                    _backfill_job(conn, job, ids, summary)
-    except psycopg.errors.UndefinedTable:
-        logger.warning("backfill: cron tables do not exist yet, skipping")
-        return None
-
-    logger.info(f"backfill from {path}: {summary}")
-    return summary
-
-
-def _backfill_job(
-    conn: psycopg.Connection,
-    job: LegacyJob,
-    ids: dict[str, int],
-    summary: BackfillSummary,
-) -> None:
-    note = f"imported from crontab.txt (line {job.line_no})"
-    if job.kind == "sync_sms":
-        insert_job(
-            conn,
-            "sync_sms",
-            job.expression,
-            job.jitter,
-            {"origin": job.target},
-            enabled=job.enabled,
-            note=note,
-        )
-    else:
-        if job.target not in ids:
-            logger.warning(f"backfill: orphaned resync-range job for {job.target}")
-            summary.orphaned += 1
-            return
-        insert_job(
-            conn,
-            "resync_thing",
-            job.expression,
-            job.jitter,
-            {"days": job.days},
-            ingest_id=ids[job.target],
-            enabled=job.enabled,
-            note=note,
-        )
-    summary.imported += 1
