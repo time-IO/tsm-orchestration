@@ -4,7 +4,8 @@ import { QIcon, QSelect } from 'quasar';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
-import ParserSelect from '@/components/ParserSelect.vue'; // adjust path
+import ParserSelect from '@/components/ParserSelect.vue';
+import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
 import { rules } from '@/utils/validation/rules';
 import type { ParserSelectOption } from '@/services/types';
 
@@ -26,6 +27,11 @@ const { stores, notifyMock, resolveMock } = vi.hoisted(() => {
     resolveMock: vi.fn((location: { path: string }) => ({ href: `#${location.path}` })),
   };
 });
+
+vi.mock('@/services/parser_predefined', () => ({
+  getPredefinedParsers: vi.fn(),
+  getPredefinedParser: vi.fn(),
+}));
 
 vi.mock('@/stores/parserCsvStore', () => ({ useCsvParserStore: () => stores.csv }));
 vi.mock('@/stores/parserJsonStore', () => ({ useJsonParserStore: () => stores.json }));
@@ -150,6 +156,33 @@ describe('ParserSelect', () => {
       store.dispatchGetList.mockReset().mockResolvedValue(undefined);
       store.dispatchGetOne.mockReset();
     }
+  });
+
+  describe('predefined parsers', () => {
+    const parser = { id: 42, name: 'truelog100', parser_type: 'predefined' };
+
+    it('offers TrueLog100 without a settings link and emits its saved identity', async () => {
+      vi.mocked(getPredefinedParsers).mockResolvedValue({ data: { items: [parser] } } as never);
+      const w = await mountOptionList({ parser_type: 'predefined' });
+      expect(getPredefinedParsers).toHaveBeenCalledOnce();
+      expect(w.text()).toContain('TrueLog100');
+      expect(w.findAllComponents(QIcon).some((icon) => icon.props('name') === 'launch')).toBe(
+        false,
+      );
+      await w.find('.option').trigger('click');
+      expect(w.emitted('update:modelValue')?.at(-1)).toEqual([parser]);
+      for (const store of Object.values(stores)) {
+        expect(store.dispatchGetList).not.toHaveBeenCalled();
+      }
+    });
+
+    it('loads a saved predefined parser missing from the recommendations', async () => {
+      vi.mocked(getPredefinedParsers).mockResolvedValue({ data: { items: [] } } as never);
+      vi.mocked(getPredefinedParser).mockResolvedValue({ data: parser } as never);
+      const w = await mountParserSelect({ parser_type: 'predefined', preselected_item_id: 42 });
+      expect(getPredefinedParser).toHaveBeenCalledWith(42);
+      expect(getSelect(w).props('options')).toEqual([parser]);
+    });
   });
 
   describe('initialization', () => {

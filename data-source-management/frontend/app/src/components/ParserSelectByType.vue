@@ -57,6 +57,7 @@
         </template>
 
         <q-icon
+          v-if="selectedParser.parser_type !== 'predefined'"
           name="launch"
           class="cursor-pointer"
           color="blue-grey-5"
@@ -79,7 +80,11 @@
 
       <q-card-section>
         <div class="text-caption q-mb-sm">1. Choose type</div>
-        <parser-type-select v-model="dialogParserType" @update:model-value="draftParser = null" />
+        <parser-type-select
+          v-model="dialogParserType"
+          include-predefined
+          @update:model-value="draftParser = null"
+        />
 
         <div class="text-caption q-mt-md q-mb-sm" v-if="dialogParserType">2. Choose parser</div>
         <parser-select

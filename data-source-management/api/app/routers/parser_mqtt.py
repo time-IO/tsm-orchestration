@@ -33,4 +33,4 @@ def read_one(
     id: int,
     repo: ParserMqttRepository = Depends(get_repo_parser_mqtt),
 ):
-    return repo.to_flat(repo.find_one(id))
+    return repo.find_one(id)

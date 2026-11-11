@@ -16,14 +16,18 @@
 
 <script setup lang="ts">
 import { QSelect } from 'quasar';
+import { computed } from 'vue';
+
+const props = defineProps<{ includePredefined?: boolean }>();
 
 const model = defineModel();
 
-const options = [
+const options = computed(() => [
   { id: 'csv', name: 'CSV' },
   { id: 'json', name: 'JSON' },
   { id: 'soilcan', name: 'SOILCAN' },
-];
+  ...(props.includePredefined ? [{ id: 'predefined', name: 'Predefined' }] : []),
+]);
 </script>
 
 <style scoped></style>

@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from models import ParserDetailed, Parser, User
+from models import ParserDetailed, Parser, User, ParserPredefined
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
@@ -37,6 +37,16 @@ class ParserDetailedRepository:
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
         return entity
+
+    def find_for_ingest(
+        self, id: int, access_scope: AccessScope
+    ) -> ParserDetailed | ParserPredefined:
+        # Keep find_one scoped to user-managed parsers so their mutation routes
+        # cannot edit or delete a predefined parser.
+        predefined = self.session.get(ParserPredefined, id)
+        if predefined is not None:
+            return predefined
+        return self.find_one(id, access_scope=access_scope)
 
     def find_all(
         self,

@@ -1,6 +1,5 @@
-from fastapi_filters import FilterSet, FilterField
+from .parser_predefined import ParserPredefinedFilter
 
 
-class ParserMqttFilter(FilterSet):
-    id: FilterField[int]
-    name: FilterField[str]
+class ParserMqttFilter(ParserPredefinedFilter):
+    pass

@@ -162,7 +162,12 @@
                     <q-item-label>Parser</q-item-label>
                     <q-item-label caption>
                       {{ item.parser.name }}
-                      <q-icon name="launch" class="cursor-pointer" @click="openParser">
+                      <q-icon
+                        v-if="item.parser.parser_type !== 'predefined'"
+                        name="launch"
+                        class="cursor-pointer"
+                        @click="openParser"
+                      >
                         <q-tooltip> Open in new window </q-tooltip>
                       </q-icon>
                     </q-item-label>

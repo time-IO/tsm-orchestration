@@ -21,6 +21,12 @@ function mountParsertypeSelect(props: Record<string, unknown> = {}) {
 const getSelect = (w: ReturnType<typeof mountParsertypeSelect>) => w.findComponent(QSelect);
 
 describe('ParserTypeSelect', () => {
+  it('offers predefined parsers for ingest selection only when enabled', () => {
+    const w = mountParsertypeSelect({ includePredefined: true, modelValue: 'predefined' });
+    expect(getSelect(w).props('options')).toContainEqual({ id: 'predefined', name: 'Predefined' });
+    expect(w.find('.q-field__native').text()).toContain('Predefined');
+  });
+
   describe('initialization', () => {
     it('offers exactly the types csv, json and soilcan', () => {
       const options = getSelect(mountParsertypeSelect()).props('options') as {

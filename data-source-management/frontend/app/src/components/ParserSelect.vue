@@ -21,8 +21,9 @@
       <q-item v-bind="scope.itemProps">
         <q-item-section>
           <q-item-label>
-            {{ scope.opt.name }}
+            {{ scope.opt.name === 'truelog100' ? 'TrueLog100' : scope.opt.name }}
             <q-icon
+              v-if="scope.opt.parser_type !== 'predefined'"
               name="launch"
               class="cursor-pointer"
               color="blue-grey-5"
@@ -97,6 +98,7 @@ import { useJsonParserStore } from '@/stores/parserJsonStore';
 import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
+import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
 
 const csvParserStore = useCsvParserStore();
 const jsonParserStore = useJsonParserStore();
@@ -111,6 +113,7 @@ const { preselected_item_id, permission_group_id, parser_type } = defineProps<{
   parser_type?: string | null;
 }>();
 
+const predefinedParsers = ref<ParserSelectOption[]>([]);
 const paginationLoading = ref(false);
 const filteredOptions = ref<ParserSelectOption[]>([]);
 const isFiltering = ref(false);
@@ -130,6 +133,7 @@ const parserStoresByType: Record<
 
 const parserRowsOfStore = computed<ParserSelectOption[]>(() => {
   if (!parser_type) return [];
+  if (parser_type === 'predefined') return predefinedParsers.value;
 
   const store = parserStoresByType[parser_type];
   return store ? store.rows.map((row) => ({ ...row, parser_type })) : [];
@@ -153,9 +157,12 @@ async function includeItemIfMissing() {
   if (!isItemMissing) return;
 
   const store = parserStoresByType[parser_type];
-  if (store) {
+  if (store || parser_type === 'predefined') {
     try {
-      const item = await store.dispatchGetOne(preselected_item_id);
+      const item =
+        parser_type === 'predefined'
+          ? (await getPredefinedParser(preselected_item_id)).data
+          : await store!.dispatchGetOne(preselected_item_id);
       filteredOptions.value = [...parserRowsOfStore.value, { ...item, parser_type }];
     } catch {
       $q.notify({
@@ -184,7 +191,9 @@ async function fetchOptions() {
   paginationLoading.value = true;
   try {
     const store = parserStoresByType[parser_type];
-    if (store) {
+    if (parser_type === 'predefined') {
+      predefinedParsers.value = (await getPredefinedParsers()).data.items;
+    } else if (store) {
       store.filters.permission_group_id = permission_group_id;
       store.pagination.rowsPerPage = 250;
       await store.dispatchGetList();

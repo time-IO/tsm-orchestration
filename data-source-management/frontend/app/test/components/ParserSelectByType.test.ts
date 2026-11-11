@@ -284,6 +284,19 @@ describe('ParserSelectByType', () => {
     );
   });
 
+  it('restores a predefined selection without offering settings', async () => {
+    const parser = { id: 42, name: 'truelog100', parser_type: 'predefined' };
+    const wrapper = mountParserSelectByType({ preselectedParser: parser });
+    expect(chipTexts(wrapper)).toContain('truelog100');
+    expect(lastEmitted(wrapper)).toEqual([42]);
+    expect(wrapper.findAllComponents(QIcon).some((icon) => icon.props('name') === 'launch')).toBe(
+      false,
+    );
+    await openDialog(wrapper);
+    expect(wrapper.findComponent(ParserTypeSelectStub).props('modelValue')).toBe('predefined');
+    expect(wrapper.findComponent(ParserSelectStub).props('modelValue')).toEqual(parser);
+  });
+
   describe('selection dialog', () => {
     it('opens the dialog when the field is clicked', async () => {
       const wrapper = mountParserSelectByType();

@@ -44,6 +44,7 @@ from repositories.parser_csv import ParserCsvRepository
 from repositories.parser_json import ParserJsonRepository
 from repositories.parser_detailed import ParserDetailedRepository
 from repositories.parser_mqtt import ParserMqttRepository
+from repositories.parser_predefined import ParserPredefinedRepository
 from repositories.parser_soilcan import ParserSoilcanRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -355,3 +356,7 @@ async def create_database_if_not_exists(
         database_repo.create(
             permission_group, access_scope=AccessScope.from_user(current_user)
         )
+
+
+def get_repo_parser_predefined(session=Depends(get_session)):
+    return ParserPredefinedRepository(session)
