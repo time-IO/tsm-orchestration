@@ -12,6 +12,9 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Fixed
+- Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
+
 ## [2026-11-11]
 
 ### Added
