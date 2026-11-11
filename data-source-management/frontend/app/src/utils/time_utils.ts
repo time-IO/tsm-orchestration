@@ -1,4 +1,5 @@
 import { i18n } from '@/boot/i18n';
+import { isIsoDate } from '@/utils/validation/validators';
 
 const tPath = 'time';
 
@@ -80,41 +81,54 @@ export function formatApprox(milliseconds: number): string {
 }
 
 /**
- * Formats an ISO timestamp as "YYYY-MM-DD HH:mm:ss +/-HH:MM" in the browser's timezone.
+ * Converts a value to a Date if it is an ISO timestamp.
  *
- * @param isoString - The ISO timestamp (e.g. "2024-01-01T12:00:00Z")
- * @returns The timestamp converted to the browser's timezone
- *   (e.g. "2024-01-01 13:00:00 +01:00" in Europe/Berlin)
+ * @param value - Any value, e.g. "2024-01-01T12:00:00Z"
+ * @returns The Date, or null if the value is not a valid ISO timestamp
  */
-export function formatIsoTimestampAsLocal(isoString: string): string {
-  const date = new Date(isoString);
+export function parseIsoTimestamp(value: unknown): Date | null {
+  if (typeof value !== 'string' || !isIsoDate(value)) {
+    return null;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-  const pad = (num: number) => String(num).padStart(2, '0');
+const dateFormats = new Map<string | undefined, Intl.DateTimeFormat>();
 
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
-
-  const tzOffsetMinutes = -date.getTimezoneOffset();
-  const sign = tzOffsetMinutes >= 0 ? '+' : '-';
-  const absOffset = Math.abs(tzOffsetMinutes);
-  const tzHours = pad(Math.floor(absOffset / 60));
-  const tzMinutes = pad(absOffset % 60);
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${sign}${tzHours}:${tzMinutes}`;
+function getDateFormat(timeZone?: string): Intl.DateTimeFormat {
+  let format = dateFormats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+      timeZoneName: 'longOffset',
+    });
+    dateFormats.set(timeZone, format);
+  }
+  return format;
 }
 
 /**
- * Formats an ISO timestamp as "YYYY-MM-DD HH:mm:ss +/-HH:MM", keeping its own time and UTC offset.
+ * Formats a date as "YYYY-MM-DD HH:mm:ss +/-HH:MM".
  *
- * @param isoString - The ISO timestamp (e.g. "2024-01-01T12:00:00+01:00")
- * @returns The formatted timestamp (e.g. "2024-01-01 12:00:00 +01:00")
+ * @param date - The date to format
+ * @param timeZone - An IANA timezone (e.g. "Europe/Berlin"), defaults to the browser's timezone
+ * @returns The formatted date (e.g. "2024-01-01 13:00:00 +01:00" in Europe/Berlin)
  */
-export function formatIsoTimestamp(isoString: string): string {
-  return isoString
-    .replace('T', ' ')
-    .replace(/(Z|[+-]\d{2}:\d{2})$/, (offset) => ` ${offset === 'Z' ? '+00:00' : offset}`);
+export function formatDate(date: Date, timeZone?: string): string {
+  const parts = Object.fromEntries(
+    getDateFormat(timeZone)
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+  // "longOffset" yields e. g. "GMT+01:00", or just "GMT" for UTC
+  const offset = parts.timeZoneName?.replace('GMT', '') || '+00:00';
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} ${offset}`;
 }
