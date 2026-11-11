@@ -127,6 +127,36 @@ services:
       BASE_URL: "${DSM_FRONTEND_RELATIVE_PATH:-/data-source-management/}"
       SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
       APP_VERSION: "dev"
+      BENTO_HTTP_BASE_URL: "${DSM_FRONTEND_BENTO_HTTP_BASE_URL:-http://localhost/http-ingest/}"
+    command: "quasar dev"
+
+  sta-hub-api:
+    image: timeio-sta-hub-api-local:dev
+    build:
+      context: .
+      dockerfile: ./sta-hub/api/docker/Dockerfile-Dev
+    working_dir: /app
+    volumes:
+      - ./sta-hub/api/app:/app:rw
+
+  sta-hub-frontend:
+    image: timeio-sta-hub-frontend-local:dev
+    build:
+      context: ./sta-hub/frontend
+      dockerfile: docker/Dockerfile-Dev
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./sta-hub/frontend/app:/home/node/app:rw,cached
+    environment:
+      API_BASE_URL: "${STA_HUB_API_APP_URL:-http://localhost/sta}"
+      OIDC_CLIENT_ID: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID:-timeIO-client}"
+      OIDC_IDP_URL: "${STA_HUB_FRONTEND_OIDC_IDP_URL:-http://localhost/keycloak/realms/timeio}" #url to idp without .well-known
+      OIDC_REDIRECT_URI: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI:-http://localhost/sta-hub/login-callback}"
+      OIDC_SCOPE: "${STA_HUB_FRONTEND_OIDC_SCOPE:-openid profile eduperson_principal_name eduperson_entitlement eduperson_unique_id email offline_access}"
+      OIDC_POST_LOGOUT_REDIRECT_URI: "${STA_HUB_FRONTEND_APP_URL:-http://localhost/sta-hub}"
+      BASE_URL: "${STA_HUB_FRONTEND_RELATIVE_PATH:-/sta-hub/}"
+      SMS_URL: "${SMS_URL:-https://web.app.ufz.de/sms}"
     command: "quasar dev"
 
   timeio-db-api:
