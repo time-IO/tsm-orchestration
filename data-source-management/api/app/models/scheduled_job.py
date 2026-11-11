@@ -6,34 +6,29 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field
 
 
-class CustomJob(SQLModel, table=True):
-    """Custom cron jobs of fixed job types, maintained by superusers, see timeio.cron."""
+class ScheduledJob(SQLModel, table=True):
+    """Manual and default cron jobs of fixed job types, see timeio.cron."""
 
-    __tablename__ = "custom_job"
+    __tablename__ = "scheduled_job"
 
     __table_args__ = (
         CheckConstraint(
-            "job_type IN ('sync_thing', 'resync_thing', 'resync_project', 'sync_sms')",
-            name="ck_custom_job_type",
+            "job_type IN ('resync_thing', 'sync_sms', 'mqtt_monitoring')",
+            name="ck_scheduled_job_type",
         ),
         CheckConstraint(
-            "(job_type IN ('sync_thing', 'resync_thing')) = (ingest_id IS NOT NULL)",
-            name="ck_custom_job_ingest",
+            "(job_type = 'resync_thing') = (ingest_id IS NOT NULL)",
+            name="ck_scheduled_job_ingest",
         ),
         CheckConstraint(
-            "(job_type = 'resync_project') = (permission_group_id IS NOT NULL)",
-            name="ck_custom_job_permission_group",
+            "jitter_seconds BETWEEN 0 AND 59", name="ck_scheduled_job_jitter"
         ),
-        CheckConstraint("jitter_seconds BETWEEN 0 AND 59", name="ck_custom_job_jitter"),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     job_type: str
     ingest_id: Optional[int] = Field(
         default=None, foreign_key="ingest.id", ondelete="CASCADE"
-    )
-    permission_group_id: Optional[int] = Field(
-        default=None, foreign_key="permission_group.id", ondelete="CASCADE"
     )
     params: dict = Field(
         default_factory=dict,

@@ -1,10 +1,9 @@
 from sqlalchemy.orm import joinedload
 from sqlmodel import Session
 from typing import Optional
-from models import Ingest, IngestSchedule, CustomJob
+from models import Ingest
 from models.filters import IngestFilter
-from datetime import datetime, timezone
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from fastapi_filters.ext.sqlalchemy import apply_filters
 from fastapi import HTTPException
 from sqlalchemy import cast, String
@@ -41,41 +40,6 @@ class IngestRepository:
         if not entity:
             raise HTTPException(status_code=404, detail="Not found")
         return entity
-
-    def find_schedule(self, ingest: Ingest) -> IngestSchedule | None:
-        return self.session.get(IngestSchedule, ingest.id)
-
-    def find_custom_jobs(self, ingest: Ingest) -> list[CustomJob]:
-        """Jobs of this ingest and project-wide jobs of its permission group."""
-        statement = (
-            select(CustomJob)
-            .where(
-                or_(
-                    CustomJob.ingest_id == ingest.id,
-                    CustomJob.permission_group_id == ingest.permission_group_id,
-                )
-            )
-            .order_by(CustomJob.id)
-        )
-        return list(self.session.scalars(statement).all())
-
-    def find_custom_job(self, ingest: Ingest, job_id: int) -> CustomJob:
-        """A job that belongs to this ingest itself (not a project-wide one)."""
-        job = self.session.get(CustomJob, job_id)
-        if job is None or job.ingest_id != ingest.id:
-            raise HTTPException(status_code=404, detail="Not found")
-        return job
-
-    def save_custom_job(self, job: CustomJob) -> CustomJob:
-        job.updated_at = datetime.now(timezone.utc)
-        self.session.add(job)
-        self.session.commit()
-        self.session.refresh(job)
-        return job
-
-    def delete_custom_job(self, job: CustomJob) -> None:
-        self.session.delete(job)
-        self.session.commit()
 
     def find_all(
         self,

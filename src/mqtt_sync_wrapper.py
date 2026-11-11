@@ -8,8 +8,8 @@ import psycopg
 from datetime import datetime, timedelta, timezone
 
 
-from timeio.mqtt import publish_multiple, publish_single
-from timeio.feta import Project, Thing
+from timeio.mqtt import publish_single
+from timeio.feta import Thing
 from timeio.common import get_envvar
 from timeio.crypto import decrypt, get_crypt_key
 
@@ -119,52 +119,29 @@ def sync_thing(thing_uuid: str):
         publish_single(get_envvar("SFTP_SYNC_TOPIC"), json.dumps(message))
 
 
-def resync_message(thing: Thing, days: int) -> str:
-    now_utc = datetime.now(timezone.utc)
-    return json.dumps(
-        {
-            "thing": thing.uuid,
-            "datetime_from": (now_utc - timedelta(days=days)).strftime(
-                "%Y-%m-%dT%H:%M:%SZ"
-            ),
-            "datetime_to": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        }
-    )
-
-
-_days_option = click.option(
+@cli.command()
+@click.argument("thing_uuid")
+@click.option(
     "--days",
     default=7,
     show_default=True,
     help="Look-back window in days, ending now, independent of the thing's configured sync interval.",
 )
-
-
-@cli.command()
-@click.argument("thing_uuid")
-@_days_option
 def resync_range(thing_uuid: str, days: int):
     """Manually (re-)trigger an ext-api sync over a custom look-back window,
     e.g. for a periodic full-week resync alongside the regular cron job."""
     thing = Thing.from_uuid(thing_uuid, dsn=get_envvar("DSMDB_DSN"))
     if thing.ext_api is None:
         raise click.ClickException(f"Thing '{thing_uuid}' has no ext_api configured")
-    publish_single(get_envvar("API_SYNC_TOPIC"), resync_message(thing, days))
-
-
-@cli.command()
-@click.argument("project_uuid")
-@_days_option
-def resync_project(project_uuid: str, days: int):
-    """Like resync-range for all ext-api things of a project, resolved at run time."""
-    project = Project.from_uuid(project_uuid, dsn=get_envvar("DSMDB_DSN"))
-    messages = [
-        resync_message(thing, days)
-        for thing in project.get_things()
-        if thing.ext_api is not None
-    ]
-    if messages:
-        publish_multiple(get_envvar("API_SYNC_TOPIC"), messages)
+    now_utc = datetime.now(timezone.utc)
+    datetime_from = (now_utc - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    datetime_to = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+    message = {
+        "thing": thing.uuid,
+        "datetime_from": datetime_from,
+        "datetime_to": datetime_to,
+    }
+    publish_single(get_envvar("API_SYNC_TOPIC"), json.dumps(message))
 
 
 @cli.command()

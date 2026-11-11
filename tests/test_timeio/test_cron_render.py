@@ -32,7 +32,6 @@ def job(id=1, job_type="resync_thing", uuid=U1, params=None, **kw):
     [
         ("sync_thing", U1, None, f"sync-thing {U1}"),
         ("resync_thing", U1, {"days": 3}, f"resync-range {U1} --days 3"),
-        ("resync_project", U1, {}, f"resync-project {U1} --days 7"),
         ("sync_sms", None, {"origin": "sms_cv"}, "sync-sms sms_cv"),
     ],
 )
@@ -199,10 +198,8 @@ def test_parse_legacy_accepts_days_equals_and_uppercase_uuid():
     assert [(j.target, j.days) for j in jobs] == [(U1, 30), (U2, 365)]
 
 
-def test_render_custom_sync_thing_job():
-    text = cron.render_crontab([], [job(job_type="sync_thing", params={})])
-    assert f"0 3 * * 0 sleep 0 && {CMD} sync-thing {U1} {SUFFIX}" in text
-
-
-def test_validate_params_sync_thing_has_none():
-    assert cron.validate_params("sync_thing", {"days": 3}) == {}
+@pytest.mark.parametrize("job_type", ["sync_thing", "resync_project"])
+def test_render_skips_unknown_job_types(job_type):
+    skipped = []
+    text = cron.render_crontab([], [job(job_type=job_type)], on_skip=skipped.append)
+    assert "sync-thing" not in text and len(skipped) == 1

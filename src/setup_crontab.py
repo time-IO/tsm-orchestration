@@ -1,24 +1,17 @@
 from __future__ import annotations
 
 import logging
-import threading
-import time
 from datetime import datetime
 from random import randint
 
-import psycopg
 from crontab import CronItem, CronTab
 
 from timeio.cron import (
-    CONNECT_TIMEOUT,
     SYNC_JITTER_SECONDS,
-    backfill_from_file,
     build_command,
-    delete_schedule,
     jitter_from_command,
     new_schedule,
     update_cron_expression,
-    upsert_schedule,
 )
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
@@ -28,8 +21,6 @@ from timeio.typehints import MqttPayload
 
 logger = logging.getLogger("crontab-setup")
 journal = Journal("Cron")
-
-BACKFILL_RETRY_SECONDS = 60
 
 
 class CreateThingInCrontabHandler(AbstractHandler):
@@ -45,36 +36,8 @@ class CreateThingInCrontabHandler(AbstractHandler):
         )
         self.tabfile = "/tmp/cron/crontab.txt"
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
-        self._backfilled = False
-        self._lock = threading.Lock()
-        self.ensure_backfill()
-        if not self._backfilled:
-            threading.Thread(target=self._retry_backfill, daemon=True).start()
-
-    def _retry_backfill(self) -> None:
-        while not self._backfilled:
-            time.sleep(BACKFILL_RETRY_SECONDS)
-            self.ensure_backfill()
-
-    def ensure_backfill(self) -> None:
-        """Import the crontab file into the DB until it succeeds once (the
-        tables may not exist yet, because the DSM-API migrates them)."""
-        # the lock keeps the backfill from overwriting a concurrent act()
-        with self._lock:
-            if self._backfilled:
-                return
-            try:
-                self._backfilled = (
-                    backfill_from_file(self.tabfile, self.dsmdb_dsn) is not None
-                )
-            except Exception:
-                logger.exception("backfill of crontab file into DB failed")
 
     def act(self, content: MqttPayload.UpdateThing, message: MQTTMessage):
-        with self._lock:
-            self._act(content)
-
-    def _act(self, content: MqttPayload.UpdateThing):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
         with CronTab(tabfile=self.tabfile) as crontab:
             job = next(
@@ -88,7 +51,6 @@ class CreateThingInCrontabHandler(AbstractHandler):
             )
             info = self.apply_job(job, thing, is_new=is_new)
             if not info:
-                result = None
                 if is_new:
                     logger.warning(
                         "no Cronjob was created, because neither extAPI, "
@@ -100,31 +62,12 @@ class CreateThingInCrontabHandler(AbstractHandler):
                         "Removed cronjob, no external sync configured", thing.uuid
                     )
             else:
-                result = (
-                    str(job.slices),
-                    jitter_from_command(job.command) or 0,
-                    job.is_enabled(),
-                )
                 if is_new:
                     crontab.append(job)
                 journal.info(
                     f"{'Created' if is_new else 'Updated'} cronjob to sync {info}",
                     thing.uuid,
                 )
-        self.mirror_to_db(thing, result)
-
-    def mirror_to_db(self, thing: Thing, result: tuple[str, int, bool] | None) -> None:
-        """Write the file job's state to the DB; failures never affect the file."""
-        try:
-            with psycopg.connect(
-                self.dsmdb_dsn, connect_timeout=CONNECT_TIMEOUT
-            ) as conn:
-                if result is None:
-                    delete_schedule(conn, thing.id)
-                else:
-                    upsert_schedule(conn, thing.id, *result)
-        except Exception:
-            logger.exception(f"could not write schedule of thing {thing.uuid} to DB")
 
     @classmethod
     def apply_job(cls, job: CronItem, thing: Thing, is_new: bool = True) -> str:
