@@ -1,52 +1,39 @@
 <template>
-  <q-banner
+  <expandable-banner
     v-if="!parsingResult.is_valid"
-    class="bg-negative text-white q-mt-lg"
-    :class="{ 'validation-table--stale': haveSettingsChanged }"
+    type="error"
+    bold
+    title="Parsing failed"
+    class="q-mt-lg"
   >
-    <template #avatar>
-      <q-icon name="error" />
-    </template>
-    Parsing failed: {{ parsingResult.error }}
-  </q-banner>
-  <q-banner
+    {{ parsingResult.error }}
+  </expandable-banner>
+  <expandable-banner
     v-else-if="parsingResult.is_valid && parsingResult.warnings.length > 0"
-    class="bg-warning text-black q-mt-lg"
-    :class="{ 'validation-table--stale': haveSettingsChanged }"
+    type="warning"
+    bold
+    :title="`Parsing finished with ${parsingResult.warnings.length} ${
+      parsingResult.warnings.length === 1 ? 'warning' : 'warnings'
+    }`"
+    class="q-mt-lg"
   >
-    <template #avatar>
-      <q-icon name="warning" />
-    </template>
-    <div class="text-weight-bold q-mt-sm">Parsing finished with warnings</div>
     <ul>
-      <li v-for="(warning, index) in parsingResult.warnings" :key="index" class="q-mt-sm">
-        {{ warning }}
-      </li>
+      <li v-for="(warning, index) in parsingResult.warnings" :key="index">{{ warning }}</li>
     </ul>
-  </q-banner>
-  <q-banner
+  </expandable-banner>
+  <expandable-banner
     v-else-if="parsingResult.is_valid && parsingResult.data.length > 0"
-    class="bg-positive text-white q-mt-lg"
-    :class="{ 'validation-table--stale': haveSettingsChanged }"
-  >
-    <template #avatar>
-      <q-icon name="check_circle" />
-    </template>
-    Parsing succeeded
-  </q-banner>
+    type="success"
+    title="Parsing succeeded"
+    class="q-mt-lg"
+  />
 </template>
 
 <script setup lang="ts">
+import ExpandableBanner from '@/components/common/ExpandableBanner.vue';
 import type { ParsingResult } from '@/services/types';
 
 defineProps<{
   parsingResult: ParsingResult;
-  haveSettingsChanged: boolean;
 }>();
 </script>
-
-<style scoped>
-.validation-table--stale {
-  opacity: 0.4;
-}
-</style>
