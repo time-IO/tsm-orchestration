@@ -363,8 +363,11 @@ services:
         UID: "${UID}"
         GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
+    environment:
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
-      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -379,7 +382,7 @@ services:
   #
   # Description
   # ===========
-  # Same image as `frost`, but its context files connect as the `sti_` database user
+  # Same image as `frost`, but its contexts connect as the `sti_` database user
   # whose search_path points at the internal schema of the project.
   # Deliberately NOT exposed via proxy
   frost-internal:
@@ -391,8 +394,11 @@ services:
         UID: "${UID}"
         GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
+    environment:
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
-      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -430,8 +436,6 @@ services:
       FLYWAY_PLACEHOLDERS_MQTT_AUTH_DB_PASSWORD: "${MQTT_AUTH_POSTGRES_PASS}"
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_USER: "${THING_MANAGEMENT_LEGACY_DATABASE_USER}"
       FLYWAY_PLACEHOLDERS_FRONTEND_DB_PASSWORD: "${THING_MANAGEMENT_LEGACY_DATABASE_PASS}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_USER: "${THING_MANAGEMENT_API_DATABASE_USER}"
-      FLYWAY_PLACEHOLDERS_THING_MANAGEMENT_DB_PASSWORD: "${THING_MANAGEMENT_API_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_USER: "${KEYCLOAK_DATABASE_USER}"
       FLYWAY_PLACEHOLDERS_KEYCLOAK_DB_PASSWORD: "${KEYCLOAK_DATABASE_PASS}"
       FLYWAY_PLACEHOLDERS_MONITORING_DB_USER: "${MONITORING_DATABASE_USER}"
@@ -546,6 +550,7 @@ services:
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
       ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
       ENV_APP_VERSION_PLACEHOLDER: "${DSM_FRONTEND_IMAGE_TAG}"
+      ENV_BENTO_HTTP_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_BENTO_HTTP_BASE_URL}"
 
 
   dsm-frontend-rootless:
@@ -641,6 +646,10 @@ services:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
+      frost:
+        condition: service_started
+      frost-internal:
+        condition: service_started
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: frontend_thing_update
@@ -653,7 +662,10 @@ services:
       DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
-      TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
+      # internal only, always these fixed URLs - not deployment-specific
+      FROST_CONTEXT_API_URL: http://frost:8081
+      FROST_INTERNAL_CONTEXT_API_URL: http://frost-internal:8081
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
       MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
@@ -676,8 +688,6 @@ services:
     entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "all"]
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
-      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/home/appuser/app/src/frost_context_files_internal:rw"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
