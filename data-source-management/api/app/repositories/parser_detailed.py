@@ -11,6 +11,7 @@ from fastapi_filters import FilterOperator
 from sqlalchemy import cast, String
 from sorting import apply_sort_list
 from access_scope import AccessScope
+from timeio.parser.predefined import FILE_INGEST_PREDEFINED_PARSERS
 
 
 class ParserDetailedRepository:
@@ -41,10 +42,16 @@ class ParserDetailedRepository:
     def find_for_ingest(
         self, id: int, access_scope: AccessScope
     ) -> ParserDetailed | ParserPredefined:
+        """Find an accessible parser supported by the current file ingest worker."""
         # Keep find_one scoped to user-managed parsers so their mutation routes
         # cannot edit or delete a predefined parser.
         predefined = self.session.get(ParserPredefined, id)
         if predefined is not None:
+            if predefined.name not in FILE_INGEST_PREDEFINED_PARSERS:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Parser is not supported for file-based ingests",
+                )
             return predefined
         return self.find_one(id, access_scope=access_scope)
 

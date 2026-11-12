@@ -20,8 +20,8 @@ def read_list(
     filters: ParserPredefinedFilter = Depends(),
     recommended_for: Literal["file", "mqtt"] | None = None,
 ):
-    # Recommendations only affect selection lists. All records remain readable
-    # and selectable through the API regardless of their usual transport.
+    # Recommendations filter selection lists; ingest routes separately validate
+    # whether the current processing worker supports the selected parser.
     repo.recommended_for = recommended_for
     return paginate(repo.find_all(filters=filters))
 

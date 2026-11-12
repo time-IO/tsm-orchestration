@@ -121,18 +121,41 @@ def test_file_ingest_selection_round_trip(
     )
 
 
-def test_recommendations_do_not_restrict_api_selections(
-    client, base_data, cleanup_ingest
+@pytest.mark.parametrize(
+    ("ingest_type", "extra"),
+    [
+        ("sftp", {}),
+        ("http", {"file_type": "csv", "api_key": "test-api-key"}),
+        ("external-sftp", {"uri": "sftp://example.com", "path": "/data"}),
+    ],
+)
+def test_file_ingests_reject_mqtt_parsers_on_create_and_update(
+    client, base_data, cleanup_ingest, ingest_type, extra
 ):
-    mqtt_parser = client.get("/parser/mqtt/").json()["items"][0]
-    response = client.post(
-        "/ingest/sftp/",
-        json={
-            "name": "Future combination",
-            "permission_group_id": base_data["permission_group_id"],
-            "parser_id": mqtt_parser["id"],
-            "filename_pattern": "*.json",
-        },
-    )
+    mqtt_parsers = client.get("/parser/mqtt/").json()["items"]
+    truelog = get_truelog(client)
+    payload = {
+        "name": "File parser compatibility",
+        "permission_group_id": base_data["permission_group_id"],
+        "parser_id": truelog["id"],
+        "filename_pattern": "*.csv",
+        **extra,
+    }
+    path = f"/ingest/{ingest_type}/"
+    for parser in mqtt_parsers:
+        response = client.post(path, json={**payload, "parser_id": parser["id"]})
+        assert response.status_code == 400, response.text
+        assert (
+            response.json()["detail"]
+            == "Parser is not supported for file-based ingests"
+        )
+    assert client.get(path).json()["items"] == []
+
+    response = client.post(path, json=payload)
     assert response.status_code == 200, response.text
-    assert response.json()["parser_id"] == mqtt_parser["id"]
+    ingest_path = f"{path}{response.json()['id']}"
+    for parser in mqtt_parsers:
+        # A partial update containing only parser_id must also be rejected.
+        response = client.patch(ingest_path, json={"parser_id": parser["id"]})
+        assert response.status_code == 400, response.text
+        assert client.get(ingest_path).json()["parser_id"] == truelog["id"]
