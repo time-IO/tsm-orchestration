@@ -300,7 +300,7 @@ services:
     entrypoint: "/app/start.${TSMDL_ENVIRONMENT}.sh"
     environment:
       UFZ_DB_URL: "${DATABASE_ADMIN_DSN}"
-      STA_ENDPOINT_URL: "${STA_PROXY_URL}"
+      STA_ENDPOINT_URL: "${STA_HUB_URL}"
       UVICORN_ARGS: "${TSMDL_UVICORN_ARGS}"
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
@@ -578,6 +578,92 @@ services:
 
   # Summary
   # =======
+  # brief: An API for controlled access to STA endpoints, acting as proxy
+  # dir: sta-hub/api
+  # see also:
+  #  - sta-hub/README.md
+  #
+  # ===========
+  # Description
+  # For detailed description and hints for development, visit sta-hub/README.md
+  sta-hub-api:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-api:${STA_HUB_API_IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: sta-hub/api/docker/prod/Dockerfile
+      args:
+        UID: "${UID:-1000}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      API_ROOT_PATH: ""
+      BASE_URL: "${PROXY_URL}"
+      STA_HUB_URL: "${STA_HUB_URL}"
+      FROST_URL: "http://frost:8080/"
+      FROST_INTERNAL_URL: "http://frost-internal:8080/"
+
+
+  # Summary
+  # =======
+  # brief: A user frontend to access STA endpoints
+  # dir: sta-hub/frontend
+  # see also:
+  #  - sta-hub/README.md
+  #
+  # Description
+  # ===========
+  # For detailed description and hints for development, visit sta-hub/README.md
+  #
+  # NOTE that two services exist: sta-hub-frontend and sta-hub-frontend-rootless
+  # Latter will not be not started or built with docker compose setup by default.
+  # To build it, use `docker compose --profile build build`
+  sta-hub-frontend:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-frontend:${STA_HUB_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./sta-hub/frontend
+      dockerfile: docker/generic-image/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      sta-hub-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${STA_HUB_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
+
+  sta-hub-frontend-rootless:
+    profiles:
+      - build # activate profile to build
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-frontend-rootless:${STA_HUB_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./sta-hub/frontend
+      dockerfile: docker/generic-image/Dockerfile-rootless
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      sta-hub-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${STA_HUB_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
+
+
+  # Summary
+  # =======
   # brief: Make services accessible on single address  (eg. tsm.ufz.de)
   # dir: nginx
   # see also: ./nginx/*.conf
@@ -620,6 +706,10 @@ services:
         condition: service_started
       init:
         condition: service_completed_successfully
+      sta-hub-api:
+        condition: service_started
+      sta-hub-frontend:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
       start_period: 10s
@@ -662,6 +752,7 @@ services:
       DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
+      TOMCAT_PROXY_URL: "${STA_HUB_URL}"
       # internal only, always these fixed URLs - not deployment-specific
       FROST_CONTEXT_API_URL: http://frost:8081
       FROST_INTERNAL_CONTEXT_API_URL: http://frost-internal:8081
@@ -1239,11 +1330,11 @@ services:
       KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
       KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
       # Keycloak client config (used in configuration template)
-      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_APP_URL}/login-callback\"]"
-      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_BASE_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_OIDC_REDIRECT_URI}\", \"${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}\"]"
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}##${STA_HUB_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "${PROXY_URL}"
       KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
       KEYCLOAK_GRAFANA_CLIENT_SECRET: "${VISUALIZATION_KEYCLOAK_CLIENT_SECRET}"
       KEYCLOAK_GRAFANA_CLIENT_ID: "${VISUALIZATION_KEYCLOAK_CLIENT_ID}"
