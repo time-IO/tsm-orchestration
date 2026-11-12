@@ -20,7 +20,7 @@ When adding a changelog entry, ensure the following:
 ### Added
 - New STA Hub offers filtering for endpoints and authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
-- TrueLog100 parser ([Merge Request1](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776), [Merge Request2](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/817))
+- TrueLog100 parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776), [Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/817))
 - Timestamps in the parser test results are now displayed in the parser's configured timezone by default. Users can switch to their local timezone if preferred ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 
 ### Fixed
