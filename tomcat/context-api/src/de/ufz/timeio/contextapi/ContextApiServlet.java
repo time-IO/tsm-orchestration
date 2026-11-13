@@ -44,7 +44,7 @@ public class ContextApiServlet extends HttpServlet {
                     type="javax.sql.DataSource" driverClassName="org.postgresql.Driver"
                     url="jdbc:%s"
                     username="%s" password="%s"
-                    maxTotal="20" minIdle="10" maxIdle="10" maxWaitMillis="-1"
+                    maxTotal="20" minIdle="2" maxIdle="5" maxWaitMillis="-1"
                     testWhileIdle="true" validationQuery="SELECT 1"
                     timeBetweenEvictionRunsMillis="30000"
                     minEvictableIdleTimeMillis="60000"
