@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5 class="q-mb-none">External Api Ingest</h5>
+    <h5 class="q-mb-none">External API Ingest</h5>
     <h6 class="q-mt-none">Zentra</h6>
     <div class="row">
       <div class="col">
@@ -41,7 +41,6 @@
                     <div class="row items-center">
                       <q-item-label caption>{{ item.uuid }}</q-item-label>
                       <copy-btn title="Copy UUID" :text-to-copy="item.uuid" />
-                      <visualization-link-btn :uuid="item.uuid" />
                     </div>
                   </q-item-section>
                 </q-item>
@@ -107,22 +106,6 @@
                       {{ item.sync_interval_in_minutes }} minutes
                     </q-item-label>
                   </q-item-section>
-
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label>Trigger External api</q-item-label>
-                      <div>
-                        <q-btn
-                          class="q-mt-sm"
-                          rounded
-                          size="sm"
-                          label="Go!"
-                          @click="openTriggerDialog"
-                          text-color="primary"
-                        />
-                      </div>
-                    </q-item-section>
-                  </q-item>
                 </q-item>
               </q-list>
             </div>
@@ -139,6 +122,20 @@
           <!--          <q-btn color="negative" flat @click="openDeleteDialog"> Delete </q-btn>-->
         </q-card-actions>
       </q-card>
+
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-7">
+          <ingest-tools-section
+            :uuid="item.uuid"
+            :ingest-id="item.id"
+            trigger-type="external-api"
+          />
+        </div>
+
+        <div class="col-12 col-md-5">
+          <related-sms-configurations-section :ingest-id="item.id" :ingest-name="item.name" />
+        </div>
+      </div>
     </div>
 
     <q-dialog v-model="deleteDialog" persistent>
@@ -156,12 +153,6 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-    <trigger-external-api-dialog
-      v-if="item !== null"
-      v-model="showTriggerDialog"
-      :ids_to_trigger="[item.id]"
-    />
   </q-page>
 </template>
 
@@ -171,9 +162,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useIngestExternalApiZentraStore } from '@/stores/ingestExternalApiZentraStore';
 import type { IngestExternalApiZentraPublic } from '@/services/ingest_external_api_zentra/types';
-import TriggerExternalApiDialog from '@/components/TriggerExternalApiDialog.vue';
 import CopyBtn from '@/components/CopyBtn.vue';
-import VisualizationLinkBtn from '@/components/VisualizationLinkBtn.vue';
+import IngestToolsSection from '@/components/IngestToolsSection.vue';
+import RelatedSmsConfigurationsSection from '@/components/RelatedSmsConfigurationsSection.vue';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -183,7 +174,6 @@ const store = useIngestExternalApiZentraStore();
 const item = ref<IngestExternalApiZentraPublic | null>(null);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
-const showTriggerDialog = ref(false);
 
 const backUrl = '/ingest';
 
@@ -227,9 +217,6 @@ const formatDate = (dateString: string) => {
 // const openDeleteDialog = () => {
 //   deleteDialog.value = true;
 // };
-const openTriggerDialog = () => {
-  showTriggerDialog.value = true;
-};
 const deleteItem = async () => {
   if (!item.value) {
     return;

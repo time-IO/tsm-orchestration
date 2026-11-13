@@ -300,7 +300,7 @@ services:
     entrypoint: "/app/start.${TSMDL_ENVIRONMENT}.sh"
     environment:
       UFZ_DB_URL: "${DATABASE_ADMIN_DSN}"
-      STA_ENDPOINT_URL: "${STA_PROXY_URL}"
+      STA_ENDPOINT_URL: "${STA_HUB_URL}"
       UVICORN_ARGS: "${TSMDL_UVICORN_ARGS}"
       ROOT_PATH: /tsmdl
       ORGANISATION: ufz
@@ -363,8 +363,11 @@ services:
         UID: "${UID}"
         GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
+    environment:
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
-      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/usr/local/tomcat/conf/Catalina/localhost"
     environment:
       FROST_KEEPALIVE_INTERVAL: "${FROST_KEEPALIVE_INTERVAL}"
     logging:
@@ -381,7 +384,7 @@ services:
   #
   # Description
   # ===========
-  # Same image as `frost`, but its context files connect as the `sti_` database user
+  # Same image as `frost`, but its contexts connect as the `sti_` database user
   # whose search_path points at the internal schema of the project.
   # Deliberately NOT exposed via proxy
   frost-internal:
@@ -393,8 +396,11 @@ services:
         UID: "${UID}"
         GID: "${GID}"
     restart: "${SERVICE_RESTART_POLICY}"
+    environment:
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
+      FROST_SERVICE_ROOT_URL: "${STA_PROXY_URL}"
     volumes:
-      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost:ro"
+      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/usr/local/tomcat/conf/Catalina/localhost"
     environment:
       FROST_KEEPALIVE_INTERVAL: "${FROST_KEEPALIVE_INTERVAL}"
     logging:
@@ -548,6 +554,7 @@ services:
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
       ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
       ENV_APP_VERSION_PLACEHOLDER: "${DSM_FRONTEND_IMAGE_TAG}"
+      ENV_BENTO_HTTP_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_BENTO_HTTP_BASE_URL}"
 
 
   dsm-frontend-rootless:
@@ -571,6 +578,92 @@ services:
       ENV_BASE_URL_PLACEHOLDER: "${DSM_FRONTEND_RELATIVE_PATH}"
       ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
       ENV_APP_VERSION_PLACEHOLDER: "${DSM_FRONTEND_IMAGE_TAG}"
+
+
+  # Summary
+  # =======
+  # brief: An API for controlled access to STA endpoints, acting as proxy
+  # dir: sta-hub/api
+  # see also:
+  #  - sta-hub/README.md
+  #
+  # ===========
+  # Description
+  # For detailed description and hints for development, visit sta-hub/README.md
+  sta-hub-api:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-api:${STA_HUB_API_IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: sta-hub/api/docker/prod/Dockerfile
+      args:
+        UID: "${UID:-1000}"
+    restart: "${SERVICE_RESTART_POLICY}"
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      flyway:
+        condition: service_completed_successfully
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL}"
+      API_ROOT_PATH: ""
+      BASE_URL: "${PROXY_URL}"
+      STA_HUB_URL: "${STA_HUB_URL}"
+      FROST_URL: "http://frost:8080/"
+      FROST_INTERNAL_URL: "http://frost-internal:8080/"
+
+
+  # Summary
+  # =======
+  # brief: A user frontend to access STA endpoints
+  # dir: sta-hub/frontend
+  # see also:
+  #  - sta-hub/README.md
+  #
+  # Description
+  # ===========
+  # For detailed description and hints for development, visit sta-hub/README.md
+  #
+  # NOTE that two services exist: sta-hub-frontend and sta-hub-frontend-rootless
+  # Latter will not be not started or built with docker compose setup by default.
+  # To build it, use `docker compose --profile build build`
+  sta-hub-frontend:
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-frontend:${STA_HUB_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./sta-hub/frontend
+      dockerfile: docker/generic-image/Dockerfile
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      sta-hub-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${STA_HUB_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
+
+  sta-hub-frontend-rootless:
+    profiles:
+      - build # activate profile to build
+    image: registry.hzdr.de/ufz-tsm/tsm-orchestration/timeio-sta-hub-frontend-rootless:${STA_HUB_FRONTEND_IMAGE_TAG}
+    build:
+      context: ./sta-hub/frontend
+      dockerfile: docker/generic-image/Dockerfile-rootless
+    restart: "${SERVICE_RESTART_POLICY}"
+    depends_on:
+      sta-hub-api:
+        condition: service_started
+    environment:
+      ENV_API_BASE_URL_PLACEHOLDER: "${STA_HUB_API_APP_URL}"
+      ENV_OIDC_IDP_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_IDP_URL}"
+      ENV_OIDC_CLIENT_ID_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_CLIENT_ID}"
+      ENV_OIDC_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}"
+      ENV_OIDC_SCOPE_PLACEHOLDER: "${STA_HUB_FRONTEND_OIDC_SCOPE}"
+      ENV_OIDC_POST_LOGOUT_REDIRECT_URI_PLACEHOLDER: "${STA_HUB_FRONTEND_APP_URL}"
+      ENV_BASE_URL_PLACEHOLDER: "${STA_HUB_FRONTEND_RELATIVE_PATH}"
+      ENV_SMS_URL_PLACEHOLDER: "${SMS_URL}"
 
 
   # Summary
@@ -617,6 +710,10 @@ services:
         condition: service_started
       init:
         condition: service_completed_successfully
+      sta-hub-api:
+        condition: service_started
+      sta-hub-frontend:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
       start_period: 10s
@@ -643,6 +740,10 @@ services:
         condition: service_healthy
       timeio-db-api:
         condition: service_healthy
+      frost:
+        condition: service_started
+      frost-internal:
+        condition: service_started
     environment:
       LOG_LEVEL: "${LOG_LEVEL}"
       TOPIC: frontend_thing_update
@@ -655,7 +756,11 @@ services:
       DATABASE_URL: "${DATABASE_ADMIN_DSN}"
       SMS_URL: "${SMS_URL}"
       CV_URL: "${CV_URL}"
-      TOMCAT_PROXY_URL: "${STA_PROXY_URL}"
+      TOMCAT_PROXY_URL: "${STA_HUB_URL}"
+      # internal only, always these fixed URLs - not deployment-specific
+      FROST_CONTEXT_API_URL: http://frost:8081
+      FROST_INTERNAL_CONTEXT_API_URL: http://frost-internal:8081
+      FROST_CONTEXT_API_TOKEN: "${FROST_CONTEXT_API_TOKEN}"
       MINIO_SECURE: "${OBJECT_STORAGE_SECURE}"
       MINIO_URL: "${OBJECT_STORAGE_HOST}"
       MINIO_ACCESS_KEY: "${OBJECT_STORAGE_ROOT_USER}"
@@ -678,8 +783,6 @@ services:
     entrypoint: ["./worker_launcher.sh", "python3", "setup_thing.py", "all"]
     volumes:
       - "${CRON_PERSISTENCE_VOLUME:-crontab}:/tmp/cron"
-      - "${FROST_PERSISTENCE_VOLUME:-tomcat-context}:/home/appuser/app/src/frost_context_files:rw"
-      - "${FROST_INTERNAL_PERSISTENCE_VOLUME:-tomcat-context-internal}:/home/appuser/app/src/frost_context_files_internal:rw"
     logging:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
@@ -1231,11 +1334,11 @@ services:
       KEYCLOAK_HELMHOLTZ_AAI_CLIENT: "${KEYCLOAK_HELMHOLTZ_AAI_CLIENT}"
       KEYCLOAK_HELMHOLTZ_AAI_META_DESCRIPTION_URL: "${KEYCLOAK_HELMHOLTZ_AAI_BASE_URL}/oauth2/.well-known/openid-configuration"
       # Keycloak client config (used in configuration template)
-      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_APP_URL}/login-callback\"]"
-      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${DSM_FRONTEND_APP_URL}"
-      KEYCLOAK_DSM_CLIENT_BASE_URL: "${DSM_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_REDIRECT_URIS: "[\"${DSM_FRONTEND_OIDC_REDIRECT_URI}\", \"${STA_HUB_FRONTEND_OIDC_REDIRECT_URI}\"]"
+      KEYCLOAK_DSM_CLIENT_POST_LOGOUT_URIS: "${DSM_FRONTEND_APP_URL}##${STA_HUB_FRONTEND_APP_URL}"
+      KEYCLOAK_DSM_CLIENT_ADMIN_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_ROOT_URL: "${PROXY_URL}"
+      KEYCLOAK_DSM_CLIENT_BASE_URL: "${PROXY_URL}"
       KEYCLOAK_DSM_CLIENT_WEB_ORIGINS: "[\"${PROXY_URL}\"]"
       KEYCLOAK_GRAFANA_CLIENT_SECRET: "${VISUALIZATION_KEYCLOAK_CLIENT_SECRET}"
       KEYCLOAK_GRAFANA_CLIENT_ID: "${VISUALIZATION_KEYCLOAK_CLIENT_ID}"
