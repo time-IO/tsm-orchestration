@@ -12,8 +12,12 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
+
 ### Fixed
 - Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
+
 
 ## [2026-11-11]
 
@@ -64,9 +68,6 @@ When adding a changelog entry, ensure the following:
 - `mqtt-broker` is built into a time.IO image containing its configuration([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/769))
 - successive jobs only run if none of jobs in stage check fail ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/795))
 
-
-### Added
-- Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
 
 ## [2026-10-15]
 
