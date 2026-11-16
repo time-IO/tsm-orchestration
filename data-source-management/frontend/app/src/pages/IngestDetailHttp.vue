@@ -55,11 +55,13 @@
                   <q-item-section>
                     <q-item-label>Path for Posts</q-item-label>
                     <div class="row items-center">
-                      <q-item-label caption>{{ item.path_for_posts || item.uuid }}</q-item-label>
-                      <copy-btn
-                        title="Copy path for posts"
-                        :text-to-copy="item.path_for_posts || item.uuid"
-                      />
+                      <q-item-label caption>
+                        {{ item.path_for_posts || item.uuid }}
+                        <q-tooltip>
+                          {{ httpIngestFullUrl }}
+                        </q-tooltip>
+                      </q-item-label>
+                      <copy-btn title="Copy path for posts" :text-to-copy="httpIngestFullUrl" />
                     </div>
                     <q-item-label v-if="!item.path_for_posts" caption class="text-grey-7">
                       No path set — the ingest's UUID is used instead.
@@ -76,7 +78,14 @@
 
                 <q-item>
                   <q-item-section>
-                    <q-item-label>API Key</q-item-label>
+                    <q-item-label>
+                      API Key
+                      <q-icon size="xs" name="help_outline" color="grey-7">
+                        <q-tooltip class="text-body2">
+                          Must be used in the <b>X-Api-Key</b> header of the request.
+                        </q-tooltip>
+                      </q-icon>
+                    </q-item-label>
                     <div class="row items-center">
                       <q-item-label caption class="col-2">
                         <q-input borderless v-model="apiKey" :type="isPwd ? 'password' : 'text'">
@@ -272,6 +281,16 @@ const basePath = '/ingest/http/';
 const apiKey = computed({
   get: () => item.value?.api_key || '',
   set: () => {},
+});
+
+const httpIngestFullUrl = computed(() => {
+  const pathEnd = item.value?.path_for_posts || item.value?.uuid;
+  const path = `${import.meta.env.BENTO_HTTP_BASE_URL}${pathEnd}`;
+
+  if (item.value?.id) {
+    return path;
+  }
+  return '';
 });
 
 const editRoute = computed(() => {

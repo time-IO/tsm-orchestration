@@ -1,6 +1,8 @@
 from sqlmodel import Field, SQLModel, Relationship
 import uuid as uuid_pkg
+from pydantic import computed_field
 from typing import TYPE_CHECKING
+
 import re
 
 if TYPE_CHECKING:
@@ -54,6 +56,11 @@ class PermissionGroup(SQLModel, table=True):
                 vo, rest = rest_content.split(":", 1)
                 return vo
         return ""
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def database_username(self) -> str | None:
+        return self.database.username if self.database else None
 
 
 # fix to avoid circular imports

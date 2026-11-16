@@ -20,6 +20,7 @@ from timeio.ext_api import (
     TtnApiSyncer,
     NmApiSyncer,
     SensotoApiSyncer,
+    ZentraApiSyncer,
     ExtApiRequestError,
     NoHttpsError,
 )
@@ -53,6 +54,7 @@ class SyncExtApiManager(AbstractHandler):
             "ttn": TtnApiSyncer(),
             "nm": NmApiSyncer(),
             "sensoto": SensotoApiSyncer(),
+            "zentra": ZentraApiSyncer(),
         }
 
     def act(self, content: MqttPayload.SyncExtApiT, message: MQTTMessage):

@@ -1,6 +1,22 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM tomcat:11.0.26-jdk25-temurin
+ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk25-temurin
+
+# Build stage: same base, so the JDK and servlet-api.jar match the runtime.
+FROM ${TOMCAT_IMAGE} AS context-api
+COPY context-api /build
+RUN mkdir -p /build/out/WEB-INF/classes \
+    && javac -d /build/out/WEB-INF/classes -cp $CATALINA_HOME/lib/servlet-api.jar \
+        $(find /build/src -name '*.java') \
+    && cp /build/WEB-INF/web.xml /build/out/WEB-INF/ \
+    && jar cf /context-api.war -C /build/out .
+# Insert the API service into the base image's own server.xml; fails if its layout changes.
+RUN grep -qx '</Server>' conf/server.xml \
+    && sed -i '\#^</Server>$#d' conf/server.xml \
+    && cat /build/server-service.xml >> conf/server.xml \
+    && echo '</Server>' >> conf/server.xml
+
+FROM ${TOMCAT_IMAGE}
 
 ARG BUILD_DATE=""
 ARG VCS_REF=""
@@ -12,14 +28,14 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.revision=$VCS_REF \
     org.opencontainers.image.created=$BUILD_DATE
 
-EXPOSE 8080
+EXPOSE 8080 8081
 
-ARG FROST_VERSION=2.7.1
+ARG FROST_VERSION=2.7.3
 ARG UID=1000
 ARG GID=1000
 ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/$FROST_VERSION/FROST-Server.HTTP-$FROST_VERSION.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2025.1.1/postgis-jdbc-2025.1.1.jar
-ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.9/postgresql-42.7.9.jar
+ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.14/postgresql-42.7.14.jar
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO FROST-Server Image" \
@@ -29,6 +45,9 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
+COPY --chmod=755 frost-entrypoint.sh /usr/local/bin/frost-entrypoint.sh
+COPY --from=context-api /usr/local/tomcat/conf/server.xml /usr/local/tomcat/conf/server.xml
+COPY --from=context-api /context-api.war /usr/local/tomcat/api-webapps/ROOT.war
 
 # Create a tomcat user with the UID and GID specified in the build arguments
 # If the UID is already in use, just print out the info
@@ -54,3 +73,7 @@ RUN mkdir ${HOME}/.postgresql \
     && cp /etc/ssl/certs/ca-certificates.crt ${HOME}/.postgresql/root.crt
 
 USER ${UID}
+
+# Setting ENTRYPOINT resets the base image CMD.
+ENTRYPOINT ["/usr/local/bin/frost-entrypoint.sh"]
+CMD ["catalina.sh", "run"]

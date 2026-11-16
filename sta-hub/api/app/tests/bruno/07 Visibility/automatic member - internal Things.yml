@@ -1,0 +1,30 @@
+info:
+  name: automatic member - internal Things
+  type: http
+  seq: 12
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/{{endpointGroup1}}/v1.1/Things?$select=name&$orderby=name"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("internal data", function () {
+          expect(res.getBody().value.map((e) => e.name)).to.deep.equal(["CRNS - Dynamic", "CRNS - Static", "Internal - Static", "Rover - separate GPS"]);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

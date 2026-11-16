@@ -8,6 +8,7 @@
     :options="options"
     clearable
     emit-value
+    map-options
     label="Parser type"
     hint="Select the parser type"
   />

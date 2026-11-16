@@ -255,17 +255,17 @@ import { QForm } from 'quasar';
 import { parseJsonField, toNullableNumber } from '@/utils/string_utils';
 import type { CsvParserFormData } from '@/utils/parser_csv_utils';
 
-const props = withDefaults(
-  defineProps<{
-    title: string;
-    isLoading: boolean;
-    backRoute: string;
-    disablePermissionGroup?: boolean;
-  }>(),
-  {
-    disablePermissionGroup: false,
-  },
-);
+const {
+  title,
+  isLoading,
+  backRoute,
+  disablePermissionGroup = false,
+} = defineProps<{
+  title: string;
+  isLoading: boolean;
+  backRoute: string;
+  disablePermissionGroup?: boolean;
+}>();
 
 defineEmits<{
   save: [];
@@ -321,7 +321,7 @@ const permissionGroupModel = computed({
     return formData.value.permission_group_id;
   },
   set(value: number | null) {
-    if (!props.disablePermissionGroup) {
+    if (!disablePermissionGroup) {
       formData.value.permission_group_id = value;
     }
   },

@@ -1,7 +1,7 @@
 # See https://hub.docker.com/_/python/
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM python:3.13.15-slim-trixie AS base
+FROM python:3.13.16-slim-trixie AS base
 
 # Install Tkinter runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -14,9 +14,13 @@ FROM base AS build
 COPY ./data-source-management/api/requirements.txt /tmp/requirements.txt
 
 RUN python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt && \
+    /opt/venv/bin/pip uninstall -y pip
 
 FROM base AS dist
+
+# pip is not needed at runtime and its vendored packages carry CVEs
+RUN python -m pip uninstall -y pip
 
 # Copy the virtual environment from the build stage
 COPY --from=build /opt/venv /opt/venv

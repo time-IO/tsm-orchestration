@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -306,36 +308,9 @@ def test_unix_milliseconds_timestamp():
     assert df["value"].tolist() == [1, 2, 3]
 
 
-LORAWAN_DATA = """
-{
-    "deduplicationId": "9947541e-2f10-40a9-9b6f-1e51085325b5",
-    "time": "2026-08-18T11:15:56.166747+00:00",
-    "deviceInfo": {
-        "tenantId": "700c0206-97d8-475a-a65d-f5a3175298fb",
-        "deviceName": "THL 0613 ID #083 MCU 25028710",
-        "devEui": "477191d4be5a97a3"
-    },
-    "devAddr": "62cbe321",
-    "data": "AATdABEY/wGAC9YJiBQ8AAAAMwM=",
-    "object": {
-        "Firmware_version_THL": 0,
-        "Voltage": 3.03,
-        "Frame_count": 1245,
-        "Illuminance": 51,
-        "Air_temperature": 24.4,
-        "Relative_humidity": 51.8,
-        "Datetime_valid": 0,
-        "Datetime_timezone": "UTC",
-        "Datetime": "2025-01-13T23:15:11"
-    },
-    "rxInfo": [
-        {
-            "gatewayId": "024a2763d8cc605e",
-            "rssi": -99
-        }
-    ]
-}
-"""
+LORAWAN_DATA = (Path(__file__).parent / "fixtures" / "lorawan.json").read_text(
+    encoding="utf-8"
+)
 
 
 def test_measurement_key_extracts_nested_object():
@@ -449,27 +424,9 @@ def test_without_excluded_keys_keeps_all_columns():
     assert "Frame_count" in df.columns
 
 
-LINA13_SENSOR_DATA = """
-{
-    "proband-id": "SU-Q993A",
-    "sensor-id": "7A9F503CD22866F5",
-    "calib-no2": "-21.76",
-    "calib-co": "4.18",
-    "calib-o3": "-46.74",
-    "data": [
-        {"ts": 1658133580721, "values": {"accel_x": -0.337, "accel_y": 5.28, "accel_z": 8.588}},
-        {"ts": 1658133579888, "values": {"accel_x": -0.437, "accel_y": 6.376, "accel_z": 7.402}},
-        {"ts": 1658133579883, "values": {"ambient_light": 138.9}},
-        {"ts": 1658133579373, "values": {"ambient_light": 118.8}},
-        {"ts": 1658133579115, "values": {"ambient_light": 105.6}},
-        {"ts": 1658133579042, "values": {"ambient_light": 90.9}},
-        {"ts": 1658133578779, "values": {"accel_x": -0.277, "accel_y": 8.718, "accel_z": 4.329}},
-        {"ts": 1658133578524, "values": {"ambient_light": 76.5}},
-        {"ts": 1658133577717, "values": {"accel_x": 0.096, "accel_y": 7.743, "accel_z": 6.572}},
-        {"ts": 1658133577616, "values": {"ambient_light": 95.3}}
-    ]
-}
-"""
+LINA13_SENSOR_DATA = (
+    Path(__file__).parent / "fixtures" / "lina13_sensor.json"
+).read_text(encoding="utf-8")
 
 
 def test_lina13_measurement_key_with_unix_ms_timestamp_per_row():
