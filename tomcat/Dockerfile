@@ -45,6 +45,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 COPY --chown=${UID}:${GID} index.jsp /usr/local/tomcat/webapps/ROOT/index.jsp
+COPY --chmod=755 frost-entrypoint.sh /usr/local/bin/frost-entrypoint.sh
 COPY --from=context-api /usr/local/tomcat/conf/server.xml /usr/local/tomcat/conf/server.xml
 COPY --from=context-api /context-api.war /usr/local/tomcat/api-webapps/ROOT.war
 
@@ -72,3 +73,7 @@ RUN mkdir ${HOME}/.postgresql \
     && cp /etc/ssl/certs/ca-certificates.crt ${HOME}/.postgresql/root.crt
 
 USER ${UID}
+
+# Setting ENTRYPOINT resets the base image CMD.
+ENTRYPOINT ["/usr/local/bin/frost-entrypoint.sh"]
+CMD ["catalina.sh", "run"]
