@@ -84,19 +84,19 @@ import PermissionGroupSelect from '@/components/PermissionGroupSelect.vue';
 type SoilcanParserFormData = SoilcanParserUpdate & {
   permission_group_id?: number | null;
 };
-const props = withDefaults(
-  defineProps<{
-    title: string;
-    isLoading: boolean;
-    backRoute: string;
-    disablePermissionGroup?: boolean;
-    permissionGroupId?: number | null;
-  }>(),
-  {
-    disablePermissionGroup: false,
-    permissionGroupId: null,
-  },
-);
+const {
+  title,
+  isLoading,
+  backRoute,
+  disablePermissionGroup = false,
+  permissionGroupId = null,
+} = defineProps<{
+  title: string;
+  isLoading: boolean;
+  backRoute: string;
+  disablePermissionGroup?: boolean;
+  permissionGroupId?: number | null;
+}>();
 
 defineEmits<{
   save: [];
@@ -114,10 +114,10 @@ const formData = defineModel<SoilcanParserFormData>({
 
 const permissionGroupModel = computed({
   get() {
-    return formData.value.permission_group_id ?? props.permissionGroupId;
+    return formData.value.permission_group_id ?? permissionGroupId;
   },
   set(value: number | null) {
-    if (!props.disablePermissionGroup) {
+    if (!disablePermissionGroup) {
       formData.value.permission_group_id = value;
     }
   },

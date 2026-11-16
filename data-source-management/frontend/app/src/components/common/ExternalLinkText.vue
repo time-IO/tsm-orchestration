@@ -24,21 +24,19 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
-  defineProps<{
-    href: string;
-    text?: string;
-    tooltip?: string;
-    boldText?: boolean;
-    hideButton?: boolean;
-  }>(),
-  {
-    text: '',
-    tooltip: 'Open in new tab',
-    boldText: true,
-    hideButton: false,
-  },
-);
+const {
+  href,
+  text = '',
+  tooltip = 'Open in new tab',
+  boldText = true,
+  hideButton = false,
+} = defineProps<{
+  href: string;
+  text?: string;
+  tooltip?: string;
+  boldText?: boolean;
+  hideButton?: boolean;
+}>();
 </script>
 
 <style scoped>

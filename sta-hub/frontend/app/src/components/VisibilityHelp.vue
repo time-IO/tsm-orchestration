@@ -1,0 +1,57 @@
+<template>
+  <help-dialog title="Access">
+    <p class="text-caption">Every STA endpoint serves a public and an internal access.</p>
+
+    <q-markup-table flat bordered separator="cell" class="visibility-help__table">
+      <tbody>
+        <tr v-for="row in ROWS" :key="row.visibility">
+          <td class="visibility-help__badge">
+            <visibility-badge :visibility="row.visibility" class="full-width justify-center" />
+          </td>
+          <td>{{ row.description }}</td>
+        </tr>
+      </tbody>
+    </q-markup-table>
+
+    <p class="text-caption q-mt-md q-mb-none">
+      Whether data is public or internal follows the visibility settings of the related entities in
+      the Sensor Management System (SMS), such as configurations and their devices. You can read
+      more about managing access control on our
+      <external-link-text
+        href="https://codebase.helmholtz.cloud/ufz-tsm/timeio-support/-/wikis/SensorThings-API-(STA)"
+        >Wiki page</external-link-text
+      >.
+    </p>
+  </help-dialog>
+</template>
+
+<script setup lang="ts">
+import HelpDialog from '@/components/common/HelpDialog.vue';
+import VisibilityBadge from '@/components/common/VisibilityBadge.vue';
+import type { VisibilityName } from '@/utils/visibility';
+import ExternalLinkText from '@/components/common/ExternalLinkText.vue';
+
+const ROWS: { visibility: VisibilityName; description: string }[] = [
+  {
+    visibility: 'public',
+    description:
+      'The public access is available to everyone and requires no login. It is limited to publicly available data.',
+  },
+  {
+    visibility: 'internal',
+    description:
+      'The internal access is limited to members of the respective project (permission group) and requires a login or another form of authentication.',
+  },
+];
+</script>
+
+<style scoped>
+.visibility-help__table td {
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.visibility-help__badge {
+  width: 110px;
+}
+</style>

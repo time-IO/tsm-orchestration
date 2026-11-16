@@ -4,7 +4,10 @@ import pytest
 
 from timeio.parser.soilcan_parser import SoilcanParser
 
-DBD_FILE = Path(__file__).parent / "data" / "000_20230824T000020.DBD"
+
+@pytest.fixture(scope="module")
+def soilcan_data():
+    return (Path(__file__).parent / "fixtures" / "000_20230824T000020.DBD").read_bytes()
 
 
 @pytest.mark.parametrize(
@@ -15,10 +18,9 @@ DBD_FILE = Path(__file__).parent / "data" / "000_20230824T000020.DBD"
         ("weighing-data", [11.2, 2956.3, 28.6, 3059.8, 0.8]),
     ],
 )
-def test_parse_soilcan_data(type, expected):
-    rawdata = DBD_FILE.read_bytes()
+def test_parse_soilcan_data(type, expected, soilcan_data):
     parser = SoilcanParser({"type": type, "header": False})
-    df = parser.do_parse(rawdata, "project", "thing")
+    df = parser.do_parse(soilcan_data, "project", "thing")
     assert df.iloc[0, :5].astype(float).to_list() == expected
 
 
@@ -39,8 +41,7 @@ def test_parse_soilcan_data(type, expected):
         ),
     ],
 )
-def test_parse_soilcan_header(type, expected):
-    rawdata = DBD_FILE.read_bytes()
+def test_parse_soilcan_header(type, expected, soilcan_data):
     parser = SoilcanParser({"type": type, "header": True})
-    df = parser.do_parse(rawdata, "project", "thing")
+    df = parser.do_parse(soilcan_data, "project", "thing")
     assert df.columns[:3].to_list() == expected

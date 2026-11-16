@@ -31,21 +31,21 @@
         <q-checkbox
           v-model="autoValidate"
           v-if="autoValidateCheckboxIsEnabled"
-          class="q-mt-md q-mb-mt"
+          dense
+          class="q-mt-md q-mb-sm"
           label="Auto-parse when valid changes detected"
         />
 
-        <parser-validate-banner
-          :parsing-result="parsingResult"
-          :have-settings-changed="haveSettingsChanged"
-        />
+        <stale-content :stale="haveSettingsChanged">
+          <parser-validate-banner :parsing-result="parsingResult" />
 
-        <parser-validate-result-table
-          v-if="parsingResult.is_valid && parsingResult.data.length > 0"
-          class="q-mt-lg"
-          :data="parsingResult.data"
-          :is-stale="haveSettingsChanged"
-        />
+          <parser-validate-result-table
+            v-if="parsingResult.is_valid && parsingResult.data.length > 0"
+            class="q-mt-lg"
+            :data="parsingResult.data"
+            :parser-timezone="lastValidatedSettings?.timezone ?? null"
+          />
+        </stale-content>
       </div>
     </div>
   </q-drawer>
@@ -59,6 +59,7 @@ import { fileMetadataIsEqual } from '@/utils/file_utils';
 import ParserValidateFileInput from '@/components/ParserValidateFileInput.vue';
 import ParserValidateBanner from '@/components/ParserValidateBanner.vue';
 import ParserValidateResultTable from '@/components/ParserValidateResultTable.vue';
+import StaleContent from '@/components/common/StaleContent.vue';
 
 const $q = useQuasar();
 
@@ -67,19 +68,21 @@ type ParseAction<T> = (settings: T, file: File) => Promise<ParsingResult>;
 const drawerIsOpen = defineModel<boolean>({
   default: false,
 });
-const props = withDefaults(
-  defineProps<{
-    parsingSettings: T;
-    parseAction: ParseAction<T>;
-    allowedFileTypes: string[];
-    allowedFileTypeName: string;
-    parserType: string;
-    overlay?: boolean;
-  }>(),
-  {
-    overlay: false,
-  },
-);
+const {
+  parsingSettings,
+  parseAction,
+  allowedFileTypes,
+  allowedFileTypeName,
+  parserType,
+  overlay = false,
+} = defineProps<{
+  parsingSettings: T;
+  parseAction: ParseAction<T>;
+  allowedFileTypes: string[];
+  allowedFileTypeName: string;
+  parserType: string;
+  overlay?: boolean;
+}>();
 
 const breakpoint = computed(() => $q.screen.sizes.md);
 const width = computed(() => $q.screen.width * ($q.screen.width < breakpoint.value ? 0.8 : 0.4));
@@ -101,7 +104,7 @@ const lastValidatedFile = ref<File | null>(null);
 const autoValidate = ref(false);
 let autoValidateTimeout: ReturnType<typeof setTimeout> | null = null;
 const autoValidateCheckboxIsEnabled = computed(
-  () => $q.screen.width >= breakpoint.value && !props.overlay,
+  () => $q.screen.width >= breakpoint.value && !overlay,
 );
 
 const isAlreadyValidated = computed(() => {
@@ -110,7 +113,7 @@ const isAlreadyValidated = computed(() => {
   }
   return (
     fileMetadataIsEqual(file.value, lastValidatedFile.value) &&
-    settingsAreEqual(props.parsingSettings, lastValidatedSettings.value)
+    settingsAreEqual(parsingSettings, lastValidatedSettings.value)
   );
 });
 
@@ -118,11 +121,11 @@ const haveSettingsChanged = computed(() => {
   if (!lastValidatedSettings.value) {
     return false;
   }
-  return !settingsAreEqual(props.parsingSettings, lastValidatedSettings.value);
+  return !settingsAreEqual(parsingSettings, lastValidatedSettings.value);
 });
 
 watch(
-  () => props.parsingSettings,
+  () => parsingSettings,
   () => {
     if (!autoValidate.value || !file.value) {
       return;
@@ -166,10 +169,10 @@ async function validate() {
   }
   isValidating.value = true;
 
-  const settingsForThisRequest = structuredClone(toRaw(props.parsingSettings));
+  const settingsForThisRequest = structuredClone(toRaw(parsingSettings));
   const fileForThisRequest = file.value;
 
-  parsingResult.value = await props.parseAction(settingsForThisRequest, fileForThisRequest);
+  parsingResult.value = await parseAction(settingsForThisRequest, fileForThisRequest);
 
   lastValidatedSettings.value = settingsForThisRequest;
   lastValidatedFile.value = fileForThisRequest;
@@ -189,6 +192,7 @@ function settingsAreEqual(a: T, b: T): boolean {
 }
 
 .validation-sidebar__body {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 </style>

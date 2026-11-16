@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from paho.mqtt.client import MQTTMessage
 from run_mqtt_ingest import ParseMqttDataHandler
+from timeio.errors import ProcessingError
 
 
 @pytest.fixture
@@ -36,6 +37,8 @@ def test_act_parses_and_publishes(mock_get_parser, mock_Thing, mock_DBapi, mock_
     parser_instance = MagicMock()
     parser_instance.do_parse.return_value = ["parsed"]
     parser_instance.to_observations.return_value = [{"result_number": 1}]
+    parser_instance.start_date = "2025-01-01T00:00:00+00:00"
+    parser_instance.end_date = "2025-01-01T01:00:00+00:00"
     mock_get_parser.return_value = parser_instance
 
     handler.dbapi.upsert_observations = MagicMock()
@@ -51,3 +54,32 @@ def test_act_parses_and_publishes(mock_get_parser, mock_Thing, mock_DBapi, mock_
     assert handler.pub_topic in kwargs["topic"] or args[0] == handler.pub_topic
     payload = json.loads(kwargs.get("payload") or args[1])
     assert payload["thing_uuid"] == "UUID"
+
+
+@patch("run_mqtt_ingest.journal")
+@patch("run_mqtt_ingest.DBapi")
+@patch("run_mqtt_ingest.Thing")
+@patch("run_mqtt_ingest.get_parser")
+def test_act_store_failure_raises_and_does_not_publish(
+    mock_get_parser, mock_Thing, mock_DBapi, mock_journal, mock_env
+):
+    handler = ParseMqttDataHandler()
+    msg = MQTTMessage(topic=b"user/topic")
+    msg.payload = b"{}"
+
+    mock_thing = MagicMock()
+    mock_thing.uuid = "UUID"
+    mock_Thing.from_mqtt_user_name.return_value = mock_thing
+    mock_get_parser.return_value = MagicMock()
+
+    handler.dbapi.upsert_observations_and_datastreams.side_effect = RuntimeError(
+        "db api down"
+    )
+    handler.mqtt_client = MagicMock()
+
+    with pytest.raises(ProcessingError):
+        handler.act({}, msg)
+
+    handler.mqtt_client.publish.assert_not_called()
+    mock_journal.error.assert_called_once()
+    mock_journal.info.assert_not_called()

@@ -10,7 +10,7 @@ from paho.mqtt.client import MQTTMessage
 
 from timeio.mqtt import AbstractHandler
 from timeio.common import get_envvar, setup_logging
-from timeio.errors import UserInputError
+from timeio.errors import ProcessingError, UserInputError
 from timeio.journaling import Journal
 from timeio.databases import DBapi
 from timeio.feta import Thing
@@ -71,13 +71,28 @@ class ParseMqttDataHandler(AbstractHandler):
                 thing_uuid, observations, mutable=False
             )
         except Exception as e:
-            logger.exception(f"Failed to store data: {e}")
+            journal.error(
+                "Parsing was successful, but storing data in database failed",
+                thing_uuid,
+            )
+            raise ProcessingError("Storing observations failed") from e
         journal.info(f"parsed mqtt data from {origin}", thing_uuid)
+
+        # QC needs the time range of the new data (see DataParsedV1)
+        if parser.start_date is None or parser.end_date is None:
+            logger.info("no time range for parsed data, not sending data_parsed")
+            return
 
         logger.info(f"send mqtt message")
         self.mqtt_client.publish(
             topic=self.pub_topic,
-            payload=json.dumps({"thing_uuid": str(thing_uuid)}),
+            payload=json.dumps(
+                {
+                    "thing_uuid": str(thing_uuid),
+                    "start_date": parser.start_date,
+                    "end_date": parser.end_date,
+                }
+            ),
             qos=self.mqtt_qos,
         )
 

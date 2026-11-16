@@ -1,0 +1,29 @@
+
+{
+    "deduplicationId": "9947541e-2f10-40a9-9b6f-1e51085325b5",
+    "time": "2026-08-18T11:15:56.166747+00:00",
+    "deviceInfo": {
+        "tenantId": "700c0206-97d8-475a-a65d-f5a3175298fb",
+        "deviceName": "THL 0613 ID #083 MCU 25028710",
+        "devEui": "477191d4be5a97a3"
+    },
+    "devAddr": "62cbe321",
+    "data": "AATdABEY/wGAC9YJiBQ8AAAAMwM=",
+    "object": {
+        "Firmware_version_THL": 0,
+        "Voltage": 3.03,
+        "Frame_count": 1245,
+        "Illuminance": 51,
+        "Air_temperature": 24.4,
+        "Relative_humidity": 51.8,
+        "Datetime_valid": 0,
+        "Datetime_timezone": "UTC",
+        "Datetime": "2025-01-13T23:15:11"
+    },
+    "rxInfo": [
+        {
+            "gatewayId": "024a2763d8cc605e",
+            "rssi": -99
+        }
+    ]
+}

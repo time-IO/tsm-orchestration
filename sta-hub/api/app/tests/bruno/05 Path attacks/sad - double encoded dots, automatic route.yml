@@ -1,0 +1,24 @@
+info:
+  name: sad - double encoded dots, automatic route
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/{{endpointGroup1}}/%252e%252e/{{endpointGroup2}}/v1.1"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "400"
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

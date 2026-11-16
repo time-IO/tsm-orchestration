@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+import pandas as pd
+
 from timeio.parser.abc_parser import AbcParser
 from timeio.journaling import Journal
 from timeio.common import ObservationResultType
@@ -48,6 +50,7 @@ class MqttParser(AbcParser):
         self, data: list[Observation], thing_uuid: str
     ) -> list[ObservationPayloadT]:
         result = []
+        timestamps = []
         for ob in data:
             if isinstance(ts := ob.timestamp, datetime):
                 ts = ts.isoformat()
@@ -82,5 +85,26 @@ class MqttParser(AbcParser):
                 )
                 continue
             result.append(obpay)
+            timestamps.append(ob.timestamp)
 
+        self._set_date_range(timestamps, thing_uuid)
         return result
+
+    def _set_date_range(self, timestamps: list[datetime | str], thing_uuid: str):
+        """Set start and end date from the timestamps of the emitted observations.
+
+        Leaves both dates unset if there are no timestamps or they cannot be
+        compared (unparsable strings, mixed naive and aware timestamps).
+        """
+        self._start_date = self._end_date = None
+        if not timestamps:
+            return
+        try:
+            parsed = [pd.Timestamp(ts) for ts in timestamps]
+            if any(pd.isna(ts) for ts in parsed):
+                raise ValueError("empty timestamp")
+            self._start_date, self._end_date = min(parsed), max(parsed)
+        except (ValueError, TypeError) as e:
+            self.logger.warning(
+                f"Could not determine time range of thing {thing_uuid}: {e}"
+            )

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
 import json
@@ -9,16 +11,9 @@ import json
 from timeio.parser import CsvParser
 from timeio.errors import ParsingError, EmptyDataError
 
-RAWDATA = """
-//Hydroinnova CRS-1000 Data
-//CellSig=12
-
-//RecordNum,Date Time(UTC),P1_mb,P3_mb,P4_mb,T1_C,T2_C,T3_C,T4_C,T_CS215,RH1,RH2,RH_CS215,Vbat,N1Cts,N2Cts,N1ET_sec,N2ET_sec,N1T_C,N1RH,N2T_C,N2RH,D1
-
-1418, 2021/09/09 05:45:00,  987.0, 989.70, 991.05,   15.9, 128.9,  15.8,  14.6,  13.8, 75.2,119.0, 89.2, 11.853,      160,      122,     900,     900,  17.9, 62.7,  17.7, 63.5,        0
-1419, 2021/09/09 06:00:00,  987.0, 989.74, 991.05,   15.9, 128.9,  15.7,  14.5,  14.2, 75.6,119.0, 88.8, 11.856,      171,      111,     900,     900,  18.0, 62.9,  17.8, 63.6,        0
-1420, 2021/09/09 06:15:00,  987.1, 989.76, 991.12,   15.9, 128.9,  15.8,  14.6,  14.5, 76.1,119.0, 89.5, 11.855,      165,      103,     900,     900,  18.1, 63.2,  17.9, 63.8,        0
-"""
+RAWDATA = (Path(__file__).parent / "fixtures" / "hydroinnova.csv").read_text(
+    encoding="utf-8"
+)
 
 
 @pytest.mark.parametrize(
@@ -59,16 +54,9 @@ def test_parsing(settings, columns):
     assert set([d["result_number"] for d in obs]) == set(tframe.squeeze().tolist())
 
 
-DIRTYDATA = """
-//Hydroinnova CRS-1000 Data
-//CellSig=12
-
-//RecordNum,Date Time(UTC),P1_mb,P3_mb,P4_mb,T1_C,
-
-1418, 2021/09/09 05:45:00,  987.0, 989.70, 991.05,   15.9
-1419, 2021/09/09 06:00:00,  987.0,    xW8, 991.05,   15.9
-1420, 2021/09/09 06:15:00,  987.1, 989.76, 991.12,   15.9
-"""
+DIRTYDATA = (Path(__file__).parent / "fixtures" / "hydroinnova_dirty.csv").read_text(
+    encoding="utf-8"
+)
 
 
 def test_dirty_data_parsing():
@@ -324,6 +312,69 @@ def test_tz_conversion():
     parser = CsvParser(settings)
     df = parser.do_parse(RAWDATA_WITH_TZ, "project", "thing")
     assert str(df.index.tz) == "Europe/Berlin"
+
+
+@pytest.mark.parametrize("header", [None, 0])
+@pytest.mark.parametrize("split_timestamp", [False, True])
+def test_dst_fallback_preserves_repeated_hour(header, split_timestamp):
+    timestamps = [
+        "2025-10-26 01:30:00",
+        "2025-10-26 02:00:00",
+        "2025-10-26 02:30:00",
+        "2025-10-26 02:00:00",
+        "2025-10-26 02:30:00",
+        "2025-10-26 03:00:00",
+    ]
+    if split_timestamp:
+        timestamp_columns = [
+            {"column": 0, "format": "%Y-%m-%d"},
+            {"column": 1, "format": "%H:%M:%S"},
+        ]
+        timestamps = [timestamp.replace(" ", ",") for timestamp in timestamps]
+        column_names = "date,time,value\n"
+    else:
+        timestamp_columns = [{"column": 0, "format": "%Y-%m-%d %H:%M:%S"}]
+        column_names = "time,value\n"
+    rawdata = "\n".join(
+        f"{timestamp},{value}" for value, timestamp in enumerate(timestamps)
+    )
+    if header is not None:
+        rawdata = column_names + rawdata
+    parser = CsvParser(
+        {
+            "header": header,
+            "timestamp_columns": timestamp_columns,
+            "timezone": "Europe/Berlin",
+        }
+    )
+
+    df = parser.do_parse(rawdata, "project", "thing")
+
+    expected_utc = pd.to_datetime(
+        [
+            "2025-10-25 23:30:00",
+            "2025-10-26 00:00:00",
+            "2025-10-26 00:30:00",
+            "2025-10-26 01:00:00",
+            "2025-10-26 01:30:00",
+            "2025-10-26 02:00:00",
+        ],
+        utc=True,
+    )
+    assert str(df.index.tz) == "Europe/Berlin"
+    assert df.index.tz_convert("UTC").equals(expected_utc)
+    assert df.iloc[:, 0].tolist() == list(range(6))
+
+    observations = parser.to_observations(df, origin="test")
+    assert [obs["result_time"] for obs in observations] == [
+        "2025-10-26T01:30:00+02:00",
+        "2025-10-26T02:00:00+02:00",
+        "2025-10-26T02:30:00+02:00",
+        "2025-10-26T02:00:00+01:00",
+        "2025-10-26T02:30:00+01:00",
+        "2025-10-26T03:00:00+01:00",
+    ]
+    assert [obs["result_number"] for obs in observations] == list(range(6))
 
 
 RAWDATA_SKIP_WITH_HEADER = """Skipline

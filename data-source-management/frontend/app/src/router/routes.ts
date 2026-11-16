@@ -22,6 +22,10 @@ import IngestCopyExternalMqtt from '@/pages/IngestCopyExternalMqtt.vue';
 import IngestDetailHttp from '@/pages/IngestDetailHttp.vue';
 import IngestEditHttp from '@/pages/IngestEditHttp.vue';
 import IngestCopyHttp from '@/pages/IngestCopyHttp.vue';
+import IngestDetailExternalApiZentra from '@/pages/IngestDetailExternalApiZentra.vue';
+import IngestCopyExternalApiZentra from '@/pages/IngestCopyExternalApiZentra.vue';
+import IngestNewExternalApiZentra from '@/pages/IngestNewExternalApiZentra.vue';
+import IngestEditExternalApiZentra from '@/pages/IngestEditExternalApiZentra.vue';
 import ParserOverview from '@/pages/ParserOverview.vue';
 import ParserNew from '@/pages/ParserNew.vue';
 import ParserNewCsv from '@/pages/ParserNewCsv.vue';
@@ -156,6 +160,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/new/external-api/zentra',
+    component: IngestNewExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/external-api/bosch/:id',
     component: IngestDetailExternalApiBosch,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -188,6 +197,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/dwd/:id',
     component: IngestDetailExternalApiDwd,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/zentra/:id',
+    component: IngestDetailExternalApiZentra,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -256,6 +270,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/external-api/zentra/:id/edit',
+    component: IngestEditExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/mqtt/:id/edit',
     component: IngestEditMqtt,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -313,6 +332,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/sensoto/:id/copy',
     component: IngestCopyExternalApiSensoto,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/zentra/:id/copy',
+    component: IngestCopyExternalApiZentra,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {

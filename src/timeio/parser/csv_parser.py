@@ -252,7 +252,8 @@ class CsvParser(PandasParser):
         if tz_info is not None:
             try:
                 if df.index.tz is None:
-                    df.index = df.index.tz_localize(tz_info)
+                    # Infer DST from row order to preserve the repeated autumn hour.
+                    df.index = df.index.tz_localize(tz_info, ambiguous="infer")
                 else:
                     journal.info(
                         f"Timestamps are already timezone aware, converting '{df.index.tz}' -> '{tz_info}'",

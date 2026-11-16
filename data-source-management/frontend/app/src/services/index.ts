@@ -5,6 +5,7 @@ import ingestExternalApiUbaController from '@/services/ingest_external_api_uba';
 import ingestExternalApiTheThingsNetworkController from '@/services/ingest_external_api_the_things_network';
 import ingestExternalApiTSystemsController from '@/services/ingest_external_api_tsystems';
 import ingestExternalApiSensotoController from '@/services/ingest_external_api_sensoto';
+import ingestExternalApiZentraController from '@/services/ingest_external_api_zentra';
 import ingestMqttController from '@/services/ingest_mqtt';
 import ingestJournalController from '@/services/ingest_journal';
 import ingestDatabaseController from '@/services/ingest_database';
@@ -37,6 +38,7 @@ import parserDetailedController from '@/services/parser_detailed';
 import ingestExternalApiController from '@/services/ingest_external_api';
 
 import usageStatisticsController from '@/services/usage_statistics';
+import versionController from '@/services/version';
 
 export const API = {
   ingestExternalApiBosch: ingestExternalApiBoschController,
@@ -46,6 +48,7 @@ export const API = {
   ingestExternalApiTheThingsNetwork: ingestExternalApiTheThingsNetworkController,
   ingestExternalApiUba: ingestExternalApiUbaController,
   ingestExternalApiSensoto: ingestExternalApiSensotoController,
+  ingestExternalApiZentra: ingestExternalApiZentraController,
   ingestMqtt: ingestMqttController,
   ingestJournal: ingestJournalController,
   ingestSftp: ingestSftpController,
@@ -67,6 +70,7 @@ export const API = {
   parserTimezone: parserTimezoneController,
   parserEncoding: parserEncodingController,
   usageStatistics: usageStatisticsController,
+  version: versionController,
   ingest: ingestController,
   parserDetailed: parserDetailedController,
   ingestExternalApi: ingestExternalApiController,
