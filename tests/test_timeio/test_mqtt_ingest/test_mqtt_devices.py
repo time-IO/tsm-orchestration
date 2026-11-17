@@ -5,6 +5,7 @@ from datetime import datetime
 from timeio.parser.mqtt_devices.campbell_cr6 import CampbellCr6Parser
 from timeio.parser.mqtt_devices.chirpstack_generic import ChirpStackGenericParser
 from timeio.parser.mqtt_devices.ydoc_ml_417 import YdocMl417Parser
+from timeio.errors import ParsingError
 from timeio.parser import get_parser
 
 
@@ -58,6 +59,28 @@ def test_ydoc_ml417_parser_valid():
     obs = parser.do_parse(raw, origin="data/jsn")
     assert len(obs) == 7
     assert isinstance(obs[0].timestamp, datetime)
+    assert [o.header for o in obs] == list(YdocMl417Parser.HEADERS)
+    assert obs[1].value == 3 and obs[1].header == "AVGVi"
+
+
+def test_ydoc_ml417_parser_skips_null_values():
+    parser = YdocMl417Parser()
+    row = {"$ts": 250101000000, "MINVi": 1.0, "AVGVi": None, "AVGCi": 100}
+    row.update({"P1*": "a", "P2": "b", "P3": float("nan"), "P4": "d"})
+    obs = parser.do_parse({"data": [row]}, origin="data/jsn")
+    assert [o.position for o in obs] == [0, 2, 3, 4, 6]
+
+
+def test_campbell_parser_skips_null_values():
+    parser = CampbellCr6Parser()
+    raw = {
+        "properties": {
+            "observationNames": ["a", "b", "c"],
+            "observations": {"2022-05-24T08:53:00Z": [11.9, None, float("nan")]},
+        }
+    }
+    obs = parser.do_parse(raw, origin="device/topic")
+    assert [(o.position, o.value) for o in obs] == [(0, 11.9)]
 
 
 @pytest.mark.parametrize(
@@ -138,3 +161,85 @@ def test_device_parsers_report_date_range(parser_type, raw, start, end):
     assert observations
     assert parser.start_date == start
     assert parser.end_date == end
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, match",
+    [
+        ("campbell_cr6", {"properties": {"observations": {}}}, "observationNames"),
+        ("chirpstack_generic", {"object": {"temp": 1}}, "'time' and 'object'"),
+        ("chirpstack_generic", {"time": "t", "object": None}, "payload codec"),
+        ("ydoc_ml417", {"foo": 1}, "'data'"),
+        ("ydoc_ml417", {"data": None}, "'data' must be a list"),
+        ("quaesta", [1, 2], "JSON object"),
+        ("quaesta", {"type": "dataCRNS", "P1_mb": 1.0}, "timestampISO8601"),
+        (
+            "quaesta",
+            {"type": "dataCRNS", "timestampISO8601": "yesterday"},
+            "Invalid 'timestampISO8601'",
+        ),
+    ],
+)
+def test_device_parsers_raise_meaningful_error(parser_type, raw, match):
+    parser = get_parser(parser_type, None)
+    with pytest.raises(ParsingError, match=match):
+        parser.do_parse(raw, "data/jsn")
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, origin, reason",
+    [
+        ("campbell_cr6", {"type": "Feature"}, "x", "'properties'"),
+        ("ydoc_ml417", {"data": []}, "status", "'data/jsn'"),
+        ("quaesta", {"type": "status"}, "x", "'status'"),
+    ],
+)
+def test_device_parsers_report_ignored_reason(parser_type, raw, origin, reason):
+    parser = get_parser(parser_type, None)
+    assert parser.do_parse(raw, origin) == []
+    assert reason in parser.ignored_reason
+
+
+def test_parsers_count_skipped_parts():
+    cr6 = CampbellCr6Parser()
+    raw = {"properties": {"observationNames": ["a", "b"], "observations": {}}}
+    raw["properties"]["observations"] = {"t1": [1, None, 3], "t2": [4]}
+    cr6.do_parse(raw, "x")
+    assert cr6.skipped_summary() == (
+        "1 values without name, 1 empty values, 1 missing values"
+    )
+
+    ydoc = YdocMl417Parser()
+    rows = [{"$ts": 230116110002, "$msg": "WDT;pr2_1"}, {}]
+    ydoc.do_parse({"data": rows}, "data/jsn")
+    assert ydoc.skipped_summary() == "2 incomplete rows"
+    assert ydoc.ignored_reason is None
+
+
+@pytest.mark.parametrize(
+    "parser_type, raw, match",
+    [
+        ("campbell_cr6", [1], "JSON object"),
+        (
+            "campbell_cr6",
+            {"properties": {"observationNames": "a", "observations": {}}},
+            "must be a list",
+        ),
+        (
+            "campbell_cr6",
+            {"properties": {"observationNames": ["a"], "observations": {"t": 5}}},
+            "list of values",
+        ),
+        (
+            "ydoc_ml417",
+            {"data": [{"$ts": "now", **{h: 1 for h in YdocMl417Parser.HEADERS}}]},
+            "Invalid '\\$ts'",
+        ),
+        ("chirpstack_generic", {"time": None, "object": {"a": 1}}, "Invalid 'time'"),
+        ("chirpstack_generic", {"time": "today", "object": {"a": 1}}, "ISO 8601"),
+    ],
+)
+def test_device_parsers_raise_on_invalid_values(parser_type, raw, match):
+    parser = get_parser(parser_type, None)
+    with pytest.raises(ParsingError, match=match):
+        parser.do_parse(raw, "data/jsn")
