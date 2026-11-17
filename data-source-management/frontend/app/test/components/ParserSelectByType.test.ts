@@ -287,7 +287,7 @@ describe('ParserSelectByType', () => {
   it('restores a predefined selection without offering settings', async () => {
     const parser = { id: 42, name: 'truelog100', parser_type: 'predefined' };
     const wrapper = mountParserSelectByType({ preselectedParser: parser });
-    expect(chipTexts(wrapper)).toContain('truelog100');
+    expect(chipTexts(wrapper)).toContain('TrueLog100');
     expect(lastEmitted(wrapper)).toEqual([42]);
     expect(wrapper.findAllComponents(QIcon).some((icon) => icon.props('name') === 'launch')).toBe(
       false,

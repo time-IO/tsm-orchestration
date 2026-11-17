@@ -9,7 +9,7 @@
     @filter="filterOptions"
     virtual-scroll-item-size="72"
     option-value="id"
-    option-label="name"
+    :option-label="(opt: ParserSelectOption) => parserDisplayName(opt.name, opt.parser_type)"
     label="Select the parser *"
     :rules="[rules.REQUIRED]"
   >
@@ -21,7 +21,7 @@
       <q-item v-bind="scope.itemProps">
         <q-item-section>
           <q-item-label>
-            {{ scope.opt.name === 'truelog100' ? 'TrueLog100' : scope.opt.name }}
+            {{ parserDisplayName(scope.opt.name, scope.opt.parser_type) }}
             <q-icon
               v-if="scope.opt.parser_type !== 'predefined'"
               name="launch"
@@ -98,6 +98,7 @@ import { useJsonParserStore } from '@/stores/parserJsonStore';
 import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
+import { parserDisplayName } from '@/utils/parser_utils';
 import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
 
 const csvParserStore = useCsvParserStore();
@@ -231,7 +232,7 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
     isFiltering.value = true;
     const needle = val.toLowerCase();
     filteredOptions.value = parserRowsOfStore.value.filter((v) =>
-      v.name.toLowerCase().includes(needle),
+      parserDisplayName(v.name, v.parser_type).toLowerCase().includes(needle),
     );
   });
 }

@@ -16,7 +16,7 @@
       <div v-if="selectedParser" class="row items-center q-gutter-xs full-width">
         <span class="text-caption text-italic text-grey">Name:</span>
         <q-chip dense square color="blue-grey-5" text-color="white">
-          {{ truncateText(selectedParser.name, 50) }}
+          {{ truncateText(parserDisplayName(selectedParser.name, selectedParser.parser_type), 50) }}
         </q-chip>
         <span class="text-caption text-italic text-grey">Type:</span>
         <q-chip dense square color="lime-5" text-color="white">
@@ -109,6 +109,7 @@ import { useRouter } from 'vue-router';
 import type { ParserRead, ParserSelectOption } from '@/services/types';
 import BaseField from '@/components/common/BaseField.vue';
 import { truncateText } from '@/utils/string_utils';
+import { parserDisplayName } from '@/utils/parser_utils';
 
 const selectedParserId = defineModel<number | null | undefined>();
 const selectedParser = ref<ParserSelectOption | null>(null);
