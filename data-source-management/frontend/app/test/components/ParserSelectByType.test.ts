@@ -344,6 +344,17 @@ describe('ParserSelectByType', () => {
       expect(select.props('disable')).toBeFalsy();
     });
 
+    it('only preselects the saved parser while its own type is shown', async () => {
+      const wrapper = mountParserSelectByType({ preselectedParser: csvParser });
+      await openDialog(wrapper);
+
+      await chooseType(wrapper, 'predefined');
+      expect(wrapper.findComponent(ParserSelectStub).props('preselected_item_id')).toBeNull();
+
+      await chooseType(wrapper, 'csv');
+      expect(wrapper.findComponent(ParserSelectStub).props('preselected_item_id')).toBe(5);
+    });
+
     it('passes null as permission group when none is given', async () => {
       const wrapper = mountParserSelectByType();
       await openDialog(wrapper);

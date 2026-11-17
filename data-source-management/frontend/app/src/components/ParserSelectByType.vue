@@ -93,7 +93,7 @@
           :disable="disable"
           :permission_group_id="permissionGroupId ?? null"
           :parser_type="dialogParserType"
-          :preselected_item_id="preselectedParser?.id"
+          :preselected_item_id="preselectedIdForDialogType"
           @update:model-value="onParserPicked"
         />
       </q-card-section>
@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ParserTypeSelect from '@/components/ParserTypeSelect.vue';
 import ParserSelect from '@/components/ParserSelect.vue';
 import { useRouter } from 'vue-router';
@@ -124,6 +124,13 @@ const props = defineProps<{
 const showDialog = ref(false);
 const dialogParserType = ref<string | null>(props.preselectedParser?.parser_type ?? null);
 const router = useRouter();
+
+// only preselect parser if its type matches the selected one
+const preselectedIdForDialogType = computed(() =>
+  props.preselectedParser && props.preselectedParser.parser_type === dialogParserType.value
+    ? props.preselectedParser.id
+    : null,
+);
 
 function openDialog() {
   draftParser.value = selectedParser.value;
