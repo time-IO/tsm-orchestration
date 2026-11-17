@@ -11,7 +11,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
-from mqtt_sync_wrapper import get_bosch_timerange, TIMERANGE_MAPPING
+from mqtt_sync_wrapper import get_bosch_timerange, get_uba_timerange, TIMERANGE_MAPPING
 
 
 def _mock_thing(settings):
@@ -60,3 +60,11 @@ def test_get_bosch_timerange_missing_period_raises_keyerror():
 
 def test_sensoto_mapped_to_bosch_timerange():
     assert TIMERANGE_MAPPING["sensoto"] is get_bosch_timerange
+
+
+def test_get_uba_timerange_is_last_full_utc_hour():
+    from_str, to_str = get_uba_timerange(_mock_thing({}))
+    from_dt = datetime.strptime(from_str, "%Y-%m-%dT%H:%M:%SZ")
+    to_dt = datetime.strptime(to_str, "%Y-%m-%dT%H:%M:%SZ")
+    assert to_dt.minute == to_dt.second == 0
+    assert (to_dt - from_dt).total_seconds() == 3600

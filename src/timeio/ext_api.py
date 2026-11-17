@@ -251,6 +251,9 @@ class TsystemsApiSyncer(ExtApiSyncer):
 
 
 class UbaApiSyncer(ExtApiSyncer):
+    # UBA uses CET (MEZ) all year, no DST
+    UBA_TZ = timezone(timedelta(hours=1))
+
     uba_componsents_url = (
         "https://www.umweltbundesamt.de/api/air_data/v3/components/json"
     )
@@ -289,15 +292,20 @@ class UbaApiSyncer(ExtApiSyncer):
         )
         return parsed_measure_data + parsed_aqi_data
 
-    @staticmethod
-    def parse_timeranges(dt_from_str, dt_to_str):
-        dt_from = datetime.strptime(dt_from_str, "%Y-%m-%d %H:%M:%S")
-        dt_to = datetime.strptime(dt_to_str, "%Y-%m-%d %H:%M:%S")
-        date_from = dt_from.date().strftime("%Y-%m-%d")
-        time_from = dt_from.hour
-        date_to = dt_to.date().strftime("%Y-%m-%d")
-        time_to = dt_to.hour
-        return date_from, time_from, date_to, time_to
+    @classmethod
+    def parse_timeranges(cls, dt_from_str, dt_to_str):
+        return (*cls.to_uba_date_hour(dt_from_str), *cls.to_uba_date_hour(dt_to_str))
+
+    @classmethod
+    def to_uba_date_hour(cls, dt_str: str) -> tuple[str, int]:
+        """Convert an ISO datetime (naive = UTC) to UBA's UTC+01 date and hour 1..24"""
+        dt = datetime.fromisoformat(dt_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.astimezone(cls.UBA_TZ)
+        if dt.hour == 0:
+            return (dt - timedelta(days=1)).strftime("%Y-%m-%d"), 24
+        return dt.strftime("%Y-%m-%d"), dt.hour
 
     @staticmethod
     def adjust_datetime(datetime_str: str) -> str:
@@ -411,7 +419,7 @@ class UbaApiSyncer(ExtApiSyncer):
     def cet_to_utc(dt_string):
         # timestamps from UBA API /json endpoints are tz aware with tz "MEZ" (CET)
         dt = datetime.strptime(dt_string, "%Y-%m-%d %H:%M:%S")
-        dt_cet = dt.replace(tzinfo=timezone(timedelta(hours=1)))
+        dt_cet = dt.replace(tzinfo=UbaApiSyncer.UBA_TZ)
         dt_utc = dt_cet.astimezone(timezone.utc)
 
         return dt_utc.isoformat()

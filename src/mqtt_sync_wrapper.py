@@ -39,24 +39,13 @@ def get_dwd_timerange(thing):
 
 
 def get_uba_timerange(thing):
-    """UBA API expects time_from/time_to in the range of 1 to 24"""
-    datetime_now = datetime.now(timezone.utc)
-    datetime_from = datetime_now - timedelta(hours=1)
-    if datetime_now.hour == 0:
-        datetime_to = (datetime_now - timedelta(days=1)).strftime(
-            "%Y-%m-%d"
-        ) + " 24:00:00"
-    else:
-        datetime_to = datetime_now.strftime("%Y-%m-%d") + f" {datetime_now.hour}:00:00"
-    if datetime_from.hour == 0:
-        datetime_from = (datetime_from - timedelta(days=1)).strftime(
-            "%Y-%m-%d"
-        ) + " 24:00:00"
-    else:
-        datetime_from = (
-            datetime_from.strftime("%Y-%m-%d") + f" {datetime_from.hour}:00:00"
-        )
-    return datetime_from, datetime_to
+    # UbaApiSyncer converts to UBA's UTC+01 hours 1..24
+    now_utc = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    datetime_from = now_utc - timedelta(hours=1)
+    return (
+        datetime_from.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    )
 
 
 def get_nm_timerange(thing):

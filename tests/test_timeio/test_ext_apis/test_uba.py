@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
 from unittest.mock import patch
 from .conf import CONTENT, mock_thing, mock_response
 
@@ -9,12 +10,28 @@ from timeio import ext_api
 
 def test_uba_parse_timeranges():
     date_from, time_from, date_to, time_to = ext_api.UbaApiSyncer.parse_timeranges(
-        "2025-01-01 03:00:00", "2025-01-02 04:00:00"
+        "2025-01-01T03:00:00Z", "2025-01-02T04:00:00Z"
     )
     assert date_from == "2025-01-01"
-    assert time_from == 3
+    assert time_from == 4
     assert date_to == "2025-01-02"
-    assert time_to == 4
+    assert time_to == 5
+
+
+@pytest.mark.parametrize(
+    "dt_str, expected",
+    [
+        ("2025-01-01T22:00:00Z", ("2025-01-01", 23)),
+        ("2025-01-01T23:00:00Z", ("2025-01-01", 24)),
+        ("2025-01-02T00:00:00Z", ("2025-01-02", 1)),
+        ("2025-01-01 23:00:00", ("2025-01-01", 24)),
+        # no DST: summer is UTC+01 as well
+        ("2025-07-01T23:00:00Z", ("2025-07-01", 24)),
+        ("2025-07-01T12:00:00+02:00", ("2025-07-01", 11)),
+    ],
+)
+def test_uba_to_uba_date_hour(dt_str, expected):
+    assert ext_api.UbaApiSyncer.to_uba_date_hour(dt_str) == expected
 
 
 def test_uba_adjust_datetime():
