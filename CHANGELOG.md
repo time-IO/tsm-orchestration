@@ -12,6 +12,17 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+### Added
+- Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
+- Component Tests: IngestOverviewExternalApiFilter, IngestOverviewExternalApiTable, IngestOverviewFilter, IngestOverviewTable and TriggerExternalApiDialog ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/792))
+
+### Fixed
+- Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
+
+### Changed
+- MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
+
+
 ## [2026-11-11]
 
 ### Added
@@ -22,6 +33,7 @@ When adding a changelog entry, ensure the following:
 ### Fixed
 - Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 - TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
+- FROST keepalive ping via `FROST_KEEPALIVE_INTERVAL` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 - Http Ingest: displays and copies full URL of the endpoint; additional infos how to use the api key ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/806))
 - CSV parser preserves observations from the repeated hour when switching from daylight saving time to standard time by inferring the correct UTC offsets ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/812))
 
@@ -30,6 +42,7 @@ When adding a changelog entry, ensure the following:
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))
 - update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))
 - CVE scan lists fixable critical CVEs per image and package with fix version ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/797))
+- MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 
 ### Removed
 - deprecated Thing Management database credentials ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/805))

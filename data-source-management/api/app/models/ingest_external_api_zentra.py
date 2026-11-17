@@ -32,6 +32,7 @@ class IngestExternalApiZentraCreate(IngestExternalApiCreate):
 
 
 class IngestExternalApiZentraUpdate(IngestExternalApiUpdate):
+    device_sn: Optional[str] = None
     period_in_minutes: Optional[int] = None
     units: Optional[Literal["metric", "imperial"]] = None
     api_key: Optional[str] = None

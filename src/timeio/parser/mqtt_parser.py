@@ -5,6 +5,7 @@ import logging
 import math
 
 from abc import abstractmethod
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -41,10 +42,24 @@ class MqttParser(AbcParser):
         self.logger = logging.getLogger(self.__class__.__qualname__)
         self._start_date = None
         self._end_date = None
+        self.ignored_reason: str | None = None
+        self.skipped: Counter[str] = Counter()
 
     @abstractmethod
     def do_parse(self, rawdata: Any, origin: str) -> list[Observation]:
         raise NotImplementedError
+
+    def ignore(self, reason: str) -> list[Observation]:
+        """Mark the whole message as intentionally ignored."""
+        self.ignored_reason = reason
+        return []
+
+    def skip(self, what: str, count: int = 1) -> None:
+        """Count dropped parts of a message, e.g. 'empty values'."""
+        self.skipped[what] += count
+
+    def skipped_summary(self) -> str:
+        return ", ".join(f"{n} {what}" for what, n in self.skipped.items())
 
     def to_observations(
         self, data: list[Observation], thing_uuid: str

@@ -78,22 +78,31 @@
             class="q-mb-md"
             v-model.number="formData.period_in_minutes"
             label="Period (in minutes) *"
+            type="number"
             hint="Determines the time window fetched per sync (up to 2,000 readings per request, Zentra's limit). Should roughly match your sync interval to avoid gaps or overlaps."
-            :rules="[
-              (val) => !!val || 'Period is required',
-              (val) =>
-                (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-            ]"
-          />
-          <q-separator class="q-my-lg" />
+            :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(1)]"
+          >
+            <template #append>
+              <help-button termHelp="period" />
+            </template>
+          </q-input>
           <q-separator class="q-my-lg" />
           <q-input
             filled
             class="q-mb-md"
             v-model="formData.api_key"
-            label="API-Key *"
+            label="API Key *"
+            :type="isPwd ? 'password' : 'text'"
             :rules="[(val) => !!val || 'Key is required']"
-          />
+          >
+            <template v-slot:append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
 
           <q-separator class="q-my-lg" />
           <!-- Sync Settings -->
@@ -102,7 +111,7 @@
 
             <q-toggle
               v-model="formData.sync_enabled"
-              label="Enable File Server Sync"
+              label="Enable Sync"
               color="primary"
               size="md"
             />
@@ -113,12 +122,12 @@
                 v-model.number="formData.sync_interval_in_minutes"
                 label="Sync Interval (in minutes) *"
                 type="number"
-                :rules="[
-                  (val) => !!val || 'Sync intervall is required',
-                  (val) =>
-                    (val !== null && val !== '' && val > 0) || 'Interval must be a positive number',
-                ]"
-              />
+                :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(10)]"
+              >
+                <template #append>
+                  <help-button termHelp="sync_interval" />
+                </template>
+              </q-input>
             </div>
           </q-card-section>
 
@@ -150,6 +159,9 @@ import type {
   IngestExternalApiZentraUpdate,
 } from '@/services/ingest_external_api_zentra/types';
 import type { PermissionGroup } from '@/services/permission_group/types';
+import HelpButton from '@/components/HelpButton.vue';
+import { ref } from 'vue';
+import { ruleFactories, rules } from '@/utils/validation/rules';
 
 defineProps<{
   title: string;
@@ -175,6 +187,8 @@ const formData = defineModel<IngestExternalApiZentraCreate | IngestExternalApiZe
     api_key: '',
   }),
 });
+
+const isPwd = ref(true);
 </script>
 
 <style scoped>
