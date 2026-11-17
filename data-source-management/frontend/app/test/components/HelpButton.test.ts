@@ -1,6 +1,6 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { mount } from '@vue/test-utils';
-import { QBtn, QDialog } from 'quasar';
+import { QBtn, QDialog, QCardSection } from 'quasar';
 import { describe, expect, it } from 'vitest';
 
 import HelpButton from '@/components/HelpButton.vue';
@@ -116,4 +116,34 @@ describe('HelpButton', () => {
     expect(wrapper.find('.text-h6').text()).toBe('Fallback title');
     expect(wrapper.find('.dialog').text()).toContain('Fallback text');
   });
+});
+
+it('shows empty title and text when no props are given', async () => {
+  const wrapper = mountHelpButton();
+
+  await openDialog(wrapper);
+
+  const sections = wrapper.findAllComponents(QCardSection);
+  expect(wrapper.find('.text-h6').text()).toBe('');
+  expect(sections[1]!.text()).toBe('');
+});
+
+it('falls back to an empty text when only titleHelp is given', async () => {
+  const wrapper = mountHelpButton({ titleHelp: 'Only title' });
+
+  await openDialog(wrapper);
+
+  const sections = wrapper.findAllComponents(QCardSection);
+  expect(wrapper.find('.text-h6').text()).toBe('Only title');
+  expect(sections[1]!.text()).toBe('');
+});
+
+it('falls back to an empty title when only textHelp is given', async () => {
+  const wrapper = mountHelpButton({ textHelp: 'Only text' });
+
+  await openDialog(wrapper);
+
+  const sections = wrapper.findAllComponents(QCardSection);
+  expect(wrapper.find('.text-h6').text()).toBe('');
+  expect(sections[1]!.text()).toBe('Only text');
 });
