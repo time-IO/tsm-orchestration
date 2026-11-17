@@ -23,7 +23,7 @@
           <q-item-label>
             {{ parserDisplayName(scope.opt.name, scope.opt.parser_type) }}
             <q-icon
-              v-if="scope.opt.parser_type !== 'predefined'"
+              v-if="!isPredefinedParser(scope.opt)"
               name="launch"
               class="cursor-pointer"
               color="blue-grey-5"
@@ -95,7 +95,7 @@ import type { ParserSelectOption } from '@/services/types';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
-import { parserDisplayName } from '@/utils/parser_utils';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
 import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
 import { useParserStoreByType } from '@/composables/useParserStoreByType';
 

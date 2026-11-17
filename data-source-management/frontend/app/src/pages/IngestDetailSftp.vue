@@ -126,7 +126,7 @@
                     <q-item-label caption>
                       {{ parserDisplayName(item.parser.name, item.parser.parser_type) }}
                       <q-icon
-                        v-if="item.parser.parser_type !== 'predefined'"
+                        v-if="!isPredefinedParser(item.parser)"
                         name="launch"
                         class="cursor-pointer"
                         @click="openParser"
@@ -188,7 +188,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import { parserDisplayName } from '@/utils/parser_utils';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestSftpPublic } from '@/services/ingest_sftp/types';

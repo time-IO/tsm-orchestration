@@ -57,7 +57,7 @@
         </template>
 
         <q-icon
-          v-if="selectedParser.parser_type !== 'predefined'"
+          v-if="!isPredefinedParser(selectedParser)"
           name="launch"
           class="cursor-pointer"
           color="blue-grey-5"
@@ -109,7 +109,7 @@ import { useRouter } from 'vue-router';
 import type { ParserRead, ParserSelectOption } from '@/services/types';
 import BaseField from '@/components/common/BaseField.vue';
 import { truncateText } from '@/utils/string_utils';
-import { parserDisplayName } from '@/utils/parser_utils';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
 
 const selectedParserId = defineModel<number | null | undefined>();
 const selectedParser = ref<ParserSelectOption | null>(null);
