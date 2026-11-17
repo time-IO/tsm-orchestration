@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 from datetime import datetime, timezone
 
+from timeio.errors import ParsingError
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 """
@@ -44,13 +45,23 @@ RecordNum should not be stored, DateTimeUTC should be transformed into datetime.
 
 class QuaestaParser(MqttParser):
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
-        timestamp = datetime.strptime(
-            rawdata.pop("timestampISO8601"), "%Y-%m-%dT%H:%M:%SZ"
-        )
+        if not isinstance(rawdata, dict):
+            raise ParsingError("Message must be a JSON object")
+        if (msg_type := rawdata.get("type")) != "dataCRNS":
+            return self.ignore(f"message type is {msg_type!r}, not 'dataCRNS'")
+        try:
+            timestamp = datetime.strptime(
+                rawdata.pop("timestampISO8601"), "%Y-%m-%dT%H:%M:%SZ"
+            )
+        except KeyError as e:
+            raise ParsingError("Message must contain 'timestampISO8601'") from e
+        except (ValueError, TypeError) as e:
+            raise ParsingError(
+                f"Invalid 'timestampISO8601', expected format "
+                f"'YYYY-MM-DDTHH:MM:SSZ': {e}"
+            ) from e
         timestamp = timestamp.replace(tzinfo=timezone.utc)
         out = []
-        if rawdata.get("type") != "dataCRNS":
-            return out
         for key, value in rawdata.items():
             if key in (
                 "stationID",
@@ -72,6 +83,5 @@ class QuaestaParser(MqttParser):
                     )
                 )
             except ValueError:
-                # value is NaN or None
-                continue
+                self.skip("empty values")
         return out
