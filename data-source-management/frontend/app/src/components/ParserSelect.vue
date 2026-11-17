@@ -93,17 +93,13 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import type { ParserSelectOption } from '@/services/types';
 import { useQuasar } from 'quasar';
-import { useCsvParserStore } from '@/stores/parserCsvStore';
-import { useJsonParserStore } from '@/stores/parserJsonStore';
-import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
 import { parserDisplayName } from '@/utils/parser_utils';
 import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
+import { useParserStoreByType } from '@/composables/useParserStoreByType';
 
-const csvParserStore = useCsvParserStore();
-const jsonParserStore = useJsonParserStore();
-const soilcanParserStore = useSoilcanParserStore();
+const { parserStoresByType } = useParserStoreByType();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -118,19 +114,6 @@ const predefinedParsers = ref<ParserSelectOption[]>([]);
 const paginationLoading = ref(false);
 const filteredOptions = ref<ParserSelectOption[]>([]);
 const isFiltering = ref(false);
-
-/**
- * Maps a parser_type string to its corresponding store.
- * Add new parser types here as they are introduced.
- */
-const parserStoresByType: Record<
-  string,
-  typeof csvParserStore | typeof jsonParserStore | typeof soilcanParserStore
-> = {
-  csv: csvParserStore,
-  json: jsonParserStore,
-  soilcan: soilcanParserStore,
-};
 
 const parserRowsOfStore = computed<ParserSelectOption[]>(() => {
   if (!parser_type) return [];
