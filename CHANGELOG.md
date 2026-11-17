@@ -15,6 +15,10 @@ When adding a changelog entry, ensure the following:
 ### Fixed
 - Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
 
+### Changed
+- MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
+
+
 ## [2026-11-11]
 
 ### Added
