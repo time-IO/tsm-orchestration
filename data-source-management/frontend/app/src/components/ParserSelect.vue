@@ -96,7 +96,7 @@ import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
 import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
-import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
+import predefinedParserApi from '@/services/parser_predefined';
 import { useParserStoreByType } from '@/composables/useParserStoreByType';
 
 const { parserStoresByType } = useParserStoreByType();
@@ -143,10 +143,9 @@ async function includeItemIfMissing() {
   const store = parserStoresByType[parser_type];
   if (store || parser_type === 'predefined') {
     try {
-      const item =
-        parser_type === 'predefined'
-          ? (await getPredefinedParser(preselected_item_id)).data
-          : await store!.dispatchGetOne(preselected_item_id);
+      const item = store
+        ? await store.dispatchGetOne(preselected_item_id)
+        : (await predefinedParserApi.getOne(preselected_item_id)).data;
       filteredOptions.value = [...parserRowsOfStore.value, { ...item, parser_type }];
     } catch {
       $q.notify({
@@ -176,7 +175,7 @@ async function fetchOptions() {
   try {
     const store = parserStoresByType[parser_type];
     if (parser_type === 'predefined') {
-      predefinedParsers.value = (await getPredefinedParsers()).data.items;
+      predefinedParsers.value = await predefinedParserApi.getAll({ recommended_for: 'file' });
     } else if (store) {
       store.filters.permission_group_id = permission_group_id;
       store.pagination.rowsPerPage = 250;

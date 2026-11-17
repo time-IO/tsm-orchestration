@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import ParserSelect from '@/components/ParserSelect.vue';
-import { getPredefinedParsers, getPredefinedParser } from '@/services/parser_predefined';
+import predefinedParserApi from '@/services/parser_predefined';
 import { rules } from '@/utils/validation/rules';
 import type { ParserSelectOption } from '@/services/types';
 
@@ -29,8 +29,7 @@ const { stores, notifyMock, resolveMock } = vi.hoisted(() => {
 });
 
 vi.mock('@/services/parser_predefined', () => ({
-  getPredefinedParsers: vi.fn(),
-  getPredefinedParser: vi.fn(),
+  default: { getAll: vi.fn(), getOne: vi.fn() },
 }));
 
 vi.mock('@/stores/parserCsvStore', () => ({ useCsvParserStore: () => stores.csv }));
@@ -162,9 +161,11 @@ describe('ParserSelect', () => {
     const parser = { id: 42, name: 'truelog100', parser_type: 'predefined' };
 
     it('offers TrueLog100 without a settings link and emits its saved identity', async () => {
-      vi.mocked(getPredefinedParsers).mockResolvedValue({ data: { items: [parser] } } as never);
+      vi.mocked(predefinedParserApi.getAll).mockResolvedValue([parser]);
       const w = await mountOptionList({ parser_type: 'predefined' });
-      expect(getPredefinedParsers).toHaveBeenCalledOnce();
+      expect(predefinedParserApi.getAll).toHaveBeenCalledExactlyOnceWith({
+        recommended_for: 'file',
+      });
       expect(w.text()).toContain('TrueLog100');
       expect(w.findAllComponents(QIcon).some((icon) => icon.props('name') === 'launch')).toBe(
         false,
@@ -177,10 +178,10 @@ describe('ParserSelect', () => {
     });
 
     it('loads a saved predefined parser missing from the recommendations', async () => {
-      vi.mocked(getPredefinedParsers).mockResolvedValue({ data: { items: [] } } as never);
-      vi.mocked(getPredefinedParser).mockResolvedValue({ data: parser } as never);
+      vi.mocked(predefinedParserApi.getAll).mockResolvedValue([]);
+      vi.mocked(predefinedParserApi.getOne).mockResolvedValue({ data: parser } as never);
       const w = await mountParserSelect({ parser_type: 'predefined', preselected_item_id: 42 });
-      expect(getPredefinedParser).toHaveBeenCalledWith(42);
+      expect(predefinedParserApi.getOne).toHaveBeenCalledWith(42);
       expect(getSelect(w).props('options')).toEqual([parser]);
     });
   });
