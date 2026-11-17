@@ -189,7 +189,12 @@
                     <q-item-label>Parser</q-item-label>
                     <q-item-label caption>
                       {{ parserDisplayName(item.parser.name, item.parser.parser_type) }}
-                      <q-icon name="launch" class="cursor-pointer" @click="openParser">
+                      <q-icon
+                        v-if="!isPredefinedParser(item.parser)"
+                        name="launch"
+                        class="cursor-pointer"
+                        @click="openParser"
+                      >
                         <q-tooltip> Open in new window</q-tooltip>
                       </q-icon>
                     </q-item-label>
@@ -257,7 +262,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import { parserDisplayName } from '@/utils/parser_utils';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestExternalMqttPublic } from '@/services/ingest_external_mqtt/types';
