@@ -3,10 +3,13 @@ from __future__ import annotations
 from typing import Any
 from datetime import datetime
 
+from timeio.errors import ParsingError
 from timeio.parser.mqtt_parser import MqttParser, Observation
 
 
 class YdocMl417Parser(MqttParser):
+    HEADERS = ("MINVi", "AVGVi", "AVGCi", "P1*", "P2", "P3", "P4")
+
     # mqtt_ingest/test-logger-pb/test/data/jsn
     # {
     # "device":
@@ -28,23 +31,34 @@ class YdocMl417Parser(MqttParser):
 
     def do_parse(self, rawdata: Any, origin: str = "", **kwargs) -> list[Observation]:
         if "data/jsn" not in origin:
-            return []
+            return self.ignore("only topics with 'data/jsn' contain data")
 
         # data = payload['data'][1]
+        try:
+            rows = rawdata["data"]
+        except (KeyError, TypeError) as e:
+            raise ParsingError("Message must contain the field 'data'") from e
+        if not isinstance(rows, list):
+            raise ParsingError("Field 'data' must be a list")
+
         ret = []
-        for data in rawdata["data"]:
+        for data in rows:
             try:
-                ts = datetime.strptime(str(data["$ts"]), "%y%m%d%H%M%S")
-                ob0 = Observation(ts, data["MINVi"], origin, 0, header="MINVi")
-                ob1 = Observation(ts, data["AVGVi"], origin, 1, header="AVGCi")
-                ob2 = Observation(ts, data["AVGCi"], origin, 2, header="AVGCi")
-                ob3 = Observation(ts, data["P1*"], origin, 3, header="P1*")
-                ob4 = Observation(ts, data["P2"], origin, 4, header="P2")
-                ob5 = Observation(ts, data["P3"], origin, 5, header="P3")
-                ob6 = Observation(ts, data["P4"], origin, 6, header="P4")
-                ret.extend([ob0, ob1, ob2, ob3, ob4, ob5, ob6])
-            except KeyError:
-                # we ignore data that not have all keys
-                # see also the example above the function at (*)
-                pass
+                raw_ts = data["$ts"]
+                values = [data[h] for h in self.HEADERS]
+            except (KeyError, TypeError):
+                # rows without all keys, see the example above (*)
+                self.skip("incomplete rows")
+                continue
+            try:
+                ts = datetime.strptime(str(raw_ts), "%y%m%d%H%M%S")
+            except ValueError as e:
+                raise ParsingError(
+                    f"Invalid '$ts' {raw_ts!r}, expected format 'YYMMDDhhmmss'"
+                ) from e
+            for pos, (header, value) in enumerate(zip(self.HEADERS, values)):
+                try:
+                    ret.append(Observation(ts, value, origin, pos, header=header))
+                except ValueError:
+                    self.skip("empty values")
         return ret
