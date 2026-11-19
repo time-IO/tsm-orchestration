@@ -53,6 +53,5 @@ const columnWidths: ColumnWidths = {
   api_type: { min: 9, default: 19 },
   created_at: { min: 10, default: 13 },
   uuid: { min: 9, default: 14 },
-  action: { min: 16, max: 16, default: 16 },
 };
 </script>

@@ -68,12 +68,10 @@ const pagination = computed({
 });
 
 const columns = computed(() =>
-  default_ingest_external_api_columns
-    .filter((col) => col.name !== 'action')
-    .map((col) => ({
-      ...col,
-      align: 'left' as const,
-    })),
+  default_ingest_external_api_columns.map((col) => ({
+    ...col,
+    align: 'left' as const,
+  })),
 );
 </script>
 
