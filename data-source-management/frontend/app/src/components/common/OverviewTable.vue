@@ -88,7 +88,7 @@
             ]"
             :style="`width: ${headerWidth(col.name)}; position: relative; user-select: none;`"
           >
-            {{ col.label }}
+            <span class="overview-table__label" :title="col.label">{{ col.label }}</span>
             <span
               v-if="isResizable(col.name)"
               class="col-resize-handle"
@@ -511,6 +511,25 @@ thead th {
 
 .row-highlight {
   background-color: rgba(255, 0, 0, 0.1);
+}
+
+.overview-table__label {
+  display: inline-block;
+  width: 0;
+  min-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.overview-table :deep(th.sortable) .overview-table__label {
+  min-width: calc(100% - 20px);
+}
+
+.overview-table :deep(th .q-table__sort-icon--left),
+.overview-table :deep(th .q-table__sort-icon--center) {
+  margin-right: calc(-1em - 4px);
 }
 
 .col-resize-handle {
