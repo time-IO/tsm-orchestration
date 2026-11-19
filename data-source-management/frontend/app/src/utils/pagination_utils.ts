@@ -148,7 +148,6 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
     },
   },
   { name: 'uuid', label: 'UUID', field: 'uuid', align: 'center' },
-  { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
 export const default_parser_columns: QTableColumn[] = [

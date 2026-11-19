@@ -6,7 +6,7 @@ import { defineComponent, h } from 'vue';
 import IngestOverviewExternalApiTable from '@/components/IngestOverviewExternalApiTable.vue';
 import type { IngestExternalApiRead } from '@/services/ingest_external_api/types';
 import type { QTableRequestPropPagination } from '@/services/types';
-import { isColumnResizable, type ColumnWidths } from '@/utils/overview_table_utils';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 import { default_ingest_external_api_columns } from '@/utils/pagination_utils';
 
 installQuasarPlugin();
@@ -89,13 +89,13 @@ describe('IngestOverviewExternalApiTable', () => {
   });
 
   describe('column widths', () => {
-    it('defines a width for every default column and a fixed action column', () => {
+    it('defines a width for every default column', () => {
       const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
       default_ingest_external_api_columns.forEach((col) => {
         expect(widths[col.name]?.default).toBeDefined();
       });
-      expect(isColumnResizable(widths, 'action')).toBe(false);
+      expect(default_ingest_external_api_columns.map((c) => c.name)).not.toContain('action');
     });
   });
 
