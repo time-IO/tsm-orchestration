@@ -94,6 +94,7 @@ import type {
 import { debounce, useQuasar } from 'quasar';
 import { useStaStore } from '@/stores/staStore';
 import StaThingDatastreamsCard from '@/components/StaThingDatastreamsCard.vue';
+import { groupDatastreamsByThing } from '@/utils/sta_utils';
 import type { Datastream } from '@/services/sta/types';
 
 import type { AxiosError } from 'axios';
@@ -151,14 +152,7 @@ const selectedCreatedWithAlias = computed(() => {
 
 const selected = computed(() => [...selectedStaWithAlias.value, ...selectedCreatedWithAlias.value]);
 
-const selectedGroups = computed(() => {
-  const groups = new Map<string, Datastream[]>();
-  selected.value.forEach((ds) => {
-    const thingName = ds.Thing?.name || '-';
-    groups.set(thingName, [...(groups.get(thingName) ?? []), ds]);
-  });
-  return Array.from(groups, ([thingName, datastreams]) => ({ thingName, datastreams }));
-});
+const selectedGroups = computed(() => groupDatastreamsByThing(selected.value));
 const expandedThings = reactive<Record<string, boolean>>({});
 
 async function loadData() {

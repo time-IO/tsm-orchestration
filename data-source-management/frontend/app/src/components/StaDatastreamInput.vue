@@ -1,54 +1,39 @@
 <template>
   <q-field :rules="rules" v-model="selectedDatastreams">
-    <div class="q-mb-md">
-      <div v-if="!hasSelection">
+    <div class="q-mb-md full-width">
+      <div class="q-mb-sm">
         <q-btn
-          label="Select Datastreams"
+          :label="hasSelection ? 'Edit Datastreams' : 'Select Datastreams'"
           :disable="!permission_group_id"
           outline
           @click="openDialog"
         />
-        <q-btn class="q-ml-sm" outline v-if="showTempCreateBtn" @click="showCreateDialog = true"
-          >Create Datastream</q-btn
-        >
+        <q-btn
+          label="Create Datastream"
+          class="q-ml-sm"
+          outline
+          v-if="showTempCreateBtn"
+          @click="showCreateDialog = true"
+        />
         <q-tooltip v-if="!permission_group_id"> Please select a Permission Group first </q-tooltip>
       </div>
 
-      <div v-else>
-        <div>
-          <div class="q-mb-sm">
-            <q-btn
-              label="Select Datastreams"
-              :disable="!permission_group_id"
-              outline
-              @click="openDialog"
-            />
-            <q-btn
-              label="Create Datastream"
-              class="q-ml-sm"
-              outline
-              v-if="showTempCreateBtn"
-              @click="showCreateDialog = true"
-            />
-          </div>
-          <div style="width: 90%">
-            <sta-datastream-card
-              label="Datastreams"
-              :selected="selectedDatastreams"
-              :removable="true"
-              :addable="false"
-              :hide-thing-name="true"
-              :hide-open-button="true"
-              @remove="removeSelected"
-            />
-          </div>
-          <div class="q-ml-sm">
-            <q-tooltip v-if="!permission_group_id">
-              Please select a Permission Group first
-            </q-tooltip>
-          </div>
-        </div>
-      </div>
+      <div v-if="!hasSelection" class="text-grey">No datastreams selected</div>
+      <template v-else>
+        <sta-thing-datastreams-card
+          v-for="group in selectedGroups"
+          :key="group.thingName"
+          class="q-mb-sm"
+          :thing-name="group.thingName"
+          :datastreams="group.datastreams"
+          :expanded="expandedThings[group.thingName] ?? true"
+          @update:expanded="(val: boolean) => (expandedThings[group.thingName] = val)"
+          removable
+          hide-thing-name
+          hide-open-button
+          @remove="removeSelected"
+        />
+      </template>
 
       <sta-datastream-selection
         v-if="showDialog"
@@ -69,16 +54,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import type { Datastream, TemporaryDatastream } from '@/services/sta/types';
 import StaDatastreamSelection from '@/components/StaDatastreamSelection.vue';
-import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
+import StaThingDatastreamsCard from '@/components/StaThingDatastreamsCard.vue';
 import StaTemporaryDatastreamCreation from '@/components/StaTemporaryDatastreamCreation.vue';
+import { groupDatastreamsByThing } from '@/utils/sta_utils';
 
 const selectedDatastreams = defineModel<Datastream[]>({ default: () => [] });
 
 const showDialog = ref(false);
 const hasSelection = computed(() => selectedDatastreams.value.length > 0);
+const selectedGroups = computed(() => groupDatastreamsByThing(selectedDatastreams.value));
+const expandedThings = reactive<Record<string, boolean>>({});
 
 defineProps<{
   permission_group_id: number;
