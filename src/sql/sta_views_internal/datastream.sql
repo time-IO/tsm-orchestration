@@ -80,12 +80,12 @@ SELECT
                 'definition', dp.accuracy_unit_uri
             )
         ),
-		'license', jsonb_build_object(
+		'license', CASE WHEN cv_l.term IS NULL THEN NULL ELSE jsonb_build_object(
 			'jsonld.type', 'CreativeWork',
     		'name', cv_l.term,
 		    'url', cv_l.provenance_uri,
 		    'provider', cv_l.definition
-		),
+		) END,
 		'providerMobility', CASE WHEN MAX(cdl.begin_date) IS NULL THEN 'static' ELSE 'dynamic' end,
 		'deployment', jsonb_build_object(
 			'jsonld.id', '{sms_url}' || 'configurations/' || c.id || '/platforms-and-devices?deviceMountAction=' || dma.id,
