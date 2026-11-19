@@ -29,7 +29,7 @@
       :rows="store.rows"
       :pagination="pagination"
       :columns="columns"
-      selection="multiple"
+      selectable
       @onRequest="store.onRequest"
     />
     <trigger-external-api-dialog
