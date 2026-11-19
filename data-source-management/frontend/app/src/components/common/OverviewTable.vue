@@ -154,14 +154,21 @@ import { computed, onMounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
+import {
+  clampColumnWidth,
+  defaultColumnWidths,
+  maxWidthOf,
+  minWidthOf,
+  type ColumnWidths,
+  type ColumnWidthValues,
+} from '@/utils/overview_table_utils';
 
 const {
   rows,
   loading,
   columns,
   storageKey,
-  colMinWidths,
-  defaultColWidths,
+  columnWidths,
   selectable = false,
   rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
 } = defineProps<{
@@ -170,8 +177,7 @@ const {
   columns: QTableColumn[];
   // prefix of the sessionStorage keys for column widths and visibility
   storageKey: string;
-  colMinWidths: Record<string, number>;
-  defaultColWidths: Record<string, number>;
+  columnWidths: ColumnWidths;
   selectable?: boolean;
   rowsPerPageOptions?: number[];
 }>();
@@ -240,20 +246,60 @@ const visibleColumnsStorageKey = `${storageKey}-visible-columns`;
 // loading the 'Usersettings'
 const savedColWidths = sessionStorage.getItem(colWidthsStorageKey);
 // handover the setting
-const colWidths = ref<Record<string, number>>(
+const colWidths = ref<ColumnWidthValues>(
   savedColWidths
     ? Object.fromEntries(
         Object.entries(JSON.parse(savedColWidths)).map(([key, value]) => [key, Number(value)]),
       )
-    : { ...defaultColWidths },
+    : defaultColumnWidths(columnWidths),
 );
 
-const minWidthOf = (colName: string) => colMinWidths[colName] ?? 50;
+// tolerance for floating point comparisons of widths: half a pixel
+const WIDTH_EPSILON = 0.5;
+
+const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
+
+const sumWidths = (colNames: string[]) =>
+  colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
+
+const hasRoomToGrow = (colName: string) =>
+  colWidths.value[colName]! < maxWidthOf(columnWidths, colName) - WIDTH_EPSILON;
+
+const hasRoomToShrink = (colName: string) =>
+  colWidths.value[colName]! > minWidthOf(columnWidths, colName) + WIDTH_EPSILON;
+
+function distributeWidth(amount: number, receivers: string[]) {
+  let remaining = amount;
+  let candidates = withWidth(receivers).filter(hasRoomToGrow);
+  while (remaining > WIDTH_EPSILON && candidates.length > 0) {
+    const share = remaining / candidates.length;
+    for (const c of candidates) {
+      const give = Math.min(share, maxWidthOf(columnWidths, c) - colWidths.value[c]!);
+      colWidths.value[c] = colWidths.value[c]! + give;
+      remaining -= give;
+    }
+    candidates = candidates.filter(hasRoomToGrow);
+  }
+}
+
+function reclaimWidth(amount: number, donors: string[]) {
+  let remaining = amount;
+  let candidates = withWidth(donors).filter(hasRoomToShrink);
+  while (remaining > WIDTH_EPSILON && candidates.length > 0) {
+    const share = remaining / candidates.length;
+    for (const c of candidates) {
+      const take = Math.min(share, colWidths.value[c]! - minWidthOf(columnWidths, c));
+      colWidths.value[c] = colWidths.value[c]! - take;
+      remaining -= take;
+    }
+    candidates = candidates.filter(hasRoomToShrink);
+  }
+}
 
 // functions for setting a new col-widths per mousemove
 let resizingCol: string | null = null;
 let startX = 0;
-let startWidths: Record<string, number> = {};
+let startWidths: ColumnWidthValues = {};
 let otherCols: string[] = [];
 
 function startResize(e: MouseEvent, colName: string) {
@@ -274,17 +320,16 @@ function startResize(e: MouseEvent, colName: string) {
 
 function onResize(e: MouseEvent) {
   if (!resizingCol) return;
-  const diff = e.clientX - startX;
   colWidths.value = { ...startWidths };
-  const startWidth = startWidths[resizingCol] ?? 100;
-  const newWidth = Math.max(minWidthOf(resizingCol), startWidth + diff);
+  const startWidth = startWidths[resizingCol] ?? minWidthOf(columnWidths, resizingCol);
+  const newWidth = clampColumnWidth(columnWidths, resizingCol, startWidth + e.clientX - startX);
   colWidths.value[resizingCol] = newWidth;
 
   const widthDelta = newWidth - startWidth;
   if (widthDelta > 0) {
     reclaimWidth(widthDelta, otherCols);
   } else {
-    distributeWidth(Math.abs(widthDelta), otherCols);
+    distributeWidth(-widthDelta, otherCols);
   }
 }
 
@@ -311,39 +356,6 @@ const savedColumns = sessionStorage.getItem(visibleColumnsStorageKey);
 const visibleColumns = ref<string[]>(
   savedColumns ? JSON.parse(savedColumns) : columns.map((c) => c.name),
 );
-
-const sumWidths = (colNames: string[]) =>
-  colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
-
-const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
-
-function distributeWidth(amount: number, receivers: string[]) {
-  const targets = withWidth(receivers);
-  if (amount <= 0 || targets.length === 0) return;
-  const share = amount / targets.length;
-  targets.forEach((c) => {
-    if (!colWidths.value[c]) {
-      return;
-    }
-    colWidths.value[c] += share;
-  });
-}
-
-// looping through remaining cols and remaining with to evenly distribute space
-function reclaimWidth(amount: number, donors: string[]) {
-  let remaining = amount;
-  const hasBuffer = (c: string) => colWidths.value[c]! > minWidthOf(c) + 0.5;
-  let candidates = withWidth(donors).filter(hasBuffer);
-  while (remaining > 0.5 && candidates.length > 0) {
-    const share = remaining / candidates.length;
-    for (const c of candidates) {
-      const take = Math.min(share, colWidths.value[c]! - minWidthOf(c));
-      colWidths.value[c] = colWidths.value[c]! - take;
-      remaining -= take;
-    }
-    candidates = candidates.filter(hasBuffer);
-  }
-}
 
 function setVisibleColumns(newVisibleColumns: string[]) {
   const hidden = visibleColumns.value.filter((c) => !newVisibleColumns.includes(c));

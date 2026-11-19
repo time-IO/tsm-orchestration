@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import IngestOverviewTable from '@/components/IngestOverviewTable.vue'; // adjust path
+import { defaultColumnWidths, type ColumnWidths } from '@/utils/overview_table_utils';
 
 vi.mock('@/utils/pagination_utils', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/utils/pagination_utils')>();
@@ -29,16 +30,7 @@ let tooltipCol: Row = { name: 'name', value: 'x' };
 
 const OverviewTableStub = defineComponent({
   name: 'OverviewTable',
-  props: [
-    'rows',
-    'loading',
-    'columns',
-    'storageKey',
-    'colMinWidths',
-    'defaultColWidths',
-    'pagination',
-    'tableStyle',
-  ],
+  props: ['rows', 'loading', 'columns', 'storageKey', 'columnWidths', 'pagination', 'tableStyle'],
   emits: ['request', 'delete', 'update:pagination'],
   setup(props, { slots }) {
     return () =>
@@ -119,24 +111,34 @@ describe('IngestOverviewTable', () => {
     it('uses the wide default column widths on large windows', () => {
       setWindowWidth(1400);
 
-      const widths = getTable(mountTable()).props('defaultColWidths');
+      const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
-      expect(widths).toMatchObject({ permission_group: 150, name: 120, uuid: 120 });
+      expect(defaultColumnWidths(widths)).toMatchObject({
+        permission_group: 150,
+        name: 120,
+        uuid: 120,
+      });
     });
 
     it('uses the narrow default column widths on small windows', () => {
       setWindowWidth(1000);
 
-      const widths = getTable(mountTable()).props('defaultColWidths');
+      const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
-      expect(widths).toMatchObject({ permission_group: 80, name: 80, uuid: 80 });
+      expect(defaultColumnWidths(widths)).toMatchObject({
+        permission_group: 80,
+        name: 80,
+        uuid: 80,
+      });
     });
 
     it('passes the same minimum widths regardless of the window size', () => {
+      const minWidths = (widths: ColumnWidths) =>
+        Object.fromEntries(Object.entries(widths).map(([name, width]) => [name, width.min]));
       setWindowWidth(1000);
-      const small = getTable(mountTable()).props('colMinWidths');
+      const small = minWidths(getTable(mountTable()).props('columnWidths') as ColumnWidths);
       setWindowWidth(1400);
-      const large = getTable(mountTable()).props('colMinWidths');
+      const large = minWidths(getTable(mountTable()).props('columnWidths') as ColumnWidths);
 
       expect(small).toEqual(large);
       expect(small).toMatchObject({ uuid: 80, action: 120 });

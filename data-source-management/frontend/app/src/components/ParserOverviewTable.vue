@@ -4,8 +4,7 @@
     :loading="loading"
     :columns="default_parser_columns"
     storage-key="parser"
-    :col-min-widths="colMinWidths"
-    :default-col-widths="defaultColWidths"
+    :column-widths="columnWidths"
     v-model:pagination="pagination"
     @request="onRequest"
     @delete="onDelete"
@@ -38,6 +37,7 @@
 import { default_parser_columns, generateParserPath } from '@/utils/pagination_utils';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import OverviewTable from '@/components/common/OverviewTable.vue';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 defineProps({
   rows: {
@@ -64,25 +64,14 @@ const onDelete = (id: number | null, closeDialog: () => void) => {
 
 const isSmallWindow = window.innerWidth < 1200;
 
-const colMinWidths: Record<string, number> = {
-  id: 40,
-  permission_group: 40,
-  name: 40,
-  uuid: 80,
-  ingest_type: 80,
-  created_at: 90,
-  created_by: 60,
-  action: 120,
-};
-
-const defaultColWidths: Record<string, number> = {
-  id: 60,
-  permission_group: isSmallWindow ? 80 : 150,
-  name: isSmallWindow ? 80 : 120,
-  uuid: isSmallWindow ? 80 : 120,
-  ingest_type: 120,
-  created_at: 110,
-  created_by: 80,
-  action: 140,
+const columnWidths: ColumnWidths = {
+  id: { min: 40, default: 60 },
+  permission_group: { min: 40, default: isSmallWindow ? 80 : 150 },
+  name: { min: 40, default: isSmallWindow ? 80 : 120 },
+  uuid: { min: 80, default: isSmallWindow ? 80 : 120 },
+  ingest_type: { min: 80, default: 120 },
+  created_at: { min: 90, default: 110 },
+  created_by: { min: 60, default: 80 },
+  action: { min: 120, default: 140 },
 };
 </script>
