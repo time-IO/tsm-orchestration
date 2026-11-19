@@ -118,9 +118,9 @@ describe('IngestOverviewTable', () => {
       const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
       expect(defaultColumnWidths(widths)).toMatchObject({
-        permission_group: 150,
-        name: 120,
-        uuid: 120,
+        permission_group: 160,
+        name: 345,
+        uuid: 190,
       });
     });
 
@@ -130,9 +130,9 @@ describe('IngestOverviewTable', () => {
       const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
       expect(defaultColumnWidths(widths)).toMatchObject({
-        permission_group: 80,
-        name: 80,
-        uuid: 80,
+        permission_group: 100,
+        name: 200,
+        uuid: 120,
       });
     });
 
@@ -148,11 +148,13 @@ describe('IngestOverviewTable', () => {
       expect(small).toMatchObject({ uuid: 80, action: 140 });
     });
 
-    it('gives the action column a fixed width', () => {
+    it('gives the id and action columns a fixed width', () => {
       const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 
+      expect(isColumnResizable(widths, 'id')).toBe(false);
       expect(isColumnResizable(widths, 'action')).toBe(false);
       expect(isColumnResizable(widths, 'name')).toBe(true);
+      expect(isColumnResizable(widths, 'created_by')).toBe(true);
     });
   });
 

@@ -134,8 +134,8 @@ describe('ParserOverviewTable', () => {
 
   describe('default column widths by window size', () => {
     it.each([
-      ['below 1200px', 1199, { permission_group: 80, name: 80, uuid: 80 }],
-      ['from 1200px', 1200, { permission_group: 150, name: 120, uuid: 120 }],
+      ['below 1200px', 1199, { permission_group: 130, name: 220, uuid: 100 }],
+      ['from 1200px', 1200, { permission_group: 215, name: 365, uuid: 165 }],
     ])('uses the matching widths %s', (_label, width, expected) => {
       setWindowWidth(width);
 
