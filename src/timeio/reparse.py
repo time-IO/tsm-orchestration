@@ -173,7 +173,7 @@ def reparse_files(
     )
     if summary.already_parsed:
         text += (
-            f" {summary.already_parsed} file(s) were already parsed and not selected "
+            f" {summary.already_parsed} file(s) were already parsed and not selected"
             "(enable reparsing of already parsed files to include them)."
         )
     logger.info(text)
