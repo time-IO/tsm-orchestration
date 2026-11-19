@@ -95,7 +95,9 @@
               @mousedown="startResize($event, col.name)"
               @mouseenter="hoveredHandleCol = col.name"
               @mouseleave="hoveredHandleCol = null"
-            />
+            >
+              <q-icon name="drag_indicator" size="16px" />
+            </span>
           </q-th>
         </q-tr>
       </template>
@@ -546,18 +548,20 @@ thead th {
 .col-resize-handle {
   position: absolute;
   right: 0;
-  top: 15%;
-  bottom: 15%;
-  width: 8px;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: col-resize;
-  background: transparent;
-  border-right: 2px solid rgba(0, 0, 0, 0.15);
-  transition: border-color 0.15s;
+  color: rgba(0, 0, 0, 0.25);
+  transition: color 0.15s;
 }
 
 .col-resize-handle:hover,
 .col-resize-handle:active {
-  border-right: 2px solid rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .overview-table :deep(thead th),
