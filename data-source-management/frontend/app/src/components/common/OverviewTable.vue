@@ -185,12 +185,12 @@ import type { QTableColumn } from 'quasar';
 import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import {
-  clampColumnWidth,
+  fitColumnWidths,
   fixedWidthOf,
-  hasMaxWidth,
+  flexibleColumnOf,
   isColumnResizable,
-  maxWidthOf,
-  minWidthOf,
+  minTableWidthOf,
+  resizeColumn,
   toPixelWidths,
   type ColumnWidths,
   type ColumnWidthValues,
@@ -308,9 +308,6 @@ const colWidths = ref<ColumnWidthValues>(
 
 const pixelWidths = ref<ColumnWidths>({});
 
-// tolerance for floating point comparisons of widths: half a pixel
-const WIDTH_EPSILON = 0.5;
-
 // fixed width for checkbox column
 const selectionColumnWidth = computed(() => (dense ? 48 : 64));
 
@@ -320,10 +317,9 @@ const visibleColumnNames = computed(() =>
 
 const isResizable = (colName: string) => isColumnResizable(pixelWidths.value, colName);
 
-const flexibleColumn = computed(() => {
-  const candidates = visibleColumnNames.value.filter(isResizable);
-  return candidates.filter((c) => !hasMaxWidth(pixelWidths.value, c)).at(-1) ?? candidates.at(-1);
-});
+const flexibleColumn = computed(() =>
+  flexibleColumnOf(pixelWidths.value, visibleColumnNames.value),
+);
 
 function headerWidth(colName: string): string {
   if (!isResizable(colName)) return `${fixedWidthOf(pixelWidths.value, colName)}px`;
@@ -332,84 +328,14 @@ function headerWidth(colName: string): string {
 }
 
 const minTableWidth = computed(() =>
-  visibleColumnNames.value.reduce(
-    (sum, c) => {
-      if (!isResizable(c)) return sum + fixedWidthOf(pixelWidths.value, c);
-      if (c === flexibleColumn.value) return sum + minWidthOf(pixelWidths.value, c);
-      return sum + (colWidths.value[c] ?? minWidthOf(pixelWidths.value, c));
-    },
+  minTableWidthOf(
+    pixelWidths.value,
+    colWidths.value,
+    visibleColumnNames.value,
+    flexibleColumn.value,
     selectable ? selectionColumnWidth.value : 0,
   ),
 );
-
-const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
-
-const sumWidths = (colNames: string[]) =>
-  colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
-
-const hasRoomToGrow = (colName: string) =>
-  colWidths.value[colName]! < maxWidthOf(pixelWidths.value, colName) - WIDTH_EPSILON;
-
-const hasRoomToShrink = (colName: string) =>
-  colWidths.value[colName]! > minWidthOf(pixelWidths.value, colName) + WIDTH_EPSILON;
-
-const shrinkableWidth = (colNames: string[]) =>
-  withWidth(colNames).reduce(
-    (sum, c) => sum + Math.max(0, colWidths.value[c]! - minWidthOf(pixelWidths.value, c)),
-    0,
-  );
-
-function distributeWidth(amount: number, receivers: string[]) {
-  let remaining = amount;
-  let candidates = withWidth(receivers).filter(hasRoomToGrow);
-  while (remaining > WIDTH_EPSILON && candidates.length > 0) {
-    const share = remaining / candidates.length;
-    for (const c of candidates) {
-      const give = Math.min(share, maxWidthOf(pixelWidths.value, c) - colWidths.value[c]!);
-      colWidths.value[c] = colWidths.value[c]! + give;
-      remaining -= give;
-    }
-    candidates = candidates.filter(hasRoomToGrow);
-  }
-}
-
-function reclaimWidth(amount: number, donors: string[]) {
-  let remaining = amount;
-  let candidates = withWidth(donors).filter(hasRoomToShrink);
-  while (remaining > WIDTH_EPSILON && candidates.length > 0) {
-    const share = remaining / candidates.length;
-    for (const c of candidates) {
-      const take = Math.min(share, colWidths.value[c]! - minWidthOf(pixelWidths.value, c));
-      colWidths.value[c] = colWidths.value[c]! - take;
-      remaining -= take;
-    }
-    candidates = candidates.filter(hasRoomToShrink);
-  }
-}
-
-// scales the widths proportionally to fill `target`, keeping each column within its min and max
-function scaleWidths(colNames: string[], target: number) {
-  let free = colNames;
-  let remaining = target;
-  while (free.length > 0) {
-    const total = sumWidths(free);
-    if (total <= 0) return;
-    const factor = remaining / total;
-    const clamped = free.filter((c) => {
-      const scaled = colWidths.value[c]! * factor;
-      return clampColumnWidth(pixelWidths.value, c, scaled) !== scaled;
-    });
-    if (clamped.length === 0) {
-      free.forEach((c) => (colWidths.value[c] = colWidths.value[c]! * factor));
-      return;
-    }
-    clamped.forEach((c) => {
-      colWidths.value[c] = clampColumnWidth(pixelWidths.value, c, colWidths.value[c]! * factor);
-      remaining -= colWidths.value[c];
-    });
-    free = free.filter((c) => !clamped.includes(c));
-  }
-}
 
 let lastFit = { width: 0, columns: '' };
 
@@ -423,14 +349,12 @@ function fitToContainer() {
   lastFit = { width: available, columns: columnsKey };
 
   pixelWidths.value = toPixelWidths(columnWidths, visibleColumnNames.value, available);
-  const fixed = visibleColumnNames.value.filter((c) => !isResizable(c));
-  const resizable = visibleColumnNames.value.filter(isResizable);
-  fixed.forEach((c) => delete colWidths.value[c]);
-  resizable.forEach((c) => {
-    colWidths.value[c] ??= pixelWidths.value[c]?.default ?? minWidthOf(pixelWidths.value, c);
-  });
-  const fixedWidth = fixed.reduce((sum, c) => sum + fixedWidthOf(pixelWidths.value, c), 0);
-  scaleWidths(resizable, available - fixedWidth);
+  colWidths.value = fitColumnWidths(
+    pixelWidths.value,
+    colWidths.value,
+    visibleColumnNames.value,
+    available,
+  );
 }
 
 // functions for setting a new col-widths per mousemove
@@ -463,20 +387,13 @@ function startResize(e: MouseEvent, colName: string) {
 
 function onResize(e: MouseEvent) {
   if (!resizingCol) return;
-  colWidths.value = { ...startWidths };
-  const startWidth = startWidths[resizingCol] ?? minWidthOf(pixelWidths.value, resizingCol);
-  const newWidth = Math.min(
-    startWidth + shrinkableWidth(otherCols),
-    clampColumnWidth(pixelWidths.value, resizingCol, startWidth + e.clientX - startX),
+  colWidths.value = resizeColumn(
+    pixelWidths.value,
+    startWidths,
+    resizingCol,
+    otherCols,
+    e.clientX - startX,
   );
-  colWidths.value[resizingCol] = newWidth;
-
-  const widthDelta = newWidth - startWidth;
-  if (widthDelta > 0) {
-    reclaimWidth(widthDelta, otherCols);
-  } else {
-    distributeWidth(-widthDelta, otherCols);
-  }
 }
 
 function stopResize() {
