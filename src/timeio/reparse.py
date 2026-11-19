@@ -23,6 +23,7 @@ class ReparseSummary:
     skipped: int = 0
     failed: int = 0
     already_parsed: int = 0
+    timezone_mismatch: int = 0
 
 
 def make_publisher(
@@ -93,6 +94,17 @@ def reparse_files(
     parser_cache: dict[str, bool] = {}
     summary = ReparseSummary()
 
+    tz_cache: dict[str, str | None] = {}
+
+    def _timezone_of(uuid: str) -> str | None:
+        if uuid not in tz_cache:
+            try:
+                params = FileParser.from_uuid(uuid, dsn=dsn).params or {}
+            except ObjectNotFound:
+                params = {}
+            tz_cache[uuid] = params.get("timezone")
+        return tz_cache[uuid]
+
     for obj in minio.list_objects(bucket, recursive=True):
         fname = obj.object_name
         if not fnmatch(fname, store.filename_pattern):
@@ -128,6 +140,18 @@ def reparse_files(
         else:
             chosen = current_parser_uuid
 
+        if parsed and original_uuid and chosen != original_uuid:
+            old_tz, new_tz = _timezone_of(original_uuid), _timezone_of(chosen)
+            if old_tz and new_tz and old_tz != new_tz:
+                msg = (
+                    f"File {fname!r} not reparsed: timezone of the original parser "
+                    f"({old_tz}) differs from the chosen parser ({new_tz}). Please contact the time.IO team."
+                )
+                logger.warning(msg)
+                journal.warning(msg, thing.uuid)
+                summary.timezone_mismatch += 1
+                continue
+
         message = {
             "EventName": "s3:ObjectCreated:Put",
             "reparsing": True,
@@ -144,11 +168,12 @@ def reparse_files(
             result.wait_for_publish()
     text = (
         f"Reparsing finished: {summary.published} file(s) sent for reparsing, "
-        f"{summary.skipped} skipped, {summary.failed} failed to send."
+        f"{summary.skipped} skipped, {summary.failed} failed to send, "
+        f"{summary.timezone_mismatch} skipped because timezone-mismatch."
     )
     if summary.already_parsed:
         text += (
-            f" {summary.already_parsed} file(s) were already parsed and not selected"
+            f" {summary.already_parsed} file(s) were already parsed and not selected "
             "(enable reparsing of already parsed files to include them)."
         )
     logger.info(text)

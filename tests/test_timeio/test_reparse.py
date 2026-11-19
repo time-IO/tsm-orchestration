@@ -62,6 +62,7 @@ class Env:
         self.publisher.publish.side_effect = lambda *a, **kw: FakeInfo()
         self.journal = MagicMock()
         self.parser_exists_calls = []
+        self.timezones = {}
 
     def run(self, **kwargs):
         return reparse_files(
@@ -87,6 +88,14 @@ def make_env(monkeypatch):
             return uuid != "DELETED"
 
         monkeypatch.setattr(reparse, "parser_exists", parser_exists)
+
+        def from_uuid(uuid, dsn):
+            return SimpleNamespace(
+                params={"timezone": env.timezones.get(uuid, "Europe/Berlin")}
+            )
+
+        monkeypatch.setattr(reparse.FileParser, "from_uuid", from_uuid)
+
         return env
 
     return factory
@@ -331,9 +340,40 @@ def test_no_already_parsed_hint_when_they_are_included(make_env):
     assert summary.already_parsed == 0
     assert "already parsed" not in env.journal.info.call_args.args[0]
 
+
 def test_listing_is_recursive(make_env):
     env = make_env()
 
     env.run()
 
     env.minio.list_objects.assert_called_once_with("bucket", recursive=True)
+
+
+def test_timezone_mismatch_skips_parsed_file_and_warns(make_env):
+    env = make_env()
+    env.timezones = {"OLD": "Europe/Berlin", "NEW": "UTC"}
+    summary = env.run(include_parsed=True, parser_uuid="NEW")
+
+    assert "done.csv" not in env.sent()
+    assert summary.timezone_mismatch == 1
+    assert any(
+        "timezone" in call.args[0] for call in env.journal.warning.call_args_list
+    )
+
+
+def test_missing_timezone_on_one_side_does_not_block(make_env):
+    env = make_env()
+    env.timezones = {"OLD": None, "NEW": "UTC"}
+    summary = env.run(include_parsed=True, parser_uuid="NEW")
+
+    assert env.sent()["done.csv"] == "NEW"
+    assert summary.timezone_mismatch == 0
+
+
+def test_same_parser_is_not_compared(make_env):
+    env = make_env()
+    env.timezones = {"OLD": "Europe/Berlin"}
+    summary = env.run(include_parsed=True, parsed_files_parser="original")
+
+    assert env.sent()["done.csv"] == "OLD"
+    assert summary.timezone_mismatch == 0
