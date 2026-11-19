@@ -1,6 +1,8 @@
 <template>
   <div :class="{ 'column no-wrap overview-table--fill': virtualScroll }">
-    <div class="row justify-end q-mb-sm">
+    <div class="row no-wrap items-center q-mb-sm" style="gap: 8px">
+      <slot name="toolbar" />
+      <q-space />
       <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
           <q-list style="min-width: 180px">
@@ -44,7 +46,7 @@
       :columns="columns"
       :visible-columns="visibleColumns"
       :loading="loading"
-      row-key="id"
+      :row-key="rowKey"
       flat
       bordered
       :dense="dense"
@@ -194,6 +196,7 @@ const {
   dense = false,
   virtualScroll = false,
   tableStyle = '',
+  rowKey = 'id',
   rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
 } = defineProps<{
   rows: Row[];
@@ -207,6 +210,7 @@ const {
   virtualScroll?: boolean;
   tableStyle?: string;
   rowsPerPageOptions?: number[];
+  rowKey?: string;
 }>();
 
 const pagination = defineModel<QTableRequestPropPagination | undefined>('pagination');
