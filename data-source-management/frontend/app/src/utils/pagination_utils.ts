@@ -1,4 +1,4 @@
-import type { QTableRequestPropPagination } from '@/services/types';
+import type { PaginatedResponse, QTableRequestPropPagination } from '@/services/types';
 import type { QTableColumn } from 'quasar';
 import type { IngestWithApiInfoRead } from '@/services/ingest/types';
 import type { ParserDetailedRead } from '@/services/parser_detailed/types';
@@ -291,3 +291,19 @@ export const formatExternalApiType = (val: string | null) => {
       return val;
   }
 };
+
+/**
+ * Fetch every page of a paginated endpoint, so lists are not silently truncated
+ * at the page size limit.
+ */
+export async function fetchAllPages<T>(
+  fetchPage: (page: number, size: number) => Promise<PaginatedResponse<T>>,
+  size = 100,
+): Promise<T[]> {
+  const items: T[] = [];
+  for (let page = 1; ; page++) {
+    const data = await fetchPage(page, size);
+    items.push(...data.items);
+    if (items.length >= data.total || data.items.length < size) return items;
+  }
+}

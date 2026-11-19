@@ -61,7 +61,7 @@ class ApiType(str, Enum):
 
 class ParserType(str, Enum):
     CSV = "csv"
-    MQTT = "mqtt"
+    PREDEFINED = "predefined"
     JSON = "json"
     SOILCAN = "soilcan"
 

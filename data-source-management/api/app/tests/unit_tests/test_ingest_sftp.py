@@ -87,7 +87,7 @@ def test_create(client, override_repo, make_ingest_dict, mock_publish_frontend_u
         object()
     )  # passed to publish_frontend_thing_update + to_flat, content irrelevant
     repo.to_flat.return_value = _sftp_dict(make_ingest_dict)
-    parser_repo.find_one.return_value = _mock_parser(permission_group_id=1)
+    parser_repo.find_for_ingest.return_value = _mock_parser(permission_group_id=1)
     mock_publish = mock_publish_frontend_update(ROUTER_MODULE)
 
     payload = {
@@ -111,7 +111,7 @@ def test_create_with_wrong_permission_group_returns_401(
     payload, the router rejects with 401 before ever calling repo.create()."""
     repo = override_repo(get_repo_ingest_sftp)
     parser_repo = override_repo(get_repo_parser_detailed)
-    parser_repo.find_one.return_value = _mock_parser(permission_group_id=999)
+    parser_repo.find_for_ingest.return_value = _mock_parser(permission_group_id=999)
 
     payload = {
         "name": "Test SFTP",
