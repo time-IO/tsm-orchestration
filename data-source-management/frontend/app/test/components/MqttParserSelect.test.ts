@@ -115,12 +115,14 @@ describe('MqttParserSelect', () => {
       expect(getSelect(wrapper).props('label')).toBe('Select the parser *');
     });
 
-    it('configures the select to use the id as value and the name as label', async () => {
+    it('configures the select to use the id as value and the display name as label', async () => {
       const wrapper = await mountSelect();
       const select = getSelect(wrapper);
+      const optionLabel = select.props('optionLabel') as (opt: Partial<MqttParser>) => string;
 
       expect(select.props('optionValue')).toBe('id');
-      expect(select.props('optionLabel')).toBe('name');
+      expect(optionLabel({ name: 'campbell_cr6' })).toBe('Campbell CR6');
+      expect(optionLabel({ name: 'unknown_parser' })).toBe('unknown_parser');
       expect(select.props('emitValue')).toBe(true);
       expect(select.props('mapOptions')).toBe(true);
     });
