@@ -135,7 +135,6 @@
           :permission-group-id="permissionGroupId"
         />
       </div>
-
     </q-card-section>
   </q-card>
 </template>
@@ -173,7 +172,6 @@ const grafanaLogo = publicAsset('icons/grafana_icon.png');
 const authStore = useAuthStore();
 const reparseOpen = ref(false);
 const showReparse = computed(() => !!reparseable && authStore.canReparse);
-
 
 const visualizationUrl = computed(() =>
   uuid ? `${window.location.origin}/visualization/d/${encodeURIComponent(uuid)}?orgId=1` : '',

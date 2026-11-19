@@ -1,18 +1,15 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { API } from '@/services';
-import type {
-  TriggerReparseBase,
-  TriggerReparseResponse,
-} from '@/services/trigger_reparse/types';
+import type { TriggerReparseBase, TriggerReparseResponse } from '@/services/trigger_reparse/types';
 
-export const useTriggerReparseStore = defineStore('triggerReparseStore',{
+export const useTriggerReparseStore = defineStore('triggerReparseStore', {
   state: () => ({}),
   getters: {},
 
   actions: {
     async dispatchTriggerReparse(input: TriggerReparseBase): Promise<TriggerReparseResponse> {
       const response = await API.triggerReparse.trigger_reparse(input);
-      return response.data
+      return response.data;
     },
   },
 });

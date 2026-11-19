@@ -9,9 +9,9 @@
       <q-card-section>
         <q-banner dense rounded class="q-mb-md">
           Parse the files of this ingest again. By default only files that are not yet parsed
-          successfully are processed. The date range refers to the upload time of the files.
-          Leave a field empty to omit it.
-          Already parsed files whose original parser used a different timezone are skipped.
+          successfully are processed. The date range refers to the upload time of the files. Leave a
+          field empty to omit it. Already parsed files whose original parser used a different
+          timezone are skipped.
         </q-banner>
         <q-banner dense rounded class="bg-orange q-mb-md">
           Please provide the dates in UTC format here.
@@ -78,7 +78,6 @@
     </q-card>
   </q-dialog>
 </template>
-
 
 <script setup lang="ts">
 import DateTimePicker from '@/components/DateTimePicker.vue';
@@ -147,8 +146,8 @@ async function triggerReparse() {
     include_parsed: includeParsed.value,
     parsed_files_parser:
       includeParsed.value && !useSpecificParser.value ? parsedFilesParser.value : 'current',
-    ...(beginDate.value ? { start_date: beginDate.value} : {}),
-    ...(endDate.value ? {end_date: endDate.value} : {}),
+    ...(beginDate.value ? { start_date: beginDate.value } : {}),
+    ...(endDate.value ? { end_date: endDate.value } : {}),
     ...(filenamePattern.value ? { filename_pattern: filenamePattern.value } : {}),
     ...(useSpecificParser.value && parserId.value ? { parser_id: parserId.value } : {}),
   };
@@ -166,7 +165,7 @@ async function triggerReparse() {
         position: 'top',
         message: warning,
         timeout: 0,
-        actions: [{label: 'Close', color: 'white'}],
+        actions: [{ label: 'Close', color: 'white' }],
       });
     }
     emit('success');
