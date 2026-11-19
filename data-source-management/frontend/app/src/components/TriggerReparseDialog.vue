@@ -11,6 +11,7 @@
           Parse the files of this ingest again. By default only files that are not yet parsed
           successfully are processed. The date range refers to the upload time of the files.
           Leave a field empty to omit it.
+          Already parsed files whose original parser used a different timezone are skipped.
         </q-banner>
         <q-banner dense rounded class="bg-orange q-mb-md">
           Please provide the dates in UTC format here.
@@ -153,12 +154,21 @@ async function triggerReparse() {
   };
   submitting.value = true;
   try {
-    await store.dispatchTriggerReparse(data);
+    const result = await store.dispatchTriggerReparse(data);
     $q.notify({
       type: 'positive',
       position: 'top',
       message: 'Reparsing was successfully triggered. See the journal for the result.',
     });
+    for (const warning of result.warnings) {
+      $q.notify({
+        type: 'warning',
+        position: 'top',
+        message: warning,
+        timeout: 0,
+        actions: [{label: 'Close', color: 'white'}],
+      });
+    }
     emit('success');
   } catch (error) {
     const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data

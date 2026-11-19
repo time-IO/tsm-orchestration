@@ -162,12 +162,28 @@ def publish(monkeypatch):
     return mock
 
 
-def make_ingest(ingest_type="sftp", permission_group_id=1):
+def make_ingest(ingest_type="sftp", permission_group_id=1, parser_id=None):
     return SimpleNamespace(
         uuid="ingest-uuid",
         ingest_type=ingest_type,
         permission_group_id=permission_group_id,
+        parser_id=parser_id,
     )
+
+
+def make_parser(tz, kind="csv"):
+    """tz=None with kind='soilcan' mimics a parser without timezone."""
+    return SimpleNamespace(
+        parser=SimpleNamespace(uuid=uuid.uuid4()),
+        parser_csv=SimpleNamespace(timezone=tz) if kind == "csv" else None,
+        parser_json=SimpleNamespace(timezone=tz) if kind == "json" else None,
+    )
+
+
+def repo_with(parsers):
+    repo = MagicMock()
+    repo.find_one.side_effect = lambda id, access_scope: parsers[id]
+    return repo
 
 
 def run_service(payload, access_scope=SUPERUSER, ingest=None, repo_parser=None):
@@ -196,7 +212,7 @@ class TestTriggerReparseService:
 
         result, repo_ingest, _ = run_service(payload)
 
-        assert result == {"triggered_ingest": 5}
+        assert result == {"triggered_ingest": 5, "warnings": []}
         repo_ingest.find_one.assert_called_once_with(5, access_scope=SUPERUSER)
         publish.assert_called_once_with(
             ingest_uuid="ingest-uuid",
@@ -330,3 +346,67 @@ class TestTriggerReparseRouter:
         paths = {route.path for route in app.routes}
 
         assert "/trigger/reparse/" in paths
+
+
+class TestTimezoneWarning:
+    def test_different_timezone_warns_but_still_publishes(self, publish):
+        repo = repo_with({7: make_parser("UTC"), 3: make_parser("Europe/Berlin")})
+
+        result, _, _ = run_service(
+            TriggerReparseBase(ingest_id=1, parser_id=7, include_parsed=True),
+            ingest=make_ingest(parser_id=3),
+            repo_parser=repo,
+        )
+
+        assert len(result["warnings"]) == 1
+        assert "UTC" in result["warnings"][0]
+        assert "Europe/Berlin" in result["warnings"][0]
+        publish.assert_called_once()
+
+    def test_same_timezone_gives_no_warning(self, publish):
+        repo = repo_with({7: make_parser("UTC"), 3: make_parser("UTC", "json")})
+
+        result, _, _ = run_service(
+            TriggerReparseBase(ingest_id=1, parser_id=7, include_parsed=True),
+            ingest=make_ingest(parser_id=3),
+            repo_parser=repo,
+        )
+
+        assert result["warnings"] == []
+
+    def test_no_comparison_without_include_parsed(self, publish):
+        repo = repo_with({7: make_parser("UTC"), 3: make_parser("Europe/Berlin")})
+
+        result, _, _ = run_service(
+            TriggerReparseBase(ingest_id=1, parser_id=7, include_parsed=False),
+            ingest=make_ingest(parser_id=3),
+            repo_parser=repo,
+        )
+
+        assert result["warnings"] == []
+        repo.find_one.assert_called_once_with(7, access_scope=SUPERUSER)
+
+    def test_parser_without_timezone_is_not_compared(self, publish):
+        repo = repo_with(
+            {7: make_parser(None, "soilcan"), 3: make_parser("Europe/Berlin")}
+        )
+
+        result, _, _ = run_service(
+            TriggerReparseBase(ingest_id=1, parser_id=7, include_parsed=True),
+            ingest=make_ingest(parser_id=3),
+            repo_parser=repo,
+        )
+
+        assert result["warnings"] == []
+
+    def test_same_parser_is_not_looked_up_twice(self, publish):
+        repo = repo_with({7: make_parser("UTC")})
+
+        result, _, _ = run_service(
+            TriggerReparseBase(ingest_id=1, parser_id=7, include_parsed=True),
+            ingest=make_ingest(parser_id=7),
+            repo_parser=repo,
+        )
+
+        assert result["warnings"] == []
+        repo.find_one.assert_called_once_with(7, access_scope=SUPERUSER)

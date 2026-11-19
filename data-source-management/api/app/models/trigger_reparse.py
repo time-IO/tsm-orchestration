@@ -14,3 +14,4 @@ class TriggerReparseBase(DateRangeBase):
 
 class TriggerReparseResponse(BaseModel):
     triggered_ingest: int
+    warnings: list[str] = []

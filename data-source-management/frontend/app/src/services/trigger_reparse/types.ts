@@ -10,4 +10,5 @@ export type TriggerReparseBase = {
 
 export type TriggerReparseResponse = {
   triggered_ingest: number;
+  warnings: string[];
 };
