@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="{ 'column no-wrap overview-table--fill': virtualScroll }">
     <div class="row justify-end q-mb-sm">
       <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
@@ -47,14 +47,23 @@
       row-key="id"
       flat
       bordered
+      :dense="dense"
       :table-style="tableStyle"
+      :virtual-scroll="virtualScroll"
+      :virtual-scroll-sticky-size-start="dense ? 33 : 48"
       :style="{ '--overview-table-min-width': `${minTableWidth}px` }"
       v-model:pagination="pagination"
       :rows-per-page-options="rowsPerPageOptions"
       @request="onRequest"
       :selection="selectable ? 'multiple' : 'none'"
       v-model:selected="selected"
-      :class="['overview-table', { 'overview-table--selectable': selectable }]"
+      :class="[
+        'overview-table',
+        {
+          'overview-table--selectable': selectable,
+          'overview-table--virtual col': virtualScroll,
+        },
+      ]"
       v-bind="$attrs"
     >
       <template v-slot:header="props">
@@ -179,6 +188,8 @@ const {
   storageKey,
   columnWidths,
   selectable = false,
+  dense = false,
+  virtualScroll = false,
   tableStyle = '',
   rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
 } = defineProps<{
@@ -189,6 +200,8 @@ const {
   storageKey: string;
   columnWidths: ColumnWidths;
   selectable?: boolean;
+  dense?: boolean;
+  virtualScroll?: boolean;
   tableStyle?: string;
   rowsPerPageOptions?: number[];
 }>();
@@ -447,6 +460,26 @@ thead th {
 <style scoped>
 .overview-table :deep(table.q-table) {
   min-width: var(--overview-table-min-width);
+}
+
+.overview-table--fill {
+  height: 100%;
+}
+
+.overview-table--virtual {
+  min-height: 0;
+}
+
+.overview-table--virtual :deep(.q-table__middle) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.overview-table--virtual :deep(thead tr th) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #fff;
 }
 
 .row-highlight {
