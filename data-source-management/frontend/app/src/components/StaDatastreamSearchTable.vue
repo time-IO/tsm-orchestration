@@ -1,87 +1,66 @@
 <template>
-  <q-table
-    title="STA Datastreams"
+  <overview-table
     :rows="rows"
+    :loading="loading"
     :columns="columnsSTA"
+    storage-key="sta-datastream"
+    :column-widths="columnWidths"
+    :rows-per-page-options="[10, 25, 50, 100]"
+    row-key="@iot.id"
+    selectable
     v-model:pagination="paginationSta"
     v-model:selected="selectedSta"
-    :rows-per-page-options="rowsPerPageOptionsSta"
-    :loading="loading"
-    row-key="@iot.id"
-    selection="multiple"
-    :filter="filter"
     @request="onRequest"
-    flat
-    bordered
+    :filter="filter"
     dense
     virtual-scroll
     no-data-label="No STA Datastreams found"
   >
-    <template v-slot:top-right>
+    <template #toolbar>
+      <slot name="filters" />
       <q-input
         v-model="filter"
         dense
         outlined
         clearable
+        hide-bottom-space
         label="Search Datastream"
-        hint="Search for ID, Name, Sensor or Description"
-        hide-hint
+        style="width: 280px"
       >
+        <q-tooltip>Search for ID, Name, Sensor or Description</q-tooltip>
         <template v-slot:append>
           <q-icon name="search" />
         </template>
       </q-input>
     </template>
-    <template #body-cell-name="slotProps">
-      <q-td :props="slotProps">
-        <span>{{ truncateText(slotProps.value, 40) }}</span>
-        <q-tooltip>{{ slotProps.value }}</q-tooltip>
-      </q-td>
+
+    <template #value-tooltip="{ col, row }">
+      {{ col.name === 'name' ? row.name : col.value }}
     </template>
 
-    <template #body-cell-thing="slotProps">
-      <q-td :props="slotProps">
-        <span>{{ truncateText(slotProps.value, 80) }}</span>
-        <q-tooltip>{{ slotProps.value }}</q-tooltip>
-      </q-td>
+    <template #actions="{ row }">
+      <q-btn
+        flat
+        dense
+        round
+        size="sm"
+        icon="open_in_new"
+        :href="row['@iot.selfLink']"
+        target="_blank"
+      >
+        <q-tooltip>Open in SensorThings API</q-tooltip>
+      </q-btn>
     </template>
-
-    <template #body-cell-sensor="slotProps">
-      <q-td :props="slotProps">
-        <span>{{ truncateText(slotProps.value, 60) }}</span>
-        <q-tooltip>{{ slotProps.value }}</q-tooltip>
-      </q-td>
-    </template>
-
-    <template #body-cell-description="slotProps">
-      <q-td :props="slotProps">
-        <span>{{ truncateText(slotProps.value, 20) }}</span>
-        <q-tooltip>{{ slotProps.value }}</q-tooltip>
-      </q-td>
-    </template>
-
-    <template #body-cell-actions="slotProps">
-      <q-td :props="slotProps">
-        <q-btn
-          flat
-          dense
-          round
-          size="sm"
-          icon="open_in_new"
-          :href="slotProps.row['@iot.selfLink']"
-          target="_blank"
-        />
-      </q-td>
-    </template>
-  </q-table>
+  </overview-table>
 </template>
 
 <script setup lang="ts">
-import { truncateText } from '@/utils/string_utils';
-import { ref } from 'vue';
-import type { QuasarPaginationInterface, StaDatastream } from '@/services/sta/types';
 import type { QTableColumn } from 'quasar';
-import type { QuasarTableOnRequestInterface } from '@/services/sta/types';
+import OverviewTable from '@/components/common/OverviewTable.vue';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
+import type { QuasarPaginationInterface, StaDatastream } from '@/services/sta/types';
+import type { QTableRequestProp } from '@/services/types';
+import { extractStreamName } from '@/utils/sta_utils';
 
 const filter = defineModel<string>('filter', { default: '' });
 const paginationSta = defineModel<QuasarPaginationInterface>('paginationSta');
@@ -94,7 +73,15 @@ defineProps<{
   loading: boolean;
 }>();
 
-const rowsPerPageOptionsSta = ref<Array<number>>([10, 25, 50, 100]);
+const columnWidths: ColumnWidths = {
+  '@iot.id': { min: 60, default: 60 },
+  name: { min: 120, default: 250 },
+  thing: { min: 100, default: 250 },
+  sensor: { min: 100, default: 230 },
+  description: { min: 160, default: 180 },
+  // fixed width
+  action: { min: 60, max: 60, default: 60 },
+};
 
 const columnsSTA: QTableColumn[] = [
   {
@@ -103,15 +90,13 @@ const columnsSTA: QTableColumn[] = [
     field: (row: StaDatastream) => row['@iot.id'],
     align: 'left',
     sortable: false,
-    style: 'width: 10%',
   },
   {
     name: 'name',
     label: 'Name',
-    field: (row: StaDatastream) => row.name,
+    field: (row: StaDatastream) => extractStreamName(row.name),
     align: 'left',
     sortable: false,
-    style: 'width: 20%',
   },
   {
     name: 'thing',
@@ -119,7 +104,6 @@ const columnsSTA: QTableColumn[] = [
     field: (row: StaDatastream) => row.Thing?.name,
     align: 'left',
     sortable: false,
-    style: 'width: 20%',
   },
   {
     name: 'sensor',
@@ -127,7 +111,6 @@ const columnsSTA: QTableColumn[] = [
     field: (row: StaDatastream) => row.Sensor?.name || '',
     align: 'left',
     sortable: false,
-    style: 'width: 20%',
   },
   {
     name: 'description',
@@ -135,16 +118,13 @@ const columnsSTA: QTableColumn[] = [
     field: (row: StaDatastream) => row.description || '',
     align: 'left',
     sortable: false,
-    style: 'width: 20%',
   },
-  { name: 'actions', label: '', align: 'center', style: 'width: 10%', field: () => '' },
+  { name: 'action', label: '', align: 'center', field: () => '' },
 ];
 
-function onRequest(params: { pagination: QuasarTableOnRequestInterface }) {
-  const { page, rowsPerPage, sortBy, descending } = params.pagination;
+function onRequest({ pagination }: QTableRequestProp) {
+  const { page, rowsPerPage, sortBy, descending } = pagination;
 
   emit('onRequest', { page, rowsPerPage, sortBy, descending });
 }
 </script>
-
-<style scoped></style>

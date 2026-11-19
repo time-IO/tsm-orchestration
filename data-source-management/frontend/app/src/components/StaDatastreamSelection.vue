@@ -5,7 +5,7 @@
     @keydown.esc="showDialog = false"
     @keydown.enter="applySelection"
   >
-    <q-card class="q-pa-lg q-ma-md" style="max-width: 95vw; height: 90vh">
+    <q-card class="q-pa-lg q-ma-md column no-wrap" style="max-width: 95vw; height: 90vh">
       <div class="q-mb-md">
         <div class="text-h5">Select Datastreams</div>
         <div class="text-grey">
@@ -13,43 +13,67 @@
         </div>
       </div>
 
-      <div class="row">
-        <div class="col-8">
-          <div class="row q-mb-sm">
-            <div class="col-6">
+      <div class="col row no-wrap" style="min-height: 0">
+        <div class="col-8 q-pr-xl column no-wrap" style="min-height: 0; min-width: 0">
+          <sta-datastream-search-table
+            v-model:filter="filters.datastream"
+            v-model:paginationSta="paginationSta"
+            v-model:selectedSta="selectedSta"
+            @onRequest="updatePaginationAndLoadData"
+            :rows="staRows"
+            :loading="loading"
+          >
+            <template #filters>
               <sta-thing-selection
                 v-model="filters.thing"
                 @update:model-value="debouncedLoadData"
                 :permission_group_id="permission_group_id"
+                style="width: 280px"
               />
-            </div>
-          </div>
-          <div class="row q-mb-md">
-            <div class="col">
-              <sta-datastream-search-table
-                v-model:filter="filters.datastream"
-                v-model:paginationSta="paginationSta"
-                v-model:selectedSta="selectedSta"
-                @onRequest="updatePaginationAndLoadData"
-                :rows="staRows"
-                :loading="loading"
-              />
-            </div>
-          </div>
+            </template>
+          </sta-datastream-search-table>
         </div>
-        <div class="col-4">
-          <sta-datastream-card
-            label="Datastreams"
-            :selected="selected"
-            :removable="true"
-            :addable="false"
-            :hide-thing-name="true"
-            :hide-open-button="true"
-            @remove="removeDatastreamFromSelection"
-          />
+
+        <div class="col-4 column no-wrap" style="min-height: 0">
+          <div class="row items-center q-mb-sm" style="min-height: 40px">
+            <div class="text-subtitle1 text-weight-medium text-grey-9">Selected Datastreams</div>
+            <q-chip v-if="selected.length" dense color="blue-grey-3" text-color="white">
+              {{ selected.length }}
+            </q-chip>
+          </div>
+
+          <div
+            v-if="selected.length === 0"
+            class="col column flex-center text-center text-grey-5 rounded-borders"
+          >
+            <q-icon name="playlist_add" size="64px" class="q-mb-md" />
+            <div class="text-h5">Selected datastreams will appear here</div>
+          </div>
+
+          <q-virtual-scroll
+            v-else
+            :items="selectedGroups"
+            v-slot="{ item }"
+            class="col"
+            style="min-height: 0"
+          >
+            <sta-thing-datastreams-card
+              :key="item.thingName"
+              class="q-mb-sm"
+              :thing-name="item.thingName"
+              :datastreams="item.datastreams"
+              :expanded="expandedThings[item.thingName] ?? true"
+              @update:expanded="(val: boolean) => (expandedThings[item.thingName] = val)"
+              removable
+              hide-thing-name
+              hide-open-button
+              @remove="removeDatastreamFromSelection"
+            />
+          </q-virtual-scroll>
         </div>
       </div>
-      <div class="q-mt-md row justify-end q-gutter-sm no-wrap action-buttons">
+
+      <div class="q-mt-md row justify-end q-gutter-sm no-wrap">
         <q-btn flat label="Cancel" @click="showDialog = false" />
         <q-btn color="primary" label="Apply selection" @click="applySelection" />
       </div>
@@ -60,7 +84,7 @@
 <script setup lang="ts">
 import StaThingSelection from '@/components/StaThingSelection.vue';
 import StaDatastreamSearchTable from '@/components/StaDatastreamSearchTable.vue';
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import type {
   QuasarPaginationInterface,
   StaDatastream,
@@ -69,7 +93,7 @@ import type {
 } from '@/services/sta/types';
 import { debounce, useQuasar } from 'quasar';
 import { useStaStore } from '@/stores/staStore';
-import StaDatastreamCard from '@/components/StaDatastreamCard.vue';
+import StaThingDatastreamsCard from '@/components/StaThingDatastreamsCard.vue';
 import type { Datastream } from '@/services/sta/types';
 
 import type { AxiosError } from 'axios';
@@ -94,10 +118,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'apply-selection', selection: Datastream[]): void;
 }>();
-
-onMounted(async () => {
-  await loadData();
-});
 
 const filters = ref<{ datastream: string; thing: StaEntity | null }>({
   datastream: '',
@@ -130,6 +150,16 @@ const selectedCreatedWithAlias = computed(() => {
 });
 
 const selected = computed(() => [...selectedStaWithAlias.value, ...selectedCreatedWithAlias.value]);
+
+const selectedGroups = computed(() => {
+  const groups = new Map<string, Datastream[]>();
+  selected.value.forEach((ds) => {
+    const thingName = ds.Thing?.name || '-';
+    groups.set(thingName, [...(groups.get(thingName) ?? []), ds]);
+  });
+  return Array.from(groups, ([thingName, datastreams]) => ({ thingName, datastreams }));
+});
+const expandedThings = reactive<Record<string, boolean>>({});
 
 async function loadData() {
   loading.value = true;
@@ -219,10 +249,3 @@ watch(
   { immediate: true },
 );
 </script>
-
-<style scoped>
-.action-buttons {
-  position: sticky;
-  bottom: 0;
-}
-</style>
