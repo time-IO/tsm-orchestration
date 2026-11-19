@@ -86,7 +86,7 @@
               col.name === 'action' ? 'text-center' : 'text-left',
               { 'col-highlight': col.name === highlightedCol },
             ]"
-            :style="`width: ${headerWidth(col.name)}; position: relative; user-select: none;`"
+            :style="`width: ${headerWidth(col.name)}; user-select: none;`"
           >
             <span class="overview-table__label" :title="col.label">{{ col.label }}</span>
             <span
@@ -513,6 +513,10 @@ thead th {
 .overview-table--virtual :deep(.q-table__middle) {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.overview-table :deep(thead th) {
+  position: relative;
 }
 
 .overview-table--virtual :deep(thead tr th) {
