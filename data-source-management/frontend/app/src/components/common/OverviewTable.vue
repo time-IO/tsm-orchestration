@@ -180,13 +180,12 @@
 </template>
 
 <script setup lang="ts" generic="Row">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import {
   clampColumnWidth,
-  defaultColumnWidths,
   fixedWidthOf,
   hasMaxWidth,
   isColumnResizable,
@@ -237,18 +236,21 @@ const tableRef = ref();
 const deleteDialog = ref(false);
 const idToDelete = ref<number | null>(null);
 
+let resizeObserver: ResizeObserver | null = null;
+
 onMounted(() => {
   // get initial data from server (1st page)
   tableRef.value.requestServerInteraction();
 
-  const tableWidth = tableRef.value.$el.querySelector('.q-table__middle')?.clientWidth ?? 0;
-  pixelWidths.value = toPixelWidths(
-    columnWidths,
-    visibleColumnNames.value,
-    tableWidth - (selectable ? selectionColumnWidth.value : 0),
-  );
-  if (!savedColWidths) colWidths.value = defaultColumnWidths(pixelWidths.value);
+  fitToContainer();
+  const container = tableRef.value.$el.querySelector('.q-table__middle');
+  if (container && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => fitToContainer());
+    resizeObserver.observe(container);
+  }
 });
+
+onBeforeUnmount(() => resizeObserver?.disconnect());
 
 function onRequest(props: QTableRequestProp) {
   emit('request', props);
@@ -385,6 +387,52 @@ function reclaimWidth(amount: number, donors: string[]) {
   }
 }
 
+// scales the widths proportionally to fill `target`, keeping each column within its min and max
+function scaleWidths(colNames: string[], target: number) {
+  let free = colNames;
+  let remaining = target;
+  while (free.length > 0) {
+    const total = sumWidths(free);
+    if (total <= 0) return;
+    const factor = remaining / total;
+    const clamped = free.filter((c) => {
+      const scaled = colWidths.value[c]! * factor;
+      return clampColumnWidth(pixelWidths.value, c, scaled) !== scaled;
+    });
+    if (clamped.length === 0) {
+      free.forEach((c) => (colWidths.value[c] = colWidths.value[c]! * factor));
+      return;
+    }
+    clamped.forEach((c) => {
+      colWidths.value[c] = clampColumnWidth(pixelWidths.value, c, colWidths.value[c]! * factor);
+      remaining -= colWidths.value[c];
+    });
+    free = free.filter((c) => !clamped.includes(c));
+  }
+}
+
+let lastFit = { width: 0, columns: '' };
+
+// converts the relative widths to pixels and fits the visible columns into the table
+function fitToContainer() {
+  const container = tableRef.value?.$el.querySelector('.q-table__middle');
+  const available = (container?.clientWidth ?? 0) - (selectable ? selectionColumnWidth.value : 0);
+  const columnsKey = visibleColumnNames.value.join();
+  if (available <= 0 || resizingCol) return;
+  if (available === lastFit.width && columnsKey === lastFit.columns) return;
+  lastFit = { width: available, columns: columnsKey };
+
+  pixelWidths.value = toPixelWidths(columnWidths, visibleColumnNames.value, available);
+  const fixed = visibleColumnNames.value.filter((c) => !isResizable(c));
+  const resizable = visibleColumnNames.value.filter(isResizable);
+  fixed.forEach((c) => delete colWidths.value[c]);
+  resizable.forEach((c) => {
+    colWidths.value[c] ??= pixelWidths.value[c]?.default ?? minWidthOf(pixelWidths.value, c);
+  });
+  const fixedWidth = fixed.reduce((sum, c) => sum + fixedWidthOf(pixelWidths.value, c), 0);
+  scaleWidths(resizable, available - fixedWidth);
+}
+
 // functions for setting a new col-widths per mousemove
 let resizingCol: string | null = null;
 let startX = 0;
@@ -457,16 +505,13 @@ const visibleColumns = ref<string[]>(
 );
 
 function setVisibleColumns(newVisibleColumns: string[]) {
-  const hidden = visibleColumns.value.filter((c) => !newVisibleColumns.includes(c));
-  const shown = newVisibleColumns.filter((c) => !visibleColumns.value.includes(c));
-  const remaining = visibleColumns.value.filter(
-    (c) => newVisibleColumns.includes(c) && isResizable(c),
-  );
-
-  distributeWidth(sumWidths(hidden), remaining);
-  reclaimWidth(sumWidths(shown), remaining);
+  // shown columns start again with their default width
+  newVisibleColumns
+    .filter((c) => !visibleColumns.value.includes(c))
+    .forEach((c) => delete colWidths.value[c]);
 
   visibleColumns.value = newVisibleColumns;
+  fitToContainer();
   sessionStorage.setItem(visibleColumnsStorageKey, JSON.stringify(visibleColumns.value));
   sessionStorage.setItem(colWidthsStorageKey, JSON.stringify(colWidths.value));
 }
