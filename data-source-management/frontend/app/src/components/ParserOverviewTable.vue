@@ -72,6 +72,7 @@ const columnWidths: ColumnWidths = {
   ingest_type: { min: 80, default: 120 },
   created_at: { min: 90, default: 110 },
   created_by: { min: 60, default: 80 },
-  action: { min: 120, default: 140 },
+  // fixed width
+  action: { min: 140, max: 140, default: 140 },
 };
 </script>

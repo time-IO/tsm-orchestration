@@ -47,12 +47,14 @@
       row-key="id"
       flat
       bordered
+      :table-style="tableStyle"
+      :style="{ '--overview-table-min-width': `${minTableWidth}px` }"
       v-model:pagination="pagination"
       :rows-per-page-options="rowsPerPageOptions"
       @request="onRequest"
       :selection="selectable ? 'multiple' : 'none'"
       v-model:selected="selected"
-      :class="{ 'overview-table--selectable': selectable }"
+      :class="['overview-table', { 'overview-table--selectable': selectable }]"
       v-bind="$attrs"
     >
       <template v-slot:header="props">
@@ -67,10 +69,14 @@
             :props="props"
             :data-col="col.name"
             :class="col.name === 'action' ? 'text-center' : 'text-left'"
-            :style="`width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}; position: relative; user-select: none;`"
+            :style="`width: ${headerWidth(col.name)}; position: relative; user-select: none;`"
           >
             {{ col.label }}
-            <span class="col-resize-handle" @mousedown="startResize($event, col.name)" />
+            <span
+              v-if="isResizable(col.name)"
+              class="col-resize-handle"
+              @mousedown="startResize($event, col.name)"
+            />
           </q-th>
         </q-tr>
       </template>
@@ -157,6 +163,9 @@ import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/
 import {
   clampColumnWidth,
   defaultColumnWidths,
+  fixedWidthOf,
+  hasMaxWidth,
+  isColumnResizable,
   maxWidthOf,
   minWidthOf,
   type ColumnWidths,
@@ -170,6 +179,7 @@ const {
   storageKey,
   columnWidths,
   selectable = false,
+  tableStyle = '',
   rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
 } = defineProps<{
   rows: Row[];
@@ -179,6 +189,7 @@ const {
   storageKey: string;
   columnWidths: ColumnWidths;
   selectable?: boolean;
+  tableStyle?: string;
   rowsPerPageOptions?: number[];
 }>();
 
@@ -257,6 +268,31 @@ const colWidths = ref<ColumnWidthValues>(
 // tolerance for floating point comparisons of widths: half a pixel
 const WIDTH_EPSILON = 0.5;
 
+const visibleColumnNames = computed(() =>
+  columns.map((c) => c.name).filter((name) => visibleColumns.value.includes(name)),
+);
+
+const isResizable = (colName: string) => isColumnResizable(columnWidths, colName);
+
+const flexibleColumn = computed(() => {
+  const candidates = visibleColumnNames.value.filter(isResizable);
+  return candidates.filter((c) => !hasMaxWidth(columnWidths, c)).at(-1) ?? candidates.at(-1);
+});
+
+function headerWidth(colName: string): string {
+  if (!isResizable(colName)) return `${fixedWidthOf(columnWidths, colName)}px`;
+  if (colName === flexibleColumn.value) return 'auto';
+  return colWidths.value[colName] ? `${colWidths.value[colName]}px` : 'auto';
+}
+
+const minTableWidth = computed(() =>
+  visibleColumnNames.value.reduce((sum, c) => {
+    if (!isResizable(c)) return sum + fixedWidthOf(columnWidths, c);
+    if (c === flexibleColumn.value) return sum + minWidthOf(columnWidths, c);
+    return sum + (colWidths.value[c] ?? minWidthOf(columnWidths, c));
+  }, 0),
+);
+
 const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
 
 const sumWidths = (colNames: string[]) =>
@@ -267,6 +303,12 @@ const hasRoomToGrow = (colName: string) =>
 
 const hasRoomToShrink = (colName: string) =>
   colWidths.value[colName]! > minWidthOf(columnWidths, colName) + WIDTH_EPSILON;
+
+const shrinkableWidth = (colNames: string[]) =>
+  withWidth(colNames).reduce(
+    (sum, c) => sum + Math.max(0, colWidths.value[c]! - minWidthOf(columnWidths, c)),
+    0,
+  );
 
 function distributeWidth(amount: number, receivers: string[]) {
   let remaining = amount;
@@ -308,11 +350,12 @@ function startResize(e: MouseEvent, colName: string) {
 
   const headerRow = (e.target as HTMLElement).closest('tr');
   const ths = headerRow ? Array.from(headerRow.querySelectorAll<HTMLElement>('th[data-col]')) : [];
-  ths.forEach((th) => {
-    colWidths.value[th.dataset.col!] = th.getBoundingClientRect().width;
+  const resizableThs = ths.filter((th) => isResizable(th.dataset.col!));
+  resizableThs.forEach((th) => {
+    colWidths.value[th.dataset.col!] = Math.floor(th.getBoundingClientRect().width);
   });
   startWidths = { ...colWidths.value };
-  otherCols = ths.map((th) => th.dataset.col!).filter((c) => c !== colName);
+  otherCols = resizableThs.map((th) => th.dataset.col!).filter((c) => c !== colName);
 
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
@@ -322,7 +365,10 @@ function onResize(e: MouseEvent) {
   if (!resizingCol) return;
   colWidths.value = { ...startWidths };
   const startWidth = startWidths[resizingCol] ?? minWidthOf(columnWidths, resizingCol);
-  const newWidth = clampColumnWidth(columnWidths, resizingCol, startWidth + e.clientX - startX);
+  const newWidth = Math.min(
+    startWidth + shrinkableWidth(otherCols),
+    clampColumnWidth(columnWidths, resizingCol, startWidth + e.clientX - startX),
+  );
   colWidths.value[resizingCol] = newWidth;
 
   const widthDelta = newWidth - startWidth;
@@ -360,7 +406,9 @@ const visibleColumns = ref<string[]>(
 function setVisibleColumns(newVisibleColumns: string[]) {
   const hidden = visibleColumns.value.filter((c) => !newVisibleColumns.includes(c));
   const shown = newVisibleColumns.filter((c) => !visibleColumns.value.includes(c));
-  const remaining = visibleColumns.value.filter((c) => newVisibleColumns.includes(c));
+  const remaining = visibleColumns.value.filter(
+    (c) => newVisibleColumns.includes(c) && isResizable(c),
+  );
 
   distributeWidth(sumWidths(hidden), remaining);
   reclaimWidth(sumWidths(shown), remaining);
@@ -397,6 +445,10 @@ thead th {
 }
 </style>
 <style scoped>
+.overview-table :deep(table.q-table) {
+  min-width: var(--overview-table-min-width);
+}
+
 .row-highlight {
   background-color: rgba(255, 0, 0, 0.1);
 }

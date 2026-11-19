@@ -3,6 +3,9 @@ import {
   clampColumnWidth,
   DEFAULT_MIN_COLUMN_WIDTH,
   defaultColumnWidths,
+  fixedWidthOf,
+  hasMaxWidth,
+  isColumnResizable,
   maxWidthOf,
   minWidthOf,
   type ColumnWidths,
@@ -11,7 +14,7 @@ import {
 const widths: ColumnWidths = {
   id: { min: 40, default: 60 },
   name: { min: 100, max: 300 },
-  action: { min: 120, default: 140 },
+  action: { min: 140, max: 140, default: 140 },
   empty: {},
 };
 
@@ -25,6 +28,32 @@ describe('minWidthOf / maxWidthOf', () => {
     expect(minWidthOf(widths, 'empty')).toBe(DEFAULT_MIN_COLUMN_WIDTH);
     expect(minWidthOf(widths, 'unknown')).toBe(DEFAULT_MIN_COLUMN_WIDTH);
     expect(maxWidthOf(widths, 'id')).toBe(Infinity);
+  });
+});
+
+describe('hasMaxWidth', () => {
+  it('detects a configured max', () => {
+    expect(hasMaxWidth(widths, 'name')).toBe(true);
+    expect(hasMaxWidth(widths, 'id')).toBe(false);
+  });
+});
+
+describe('isColumnResizable', () => {
+  it('is false for fixed columns', () => {
+    expect(isColumnResizable(widths, 'action')).toBe(false);
+  });
+
+  it('is true for other columns', () => {
+    expect(isColumnResizable(widths, 'id')).toBe(true);
+    expect(isColumnResizable(widths, 'name')).toBe(true);
+    expect(isColumnResizable(widths, 'unknown')).toBe(true);
+  });
+});
+
+describe('fixedWidthOf', () => {
+  it('prefers the default and falls back to the min', () => {
+    expect(fixedWidthOf(widths, 'action')).toBe(140);
+    expect(fixedWidthOf(widths, 'name')).toBe(100);
   });
 });
 

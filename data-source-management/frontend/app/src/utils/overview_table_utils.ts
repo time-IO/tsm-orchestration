@@ -3,6 +3,7 @@
  * - `min`: the column cannot be resized below this width
  * - `max`: the column cannot be resized above this width
  * - `default`: the initial width; without one, the column starts with `auto` width
+ * A column with equal values for `min` and `max` has a fixed width and is not resizable.
  */
 export interface ColumnWidth {
   min?: number;
@@ -32,6 +33,36 @@ export function minWidthOf(widths: ColumnWidths, colName: string): number {
  */
 export function maxWidthOf(widths: ColumnWidths, colName: string): number {
   return widths[colName]?.max ?? Infinity;
+}
+
+/**
+ * Checks whether a column has a maximum width.
+ * @param widths - The width constraints of all columns
+ * @param colName - The column name
+ * @returns `true` if a `max` is configured
+ */
+export function hasMaxWidth(widths: ColumnWidths, colName: string): boolean {
+  return widths[colName]?.max !== undefined;
+}
+
+/**
+ * Checks whether a column can be resized, i.e. it does not have a fixed width (`min === max`).
+ * @param widths - The width constraints of all columns
+ * @param colName - The column name
+ * @returns `true` if the column is resizable
+ */
+export function isColumnResizable(widths: ColumnWidths, colName: string): boolean {
+  return minWidthOf(widths, colName) < maxWidthOf(widths, colName);
+}
+
+/**
+ * Returns the width of a non-resizable column.
+ * @param widths - The width constraints of all columns
+ * @param colName - The column name
+ * @returns The configured default, or its minimum width
+ */
+export function fixedWidthOf(widths: ColumnWidths, colName: string): number {
+  return widths[colName]?.default ?? minWidthOf(widths, colName);
 }
 
 /**

@@ -6,7 +6,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import IngestOverviewTable from '@/components/IngestOverviewTable.vue'; // adjust path
-import { defaultColumnWidths, type ColumnWidths } from '@/utils/overview_table_utils';
+import {
+  defaultColumnWidths,
+  isColumnResizable,
+  type ColumnWidths,
+} from '@/utils/overview_table_utils';
 
 vi.mock('@/utils/pagination_utils', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/utils/pagination_utils')>();
@@ -141,7 +145,14 @@ describe('IngestOverviewTable', () => {
       const large = minWidths(getTable(mountTable()).props('columnWidths') as ColumnWidths);
 
       expect(small).toEqual(large);
-      expect(small).toMatchObject({ uuid: 80, action: 120 });
+      expect(small).toMatchObject({ uuid: 80, action: 140 });
+    });
+
+    it('gives the action column a fixed width', () => {
+      const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
+
+      expect(isColumnResizable(widths, 'action')).toBe(false);
+      expect(isColumnResizable(widths, 'name')).toBe(true);
     });
   });
 
