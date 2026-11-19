@@ -74,7 +74,7 @@ defineProps<{
 }>();
 
 const columnWidths: ColumnWidths = {
-  '@iot.id': { min: 6, default: 6 },
+  '@iot.id': { min: 6, default: 6, max: 6 },
   name: { min: 12, default: 24 },
   thing: { min: 10, default: 24 },
   sensor: { min: 10, default: 22 },
