@@ -278,7 +278,14 @@ const FLOWS: Record<IngestFlowType, Flow> = {
       databaseStacked,
     ],
     edges: [
-      { from: 'src', to: 'timeio', kind: 'data', label: 'upload', packet: 'file', window: SLOT_1 },
+      {
+        from: 'src',
+        to: 'timeio',
+        kind: 'data',
+        label: 'upload file',
+        packet: 'file',
+        window: SLOT_1,
+      },
       {
         from: 'timeio',
         to: 'bucket',
@@ -376,7 +383,7 @@ const FLOWS: Record<IngestFlowType, Flow> = {
         from: 'src',
         to: 'timeio',
         kind: 'data',
-        label: 'send',
+        label: 'send message',
         packet: 'message',
         window: SLOT_1,
       },
@@ -420,7 +427,7 @@ const FLOWS: Record<IngestFlowType, Flow> = {
         from: 'src',
         to: 'broker',
         kind: 'data',
-        label: 'send',
+        label: 'send message',
         packet: 'message',
         window: SLOT_1,
       },
@@ -428,7 +435,7 @@ const FLOWS: Record<IngestFlowType, Flow> = {
         from: 'broker',
         to: 'timeio',
         kind: 'data',
-        label: 'forward',
+        label: 'publish',
         packet: 'message',
         window: SLOT_2,
       },
@@ -460,7 +467,14 @@ const FLOWS: Record<IngestFlowType, Flow> = {
       databaseStacked,
     ],
     edges: [
-      { from: 'src', to: 'timeio', kind: 'data', label: 'send', packet: 'file', window: SLOT_1 },
+      {
+        from: 'src',
+        to: 'timeio',
+        kind: 'data',
+        label: 'send data',
+        packet: 'file',
+        window: SLOT_1,
+      },
       {
         from: 'timeio',
         to: 'bucket',

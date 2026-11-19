@@ -2,7 +2,7 @@
   <q-dialog :model-value="option !== null" @update:model-value="onDialogToggle">
     <q-card v-if="option" style="width: 640px; max-width: 90vw">
       <q-card-section class="row items-center no-wrap">
-        <q-icon v-if="icon" :name="icon" size="sm" class="q-mr-sm" />
+        <q-icon name="input" size="sm" class="q-mr-sm" />
         <div class="text-h6">{{ option.label }}</div>
         <q-space />
         <q-btn icon="close" flat round dense aria-label="Close" @click="emit('close')" />
@@ -33,9 +33,7 @@ import IngestDataFlow from '@/components/IngestDataFlow.vue';
 import type { IngestOption } from '@/components/ingestOptions';
 
 defineProps<{
-  /** The ingest to explain; the dialog is open while this is set. */
   option: IngestOption | null;
-  icon?: string | undefined;
   sourceLabel?: string | undefined;
 }>();
 

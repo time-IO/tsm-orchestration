@@ -46,16 +46,15 @@ const clusters: IngestCluster[] = [
     items: [
       {
         name: 'sftp',
-        label: 'SFTP/S3',
+        label: 'SFTP',
         description: 'Upload files to a time.IO bucket.',
         flow: 'sftp',
         path: '/ingest/new/sftp',
         helpText:
-          'Your data logger or a script uploads data files to a storage area that time.IO provides for you. You receive login details for SFTP and S3. time.IO keeps every uploaded file and automatically imports the measurements from it, using the file parser you select.',
+          'Your data logger or a script uploads data files to a storage area that time.IO provides for you. Login details are generated once you create the ingest. time.IO keeps every uploaded file and automatically imports the measurements from it, using the selected file parser. You can access all uploaded files via the File Explorer in the ingest Tools Section.',
         chooseIf: [
-          'your logger or software writes data files, e.g. CSV',
-          'you or a script can upload these files regularly',
-          'you want to keep the original files next to the imported data',
+          'your logger or software writes data files, e.g. CSV or JSON',
+          'you do not already send data to your own FTP/SFTP server',
         ],
       },
       {
@@ -65,7 +64,7 @@ const clusters: IngestCluster[] = [
         flow: 'ext_sftp',
         path: '/ingest/new/external-sftp',
         helpText:
-          'Your data files are already collected on your own FTP or SFTP server. time.IO connects to it at a fixed interval, copies new files, keeps them and imports the measurements.',
+          'Your data files are already collected on your own FTP/SFTP server. time.IO connects to it at a fixed interval, copies new files, keeps them and imports the measurements, using the selected file parser.',
         chooseIf: [
           'your data files already arrive on an FTP or SFTP server you operate',
           'you do not want to change where your logger sends its data',
@@ -79,7 +78,7 @@ const clusters: IngestCluster[] = [
     icon: 'wifi_tethering',
     label: 'MQTT',
     description:
-      'Data arrives as messages as soon as it is measured. Each message is parsed with an MQTT parser.',
+      'Data is received as a continuous stream of messages as measurements are taken. Each incoming message is parsed using an MQTT parser.',
     items: [
       {
         name: 'mqtt',
@@ -88,11 +87,10 @@ const clusters: IngestCluster[] = [
         flow: 'mqtt',
         path: '/ingest/new/mqtt',
         helpText:
-          'Your device sends each measurement as a message to the time.IO MQTT broker as soon as it is measured. time.IO imports every message right away.',
+          'Your device sends each measurement as a message to the time.IO MQTT broker. Credentials are generated once you create the ingest. time.IO imports every message right away.',
         chooseIf: [
-          'your device can send data via MQTT',
-          'you want to see new data almost in real time',
-          'your device sends many small messages rather than files',
+          'your device sends data via MQTT',
+          'you do not already send data to your own MQTT broker',
         ],
       },
       {
@@ -102,11 +100,10 @@ const clusters: IngestCluster[] = [
         flow: 'ext_mqtt',
         path: '/ingest/new/external-mqtt',
         helpText:
-          'Your devices already send messages to your own MQTT broker. time.IO subscribes to a topic on that broker and imports every message it receives.',
+          'Your device already sends messages to your own MQTT broker. time.IO subscribes to a configured topic on that broker and imports every message it receives.',
         chooseIf: [
           'you already run your own MQTT broker',
           'your devices should keep sending to it unchanged',
-          'you want to see new data almost in real time',
         ],
       },
     ],
@@ -125,12 +122,8 @@ const clusters: IngestCluster[] = [
         flow: 'http',
         path: '/ingest/new/http',
         helpText:
-          'Your device or software sends data files to a time.IO web address. time.IO keeps every file and automatically imports the measurements from it.',
-        chooseIf: [
-          'your device or software can send web (HTTP) requests, but not SFTP or MQTT',
-          'only standard web connections are allowed in your network',
-          'you want to keep the original files next to the imported data',
-        ],
+          'Your device or software sends data to a time.IO web address. time.IO creates and keeps files from that data and automatically imports the measurements, using the selected file parser.',
+        chooseIf: ['your device or software sends web (HTTP) requests'],
       },
       {
         name: 'ext_api',
@@ -139,10 +132,10 @@ const clusters: IngestCluster[] = [
         flow: 'ext_api',
         variantSelect: true,
         helpText:
-          'Your data is available from a supported online service, e.g. a weather service or the cloud of a device manufacturer. time.IO requests new data from it at a fixed interval and imports it. Select the service from the list.',
+          'Your data is available from a supported online service, e. g. a weather service or the cloud of a device manufacturer. time.IO requests new data from it at a fixed interval and imports it. Select the service from the list.',
         chooseIf: [
           'your data is available from one of the supported services',
-          'you have the access credentials the service requires',
+          'you have the access credentials the service might require',
           'a delay of up to one sync interval is acceptable',
         ],
       },
