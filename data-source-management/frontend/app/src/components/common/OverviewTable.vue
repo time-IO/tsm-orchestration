@@ -48,6 +48,7 @@
       flat
       bordered
       v-model:pagination="pagination"
+      :rows-per-page-options="rowsPerPageOptions"
       @request="onRequest"
       :selection="selectable ? 'multiple' : 'none'"
       v-model:selected="selected"
@@ -162,6 +163,7 @@ const {
   colMinWidths,
   defaultColWidths,
   selectable = false,
+  rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
 } = defineProps<{
   rows: Row[];
   loading: boolean;
@@ -171,6 +173,7 @@ const {
   colMinWidths: Record<string, number>;
   defaultColWidths: Record<string, number>;
   selectable?: boolean;
+  rowsPerPageOptions?: number[];
 }>();
 
 const pagination = defineModel<QTableRequestPropPagination | undefined>('pagination');

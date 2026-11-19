@@ -50,6 +50,7 @@
       flat
       bordered
       v-model:pagination="pagination"
+      :rows-per-page-options="props.rowsPerPageOptions"
       @request="onRequest"
       v-bind="$attrs"
     >
@@ -121,6 +122,10 @@ const props = defineProps({
   columns: {
     type: Array as () => QTableColumn[],
     default: () => default_ingest_external_api_columns,
+  },
+  rowsPerPageOptions: {
+    type: Array as () => number[],
+    default: () => [10, 25, 50, 100, 200],
   },
 });
 
