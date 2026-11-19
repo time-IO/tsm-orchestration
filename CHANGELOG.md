@@ -19,6 +19,7 @@ When adding a changelog entry, ensure the following:
 ### Fixed
 - Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
 - STA datastream selection for QC functions retrieves STA data using authentication, enabling access to internal datastreams ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/818))
+- empty projects list if project is null, use null if no license is available, spelling fix: responsiblePersons ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/820))
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
@@ -29,11 +30,11 @@ When adding a changelog entry, ensure the following:
 ### Added
 - New STA Hub offers filtering for endpoints and authenticated access to protected endpoints ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/744))
 - Component Test: IngestFormExternalApiBosch , IngestFormExternalApiDwd, IngestFormExternalApiNm, IngestFormExternalApiSensoto, IngestFormExternalApiTSystems, IngestFormExternalApiTtn, IngestFormExternalApiUba ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/789))
+- TrueLog100 parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776), [Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/817))
 - Timestamps in the parser test results are now displayed in the parser's configured timezone by default. Users can switch to their local timezone if preferred ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
 
 ### Fixed
 - Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
-- TrueLog100 Parser ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/776))
 - FROST keepalive ping via `FROST_KEEPALIVE_INTERVAL` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 - Http Ingest: displays and copies full URL of the endpoint; additional infos how to use the api key ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/806))
 - CSV parser preserves observations from the repeated hour when switching from daylight saving time to standard time by inferring the correct UTC offsets ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/812))

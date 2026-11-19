@@ -36,7 +36,7 @@ from .ingest_sftp import IngestSftp
 
 from .parser import Parser
 from .parser_detailed import ParserDetailed
-from .parser_mqtt import ParserMqtt
+from .parser_predefined import ParserPredefined
 from .parser_csv import ParserCsv, ParserCsvTimestampColumn
 from .parser_json import ParserJson, ParserJsonTimestampKey
 from .parser_soilcan import ParserSoilcan
@@ -78,6 +78,6 @@ __all__ = [
     "ParserCsv",
     "ParserJson",
     "ParserCsvTimestampColumn",
-    "ParserMqtt",
+    "ParserPredefined",
     "ParserSoilcan",
 ]

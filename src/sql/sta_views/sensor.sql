@@ -49,7 +49,7 @@ WITH
                 'jsonld.type', 'Person',
                 'roleName', drrp.role_name,
                 'definition', drrp.role_uri,
-                'resonsiblePersons', drrp.responsible_persons
+                'responsiblePersons', drrp.responsible_persons
             ))
         ) AS "properties"
     FROM public.sms_device d

@@ -284,6 +284,19 @@ describe('ParserSelectByType', () => {
     );
   });
 
+  it('restores a predefined selection without offering settings', async () => {
+    const parser = { id: 42, name: 'truelog100', parser_type: 'predefined' };
+    const wrapper = mountParserSelectByType({ preselectedParser: parser });
+    expect(chipTexts(wrapper)).toContain('TrueLog100');
+    expect(lastEmitted(wrapper)).toEqual([42]);
+    expect(wrapper.findAllComponents(QIcon).some((icon) => icon.props('name') === 'launch')).toBe(
+      false,
+    );
+    await openDialog(wrapper);
+    expect(wrapper.findComponent(ParserTypeSelectStub).props('modelValue')).toBe('predefined');
+    expect(wrapper.findComponent(ParserSelectStub).props('modelValue')).toEqual(parser);
+  });
+
   describe('selection dialog', () => {
     it('opens the dialog when the field is clicked', async () => {
       const wrapper = mountParserSelectByType();
@@ -329,6 +342,17 @@ describe('ParserSelectByType', () => {
       expect(select.props('permission_group_id')).toBe(3);
       expect(select.props('preselected_item_id')).toBe(5);
       expect(select.props('disable')).toBeFalsy();
+    });
+
+    it('only preselects the saved parser while its own type is shown', async () => {
+      const wrapper = mountParserSelectByType({ preselectedParser: csvParser });
+      await openDialog(wrapper);
+
+      await chooseType(wrapper, 'predefined');
+      expect(wrapper.findComponent(ParserSelectStub).props('preselected_item_id')).toBeNull();
+
+      await chooseType(wrapper, 'csv');
+      expect(wrapper.findComponent(ParserSelectStub).props('preselected_item_id')).toBe(5);
     });
 
     it('passes null as permission group when none is given', async () => {

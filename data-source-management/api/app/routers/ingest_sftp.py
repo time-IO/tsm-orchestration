@@ -8,7 +8,7 @@ from dependencies import (
     create_database_if_not_exists,
     get_repo_parser_detailed,
 )
-from models import User
+from models import User, ParserPredefined
 from models.ingest_sftp import (
     IngestSftpCreate,
     IngestSftpRead,
@@ -81,10 +81,13 @@ def create(
     parser_repo: ParserDetailedRepository = Depends(get_repo_parser_detailed),
 ):
     if payload.parser_id:
-        parser = parser_repo.find_one(
+        parser = parser_repo.find_for_ingest(
             payload.parser_id, access_scope=AccessScope.from_user(current_user)
         )
-        if not parser or parser.permission_group_id != payload.permission_group_id:
+        if not parser or (
+            not isinstance(parser, ParserPredefined)
+            and parser.permission_group_id != payload.permission_group_id
+        ):
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
     _uuid = uuid.uuid4()
@@ -126,10 +129,13 @@ def update(
 ):
 
     if payload.parser_id:
-        parser = parser_repo.find_one(
+        parser = parser_repo.find_for_ingest(
             payload.parser_id, access_scope=AccessScope.from_user(current_user)
         )
-        if not parser or parser.permission_group_id != payload.permission_group_id:
+        if not parser or (
+            not isinstance(parser, ParserPredefined)
+            and parser.permission_group_id != payload.permission_group_id
+        ):
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
     entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))

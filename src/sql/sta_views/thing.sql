@@ -37,12 +37,12 @@ WITH
             'jsonld.type', 'Role',
             'roleName', crrp.role_name,
             'definition', crrp.role_uri,
-            'resonsiblePersons', crrp.responsible_persons
+            'responsiblePersons', crrp.responsible_persons
         )),
-        'partOfProjects', array_agg(DISTINCT jsonb_build_object(
+        'partOfProjects', coalesce(array_agg(DISTINCT jsonb_build_object(
             'jsonld.type', 'Project',
             'name', c.project
-        )),
+        )) FILTER (WHERE nullif(c.project, '') IS NOT NULL), '{}'),
         'metadata', jsonb_build_object('jsonld.type', 'Dataset',
             'encodingType', 'http://www.opengis.net/doc/IS/SensorML/2.0',
             'distribution', jsonb_build_object(
