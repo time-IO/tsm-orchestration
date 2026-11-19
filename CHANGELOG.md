@@ -21,6 +21,7 @@ When adding a changelog entry, ensure the following:
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
+- Some enhancements to generic overview table and usage for STA datastream selection and External API trigger ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/821))
 
 
 ## [2026-11-11]
