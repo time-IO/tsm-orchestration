@@ -60,7 +60,6 @@
       :class="[
         'overview-table',
         {
-          'overview-table--selectable': selectable,
           'overview-table--virtual col': virtualScroll,
         },
       ]"
@@ -68,8 +67,12 @@
     >
       <template v-slot:header="props">
         <q-tr :props="props">
-          <q-th v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" />
+          <q-th
+            v-if="selectable"
+            class="overview-table__selection"
+            :style="`width: ${selectionColumnWidth}px`"
+          >
+            <q-checkbox v-model="props.selected" :dense="dense" />
           </q-th>
 
           <q-th
@@ -96,8 +99,8 @@
 
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-          <q-td v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" />
+          <q-td v-if="selectable" class="overview-table__selection">
+            <q-checkbox v-model="props.selected" :dense="dense" />
           </q-td>
           <q-td
             v-for="col in props.cols"
@@ -281,6 +284,9 @@ const colWidths = ref<ColumnWidthValues>(
 // tolerance for floating point comparisons of widths: half a pixel
 const WIDTH_EPSILON = 0.5;
 
+// fixed width for checkbox column
+const selectionColumnWidth = computed(() => (dense ? 48 : 64));
+
 const visibleColumnNames = computed(() =>
   columns.map((c) => c.name).filter((name) => visibleColumns.value.includes(name)),
 );
@@ -299,11 +305,14 @@ function headerWidth(colName: string): string {
 }
 
 const minTableWidth = computed(() =>
-  visibleColumnNames.value.reduce((sum, c) => {
-    if (!isResizable(c)) return sum + fixedWidthOf(columnWidths, c);
-    if (c === flexibleColumn.value) return sum + minWidthOf(columnWidths, c);
-    return sum + (colWidths.value[c] ?? minWidthOf(columnWidths, c));
-  }, 0),
+  visibleColumnNames.value.reduce(
+    (sum, c) => {
+      if (!isResizable(c)) return sum + fixedWidthOf(columnWidths, c);
+      if (c === flexibleColumn.value) return sum + minWidthOf(columnWidths, c);
+      return sum + (colWidths.value[c] ?? minWidthOf(columnWidths, c));
+    },
+    selectable ? selectionColumnWidth.value : 0,
+  ),
 );
 
 const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
@@ -503,10 +512,9 @@ thead th {
   border-right: 2px solid rgba(0, 0, 0, 0.5);
 }
 
-.overview-table--selectable .q-table th:first-child,
-.overview-table--selectable .q-table td:first-child {
-  padding-left: 0;
-  padding-right: 0;
+.overview-table .overview-table__selection {
+  padding-left: 12px;
+  padding-right: 12px;
   text-align: center;
   vertical-align: middle;
 }
