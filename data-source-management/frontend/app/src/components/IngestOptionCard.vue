@@ -19,7 +19,8 @@
       </q-item-section>
     </q-item>
 
-    <q-card-section v-if="option.variantSelect" class="q-pt-none">
+    <q-space />
+    <q-card-section v-if="option.variantSelect" class="q-pa-sm q-pb-none">
       <q-select
         v-model="selectedVariant"
         :options="filteredVariants"
@@ -63,9 +64,6 @@
         </template>
       </q-select>
     </q-card-section>
-
-    <q-space />
-    <q-separator />
     <q-card-actions>
       <q-btn
         :disable="option.variantSelect && !selectedVariant"

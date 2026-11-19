@@ -42,7 +42,7 @@ const clusters: IngestCluster[] = [
     icon: 'folder_copy',
     label: 'File transfer (SFTP / S3)',
     description:
-      'Data arrives as files. time.IO keeps the raw files in an object storage bucket and parses them with a file parser.',
+      'Data arrives as files: time.IO keeps the raw files in an object storage bucket and parses them with a file parser.',
     items: [
       {
         name: 'sftp',
@@ -78,7 +78,7 @@ const clusters: IngestCluster[] = [
     icon: 'wifi_tethering',
     label: 'MQTT',
     description:
-      'Data is received as a continuous stream of messages as measurements are taken. Each incoming message is parsed using an MQTT parser.',
+      'Data is received as a continuous stream of messages: Each incoming message is parsed using an MQTT parser.',
     items: [
       {
         name: 'mqtt',
@@ -113,7 +113,7 @@ const clusters: IngestCluster[] = [
     icon: 'http',
     label: 'HTTP',
     description:
-      'Data arrives over the web: send files to time.IO, or let time.IO request a supported web API.',
+      'Data arrives over the web: Send files to time.IO, or let time.IO request a supported web API.',
     items: [
       {
         name: 'http',
