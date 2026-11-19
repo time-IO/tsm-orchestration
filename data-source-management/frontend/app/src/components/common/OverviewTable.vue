@@ -208,7 +208,7 @@ const {
   virtualScroll = false,
   tableStyle = '',
   rowKey = 'id',
-  rowsPerPageOptions = [0, 10, 25, 50, 100, 200],
+  rowsPerPageOptions = [10, 25, 50, 100, 200],
 } = defineProps<{
   rows: Row[];
   loading: boolean;
