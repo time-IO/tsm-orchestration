@@ -1,7 +1,6 @@
 import { onBeforeUnmount, onMounted, readonly, ref } from 'vue';
 
-/** Duration of one animation cycle shared by all synced animations. */
-export const LOOP_DURATION_MS = 4000;
+export const LOOP_DURATION_MS = 4000; // duration of one animation cycle shared by all animations
 
 const phase = ref(0);
 const reducedMotion = ref(false);
@@ -10,8 +9,6 @@ let frame: number | null = null;
 let motionQuery: MediaQueryList | null = null;
 
 function tick(now: number) {
-  // Derive the phase from the global clock, not from the mount time, so
-  // components mounted later (e.g. after expanding a card) stay in sync.
   phase.value = (now % LOOP_DURATION_MS) / LOOP_DURATION_MS;
   frame = requestAnimationFrame(tick);
 }
@@ -38,15 +35,11 @@ function onMotionChange(event: MediaQueryListEvent) {
   }
 }
 
-/**
- * Shared animation clock. Every subscriber reads the same phase in [0, 1),
- * driven by a single requestAnimationFrame loop, so all animations have the
- * same duration and run in lockstep. Respects `prefers-reduced-motion`.
- */
 export function useSyncedLoop() {
   onMounted(() => {
     if (subscribers++ === 0) {
       if (motionQuery === null && typeof window.matchMedia === 'function') {
+        // respect user preferences: https://developer.mozilla.org/de/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion
         motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
         reducedMotion.value = motionQuery.matches;
         motionQuery.addEventListener('change', onMotionChange);

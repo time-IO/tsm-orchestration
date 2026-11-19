@@ -15,11 +15,11 @@
       <div class="row q-col-gutter-md">
         <div v-for="option in cluster.items" :key="option.name" class="col-12 col-md-6 col-lg-12">
           <IngestOptionCard
-            v-model:selected-api="selectedApi"
+            v-model:selected-variant="selectedVariant"
             :option="option"
-            :apis="apis"
+            :variants="variants"
             @help="emit('help', $event)"
-            @create="(o, api) => emit('create', o, api)"
+            @create="(o, variant) => emit('create', o, variant)"
             @docs="emit('docs', $event)"
           />
         </div>
@@ -30,31 +30,26 @@
 
 <script setup lang="ts">
 import IngestOptionCard from '@/components/IngestOptionCard.vue';
-import type { ExternalApi, IngestCluster, IngestOption } from '@/components/ingestOptions';
+import type { IngestVariant, IngestCluster, IngestOption } from '@/components/ingestOptions';
 
 withDefaults(
   defineProps<{
     cluster: IngestCluster;
-    /** APIs offered by API ingests in this cluster. */
-    apis?: ExternalApi[];
+    variants?: IngestVariant[];
   }>(),
-  { apis: () => [] },
+  { variants: () => [] },
 );
 
-/** The API chosen in an API ingest's dropdown (`v-model:selected-api`). */
-const selectedApi = defineModel<ExternalApi | null>('selectedApi', { default: null });
+const selectedVariant = defineModel<IngestVariant | null>('selectedVariant', { default: null });
 
 const emit = defineEmits<{
   help: [option: IngestOption];
-  create: [option: IngestOption, api: ExternalApi | null];
-  docs: [api: ExternalApi];
+  create: [option: IngestOption, variant: IngestVariant | null];
+  docs: [variant: IngestVariant];
 }>();
 </script>
 
 <style scoped lang="scss">
-// Large screens (Quasar lg, 1440px): the parent lays the clusters out side by side
-// in a grid. Each cluster spans three rows (header, separator, content) and shares
-// them via subgrid, so all cluster headers have the same height.
 @media (min-width: 1440px) {
   .ingest-option-cluster {
     display: grid;

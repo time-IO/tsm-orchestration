@@ -19,10 +19,10 @@
       </q-item-section>
     </q-item>
 
-    <q-card-section v-if="option.apiSelect" class="q-pt-none">
+    <q-card-section v-if="option.variantSelect" class="q-pt-none">
       <q-select
-        v-model="selectedApi"
-        :options="filteredApis"
+        v-model="selectedVariant"
+        :options="filteredVariants"
         option-label="label"
         label="Select API"
         filled
@@ -32,7 +32,7 @@
         hide-selected
         fill-input
         input-debounce="0"
-        @filter="filterApis"
+        @filter="filterVariants"
       >
         <template #prepend>
           <q-icon name="search" />
@@ -68,15 +68,15 @@
     <q-separator />
     <q-card-actions>
       <q-btn
-        :disable="option.apiSelect && !selectedApi"
+        :disable="option.variantSelect && !selectedVariant"
         class="full-width"
         color="green"
         icon="add"
-        :label="`Create ${option.apiSelect && selectedApi ? selectedApi.label : option.label} ingest`"
+        :label="`Create ${option.variantSelect && selectedVariant ? selectedVariant.label : option.label} ingest`"
         no-caps
-        @click="emit('create', option, option.apiSelect ? selectedApi : null)"
+        @click="emit('create', option, option.variantSelect ? selectedVariant : null)"
       >
-        <q-tooltip v-if="option.apiSelect && !selectedApi">Select an API first</q-tooltip>
+        <q-tooltip v-if="option.variantSelect && !selectedVariant">Select an API first</q-tooltip>
       </q-btn>
     </q-card-actions>
   </q-card>
@@ -84,50 +84,49 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { ExternalApi, IngestOption } from '@/components/ingestOptions';
+import type { IngestVariant, IngestOption } from '@/components/ingestOptions';
 
 const props = withDefaults(
   defineProps<{
     option: IngestOption;
-    /** APIs offered in the dropdown; only used when `option.apiSelect` is set. */
-    apis?: ExternalApi[];
+    /** Variants offered in the dropdown; only used when `option.variantSelect` is set. */
+    variants?: IngestVariant[];
   }>(),
-  { apis: () => [] },
+  { variants: () => [] },
 );
 
-/** The API chosen in the dropdown (`v-model:selected-api`). */
-const selectedApi = defineModel<ExternalApi | null>('selectedApi', { default: null });
+/** The variant chosen in the dropdown (`v-model:selected-variant`). */
+const selectedVariant = defineModel<IngestVariant | null>('selectedVariant', { default: null });
 
 const emit = defineEmits<{
   /** The help button was clicked. */
   help: [option: IngestOption];
-  /** The create button was clicked; `api` is the selected API for API ingests. */
-  create: [option: IngestOption, api: ExternalApi | null];
-  /** The documentation button of an API in the dropdown was clicked. */
-  docs: [api: ExternalApi];
+  /** The create button was clicked; `variant` is the selected variant for ingests with a variant select. */
+  create: [option: IngestOption, variant: IngestVariant | null];
+  /** The documentation button of a variant in the dropdown was clicked. */
+  docs: [variant: IngestVariant];
 }>();
 
-const filteredApis = ref<ExternalApi[]>(props.apis);
+const filteredVariants = ref<IngestVariant[]>(props.variants);
 watch(
-  () => props.apis,
-  (apis) => (filteredApis.value = apis),
+  () => props.variants,
+  (variants) => (filteredVariants.value = variants),
 );
 
-function filterApis(input: string, update: (callback: () => void) => void) {
+function filterVariants(input: string, update: (callback: () => void) => void) {
   update(() => {
     const needle = input.trim().toLowerCase();
-    filteredApis.value = needle
-      ? props.apis.filter(
-          (api) => api.label.toLowerCase().includes(needle) || api.name.includes(needle),
+    filteredVariants.value = needle
+      ? props.variants.filter(
+          (variant) =>
+            variant.label.toLowerCase().includes(needle) || variant.name.includes(needle),
         )
-      : props.apis;
+      : props.variants;
   });
 }
 </script>
 
 <style scoped lang="scss">
-// Keep every section at its natural height; only the spacer may stretch, so the
-// content never gets squeezed into the button below it.
 .ingest-option-card > * {
   flex-shrink: 0;
 }

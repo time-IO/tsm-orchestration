@@ -11,9 +11,9 @@
       <IngestOptionCluster
         v-for="cluster in clusters"
         :key="cluster.name"
-        v-model:selected-api="selectedApi"
+        v-model:selected-variant="selectedVariant"
         :cluster="cluster"
-        :apis="externalApis"
+        :variants="externalApis"
         @help="helpOption = $event"
         @create="createIngest"
         @docs="showDocs"
@@ -23,7 +23,7 @@
     <IngestOptionHelpDialog
       :option="helpOption"
       :icon="helpCluster?.icon"
-      :source-label="helpOption?.apiSelect ? selectedApi?.label : undefined"
+      :source-label="helpOption?.variantSelect ? selectedVariant?.label : undefined"
       @close="helpOption = null"
     />
   </q-page>
@@ -34,7 +34,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import IngestOptionCluster from '@/components/IngestOptionCluster.vue';
 import IngestOptionHelpDialog from '@/components/IngestOptionHelpDialog.vue';
-import type { ExternalApi, IngestCluster, IngestOption } from '@/components/ingestOptions';
+import type { IngestVariant, IngestCluster, IngestOption } from '@/components/ingestOptions';
 
 const clusters: IngestCluster[] = [
   {
@@ -137,7 +137,7 @@ const clusters: IngestCluster[] = [
         label: 'External API',
         description: 'time.IO requests a registered API on a schedule.',
         flow: 'ext_api',
-        apiSelect: true,
+        variantSelect: true,
         helpText:
           'Your data is available from a supported online service, e.g. a weather service or the cloud of a device manufacturer. time.IO requests new data from it at a fixed interval and imports it. Select the service from the list.',
         chooseIf: [
@@ -150,7 +150,7 @@ const clusters: IngestCluster[] = [
   },
 ];
 
-const externalApis: ExternalApi[] = [
+const externalApis: IngestVariant[] = [
   {
     name: 'bosch',
     label: 'Bosch IoT',
@@ -188,20 +188,20 @@ const externalApis: ExternalApi[] = [
 
 const router = useRouter();
 
-const selectedApi = ref<ExternalApi | null>(null);
+const selectedVariant = ref<IngestVariant | null>(null);
 const helpOption = ref<IngestOption | null>(null);
 /** The cluster of the ingest whose help is open; its icon heads the dialog. */
 const helpCluster = computed(() =>
   clusters.find((cluster) => cluster.items.some((item) => item.name === helpOption.value?.name)),
 );
 
-function createIngest(option: IngestOption, api: ExternalApi | null) {
-  const path = option.apiSelect ? api?.path : option.path;
+function createIngest(option: IngestOption, variant: IngestVariant | null) {
+  const path = option.variantSelect ? variant?.path : option.path;
   if (path) void router.push(path);
 }
 
-function showDocs(api: ExternalApi) {
-  if (api.docsUrl) window.open(api.docsUrl, '_blank');
+function showDocs(variant: IngestVariant) {
+  if (variant.docsUrl) window.open(variant.docsUrl, '_blank');
 }
 </script>
 
