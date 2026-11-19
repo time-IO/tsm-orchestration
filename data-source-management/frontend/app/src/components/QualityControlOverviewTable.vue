@@ -86,13 +86,11 @@ const columns: QTableColumn[] = [
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
-const isSmallWindow = window.innerWidth < 1200;
-
 const columnWidths: ColumnWidths = {
-  id: { min: 40, max: 40, default: 40 },
-  permission_group: { min: 40, default: 40 },
-  name: { min: 40, default: isSmallWindow ? 300 : 440 },
-  created_by: { min: 60, default: isSmallWindow ? 80 : 115 },
-  action: { min: 140, max: 140, default: 140 },
+  id: { min: 5, max: 5, default: 5 },
+  permission_group: { min: 8, default: 8 },
+  name: { min: 5, default: 20 },
+  created_by: { min: 8, default: 15 },
+  action: { min: 18, max: 18, default: 18 },
 };
 </script>

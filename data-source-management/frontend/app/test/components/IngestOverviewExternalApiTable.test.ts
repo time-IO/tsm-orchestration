@@ -1,16 +1,12 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { mount } from '@vue/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import IngestOverviewExternalApiTable from '@/components/IngestOverviewExternalApiTable.vue';
 import type { IngestExternalApiRead } from '@/services/ingest_external_api/types';
 import type { QTableRequestPropPagination } from '@/services/types';
-import {
-  defaultColumnWidths,
-  isColumnResizable,
-  type ColumnWidths,
-} from '@/utils/overview_table_utils';
+import { isColumnResizable, type ColumnWidths } from '@/utils/overview_table_utils';
 import { default_ingest_external_api_columns } from '@/utils/pagination_utils';
 
 installQuasarPlugin();
@@ -63,21 +59,11 @@ const mountTable = (props: Record<string, unknown> = {}) =>
 const getTable = (wrapper: ReturnType<typeof mountTable>) =>
   wrapper.findComponent(OverviewTableStub);
 
-const setWindowWidth = (width: number) => {
-  Object.defineProperty(window, 'innerWidth', { value: width, configurable: true, writable: true });
-};
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('IngestOverviewExternalApiTable', () => {
-  const originalWidth = window.innerWidth;
-
-  afterEach(() => {
-    setWindowWidth(originalWidth);
-  });
-
   describe('initialization', () => {
     it('passes rows, loading and the table config to the overview table', () => {
       const table = getTable(mountTable({ rows: [ROW], loading: true }));
@@ -103,28 +89,6 @@ describe('IngestOverviewExternalApiTable', () => {
   });
 
   describe('column widths', () => {
-    it('uses the wide default widths on large windows', () => {
-      setWindowWidth(1400);
-      const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
-
-      expect(defaultColumnWidths(widths)).toMatchObject({
-        permission_group: 150,
-        name: 120,
-        uuid: 120,
-      });
-    });
-
-    it('uses the narrow default widths on small windows', () => {
-      setWindowWidth(1000);
-      const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
-
-      expect(defaultColumnWidths(widths)).toMatchObject({
-        permission_group: 80,
-        name: 80,
-        uuid: 80,
-      });
-    });
-
     it('defines a width for every default column and a fixed action column', () => {
       const widths = getTable(mountTable()).props('columnWidths') as ColumnWidths;
 

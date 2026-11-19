@@ -190,6 +190,7 @@ import {
   isColumnResizable,
   maxWidthOf,
   minWidthOf,
+  toPixelWidths,
   type ColumnWidths,
   type ColumnWidthValues,
 } from '@/utils/overview_table_utils';
@@ -237,6 +238,14 @@ const idToDelete = ref<number | null>(null);
 onMounted(() => {
   // get initial data from server (1st page)
   tableRef.value.requestServerInteraction();
+
+  const tableWidth = tableRef.value.$el.querySelector('.q-table__middle')?.clientWidth ?? 0;
+  pixelWidths.value = toPixelWidths(
+    columnWidths,
+    visibleColumnNames.value,
+    tableWidth - (selectable ? selectionColumnWidth.value : 0),
+  );
+  if (!savedColWidths) colWidths.value = defaultColumnWidths(pixelWidths.value);
 });
 
 function onRequest(props: QTableRequestProp) {
@@ -290,8 +299,10 @@ const colWidths = ref<ColumnWidthValues>(
     ? Object.fromEntries(
         Object.entries(JSON.parse(savedColWidths)).map(([key, value]) => [key, Number(value)]),
       )
-    : defaultColumnWidths(columnWidths),
+    : {},
 );
+
+const pixelWidths = ref<ColumnWidths>({});
 
 // tolerance for floating point comparisons of widths: half a pixel
 const WIDTH_EPSILON = 0.5;
@@ -303,15 +314,15 @@ const visibleColumnNames = computed(() =>
   columns.map((c) => c.name).filter((name) => visibleColumns.value.includes(name)),
 );
 
-const isResizable = (colName: string) => isColumnResizable(columnWidths, colName);
+const isResizable = (colName: string) => isColumnResizable(pixelWidths.value, colName);
 
 const flexibleColumn = computed(() => {
   const candidates = visibleColumnNames.value.filter(isResizable);
-  return candidates.filter((c) => !hasMaxWidth(columnWidths, c)).at(-1) ?? candidates.at(-1);
+  return candidates.filter((c) => !hasMaxWidth(pixelWidths.value, c)).at(-1) ?? candidates.at(-1);
 });
 
 function headerWidth(colName: string): string {
-  if (!isResizable(colName)) return `${fixedWidthOf(columnWidths, colName)}px`;
+  if (!isResizable(colName)) return `${fixedWidthOf(pixelWidths.value, colName)}px`;
   if (colName === flexibleColumn.value) return 'auto';
   return colWidths.value[colName] ? `${colWidths.value[colName]}px` : 'auto';
 }
@@ -319,9 +330,9 @@ function headerWidth(colName: string): string {
 const minTableWidth = computed(() =>
   visibleColumnNames.value.reduce(
     (sum, c) => {
-      if (!isResizable(c)) return sum + fixedWidthOf(columnWidths, c);
-      if (c === flexibleColumn.value) return sum + minWidthOf(columnWidths, c);
-      return sum + (colWidths.value[c] ?? minWidthOf(columnWidths, c));
+      if (!isResizable(c)) return sum + fixedWidthOf(pixelWidths.value, c);
+      if (c === flexibleColumn.value) return sum + minWidthOf(pixelWidths.value, c);
+      return sum + (colWidths.value[c] ?? minWidthOf(pixelWidths.value, c));
     },
     selectable ? selectionColumnWidth.value : 0,
   ),
@@ -333,14 +344,14 @@ const sumWidths = (colNames: string[]) =>
   colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
 
 const hasRoomToGrow = (colName: string) =>
-  colWidths.value[colName]! < maxWidthOf(columnWidths, colName) - WIDTH_EPSILON;
+  colWidths.value[colName]! < maxWidthOf(pixelWidths.value, colName) - WIDTH_EPSILON;
 
 const hasRoomToShrink = (colName: string) =>
-  colWidths.value[colName]! > minWidthOf(columnWidths, colName) + WIDTH_EPSILON;
+  colWidths.value[colName]! > minWidthOf(pixelWidths.value, colName) + WIDTH_EPSILON;
 
 const shrinkableWidth = (colNames: string[]) =>
   withWidth(colNames).reduce(
-    (sum, c) => sum + Math.max(0, colWidths.value[c]! - minWidthOf(columnWidths, c)),
+    (sum, c) => sum + Math.max(0, colWidths.value[c]! - minWidthOf(pixelWidths.value, c)),
     0,
   );
 
@@ -350,7 +361,7 @@ function distributeWidth(amount: number, receivers: string[]) {
   while (remaining > WIDTH_EPSILON && candidates.length > 0) {
     const share = remaining / candidates.length;
     for (const c of candidates) {
-      const give = Math.min(share, maxWidthOf(columnWidths, c) - colWidths.value[c]!);
+      const give = Math.min(share, maxWidthOf(pixelWidths.value, c) - colWidths.value[c]!);
       colWidths.value[c] = colWidths.value[c]! + give;
       remaining -= give;
     }
@@ -364,7 +375,7 @@ function reclaimWidth(amount: number, donors: string[]) {
   while (remaining > WIDTH_EPSILON && candidates.length > 0) {
     const share = remaining / candidates.length;
     for (const c of candidates) {
-      const take = Math.min(share, colWidths.value[c]! - minWidthOf(columnWidths, c));
+      const take = Math.min(share, colWidths.value[c]! - minWidthOf(pixelWidths.value, c));
       colWidths.value[c] = colWidths.value[c]! - take;
       remaining -= take;
     }
@@ -403,10 +414,10 @@ function startResize(e: MouseEvent, colName: string) {
 function onResize(e: MouseEvent) {
   if (!resizingCol) return;
   colWidths.value = { ...startWidths };
-  const startWidth = startWidths[resizingCol] ?? minWidthOf(columnWidths, resizingCol);
+  const startWidth = startWidths[resizingCol] ?? minWidthOf(pixelWidths.value, resizingCol);
   const newWidth = Math.min(
     startWidth + shrinkableWidth(otherCols),
-    clampColumnWidth(columnWidths, resizingCol, startWidth + e.clientX - startX),
+    clampColumnWidth(pixelWidths.value, resizingCol, startWidth + e.clientX - startX),
   );
   colWidths.value[resizingCol] = newWidth;
 

@@ -1,5 +1,7 @@
 /**
- * Width constraints of an overview table column, all in pixels.
+ * Width constraints of an overview table column, as relative weights. The table converts them to
+ * pixels by splitting its width among the visible columns in proportion to their `default` weights
+ * (see `toPixelWidths`).
  * - `min`: the column cannot be resized below this width
  * - `max`: the column cannot be resized above this width
  * - `default`: the initial width; without one, the column starts with `auto` width
@@ -13,6 +15,7 @@ export interface ColumnWidth {
 
 export type ColumnWidths = Record<string, ColumnWidth>;
 
+// in pixels, for columns without a configured `min`
 export const DEFAULT_MIN_COLUMN_WIDTH = 50;
 
 /**
@@ -91,3 +94,26 @@ export function defaultColumnWidths(widths: ColumnWidths): Record<string, number
 
 /** Current width per column name, in pixels. */
 export type ColumnWidthValues = Record<string, number>;
+
+/**
+ * Converts relative width weights to pixels, so that the `default` weights of the given columns
+ * add up to the available width.
+ * @param widths - The width constraints of all columns, as relative weights
+ * @param colNames - The columns sharing the available width
+ * @param availableWidth - The width to split among these columns, in pixels
+ * @returns The width constraints of all columns, in pixels
+ */
+export function toPixelWidths(
+  widths: ColumnWidths,
+  colNames: string[],
+  availableWidth: number,
+): ColumnWidths {
+  const totalWeight = colNames.reduce((sum, c) => sum + (widths[c]?.default ?? 0), 0);
+  const scale = totalWeight > 0 ? availableWidth / totalWeight : 0;
+  return Object.fromEntries(
+    Object.entries(widths).map(([colName, width]) => [
+      colName,
+      Object.fromEntries(Object.entries(width).map(([key, weight]) => [key, weight * scale])),
+    ]),
+  );
+}

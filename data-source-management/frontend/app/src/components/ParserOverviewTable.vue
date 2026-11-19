@@ -62,16 +62,14 @@ const onDelete = (id: number | null, closeDialog: () => void) => {
   closeDialog();
 };
 
-const isSmallWindow = window.innerWidth < 1200;
-
 const columnWidths: ColumnWidths = {
-  id: { min: 80, max: 80, default: 80 },
-  permission_group: { min: 40, default: isSmallWindow ? 130 : 215 },
-  name: { min: 40, default: isSmallWindow ? 220 : 365 },
-  parser_type: { min: 60, default: isSmallWindow ? 80 : 100 },
-  created_at: { min: 80, default: isSmallWindow ? 90 : 115 },
-  created_by: { min: 60, default: isSmallWindow ? 80 : 105 },
-  uuid: { min: 40, default: isSmallWindow ? 100 : 165 },
-  action: { min: 140, max: 140, default: 140 },
+  id: { min: 6, max: 6, default: 6 },
+  permission_group: { min: 8, default: 17 },
+  name: { min: 3, default: 28 },
+  parser_type: { min: 5, default: 8 },
+  created_at: { min: 6, default: 9 },
+  created_by: { min: 5, default: 8 },
+  uuid: { min: 3, default: 13 },
+  action: { min: 11, max: 11, default: 11 },
 };
 </script>

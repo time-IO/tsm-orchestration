@@ -74,13 +74,12 @@ defineProps<{
 }>();
 
 const columnWidths: ColumnWidths = {
-  '@iot.id': { min: 60, default: 60 },
-  name: { min: 120, default: 250 },
-  thing: { min: 100, default: 250 },
-  sensor: { min: 100, default: 230 },
-  description: { min: 160, default: 180 },
-  // fixed width
-  action: { min: 60, max: 60, default: 60 },
+  '@iot.id': { min: 6, default: 6 },
+  name: { min: 12, default: 24 },
+  thing: { min: 10, default: 24 },
+  sensor: { min: 10, default: 22 },
+  description: { min: 16, default: 18 },
+  action: { min: 6, max: 6, default: 6 },
 };
 
 const columnsSTA: QTableColumn[] = [

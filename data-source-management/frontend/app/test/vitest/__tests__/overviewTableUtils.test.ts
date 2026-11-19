@@ -8,6 +8,7 @@ import {
   isColumnResizable,
   maxWidthOf,
   minWidthOf,
+  toPixelWidths,
   type ColumnWidths,
 } from '@/utils/overview_table_utils';
 
@@ -69,5 +70,26 @@ describe('clampColumnWidth', () => {
 describe('defaultColumnWidths', () => {
   it('collects only columns with a default', () => {
     expect(defaultColumnWidths(widths)).toEqual({ id: 60, action: 140 });
+  });
+});
+
+describe('toPixelWidths', () => {
+  it('splits the available width by the default weights of the given columns', () => {
+    const pixels = toPixelWidths(widths, ['id', 'action'], 1000);
+
+    expect(pixels.id).toEqual({ min: 200, default: 300 });
+    expect(pixels.action).toEqual({ min: 700, max: 700, default: 700 });
+    expect(pixels.name).toEqual({ min: 500, max: 1500 });
+    expect(pixels.empty).toEqual({});
+  });
+
+  it('ignores columns without a default weight', () => {
+    const pixels = toPixelWidths(widths, ['id', 'name'], 600);
+
+    expect(pixels.id?.default).toBe(600);
+  });
+
+  it('scales to zero without any default weight', () => {
+    expect(toPixelWidths(widths, ['name'], 600).name).toEqual({ min: 0, max: 0 });
   });
 });

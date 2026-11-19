@@ -46,15 +46,13 @@ function onRequest(props: QTableRequestProp) {
   emit('onRequest', props);
 }
 
-const isSmallWindow = window.innerWidth < 1200;
-
 const columnWidths: ColumnWidths = {
-  id: { min: 40, default: 60 },
-  permission_group: { min: 40, default: isSmallWindow ? 80 : 150 },
-  name: { min: 40, default: isSmallWindow ? 80 : 120 },
-  api_type: { min: 80, default: 160 },
-  created_at: { min: 90, default: 110 },
-  uuid: { min: 80, default: isSmallWindow ? 80 : 120 },
-  action: { min: 140, max: 140, default: 140 },
+  id: { min: 5, default: 7 },
+  permission_group: { min: 5, default: 17 },
+  name: { min: 5, default: 14 },
+  api_type: { min: 9, default: 19 },
+  created_at: { min: 10, default: 13 },
+  uuid: { min: 9, default: 14 },
+  action: { min: 16, max: 16, default: 16 },
 };
 </script>

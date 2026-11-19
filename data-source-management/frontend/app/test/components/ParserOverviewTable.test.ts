@@ -1,13 +1,13 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { mount } from '@vue/test-utils';
 import { QBtn } from 'quasar';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import ParserOverviewTable from '@/components/ParserOverviewTable.vue'; // adjust path
 import type { QTableRequestPropPagination } from '@/services/types';
 import { default_parser_columns } from '@/utils/pagination_utils';
-import { defaultColumnWidths, type ColumnWidths } from '@/utils/overview_table_utils';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -77,23 +77,13 @@ const mountParserOverviewTable = (props: Record<string, unknown> = {}) =>
 const getTable = (w: ReturnType<typeof mountParserOverviewTable>) =>
   w.findComponent(OverviewTableStub);
 
-const setWindowWidth = (width: number) => {
-  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: width });
-};
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('ParserOverviewTable', () => {
-  const originalWidth = window.innerWidth;
-
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    setWindowWidth(originalWidth);
   });
 
   describe('initialization and props', () => {
@@ -129,20 +119,6 @@ describe('ParserOverviewTable', () => {
         expect(width.min).toBeDefined();
         expect(width.default).toBeDefined();
       });
-    });
-  });
-
-  describe('default column widths by window size', () => {
-    it.each([
-      ['below 1200px', 1199, { permission_group: 130, name: 220, uuid: 100 }],
-      ['from 1200px', 1200, { permission_group: 215, name: 365, uuid: 165 }],
-    ])('uses the matching widths %s', (_label, width, expected) => {
-      setWindowWidth(width);
-
-      const w = mountParserOverviewTable();
-
-      const widths = getTable(w).props('columnWidths') as ColumnWidths;
-      expect(defaultColumnWidths(widths)).toMatchObject(expected);
     });
   });
 
