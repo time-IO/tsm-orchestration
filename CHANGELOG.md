@@ -20,6 +20,7 @@ When adding a changelog entry, ensure the following:
 - CompTest for ParserFormCsv/Json/Soilcan([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/779))
 - Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/781))
 - Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
+- Superusers can reparse files of file-based ingests (SFTP, External SFTP, HTTP) in the data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/810)
 
 ### Fixed
 - Uploads to the bucket of a deleted ingest no longer crash the file ingest worker ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/762))
