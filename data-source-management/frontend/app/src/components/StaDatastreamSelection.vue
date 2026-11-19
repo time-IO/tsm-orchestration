@@ -129,7 +129,7 @@ const paginationSta = ref<QuasarPaginationInterface>({
   sortBy: '@iot.id',
   descending: false,
   page: 1,
-  rowsPerPage: 10,
+  rowsPerPage: 25,
   rowsNumber: 0,
   pages: 0,
 });
