@@ -34,6 +34,7 @@ from repositories.ingest_external_api_tsystems import (
 )
 from repositories.ingest_external_api_uba import IngestExternalApiUbaRepository
 from repositories.ingest_external_api_sensoto import IngestExternalApiSensotoRepository
+from repositories.ingest_external_api_zentra import IngestExternalApiZentraRepository
 from repositories.ingest_external_sftp import IngestExternalSftpRepository
 from repositories.ingest_external_mqtt import IngestExternalMqttRepository
 from repositories.ingest_mqtt import IngestMqttRepository
@@ -43,6 +44,7 @@ from repositories.parser_csv import ParserCsvRepository
 from repositories.parser_json import ParserJsonRepository
 from repositories.parser_detailed import ParserDetailedRepository
 from repositories.parser_mqtt import ParserMqttRepository
+from repositories.parser_predefined import ParserPredefinedRepository
 from repositories.parser_soilcan import ParserSoilcanRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -263,6 +265,10 @@ def get_repo_ingest_external_api_tsystems(session=Depends(get_session)):
     return IngestExternalApiTSystemsRepository(session)
 
 
+def get_repo_ingest_external_api_zentra(session=Depends(get_session)):
+    return IngestExternalApiZentraRepository(session)
+
+
 def get_repo_ingest_external_sftp(session=Depends(get_session)):
     return IngestExternalSftpRepository(session)
 
@@ -350,3 +356,7 @@ async def create_database_if_not_exists(
         database_repo.create(
             permission_group, access_scope=AccessScope.from_user(current_user)
         )
+
+
+def get_repo_parser_predefined(session=Depends(get_session)):
+    return ParserPredefinedRepository(session)

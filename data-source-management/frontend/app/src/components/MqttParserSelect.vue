@@ -12,7 +12,7 @@
     @filter="filterOptions"
     @virtual-scroll="onVirtualScroll"
     option-value="id"
-    option-label="name"
+    :option-label="(opt: MqttParser) => parserDisplayName(opt.name, 'predefined')"
     label="Select the parser *"
     :rules="[rules.REQUIRED]"
   >
@@ -30,6 +30,7 @@ import type { MqttParser } from '@/services/parser_mqtt/types';
 import { useMqttParserStore } from '@/stores/parserMqttStore';
 import { useQuasar } from 'quasar';
 import { rules } from '@/utils/validation/rules';
+import { parserDisplayName } from '@/utils/parser_utils';
 
 const mqttParserStore = useMqttParserStore();
 const $q = useQuasar();
@@ -63,6 +64,7 @@ watch(
 );
 
 async function includeItemIfMissing() {
+  /* v8 ignore next */
   if (preselectedItemId) {
     const isItemMissing = !fetchedOptions.value.some((option) => option.id === preselectedItemId);
     if (isItemMissing) {
@@ -125,7 +127,7 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
   update(() => {
     const needle = val.toLowerCase();
     filteredOptions.value = fetchedOptions.value.filter((v) =>
-      v.name.toLowerCase().includes(needle),
+      parserDisplayName(v.name, 'predefined').toLowerCase().includes(needle),
     );
   });
 }

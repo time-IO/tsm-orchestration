@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
+from pathlib import Path
 
 import psycopg
 from psycopg import sql
@@ -24,6 +26,30 @@ GRF_PREFIX = "grf_"
 
 INTERNAL_SCHEMA_SUFFIX = "_int"
 
+SQL_DIR = Path(__file__).parent / "sql"
+DDL_FILE = SQL_DIR / "postgres-ddl.sql"
+STA_VIEW_FILES = (
+    "schema_context.sql",
+    "thing.sql",
+    "location.sql",
+    "sensor.sql",
+    "observed_property.sql",
+    "datastream.sql",
+    "helper_views/foi_ts_action_type_coord.sql",
+    "helper_views/obs_ts_action_type_coord.sql",
+    "feature.sql",
+    "observation.sql",
+)
+GRAFANA_VIEW_FILES = ("datastream_properties.sql", "sta_datastream_links.sql")
+VIEW_FILES = {
+    "sta": [SQL_DIR / "sta_views" / f for f in STA_VIEW_FILES],
+    "sti": [SQL_DIR / "sta_views_internal" / f for f in STA_VIEW_FILES],
+    "grf": [SQL_DIR / "grafana_views" / f for f in GRAFANA_VIEW_FILES],
+}
+VIEW_LOCK_TIMEOUT = {"sta": "30s", "sti": "30s", "grf": "10s"}
+# Bump to force a view redeploy after changes not covered by the version hash.
+VIEWS_REVISION = 1
+
 
 class CreateThingInPostgresHandler(AbstractHandler):
     def __init__(self):
@@ -38,6 +64,7 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         self.db = Database(get_envvar("DATABASE_URL"))
         self.dsmdb_dsn = get_envvar("DSMDB_DSN")
+        self.views_digests = {k: self.hash_view_files(f) for k, f in VIEW_FILES.items()}
 
     def act(self, content: dict, message: MQTTMessage):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
@@ -58,7 +85,8 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         self.upsert_schema_thing_mapping(thing)
 
-        int_schema = thing.database.username.lower() + INTERNAL_SCHEMA_SUFFIX
+        schema = user
+        int_schema = schema + INTERNAL_SCHEMA_SUFFIX
 
         if not self.user_exists(sta_internal_user := STA_INTERNAL_PREFIX + ro_user):
             logger.debug(f"create sta-internal read-only user {sta_internal_user}")
@@ -74,26 +102,81 @@ class CreateThingInPostgresHandler(AbstractHandler):
 
         if not self.user_exists(grf_user := GRF_PREFIX + ro_user):
             logger.debug(f"create grafana read-only user {grf_user}")
-            self.create_ro_user(thing, user_prefix=GRF_PREFIX)
+            self.create_ro_user(thing, user_prefix=GRF_PREFIX, with_public=False)
 
         logger.info("update/create thing in db")
         created = self.upsert_thing(thing)
         journal.info(f"{'Created' if created else 'Updated'} Thing", thing.uuid)
 
-        logger.debug("create/refresh public frost views")
-        self.create_frost_views(thing)
+        self.deploy_views(thing, schema, int_schema)
+
         logger.debug(f"grant public frost view privileges to {sta_user}")
         self.grant_sta_select(thing, user_prefix=STA_PREFIX)
-
-        logger.debug("create/refresh internal frost views")
-        self.create_internal_frost_views(thing)
         logger.debug(f"grant internal frost view privileges to {sta_internal_user}")
         self.grant_sta_select(thing, user_prefix=STA_INTERNAL_PREFIX, schema=int_schema)
-
-        logger.debug("create/refresh grafana views")
-        self.create_grafana_views(thing)
         logger.debug(f"grant grafana view privileges to {grf_user}")
         self.grant_grafana_select(thing, user_prefix=GRF_PREFIX)
+
+    @staticmethod
+    def hash_view_files(files: list[Path]) -> str:
+        h = hashlib.sha256()
+        for f in [DDL_FILE, *files]:
+            h.update(f.relative_to(SQL_DIR).as_posix().encode())
+            h.update(f.read_bytes())
+        return h.hexdigest()
+
+    @staticmethod
+    def compute_views_version(files_digest: str) -> str:
+        key = (
+            f"{VIEWS_REVISION}|{os.environ.get('SMS_URL')}|"
+            f"{os.environ.get('CV_URL')}|{files_digest}"
+        )
+        return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+    def deploy_views(self, thing, schema: str, int_schema: str):
+        for kind, target in (("sta", schema), ("sti", int_schema), ("grf", schema)):
+            version = self.compute_views_version(self.views_digests[kind])
+            if self.views_up_to_date(target, kind, version):
+                logger.debug(f"{kind} views in {target} are up to date ({version})")
+                continue
+            logger.debug(f"create/refresh {kind} views in {target}")
+            with self.db.connection() as conn:
+                with conn.cursor() as c:
+                    self.deploy_view_files(c, thing, kind, target)
+                    self.set_views_stamp(c, target, kind, version)
+
+    def views_up_to_date(self, schema: str, kind: str, version: str) -> bool:
+        with self.db.connection() as conn:
+            row = conn.execute(
+                "SELECT EXISTS ("
+                "  SELECT 1 FROM public.views_deploy_state s"
+                "  WHERE s.schema = %s AND s.kind = %s AND s.version = %s"
+                "  AND s.views <@ ARRAY("
+                "    SELECT viewname::text FROM pg_views WHERE schemaname = s.schema"
+                "  )"
+                ")",
+                [schema, kind, version],
+            ).fetchone()
+        return row[0]
+
+    def set_views_stamp(self, c, schema: str, kind: str, version: str):
+        # Must run in the deploy transaction: xmin picks the views it created.
+        c.execute(
+            "WITH v AS ("
+            "  SELECT array_agg(relname::text) AS views FROM pg_class"
+            "  WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = %s)"
+            "  AND relkind = 'v' AND xmin = pg_current_xact_id()::xid"
+            ") "
+            "INSERT INTO public.views_deploy_state (schema, kind, version, views) "
+            "SELECT %s, %s, %s, views FROM v WHERE views IS NOT NULL "
+            "ON CONFLICT (schema, kind) DO UPDATE SET "
+            "version = EXCLUDED.version, views = EXCLUDED.views, "
+            "deployed_at = now()",
+            [schema, schema, kind, version],
+        )
+        if c.rowcount == 0:
+            # An empty stamp would make the existence check vacuous.
+            logger.warning(f"captured no {kind} views in {schema}; not stamping")
 
     def create_user(self, thing):
 
@@ -112,7 +195,13 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     )
                 )
 
-    def create_ro_user(self, thing, user_prefix: str = "", schema: str | None = None):
+    def create_ro_user(
+        self,
+        thing,
+        user_prefix: str = "",
+        schema: str | None = None,
+        with_public: bool = True,
+    ):
         with self.db.connection() as conn:
             with conn.cursor() as c:
                 ro_username = user_prefix.lower() + thing.database.ro_username.lower()
@@ -142,6 +231,14 @@ class CreateThingInPostgresHandler(AbstractHandler):
                 c.execute(
                     sql.SQL("GRANT USAGE ON SCHEMA {schema} TO {ro_user}").format(
                         ro_user=ro_user, schema=schema
+                    )
+                )
+
+                # Only at creation: PG16+ needs ADMIN OPTION to alter pre-upgrade roles
+                path = sql.SQL("{}, public" if with_public else "{}").format(schema)
+                c.execute(
+                    sql.SQL("ALTER ROLE {ro_user} SET search_path TO {path}").format(
+                        ro_user=ro_user, path=path
                     )
                 )
 
@@ -246,13 +343,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
         )
         with self.db.connection() as conn:
             with conn.cursor() as c:
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL(
-                        "ALTER ROLE {sta_user} SET search_path to {schema}, public"
-                    ).format(sta_user=sta_user, schema=schema)
-                )
-
                 # grant read rights to newly created views in schema to user
                 c.execute(
                     sql.SQL(
@@ -280,13 +370,6 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     user_prefix.lower() + thing.database.ro_username.lower()
                 )
 
-                # Set default schema when connecting as user
-                c.execute(
-                    sql.SQL("ALTER ROLE {grf_user} SET search_path to {schema}").format(
-                        grf_user=grf_user, schema=schema
-                    )
-                )
-
                 c.execute(sql.SQL("SET search_path TO {schema}").format(schema=schema))
 
                 c.execute(
@@ -305,110 +388,24 @@ class CreateThingInPostgresHandler(AbstractHandler):
                     ).format(grf_user=grf_user, schema=schema)
                 )
 
-    def create_frost_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views")
-        files = [
-            os.path.join(base_path, "schema_context.sql"),
-            os.path.join(base_path, "thing.sql"),
-            os.path.join(base_path, "location.sql"),
-            os.path.join(base_path, "sensor.sql"),
-            os.path.join(base_path, "observed_property.sql"),
-            os.path.join(base_path, "datastream.sql"),
-            os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
-            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
-            os.path.join(base_path, "feature.sql"),
-            os.path.join(base_path, "observation.sql"),
-        ]
-
-        schema = thing.database.schema.lower()
-        user = sql.Identifier(thing.database.username.lower())
-        SMS_URL = os.environ.get("SMS_URL")
-        CV_URL = os.environ.get("CV_URL")
-
-        def escape_quote(s: str) -> str:
-            return s.replace("'", "''")
-
-        with self.db.connection() as conn:
-            with conn.cursor() as c:
-                c.execute(sql.SQL("SET search_path TO {user}").format(user=user))
-                # The DROP/CREATE below needs an ACCESS EXCLUSIVE lock on each
-                # view and would otherwise queue indefinitely behind a reader,
-                # blocking further queries in the meantime. Fail fast instead:
-                # give up waiting for the lock after 30s.
-                c.execute("SET lock_timeout TO '30s'")
-                for file in files:
-                    logger.debug(f"deploy file: {file}")
-                    with open(file) as fh:
-                        view = fh.read()
-                    # This is a possible entry point for SQL injections. Ensure that we have
-                    # full control over the values, especially that the value does not come
-                    # from userinput. Additionally, we escape single quotes, prevent closing
-                    # the outer quotes in the file.
-                    view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
-                    view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
-                    view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
-                    c.execute(view)
-
-    def create_internal_frost_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "sta_views_internal")
-        files = [
-            os.path.join(base_path, "schema_context.sql"),
-            os.path.join(base_path, "thing.sql"),
-            os.path.join(base_path, "location.sql"),
-            os.path.join(base_path, "sensor.sql"),
-            os.path.join(base_path, "observed_property.sql"),
-            os.path.join(base_path, "datastream.sql"),
-            os.path.join(base_path, "helper_views", "foi_ts_action_type_coord.sql"),
-            os.path.join(base_path, "helper_views", "obs_ts_action_type_coord.sql"),
-            os.path.join(base_path, "feature.sql"),
-            os.path.join(base_path, "observation.sql"),
-        ]
-
-        schema = thing.database.schema.lower()
-        int_schema = schema + INTERNAL_SCHEMA_SUFFIX
-        target = sql.Identifier(int_schema)
-        SMS_URL = os.environ.get("SMS_URL")
-        CV_URL = os.environ.get("CV_URL")
-
-        def escape_quote(s: str) -> str:
-            return s.replace("'", "''")
-
-        with self.db.connection() as conn:
-            with conn.cursor() as c:
-                c.execute(sql.SQL("SET search_path TO {target}").format(target=target))
-                c.execute("SET lock_timeout TO '30s'")
-                for file in files:
-                    logger.debug(f"deploy file: {file}")
-                    with open(file) as fh:
-                        view = fh.read()
-                    # See create_frost_views: values are trusted (no user input)
-                    # and single quotes are escaped. {tsm_schema} is the project
-                    # schema (raw observation + datasource_id); {target_schema} is
-                    # the internal schema (feature.sql existence check).
-                    view = view.replace("{tsm_schema}", f"{escape_quote(schema)}")
-                    view = view.replace(
-                        "{target_schema}", f"{escape_quote(int_schema)}"
-                    )
-                    view = view.replace("{sms_url}", f"{escape_quote(SMS_URL)}")
-                    view = view.replace("{cv_url}", f"{escape_quote(CV_URL)}")
-                    c.execute(view)
-
-    def create_grafana_views(self, thing):
-        base_path = os.path.join(os.path.dirname(__file__), "sql", "grafana_views")
-        files = [
-            os.path.join(base_path, "datastream_properties.sql"),
-            os.path.join(base_path, "sta_datastream_links.sql"),
-        ]
-        with self.db.connection() as conn:
-            with conn.cursor() as c:
-                user = sql.Identifier(thing.database.username.lower())
-                c.execute(sql.SQL("SET search_path TO {0}").format(user))
-                # Same rationale as create_frost_views: fail fast rather than
-                # queue the DROP/CREATE behind a reader holding the view lock.
-                c.execute("SET lock_timeout TO '10s'")
-                for file in files:
-                    with open(file) as fh:
-                        c.execute(fh.read())
+    def deploy_view_files(self, c, thing, kind: str, target: str):
+        replacements = {
+            "{tsm_schema}": thing.database.schema.lower(),
+            "{target_schema}": target,
+            "{sms_url}": os.environ.get("SMS_URL"),
+            "{cv_url}": os.environ.get("CV_URL"),
+        }
+        c.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(target)))
+        # Fail fast instead of queueing the DROP/CREATE behind readers of the views.
+        c.execute(f"SET lock_timeout TO '{VIEW_LOCK_TIMEOUT[kind]}'")
+        for file in VIEW_FILES[kind]:
+            logger.debug(f"deploy file: {file}")
+            view = file.read_text()
+            # Values are trusted config (no user input); quotes are escaped.
+            for key, value in replacements.items():
+                if key in view:
+                    view = view.replace(key, value.replace("'", "''"))
+            c.execute(view)
 
     def upsert_thing(self, thing) -> bool:
         """Returns True for insert and False for update"""

@@ -16,7 +16,7 @@
       <div v-if="selectedParser" class="row items-center q-gutter-xs full-width">
         <span class="text-caption text-italic text-grey">Name:</span>
         <q-chip dense square color="blue-grey-5" text-color="white">
-          {{ truncateText(selectedParser.name, 50) }}
+          {{ truncateText(parserDisplayName(selectedParser.name, selectedParser.parser_type), 50) }}
         </q-chip>
         <span class="text-caption text-italic text-grey">Type:</span>
         <q-chip dense square color="lime-5" text-color="white">
@@ -57,6 +57,7 @@
         </template>
 
         <q-icon
+          v-if="!isPredefinedParser(selectedParser)"
           name="launch"
           class="cursor-pointer"
           color="blue-grey-5"
@@ -79,7 +80,11 @@
 
       <q-card-section>
         <div class="text-caption q-mb-sm">1. Choose type</div>
-        <parser-type-select v-model="dialogParserType" @update:model-value="draftParser = null" />
+        <parser-type-select
+          v-model="dialogParserType"
+          include-predefined
+          @update:model-value="draftParser = null"
+        />
 
         <div class="text-caption q-mt-md q-mb-sm" v-if="dialogParserType">2. Choose parser</div>
         <parser-select
@@ -88,7 +93,7 @@
           :disable="disable"
           :permission_group_id="permissionGroupId ?? null"
           :parser_type="dialogParserType"
-          :preselected_item_id="preselectedParser?.id"
+          :preselected_item_id="preselectedIdForDialogType"
           @update:model-value="onParserPicked"
         />
       </q-card-section>
@@ -97,13 +102,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ParserTypeSelect from '@/components/ParserTypeSelect.vue';
 import ParserSelect from '@/components/ParserSelect.vue';
 import { useRouter } from 'vue-router';
 import type { ParserRead, ParserSelectOption } from '@/services/types';
 import BaseField from '@/components/common/BaseField.vue';
 import { truncateText } from '@/utils/string_utils';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
 
 const selectedParserId = defineModel<number | null | undefined>();
 const selectedParser = ref<ParserSelectOption | null>(null);
@@ -118,6 +124,13 @@ const props = defineProps<{
 const showDialog = ref(false);
 const dialogParserType = ref<string | null>(props.preselectedParser?.parser_type ?? null);
 const router = useRouter();
+
+// only preselect parser if its type matches the selected one
+const preselectedIdForDialogType = computed(() =>
+  props.preselectedParser && props.preselectedParser.parser_type === dialogParserType.value
+    ? props.preselectedParser.id
+    : null,
+);
 
 function openDialog() {
   draftParser.value = selectedParser.value;

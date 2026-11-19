@@ -28,6 +28,7 @@ from .ingest_external_api_the_things_network import IngestExternalApiTheThingsNe
 from .ingest_external_api_tsystems import IngestExternalApiTSystems
 from .ingest_external_api_uba import IngestExternalApiUba
 from .ingest_external_api_sensoto import IngestExternalApiSensoto
+from .ingest_external_api_zentra import IngestExternalApiZentra
 from .ingest_external_sftp import IngestExternalSftp
 from .ingest_external_mqtt import IngestExternalMqtt
 from .ingest_http import IngestHttp
@@ -36,7 +37,7 @@ from .ingest_sftp import IngestSftp
 
 from .parser import Parser
 from .parser_detailed import ParserDetailed
-from .parser_mqtt import ParserMqtt
+from .parser_predefined import ParserPredefined
 from .parser_csv import ParserCsv, ParserCsvTimestampColumn
 from .parser_json import ParserJson, ParserJsonTimestampKey
 from .parser_soilcan import ParserSoilcan
@@ -67,6 +68,7 @@ __all__ = [
     "IngestExternalApiTSystems",
     "IngestExternalApiUba",
     "IngestExternalApiSensoto",
+    "IngestExternalApiZentra",
     "IngestExternalSftp",
     "IngestExternalMqtt",
     "IngestHttp",
@@ -77,7 +79,7 @@ __all__ = [
     "ParserCsv",
     "ParserJson",
     "ParserCsvTimestampColumn",
-    "ParserMqtt",
+    "ParserPredefined",
     "ParserSoilcan",
     "TriggerReparseBase",
     "TriggerReparseResponse",

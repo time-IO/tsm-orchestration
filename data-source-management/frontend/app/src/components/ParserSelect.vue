@@ -9,7 +9,7 @@
     @filter="filterOptions"
     virtual-scroll-item-size="72"
     option-value="id"
-    option-label="name"
+    :option-label="(opt: ParserSelectOption) => parserDisplayName(opt.name, opt.parser_type)"
     label="Select the parser *"
     :rules="[rules.REQUIRED]"
   >
@@ -21,8 +21,9 @@
       <q-item v-bind="scope.itemProps">
         <q-item-section>
           <q-item-label>
-            {{ scope.opt.name }}
+            {{ parserDisplayName(scope.opt.name, scope.opt.parser_type) }}
             <q-icon
+              v-if="!isPredefinedParser(scope.opt)"
               name="launch"
               class="cursor-pointer"
               color="blue-grey-5"
@@ -92,15 +93,13 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import type { ParserSelectOption } from '@/services/types';
 import { useQuasar } from 'quasar';
-import { useCsvParserStore } from '@/stores/parserCsvStore';
-import { useJsonParserStore } from '@/stores/parserJsonStore';
-import { useSoilcanParserStore } from '@/stores/parserSoilcanStore';
 import { useRouter } from 'vue-router';
 import { rules } from '@/utils/validation/rules';
+import { isPredefinedParser, parserDisplayName } from '@/utils/parser_utils';
+import predefinedParserApi from '@/services/parser_predefined';
+import { useParserStoreByType } from '@/composables/useParserStoreByType';
 
-const csvParserStore = useCsvParserStore();
-const jsonParserStore = useJsonParserStore();
-const soilcanParserStore = useSoilcanParserStore();
+const { parserStoresByType } = useParserStoreByType();
 const $q = useQuasar();
 const router = useRouter();
 
@@ -111,25 +110,14 @@ const { preselected_item_id, permission_group_id, parser_type } = defineProps<{
   parser_type?: string | null;
 }>();
 
+const predefinedParsers = ref<ParserSelectOption[]>([]);
 const paginationLoading = ref(false);
 const filteredOptions = ref<ParserSelectOption[]>([]);
 const isFiltering = ref(false);
 
-/**
- * Maps a parser_type string to its corresponding store.
- * Add new parser types here as they are introduced.
- */
-const parserStoresByType: Record<
-  string,
-  typeof csvParserStore | typeof jsonParserStore | typeof soilcanParserStore
-> = {
-  csv: csvParserStore,
-  json: jsonParserStore,
-  soilcan: soilcanParserStore,
-};
-
 const parserRowsOfStore = computed<ParserSelectOption[]>(() => {
   if (!parser_type) return [];
+  if (parser_type === 'predefined') return predefinedParsers.value;
 
   const store = parserStoresByType[parser_type];
   return store ? store.rows.map((row) => ({ ...row, parser_type })) : [];
@@ -153,9 +141,11 @@ async function includeItemIfMissing() {
   if (!isItemMissing) return;
 
   const store = parserStoresByType[parser_type];
-  if (store) {
+  if (store || parser_type === 'predefined') {
     try {
-      const item = await store.dispatchGetOne(preselected_item_id);
+      const item = store
+        ? await store.dispatchGetOne(preselected_item_id)
+        : (await predefinedParserApi.getOne(preselected_item_id)).data;
       filteredOptions.value = [...parserRowsOfStore.value, { ...item, parser_type }];
     } catch {
       $q.notify({
@@ -184,7 +174,9 @@ async function fetchOptions() {
   paginationLoading.value = true;
   try {
     const store = parserStoresByType[parser_type];
-    if (store) {
+    if (parser_type === 'predefined') {
+      predefinedParsers.value = await predefinedParserApi.getAll({ recommended_for: 'file' });
+    } else if (store) {
       store.filters.permission_group_id = permission_group_id;
       store.pagination.rowsPerPage = 250;
       await store.dispatchGetList();
@@ -222,7 +214,7 @@ function filterOptions(val: string, update: (cb: () => void) => void) {
     isFiltering.value = true;
     const needle = val.toLowerCase();
     filteredOptions.value = parserRowsOfStore.value.filter((v) =>
-      v.name.toLowerCase().includes(needle),
+      parserDisplayName(v.name, v.parser_type).toLowerCase().includes(needle),
     );
   });
 }

@@ -42,6 +42,7 @@ class ApiType(str, Enum):
     TSYSTEMS = "tsystems"
     UBA = "uba"
     SENSOTO = "sensoto"
+    ZENTRA = "zentra"
 
     @classmethod
     def from_string(cls, value: str) -> "ApiType":
@@ -65,7 +66,7 @@ class ApiType(str, Enum):
 
 class ParserType(str, Enum):
     CSV = "csv"
-    MQTT = "mqtt"
+    PREDEFINED = "predefined"
     JSON = "json"
     SOILCAN = "soilcan"
 

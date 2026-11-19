@@ -1,0 +1,30 @@
+info:
+  name: internal - Datastreams
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/internal/{{endpointGroup1}}/v1.1/Datastreams?$select=id&$top=1&$count=true"
+  headers:
+    - name: X-Test-User
+      value: user2
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("datastreams of public and internal devices", function () {
+          expect(res.getBody()["@iot.count"]).to.equal(75);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -1,0 +1,31 @@
+info:
+  name: invalid token - ignored
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/public/{{endpointGroup1}}/v1.1"
+  headers:
+    - name: X-Test-User
+      value: invalid
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("public FROST, cacheable, not varying by user", function () {
+          expect(res.getHeader("cache-control")).to.be.undefined;
+          expect(res.getHeader("vary")).to.be.undefined;
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

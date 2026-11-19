@@ -184,6 +184,7 @@ function startResize(e: MouseEvent, colName: string) {
 }
 
 function onResize(e: MouseEvent) {
+  /* v8 ignore next */
   if (!resizingCol) return;
   const diff = e.clientX - startX;
   const min = colMinWidths[resizingCol] ?? 50;

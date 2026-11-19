@@ -119,7 +119,9 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label>Mqtt Parser</q-item-label>
-                    <q-item-label caption>{{ item.parser.name }}</q-item-label>
+                    <q-item-label caption>{{
+                      parserDisplayName(item.parser.name, item.parser.parser_type)
+                    }}</q-item-label>
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -169,6 +171,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
+import { parserDisplayName } from '@/utils/parser_utils';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { IngestMqttPublic } from '@/services/ingest_mqtt/types';

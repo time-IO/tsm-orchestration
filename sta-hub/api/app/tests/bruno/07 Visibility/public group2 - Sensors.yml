@@ -1,0 +1,27 @@
+info:
+  name: public group2 - Sensors
+  type: http
+  seq: 14
+
+http:
+  method: GET
+  url: "{{baseUrl}}/sta/public/{{endpointGroup2}}/v1.1/Sensors?$select=name&$orderby=name"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("only public devices in public configurations", function () {
+          expect(res.getBody().value.map((e) => e.name)).to.deep.equal(["CRS_Static", "Rover_GPS", "Rover_Sensor"]);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
