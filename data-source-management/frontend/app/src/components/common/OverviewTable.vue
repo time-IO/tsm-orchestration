@@ -96,7 +96,7 @@
       </template>
 
       <template v-slot:loading>
-        <q-inner-loading showing color="primary" />
+        <q-inner-loading showing color="primary" :transition-duration="100" />
       </template>
 
       <template v-slot:body="props">
