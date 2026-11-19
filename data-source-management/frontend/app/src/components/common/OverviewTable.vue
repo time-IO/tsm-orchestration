@@ -82,7 +82,10 @@
             :key="col.name"
             :props="props"
             :data-col="col.name"
-            :class="col.name === 'action' ? 'text-center' : 'text-left'"
+            :class="[
+              col.name === 'action' ? 'text-center' : 'text-left',
+              { 'col-highlight': col.name === highlightedCol },
+            ]"
             :style="`width: ${headerWidth(col.name)}; position: relative; user-select: none;`"
           >
             {{ col.label }}
@@ -90,6 +93,8 @@
               v-if="isResizable(col.name)"
               class="col-resize-handle"
               @mousedown="startResize($event, col.name)"
+              @mouseenter="hoveredHandleCol = col.name"
+              @mouseleave="hoveredHandleCol = null"
             />
           </q-th>
         </q-tr>
@@ -108,7 +113,10 @@
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
-            :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
+            :class="[
+              ['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left',
+              { 'col-highlight': col.name === highlightedCol },
+            ]"
           >
             <template v-if="col.name === 'action'">
               <slot name="actions" :row="props.row" :open-delete-dialog="openDeleteDialog" />
@@ -370,8 +378,13 @@ let startX = 0;
 let startWidths: ColumnWidthValues = {};
 let otherCols: string[] = [];
 
+const hoveredHandleCol = ref<string | null>(null);
+const draggedCol = ref<string | null>(null);
+const highlightedCol = computed(() => draggedCol.value ?? hoveredHandleCol.value);
+
 function startResize(e: MouseEvent, colName: string) {
   resizingCol = colName;
+  draggedCol.value = colName;
   startX = e.clientX;
 
   const headerRow = (e.target as HTMLElement).closest('tr');
@@ -412,6 +425,7 @@ function stopResize() {
   };
   document.addEventListener('click', preventSortTrigger, true);
   resizingCol = null;
+  draggedCol.value = null;
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
   sessionStorage.setItem(colWidthsStorageKey, JSON.stringify(colWidths.value));
@@ -514,6 +528,19 @@ thead th {
 .col-resize-handle:hover,
 .col-resize-handle:active {
   border-right: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+.overview-table :deep(thead th),
+.overview-table :deep(tbody td) {
+  transition: background-color 0.3s;
+}
+
+.overview-table :deep(th.col-highlight) {
+  background-color: #f2f2f2;
+}
+
+.overview-table :deep(td.col-highlight) {
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .overview-table .overview-table__selection {
