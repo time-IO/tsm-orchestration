@@ -162,13 +162,33 @@ def test_normal_upload_without_tag_uses_current_parser(setup):
     assert setup.parser.to_observations.call_args.args[2] == CURRENT
 
 
-def test_normal_upload_behaviour_with_old_tag_is_unchanged(setup):
-    """Documents the existing behaviour (parser-tag ticket): the tag only decides
-    the label, the parser object is still the current one."""
+def test_normal_upload_with_tag_uses_the_parser_from_the_tag(setup):
     setup.handler.get_parser_tags.return_value = {"parser_id": OLD}
+    setup.FileParser.from_uuid.return_value = make_pobj(OLD, "json")
 
     setup.handler.act(make_message(), MagicMock())
 
-    setup.FileParser.from_uuid.assert_not_called()
-    assert setup.get_parser.call_args.args[0] == "csv"  # current parser
-    assert setup.parser.to_observations.call_args.args[2] == OLD  # label from tag
+    setup.FileParser.from_uuid.assert_called_once_with(OLD, dsn="dsn")
+    # the parser object is built from the record of the tag, not the current one
+    assert setup.get_parser.call_args.args[0] == "json"
+    # and label and parser agree
+    assert setup.parser.to_observations.call_args.args[2] == OLD
+    setup.handler.set_tags.assert_called_once_with(
+        "bucket", "data.csv", OLD, "successful"
+    )
+
+
+def test_missing_parser_from_the_tag_falls_back_to_current_and_warns(setup):
+    setup.handler.get_parser_tags.return_value = {"parser_id": OLD}
+    setup.FileParser.from_uuid.side_effect = ObjectNotFound("gone")
+
+    setup.handler.act(make_message(), MagicMock())
+
+    assert setup.get_parser.call_args.args[0] == "csv"  # the current parser
+    # label names the parser that was really used, not the missing one
+    assert setup.parser.to_observations.call_args.args[2] == CURRENT
+    setup.handler.set_tags.assert_called_once_with(
+        "bucket", "data.csv", CURRENT, "successful"
+    )
+    setup.journal.warning.assert_called_once()
+    assert OLD in setup.journal.warning.call_args.args[0]
