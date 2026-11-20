@@ -1,12 +1,13 @@
 import { installQuasarPlugin } from '@quasar/quasar-app-extension-testing-unit-vitest';
 import { mount } from '@vue/test-utils';
 import { QBtn } from 'quasar';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 
 import ParserOverviewTable from '@/components/ParserOverviewTable.vue'; // adjust path
 import type { QTableRequestPropPagination } from '@/services/types';
 import { default_parser_columns } from '@/utils/pagination_utils';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -33,15 +34,7 @@ installQuasarPlugin();
 // Renders the scoped "actions" slot once per row, like the real table does
 const OverviewTableStub = defineComponent({
   name: 'OverviewTable',
-  props: [
-    'rows',
-    'loading',
-    'columns',
-    'storageKey',
-    'colMinWidths',
-    'defaultColWidths',
-    'pagination',
-  ],
+  props: ['rows', 'loading', 'columns', 'storageKey', 'columnWidths', 'pagination'],
   emits: ['update:pagination', 'request', 'delete'],
   setup:
     (props, { slots }) =>
@@ -84,23 +77,13 @@ const mountParserOverviewTable = (props: Record<string, unknown> = {}) =>
 const getTable = (w: ReturnType<typeof mountParserOverviewTable>) =>
   w.findComponent(OverviewTableStub);
 
-const setWindowWidth = (width: number) => {
-  Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: width });
-};
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('ParserOverviewTable', () => {
-  const originalWidth = window.innerWidth;
-
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    setWindowWidth(originalWidth);
   });
 
   describe('initialization and props', () => {
@@ -129,24 +112,13 @@ describe('ParserOverviewTable', () => {
 
     it('defines min and default widths for the same columns', () => {
       const w = mountParserOverviewTable();
-      const minKeys = Object.keys(getTable(w).props('colMinWidths') as object).sort();
-      const defaultKeys = Object.keys(getTable(w).props('defaultColWidths') as object).sort();
+      const widths = Object.values(getTable(w).props('columnWidths') as ColumnWidths);
 
-      expect(minKeys.length).toBeGreaterThan(0);
-      expect(defaultKeys).toEqual(minKeys);
-    });
-  });
-
-  describe('default column widths by window size', () => {
-    it.each([
-      ['below 1200px', 1199, { permission_group: 80, name: 80, uuid: 80 }],
-      ['from 1200px', 1200, { permission_group: 150, name: 120, uuid: 120 }],
-    ])('uses the matching widths %s', (_label, width, expected) => {
-      setWindowWidth(width);
-
-      const w = mountParserOverviewTable();
-
-      expect(getTable(w).props('defaultColWidths')).toMatchObject(expected);
+      expect(widths.length).toBeGreaterThan(0);
+      widths.forEach((width) => {
+        expect(width.min).toBeDefined();
+        expect(width.default).toBeDefined();
+      });
     });
   });
 
