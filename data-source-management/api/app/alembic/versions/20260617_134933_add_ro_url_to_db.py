@@ -34,8 +34,7 @@ def upgrade() -> None:
     conn = op.get_bind()
 
     conn.execute(
-        sa.text(
-            """
+        sa.text("""
                 UPDATE database
                 SET read_only_url =
                         'postgresql://' ||
@@ -44,8 +43,7 @@ def upgrade() -> None:
                         :server ||
                         '/' ||
                         :db
-                """
-        ),
+                """),
         {
             "server": server,
             "db": db,

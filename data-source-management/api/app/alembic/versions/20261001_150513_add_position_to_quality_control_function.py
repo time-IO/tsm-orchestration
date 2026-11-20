@@ -25,8 +25,7 @@ def upgrade() -> None:
         "quality_control_function",
         sa.Column("position", sa.Integer(), nullable=False, server_default="0"),
     )
-    op.execute(
-        """
+    op.execute("""
         UPDATE quality_control_function AS qcf
         SET position = sub.rn
         FROM (
@@ -36,8 +35,7 @@ def upgrade() -> None:
             FROM quality_control_function
         ) AS sub
         WHERE qcf.id = sub.id
-        """
-    )
+        """)
     op.alter_column("quality_control_function", "position", server_default=None)
 
 
