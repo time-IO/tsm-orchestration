@@ -8,9 +8,7 @@
     <q-card class="q-pa-lg q-ma-md column no-wrap" style="max-width: 95vw; height: 90vh">
       <div class="q-mb-md">
         <div class="text-h5">Select Datastreams</div>
-        <div class="text-grey">
-          Filter and select Datastreams from SensorThings API
-        </div>
+        <div class="text-grey">Filter and select Datastreams from SensorThings API</div>
       </div>
 
       <div class="col row no-wrap" style="min-height: 0">
