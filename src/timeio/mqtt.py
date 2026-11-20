@@ -28,7 +28,7 @@ logger = logging.getLogger("mqtt-handler")
 class AbstractHandler(ABC):
     def __init__(
         self,
-        topic: str,
+        topic: str | list[str],
         mqtt_broker: str,
         mqtt_user: str,
         mqtt_password: str,
@@ -36,7 +36,7 @@ class AbstractHandler(ABC):
         mqtt_qos: int,
         mqtt_clean_session: bool,
     ):
-        self.topic = topic
+        self.topics = [topic] if isinstance(topic, str) else list(topic)
         self.mqtt_broker = mqtt_broker
         self.mqtt_user = mqtt_user
         self.mqtt_password = mqtt_password
@@ -88,8 +88,9 @@ class AbstractHandler(ABC):
             )
             # Subscribe to topic in on_connect callback
             # to make sure we re-subscribe after a reconnect
-            res, mid = self.mqtt_client.subscribe(self.topic, self.mqtt_qos)
-            self._mid_to_topic[mid] = self.topic
+            for t in self.topics:
+                res, mid = self.mqtt_client.subscribe(t, self.mqtt_qos)
+                self._mid_to_topic[mid] = t
             res, mid = self.mqtt_client.subscribe(self._healthcheck_topic, 0)
             self._mid_to_topic[mid] = self._healthcheck_topic
             return
