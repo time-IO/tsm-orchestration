@@ -10,9 +10,9 @@ import warnings
 from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.errors import UserInputError, ParsingError, ParsingWarning, EmptyDataError
-from timeio.feta import Thing, FileParser
+from timeio.feta import Thing, FileParser, ObjectNotFound
 from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
@@ -28,7 +28,7 @@ class ParserJobHandler(AbstractHandler):
 
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
@@ -60,25 +60,28 @@ class ParserJobHandler(AbstractHandler):
 
         thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.dsmdb_dsn)
         thing_uuid = thing.uuid
-        file_parser = FileParser.from_id(
-            thing.s3_store.file_parser_id, dsn=self.dsmdb_dsn
-        )
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
             return
         tags = self.get_parser_tags(bucket_name, filename)
+        pobj = thing.s3_store.file_parser  # default: current parser of the ingest
         if tags is not None:
-            parser_uuid = tags["parser_id"]
-            logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
-        else:
-            parser_uuid = file_parser.uuid
-            logger.info(f"No parser file tag found, using default parser {parser_uuid}")
+            try:
+                pobj = FileParser.from_uuid(tags["parser_id"], dsn=self.dsmdb_dsn)
+                logger.info(f"Re-parsing file with parser from file tag {pobj.uuid}")
+            except ObjectNotFound:
+                msg = (
+                    f"File {filename!r}: the parser of an earlier version "
+                    f"({tags['parser_id']}) does not exist, using the current parser."
+                )
+                logger.warning(msg)
+                journal.warning(msg, thing_uuid)
+        parser_uuid = pobj.uuid
 
         source_uri = f"{bucket_name}/{filename}"
 
-        pobj = thing.s3_store.file_parser
         parser = get_parser(pobj.file_parser_type.name, pobj.params)
 
         encoding = pobj.params.pop("encoding", None) or "utf-8"
