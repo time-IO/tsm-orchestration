@@ -22,6 +22,7 @@ When adding a changelog entry, ensure the following:
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
+- Permission group of ingests and QC settings can no longer be changed after creation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/826))
 
 
 ## [2026-11-11]
