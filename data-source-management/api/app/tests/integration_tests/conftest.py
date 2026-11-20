@@ -256,7 +256,7 @@ def cleanup_parser(base_data):
                 params={"ids": ids},
             )
             session.exec(
-                text("DELETE FROM parser_mqtt WHERE parser_id = ANY(:ids)"),
+                text("DELETE FROM parser_predefined WHERE parser_id = ANY(:ids)"),
                 params={"ids": ids},
             )
             session.exec(

@@ -30,6 +30,7 @@ from routers import (
     health,
     version,
     parser_mqtt,
+    parser_predefined,
     user,
     sta_proxy,
     trigger_quality_control,
@@ -93,6 +94,7 @@ app.include_router(ingest_sftp_storage.router)
 app.include_router(ingest_external_sftp_storage.router)
 app.include_router(ingest_http_storage.router)
 app.include_router(parser_mqtt.router)
+app.include_router(parser_predefined.router)
 app.include_router(neutron_monitor_station.router)
 app.include_router(permission_group.router)
 app.include_router(quality_control_setting.router)

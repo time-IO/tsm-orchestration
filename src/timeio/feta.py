@@ -548,7 +548,10 @@ class FileParser(Base, FromUUIDMixin):
 
     @property
     def file_parser_type(self) -> FileParserType:
-        return FileParserType(self._attrs["parser_type"])
+        # Fixed parsers resolve by implementation key; configurable parsers
+        # continue to resolve by their settings subtype.
+        parser_type = self._attrs["parser_type"]
+        return FileParserType(self.name if parser_type == "predefined" else parser_type)
 
     @property
     def name(self) -> str:
@@ -562,11 +565,11 @@ class FileParser(Base, FromUUIDMixin):
         query = f"""
                 SELECT
                     CASE
-                        WHEN p.parser_type = 'mqtt' THEN pm."name"
+                        WHEN p.parser_type = 'predefined' THEN pm."name"
                         ELSE pd."name"
                     END AS name
                 FROM {self._schema}."parser" p
-                left join {self._schema}.parser_mqtt pm on pm.parser_id = p.id
+                left join {self._schema}.parser_predefined pm on pm.parser_id = p.id
                 left join {self._schema}.parser_detailed pd on pd.parser_id = p.id 
                 where p.id = %s
             """
@@ -574,8 +577,8 @@ class FileParser(Base, FromUUIDMixin):
         return row["name"]
 
     def _get_params(self) -> dict:
-        if self.file_parser_type == "mqtt":
-            return self._get_mqtt_params()
+        if self._attrs["parser_type"] == "predefined":
+            return {}
         if self.file_parser_type.name == "csv":
             return self._get_csv_params()
         if self.file_parser_type.name == "json":
@@ -610,9 +613,6 @@ class FileParser(Base, FromUUIDMixin):
             return {}
         return {k: v for k, v in row.items() if k != "parser_id"}
 
-    def _get_mqtt_params(self):
-        return {}
-
     def _get_csv_ts_cols(self):
         query = f"""select "column", timestamp_format as "format" from {self._schema}.parser_csv_timestamp_column where parser_csv_id = %s"""
         return self._fetchall(self._conn, query, self.id)
@@ -638,7 +638,7 @@ class MQTT(Base):
 
     def _get_mqtt_device_type(self):
         query = f"""
-            select pm."name" from {self._schema}.parser_mqtt pm
+            select pm."name" from {self._schema}.parser_predefined pm
             join {self._schema}.ingest i on pm.parser_id = i.parser_id
             where i.id = %s
         """

@@ -127,7 +127,7 @@ def test_parser_lookup_passes_superuser_access_scope(
     repo = MagicMock()
     repo.create.return_value = object()
     parser_repo = MagicMock(spec=ParserDetailedRepository)
-    parser_repo.find_one.return_value = SimpleNamespace(permission_group_id=999)
+    parser_repo.find_for_ingest.return_value = SimpleNamespace(permission_group_id=999)
     monkeypatch.setattr(router_module, "publish_frontend_thing_update", MagicMock())
     _patch_generated_values(router_module, monkeypatch)
     payload = SimpleNamespace(parser_id=1, permission_group_id=999)
@@ -139,7 +139,7 @@ def test_parser_lookup_passes_superuser_access_scope(
         parser_repo=parser_repo,
     )
 
-    access_scope = parser_repo.find_one.call_args.kwargs["access_scope"]
+    access_scope = parser_repo.find_for_ingest.call_args.kwargs["access_scope"]
     assert access_scope.is_superuser is True
 
 

@@ -81,10 +81,12 @@ def test_create(client, override_repo, make_ingest_dict, mock_publish_frontend_u
     parser_repo = override_repo(get_repo_parser_detailed)
     repo.create.return_value = object()
     repo.to_flat.return_value = _sftp_dict(make_ingest_dict)
-    parser_repo.find_one.return_value = type("Parser", (), {"permission_group_id": 1})()
+    parser_repo.find_for_ingest.return_value = type(
+        "Parser", (), {"permission_group_id": 1}
+    )()
     mock_publish = mock_publish_frontend_update(ROUTER_MODULE)
 
-    # parser_id included; parser_repo.find_one is mocked above
+    # parser_id included; parser_repo.find_for_ingest is mocked above
     payload = {
         "name": "Test SFTP",
         "permission_group_id": 1,
@@ -112,7 +114,9 @@ def test_create_with_parser_id_checks_permission(
     parser_repo = override_repo(get_repo_parser_detailed)
     repo.create.return_value = object()
     repo.to_flat.return_value = _sftp_dict(make_ingest_dict)
-    parser_repo.find_one.return_value = type("Parser", (), {"permission_group_id": 1})()
+    parser_repo.find_for_ingest.return_value = type(
+        "Parser", (), {"permission_group_id": 1}
+    )()
     mock_publish_frontend_update(ROUTER_MODULE)
 
     payload = {
@@ -128,7 +132,7 @@ def test_create_with_parser_id_checks_permission(
     response = client.post(f"{BASE_PATH}/", json=payload)
 
     assert response.status_code == 200
-    parser_repo.find_one.assert_called_once()
+    parser_repo.find_for_ingest.assert_called_once()
     repo.create.assert_called_once()
 
 
@@ -139,7 +143,7 @@ def test_create_with_parser_id_wrong_permission_group_returns_401(
     payload, the router rejects with 401 before ever calling repo.create()."""
     repo = override_repo(get_repo_ingest_external_sftp)
     parser_repo = override_repo(get_repo_parser_detailed)
-    parser_repo.find_one.return_value = type(
+    parser_repo.find_for_ingest.return_value = type(
         "Parser", (), {"permission_group_id": 999}
     )()
 

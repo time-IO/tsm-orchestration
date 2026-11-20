@@ -7,6 +7,7 @@ import pytest
 from fastapi import HTTPException
 
 import models
+from models import ParserPredefined
 from models.ingest import IngestUpdate
 from models.ingest_external_sftp import IngestExternalSftpUpdate
 from models.ingest_http import IngestHttpUpdate
@@ -51,8 +52,8 @@ def _call_update(router_module, payload_cls, payload, mock_user, monkeypatch):
         ingest=SimpleNamespace(permission_group_id=1)
     )
     parser_repo = MagicMock(spec=ParserDetailedRepository)
-    parser_repo.find_one.return_value = SimpleNamespace(
-        permission_group_id=payload.pop("parser_group", 1)
+    parser_repo.find_for_ingest.return_value = payload.pop(
+        "parser", SimpleNamespace(permission_group_id=1)
     )
     router_module.update(
         id=7,
@@ -69,7 +70,8 @@ def test_update_rejects_parser_from_other_group(
     router_module, payload_cls, mock_user, monkeypatch
 ):
     # payload group matches the parser, but the stored ingest group wins
-    payload = {"parser_id": 3, "parser_group": 2, "permission_group_id": 2}
+    parser = SimpleNamespace(permission_group_id=2)
+    payload = {"parser_id": 3, "parser": parser, "permission_group_id": 2}
 
     with pytest.raises(HTTPException) as exc_info:
         _call_update(router_module, payload_cls, payload, mock_user, monkeypatch)
@@ -98,5 +100,16 @@ def test_update_without_parser_skips_parser_check(
     )
 
     repo.find_one.assert_not_called()
-    parser_repo.find_one.assert_not_called()
+    parser_repo.find_for_ingest.assert_not_called()
+    repo.update.assert_called_once()
+
+
+@pytest.mark.parametrize(("router_module", "payload_cls"), ROUTER_CASES)
+def test_update_accepts_predefined_parser(
+    router_module, payload_cls, mock_user, monkeypatch
+):
+    payload = {"parser_id": 3, "parser": ParserPredefined(parser_id=3, name="x")}
+
+    repo, _ = _call_update(router_module, payload_cls, payload, mock_user, monkeypatch)
+
     repo.update.assert_called_once()
