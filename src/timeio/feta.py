@@ -930,12 +930,12 @@ class Thing(Base, FromNameMixin, FromUUIDMixin):
     name = _prop(lambda self: self._attrs["name"])
     project_id: int = _prop(lambda self: self._attrs["permission_group_id"])
     description: str | None = _prop(lambda self: self._attrs["description"])
-    project: Project = _create(Project, f"select * from {_schema}.permission_group where id = %s", "project_id") #fmt: skip
-    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id", optional=True) # fmt: skip
-    mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    project: Project = _create(Project, f"select * from {_schema}.permission_group where id = %s", "project_id")  # fmt: skip
+    s3_store: S3Store | None = _create(S3Store, f"select * from {_schema}.ingest where id = %s", "id", optional=True)  # fmt: skip
+    mqtt: MQTT | None = _create(MQTT, f"select * from {_schema}.ingest_mqtt where ingest_id = %s", "id", optional=True)  # fmt: skip
     ext_sftp: ExtSFTP | None = _create(ExtSFTP, f"select * from {_schema}.ingest_external_sftp where ingest_id = %s","id", optional=True)  # fmt: skip
     ext_api: ExtAPI | None = _create(ExtAPI, f"select * from {_schema}.ingest_external_api where ingest_id = %s", "id", optional=True)  # fmt: skip
-    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True) # fmt: skip
+    ext_mqtt: ExtMQTT | None = _create(ExtMQTT, f"select * from {_schema}.ingest_external_mqtt where ingest_id = %s", "id", optional=True)  # fmt: skip
     http: HTTP | None = _create(HTTP, f"select * from {_schema}.ingest_http where ingest_id = %s", "id", optional=True)  # fmt: skip
 
     @property
