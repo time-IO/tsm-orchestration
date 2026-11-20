@@ -212,6 +212,7 @@ function updatePaginationAndLoadData(pagination: QuasarPaginationInterface) {
     paginationSta.value.sortBy = pagination.sortBy;
   }
 
+  loading.value = true;
   debouncedLoadData();
 }
 
