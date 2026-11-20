@@ -104,7 +104,6 @@ class QualityControlSettingCreate(QualityControlSettingBase):
 
 
 class QualityControlSettingUpdate(SQLModel):
-    permission_group_id: int | None = None
     name: str | None = None
     description: str | None = None
     context_window: str | None = None

@@ -197,10 +197,10 @@ def test_create_accepts_superuser_permission_group(repository_class):
 
 
 @pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
-def test_update_accepts_superuser_permission_group(repository_class):
+def test_update_passes_superuser_scope_to_find_one(repository_class):
     repo = repository_class(MagicMock())
     repo.find_one = MagicMock(side_effect=StopAfterAuthorization)
-    payload = SimpleNamespace(permission_group_id=999)
+    payload = SimpleNamespace()
     access_scope = AccessScope([], is_superuser=True)
 
     with pytest.raises(StopAfterAuthorization):
@@ -216,16 +216,5 @@ def test_create_keeps_permission_group_check(repository_class):
 
     with pytest.raises(HTTPException) as exc_info:
         repo.create(payload, {}, AccessScope([1]))
-
-    assert exc_info.value.status_code == 403
-
-
-@pytest.mark.parametrize("repository_class", REPOSITORY_CLASSES)
-def test_update_keeps_permission_group_check(repository_class):
-    repo = repository_class(MagicMock())
-    payload = SimpleNamespace(permission_group_id=999)
-
-    with pytest.raises(HTTPException) as exc_info:
-        repo.update(1, payload, AccessScope([1]))
 
     assert exc_info.value.status_code == 403

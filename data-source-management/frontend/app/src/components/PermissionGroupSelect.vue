@@ -13,7 +13,8 @@
     map-options
     clearable
     use-input
-    hint="Select the Permission Group"
+    :disable="disable"
+    :hint="disable ? undefined : 'Permission Group cannot be changed after creation'"
     :rules="rules"
   />
 </template>
@@ -29,10 +30,11 @@ const $q = useQuasar();
 
 const model = defineModel();
 
-const { preselectedItem } = defineProps<{
+const { preselectedItem, disable = false } = defineProps<{
   rules?: Array<(val: unknown) => string | boolean>;
   preselectedItem?: PermissionGroup | null | undefined;
   label?: string;
+  disable?: boolean;
 }>();
 
 // Pagination state

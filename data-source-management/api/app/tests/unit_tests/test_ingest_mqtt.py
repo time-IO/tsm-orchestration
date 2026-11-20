@@ -7,9 +7,8 @@ Differences from the other unit_tests:
   Create schema only accepts parser_id (plus the inherited base
   Ingest fields like name, permission_group_id).
 - update() uses the generic IngestUpdate schema (not a mqtt-specific
-  one) - only base Ingest fields (name, description,
-  permission_group_id, parser_id) can be changed, no mqtt-specific
-  fields.
+  one) - only base Ingest fields (name, description, parser_id) can
+  be changed, no mqtt-specific fields.
 - No parser_repo permission check here (unlike the sftp unit_tests) -
   create() doesn't validate parser_id against permission groups.
 - to_flat() builds a nested "parser" dict in addition to the nested
