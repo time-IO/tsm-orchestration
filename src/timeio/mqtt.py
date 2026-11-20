@@ -28,7 +28,7 @@ logger = logging.getLogger("mqtt-handler")
 class AbstractHandler(ABC):
     def __init__(
         self,
-        topic: str | list[str],
+        topics: list[str],
         mqtt_broker: str,
         mqtt_user: str,
         mqtt_password: str,
@@ -36,7 +36,9 @@ class AbstractHandler(ABC):
         mqtt_qos: int,
         mqtt_clean_session: bool,
     ):
-        self.topics = [topic] if isinstance(topic, str) else list(topic)
+        if not isinstance(topics, list) or not topics or not all(topics):
+            raise ValueError(f"non-empty list of MQTT topics required, got {topics!r}")
+        self.topics = topics
         self.mqtt_broker = mqtt_broker
         self.mqtt_user = mqtt_user
         self.mqtt_password = mqtt_password

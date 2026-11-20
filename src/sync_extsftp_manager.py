@@ -7,7 +7,7 @@ import logging
 from urllib.parse import urlparse
 from paramiko import WarningPolicy
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
 from timeio.remote_fs import MinioFS, SftpFS, sync, FtpFS
 from timeio.feta import Thing
@@ -48,7 +48,7 @@ class SyncExtSftpManager(AbstractHandler):
 
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
