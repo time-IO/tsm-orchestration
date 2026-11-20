@@ -7,6 +7,7 @@
     :column-widths="columnWidths"
     :rows-per-page-options="[10, 25, 50, 100]"
     row-key="@iot.id"
+    binary-state-sort
     selectable
     v-model:pagination="paginationSta"
     v-model:selected="selectedSta"
