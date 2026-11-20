@@ -116,7 +116,7 @@ const columnsSTA: QTableColumn[] = [
     label: 'Description',
     field: (row: StaDatastream) => row.description || '',
     align: 'left',
-    sortable: true,
+    sortable: false,
   },
   { name: 'action', label: '', align: 'center', field: () => '' },
 ];
