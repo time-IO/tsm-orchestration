@@ -133,7 +133,9 @@
             <template v-else>
               <div
                 v-if="col.value !== null && col.value !== undefined && col.value !== ''"
-                :style="colWidths[col.name] ? 'width: 0; min-width: 100%' : ''"
+                :style="
+                  colWidths[col.name] || !isResizable(col.name) ? 'width: 0; min-width: 100%' : ''
+                "
               >
                 <span style="display: inline-flex; align-items: center; max-width: 100%">
                   <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
