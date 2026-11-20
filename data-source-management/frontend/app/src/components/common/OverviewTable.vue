@@ -513,6 +513,10 @@ thead th {
   margin-right: calc(-1em - 4px);
 }
 
+.overview-table :deep(th:has(.col-resize-handle)) {
+  padding-right: 24px;
+}
+
 .col-resize-handle {
   position: absolute;
   right: 0;
