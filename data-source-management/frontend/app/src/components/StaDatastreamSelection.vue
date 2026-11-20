@@ -204,13 +204,8 @@ function updatePaginationAndLoadData(pagination: QuasarPaginationInterface) {
   paginationSta.value.rowsPerPage = pagination.rowsPerPage;
   paginationSta.value.page = pagination.page;
 
-  if (pagination.descending) {
-    paginationSta.value.descending = pagination.descending;
-  }
-
-  if (pagination.sortBy) {
-    paginationSta.value.sortBy = pagination.sortBy;
-  }
+  paginationSta.value.descending = pagination.descending;
+  paginationSta.value.sortBy = pagination.sortBy || '@iot.id';
 
   loading.value = true;
   debouncedLoadData();
