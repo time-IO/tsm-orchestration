@@ -104,7 +104,6 @@ class QualityControlSettingCreate(QualityControlSettingBase):
 
 
 class QualityControlSettingUpdate(SQLModel):
-    # permission group is immutable after creation
     name: str | None = None
     description: str | None = None
     context_window: str | None = None
