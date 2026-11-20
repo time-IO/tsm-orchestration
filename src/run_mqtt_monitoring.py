@@ -12,7 +12,7 @@ import paho.mqtt.client as mqtt
 
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 
 logger = logging.getLogger("run-mqtt-monitoring")
 
@@ -21,7 +21,7 @@ class MqttMonitoringHandler(AbstractHandler):
 
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),

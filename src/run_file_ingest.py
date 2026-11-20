@@ -10,7 +10,7 @@ import warnings
 from minio import Minio, S3Error
 from minio.commonconfig import Tags
 
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.errors import UserInputError, ParsingError, ParsingWarning, EmptyDataError
 from timeio.feta import Thing, FileParser, ObjectNotFound
 from timeio.journaling import Journal
@@ -28,7 +28,7 @@ class ParserJobHandler(AbstractHandler):
 
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
