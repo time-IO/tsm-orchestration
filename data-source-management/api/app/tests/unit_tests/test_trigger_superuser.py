@@ -14,12 +14,15 @@ from routers import (
     trigger_ext_sftp,
     trigger_quality_control,
 )
+from services import sta_proxy as sta_proxy_service_module
 from services import trigger_ext_api as trigger_ext_api_service_module
 from services import trigger_ext_sftp as trigger_ext_sftp_service_module
 from services import trigger_quality_control as trigger_quality_control_service_module
 
 
 class FakeStaResponse:
+    is_error = False
+
     def json(self):
         return {"ok": True}
 
@@ -31,7 +34,7 @@ class FakeAsyncClient:
     async def __aexit__(self, exc_type, exc_value, traceback):
         return None
 
-    async def get(self, url):
+    async def get(self, url, headers=None):
         return FakeStaResponse()
 
 
@@ -39,7 +42,7 @@ def test_sta_proxy_allows_superuser_outside_permission_group(monkeypatch):
     user = SimpleNamespace(permission_group_ids=[], is_superuser=True)
     repo = MagicMock()
     repo.find_one_permission_group_id.return_value = SimpleNamespace(username="test")
-    monkeypatch.setattr(sta_proxy.httpx, "AsyncClient", FakeAsyncClient)
+    monkeypatch.setattr(sta_proxy_service_module, "AsyncClient", FakeAsyncClient)
 
     result = asyncio.run(
         sta_proxy.redirect_query(
@@ -47,6 +50,7 @@ def test_sta_proxy_allows_superuser_outside_permission_group(monkeypatch):
             q="/Things",
             repo=repo,
             current_user=user,
+            credentials=SimpleNamespace(credentials="token"),
         )
     )
 
@@ -64,6 +68,7 @@ def test_sta_proxy_keeps_normal_user_permission_check():
                 q="/Things",
                 repo=MagicMock(),
                 current_user=user,
+                credentials=SimpleNamespace(credentials="token"),
             )
         )
 
