@@ -22,7 +22,7 @@ When adding a changelog entry, ensure the following:
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
-
+- Workers based on `AbstractHandler` can subscribe to several MQTT topics; a single topic works as before ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/825))
 
 ## [2026-11-11]
 
