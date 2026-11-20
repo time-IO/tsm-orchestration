@@ -26,10 +26,12 @@ def nm_station(base_data):
     station_id_str = f"test-station-{station_uuid}"
     with Session(engine) as session:
         session.exec(
-            text("""
+            text(
+                """
                 INSERT INTO neutron_monitor_station (station_id, description)
                 VALUES (:station_id, 'Test Station')
-            """),
+            """
+            ),
             params={"station_id": station_id_str},
         )
         session.commit()

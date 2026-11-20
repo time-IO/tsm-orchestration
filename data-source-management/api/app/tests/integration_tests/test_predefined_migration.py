@@ -23,10 +23,14 @@ def test_predefined_migration_preserves_records_and_references():
     with engine.begin() as conn:
         conn.execute(sa.text(f'CREATE SCHEMA "{schema}"'))
         conn.execute(sa.text(f'SET LOCAL search_path TO "{schema}"'))
-        conn.execute(sa.text("""CREATE TABLE parser (
+        conn.execute(
+            sa.text(
+                """CREATE TABLE parser (
             id SERIAL PRIMARY KEY, uuid UUID NOT NULL UNIQUE, parser_type TEXT NOT NULL,
             CONSTRAINT ck_parser_type CHECK (parser_type IN ('csv','json','mqtt','soilcan'))
-        )"""))
+        )"""
+            )
+        )
         conn.execute(
             sa.text(
                 "CREATE TABLE parser_mqtt (parser_id INTEGER PRIMARY KEY REFERENCES parser(id), name TEXT NOT NULL)"

@@ -19,9 +19,11 @@ class PublishAllThings:
         with self.db.connection() as conn:
             try:
                 with conn.cursor() as cursor:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         Select uuid::TEXT from dsm_db.ingest;
-                        """)
+                        """
+                    )
                     logger.info(f"Fetching uuids of all stored things")
                     self.things_uuids = [row[0] for row in cursor.fetchall()]
 
