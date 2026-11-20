@@ -3,6 +3,13 @@ import type { StaDatastreamRequestParameter } from '@/services/sta/types';
 
 const apiPath = '/sta/';
 
+const ORDER_BY_PATHS: Record<string, string> = {
+  // name sorting matches the name part of the stamplate pattern
+  name: 'substring(substring(substring(name, length(Thing/name)), length(Sensor/name)), 2)',
+  thing: 'Thing/name',
+  sensor: 'Sensor/name',
+};
+
 async function fetchDatastreams(
   permission_group_id: number,
   parameter: StaDatastreamRequestParameter,
@@ -39,7 +46,9 @@ async function fetchDatastreams(
 
   if (filterParts.length) query += `&$filter=${filterParts.join(' and ')}`;
 
-  if (sortBy) query += `&$orderby=${sortBy} ${descending ? 'desc' : 'asc'}`;
+  if (sortBy) {
+    query += `&$orderby=${ORDER_BY_PATHS[sortBy] ?? sortBy} ${descending ? 'desc' : 'asc'}`;
+  }
 
   const url = `${apiPath}?permission_group_id=${permission_group_id}&q=${encodeURIComponent(query)}`;
 

@@ -1,6 +1,8 @@
 <template>
-  <div>
-    <div class="row justify-end q-mb-sm">
+  <div :class="{ 'column no-wrap overview-table--fill': virtualScroll }">
+    <div class="row no-wrap items-center q-mb-sm" style="gap: 8px">
+      <slot name="toolbar" />
+      <q-space />
       <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
           <q-list style="min-width: 180px">
@@ -44,20 +46,35 @@
       :columns="columns"
       :visible-columns="visibleColumns"
       :loading="loading"
-      row-key="id"
+      :row-key="rowKey"
       flat
       bordered
+      :dense="dense"
+      :table-style="tableStyle"
+      :virtual-scroll="virtualScroll"
+      :virtual-scroll-sticky-size-start="dense ? 33 : 48"
+      :style="{ '--overview-table-min-width': `${minTableWidth}px` }"
       v-model:pagination="pagination"
+      :rows-per-page-options="rowsPerPageOptions"
       @request="onRequest"
       :selection="selectable ? 'multiple' : 'none'"
       v-model:selected="selected"
-      :class="{ 'overview-table--selectable': selectable }"
+      :class="[
+        'overview-table',
+        {
+          'overview-table--virtual col': virtualScroll,
+        },
+      ]"
       v-bind="$attrs"
     >
       <template v-slot:header="props">
         <q-tr :props="props">
-          <q-th v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" />
+          <q-th
+            v-if="selectable"
+            class="overview-table__selection"
+            :style="`width: ${selectionColumnWidth}px`"
+          >
+            <q-checkbox v-model="props.selected" :dense="dense" />
           </q-th>
 
           <q-th
@@ -65,29 +82,43 @@
             :key="col.name"
             :props="props"
             :data-col="col.name"
-            :class="col.name === 'action' ? 'text-center' : 'text-left'"
-            :style="`width: ${colWidths[col.name] ? colWidths[col.name] + 'px' : 'auto'}; position: relative; user-select: none;`"
+            :class="[
+              col.name === 'action' ? 'text-center' : 'text-left',
+              { 'col-highlight': col.name === highlightedCol },
+            ]"
+            :style="`width: ${headerWidth(col.name)}; user-select: none;`"
           >
-            {{ col.label }}
-            <span class="col-resize-handle" @mousedown="startResize($event, col.name)" />
+            <span class="overview-table__label" :title="col.label">{{ col.label }}</span>
+            <span
+              v-if="isResizable(col.name)"
+              class="col-resize-handle"
+              @mousedown="startResize($event, col.name)"
+              @mouseenter="hoveredHandleCol = col.name"
+              @mouseleave="hoveredHandleCol = null"
+            >
+              <q-icon name="drag_indicator" size="16px" />
+            </span>
           </q-th>
         </q-tr>
       </template>
 
       <template v-slot:loading>
-        <q-inner-loading showing color="primary" />
+        <q-inner-loading showing color="primary" :transition-duration="100" />
       </template>
 
       <template v-slot:body="props">
         <q-tr :props="props" :class="{ 'row-highlight': props.row.id === idToDelete }">
-          <q-td v-if="selectable" auto-width>
-            <q-checkbox v-model="props.selected" />
+          <q-td v-if="selectable" class="overview-table__selection">
+            <q-checkbox v-model="props.selected" :dense="dense" />
           </q-td>
           <q-td
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
-            :class="['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left'"
+            :class="[
+              ['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left',
+              { 'col-highlight': col.name === highlightedCol },
+            ]"
           >
             <template v-if="col.name === 'action'">
               <slot name="actions" :row="props.row" :open-delete-dialog="openDeleteDialog" />
@@ -102,7 +133,9 @@
             <template v-else>
               <div
                 v-if="col.value !== null && col.value !== undefined && col.value !== ''"
-                :style="colWidths[col.name] ? 'width: 0; min-width: 100%' : ''"
+                :style="
+                  colWidths[col.name] || !isResizable(col.name) ? 'width: 0; min-width: 100%' : ''
+                "
               >
                 <span style="display: inline-flex; align-items: center; max-width: 100%">
                   <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
@@ -149,28 +182,47 @@
 </template>
 
 <script setup lang="ts" generic="Row">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { copyToClipboard, useQuasar } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
+import {
+  fitColumnWidths,
+  fixedWidthOf,
+  flexibleColumnOf,
+  isColumnResizable,
+  minTableWidthOf,
+  resizeColumn,
+  toPixelWidths,
+  type ColumnWidths,
+  type ColumnWidthValues,
+} from '@/utils/overview_table_utils';
 
 const {
   rows,
   loading,
   columns,
   storageKey,
-  colMinWidths,
-  defaultColWidths,
+  columnWidths,
   selectable = false,
+  dense = false,
+  virtualScroll = false,
+  tableStyle = '',
+  rowKey = 'id',
+  rowsPerPageOptions = [10, 25, 50, 100, 200],
 } = defineProps<{
   rows: Row[];
   loading: boolean;
   columns: QTableColumn[];
   // prefix of the sessionStorage keys for column widths and visibility
   storageKey: string;
-  colMinWidths: Record<string, number>;
-  defaultColWidths: Record<string, number>;
+  columnWidths: ColumnWidths;
   selectable?: boolean;
+  dense?: boolean;
+  virtualScroll?: boolean;
+  tableStyle?: string;
+  rowsPerPageOptions?: number[];
+  rowKey?: string;
 }>();
 
 const pagination = defineModel<QTableRequestPropPagination | undefined>('pagination');
@@ -186,10 +238,21 @@ const tableRef = ref();
 const deleteDialog = ref(false);
 const idToDelete = ref<number | null>(null);
 
+let resizeObserver: ResizeObserver | null = null;
+
 onMounted(() => {
   // get initial data from server (1st page)
   tableRef.value.requestServerInteraction();
+
+  fitToContainer();
+  const container = tableRef.value.$el.querySelector('.q-table__middle');
+  if (container && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => fitToContainer());
+    resizeObserver.observe(container);
+  }
 });
+
+onBeforeUnmount(() => resizeObserver?.disconnect());
 
 function onRequest(props: QTableRequestProp) {
   emit('request', props);
@@ -237,33 +300,88 @@ const visibleColumnsStorageKey = `${storageKey}-visible-columns`;
 // loading the 'Usersettings'
 const savedColWidths = sessionStorage.getItem(colWidthsStorageKey);
 // handover the setting
-const colWidths = ref<Record<string, number>>(
+const colWidths = ref<ColumnWidthValues>(
   savedColWidths
     ? Object.fromEntries(
         Object.entries(JSON.parse(savedColWidths)).map(([key, value]) => [key, Number(value)]),
       )
-    : { ...defaultColWidths },
+    : {},
 );
 
-const minWidthOf = (colName: string) => colMinWidths[colName] ?? 50;
+const pixelWidths = ref<ColumnWidths>({});
+
+// fixed width for checkbox column
+const selectionColumnWidth = computed(() => (dense ? 48 : 64));
+
+const visibleColumnNames = computed(() =>
+  columns.map((c) => c.name).filter((name) => visibleColumns.value.includes(name)),
+);
+
+const isResizable = (colName: string) => isColumnResizable(pixelWidths.value, colName);
+
+const flexibleColumn = computed(() =>
+  flexibleColumnOf(pixelWidths.value, visibleColumnNames.value),
+);
+
+function headerWidth(colName: string): string {
+  if (!isResizable(colName)) return `${fixedWidthOf(pixelWidths.value, colName)}px`;
+  if (colName === flexibleColumn.value) return 'auto';
+  return colWidths.value[colName] ? `${colWidths.value[colName]}px` : 'auto';
+}
+
+const minTableWidth = computed(() =>
+  minTableWidthOf(
+    pixelWidths.value,
+    colWidths.value,
+    visibleColumnNames.value,
+    flexibleColumn.value,
+    selectable ? selectionColumnWidth.value : 0,
+  ),
+);
+
+let lastFit = { width: 0, columns: '' };
+
+// converts the relative widths to pixels and fits the visible columns into the table
+function fitToContainer() {
+  const container = tableRef.value?.$el.querySelector('.q-table__middle');
+  const available = (container?.clientWidth ?? 0) - (selectable ? selectionColumnWidth.value : 0);
+  const columnsKey = visibleColumnNames.value.join();
+  if (available <= 0 || resizingCol) return;
+  if (available === lastFit.width && columnsKey === lastFit.columns) return;
+  lastFit = { width: available, columns: columnsKey };
+
+  pixelWidths.value = toPixelWidths(columnWidths, visibleColumnNames.value, available);
+  colWidths.value = fitColumnWidths(
+    pixelWidths.value,
+    colWidths.value,
+    visibleColumnNames.value,
+    available,
+  );
+}
 
 // functions for setting a new col-widths per mousemove
 let resizingCol: string | null = null;
 let startX = 0;
-let startWidths: Record<string, number> = {};
+let startWidths: ColumnWidthValues = {};
 let otherCols: string[] = [];
+
+const hoveredHandleCol = ref<string | null>(null);
+const draggedCol = ref<string | null>(null);
+const highlightedCol = computed(() => draggedCol.value ?? hoveredHandleCol.value);
 
 function startResize(e: MouseEvent, colName: string) {
   resizingCol = colName;
+  draggedCol.value = colName;
   startX = e.clientX;
 
   const headerRow = (e.target as HTMLElement).closest('tr');
   const ths = headerRow ? Array.from(headerRow.querySelectorAll<HTMLElement>('th[data-col]')) : [];
-  ths.forEach((th) => {
-    colWidths.value[th.dataset.col!] = th.getBoundingClientRect().width;
+  const resizableThs = ths.filter((th) => isResizable(th.dataset.col!));
+  resizableThs.forEach((th) => {
+    colWidths.value[th.dataset.col!] = Math.floor(th.getBoundingClientRect().width);
   });
   startWidths = { ...colWidths.value };
-  otherCols = ths.map((th) => th.dataset.col!).filter((c) => c !== colName);
+  otherCols = resizableThs.map((th) => th.dataset.col!).filter((c) => c !== colName);
 
   document.addEventListener('mousemove', onResize);
   document.addEventListener('mouseup', stopResize);
@@ -271,18 +389,13 @@ function startResize(e: MouseEvent, colName: string) {
 
 function onResize(e: MouseEvent) {
   if (!resizingCol) return;
-  const diff = e.clientX - startX;
-  colWidths.value = { ...startWidths };
-  const startWidth = startWidths[resizingCol] ?? 100;
-  const newWidth = Math.max(minWidthOf(resizingCol), startWidth + diff);
-  colWidths.value[resizingCol] = newWidth;
-
-  const widthDelta = newWidth - startWidth;
-  if (widthDelta > 0) {
-    reclaimWidth(widthDelta, otherCols);
-  } else {
-    distributeWidth(Math.abs(widthDelta), otherCols);
-  }
+  colWidths.value = resizeColumn(
+    pixelWidths.value,
+    startWidths,
+    resizingCol,
+    otherCols,
+    e.clientX - startX,
+  );
 }
 
 function stopResize() {
@@ -292,6 +405,7 @@ function stopResize() {
   };
   document.addEventListener('click', preventSortTrigger, true);
   resizingCol = null;
+  draggedCol.value = null;
   document.removeEventListener('mousemove', onResize);
   document.removeEventListener('mouseup', stopResize);
   sessionStorage.setItem(colWidthsStorageKey, JSON.stringify(colWidths.value));
@@ -309,48 +423,14 @@ const visibleColumns = ref<string[]>(
   savedColumns ? JSON.parse(savedColumns) : columns.map((c) => c.name),
 );
 
-const sumWidths = (colNames: string[]) =>
-  colNames.reduce((sum, c) => sum + (colWidths.value[c] ?? 0), 0);
-
-const withWidth = (colNames: string[]) => colNames.filter((c) => colWidths.value[c] !== undefined);
-
-function distributeWidth(amount: number, receivers: string[]) {
-  const targets = withWidth(receivers);
-  if (amount <= 0 || targets.length === 0) return;
-  const share = amount / targets.length;
-  targets.forEach((c) => {
-    if (!colWidths.value[c]) {
-      return;
-    }
-    colWidths.value[c] += share;
-  });
-}
-
-// looping through remaining cols and remaining with to evenly distribute space
-function reclaimWidth(amount: number, donors: string[]) {
-  let remaining = amount;
-  const hasBuffer = (c: string) => colWidths.value[c]! > minWidthOf(c) + 0.5;
-  let candidates = withWidth(donors).filter(hasBuffer);
-  while (remaining > 0.5 && candidates.length > 0) {
-    const share = remaining / candidates.length;
-    for (const c of candidates) {
-      const take = Math.min(share, colWidths.value[c]! - minWidthOf(c));
-      colWidths.value[c] = colWidths.value[c]! - take;
-      remaining -= take;
-    }
-    candidates = candidates.filter(hasBuffer);
-  }
-}
-
 function setVisibleColumns(newVisibleColumns: string[]) {
-  const hidden = visibleColumns.value.filter((c) => !newVisibleColumns.includes(c));
-  const shown = newVisibleColumns.filter((c) => !visibleColumns.value.includes(c));
-  const remaining = visibleColumns.value.filter((c) => newVisibleColumns.includes(c));
-
-  distributeWidth(sumWidths(hidden), remaining);
-  reclaimWidth(sumWidths(shown), remaining);
+  // shown columns start again with their default width
+  newVisibleColumns
+    .filter((c) => !visibleColumns.value.includes(c))
+    .forEach((c) => delete colWidths.value[c]);
 
   visibleColumns.value = newVisibleColumns;
+  fitToContainer();
   sessionStorage.setItem(visibleColumnsStorageKey, JSON.stringify(visibleColumns.value));
   sessionStorage.setItem(colWidthsStorageKey, JSON.stringify(colWidths.value));
 }
@@ -382,31 +462,96 @@ thead th {
 }
 </style>
 <style scoped>
+.overview-table :deep(table.q-table) {
+  min-width: var(--overview-table-min-width);
+}
+
+.overview-table--fill {
+  height: 100%;
+}
+
+.overview-table--virtual {
+  min-height: 0;
+}
+
+.overview-table--virtual :deep(.q-table__middle) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.overview-table :deep(thead th) {
+  position: relative;
+}
+
+.overview-table--virtual :deep(thead tr th) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #fff;
+}
+
 .row-highlight {
   background-color: rgba(255, 0, 0, 0.1);
+}
+
+.overview-table__label {
+  display: inline-block;
+  width: 0;
+  min-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.overview-table :deep(th.sortable) .overview-table__label {
+  min-width: calc(100% - 20px);
+}
+
+.overview-table :deep(th .q-table__sort-icon--left),
+.overview-table :deep(th .q-table__sort-icon--center) {
+  margin-right: calc(-1em - 4px);
+}
+
+.overview-table :deep(th:has(.col-resize-handle)) {
+  padding-right: 24px;
 }
 
 .col-resize-handle {
   position: absolute;
   right: 0;
-  top: 15%;
-  bottom: 15%;
-  width: 8px;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: col-resize;
-  background: transparent;
-  border-right: 2px solid rgba(0, 0, 0, 0.15);
-  transition: border-color 0.15s;
+  color: rgba(0, 0, 0, 0.25);
+  transition: color 0.15s;
 }
 
 .col-resize-handle:hover,
 .col-resize-handle:active {
-  border-right: 2px solid rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.6);
 }
 
-.overview-table--selectable .q-table th:first-child,
-.overview-table--selectable .q-table td:first-child {
-  padding-left: 0;
-  padding-right: 0;
+.overview-table :deep(thead th),
+.overview-table :deep(tbody td) {
+  transition: background-color 0.3s;
+}
+
+.overview-table :deep(th.col-highlight) {
+  background-color: #f2f2f2;
+}
+
+.overview-table :deep(td.col-highlight) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.overview-table .overview-table__selection {
+  padding-left: 12px;
+  padding-right: 12px;
   text-align: center;
   vertical-align: middle;
 }

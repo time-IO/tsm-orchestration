@@ -28,20 +28,12 @@ export interface StaDatastreamRequestParameter {
 }
 
 export interface QuasarPaginationInterface {
-  sortBy?: string;
-  descending?: boolean;
+  sortBy: string;
+  descending: boolean;
   page: number;
   rowsPerPage: number;
   rowsNumber: number;
   pages: number;
-}
-export interface QuasarTableOnRequestInterface {
-  sortBy?: string;
-  descending?: boolean;
-  page?: number;
-  rowsPerPage?: number;
-  rowsNumber?: number;
-  pages?: number;
 }
 
 export interface TemporaryDatastream extends BaseDatastream {
