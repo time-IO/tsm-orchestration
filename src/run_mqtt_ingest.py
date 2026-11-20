@@ -9,7 +9,7 @@ import typing
 from paho.mqtt.client import MQTTMessage
 
 from timeio.mqtt import AbstractHandler
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.errors import ParsingError, ProcessingError, UserInputError
 from timeio.journaling import Journal
 from timeio.databases import DBapi
@@ -23,7 +23,7 @@ journal = Journal("Parser")
 class ParseMqttDataHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),

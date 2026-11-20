@@ -88,6 +88,17 @@ def get_envvar_as_bool(
     return val.lower() not in false_list
 
 
+def get_envvar_as_list(name, default: Any = no_default, sep: str = ",") -> list[str]:
+    """
+    Return the environment variable split at 'sep', with items stripped
+    and empty items dropped, e.g. "a/b, c/d," -> ["a/b", "c/d"].
+    """
+    val = get_envvar(name, default=default, cast_None=False)
+    if val is default:
+        return default
+    return [item.strip() for item in val.split(sep) if item.strip()]
+
+
 def log_query(logger: logging.Logger, query: str, params: Any = no_default):
     """
     Log a string(!) query.

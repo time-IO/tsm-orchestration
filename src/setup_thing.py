@@ -4,7 +4,7 @@ import logging
 import click
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.journaling import Journal
 from timeio.typehints import MqttPayload
 
@@ -40,7 +40,7 @@ class SetupThingHandler(AbstractHandler):
             actions: List of action names to execute (in order)
         """
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),

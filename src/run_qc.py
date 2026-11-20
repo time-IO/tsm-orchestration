@@ -10,7 +10,7 @@ import pandas as pd
 from paho.mqtt.client import MQTTMessage
 
 from timeio import feta
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.databases import Database, DBapi
 from timeio.errors import (
     ParsingError,
@@ -31,7 +31,7 @@ journal = Journal("QualityControl")
 class QcHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),

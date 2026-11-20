@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from timeio.grafana.api import TimeioGrafanaApi
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.crypto import decrypt, get_crypt_key
 from timeio.typehints import MqttPayload
 from typing import TypedDict, Any
@@ -17,7 +17,7 @@ logger = logging.getLogger("grafana-dashboard-setup")
 class CreateThingInGrafanaHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
