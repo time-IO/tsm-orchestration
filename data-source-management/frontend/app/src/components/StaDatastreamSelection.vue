@@ -9,7 +9,7 @@
       <div class="q-mb-md">
         <div class="text-h5">Select Datastreams</div>
         <div class="text-grey">
-          Filter and select Datastreams from SensorThings API or create new ones
+          Filter and select Datastreams from SensorThings API
         </div>
       </div>
 
