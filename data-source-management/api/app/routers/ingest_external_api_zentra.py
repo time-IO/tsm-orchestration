@@ -98,7 +98,6 @@ def create(
     "/{id}",
     response_model=IngestExternalApiZentraRead,
     summary=f"Update one {entity_name}",
-    dependencies=[Depends(create_database_if_not_exists)],
 )
 def update(
     *,

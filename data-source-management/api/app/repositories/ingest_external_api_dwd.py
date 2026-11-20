@@ -135,11 +135,6 @@ class IngestExternalApiDwdRepository:
         access_scope: AccessScope,
     ) -> IngestExternalApiDwd:
 
-        if payload.permission_group_id is not None:
-            RepositoryValidator.check_payload_access_scope(
-                payload.permission_group_id, access_scope
-            )
-
         entity = self.find_one(ingest_id, access_scope=access_scope)
 
         ingest = entity.external_api.ingest
@@ -159,7 +154,7 @@ class IngestExternalApiDwdRepository:
                 {
                     k: v
                     for k, v in data.items()
-                    if k in {"name", "description", "permission_group_id", "parser_id"}
+                    if k in {"name", "description", "parser_id"}
                 }
             )
 
@@ -179,7 +174,6 @@ class IngestExternalApiDwdRepository:
                     not in {
                         "name",
                         "description",
-                        "permission_group_id",
                         "parser_id",
                         "sync_enabled",
                         "sync_interval_in_minutes",
