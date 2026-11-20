@@ -48,7 +48,6 @@ class IngestCreate(SQLModel):
 class IngestUpdate(SQLModel):
     name: Optional[str] = None
     description: Optional[str] = None
-    permission_group_id: Optional[int] = None
     parser_id: Optional[int] = None
 
 

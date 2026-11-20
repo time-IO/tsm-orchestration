@@ -93,6 +93,33 @@ def test_create_and_update(client, base_data):
     assert response.json()["is_active"] is True
 
 
+def _use_both_groups(base_data, other_group_data):
+    with Session(engine) as s:
+        user = s.get(User, base_data["user_id"])
+        proxy = UserProxy(
+            user,
+            [base_data["permission_group_id"], other_group_data["permission_group_id"]],
+        )
+    app.dependency_overrides[get_current_user] = lambda: proxy
+
+
+def test_update_ignores_permission_group_change(client, base_data, other_group_data):
+    response = client.post(f"{BASE_PATH}/", json=_qc_payload(base_data))
+    assert response.status_code == 200
+    qc_id = response.json()["id"]
+    _use_both_groups(base_data, other_group_data)
+
+    response = client.patch(
+        f"{BASE_PATH}/{qc_id}",
+        json={"permission_group_id": other_group_data["permission_group_id"]},
+    )
+    assert response.status_code == 200
+    assert response.json()["permission_group_id"] == base_data["permission_group_id"]
+
+    response = client.get(f"{BASE_PATH}/{qc_id}")
+    assert response.json()["permission_group_id"] == base_data["permission_group_id"]
+
+
 def test_create_and_delete(client, base_data):
     payload = _qc_payload(base_data, name="QC Setting To Delete")
     response = client.post(f"{BASE_PATH}/", json=payload)

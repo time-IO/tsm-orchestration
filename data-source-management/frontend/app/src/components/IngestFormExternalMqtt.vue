@@ -29,6 +29,7 @@
 
           <permission-group-select
             v-model="formData.permission_group_id"
+            :disable="disablePermissionGroup"
             :preselected-item="itemPermissionGroup"
             :rules="[(val: unknown) => !!val || 'Permission Group is required']"
           />
@@ -237,6 +238,7 @@ defineProps<{
   isLoading: boolean;
   backRoute: string;
   itemPermissionGroup?: PermissionGroup | null;
+  disablePermissionGroup?: boolean;
   itemParserId?: number | null | undefined;
 }>();
 

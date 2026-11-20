@@ -112,11 +112,6 @@ class IngestMqttRepository:
         access_scope: AccessScope,
     ) -> IngestMqtt:
 
-        if payload.permission_group_id is not None:
-            RepositoryValidator.check_payload_access_scope(
-                payload.permission_group_id, access_scope
-            )
-
         entity = self.find_one(ingest_id, access_scope=access_scope)
 
         ingest = entity.ingest
@@ -134,7 +129,7 @@ class IngestMqttRepository:
                 {
                     k: v
                     for k, v in data.items()
-                    if k in {"name", "description", "permission_group_id", "parser_id"}
+                    if k in {"name", "description", "parser_id"}
                 }
             )
 

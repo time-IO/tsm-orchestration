@@ -391,11 +391,6 @@ class QualityControlSettingRepository(BaseRepository):
         access_scope: AccessScope,
         ingest_type_info=None,
     ):
-        if payload.permission_group_id is not None:
-            RepositoryValidator.check_payload_access_scope(
-                payload.permission_group_id, access_scope
-            )
-
         try:
             update_payload = payload.model_dump(
                 exclude_unset=True, exclude={"quality_control_functions"}

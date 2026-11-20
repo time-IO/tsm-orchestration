@@ -6,6 +6,7 @@
     v-model="formData"
     @save="save"
     :item-permission-group="itemPermissionGroup"
+    disable-permission-group
     :item-parser="itemParser"
     :item-parser-id="formData.parser_id"
     :item-parser-type="itemParserType"
