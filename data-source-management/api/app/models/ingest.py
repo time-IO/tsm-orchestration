@@ -46,9 +46,9 @@ class IngestCreate(SQLModel):
 
 
 class IngestUpdate(SQLModel):
+    # permission group is immutable after creation
     name: Optional[str] = None
     description: Optional[str] = None
-    permission_group_id: Optional[int] = None
     parser_id: Optional[int] = None
 
 

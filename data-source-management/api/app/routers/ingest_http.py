@@ -114,7 +114,6 @@ def create(
     "/{id}",
     response_model=IngestHttpRead,
     summary=f"Update one {entity_name}",
-    dependencies=[Depends(create_database_if_not_exists)],
 )
 def update(
     *,
@@ -125,10 +124,10 @@ def update(
     parser_repo: ParserDetailedRepository = Depends(get_repo_parser_detailed),
 ):
     if payload.parser_id:
-        parser = parser_repo.find_one(
-            payload.parser_id, access_scope=AccessScope.from_user(current_user)
-        )
-        if not parser or parser.permission_group_id != payload.permission_group_id:
+        access_scope = AccessScope.from_user(current_user)
+        ingest = repo.find_one(id, access_scope=access_scope).ingest
+        parser = parser_repo.find_one(payload.parser_id, access_scope=access_scope)
+        if not parser or parser.permission_group_id != ingest.permission_group_id:
             raise HTTPException(status_code=401, detail="Not allowed to use parser")
 
     entity = repo.update(id, payload, access_scope=AccessScope.from_user(current_user))

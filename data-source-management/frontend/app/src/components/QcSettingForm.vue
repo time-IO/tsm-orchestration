@@ -21,6 +21,7 @@
           <!-- Permission Group Field -->
           <permission-group-select
             v-model="formData.permission_group_id"
+            :disable="disablePermissionGroup"
             :preselected-item="itemPermissionGroup"
             :rules="[rules.REQUIRED]"
             class="q-mb-md"
@@ -227,6 +228,7 @@ defineProps<{
   title: string;
   backUrl: string;
   itemPermissionGroup?: PermissionGroup | null;
+  disablePermissionGroup?: boolean;
 }>();
 
 const emit = defineEmits(['save']);
