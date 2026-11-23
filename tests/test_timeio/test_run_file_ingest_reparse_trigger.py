@@ -50,8 +50,15 @@ def mocks():
 
 
 def test_message_on_the_reparse_topic_starts_reparsing(handler, mocks):
-    handler.act({"version": 1, "thing": "thing-uuid", "include_parsed": False,
-                 "parsed_files_parser": "current"}, trigger_message())
+    handler.act(
+        {
+            "version": 1,
+            "thing": "thing-uuid",
+            "include_parsed": False,
+            "parsed_files_parser": "current",
+        },
+        trigger_message(),
+    )
 
     mocks.reparse_files.assert_called_once()
 
@@ -59,7 +66,9 @@ def test_message_on_the_reparse_topic_starts_reparsing(handler, mocks):
 def test_message_on_another_topic_is_not_a_reparse_trigger(handler, mocks):
     handler.is_valid_event = MagicMock(return_value=False)
 
-    handler.act({"EventName": "x"}, trigger_message("object_storage_notification_triggered"))
+    handler.act(
+        {"EventName": "x"}, trigger_message("object_storage_notification_triggered")
+    )
 
     mocks.Thing.from_uuid.assert_not_called()
     mocks.reparse_files.assert_not_called()
