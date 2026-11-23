@@ -68,7 +68,7 @@
             v-model.number="formData.period_in_minutes"
             label="Period (in minutes) *"
             type="number"
-            hint="Determines the time window fetched per sync. Set it somewhat larger than the sync interval, as measurements can arrive up to ~40 minutes late."
+            hint="Determines the time window fetched per sync."
             :rules="[rules.REQUIRED, rules.INTEGER, ruleFactories.MIN(1)]"
           >
             <template #append>
@@ -164,7 +164,9 @@ defineEmits<{
   save: [];
 }>();
 
-const formData = defineModel<IngestExternalApiMyAtmosphereCreate | IngestExternalApiMyAtmosphereUpdate>({
+const formData = defineModel<
+  IngestExternalApiMyAtmosphereCreate | IngestExternalApiMyAtmosphereUpdate
+>({
   default: () => ({
     name: '',
     permission_group_id: null,

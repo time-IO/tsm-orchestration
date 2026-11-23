@@ -79,6 +79,28 @@
 
                 <q-item>
                   <q-item-section>
+                    <q-item-label>API Key</q-item-label>
+                    <q-item-label caption>
+                      <q-input
+                        borderless
+                        readonly
+                        v-model="item.api_key"
+                        :type="isPwd ? 'password' : 'text'"
+                      >
+                        <template v-slot:prepend>
+                          <q-icon
+                            :name="isPwd ? 'visibility_off' : 'visibility'"
+                            class="cursor-pointer"
+                            @click="isPwd = !isPwd"
+                          />
+                        </template>
+                      </q-input>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item>
+                  <q-item-section>
                     <q-item-label>Created At (UTC)</q-item-label>
                     <q-item-label caption>{{ formatDate(item.created_at) }}</q-item-label>
                   </q-item-section>
@@ -172,6 +194,7 @@ const router = useRouter();
 const store = useIngestExternalApiMyAtmosphereStore();
 
 const item = ref<IngestExternalApiMyAtmospherePublic | null>(null);
+const isPwd = ref(true);
 const deleteDialog = ref(false);
 const isLoading = ref(false);
 
