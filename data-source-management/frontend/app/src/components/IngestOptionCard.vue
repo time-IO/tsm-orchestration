@@ -14,7 +14,7 @@
           :aria-label="`Help for ${option.label} ingest`"
           @click="emit('help', option)"
         >
-          <q-tooltip>When to choose this ingest</q-tooltip>
+          <q-tooltip>How this ingest works</q-tooltip>
         </q-btn>
       </q-item-section>
     </q-item>
