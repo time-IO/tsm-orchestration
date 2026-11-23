@@ -47,14 +47,6 @@ def make_publisher(
     return client
 
 
-def parser_exists(uuid: str, dsn: str) -> bool:
-    try:
-        FileParser.from_uuid(uuid, dsn=dsn)
-    except ObjectNotFound:
-        return False
-    return True
-
-
 def get_parse_info(minio: Minio, bucket: str, fname: str) -> tuple[bool, str | None]:
     """Read-only: (parsed successfully?, parser uuid from the tag) of the latest object version"""
     try:
@@ -91,19 +83,24 @@ def reparse_files(
     bucket = store.bucket
     start, end = _to_utc(start_date), _to_utc(end_date)
     current_parser_uuid = str(thing.s3_store.file_parser.uuid)
-    parser_cache: dict[str, bool] = {}
     summary = ReparseSummary()
 
-    tz_cache: dict[str, str | None] = {}
+    parsers: dict[str, FileParser | None] = {}
+
+    def _parser(uuid: str) -> FileParser | None:
+        if uuid not in parsers:
+            try:
+                parsers[uuid] = FileParser.from_uuid(uuid, dsn=dsn)
+            except ObjectNotFound:
+                parsers[uuid] = None
+        return parsers[uuid]
 
     def _timezone_of(uuid: str) -> str | None:
-        if uuid not in tz_cache:
-            try:
-                params = FileParser.from_uuid(uuid, dsn=dsn).params or {}
-            except ObjectNotFound:
-                params = {}
-            tz_cache[uuid] = params.get("timezone")
-        return tz_cache[uuid]
+        parser = _parser(uuid)
+        return (parser.params or {}).get("timezone") if parser else None
+
+    if parser_uuid and _parser(parser_uuid) is None:
+        raise ObjectNotFound(f"parser {parser_uuid} does not exist")
 
     for obj in minio.list_objects(bucket, recursive=True):
         fname = obj.object_name
@@ -126,9 +123,7 @@ def reparse_files(
             chosen = parser_uuid
         elif parsed and parsed_files_parser == "original":
             chosen = original_uuid
-            if chosen not in parser_cache:
-                parser_cache[chosen] = bool(chosen) and parser_exists(chosen, dsn)
-            if not parser_cache[chosen]:
+            if not chosen or _parser(chosen) is None:
                 msg = (
                     f"File {fname!r} not reparsed: the parser it was originally "
                     f"parsed with ({chosen}) no longer exists."

@@ -17,7 +17,7 @@ from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
 from timeio.databases import DBapi
-from timeio.reparse import make_publisher, parser_exists, reparse_files
+from timeio.reparse import make_publisher, reparse_files
 from timeio.typehints import MqttPayload
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
@@ -261,13 +261,6 @@ class ParserJobHandler(AbstractHandler):
     def act_reparse(self, content: MqttPayload.ReparsesFiles):
         thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
 
-        parser_uuid = content.get("parser_uuid")
-        if parser_uuid and not parser_exists(parser_uuid, self.dsmdb_dsn):
-            msg = f"Reparsing not started: parser {parser_uuid} does not exist."
-            logger.error(msg)
-            reparse_journal.error(msg, thing.uuid)
-            return
-
         # A second client with its own network thread sends the messages, so that
         # waiting for acknowledgements cannot block this handler's client.
         publisher = make_publisher(
@@ -286,7 +279,7 @@ class ParserJobHandler(AbstractHandler):
                 start_date=content.get("start_date"),
                 end_date=content.get("end_date"),
                 filename_pattern=content.get("filename_pattern"),
-                parser_uuid=parser_uuid,
+                parser_uuid=content.get("parser_uuid"),
                 include_parsed=content.get("include_parsed", False),
                 parsed_files_parser=content.get("parsed_files_parser", "current"),
             )

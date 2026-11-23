@@ -6,9 +6,9 @@ import logging
 import click
 from minio import Minio
 
-from timeio.feta import Thing
+from timeio.feta import ObjectNotFound, Thing
 from timeio.journaling import Journal
-from timeio.reparse import make_publisher, parser_exists, reparse_files
+from timeio.reparse import make_publisher, reparse_files
 
 logging.basicConfig(level=logging.INFO)
 journal = Journal("Reprocessing", errors="warn")
@@ -77,10 +77,6 @@ def main(
         secure=not minio_host.startswith("localhost"),
     )
 
-    if parser_uuid and not parser_exists(parser_uuid, dsmdb_dsn):
-        raise click.BadParameter(
-            f"parser {parser_uuid!r} not found", param_hint="--parser"
-        )
     publisher = make_publisher(mqtt_host, mqtt_user, mqtt_password, "reparse-files-cli")
     try:
         reparse_files(
@@ -96,6 +92,8 @@ def main(
             include_parsed=include_parsed,
             parsed_files_parser=parsed_files_parser,
         )
+    except ObjectNotFound as e:
+        raise click.BadParameter(str(e), param_hint="--parser")
     finally:
         publisher.loop_stop()
         publisher.disconnect()

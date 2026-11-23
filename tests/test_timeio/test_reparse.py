@@ -61,7 +61,7 @@ class Env:
         self.publisher = MagicMock()
         self.publisher.publish.side_effect = lambda *a, **kw: FakeInfo()
         self.journal = MagicMock()
-        self.parser_exists_calls = []
+        self.parser_lookups = []
         self.timezones = {}
 
     def run(self, **kwargs):
@@ -83,13 +83,10 @@ def make_env(monkeypatch):
     def factory(files=None):
         env = Env(FILES if files is None else files)
 
-        def parser_exists(uuid, dsn):
-            env.parser_exists_calls.append(uuid)
-            return uuid != "DELETED"
-
-        monkeypatch.setattr(reparse, "parser_exists", parser_exists)
-
         def from_uuid(uuid, dsn):
+            env.parser_lookups.append(uuid)
+            if uuid == "DELETED":
+                raise reparse.ObjectNotFound(uuid)
             return SimpleNamespace(
                 params={"timezone": env.timezones.get(uuid, "Europe/Berlin")}
             )
@@ -180,10 +177,10 @@ def test_original_parser_missing_in_tag_skips_file(make_env):
     assert env.sent() == {}
     assert summary.skipped == 1
     env.journal.warning.assert_called_once()
-    assert env.parser_exists_calls == []  # no lookup for an empty parser id
+    assert env.parser_lookups == []  # no lookup for an empty parser id
 
 
-def test_parser_existence_is_checked_once_per_parser(make_env):
+def test_parser_is_looked_up_once_per_parser(make_env):
     files = {
         f"{n}.csv": (datetime(2026, 3, 1, tzinfo=UTC), tags("successful", "OLD"))
         for n in "abc"
@@ -192,7 +189,7 @@ def test_parser_existence_is_checked_once_per_parser(make_env):
 
     env.run(include_parsed=True, parsed_files_parser="original")
 
-    assert env.parser_exists_calls == ["OLD"]
+    assert env.parser_lookups == ["OLD"]
     assert env.sent() == {"a.csv": "OLD", "b.csv": "OLD", "c.csv": "OLD"}
 
 
@@ -211,6 +208,16 @@ def test_explicit_parser_wins_for_all_files(make_env):
     assert len(env.sent()) == 4  # new, failed, done, gone
     assert summary.skipped == 0
     env.journal.warning.assert_not_called()
+
+
+def test_unknown_explicit_parser_raises_before_publishing(make_env):
+    env = make_env()
+
+    with pytest.raises(reparse.ObjectNotFound, match="DELETED"):
+        env.run(parser_uuid="DELETED")
+
+    env.minio.list_objects.assert_not_called()
+    env.publisher.publish.assert_not_called()
 
 
 def test_date_range_is_inclusive_and_naive_dates_are_utc(make_env):

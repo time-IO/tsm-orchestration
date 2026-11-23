@@ -30,8 +30,6 @@ def handler():
 @pytest.fixture
 def mocks():
     with patch.object(run_file_ingest, "Thing") as thing, patch.object(
-        run_file_ingest, "parser_exists"
-    ) as parser_exists, patch.object(
         run_file_ingest, "make_publisher"
     ) as make_publisher, patch.object(
         run_file_ingest, "reparse_files"
@@ -39,10 +37,8 @@ def mocks():
         run_file_ingest, "reparse_journal"
     ) as journal:
         thing.from_uuid.return_value = MagicMock(uuid="thing-uuid")
-        parser_exists.return_value = True
         yield MagicMock(
             Thing=thing,
-            parser_exists=parser_exists,
             make_publisher=make_publisher,
             reparse_files=reparse_files,
             journal=journal,
