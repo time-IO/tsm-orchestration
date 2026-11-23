@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-lg">
-    <h5>Create a new Data Ingest</h5>
+    <h5>Create a new data ingest</h5>
     <div class="row">
       <div class="col">
         <q-btn label="back" class="q-mb-lg" icon="chevron_left" to="/ingest" />
@@ -47,11 +47,11 @@ const clusters: IngestCluster[] = [
       {
         name: 'sftp',
         label: 'SFTP',
-        description: 'Upload files to a time.IO bucket.',
+        description: 'Upload files to time.IO storage via SFTP.',
         flow: 'sftp',
         path: '/ingest/new/sftp',
         helpText:
-          'Your data logger or a script uploads data files to a storage area that time.IO provides for you. Login details are generated once you create the ingest. time.IO keeps every uploaded file and automatically imports the measurements from it, using the selected file parser. You can access all uploaded files via the File Explorer in the ingest Tools Section.',
+          'Your data logger or a script uploads data files to a storage area that time.IO provides for you. Credentials are generated once you create the ingest. time.IO keeps every uploaded file and automatically imports the measurements from it, using the selected file parser. You can access uploaded files via the File Explorer in the Ingest Tools section.',
         chooseIf: [
           'your logger or software writes data files, e.g. CSV or JSON',
           'you do not already send data to your own FTP/SFTP server',
@@ -78,7 +78,7 @@ const clusters: IngestCluster[] = [
     icon: 'wifi_tethering',
     label: 'MQTT',
     description:
-      'Data is received as a continuous stream of messages: Each incoming message is parsed using an MQTT parser.',
+      'Data arrives as a continuous stream of messages: each message is parsed with an MQTT parser.',
     items: [
       {
         name: 'mqtt',
@@ -87,7 +87,7 @@ const clusters: IngestCluster[] = [
         flow: 'mqtt',
         path: '/ingest/new/mqtt',
         helpText:
-          'Your device sends each measurement as a message to the time.IO MQTT broker. Credentials are generated once you create the ingest. time.IO imports every message right away.',
+          'Your device sends its data as messages to the time.IO MQTT broker. Credentials are generated once you create the ingest. time.IO imports every message right away, using the selected MQTT parser.',
         chooseIf: [
           'your device sends data via MQTT',
           'you do not already send data to your own MQTT broker',
@@ -100,10 +100,10 @@ const clusters: IngestCluster[] = [
         flow: 'ext_mqtt',
         path: '/ingest/new/external-mqtt',
         helpText:
-          'Your device already sends messages to your own MQTT broker. time.IO subscribes to a configured topic on that broker and imports every message it receives.',
+          'Your device already sends messages to your own MQTT broker. time.IO subscribes to a configured topic on that broker and imports every message it receives, using the selected MQTT parser.',
         chooseIf: [
           'you already run your own MQTT broker',
-          'your devices should keep sending to it unchanged',
+          'you do not want to change where your devices send their data',
         ],
       },
     ],
@@ -113,16 +113,16 @@ const clusters: IngestCluster[] = [
     icon: 'http',
     label: 'HTTP',
     description:
-      'Data arrives over the web: Send files to time.IO, or let time.IO request a supported web API.',
+      'Data arrives over the web: send files to time.IO, or let time.IO request a supported web API.',
     items: [
       {
         name: 'http',
         label: 'HTTP',
-        description: 'POST files to a time.IO endpoint.',
+        description: 'POST data to a time.IO endpoint.',
         flow: 'http',
         path: '/ingest/new/http',
         helpText:
-          'Your device or software sends data to a time.IO web address. time.IO creates and keeps files from that data and automatically imports the measurements, using the selected file parser.',
+          'Your device or software sends data to a time.IO web address, authenticated with an API key you set when creating the ingest. time.IO creates and keeps files from that data and automatically imports the measurements, using the selected file parser.',
         chooseIf: ['your device or software sends web (HTTP) requests'],
       },
       {
@@ -132,10 +132,10 @@ const clusters: IngestCluster[] = [
         flow: 'ext_api',
         variantSelect: true,
         helpText:
-          'Your data is available from a supported online service, e. g. a weather service or the cloud of a device manufacturer. time.IO requests new data from it at a fixed interval and imports it. Select the service from the list.',
+          'Your data is available from a supported online service, e.g. a weather service or the cloud of a device manufacturer. time.IO requests new data from it at a fixed interval and imports it. Select the service from the list.',
         chooseIf: [
           'your data is available from one of the supported services',
-          'you have the access credentials the service might require',
+          'you have any access credentials the service requires',
           'a delay of up to one sync interval is acceptable',
         ],
       },
@@ -146,7 +146,7 @@ const clusters: IngestCluster[] = [
 const externalApis: IngestVariant[] = [
   {
     name: 'bosch',
-    label: 'Bosch IoT',
+    label: 'Bosch IoT Insights',
     path: '/ingest/new/external-api/bosch',
     docsUrl: 'https://bosch-iot-insights.com/ui/pages/api/mongodb-query/latest',
   },
@@ -163,10 +163,10 @@ const externalApis: IngestVariant[] = [
     docsUrl: 'https://www.nmdb.eu/nest/help.php#howto',
   },
   { name: 'sensoto', label: 'Sensoto', path: '/ingest/new/external-api/sensoto' },
-  { name: 'tsystems', label: 'TSystems', path: '/ingest/new/external-api/tsystems' },
+  { name: 'tsystems', label: 'T-Systems', path: '/ingest/new/external-api/tsystems' },
   {
     name: 'ttn',
-    label: 'The Things network',
+    label: 'The Things Network',
     path: '/ingest/new/external-api/ttn',
     docsUrl: 'https://www.thethingsindustries.com/docs/api/',
   },
