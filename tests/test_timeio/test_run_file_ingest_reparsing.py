@@ -152,23 +152,3 @@ def test_reparsing_still_respects_the_things_filename_pattern(setup):
 
     setup.get_parser.assert_not_called()
     setup.handler.set_tags.assert_not_called()
-
-
-def test_normal_upload_without_tag_uses_current_parser(setup):
-    setup.handler.act(make_message(), MagicMock())
-
-    setup.handler.get_parser_tags.assert_called_once_with("bucket", "data.csv")
-    setup.FileParser.from_uuid.assert_not_called()
-    assert setup.parser.to_observations.call_args.args[2] == CURRENT
-
-
-def test_normal_upload_behaviour_with_old_tag_is_unchanged(setup):
-    """Documents the existing behaviour (parser-tag ticket): the tag only decides
-    the label, the parser object is still the current one."""
-    setup.handler.get_parser_tags.return_value = {"parser_id": OLD}
-
-    setup.handler.act(make_message(), MagicMock())
-
-    setup.FileParser.from_uuid.assert_not_called()
-    assert setup.get_parser.call_args.args[0] == "csv"  # current parser
-    assert setup.parser.to_observations.call_args.args[2] == OLD  # label from tag

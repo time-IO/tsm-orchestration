@@ -33,9 +33,11 @@ class ParserJobHandler(AbstractHandler):
 
     def __init__(self):
         reparse_topic = get_envvar("TOPIC_REPARSE_FILES", default=None)
-        topics = [get_envvar("TOPIC")] + ([reparse_topic] if reparse_topic else [])
+        topics = get_envvar_as_list("TOPIC") + (
+            [reparse_topic] if reparse_topic else []
+        )
         super().__init__(
-            topic=topics,
+            topics=topics,
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
@@ -71,9 +73,6 @@ class ParserJobHandler(AbstractHandler):
 
         thing = Thing.from_s3_bucket_name(bucket_name, dsn=self.dsmdb_dsn)
         thing_uuid = thing.uuid
-        file_parser = FileParser.from_id(
-            thing.s3_store.file_parser_id, dsn=self.dsmdb_dsn
-        )
         schema = thing.project.database.schema
         pattern = thing.s3_store.filename_pattern
         if not fnmatch.fnmatch(filename, pattern):
@@ -97,15 +96,21 @@ class ParserJobHandler(AbstractHandler):
             logger.info(f"Reparsing file with parser {parser_uuid}")
         else:
             tags = self.get_parser_tags(bucket_name, filename)
+            pobj = thing.s3_store.file_parser  # default: current parser of the ingest
             if tags is not None:
-                parser_uuid = tags["parser_id"]
-                logger.info(f"Re-parsing file with parser from file tag {parser_uuid}")
-            else:
-                parser_uuid = file_parser.uuid
-                logger.info(
-                    f"No parser file tag found, using default parser {parser_uuid}"
-                )
-            pobj = thing.s3_store.file_parser
+                try:
+                    pobj = FileParser.from_uuid(tags["parser_id"], dsn=self.dsmdb_dsn)
+                    logger.info(
+                        f"Re-parsing file with parser from file tag {pobj.uuid}"
+                    )
+                except ObjectNotFound:
+                    msg = (
+                        f"File {filename!r}: the parser of an earlier version "
+                        f"({tags['parser_id']}) does not exist, using the current parser."
+                    )
+                    logger.warning(msg)
+                    journal.warning(msg, thing_uuid)
+            parser_uuid = pobj.uuid
 
         source_uri = f"{bucket_name}/{filename}"
 

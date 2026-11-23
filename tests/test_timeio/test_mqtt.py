@@ -10,7 +10,7 @@ from timeio.mqtt import AbstractHandler
 class RecordingHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
-            topic="test/topic",
+            topics=["test/topic"],
             mqtt_broker="broker:1883",
             mqtt_user="user",
             mqtt_password="pw",
@@ -59,12 +59,12 @@ def test_on_message_exits_on_unhandled_error_in_act():
         handler.on_message(None, None, make_message(b"{}"))
 
 
-def make_handler(topic):
+def make_handler(topics):
     class H(RecordingHandler):
         def __init__(self):
             AbstractHandler.__init__(
                 self,
-                topic=topic,
+                topics=topics,
                 mqtt_broker="broker:1883",
                 mqtt_user="user",
                 mqtt_password="pw",
@@ -83,7 +83,7 @@ def make_handler(topic):
 
 
 def test_single_topic_as_text_is_subscribed_as_before():
-    handler = make_handler("a/b")
+    handler = make_handler(["a/b"])
 
     handler.on_connect(handler.mqtt_client, None, None, 0)
 
@@ -107,6 +107,12 @@ def test_each_subscription_is_registered_for_logging():
     handler.on_connect(handler.mqtt_client, None, None, 0)
 
     assert set(handler._mid_to_topic.values()) >= {"a/b", "c/d"}
+
+
+@pytest.mark.parametrize("topics", ["a/b", [], ["a/b", ""]])
+def test_invalid_topics_are_rejected(topics):
+    with pytest.raises(ValueError):
+        make_handler(topics)
 
 
 def test_healthcheck_topic_is_still_subscribed():
