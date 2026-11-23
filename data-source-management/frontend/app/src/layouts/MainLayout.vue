@@ -221,6 +221,7 @@ const topNavigation: NavEntry[] = [
       { label: 'The Things Network', route: '/ingest/new/external-api/ttn' },
       { label: 'Umweltbundesamt (UBA)', route: '/ingest/new/external-api/uba' },
       { label: 'Zentra', route: '/ingest/new/external-api/zentra' },
+      { label: 'Palas MyAtmosphere Device Measurements', route: '/ingest/new/external-api/myatmosphere' },
     ],
   },
   {

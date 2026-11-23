@@ -27,6 +27,7 @@ const options = [
   { id: 'uba', name: 'Umweltbundesamt (UBA) Air Data' },
   { id: 'sensoto', name: 'Sensoto' },
   { id: 'zentra', name: 'Zentra' },
+  { id: 'myatmosphere', name: 'Palas MyAtmosphere Device Measurements' },
 ];
 </script>
 
