@@ -18,11 +18,16 @@ When adding a changelog entry, ensure the following:
 
 ### Fixed
 - Zentra API detail page and form aligned with other external APIs ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/798))
+- STA datastream selection for QC functions retrieves STA data using authentication, enabling access to internal datastreams ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/818))
 - empty projects list if project is null, use null if no license is available, spelling fix: responsiblePersons ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/820))
+- Re-uploaded files are parsed with the parser stored in the tag of the earlier version of the file, and tag and parser always match; if that parser no longer exists, the current parser is used and a warning is written to the journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/823))
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 - Workers based on `AbstractHandler` can subscribe to several MQTT topics; a single topic works as before ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/825))
+- Some enhancements to generic overview table and usage for STA datastream selection and External API trigger ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/821))
+- Permission group of ingests and QC settings can no longer be changed after creation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/826))
+- Workers based on `AbstractHandler` can subscribe to several MQTT topics, e.g. `TOPIC=a/b,c/d` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/825))
 
 ## [2026-11-11]
 
@@ -57,7 +62,6 @@ When adding a changelog entry, ensure the following:
 - CompTest for ParserFormCsv/Json/Soilcan([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/779))
 - Component Test: ParserSelect, ParserSelectByType, ParserTypeSelect ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/781))
 - Version Tags of DSM-Frontend and Backend in DSM-Frontend Footer ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/775))
-- Superusers can reparse files of file-based ingests (SFTP, External SFTP, HTTP) in the data-source-management ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/810)
 
 ### Fixed
 - Uploads to the bucket of a deleted ingest no longer crash the file ingest worker ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/762))

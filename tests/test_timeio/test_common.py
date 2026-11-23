@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from timeio.common import get_envvar, get_envvar_as_bool, no_default
+from timeio.common import get_envvar, get_envvar_as_bool, get_envvar_as_list, no_default
 
 TEST_ENV = {
     "VAR_STRING": "test",
@@ -130,3 +130,27 @@ def test_get_envar_as_bool__custom_false_list(value, false_list, expected):
     with mock.patch.dict(os.environ, {"TEST_VAR": value}, clear=True):
         result = get_envvar_as_bool("TEST_VAR", false_list=false_list)
     assert is_equal(result, expected)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("a/b", ["a/b"]),
+        ("a/b,c/d", ["a/b", "c/d"]),
+        (" a/b , c/d, ", ["a/b", "c/d"]),
+        ("", []),
+        (" , ", []),
+        ("None", ["None"]),
+    ],
+)
+def test_get_envvar_as_list(value, expected):
+    with mock.patch.dict(os.environ, {"TEST_VAR": value}, clear=True):
+        result = get_envvar_as_list("TEST_VAR")
+    assert result == expected
+
+
+def test_get_envvar_as_list__default():
+    with mock.patch.dict(os.environ, {}, clear=True):
+        assert get_envvar_as_list("TEST_VAR", default=None) is None
+        with pytest.raises(EnvironmentError):
+            get_envvar_as_list("TEST_VAR")

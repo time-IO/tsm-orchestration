@@ -4,8 +4,7 @@
     :loading="loading"
     :columns="default_ingest_columns"
     storage-key="ingest"
-    :col-min-widths="colMinWidths"
-    :default-col-widths="defaultColWidths"
+    :column-widths="columnWidths"
     v-model:pagination="pagination"
     @request="onRequest"
     @delete="onDelete"
@@ -61,6 +60,7 @@ import {
   formatExternalApiType,
 } from '@/utils/pagination_utils';
 import OverviewTable from '@/components/common/OverviewTable.vue';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 defineProps({
   rows: {
@@ -86,28 +86,15 @@ const onDelete = (id: number | null, closeDialog: () => void) => {
   closeDialog();
 };
 
-const isSmallWindow = window.innerWidth < 1200;
-
-const colMinWidths: Record<string, number> = {
-  id: 40,
-  permission_group: 40,
-  name: 40,
-  uuid: 80,
-  ingest_type: 80,
-  created_at: 90,
-  created_by: 60,
-  action: 120,
-};
-
-const defaultColWidths: Record<string, number> = {
-  id: 60,
-  permission_group: isSmallWindow ? 80 : 150,
-  name: isSmallWindow ? 80 : 120,
-  uuid: isSmallWindow ? 80 : 120,
-  ingest_type: 120,
-  created_at: 110,
-  created_by: 80,
-  action: 140,
+const columnWidths: ColumnWidths = {
+  id: { min: 5, max: 5, default: 5 },
+  permission_group: { min: 8, default: 13 },
+  name: { min: 10, default: 29 },
+  uuid: { min: 7, default: 16 },
+  ingest_type: { min: 7, default: 9 },
+  created_at: { min: 8, default: 9 },
+  created_by: { min: 5, default: 10 },
+  action: { min: 12, max: 12, default: 12 },
 };
 
 function visualizationUrl(uuid: string | null) {

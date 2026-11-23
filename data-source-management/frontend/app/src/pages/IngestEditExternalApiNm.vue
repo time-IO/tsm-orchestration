@@ -4,6 +4,7 @@
     :is-loading="isLoading"
     :back-route="detailRoute"
     :item-permission-group="itemPermissionGroup"
+    disable-permission-group
     :item-station="itemStation"
     v-model="formData"
     @save="save"

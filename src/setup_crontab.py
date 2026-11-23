@@ -8,7 +8,7 @@ from crontab import CronItem, CronTab, CronRange, CronSlices
 
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.feta import Thing
-from timeio.common import get_envvar, setup_logging
+from timeio.common import get_envvar, get_envvar_as_list, setup_logging
 from timeio.journaling import Journal
 from timeio.typehints import MqttPayload
 
@@ -27,7 +27,7 @@ SYNC_JITTER_SECONDS = 30
 class CreateThingInCrontabHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topics=get_envvar_as_list("TOPIC"),
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),

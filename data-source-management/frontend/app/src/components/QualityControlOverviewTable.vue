@@ -4,8 +4,7 @@
     :loading="loading"
     :columns="columns"
     storage-key="qcsetting"
-    :col-min-widths="colMinWidths"
-    :default-col-widths="defaultColWidths"
+    :column-widths="columnWidths"
     selectable
     v-model:pagination="pagination"
     v-model:selected="selected"
@@ -34,6 +33,7 @@ import type { QTableColumn } from 'quasar';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import type { QualityControlSettingPublic } from '@/services/quality_control_setting/types';
 import OverviewTable from '@/components/common/OverviewTable.vue';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 defineProps<{
   rows: QualityControlSettingPublic[];
@@ -86,21 +86,11 @@ const columns: QTableColumn[] = [
   { name: 'action', label: 'Actions', align: 'center', field: () => '' },
 ];
 
-const isSmallWindow = window.innerWidth < 1200;
-
-const colMinWidths: Record<string, number> = {
-  id: 40,
-  permission_group: 40,
-  name: 40,
-  created_by: 60,
-  action: 120,
-};
-
-const defaultColWidths: Record<string, number> = {
-  id: 60,
-  permission_group: isSmallWindow ? 80 : 150,
-  name: isSmallWindow ? 80 : 120,
-  created_by: 80,
-  action: 140,
+const columnWidths: ColumnWidths = {
+  id: { min: 5, max: 5, default: 5 },
+  permission_group: { min: 8, default: 8 },
+  name: { min: 5, default: 20 },
+  created_by: { min: 8, default: 15 },
+  action: { min: 18, max: 18, default: 18 },
 };
 </script>

@@ -153,7 +153,6 @@ def test_update_passes_superuser_scope_to_find_allowed_one():
     repo = QualityControlSettingRepository(MagicMock())
     repo.find_allowed_one = MagicMock(side_effect=HTTPException(status_code=418))
     payload = MagicMock()
-    payload.permission_group_id = 999
     payload.model_dump.return_value = {}
     access_scope = AccessScope([], is_superuser=True)
 
@@ -162,14 +161,3 @@ def test_update_passes_superuser_scope_to_find_allowed_one():
 
     assert exc_info.value.status_code == 418
     repo.find_allowed_one.assert_called_once_with(1, access_scope=access_scope)
-
-
-def test_update_checks_access_scope_permission_groups():
-    repo = QualityControlSettingRepository(MagicMock())
-    payload = MagicMock()
-    payload.permission_group_id = 999
-
-    with pytest.raises(HTTPException) as exc_info:
-        repo.update_allowed(1, payload, access_scope=AccessScope([1]))
-
-    assert exc_info.value.status_code == 403
