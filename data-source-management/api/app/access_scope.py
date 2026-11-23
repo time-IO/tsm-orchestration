@@ -21,3 +21,6 @@ class AccessScope:
 
     def can_access_permission_group(self, permission_group_id: int) -> bool:
         return self.is_superuser or permission_group_id in self.permission_group_ids
+
+    def can_reparse(self, permission_group_id: int) -> bool:
+        return self.is_superuser
