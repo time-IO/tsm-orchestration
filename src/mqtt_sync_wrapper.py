@@ -93,6 +93,7 @@ TIMERANGE_MAPPING = {
     "nm": get_nm_timerange,
     "sensoto": get_bosch_timerange,
     "zentra": get_bosch_timerange,
+    "myatmosphere": get_bosch_timerange,
 }
 
 
