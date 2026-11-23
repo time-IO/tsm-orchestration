@@ -17,18 +17,25 @@ from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
 from timeio.databases import DBapi
+from timeio.reparse import make_publisher, parser_exists, reparse_files
+from timeio.typehints import MqttPayload
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
 logger = logging.getLogger("file-ingest")
 journal = Journal("Parser", errors="warn")
+reparse_journal = Journal("Reparse", errors="warn")
 
 
 class ParserJobHandler(AbstractHandler):
+    # Only set for the worker that also handles the reparse trigger.
+    reparse_topic: str | None = None
 
     def __init__(self):
+        reparse_topic = get_envvar("TOPIC_REPARSE_FILES", default=None)
+        topics = [get_envvar("TOPIC")] + ([reparse_topic] if reparse_topic else [])
         super().__init__(
-            topic=get_envvar("TOPIC"),
+            topic=topics,
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
@@ -36,6 +43,7 @@ class ParserJobHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
+        self.reparse_topic = reparse_topic
         self.minio = Minio(
             endpoint=get_envvar("MINIO_URL"),
             access_key=get_envvar("MINIO_ACCESS_KEY"),
@@ -49,6 +57,9 @@ class ParserJobHandler(AbstractHandler):
         )
 
     def act(self, content: dict, message: MQTTMessage):
+        if self.reparse_topic and message.topic == self.reparse_topic:
+            self.act_reparse(content)
+            return
 
         if not self.is_valid_event(content):
             logger.debug(f'irrelevant event {content["EventName"]!r}')
@@ -241,6 +252,45 @@ class ParserJobHandler(AbstractHandler):
 
         self.is_valid_encoding(encoding)
         return rawdata.decode(encoding).rstrip("\x03")
+
+    def act_reparse(self, content: MqttPayload.ReparsesFiles):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
+
+        parser_uuid = content.get("parser_uuid")
+        if parser_uuid and not parser_exists(parser_uuid, self.dsmdb_dsn):
+            msg = f"Reparsing not started: parser {parser_uuid} does not exist."
+            logger.error(msg)
+            reparse_journal.error(msg, thing.uuid)
+            return
+
+        # A second client with its own network thread sends the messages, so that
+        # waiting for acknowledgements cannot block this handler's client.
+        publisher = make_publisher(
+            self.mqtt_broker,
+            self.mqtt_user,
+            self.mqtt_password,
+            f"{self.mqtt_client_id}-publisher",
+        )
+        try:
+            reparse_files(
+                thing,
+                self.minio,
+                publisher,
+                reparse_journal,
+                self.dsmdb_dsn,
+                start_date=content.get("start_date"),
+                end_date=content.get("end_date"),
+                filename_pattern=content.get("filename_pattern"),
+                parser_uuid=parser_uuid,
+                include_parsed=content.get("include_parsed", False),
+                parsed_files_parser=content.get("parsed_files_parser", "current"),
+            )
+        except Exception as e:
+            reparse_journal.error(f"Reparsing aborted: {e}", thing.uuid)
+            raise
+        finally:
+            publisher.loop_stop()
+            publisher.disconnect()
 
     @staticmethod
     def is_valid_encoding(encoding: str):

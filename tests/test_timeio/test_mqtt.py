@@ -7,7 +7,6 @@ from unittest.mock import MagicMock
 from timeio.mqtt import AbstractHandler
 
 
-
 class RecordingHandler(AbstractHandler):
     def __init__(self):
         super().__init__(
