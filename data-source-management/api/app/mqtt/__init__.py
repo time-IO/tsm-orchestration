@@ -5,6 +5,7 @@ from .mqtt_client import (
     publish_trigger_ext_sftp,
     publish_frontend_thing_update,
     publish_qaqc_settings_update,
+    publish_trigger_reparse,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "publish_trigger_ext_sftp",
     "publish_frontend_thing_update",
     "publish_qaqc_settings_update",
+    "publish_trigger_reparse",
 ]

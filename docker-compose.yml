@@ -870,6 +870,7 @@ services:
       JOURNALING: "${JOURNALING}"
       RESTART_MAX_ATTEMPTS: "${SERVICE_WORKER_RESTART_MAX_ATTEMPTS}"
       RESTART_WINDOW_SECONDS: "${SERVICE_WORKER_RESTART_WINDOW_SECONDS}"
+      TOPIC_REPARSE_FILES: reparse_files_triggered
     entrypoint: ["./worker_launcher.sh", "python3", "run_file_ingest.py"]
     volumes:
       - ./migrations/worker_file_ingest/datastream_mapping/:/tmp/datastream_mapping/
@@ -1160,6 +1161,7 @@ services:
       options:
         max-size: "${DEFAULT_MAX_LOG_FILE_SIZE}"
         max-file: "${DEFAULT_MAX_LOG_FILE_COUNT}"
+
 
   # Summary
   # =======

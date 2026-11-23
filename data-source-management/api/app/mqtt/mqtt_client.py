@@ -15,6 +15,7 @@ from .generate_mqtt_messages import (
     create_sync_quality_control,
     create_frontend_thing_update,
     create_qc_settings_msg,
+    create_reparse_files_msg,
 )
 
 logger = logging.getLogger("app.mqtt")
@@ -145,4 +146,30 @@ def publish_qaqc_settings_update(qc_settings, topic="qaqc_settings_update"):
     msg = create_qc_settings_msg(qc_settings)
     publish_message(
         msg, topic, f"QC Settings '{qc_settings.name}' published on '{topic}'"
+    )
+
+
+def publish_trigger_reparse(
+    ingest_uuid,
+    start_date,
+    end_date,
+    filename_pattern,
+    parser_uuid,
+    include_parsed,
+    parsed_files_parser,
+    topic="reparse_files_triggered",
+):
+    msg = create_reparse_files_msg(
+        ingest_uuid,
+        start_date,
+        end_date,
+        filename_pattern,
+        parser_uuid,
+        include_parsed,
+        parsed_files_parser,
+    )
+    publish_message(
+        msg,
+        topic,
+        f"Reparse files for ingest '{ingest_uuid}' published on '{topic}'",
     )

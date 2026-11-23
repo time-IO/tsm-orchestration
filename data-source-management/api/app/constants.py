@@ -29,6 +29,11 @@ class IngestType(str, Enum):
         return self.value
 
 
+REPARSABLE_INGEST_TYPES = frozenset(
+    {IngestType.SFTP, IngestType.EXTERNAL_SFTP, IngestType.HTTP}
+)
+
+
 class ApiType(str, Enum):
     BOSCH = "bosch"
     DWD = "dwd"

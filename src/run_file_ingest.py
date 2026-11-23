@@ -17,18 +17,27 @@ from timeio.journaling import Journal
 from timeio.mqtt import AbstractHandler, MQTTMessage
 from timeio.parser import get_parser
 from timeio.databases import DBapi
+from timeio.reparse import make_publisher, reparse_files
+from timeio.typehints import MqttPayload
 
 _FILE_MAX_SIZE = 256 * 1024 * 1024
 
 logger = logging.getLogger("file-ingest")
 journal = Journal("Parser", errors="warn")
+reparse_journal = Journal("Reparse", errors="warn")
 
 
 class ParserJobHandler(AbstractHandler):
+    # Only set for the worker that also handles the reparse trigger.
+    reparse_topic: str | None = None
 
     def __init__(self):
+        reparse_topic = get_envvar("TOPIC_REPARSE_FILES", default=None)
+        topics = get_envvar_as_list("TOPIC") + (
+            [reparse_topic] if reparse_topic else []
+        )
         super().__init__(
-            topics=get_envvar_as_list("TOPIC"),
+            topics=topics,
             mqtt_broker=get_envvar("MQTT_BROKER"),
             mqtt_user=get_envvar("MQTT_USER"),
             mqtt_password=get_envvar("MQTT_PASSWORD"),
@@ -36,6 +45,7 @@ class ParserJobHandler(AbstractHandler):
             mqtt_qos=get_envvar("MQTT_QOS", cast_to=int),
             mqtt_clean_session=get_envvar("MQTT_CLEAN_SESSION", cast_to=bool),
         )
+        self.reparse_topic = reparse_topic
         self.minio = Minio(
             endpoint=get_envvar("MINIO_URL"),
             access_key=get_envvar("MINIO_ACCESS_KEY"),
@@ -49,6 +59,9 @@ class ParserJobHandler(AbstractHandler):
         )
 
     def act(self, content: dict, message: MQTTMessage):
+        if self.reparse_topic and message.topic == self.reparse_topic:
+            self.act_reparse(content)
+            return
 
         if not self.is_valid_event(content):
             logger.debug(f'irrelevant event {content["EventName"]!r}')
@@ -65,20 +78,39 @@ class ParserJobHandler(AbstractHandler):
         if not fnmatch.fnmatch(filename, pattern):
             logger.debug(f"{filename} is excluded by filename_pattern {pattern!r}")
             return
-        tags = self.get_parser_tags(bucket_name, filename)
-        pobj = thing.s3_store.file_parser  # default: current parser of the ingest
-        if tags is not None:
-            try:
-                pobj = FileParser.from_uuid(tags["parser_id"], dsn=self.dsmdb_dsn)
-                logger.info(f"Re-parsing file with parser from file tag {pobj.uuid}")
-            except ObjectNotFound:
-                msg = (
-                    f"File {filename!r}: the parser of an earlier version "
-                    f"({tags['parser_id']}) does not exist, using the current parser."
-                )
-                logger.warning(msg)
-                journal.warning(msg, thing_uuid)
-        parser_uuid = pobj.uuid
+        if content.get("reparsing"):
+            if requested_uuid := content.get("parser_uuid"):
+                try:
+                    pobj = FileParser.from_uuid(requested_uuid, dsn=self.dsmdb_dsn)
+                except ObjectNotFound:
+                    msg = (
+                        f"File {filename!r} not reparsed: "
+                        f"parser {requested_uuid} does not exist."
+                    )
+                    logger.warning(msg)
+                    journal.warning(msg, thing_uuid)
+                    return
+            else:
+                pobj = thing.s3_store.file_parser
+            parser_uuid = pobj.uuid
+            logger.info(f"Reparsing file with parser {parser_uuid}")
+        else:
+            tags = self.get_parser_tags(bucket_name, filename)
+            pobj = thing.s3_store.file_parser  # default: current parser of the ingest
+            if tags is not None:
+                try:
+                    pobj = FileParser.from_uuid(tags["parser_id"], dsn=self.dsmdb_dsn)
+                    logger.info(
+                        f"Re-parsing file with parser from file tag {pobj.uuid}"
+                    )
+                except ObjectNotFound:
+                    msg = (
+                        f"File {filename!r}: the parser of an earlier version "
+                        f"({tags['parser_id']}) does not exist, using the current parser."
+                    )
+                    logger.warning(msg)
+                    journal.warning(msg, thing_uuid)
+            parser_uuid = pobj.uuid
 
         source_uri = f"{bucket_name}/{filename}"
 
@@ -225,6 +257,38 @@ class ParserJobHandler(AbstractHandler):
 
         self.is_valid_encoding(encoding)
         return rawdata.decode(encoding).rstrip("\x03")
+
+    def act_reparse(self, content: MqttPayload.ReparsesFiles):
+        thing = Thing.from_uuid(content["thing"], dsn=self.dsmdb_dsn)
+
+        # A second client with its own network thread sends the messages, so that
+        # waiting for acknowledgements cannot block this handler's client.
+        publisher = make_publisher(
+            self.mqtt_broker,
+            self.mqtt_user,
+            self.mqtt_password,
+            f"{self.mqtt_client_id}-publisher",
+        )
+        try:
+            reparse_files(
+                thing,
+                self.minio,
+                publisher,
+                reparse_journal,
+                self.dsmdb_dsn,
+                start_date=content.get("start_date"),
+                end_date=content.get("end_date"),
+                filename_pattern=content.get("filename_pattern"),
+                parser_uuid=content.get("parser_uuid"),
+                include_parsed=content.get("include_parsed", False),
+                parsed_files_parser=content.get("parsed_files_parser", "current"),
+            )
+        except Exception as e:
+            reparse_journal.error(f"Reparsing aborted: {e}", thing.uuid)
+            raise
+        finally:
+            publisher.loop_stop()
+            publisher.disconnect()
 
     @staticmethod
     def is_valid_encoding(encoding: str):
