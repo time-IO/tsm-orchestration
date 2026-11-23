@@ -58,6 +58,8 @@ __all__ = [
     "TriggerSyncExtApiResponse",
     "TriggerSyncExtSftpBase",
     "TriggerSyncExtSftpResponse",
+    "TriggerReparseBase",
+    "TriggerReparseResponse",
     "TriggerQualityControl",
     "Ingest",
     "IngestExternalApi",
@@ -81,6 +83,4 @@ __all__ = [
     "ParserCsvTimestampColumn",
     "ParserPredefined",
     "ParserSoilcan",
-    "TriggerReparseBase",
-    "TriggerReparseResponse",
 ]
