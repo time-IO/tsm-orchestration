@@ -1,5 +1,5 @@
 <template>
-  <ingest-form-external-api-myatmosphere
+  <ingest-form-external-api-my-atmosphere
     title="Edit External Api Ingest"
     :is-loading="isLoading"
     :back-route="detailRoute"
