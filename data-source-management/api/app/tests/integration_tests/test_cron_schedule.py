@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from dependencies import engine
-from models import Ingest, IngestSchedule, ScheduledJob
+from models import CronLegacyImport, Ingest, IngestSchedule, ScheduledJob
 
 
 @pytest.fixture
@@ -29,7 +29,8 @@ def test_ingest_delete_cascades(mqtt_ingest, cleanup_jobs):
     with Session(engine) as session:
         ingest = _ingest(session, mqtt_ingest)
         ingest_id = ingest.id
-        session.add(IngestSchedule(ingest_id=ingest_id, cron_expression="0 * * * *"))
+        schedule = IngestSchedule(ingest_id=ingest_id, cron_expression="0 * * * *")
+        session.add(schedule)
         session.add(
             ScheduledJob(
                 job_type="resync_thing",
@@ -46,6 +47,8 @@ def test_ingest_delete_cascades(mqtt_ingest, cleanup_jobs):
         session.add(sms)
         session.commit()
         sms_id = sms.id
+        session.refresh(schedule)
+        assert schedule.sync_interval_minutes is None
         session.delete(ingest)
         session.commit()
         assert session.get(IngestSchedule, ingest_id) is None
@@ -86,3 +89,23 @@ def test_scheduled_job_checks(kwargs, with_ingest, mqtt_ingest, cleanup_jobs):
         )
         with pytest.raises(IntegrityError):
             session.commit()
+
+
+@pytest.fixture
+def cleanup_marker():
+    yield
+    with Session(engine) as session:
+        for row in session.exec(select(CronLegacyImport)).all():
+            session.delete(row)
+        session.commit()
+
+
+def test_cron_legacy_import_single_row(cleanup_marker):
+    with Session(engine) as session:
+        session.add(CronLegacyImport())
+        session.commit()
+    for row in (CronLegacyImport(), CronLegacyImport(id=False)):
+        with Session(engine) as session:
+            session.add(row)
+            with pytest.raises(IntegrityError):
+                session.commit()

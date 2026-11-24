@@ -1,7 +1,7 @@
 """add_cron_schedule_tables
 
 Revision ID: 5c1e7a9d3b42
-Revises: 38995f27c8a8
+Revises: b71df45e920a
 Create Date: 2026-11-05 12:00:00.000000
 
 """
@@ -15,7 +15,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "5c1e7a9d3b42"
-down_revision: Union[str, Sequence[str], None] = "38995f27c8a8"
+down_revision: Union[str, Sequence[str], None] = "b71df45e920a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -30,6 +30,7 @@ def upgrade() -> None:
         ),
         sa.Column("jitter_seconds", sa.Integer(), server_default="0", nullable=False),
         sa.Column("enabled", sa.Boolean(), server_default="true", nullable=False),
+        sa.Column("sync_interval_minutes", sa.Integer(), nullable=True),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
@@ -79,9 +80,22 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_table(
+        "cron_legacy_import",
+        sa.Column("id", sa.Boolean(), server_default="true", nullable=False),
+        sa.Column(
+            "imported_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.CheckConstraint("id", name="ck_cron_legacy_import_single_row"),
+        sa.PrimaryKeyConstraint("id"),
+    )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_table("cron_legacy_import")
     op.drop_table("scheduled_job")
     op.drop_table("ingest_schedule")
