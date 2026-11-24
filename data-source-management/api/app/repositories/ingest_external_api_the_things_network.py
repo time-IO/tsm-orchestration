@@ -1,4 +1,5 @@
 from constants import ApiType, IngestType
+from services.ingest_schedule import apply_ingest_schedule
 from models import IngestExternalApiTheThingsNetwork, IngestExternalApi, Ingest
 from models.ingest_external_api_the_things_network import (
     IngestExternalApiTheThingsNetworkRead,
@@ -119,6 +120,7 @@ class IngestExternalApiTheThingsNetworkRepository:
 
             self.session.add(ingest_external_api_ttn)
 
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
 
             return ingest_external_api_ttn
@@ -184,6 +186,7 @@ class IngestExternalApiTheThingsNetworkRepository:
             self.session.add(ingest)
             self.session.add(ext_api)
             self.session.add(entity)
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(ext_api)

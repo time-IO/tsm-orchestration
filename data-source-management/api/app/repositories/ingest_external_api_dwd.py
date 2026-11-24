@@ -1,4 +1,5 @@
 from constants import ApiType, IngestType
+from services.ingest_schedule import apply_ingest_schedule
 from models import IngestExternalApiDwd, IngestExternalApi, Ingest
 from models.ingest_external_api_dwd import (
     IngestExternalApiDwdRead,
@@ -119,6 +120,7 @@ class IngestExternalApiDwdRepository:
 
             self.session.add(ingest_external_api_dwd)
 
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
 
             return ingest_external_api_dwd
@@ -184,6 +186,7 @@ class IngestExternalApiDwdRepository:
             self.session.add(ingest)
             self.session.add(ext_api)
             self.session.add(entity)
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(ext_api)

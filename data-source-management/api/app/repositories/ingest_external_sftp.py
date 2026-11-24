@@ -1,4 +1,5 @@
 from constants import IngestType
+from services.ingest_schedule import apply_ingest_schedule
 from models import IngestExternalSftp, Ingest
 from models.ingest_external_sftp import (
     IngestExternalSftpCreate,
@@ -101,6 +102,7 @@ class IngestExternalSftpRepository:
 
             self.session.add(ingest_extneral_sftp)
 
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
 
             return ingest_extneral_sftp
@@ -147,6 +149,7 @@ class IngestExternalSftpRepository:
             )
 
             self.session.add(ingest)
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(entity)

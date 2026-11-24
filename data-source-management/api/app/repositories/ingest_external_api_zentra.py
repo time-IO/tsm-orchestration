@@ -1,4 +1,5 @@
 from constants import ApiType, IngestType
+from services.ingest_schedule import apply_ingest_schedule
 from models import IngestExternalApiZentra, IngestExternalApi, Ingest
 from models.ingest_external_api_zentra import (
     IngestExternalApiZentraRead,
@@ -119,6 +120,7 @@ class IngestExternalApiZentraRepository:
 
             self.session.add(ingest_external_api_zen)
 
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
 
             return ingest_external_api_zen
@@ -184,6 +186,7 @@ class IngestExternalApiZentraRepository:
             self.session.add(ingest)
             self.session.add(ext_api)
             self.session.add(entity)
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(ext_api)

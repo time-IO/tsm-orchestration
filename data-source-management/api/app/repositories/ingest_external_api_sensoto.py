@@ -1,4 +1,5 @@
 from constants import ApiType, IngestType
+from services.ingest_schedule import apply_ingest_schedule
 from models import IngestExternalApiSensoto, IngestExternalApi, Ingest
 from models.ingest_external_api_sensoto import (
     IngestExternalApiSensotoRead,
@@ -119,6 +120,7 @@ class IngestExternalApiSensotoRepository:
 
             self.session.add(ingest_external_api_sens)
 
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
 
             return ingest_external_api_sens
@@ -184,6 +186,7 @@ class IngestExternalApiSensotoRepository:
             self.session.add(ingest)
             self.session.add(ext_api)
             self.session.add(entity)
+            apply_ingest_schedule(self.session, ingest.id)
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(ext_api)
