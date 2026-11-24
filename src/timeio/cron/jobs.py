@@ -125,9 +125,9 @@ def render_crontab(
             skip(f"ingest_schedule thing {s.uuid}: {e}")
             continue
         out.append(
-            f"# {_stamp(s.updated_at)} | {_clean(s.project)} | {_clean(s.name)} | {s.uuid}"
+            f"# {_stamp(s.updated_at)} | {_clean(s.project)} | {_clean(s.name)} | {s.uuid}\n"
+            + _line(expression, command, s.enabled)
         )
-        out.append(_line(expression, command, s.enabled))
 
     for j in sorted(jobs, key=lambda r: r.id):
         expression = " ".join(j.cron_expression.split())
@@ -146,8 +146,9 @@ def render_crontab(
             continue
         target = _clean(j.target_name or j.params.get("origin") or "")
         out.append(
-            f"# {_stamp(j.updated_at)} | {j.job_type} | {target} | {_clean(j.note or '')}"
+            f"# {_stamp(j.updated_at)} | {j.job_type} | {target} | {_clean(j.note or '')}\n"
+            + _line(expression, command, j.enabled)
         )
-        out.append(_line(expression, command, j.enabled))
 
-    return "\n".join(out) + "\n"
+    # blank line between entries for readability
+    return "\n\n".join(out) + "\n"

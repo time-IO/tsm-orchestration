@@ -84,8 +84,10 @@ def test_render_format_and_order():
     assert text == (
         f"# 2026-01-02 03:04:05 | proj | thing | {U1}\n"
         f"# 5-59/10 * * * * sleep 0 && {CMD} sync-thing {U1} {SUFFIX}\n"
+        "\n"
         f"# 2026-01-02 03:04:05 | proj | b | {U2}\n"
         f"5-59/10 * * * * sleep 7 && {CMD} sync-thing {U2} {SUFFIX}\n"
+        "\n"
         "# 2026-01-02 03:04:05 | sync_sms | sms_cv | x\n"
         f"0 3 * * 0 sleep 0 && {CMD} sync-sms sms_cv {SUFFIX}\n"
     )
