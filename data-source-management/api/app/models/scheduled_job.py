@@ -7,7 +7,7 @@ from sqlmodel import SQLModel, Field
 
 
 class ScheduledJob(SQLModel, table=True):
-    """Manual and default cron jobs of fixed job types, see timeio.cron."""
+    """Manual and default cron jobs of fixed job types, see timeio.cron.jobs."""
 
     __tablename__ = "scheduled_job"
 

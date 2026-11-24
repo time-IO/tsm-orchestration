@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from timeio import cron
+from timeio.cron import jobs, legacy, schedule
 
 U1 = "00000000-0000-0000-0000-000000000001"
 U2 = "00000000-0000-0000-0000-000000000002"
@@ -12,14 +12,14 @@ SUFFIX = "> $STDOUT 2> $STDERR"
 
 
 def sched(ingest_id=1, uuid=U1, expr="5-59/10 * * * *", jitter=7, enabled=True, **kw):
-    return cron.ScheduleRow(
+    return jobs.ScheduleRow(
         ingest_id, uuid, kw.get("name", "thing"), kw.get("project", "proj"),
         expr, jitter, enabled, TS,
     )  # fmt: skip
 
 
 def job(id=1, job_type="resync_thing", uuid=U1, params=None, **kw):
-    return cron.JobRow(
+    return jobs.JobRow(
         id, job_type, uuid, kw.get("name", "thing"),
         params if params is not None else {"days": 7},
         kw.get("expr", "0 3 * * 0"), kw.get("jitter", 0), kw.get("enabled", True),
@@ -33,11 +33,12 @@ def job(id=1, job_type="resync_thing", uuid=U1, params=None, **kw):
         ("sync_thing", U1, None, f"sync-thing {U1}"),
         ("resync_thing", U1, {"days": 3}, f"resync-range {U1} --days 3"),
         ("sync_sms", None, {"origin": "sms_cv"}, "sync-sms sms_cv"),
+        ("mqtt_monitoring", None, {}, "mqtt-monitoring"),
     ],
 )
 def test_build_command(job_type, target, params, args):
     assert (
-        cron.build_command(job_type, target, params, 5)
+        jobs.build_command(job_type, target, params, 5)
         == f"sleep 5 && {CMD} {args} {SUFFIX}"
     )
 
@@ -51,11 +52,12 @@ def test_build_command(job_type, target, params, args):
         ("resync_thing", U1, {"days": "7"}, 0),
         ("sync_thing", U1, None, 60),
         ("unknown", U1, None, 0),
+        ("mqtt_monitoring", None, {"x": 1}, 0),
     ],
 )
 def test_build_command_rejects(job_type, target, params, jitter):
     with pytest.raises(ValueError):
-        cron.build_command(job_type, target, params, jitter)
+        jobs.build_command(job_type, target, params, jitter)
 
 
 @pytest.mark.parametrize(
@@ -70,17 +72,15 @@ def test_build_command_rejects(job_type, target, params, jitter):
     ],
 )
 def test_validate_expression(expr, valid):
-    assert cron.validate_expression(expr) is valid
+    assert schedule.validate_expression(expr) is valid
 
 
 def test_render_format_and_order():
-    text = cron.render_crontab(
+    text = jobs.render_crontab(
         [sched(2, U2, name="b"), sched(1, U1, jitter=0, enabled=False)],
         [job(5, "sync_sms", None, {"origin": "sms_cv"}, name=None, note="x")],
-        "# static\n* * * * * * * echo hi\n",
     )
     assert text == (
-        "# static\n* * * * * * * echo hi\n\n"
         f"# 2026-01-02 03:04:05 | proj | thing | {U1}\n"
         f"# 5-59/10 * * * * sleep 0 && {CMD} sync-thing {U1} {SUFFIX}\n"
         f"# 2026-01-02 03:04:05 | proj | b | {U2}\n"
@@ -91,14 +91,14 @@ def test_render_format_and_order():
 
 
 def test_render_is_deterministic():
-    a = cron.render_crontab([sched(1), sched(2, U2)], [job(1), job(2)])
-    b = cron.render_crontab([sched(2, U2), sched(1)], [job(2), job(1)])
+    a = jobs.render_crontab([sched(1), sched(2, U2)], [job(1), job(2)])
+    b = jobs.render_crontab([sched(2, U2), sched(1)], [job(2), job(1)])
     assert a == b
 
 
 def test_render_skips_invalid_rows():
     skipped = []
-    text = cron.render_crontab(
+    text = jobs.render_crontab(
         [sched(1, expr="nope"), sched(2, U2)],
         [
             job(1, params={"days": 999}),
@@ -113,7 +113,7 @@ def test_render_skips_invalid_rows():
 
 
 def test_render_sanitizes_comment_newlines():
-    text = cron.render_crontab([sched(name="a\nb")], [])
+    text = jobs.render_crontab([sched(name="a\nb")], [])
     assert "| a b |" in text and text.count("\n") == 2
 
 
@@ -132,8 +132,8 @@ LEGACY = f"""\
 
 
 def test_parse_legacy_crontab():
-    legacy = cron.parse_legacy_crontab(LEGACY)
-    kinds = [(j.kind, j.target, j.days, j.jitter, j.enabled) for j in legacy.jobs]
+    parsed = legacy.parse_legacy_crontab(LEGACY)
+    kinds = [(j.kind, j.target, j.days, j.jitter, j.enabled) for j in parsed.jobs]
     assert kinds == [
         ("mqtt_monitoring", None, None, 0, True),
         ("sync_thing", U1, None, 12, True),
@@ -142,15 +142,16 @@ def test_parse_legacy_crontab():
         ("resync_thing", U2, 7, 0, True),
         ("sync_sms", "sms_backend", None, 0, True),
     ]
-    assert legacy.jobs[1].expression == "5-59/10 * * * *"
-    assert [n for n, _ in legacy.unknown] == [9, 10]
+    assert parsed.jobs[0].expression == "*/30 * * * * * *"
+    assert parsed.jobs[1].expression == "5-59/10 * * * *"
+    assert [n for n, _ in parsed.unknown] == [9, 10]
 
 
 def test_parse_legacy_seven_field_sync_is_unknown():
-    legacy = cron.parse_legacy_crontab(
+    parsed = legacy.parse_legacy_crontab(
         f"* * * * * * * {CMD} sync-thing {U1} {SUFFIX}\n"
     )
-    assert not legacy.jobs and len(legacy.unknown) == 1
+    assert not parsed.jobs and len(parsed.unknown) == 1
 
 
 @pytest.mark.parametrize(
@@ -158,12 +159,12 @@ def test_parse_legacy_seven_field_sync_is_unknown():
     [("sleep 12 && python3 x", 12), ("sleep 99 && x", 59), ("python3 x", None)],
 )
 def test_jitter_from_command(command, expected):
-    assert cron.jitter_from_command(command) == expected
+    assert legacy.jitter_from_command(command) == expected
 
 
 def test_render_normalizes_whitespace_and_rejects_bad_params():
     skipped = []
-    text = cron.render_crontab(
+    text = jobs.render_crontab(
         [sched(expr="5-59/10  * * *\t*")],
         [job(1, params=[]), job(2, "sync_sms", None, "x")],
         on_skip=skipped.append,
@@ -185,8 +186,8 @@ def test_render_normalizes_whitespace_and_rejects_bad_params():
     ],
 )
 def test_parse_legacy_rejects_unexpected_args(args):
-    legacy = cron.parse_legacy_crontab(f"0 * * * * {CMD} {args} {SUFFIX}\n")
-    assert not legacy.jobs and len(legacy.unknown) == 1
+    parsed = legacy.parse_legacy_crontab(f"0 * * * * {CMD} {args} {SUFFIX}\n")
+    assert not parsed.jobs and len(parsed.unknown) == 1
 
 
 def test_parse_legacy_accepts_days_equals_and_uppercase_uuid():
@@ -194,12 +195,57 @@ def test_parse_legacy_accepts_days_equals_and_uppercase_uuid():
         f"0 * * * * {CMD} resync-range {U1.upper()} --days=30 {SUFFIX}\n"
         f"0 * * * * {CMD} resync-range {U2} --days 365 {SUFFIX}\n"
     )
-    jobs = cron.parse_legacy_crontab(text).jobs
-    assert [(j.target, j.days) for j in jobs] == [(U1, 30), (U2, 365)]
+    parsed = legacy.parse_legacy_crontab(text).jobs
+    assert [(j.target, j.days) for j in parsed] == [(U1, 30), (U2, 365)]
 
 
 @pytest.mark.parametrize("job_type", ["sync_thing", "resync_project"])
 def test_render_skips_unknown_job_types(job_type):
     skipped = []
-    text = cron.render_crontab([], [job(job_type=job_type)], on_skip=skipped.append)
+    text = jobs.render_crontab([], [job(job_type=job_type)], on_skip=skipped.append)
     assert "sync-thing" not in text and len(skipped) == 1
+
+
+@pytest.mark.parametrize(
+    ("expr", "allow_seconds", "valid"),
+    [
+        ("*/30 * * * * * *", True, True),
+        ("*/30 * * * * * *", False, False),
+        ("0 0 4 * * MON *", True, True),
+        ("60 * * * * * *", True, False),
+        ("*/30 * * * * * 20x", True, False),
+        ("* * * * * *", True, False),
+        ("0 4 * * MON", False, True),
+    ],
+)
+def test_validate_expression_seconds(expr, allow_seconds, valid):
+    assert schedule.validate_expression(expr, allow_seconds) is valid
+
+
+def test_render_mqtt_monitoring_seven_fields():
+    text = jobs.render_crontab(
+        [], [job(1, "mqtt_monitoring", None, {}, name=None, expr="*/30 * * * * * *")]
+    )
+    assert f"\n*/30 * * * * * * sleep 0 && {CMD} mqtt-monitoring {SUFFIX}\n" in text
+
+
+PROD_SHAPES = f"""\
+*/30 * * * * * * /scripts/mqtt_sync_wrapper.py mqtt-monitoring > $STDOUT 2>$STDERR
+0 4 * * MON /scripts/mqtt_sync_wrapper resync-range {U1} --days 8 > $STDOUT 2>$STDERR
+5-59 * * * * python3 /scripts/mqtt_sync_wrapper.py sync-sms sms_backend 2>&1
+# 30 1 * * * python3 /scripts/mqtt_sync_wrapper.py sync-sms sms_cv
+# 0 * * * * python3 /scripts/trigger_qaqc.py {U1}
+"""
+
+
+def test_parse_legacy_prod_shapes():
+    parsed = legacy.parse_legacy_crontab(PROD_SHAPES)
+    assert [
+        (j.kind, j.target, j.days, j.expression, j.enabled) for j in parsed.jobs
+    ] == [
+        ("mqtt_monitoring", None, None, "*/30 * * * * * *", True),
+        ("resync_thing", U1, 8, "0 4 * * MON", True),
+        ("sync_sms", "sms_backend", None, "5-59 * * * *", True),
+        ("sync_sms", "sms_cv", None, "30 1 * * *", False),
+    ]
+    assert not parsed.unknown

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from crontab import CronItem
 
 from setup_crontab import CreateThingInCrontabHandler
-from timeio import cron
+from timeio.cron import schedule as cron
 
 
 class ProjectMock:

@@ -15,43 +15,27 @@ from pathlib import Path
 import click
 import psycopg
 
-from timeio import cron
+from timeio.cron import db, jobs
 from timeio.common import get_envvar, setup_logging
 
 logger = logging.getLogger("cron-scheduler")
 
-STATIC_PATH = "/etc/timeio/crontab.static.txt"
-CONNECT_TIMEOUT = 10
 
-
-def _read(path: str | None) -> str:
-    if not path or not Path(path).is_file():
-        return ""
-    return Path(path).read_text()
-
-
-def read_static(extra_path: str | None, static_path: str = STATIC_PATH) -> str:
-    return _read(static_path) + "\n" + _read(extra_path)
-
-
-def render_from_db(dsn: str, static_text: str, on_skip=None) -> tuple[str, int]:
+def render_from_db(dsn: str, on_skip=None) -> tuple[str, int]:
     """Return the rendered crontab and the number of ingest schedules."""
-    with psycopg.connect(
-        dsn, connect_timeout=CONNECT_TIMEOUT
-    ) as conn, conn.transaction():
-        schedules = cron.fetch_schedules(conn)
-        jobs = cron.fetch_jobs(conn)
-    return cron.render_crontab(schedules, jobs, static_text, on_skip), len(schedules)
+    with db.connect(dsn) as conn, conn.transaction():
+        schedules = db.fetch_schedules(conn)
+        job_rows = db.fetch_jobs(conn)
+    return jobs.render_crontab(schedules, job_rows, on_skip), len(schedules)
 
 
 class Scheduler:
-    def __init__(self, dsn: str, crontab_dir: str, poll: int, extra: str | None):
+    def __init__(self, dsn: str, crontab_dir: str, poll: int):
         self.dsn = dsn
         self.dir = Path(crontab_dir)
         self.path = self.dir / "crontab.txt"
         self.heartbeat = self.dir / ".heartbeat"
         self.poll = poll
-        self.extra = extra
         self.proc: subprocess.Popen | None = None
         self.last_hash: str | None = None
         self._last_skips: frozenset[str] = frozenset()
@@ -59,9 +43,7 @@ class Scheduler:
 
     def render(self) -> str:
         skips: list[str] = []
-        text, n = render_from_db(
-            self.dsn, read_static(self.extra), on_skip=skips.append
-        )
+        text, n = render_from_db(self.dsn, on_skip=skips.append)
         if frozenset(skips) != self._last_skips:
             self._last_skips = frozenset(skips)
             for msg in skips:
@@ -112,8 +94,7 @@ class Scheduler:
             logger.exception("initial crontab update failed")
             updated = False
         if not updated and not self.path.is_file():
-            static = read_static(self.extra)
-            self.path.write_text(cron.render_crontab([], [], static))
+            self.path.write_text(jobs.render_crontab([], []))
         self.heartbeat.touch()
         self.proc = subprocess.Popen(["supercronic", "-split-logs", str(self.path)])
 
@@ -144,15 +125,12 @@ class Scheduler:
 def main(render_only: bool):
     setup_logging(get_envvar("LOG_LEVEL", "INFO"))
     dsn = get_envvar("DSMDB_DSN")
-    extra = os.environ.get("CRON_EXTRA_CRONTAB") or None
     if render_only:
-        text, _ = render_from_db(dsn, read_static(extra))
+        text, _ = render_from_db(dsn)
         click.echo(text, nl=False)
         return
     poll = int(os.environ.get("CRON_SCHEDULER_POLL_INTERVAL_SECONDS", "60"))
-    sys.exit(
-        Scheduler(dsn, os.environ.get("CRON_DIR", "/tmp/crontab"), poll, extra).run()
-    )
+    sys.exit(Scheduler(dsn, os.environ.get("CRON_DIR", "/tmp/crontab"), poll).run())
 
 
 if __name__ == "__main__":

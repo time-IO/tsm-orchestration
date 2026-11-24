@@ -6,10 +6,10 @@ from random import randint
 
 from crontab import CronItem, CronTab
 
-from timeio.cron import (
+from timeio.cron.jobs import build_command
+from timeio.cron.legacy import jitter_from_command
+from timeio.cron.schedule import (
     SYNC_JITTER_SECONDS,
-    build_command,
-    jitter_from_command,
     new_schedule,
     update_cron_expression,
 )

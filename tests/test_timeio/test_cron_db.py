@@ -11,7 +11,7 @@ from crontab import CronTab
 import cron_jobs
 import cron_scheduler
 import setup_crontab
-from timeio import cron
+from timeio.cron import legacy
 
 U1 = "00000000-0000-0000-0000-000000000001"
 U2 = "00000000-0000-0000-0000-000000000002"
@@ -97,14 +97,14 @@ def test_act_creates_and_updates_keeping_jitter(handler, monkeypatch):
     thing = thing_mock(ext_api=api(10))
     run_act(handler, monkeypatch, thing)
     job = next(iter(CronTab(tabfile=handler.tabfile)))
-    jitter = cron.jitter_from_command(job.command)
+    jitter = legacy.jitter_from_command(job.command)
     assert job.is_enabled()
 
     thing.ext_api = api(10, enabled=False)
     run_act(handler, monkeypatch, thing)
     jobs = list(CronTab(tabfile=handler.tabfile))
     assert len(jobs) == 1 and not jobs[0].is_enabled()
-    assert cron.jitter_from_command(jobs[0].command) == jitter
+    assert legacy.jitter_from_command(jobs[0].command) == jitter
 
 
 def test_act_without_ext_creates_nothing_and_removes_existing(handler, monkeypatch):
@@ -168,7 +168,7 @@ def test_cli_unknown_thing_and_job(monkeypatch):
 
 @pytest.fixture
 def scheduler(tmp_path, monkeypatch):
-    s = cron_scheduler.Scheduler("dsn", str(tmp_path), 60, None)
+    s = cron_scheduler.Scheduler("dsn", str(tmp_path), 60)
     s.dir.mkdir(exist_ok=True)
     s.text = "# x\n"
     monkeypatch.setattr(s, "render", lambda: s.text)
