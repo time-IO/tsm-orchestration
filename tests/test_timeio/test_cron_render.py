@@ -65,6 +65,7 @@ def test_build_command_rejects(job_type, target, params, jitter):
     [
         ("*/5 * * * *", True),
         ("0 3 * * 0", True),
+        ("0  4 * * MON", True),
         ("* * * * * *", False),
         ("@daily", False),
         ("61 * * * *", False),

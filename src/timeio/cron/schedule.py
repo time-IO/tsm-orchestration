@@ -177,7 +177,7 @@ def validate_expression(expression: str, allow_seconds: bool = False) -> bool:
     """5 fields, or with `allow_seconds` supercronic's 7 (sec min hour dom mon dow year)."""
     fields = expression.split()
     if len(fields) == 5:
-        return CronSlices.is_valid(expression)
+        return CronSlices.is_valid(" ".join(fields))
     if allow_seconds and len(fields) == 7:
         # the seconds field has the syntax and range of a minute field
         return (

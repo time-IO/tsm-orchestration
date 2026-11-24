@@ -24,7 +24,8 @@ DEFAULT_JOBS: tuple[tuple[str, dict[str, Any], str], ...] = (
 
 
 def connect(dsn: str) -> psycopg.Connection:
-    return psycopg.connect(dsn, connect_timeout=CONNECT_TIMEOUT)
+    # autocommit: each conn.transaction() commits on its own (import, seeding)
+    return psycopg.connect(dsn, connect_timeout=CONNECT_TIMEOUT, autocommit=True)
 
 
 def fetch_schedules(conn: psycopg.Connection) -> list[ScheduleRow]:
