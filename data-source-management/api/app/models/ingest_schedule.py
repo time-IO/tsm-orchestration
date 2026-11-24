@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import CheckConstraint, Column, DateTime, text
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field
 
 
@@ -30,3 +31,12 @@ class IngestSchedule(SQLModel, table=True):
             DateTime(timezone=True), nullable=False, server_default=text("now()")
         ),
     )
+
+
+class IngestScheduleRead(BaseModel):
+    cron_expression: str
+    jitter_seconds: int
+    enabled: bool
+    sync_interval_minutes: Optional[int]
+    updated_at: datetime
+    next_runs: list[datetime] = []

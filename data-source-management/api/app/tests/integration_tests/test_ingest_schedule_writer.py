@@ -1,11 +1,15 @@
 """Integration tests: external ingest create/update keeps ingest_schedule in line."""
 
+from datetime import datetime, timezone
+
 import pytest
 from sqlmodel import Session
 
-from dependencies import engine
-from models import IngestSchedule
-from timeio.cron.schedule import extract_base_minute, get_current_interval
+from dependencies import engine, get_current_user
+from main import app
+from models import IngestSchedule, ScheduledJob, User
+from services.ingest_schedule import next_runs
+from timeio.cron.schedule import get_current_interval
 
 from .test_ingest_external_api_bosch import _bosch_payload
 from .test_ingest_external_api_dwd import _dwd_payload
@@ -16,6 +20,7 @@ from .test_ingest_external_api_tsystems import _tsystems_payload
 from .test_ingest_external_api_uba import _uba_payload
 from .test_ingest_external_api_zentra import _zentra_payload
 from .test_ingest_external_sftp import _sftp_payload
+from ..utils.user_proxy import UserProxy
 
 SFTP = "/ingest/external-sftp"
 
@@ -159,3 +164,81 @@ def test_delete_removes_schedule(client, base_data):
     assert _row(ingest_id) is not None
     assert client.delete(f"{SFTP}/{ingest_id}").status_code == 200
     assert _row(ingest_id) is None
+
+
+def test_schedule_endpoint(client, base_data):
+    ingest_id = _create_sftp(client, base_data, sync_interval_in_minutes=60)
+    with Session(engine) as session:
+        session.add(
+            ScheduledJob(
+                job_type="resync_thing",
+                ingest_id=ingest_id,
+                params={"days": 8},
+                cron_expression="0 4 * * MON",
+                note="weekly",
+            )
+        )
+        session.commit()
+
+    response = client.get(f"/ingest/{ingest_id}/schedule")
+    assert response.status_code == 200
+    body = response.json()
+    row = _row(ingest_id)
+    assert body["schedule"]["cron_expression"] == row.cron_expression
+    assert body["schedule"]["jitter_seconds"] == row.jitter_seconds
+    assert body["schedule"]["sync_interval_minutes"] == 60
+    assert body["schedule"]["enabled"] is True
+    assert [(j["job_type"], j["params"], j["note"]) for j in body["jobs"]] == [
+        ("resync_thing", {"days": 8}, "weekly")
+    ]
+    assert len(body["schedule"]["next_runs"]) == 5
+    assert len(body["jobs"][0]["next_runs"]) == 5
+
+
+def test_schedule_endpoint_without_schedule(client, mqtt_ingest):
+    response = client.get(f"/ingest/{mqtt_ingest['id']}/schedule")
+    assert response.status_code == 200
+    assert response.json() == {"schedule": None, "jobs": []}
+
+
+def test_schedule_endpoint_access_scope(client, base_data, other_group_data):
+    ingest_id = _create_sftp(client, base_data)
+    with Session(engine) as session:
+        other_user = session.get(User, other_group_data["user_id"])
+        proxy = UserProxy(other_user, [other_group_data["permission_group_id"]])
+    app.dependency_overrides[get_current_user] = lambda: proxy
+
+    response = client.get(f"/ingest/{ingest_id}/schedule")
+    assert response.status_code == 404
+
+
+def _utc(*args):
+    return datetime(*args, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize(
+    ("now", "first"),
+    [
+        (_utc(2026, 1, 1, 10, 0), _utc(2026, 1, 1, 10, 17, 30)),
+        # the 10:17 run is still waiting for its start delay
+        (_utc(2026, 1, 1, 10, 17, 10), _utc(2026, 1, 1, 10, 17, 30)),
+        (_utc(2026, 1, 1, 10, 17, 40), _utc(2026, 1, 1, 12, 17, 30)),
+    ],
+)
+def test_next_runs(now, first):
+    runs = next_runs("17 */2 * * *", 30, True, now=now)
+    assert runs[0] == first
+    assert [(b - a).total_seconds() for a, b in zip(runs, runs[1:])] == [7200] * 4
+
+
+@pytest.mark.parametrize(
+    ("expression", "enabled"),
+    [("17 */2 * * *", False), ("*/30 * * * * * *", True), ("nope", True)],
+)
+def test_next_runs_empty(expression, enabled):
+    assert next_runs(expression, 0, enabled) == []
+
+
+def test_next_runs_day_names():
+    runs = next_runs("0 4 * * MON", 0, True, count=2, now=_utc(2026, 11, 24))
+    assert runs == [_utc(2026, 11, 30, 4), _utc(2026, 12, 7, 4)]

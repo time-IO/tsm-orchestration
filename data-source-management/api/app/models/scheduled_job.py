@@ -3,7 +3,10 @@ from typing import Optional
 
 from sqlalchemy import CheckConstraint, Column, DateTime, text
 from sqlalchemy.dialects.postgresql import JSONB
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field
+
+from models.ingest_schedule import IngestScheduleRead
 
 
 class ScheduledJob(SQLModel, table=True):
@@ -44,3 +47,20 @@ class ScheduledJob(SQLModel, table=True):
             DateTime(timezone=True), nullable=False, server_default=text("now()")
         ),
     )
+
+
+class ScheduledJobRead(BaseModel):
+    id: int
+    job_type: str
+    params: dict
+    cron_expression: str
+    jitter_seconds: int
+    enabled: bool
+    note: Optional[str]
+    updated_at: datetime
+    next_runs: list[datetime] = []
+
+
+class IngestScheduleInfoRead(BaseModel):
+    schedule: Optional[IngestScheduleRead] = None
+    jobs: list[ScheduledJobRead] = []

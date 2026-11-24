@@ -1,17 +1,61 @@
 """Keeps `ingest_schedule` in line with an external ingest's sync settings."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from random import randint
 from typing import Optional
 
+from croniter import CroniterBadCronError, croniter
 from sqlmodel import Session
 
-from models import IngestExternalApi, IngestExternalSftp, IngestSchedule
+from models import IngestExternalApi, IngestExternalSftp, IngestSchedule, ScheduledJob
+from models.ingest_schedule import IngestScheduleRead
+from models.scheduled_job import IngestScheduleInfoRead, ScheduledJobRead
 from timeio.cron.schedule import (
     SYNC_JITTER_SECONDS,
     new_schedule,
     update_cron_expression,
 )
+
+NEXT_RUNS_COUNT = 5
+
+
+def next_runs(
+    expression: str,
+    jitter_seconds: int,
+    enabled: bool,
+    count: int = NEXT_RUNS_COUNT,
+    now: Optional[datetime] = None,
+) -> list[datetime]:
+    """Upcoming start times (UTC) including the start delay; empty if disabled."""
+    if not enabled or len(expression.split()) != 5:
+        return []
+    now = now or datetime.now(timezone.utc)
+    jitter = timedelta(seconds=jitter_seconds)
+    try:
+        # start before now so a run whose delay is still pending is listed
+        it = croniter(expression, now - jitter)
+        return [it.get_next(datetime) + jitter for _ in range(count)]
+    except (CroniterBadCronError, ValueError, KeyError):
+        return []
+
+
+def _read_with_next_runs(entity, read_model):
+    read = read_model.model_validate(entity, from_attributes=True)
+    read.next_runs = next_runs(
+        entity.cron_expression, entity.jitter_seconds, entity.enabled
+    )
+    return read
+
+
+def build_schedule_info(
+    schedule: Optional[IngestSchedule], jobs: list[ScheduledJob]
+) -> IngestScheduleInfoRead:
+    return IngestScheduleInfoRead(
+        schedule=(
+            _read_with_next_runs(schedule, IngestScheduleRead) if schedule else None
+        ),
+        jobs=[_read_with_next_runs(j, ScheduledJobRead) for j in jobs],
+    )
 
 
 def _sync_config(
