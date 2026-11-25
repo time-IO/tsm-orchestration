@@ -3,7 +3,7 @@
     <div class="row no-wrap items-center q-mb-sm" style="gap: 8px">
       <slot name="toolbar" />
       <q-space />
-      <q-btn flat icon="view_column" label="Columns" color="blue-grey-6">
+      <q-btn v-if="columnToggle" flat icon="view_column" label="Columns" color="blue-grey-6">
         <q-menu>
           <q-list style="min-width: 180px">
             <q-item dense clickable @click="toggleAll">
@@ -155,6 +155,7 @@
                   >
                     <q-tooltip>Copy UUID</q-tooltip>
                   </q-btn>
+                  <slot name="value-append" :col="col" :row="props.row" />
                 </span>
               </div>
               <span v-else class="text-grey-6"> N/A </span>
@@ -210,6 +211,7 @@ const {
   tableStyle = '',
   rowKey = 'id',
   rowsPerPageOptions = [10, 25, 50, 100, 200],
+  columnToggle = true,
 } = defineProps<{
   rows: Row[];
   loading: boolean;
@@ -223,6 +225,7 @@ const {
   tableStyle?: string;
   rowsPerPageOptions?: number[];
   rowKey?: string;
+  columnToggle?: boolean;
 }>();
 
 const pagination = defineModel<QTableRequestPropPagination | undefined>('pagination');
@@ -420,7 +423,7 @@ const columnOptions = computed(() =>
 const savedColumns = sessionStorage.getItem(visibleColumnsStorageKey);
 
 const visibleColumns = ref<string[]>(
-  savedColumns ? JSON.parse(savedColumns) : columns.map((c) => c.name),
+  savedColumns && columnToggle ? JSON.parse(savedColumns) : columns.map((c) => c.name),
 );
 
 function setVisibleColumns(newVisibleColumns: string[]) {
@@ -481,6 +484,20 @@ thead th {
 
 .overview-table :deep(thead th) {
   position: relative;
+}
+
+/*
+ * In Firefox, the overlay scrollbar of the virtual scroll covers the last column's resize handle,
+ * so the handle moves left
+ */
+@supports (-moz-appearance: none) {
+  .overview-table--virtual :deep(thead th:last-child) .col-resize-handle {
+    right: 12px;
+  }
+
+  .overview-table--virtual :deep(thead th:last-child:has(.col-resize-handle)) {
+    padding-right: 36px;
+  }
 }
 
 .overview-table--virtual :deep(thead tr th) {
