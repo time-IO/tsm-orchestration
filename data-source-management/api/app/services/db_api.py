@@ -71,3 +71,24 @@ async def get_ingest_journal(
         f"/things/{ingest_uuid}/journal",
         params=params,
     )
+
+
+async def get_ingest_mqtt_messages(
+    ingest_uuid: UUID,
+    datetime_from: Optional[str] = None,
+    datetime_to: Optional[str] = None,
+    page_number: int = 1,
+    page_size: int = 100,
+    order: str = "desc",
+) -> dict:
+    params = _build_query_params(
+        datetime_from=datetime_from,
+        datetime_to=datetime_to,
+        page_number=page_number,
+        page_size=page_size,
+        order=order,
+    )
+    return await _fetch_db_api(
+        f"/things/{ingest_uuid}/mqtt_message",
+        params=params,
+    )
