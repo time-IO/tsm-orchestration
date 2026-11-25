@@ -6,7 +6,7 @@
     @show="onOpen"
     @hide="onHide"
   >
-    <q-card class="q-pa-sm column no-wrap" style="width: 60vw; max-width: 80vw; max-height: 80vh">
+    <q-card class="q-pa-sm column no-wrap" style="width: 60vw; max-width: 80vw; height: 80vh">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">MQTT Client</div>
         <q-badge :color="statusColor" class="q-ml-md" :label="statusLabel" text-color="white" />
@@ -31,23 +31,20 @@
         />
       </q-card-section>
 
-      <q-card-section class="q-pt-sm col scroll" style="min-height: 0">
-        <q-table
-          flat
-          bordered
-          dense
+      <q-card-section class="q-pt-sm col column no-wrap" style="min-height: 0">
+        <overview-table
+          v-model:pagination="pagination"
           :rows="messages"
+          :loading="false"
           :columns="columns"
+          storage-key="mqtt-messages"
+          :column-widths="columnWidths"
+          :column-toggle="false"
           row-key="key"
-          :pagination="{ rowsPerPage: 10 }"
+          dense
+          virtual-scroll
           :no-data-label="status === 'connected' ? 'Waiting for messages…' : 'Not connected'"
-        >
-          <template #body-cell-payload="props">
-            <q-td :props="props">
-              <div class="mqtt-payload">{{ props.row.payload }}</div>
-            </q-td>
-          </template>
-        </q-table>
+        />
       </q-card-section>
 
       <q-separator />
@@ -95,9 +92,12 @@
 import { computed, onUnmounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
+import OverviewTable from '@/components/common/OverviewTable.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { MqttLiveConnection } from '@/services/ingest_mqtt_client';
 import type { MqttLiveMessage } from '@/services/ingest_mqtt_client/types';
+import type { QTableRequestPropPagination } from '@/services/types';
+import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 const showDialog = defineModel<boolean>({ default: false });
 const { ingestId, topic } = defineProps<{
@@ -119,6 +119,19 @@ const publishPayload = ref('');
 
 let conn: MqttLiveConnection | null = null;
 let seq = 0;
+
+const pagination = ref<QTableRequestPropPagination>({
+  sortBy: '',
+  descending: false,
+  page: 1,
+  rowsPerPage: 25,
+});
+
+const columnWidths: ColumnWidths = {
+  time: { min: 8, default: 10, max: 16 },
+  topic: { min: 10, default: 20 },
+  payload: { min: 20, default: 40 },
+};
 
 const columns: QTableColumn<Row>[] = [
   { name: 'time', label: 'Received', field: 'time', align: 'left' },
@@ -206,12 +219,3 @@ function doPublish() {
   conn.publish(publishSuffix.value, publishPayload.value);
 }
 </script>
-
-<style scoped>
-.mqtt-payload {
-  max-width: 20vw;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-family: monospace;
-}
-</style>
