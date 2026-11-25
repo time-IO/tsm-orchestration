@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from access_scope import AccessScope
@@ -10,7 +10,11 @@ from models import User
 from models.filters import IngestFilter
 from models.ingest import IngestWithApiInfoRead
 from repositories.ingest import IngestRepository
-from services.db_api import get_ingest_configurations, get_ingest_journal
+from services.db_api import (
+    get_ingest_configurations,
+    get_ingest_journal,
+    get_ingest_mqtt_messages,
+)
 import logging
 
 from fastapi_pagination import Page
@@ -97,6 +101,28 @@ async def read_ingest_journal(
         datetime_to=datetime_to,
         level=level,
         limit=limit,
+    )
+
+
+@router.get("/{ingest_id}/mqtt_messages", tags=["ingest/mqtt"])
+async def read_ingest_mqtt_messages(
+    ingest_id: int,
+    datetime_from: Optional[str] = Query(None),
+    datetime_to: Optional[str] = Query(None),
+    page_number: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=1000),
+    order: Literal["asc", "desc"] = Query("desc", description="Sort by timestamp"),
+    repo: IngestRepository = Depends(get_repo_ingest),
+    current_user: User = Depends(get_current_user),
+):
+    ingest = repo.find_one(ingest_id, access_scope=AccessScope.from_user(current_user))
+    return await get_ingest_mqtt_messages(
+        ingest.uuid,
+        datetime_from=datetime_from,
+        datetime_to=datetime_to,
+        page_number=page_number,
+        page_size=page_size,
+        order=order,
     )
 
 
