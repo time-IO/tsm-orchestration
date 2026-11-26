@@ -61,7 +61,7 @@ _KINDS = {
 
 @dataclass
 class LegacyJob:
-    kind: str  # sync_thing | resync_thing | sync_sms | mqtt_monitoring | trigger_qc
+    kind: str  # resync_thing | sync_sms | mqtt_monitoring | trigger_qc
     target: str | None  # thing uuid, sms origin or permission group uuid
     days: int | None
     expression: str
@@ -76,6 +76,7 @@ class LegacyJob:
 class LegacyCrontab:
     jobs: list[LegacyJob] = field(default_factory=list)
     unknown: list[tuple[int, str]] = field(default_factory=list)
+    sync_lines: int = 0
 
 
 class ImportBlocked(RuntimeError):
@@ -123,6 +124,10 @@ def parse_legacy_crontab(text: str) -> LegacyCrontab:
                 result.unknown.append((line_no, line))
             continue
         kind = _KINDS[m["cmd"]]
+        if kind == "sync_thing":
+            # derived from the DSM sync settings (ingest_schedule), not imported
+            result.sync_lines += 1
+            continue
         expression = normalize_expression(m["fields"])
         jitter = min(int(m["sleep"] or 0), MAX_JITTER_SECONDS)
         enabled = not m["comment"]
@@ -153,8 +158,6 @@ def _parse_legacy_args(kind: str, args: list[str]) -> tuple[str, int | None] | N
     if not args or not _is_uuid(args[0]):
         return None
     target, rest = args[0].lower(), args[1:]
-    if kind == "sync_thing":
-        return (target, None) if not rest else None
     if not rest:
         return target, DEFAULT_RESYNC_DAYS
     if len(rest) == 2 and rest[0] == "--days":
@@ -261,37 +264,35 @@ def mark_imported(path: Path, tables_id: str) -> None:
     tmp.replace(marker)
 
 
-def _ingests(conn: psycopg.Connection, uuids: list[str]) -> dict[str, tuple]:
-    """uuid -> (ingest_id, configured sync interval or None)."""
+def _ingests(conn: psycopg.Connection, uuids: list[str]) -> dict[str, int]:
+    """uuid -> ingest_id."""
     rows = conn.execute(
         f"""
-        SELECT i.uuid::text, i.id,
-               COALESCE(s.sync_interval_in_minutes, a.sync_interval_in_minutes)
-        FROM {db.SCHEMA}.ingest i
-        LEFT JOIN {db.SCHEMA}.ingest_external_sftp s ON s.ingest_id = i.id
-        LEFT JOIN {db.SCHEMA}.ingest_external_api a ON a.ingest_id = i.id
+        SELECT i.uuid::text, i.id FROM {db.SCHEMA}.ingest i
         WHERE i.uuid = ANY(%s::uuid[])
         """,
         (uuids,),
     ).fetchall()
-    return {r[0]: (r[1], r[2]) for r in rows}
+    return {r[0]: r[1] for r in rows}
 
 
 def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
     """Import a legacy crontab in one transaction. Existing rows win and nothing
     is updated, so a repeated import only adds what is missing."""
     parsed = parse_legacy_crontab(text)
-    selected, duplicates, conflicts = _select_jobs(parsed.jobs)
+    selected, duplicates = _select_jobs(parsed.jobs)
     active_unknown = [(n, line) for n, line in parsed.unknown if line[0] != "#"]
-    if active_unknown or conflicts:
+    if active_unknown:
         problems = [
             f"line {n} cannot be imported: {line}" for n, line in active_unknown
         ]
         raise ImportBlocked(
-            "; ".join(problems + conflicts)
+            "; ".join(problems)
             + " -- comment out the lines to drop in the legacy crontab"
         )
-    summary = ImportSummary(unknown=len(parsed.unknown), skipped=len(duplicates))
+    summary = ImportSummary(
+        unknown=len(parsed.unknown), skipped=len(duplicates) + parsed.sync_lines
+    )
     for line_no, line in parsed.unknown:
         logger.warning(f"legacy crontab line {line_no} not imported: {line}")
     for job, kept in duplicates:
@@ -300,9 +301,7 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
             "not imported"
         )
     with conn.transaction():
-        uuids = sorted(
-            {j.target for j in selected if j.kind in ("sync_thing", "resync_thing")}
-        )
+        uuids = sorted({j.target for j in selected if j.kind == "resync_thing"})
         ingests = _ingests(conn, uuids)
         for job in selected:
             if job.kind == "trigger_qc":
@@ -318,14 +317,14 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
                 else:
                     summary.skipped += 1
                 continue
-            ingest_id, interval = ingests.get(job.target, (None, None))
-            if job.kind in ("sync_thing", "resync_thing") and ingest_id is None:
+            ingest_id = ingests.get(job.target)
+            if job.kind == "resync_thing" and ingest_id is None:
                 summary.orphaned += 1
                 logger.warning(
                     f"legacy crontab line {job.line_no}: unknown thing {job.target}"
                 )
                 continue
-            if _import_job(conn, job, ingest_id, interval):
+            if _import_job(conn, job, ingest_id):
                 summary.imported += 1
             else:
                 summary.skipped += 1
@@ -334,50 +333,31 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
 
 def _job_key(job: LegacyJob) -> tuple:
     """Lines with the same key would end up as one DB row."""
-    if job.kind == "sync_thing":
-        return job.kind, job.target
     qc_name = job.qc_name.lower() if job.qc_name else None
     return job.kind, job.target, job.days, qc_name, job.qc_interval, job.expression
 
 
 def _select_jobs(
     jobs: list[LegacyJob],
-) -> tuple[list[LegacyJob], list[tuple[LegacyJob, LegacyJob]], list[str]]:
+) -> tuple[list[LegacyJob], list[tuple[LegacyJob, LegacyJob]]]:
     """One job per key: the last active line, else the last line.
-    Returns (selected, (dropped, kept) pairs, conflicts)."""
+    Returns (selected, (dropped, kept) pairs)."""
     groups: dict[tuple, list[LegacyJob]] = {}
     for job in jobs:
         groups.setdefault(_job_key(job), []).append(job)
-    selected, duplicates, conflicts = [], [], []
+    selected, duplicates = [], []
     for group in groups.values():
         active = [j for j in group if j.enabled]
-        if len({j.expression for j in active}) > 1:
-            lines = ", ".join(str(j.line_no) for j in active)
-            conflicts.append(
-                f"lines {lines} are active with different schedules for {group[0].target}"
-            )
         kept = (active or group)[-1]
         selected.append(kept)
         duplicates += [(j, kept) for j in group if j is not kept]
     selected.sort(key=lambda j: j.line_no)
-    return selected, duplicates, conflicts
+    return selected, duplicates
 
 
 def _import_job(
-    conn: psycopg.Connection, job: LegacyJob, ingest_id: int | None, interval
+    conn: psycopg.Connection, job: LegacyJob, ingest_id: int | None
 ) -> bool:
-    if job.kind == "sync_thing":
-        cur = conn.execute(
-            f"""
-            INSERT INTO {db.SCHEMA}.ingest_schedule
-                (ingest_id, cron_expression, jitter_seconds, enabled,
-                 sync_interval_minutes)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (ingest_id) DO NOTHING
-            """,
-            (ingest_id, job.expression, job.jitter, job.enabled, interval),
-        )
-        return cur.rowcount == 1
     if job.kind == "resync_thing":
         params = {"days": job.days}
     elif job.kind == "sync_sms":

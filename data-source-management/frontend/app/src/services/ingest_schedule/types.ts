@@ -1,5 +1,5 @@
 export interface IngestSchedule {
-  cron_expression: string;
+  cron_expression: string | null;
   jitter_seconds: number;
   enabled: boolean;
   sync_interval_minutes: number | null;

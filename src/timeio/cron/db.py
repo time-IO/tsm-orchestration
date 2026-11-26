@@ -1,4 +1,4 @@
-"""DSM DB access for cron-scheduler and cron_jobs.py."""
+"""DSM DB access for cron-scheduler."""
 
 from __future__ import annotations
 
@@ -36,6 +36,7 @@ def fetch_schedules(conn: psycopg.Connection) -> list[ScheduleRow]:
             FROM {SCHEMA}.ingest_schedule s
             JOIN {SCHEMA}.ingest i ON i.id = s.ingest_id
             JOIN {SCHEMA}.permission_group p ON p.id = i.permission_group_id
+            WHERE s.cron_expression IS NOT NULL
             ORDER BY s.ingest_id
             """)
         return [ScheduleRow(**r) for r in cur.fetchall()]

@@ -45,13 +45,12 @@ class IngestRepository:
         self, ingest: Ingest
     ) -> tuple[Optional[IngestSchedule], list[ScheduledJob]]:
         """The sync schedule and the manual jobs targeting this ingest."""
-        schedule = self.session.get(IngestSchedule, ingest.id)
         jobs = self.session.exec(
             select(ScheduledJob)
             .where(ScheduledJob.ingest_id == ingest.id)
             .order_by(ScheduledJob.id)
         ).scalars()
-        return schedule, list(jobs)
+        return ingest.schedule, list(jobs)
 
     def find_all(
         self,

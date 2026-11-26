@@ -12,7 +12,8 @@
       <div class="row q-col-gutter-md q-mt-none">
         <div class="col-12 col-sm-4">
           <div class="text-caption text-grey-7">Cron expression (UTC)</div>
-          <code class="text-body2">{{ entry.cron_expression }}</code>
+          <code v-if="entry.cron_expression" class="text-body2">{{ entry.cron_expression }}</code>
+          <div v-else>not set</div>
         </div>
         <div class="col-6 col-sm-4">
           <div class="text-caption text-grey-7">Start delay</div>

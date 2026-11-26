@@ -5,9 +5,13 @@ from random import randint
 from typing import Optional
 
 from croniter import CroniterBadCronError, croniter
-from sqlmodel import Session
-
-from models import IngestExternalApi, IngestExternalSftp, IngestSchedule, ScheduledJob
+from models import (
+    Ingest,
+    IngestExternalApi,
+    IngestExternalSftp,
+    IngestSchedule,
+    ScheduledJob,
+)
 from models.ingest_schedule import IngestScheduleRead
 from models.scheduled_job import IngestScheduleInfoRead, ScheduledJobRead
 from timeio.cron.schedule import (
@@ -21,15 +25,17 @@ NEXT_RUNS_COUNT = 5
 
 
 def next_runs(
-    expression: str,
+    expression: Optional[str],
     jitter_seconds: int,
     enabled: bool,
     count: int = NEXT_RUNS_COUNT,
     now: Optional[datetime] = None,
 ) -> list[datetime]:
     """Upcoming start times (UTC) including the start delay; empty if disabled."""
+    if not enabled or not expression:
+        return []
     expression = normalize_expression(expression)
-    if not enabled or len(expression.split()) != 5:
+    if len(expression.split()) != 5:
         return []
     now = now or datetime.now(timezone.utc)
     jitter = timedelta(seconds=jitter_seconds)
@@ -60,46 +66,37 @@ def build_schedule_info(
     )
 
 
-def _sync_config(
-    session: Session, ingest_id: int
-) -> Optional[tuple[Optional[int], bool]]:
-    for model in (IngestExternalSftp, IngestExternalApi):
-        config = session.get(model, ingest_id)
-        if config is not None:
-            return config.sync_interval_in_minutes, bool(config.sync_enabled)
-    return None
-
-
-def apply_ingest_schedule(session: Session, ingest_id: int) -> None:
-    """Create/adapt the row; recompute only on interval change, keep jitter. No commit."""
-    session.flush()
-    config = _sync_config(session, ingest_id)
-    if config is None:
-        return
-    interval, sync_enabled = config
-    enabled = sync_enabled and interval is not None
-    row = session.get(IngestSchedule, ingest_id)
+def sync_ingest_schedule(
+    ingest: Ingest, config: IngestExternalApi | IngestExternalSftp
+) -> IngestSchedule:
+    """Create/adapt the ingest's schedule; recompute only on interval change, keep jitter."""
+    interval = config.sync_interval_in_minutes
+    enabled = bool(config.sync_enabled) and interval is not None
+    row = ingest.schedule
 
     if row is None:
-        if interval is not None:
-            session.add(
-                IngestSchedule(
-                    ingest_id=ingest_id,
-                    cron_expression=new_schedule(interval),
-                    jitter_seconds=randint(0, SYNC_JITTER_SECONDS),
-                    enabled=enabled,
-                    sync_interval_minutes=interval,
-                )
-            )
-        return
+        return IngestSchedule(
+            ingest_id=ingest.id,
+            cron_expression=new_schedule(interval) if interval is not None else None,
+            jitter_seconds=randint(0, SYNC_JITTER_SECONDS),
+            enabled=enabled,
+            sync_interval_minutes=interval,
+        )
 
-    expression = normalize_expression(row.cron_expression)
-    if interval is not None and interval != row.sync_interval_minutes:
-        expression = update_cron_expression(row.cron_expression, interval)
+    current = row.cron_expression and normalize_expression(row.cron_expression)
+    expression = current
+    if interval is not None and (
+        current is None or interval != row.sync_interval_minutes
+    ):
+        expression = (
+            update_cron_expression(current, interval)
+            if current
+            else new_schedule(interval)
+        )
     # updated_at is rendered into the crontab, so only bump it on visible changes
     if (expression, enabled) != (row.cron_expression, row.enabled):
         row.cron_expression = expression
         row.enabled = enabled
         row.updated_at = datetime.now(timezone.utc)
     row.sync_interval_minutes = interval
-    session.add(row)
+    return row

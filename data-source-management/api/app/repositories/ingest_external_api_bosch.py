@@ -1,5 +1,5 @@
 from constants import ApiType, IngestType
-from services.ingest_schedule import apply_ingest_schedule
+from services.ingest_schedule import sync_ingest_schedule
 from models import IngestExternalApiBosch, IngestExternalApi, Ingest
 from models.ingest_external_api_bosch import (
     IngestExternalApiBoschRead,
@@ -120,7 +120,7 @@ class IngestExternalApiBoschRepository:
 
             self.session.add(ingest_external_api_bosch)
 
-            apply_ingest_schedule(self.session, ingest.id)
+            self.session.add(sync_ingest_schedule(ingest, ingest_external_api))
             self.session.commit()
 
             return ingest_external_api_bosch
@@ -186,7 +186,7 @@ class IngestExternalApiBoschRepository:
             self.session.add(ingest)
             self.session.add(ext_api)
             self.session.add(entity)
-            apply_ingest_schedule(self.session, ingest.id)
+            self.session.add(sync_ingest_schedule(ingest, ext_api))
             self.session.commit()
             self.session.refresh(ingest)
             self.session.refresh(ext_api)

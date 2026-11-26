@@ -81,10 +81,9 @@ def test_every_path_writes_schedule(client, base_data, request, path):
     row = _row(ingest_id)
     interval = created["sync_interval_in_minutes"]
     if interval is None:
-        assert row is None
-        return
+        assert (row.cron_expression, row.enabled) == (None, False)
     assert row.sync_interval_minutes == interval
-    assert row.enabled is created["sync_enabled"]
+    assert row.enabled is (created["sync_enabled"] and interval is not None)
     assert 0 <= row.jitter_seconds <= 30
     jitter = row.jitter_seconds
 
@@ -100,7 +99,7 @@ def test_every_path_writes_schedule(client, base_data, request, path):
     assert row.jitter_seconds == jitter
 
 
-def test_unrelated_edit_keeps_hand_tuned_row(client, base_data):
+def test_unrelated_edit_keeps_row(client, base_data):
     ingest_id = _create_sftp(client, base_data, sync_interval_in_minutes=20)
     _set_row(ingest_id, cron_expression="5,35,50 * * * *", jitter_seconds=42)
     before = _row(ingest_id)
@@ -159,9 +158,18 @@ def test_sync_enabled_toggle(client, base_data):
 
 def test_null_interval(client, base_data):
     ingest_id = _create_sftp(client, base_data, sync_interval_in_minutes=None)
-    assert _row(ingest_id) is None
+    row = _row(ingest_id)
+    assert (row.enabled, row.cron_expression, row.sync_interval_minutes) == (
+        False,
+        None,
+        None,
+    )
+    jitter = row.jitter_seconds
 
     _patch_sftp(client, ingest_id, sync_interval_in_minutes=60)
+    row = _row(ingest_id)
+    assert row.enabled and get_current_interval(row.cron_expression) == 60
+    assert row.jitter_seconds == jitter
     _set_row(ingest_id, cron_expression="17 */1 * * *", jitter_seconds=42)
 
     _patch_sftp(client, ingest_id, sync_interval_in_minutes=None)

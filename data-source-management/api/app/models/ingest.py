@@ -111,3 +111,6 @@ class Ingest(SQLModel, table=True):
     external_mqtt_detail: Optional["IngestExternalMqtt"] = Relationship(
         back_populates="ingest", cascade_delete=True
     )
+    schedule: Optional["IngestSchedule"] = Relationship(
+        back_populates="ingest", cascade_delete=True
+    )

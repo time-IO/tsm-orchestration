@@ -139,14 +139,12 @@ def test_parse_legacy_crontab():
     kinds = [(j.kind, j.target, j.days, j.jitter, j.enabled) for j in parsed.jobs]
     assert kinds == [
         ("mqtt_monitoring", None, None, 0, True),
-        ("sync_thing", U1, None, 12, True),
-        ("sync_thing", U2, None, 0, False),
         ("resync_thing", U1, 14, 0, True),
         ("resync_thing", U2, 7, 0, True),
         ("sync_sms", "sms_backend", None, 0, True),
     ]
     assert parsed.jobs[0].expression == "*/30 * * * * * *"
-    assert parsed.jobs[1].expression == "5-59/10 * * * *"
+    assert parsed.sync_lines == 2
     # commented-out cron lines are reported, plain comments are not
     assert [n for n, _ in parsed.unknown] == [1, 9, 10]
 
@@ -165,9 +163,9 @@ def test_parse_legacy_commented_lines(line, unknown):
     assert bool(legacy.parse_legacy_crontab(line + "\n").unknown) is unknown
 
 
-def test_parse_legacy_seven_field_sync_is_unknown():
+def test_parse_legacy_seven_field_resync_is_unknown():
     parsed = legacy.parse_legacy_crontab(
-        f"* * * * * * * {CMD} sync-thing {U1} {SUFFIX}\n"
+        f"* * * * * * * {CMD} resync-range {U1} {SUFFIX}\n"
     )
     assert not parsed.jobs and len(parsed.unknown) == 1
 
@@ -194,7 +192,6 @@ def test_render_normalizes_whitespace_and_rejects_bad_params():
 @pytest.mark.parametrize(
     "args",
     [
-        f"sync-thing {U1} extra",
         f"resync-range {U1} --days=30x",
         f"resync-range {U1} --days 0",
         f"resync-range {U1} --days 366",
@@ -367,15 +364,15 @@ def test_render_expands_macros():
 
 def test_parse_legacy_macros():
     parsed = legacy.parse_legacy_crontab(
-        f"@hourly {CMD} sync-thing {U1} {SUFFIX}\n"
-        f"# @DAILY sleep 3 && {CMD} sync-thing {U2}\n"
-        f"@reboot {CMD} sync-thing {U1}\n"
+        f"@hourly {CMD} resync-range {U1} {SUFFIX}\n"
+        f"# @DAILY sleep 3 && {CMD} sync-sms sms_cv\n"
+        f"@reboot {CMD} resync-range {U1}\n"
         f"@weekly {QC} --interval 7d --project-uuid {U1} --qc-settings-name x\n"
         "# @hourly /usr/bin/x\n"
     )
     assert [(j.kind, j.expression, j.jitter, j.enabled) for j in parsed.jobs] == [
-        ("sync_thing", "0 * * * *", 0, True),
-        ("sync_thing", "0 0 * * *", 3, False),
+        ("resync_thing", "0 * * * *", 0, True),
+        ("sync_sms", "0 0 * * *", 3, False),
         ("trigger_qc", "0 0 * * 0", 0, True),
     ]
     assert [n for n, _ in parsed.unknown] == [3, 5]

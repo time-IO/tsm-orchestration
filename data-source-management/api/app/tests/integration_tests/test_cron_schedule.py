@@ -141,3 +141,11 @@ def test_scheduled_job_qc_setting_check(
         )
         with pytest.raises(IntegrityError):
             session.commit()
+
+
+def test_enabled_ingest_schedule_needs_expression(mqtt_ingest):
+    with Session(engine) as session:
+        ingest_id = _ingest(session, mqtt_ingest).id
+        session.add(IngestSchedule(ingest_id=ingest_id, enabled=True))
+        with pytest.raises(IntegrityError):
+            session.commit()

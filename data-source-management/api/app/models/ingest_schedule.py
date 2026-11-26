@@ -1,13 +1,16 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import CheckConstraint, Column, DateTime, text
 from pydantic import BaseModel
-from sqlmodel import SQLModel, Field
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from .ingest import Ingest
 
 
 class IngestSchedule(SQLModel, table=True):
-    """Sync schedule per external ingest, written by the DSM API, read by cron-scheduler."""
+    """Sync schedule of every external SFTP/API ingest, derived on each save, read by cron-scheduler."""
 
     __tablename__ = "ingest_schedule"
 
@@ -15,12 +18,17 @@ class IngestSchedule(SQLModel, table=True):
         CheckConstraint(
             "jitter_seconds BETWEEN 0 AND 59", name="ck_ingest_schedule_jitter"
         ),
+        CheckConstraint(
+            "NOT enabled OR cron_expression IS NOT NULL",
+            name="ck_ingest_schedule_expression",
+        ),
     )
 
     ingest_id: int = Field(
         foreign_key="ingest.id", primary_key=True, ondelete="CASCADE"
     )
-    cron_expression: str
+    # NULL until the ingest gets a sync interval
+    cron_expression: Optional[str] = None
     jitter_seconds: int = Field(default=0, sa_column_kwargs={"server_default": "0"})
     enabled: bool = Field(default=True, sa_column_kwargs={"server_default": "true"})
     # interval the expression was computed from; detects real interval changes
@@ -32,9 +40,12 @@ class IngestSchedule(SQLModel, table=True):
         ),
     )
 
+    ingest: "Ingest" = Relationship(back_populates="schedule")
+
 
 class IngestScheduleRead(BaseModel):
-    cron_expression: str
+    # NULL until the ingest gets a sync interval
+    cron_expression: Optional[str] = None
     jitter_seconds: int
     enabled: bool
     sync_interval_minutes: Optional[int]
