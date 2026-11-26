@@ -24,7 +24,7 @@ class IngestExternalApi(SQLModel, table=True):
 
     __table_args__ = (
         CheckConstraint(
-            "api_type IN ('bosch','dwd','nm', 'ttn','tsystems','uba', 'sensoto', 'zentra')",
+            "api_type IN ('bosch','dwd','nm', 'ttn','tsystems','uba', 'sensoto', 'zentra', 'myatmosphere')",
             name="ck_api_type",
         ),
     )
@@ -66,5 +66,8 @@ class IngestExternalApi(SQLModel, table=True):
         back_populates="external_api", cascade_delete=True
     )
     zentra_detail: Optional["IngestExternalApiZentra"] = Relationship(
+        back_populates="external_api", cascade_delete=True
+    )
+    myatmosphere_detail: Optional["IngestExternalApiMyAtmosphere"] = Relationship(
         back_populates="external_api", cascade_delete=True
     )

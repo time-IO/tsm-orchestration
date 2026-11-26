@@ -26,6 +26,10 @@ import IngestDetailExternalApiZentra from '@/pages/IngestDetailExternalApiZentra
 import IngestCopyExternalApiZentra from '@/pages/IngestCopyExternalApiZentra.vue';
 import IngestNewExternalApiZentra from '@/pages/IngestNewExternalApiZentra.vue';
 import IngestEditExternalApiZentra from '@/pages/IngestEditExternalApiZentra.vue';
+import IngestDetailExternalApiMyAtmosphere from '@/pages/IngestDetailExternalApiMyAtmosphere.vue';
+import IngestCopyExternalApiMyAtmosphere from '@/pages/IngestCopyExternalApiMyAtmosphere.vue';
+import IngestNewExternalApiMyAtmosphere from '@/pages/IngestNewExternalApiMyAtmosphere.vue';
+import IngestEditExternalApiMyAtmosphere from '@/pages/IngestEditExternalApiMyAtmosphere.vue';
 import ParserOverview from '@/pages/ParserOverview.vue';
 import ParserNew from '@/pages/ParserNew.vue';
 import ParserNewCsv from '@/pages/ParserNewCsv.vue';
@@ -165,6 +169,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/new/external-api/myatmosphere',
+    component: IngestNewExternalApiMyAtmosphere,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/external-api/bosch/:id',
     component: IngestDetailExternalApiBosch,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -202,6 +211,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/zentra/:id',
     component: IngestDetailExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/myatmosphere/:id',
+    component: IngestDetailExternalApiMyAtmosphere,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
@@ -275,6 +289,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {
+    path: '/ingest/external-api/myatmosphere/:id/edit',
+    component: IngestEditExternalApiMyAtmosphere,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
     path: '/ingest/mqtt/:id/edit',
     component: IngestEditMqtt,
     meta: { requiresAuth: true, constrainWidth: true },
@@ -337,6 +356,11 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ingest/external-api/zentra/:id/copy',
     component: IngestCopyExternalApiZentra,
+    meta: { requiresAuth: true, constrainWidth: true },
+  },
+  {
+    path: '/ingest/external-api/myatmosphere/:id/copy',
+    component: IngestCopyExternalApiMyAtmosphere,
     meta: { requiresAuth: true, constrainWidth: true },
   },
   {

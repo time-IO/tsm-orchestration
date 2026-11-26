@@ -159,6 +159,11 @@ const externalAPis = {
       docsUrl: 'https://luftdaten.umweltbundesamt.de/api/air-data/v3/doc/',
     },
     { name: 'zentra', label: 'Zentra', path: '/ingest/new/external-api/zentra' },
+    {
+      name: 'myatmosphere',
+      label: 'Palas MyAtmosphere Device Measurements',
+      path: '/ingest/new/external-api/myatmosphere',
+    },
   ],
 };
 
