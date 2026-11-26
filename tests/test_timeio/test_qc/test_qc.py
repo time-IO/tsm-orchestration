@@ -18,6 +18,7 @@ from timeio.qc import filter_qc_functions
 from timeio.qc.qcfunction import (
     QcFunction,
     QcFunctionStream,
+    filter_functions_to_execute,
     get_qc_functions,
     merge_qc_streams,
 )
@@ -603,6 +604,112 @@ def test_selected_deployment_values_reach_saqc(
     assert [quality["annotation"] for quality in qc.data[stream]["quality"]] == [
         "255.0" if value > 10 else "-inf" for value in values
     ]
+
+
+def test_dependency_selection_follows_all_branches_and_long_chains():
+    x, y, z, w, v = [make_stream(a, i) for i, a in enumerate("xyzwv", 1)]
+    first = make_function("first", x, y)
+    branch = make_function("branch", y, v)
+    second = make_function("second", y, z)
+    third = make_function("third", z, w)
+    downstream = make_function("downstream", v, v)
+    funcs = [first, branch, second, third, downstream]
+    assert filter_qc_functions(funcs, "1") == funcs
+
+
+@pytest.mark.parametrize("branch_first", [False, True])
+def test_dependency_chain_uses_fresh_values_and_uploads_all_branches(branch_first):
+    x, y, z, w, v, u = [make_stream(a, i) for i, a in enumerate("xyzwvu", 1)]
+    for stream in [y, z, w, v]:
+        stream.is_mutable = True
+
+    def process(name, field, target, expression):
+        return QcFunction(
+            name,
+            "processGeneric",
+            [field],
+            {"function": expression},
+            [target],
+        )
+
+    first = process("first", x, y, "x * 2")
+    second = process("second", y, z, "y + 10")
+    branch = process("branch", y, v, "y + 100")
+    third = process("third", z, w, "z * 3")
+    unrelated = process("unrelated", u, u, "u + 1")
+    middle = [branch, second] if branch_first else [second, branch]
+    funcs = filter_qc_functions([first, *middle, third, unrelated], "1")
+    index = pd.date_range("2026-01-10", periods=3, tz="UTC")
+    stored = {
+        "x": [1.0, 2.0, 3.0],
+        "y": [-100.0] * 3,
+        "z": [-200.0] * 3,
+        "w": [-300.0] * 3,
+        "v": [-400.0] * 3,
+        "u": [-500.0] * 3,
+    }
+
+    def observations(uuid, position, **kwargs):
+        return {
+            "observations": [
+                {
+                    "result_time": date.isoformat(),
+                    "result_type": 0,
+                    "result_number": value,
+                    "result_quality": None,
+                }
+                for date, value in zip(index, stored[position])
+            ]
+        }
+
+    dbapi = Mock()
+    dbapi.get_datastream_observations.side_effect = observations
+    streams = [stream for func in funcs for stream in func.streams]
+    qc = SaQCWrapper(read_stream_data(dbapi, streams, index[0], index[-1]))
+    for func in funcs:
+        qc.execute(func)
+    write_qc_data(dbapi, qc)
+
+    expected = {
+        y: [2.0, 4.0, 6.0],
+        z: [12.0, 14.0, 16.0],
+        w: [36.0, 42.0, 48.0],
+        v: [102.0, 104.0, 106.0],
+    }
+    for stream, values in expected.items():
+        assert qc.data[stream]["data"].tolist() == values
+    uploads = {
+        call.kwargs["thing_uuid"]: [
+            observation["result_number"] for observation in call.kwargs["observations"]
+        ]
+        for call in dbapi.upsert_observations.call_args_list
+    }
+    assert uploads == {stream.thing_uuid: values for stream, values in expected.items()}
+    assert {
+        call.args[1] for call in dbapi.get_datastream_observations.call_args_list
+    } == {"x", "y", "z", "w", "v"}
+
+
+def test_dependency_selection_preserves_order_and_handles_cycles_once():
+    x, y, z = [make_stream(a, i) for i, a in enumerate("xyz", 1)]
+    first = make_function("first", x, y)
+    second = make_function("second", y, x)
+    unrelated = make_function("unrelated", z, z)
+    selected = [second]
+    assert filter_functions_to_execute([first, second, unrelated], selected) == [
+        first,
+        second,
+    ]
+    assert selected == [second]
+
+
+def test_distinct_new_targets_on_same_thing_remain_distinct():
+    x, y = [make_stream(a, stream_id=None) for a in "xy"]
+    assert x != y
+    assert len({x, y}) == 2
+    first = make_function("first", make_stream("input"), x)
+    unrelated = make_function("unrelated", y, y)
+    assert filter_functions_to_execute([first, unrelated], [first]) == [first]
 
 
 @pytest.mark.parametrize("reverse", [False, True])
