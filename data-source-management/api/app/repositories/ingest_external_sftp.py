@@ -96,16 +96,16 @@ class IngestExternalSftpRepository:
 
             extra_data["ingest_id"] = ingest.id
 
-            ingest_extneral_sftp = IngestExternalSftp.model_validate(
+            ingest_external_sftp = IngestExternalSftp.model_validate(
                 payload, update=extra_data
             )
 
-            self.session.add(ingest_extneral_sftp)
+            self.session.add(ingest_external_sftp)
 
-            self.session.add(sync_ingest_schedule(ingest, ingest_extneral_sftp))
+            self.session.add(sync_ingest_schedule(ingest, ingest_external_sftp))
             self.session.commit()
 
-            return ingest_extneral_sftp
+            return ingest_external_sftp
 
         except Exception as e:
             print(str(e))
