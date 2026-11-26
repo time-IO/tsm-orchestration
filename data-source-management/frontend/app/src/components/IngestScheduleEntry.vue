@@ -33,10 +33,9 @@
         <q-chip
           v-for="run in entry.next_runs"
           :key="run"
-          dense
           outline
-          size="sm"
-          class="q-ma-none q-mr-xs q-mb-xs"
+          class="q-ma-none q-mr-sm q-mb-sm"
+          style="font-variant-numeric: tabular-nums"
         >
           {{ formatUtc(run) }}
         </q-chip>
