@@ -3,3 +3,36 @@
   max-height: 250px !important;
   overflow-y: auto !important;
 }
+
+// tooltip created by the useCopy composable
+.copy-tooltip {
+  position: fixed;
+  z-index: $z-tooltip;
+  padding: $tooltip-padding;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 15px));
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    background-color 0.15s ease;
+
+  @media (max-width: $breakpoint-xs-max) {
+    font-size: $tooltip-mobile-fontsize;
+    padding: $tooltip-mobile-padding;
+  }
+
+  &.copy-tooltip--visible {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+
+  &.copy-tooltip--copied {
+    background: $positive;
+  }
+
+  &.copy-tooltip--failed {
+    background: $negative;
+  }
+}
