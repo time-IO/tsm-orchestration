@@ -9,7 +9,6 @@ import psycopg
 import requests
 
 from urllib.parse import urljoin
-from crontab import CronTab
 from minio.credentials import StaticProvider
 from minio.deleteobjects import DeleteObject
 
@@ -93,14 +92,6 @@ def delete_ext_sftp_entry(cursor, id):
 
 def delete_ext_api_entry(cursor, id):
     cursor.execute("DELETE FROM config_db.ext_api where id = %s", [id])
-
-
-def delete_crontab_entry(crontab_file, thing_uuid):
-    cron = CronTab(tabfile=crontab_file, user=False)
-    for job in cron:
-        if thing_uuid in job.command:
-            cron.remove(job)
-    cron.write()
 
 
 def delete_legacy_qc(cursor, id):
@@ -255,7 +246,6 @@ def get_ids(cursor, thing_uuid):
 )
 @click.option("--grafana-user", default="grafana", envvar="VISUALIZATION_USER")
 @click.option("--grafana-password", default="grafana", envvar="VISUALIZATION_PASSWORD")
-@click.option("--crontab-file", required=True)
 def main(
     thing_uuid,
     dsn,
@@ -265,7 +255,6 @@ def main(
     grafana_host,
     grafana_user,
     grafana_password,
-    crontab_file,
 ):
     """
     * Deletes the given thing, related datastreams and observations from `obervationdb`
@@ -273,7 +262,6 @@ def main(
       - given thing and related entries in ext_api, ext_sftp, mqtt, qaqc, qaqc_test, s3_store
       - mqtt user
       - minio bucket and user -> NOTE: This is because of WORM protection not working right now
-      - crontab entries
     """
 
     logger.info(
@@ -311,11 +299,9 @@ def main(
 
         if ext_sftp_id:
             delete_ext_sftp_entry(cur, ext_sftp_id)
-            delete_crontab_entry(crontab_file, thing_uuid)
 
         if ext_api_id:
             delete_ext_api_entry(cur, ext_api_id)
-            delete_crontab_entry(crontab_file, thing_uuid)
 
         if legacy_qaqc_id:
             delete_legacy_qc(cur, legacy_qaqc_id)

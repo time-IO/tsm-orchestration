@@ -30,7 +30,7 @@ cp docker-compose-dev.example.yml docker-compose-dev.yml
 ```
 
 - Startup ordering is intentional: `init`, PostgreSQL health, and Flyway precede dependent APIs and workers. Preserve `depends_on` conditions when changing service wiring.
-- DSM changes publish `frontend_thing_update`; `worker-thing-setup` provisions PostgreSQL, MinIO, MQTT, Grafana, FROST context, and cron state. File/MQTT ingestion writes through the DB API, then `data_parsed` triggers QA/QC.
+- DSM changes publish `frontend_thing_update`; `worker-thing-setup` provisions PostgreSQL, MinIO, MQTT, Grafana, and FROST context. `cron-scheduler` renders its crontab from the DSM DB (`ingest_schedule`, written by the DSM API, and `scheduled_job`, maintained via `src/cron_jobs.py`) on every poll. File/MQTT ingestion writes through the DB API, then `data_parsed` triggers QA/QC.
 - The `init` container generates ignored certificates, keys, volume state, and `cron/crontab.txt`, and can change permissions on mounted configuration directories.
 
 ## Verification

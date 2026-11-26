@@ -16,7 +16,7 @@ LABEL maintainer="The ZID Team" \
     org.opencontainers.image.created=$BUILD_DATE
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl tini python3 python3-venv inotify-tools \
+    && apt-get install -y --no-install-recommends curl tini python3 python3-venv \
     && rm -rf /var/lib/apt/\
     && rm -rf /etc/cron.*/*
 
@@ -34,7 +34,9 @@ RUN python3 -m venv /opt/venv
 RUN /opt/venv/bin/pip install --no-cache-dir -r /scripts/requirements.txt
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER}
+RUN useradd --uid ${UID} -m -d /home/${USER} -s /bin/bash ${USER} \
+    && mkdir -p /tmp/crontab \
+    && chown ${UID}:${UID} /tmp/crontab
 
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 ENV STDOUT=/proc/1/fd/1
@@ -44,4 +46,4 @@ ENV PYTHONPATH=/scripts/timeio
 USER ${UID}
 
 ENTRYPOINT ["tini", "--"]
-CMD ["sh", "-c", "/supercronic-entrypoint.sh"]
+CMD ["/supercronic-entrypoint.sh"]

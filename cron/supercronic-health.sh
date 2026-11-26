@@ -1,9 +1,25 @@
 #!/bin/bash
 
-# Loop through all commands of all processes in /proc
+# healthy: supercronic runs and cron_scheduler.py touched its heartbeat within 3 polls
+poll="${CRON_SCHEDULER_POLL_INTERVAL_SECONDS:-60}"
+heartbeat="${CRON_DIR:-/tmp/crontab}/.heartbeat"
+
+running=false
 for cmd in /proc/[0-9]*/cmdline; do
-  # Check the command line for the supercronic process
-  tr '\0' ' ' < $cmd | grep -q "supercronic -inotify -split-logs" && echo "Supercronic is running." && exit 0
+  tr '\0' ' ' < "$cmd" 2>/dev/null | grep -q "^supercronic -split-logs" && running=true && break
 done
-echo "Supercronic is not running."
-exit 1
+if [ "$running" != true ]; then
+  echo "Supercronic is not running."
+  exit 1
+fi
+
+if [ ! -f "$heartbeat" ]; then
+  echo "No heartbeat at $heartbeat."
+  exit 1
+fi
+age=$(( $(date +%s) - $(stat -c %Y "$heartbeat") ))
+if [ "$age" -gt $(( 3 * poll )) ]; then
+  echo "Heartbeat is ${age}s old."
+  exit 1
+fi
+echo "Supercronic is running, heartbeat ${age}s old."
