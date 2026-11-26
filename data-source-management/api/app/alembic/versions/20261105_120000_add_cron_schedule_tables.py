@@ -8,14 +8,10 @@ Create Date: 2026-11-05 12:00:00.000000
 
 from typing import Sequence, Union
 
-from random import randint
-
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
 from sqlalchemy.dialects import postgresql
-
-from timeio.cron.schedule import SYNC_JITTER_SECONDS, new_schedule
 
 # revision identifiers, used by Alembic.
 revision: str = "5c1e7a9d3b42"
@@ -96,40 +92,6 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    _backfill_ingest_schedules()
-
-
-def _backfill_ingest_schedules() -> None:
-    conn = op.get_bind()
-    configs = conn.execute(sa.text("""
-            SELECT i.id,
-                   COALESCE(s.sync_interval_in_minutes, a.sync_interval_in_minutes),
-                   COALESCE(s.sync_enabled, a.sync_enabled)
-            FROM ingest i
-            LEFT JOIN ingest_external_sftp s ON s.ingest_id = i.id
-            LEFT JOIN ingest_external_api a ON a.ingest_id = i.id
-            WHERE s.ingest_id IS NOT NULL OR a.ingest_id IS NOT NULL
-            """)).all()
-    rows = [
-        {
-            "ingest_id": ingest_id,
-            "cron_expression": new_schedule(interval) if interval is not None else None,
-            "jitter_seconds": randint(0, SYNC_JITTER_SECONDS),
-            "enabled": bool(sync_enabled) and interval is not None,
-            "sync_interval_minutes": interval,
-        }
-        for ingest_id, interval, sync_enabled in configs
-    ]
-    if rows:
-        conn.execute(
-            sa.text("""
-                INSERT INTO ingest_schedule (ingest_id, cron_expression,
-                    jitter_seconds, enabled, sync_interval_minutes)
-                VALUES (:ingest_id, :cron_expression, :jitter_seconds, :enabled,
-                    :sync_interval_minutes)
-                """),
-            rows,
-        )
 
 
 def downgrade() -> None:

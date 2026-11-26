@@ -25,19 +25,22 @@ class Result:
 class FakeDB:
     """In-memory stand-in for the statements of timeio.cron.db/legacy."""
 
-    def __init__(self, ingests=None, jobs=None, qc=None):
+    def __init__(self, ingests=None, jobs=None, qc=None, configs=None, schedules=None):
         self.ingests = ingests or {}  # uuid -> ingest_id
+        self.configs = configs or {}  # ingest_id -> (sync interval, sync enabled)
+        # ingest_id -> [expression, jitter, enabled, interval]
+        self.schedules = {k: list(v) for k, v in (schedules or {}).items()}
         self.qc = qc or {}  # (group uuid, lower name) -> qc setting id
         self.jobs = list(jobs or [])  # dicts
         self.rolled_back = False
 
     @contextmanager
     def transaction(self):
-        snapshot = list(self.jobs)
+        snapshot = list(self.jobs), {k: list(v) for k, v in self.schedules.items()}
         try:
             yield
         except Exception:
-            self.jobs = snapshot
+            self.jobs, self.schedules = snapshot
             self.rolled_back = True
             raise
 
@@ -46,6 +49,21 @@ class FakeDB:
         if "FROM dsm_db.quality_control_setting q" in sql:
             qc_id = self.qc.get((params[0], params[1].lower()))
             return Result([(qc_id,)] if qc_id else [])
+        if "LEFT JOIN dsm_db.ingest_external_sftp" in sql:
+            ids = {u: self.ingests[u] for u in params[0] if u in self.ingests}
+            return Result(
+                [(u, i, *self.configs[i]) for u, i in ids.items() if i in self.configs]
+            )
+        if "INSERT INTO dsm_db.ingest_schedule" in sql:
+            ingest_id, expr, jitter, enabled, interval = params
+            row = self.schedules.get(ingest_id)
+            if row is None:
+                self.schedules[ingest_id] = [expr, jitter, enabled, interval]
+            elif row[:2] == [expr, jitter]:
+                return Result(rowcount=0)
+            else:
+                row[:2] = [expr, jitter]
+            return Result(rowcount=1)
         if "FROM dsm_db.ingest i" in sql:
             rows = [(u, self.ingests[u]) for u in params[0] if u in self.ingests]
             return Result(rows)
@@ -90,11 +108,19 @@ LEGACY = f"""\
 """
 
 
+CONFIGS = {1: (10, True), 2: (None, True)}
+
+
 def test_import_legacy():
-    conn = FakeDB(ingests={U1: 1, U2: 2})
+    conn = FakeDB(ingests={U1: 1, U2: 2}, configs=CONFIGS)
     summary = legacy.import_legacy(conn, LEGACY)
-    # the three sync-thing lines are skipped, ingest_schedule comes from the DSM
-    assert str(summary) == "imported=3 skipped=4 orphaned=0 unknown=1"
+    # U3 has no external ingest; minute and start delay come from the file,
+    # interval and enabled from the DSM
+    assert str(summary) == "imported=5 skipped=1 orphaned=1 unknown=1"
+    assert conn.schedules == {
+        1: ["5-59/10 * * * *", 12, True, 10],
+        2: ["7 */2 * * *", 3, False, None],
+    }
     assert [(j["job_type"], j["ingest_id"], j["params"], j["expr"]) for j in conn.jobs] == [
         ("mqtt_monitoring", None, {}, "*/30 * * * * * *"),
         ("resync_thing", 1, {"days": 8}, "0 4 * * MON"),
@@ -105,6 +131,8 @@ def test_import_legacy():
 def test_import_keeps_existing_rows():
     conn = FakeDB(
         ingests={U1: 1},
+        configs={1: (10, True)},
+        schedules={1: ["5-59/10 * * * *", 12, True, 10]},
         jobs=[
             dict(job_type="sync_sms", ingest_id=None, params={"origin": "sms_backend"},
                  expr="5-59 * * * *", jitter=0, enabled=False, note=None),
@@ -120,15 +148,15 @@ def test_import_keeps_existing_rows():
 
 
 def test_import_twice_adds_nothing():
-    conn = FakeDB(ingests={U1: 1, U2: 2})
+    conn = FakeDB(ingests={U1: 1, U2: 2}, configs=CONFIGS)
     legacy.import_legacy(conn, LEGACY)
-    before = list(conn.jobs)
+    before = list(conn.jobs), {k: list(v) for k, v in conn.schedules.items()}
     summary = legacy.import_legacy(conn, LEGACY)
-    assert summary.imported == 0 and conn.jobs == before
+    assert summary.imported == 0 and (conn.jobs, conn.schedules) == before
 
 
 def test_import_rolls_back_on_error():
-    conn = FakeDB(ingests={U1: 1})
+    conn = FakeDB(ingests={U1: 1}, configs={1: (60, True)})
     text = f"5 * * * * {CMD} sync-thing {U1}\n0 0 * * * {CMD} sync-sms sms_backend\n"
     real = conn.execute
 
@@ -141,6 +169,7 @@ def test_import_rolls_back_on_error():
     with pytest.raises(RuntimeError):
         legacy.import_legacy(conn, text)
     assert conn.jobs == [] and conn.rolled_back
+    assert conn.schedules == {}
 
 
 def test_imported_marker(tmp_path):
@@ -227,6 +256,7 @@ def test_import_trigger_qc():
     [
         ("0 0 * * * /usr/bin/something-else\n", "line 1 cannot be imported"),
         (f"@reboot {CMD} resync-range {U1}\n", "line 1 cannot be imported"),
+        (f"5 * * * * {CMD} sync-thing {U1} --odd\n", "line 1 cannot be imported"),
     ],
 )
 def test_import_blocked(text, message):
@@ -243,17 +273,76 @@ def test_import_commented_unknown_is_dropped():
 
 
 @pytest.mark.parametrize(
-    "line",
+    ("line", "interval", "expected"),
     [
-        f"5 * * * * {CMD} sync-thing {U1}",
-        f"# 5 * * * * {CMD} sync-thing {U1}",
-        f"@reboot {CMD} sync-thing {U1} --odd",
+        # same interval: the line as is
+        (f"12,42 * * * * sleep 4 && {CMD} sync-thing {U1}", 30, ["12,42 * * * *", 4]),
+        (f"@hourly sleep 29 && {CMD} sync-thing {U1}", 60, ["0 * * * *", 29]),
+        # the DSM interval differs: its step, the line's base minute
+        (f"5 * * * * sleep 9 && {CMD} sync-thing {U1}", 30, ["5-59/30 * * * *", 9]),
+        # a disabled line still sets minute and start delay
+        (f"# 7 * * * * {CMD} sync-thing {U1}", 60, ["7 * * * *", 0]),
+        # no DSM interval yet: keep the line for when one is set
+        (f"7 * * * * sleep 2 && {CMD} sync-thing {U1}", None, ["7 * * * *", 2]),
     ],
 )
-def test_import_skips_sync_thing(line):
-    conn = FakeDB(ingests={U1: 1})
-    summary = legacy.import_legacy(conn, f"{line}\n{line}\n")
-    assert str(summary) == "imported=0 skipped=2 orphaned=0 unknown=0"
+def test_import_sync_thing(line, interval, expected):
+    conn = FakeDB(ingests={U1: 1}, configs={1: (interval, True)})
+    summary = legacy.import_legacy(conn, line + "\n")
+    assert summary.imported == 1
+    assert conn.schedules[1] == [*expected, interval is not None, interval]
+
+
+def test_import_sync_thing_without_line_gets_no_row():
+    conn = FakeDB(ingests={U1: 1, U2: 2}, configs={1: (60, True), 2: (60, True)})
+    legacy.import_legacy(conn, f"5 * * * * {CMD} sync-thing {U1}\n")
+    assert list(conn.schedules) == [1]
+
+
+def test_import_sync_thing_after_dsm_save_keeps_dsm_fields():
+    # the DSM saved the ingest before the import: its interval and enabled stay
+    conn = FakeDB(
+        ingests={U1: 1},
+        configs={1: (30, False)},
+        schedules={1: ["33-59/30 * * * *", 17, False, 30]},
+    )
+    seen = []
+    real = conn.execute
+
+    def spy(sql, params=None):
+        seen.append(sql)
+        return real(sql, params)
+
+    conn.execute = spy
+    summary = legacy.import_legacy(conn, f"5 * * * * {CMD} sync-thing {U1}\n")
+    assert summary.imported == 1
+    assert conn.schedules[1] == ["5-59/30 * * * *", 0, False, 30]
+    insert = next(s for s in seen if "INSERT INTO dsm_db.ingest_schedule" in s)
+    on_conflict = insert.split("DO UPDATE")[1]
+    assert "enabled" not in on_conflict and "sync_interval" not in on_conflict
+
+
+def test_import_sync_thing_prefers_active_line():
+    conn = FakeDB(ingests={U1: 1}, configs={1: (60, True)})
+    text = (
+        f"# 1 * * * * sleep 1 && {CMD} sync-thing {U1}\n"
+        f"5 * * * * sleep 5 && {CMD} sync-thing {U1}\n"
+        f"# 9 * * * * sleep 9 && {CMD} sync-thing {U1}\n"
+    )
+    summary = legacy.import_legacy(conn, text)
+    assert (summary.imported, summary.skipped) == (1, 2)
+    assert conn.schedules[1] == ["5 * * * *", 5, True, 60]
+
+
+def test_import_sync_thing_unadaptable_keeps_line(monkeypatch):
+    def fail(expression, interval):
+        raise ValueError("bad")
+
+    monkeypatch.setattr(legacy, "update_cron_expression", fail)
+    conn = FakeDB(ingests={U1: 1}, configs={1: (60, True)})
+    summary = legacy.import_legacy(conn, f"5 * * * * {CMD} sync-thing {U1}\n")
+    assert summary.imported == 1
+    assert conn.schedules[1] == ["5 * * * *", 0, True, 60]
 
 
 def test_import_duplicate_jobs_prefer_active():

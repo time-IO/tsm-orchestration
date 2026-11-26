@@ -139,12 +139,14 @@ def test_parse_legacy_crontab():
     kinds = [(j.kind, j.target, j.days, j.jitter, j.enabled) for j in parsed.jobs]
     assert kinds == [
         ("mqtt_monitoring", None, None, 0, True),
+        ("sync_thing", U1, None, 12, True),
+        ("sync_thing", U2, None, 0, False),
         ("resync_thing", U1, 14, 0, True),
         ("resync_thing", U2, 7, 0, True),
         ("sync_sms", "sms_backend", None, 0, True),
     ]
     assert parsed.jobs[0].expression == "*/30 * * * * * *"
-    assert parsed.sync_lines == 2
+    assert parsed.jobs[1].expression == "5-59/10 * * * *"
     # commented-out cron lines are reported, plain comments are not
     assert [n for n, _ in parsed.unknown] == [1, 9, 10]
 
@@ -192,6 +194,7 @@ def test_render_normalizes_whitespace_and_rejects_bad_params():
 @pytest.mark.parametrize(
     "args",
     [
+        f"sync-thing {U1} extra",
         f"resync-range {U1} --days=30x",
         f"resync-range {U1} --days 0",
         f"resync-range {U1} --days 366",

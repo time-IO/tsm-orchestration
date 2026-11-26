@@ -17,6 +17,7 @@ from timeio.cron.schedule import (
     MACROS,
     MAX_JITTER_SECONDS,
     normalize_expression,
+    update_cron_expression,
     validate_expression,
 )
 
@@ -61,7 +62,7 @@ _KINDS = {
 
 @dataclass
 class LegacyJob:
-    kind: str  # resync_thing | sync_sms | mqtt_monitoring | trigger_qc
+    kind: str  # sync_thing | resync_thing | sync_sms | mqtt_monitoring | trigger_qc
     target: str | None  # thing uuid, sms origin or permission group uuid
     days: int | None
     expression: str
@@ -76,7 +77,6 @@ class LegacyJob:
 class LegacyCrontab:
     jobs: list[LegacyJob] = field(default_factory=list)
     unknown: list[tuple[int, str]] = field(default_factory=list)
-    sync_lines: int = 0
 
 
 class ImportBlocked(RuntimeError):
@@ -124,10 +124,6 @@ def parse_legacy_crontab(text: str) -> LegacyCrontab:
                 result.unknown.append((line_no, line))
             continue
         kind = _KINDS[m["cmd"]]
-        if kind == "sync_thing":
-            # derived from the DSM sync settings (ingest_schedule), not imported
-            result.sync_lines += 1
-            continue
         expression = normalize_expression(m["fields"])
         jitter = min(int(m["sleep"] or 0), MAX_JITTER_SECONDS)
         enabled = not m["comment"]
@@ -158,6 +154,8 @@ def _parse_legacy_args(kind: str, args: list[str]) -> tuple[str, int | None] | N
     if not args or not _is_uuid(args[0]):
         return None
     target, rest = args[0].lower(), args[1:]
+    if kind == "sync_thing":
+        return (target, None) if not rest else None
     if not rest:
         return target, DEFAULT_RESYNC_DAYS
     if len(rest) == 2 and rest[0] == "--days":
@@ -276,9 +274,28 @@ def _ingests(conn: psycopg.Connection, uuids: list[str]) -> dict[str, int]:
     return {r[0]: r[1] for r in rows}
 
 
+def _sync_configs(conn: psycopg.Connection, uuids: list[str]) -> dict[str, tuple]:
+    """uuid -> (ingest_id, sync interval, sync enabled) of external SFTP/API ingests."""
+    rows = conn.execute(
+        f"""
+        SELECT i.uuid::text, i.id,
+               COALESCE(s.sync_interval_in_minutes, a.sync_interval_in_minutes),
+               COALESCE(s.sync_enabled, a.sync_enabled)
+        FROM {db.SCHEMA}.ingest i
+        LEFT JOIN {db.SCHEMA}.ingest_external_sftp s ON s.ingest_id = i.id
+        LEFT JOIN {db.SCHEMA}.ingest_external_api a ON a.ingest_id = i.id
+        WHERE i.uuid = ANY(%s::uuid[])
+          AND (s.ingest_id IS NOT NULL OR a.ingest_id IS NOT NULL)
+        """,
+        (uuids,),
+    ).fetchall()
+    return {r[0]: (r[1], r[2], r[3]) for r in rows}
+
+
 def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
-    """Import a legacy crontab in one transaction. Existing rows win and nothing
-    is updated, so a repeated import only adds what is missing."""
+    """Import a legacy crontab in one transaction. Sync lines create the ingest's
+    schedule (or set minute and start delay of a row the DSM already wrote); other
+    jobs are only added if missing. A repeated import changes nothing."""
     parsed = parse_legacy_crontab(text)
     selected, duplicates = _select_jobs(parsed.jobs)
     active_unknown = [(n, line) for n, line in parsed.unknown if line[0] != "#"]
@@ -290,9 +307,7 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
             "; ".join(problems)
             + " -- comment out the lines to drop in the legacy crontab"
         )
-    summary = ImportSummary(
-        unknown=len(parsed.unknown), skipped=len(duplicates) + parsed.sync_lines
-    )
+    summary = ImportSummary(unknown=len(parsed.unknown), skipped=len(duplicates))
     for line_no, line in parsed.unknown:
         logger.warning(f"legacy crontab line {line_no} not imported: {line}")
     for job, kept in duplicates:
@@ -303,7 +318,22 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
     with conn.transaction():
         uuids = sorted({j.target for j in selected if j.kind == "resync_thing"})
         ingests = _ingests(conn, uuids)
+        configs = _sync_configs(
+            conn, sorted({j.target for j in selected if j.kind == "sync_thing"})
+        )
         for job in selected:
+            if job.kind == "sync_thing":
+                if job.target not in configs:
+                    summary.orphaned += 1
+                    logger.warning(
+                        f"legacy crontab line {job.line_no}: no external ingest "
+                        f"{job.target}"
+                    )
+                elif _import_sync(conn, job, *configs[job.target]):
+                    summary.imported += 1
+                else:
+                    summary.skipped += 1
+                continue
             if job.kind == "trigger_qc":
                 qc_id = _qc_setting_id(conn, job.target, job.qc_name)
                 if qc_id is None:
@@ -333,6 +363,8 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
 
 def _job_key(job: LegacyJob) -> tuple:
     """Lines with the same key would end up as one DB row."""
+    if job.kind == "sync_thing":
+        return job.kind, job.target
     qc_name = job.qc_name.lower() if job.qc_name else None
     return job.kind, job.target, job.days, qc_name, job.qc_interval, job.expression
 
@@ -353,6 +385,48 @@ def _select_jobs(
         duplicates += [(j, kept) for j in group if j is not kept]
     selected.sort(key=lambda j: j.line_no)
     return selected, duplicates
+
+
+def _import_sync(
+    conn: psycopg.Connection,
+    job: LegacyJob,
+    ingest_id: int,
+    interval: int | None,
+    sync_enabled: bool | None,
+) -> bool:
+    """Minute and start delay from the line; interval and enabled from the DSM."""
+    expression = job.expression
+    if interval:
+        try:
+            expression = update_cron_expression(job.expression, interval)
+        except ValueError as e:
+            logger.warning(
+                f"legacy crontab line {job.line_no}: keeping {job.expression!r}, "
+                f"cannot adapt it to {interval} min: {e}"
+            )
+    # a row the DSM wrote before the import keeps its interval and enabled
+    cur = conn.execute(
+        f"""
+        INSERT INTO {db.SCHEMA}.ingest_schedule AS s
+            (ingest_id, cron_expression, jitter_seconds, enabled,
+             sync_interval_minutes)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (ingest_id) DO UPDATE
+        SET cron_expression = EXCLUDED.cron_expression,
+            jitter_seconds = EXCLUDED.jitter_seconds,
+            updated_at = now()
+        WHERE s.cron_expression IS DISTINCT FROM EXCLUDED.cron_expression
+           OR s.jitter_seconds <> EXCLUDED.jitter_seconds
+        """,
+        (
+            ingest_id,
+            expression,
+            job.jitter,
+            bool(sync_enabled) and interval is not None,
+            interval,
+        ),
+    )
+    return cur.rowcount == 1
 
 
 def _import_job(
