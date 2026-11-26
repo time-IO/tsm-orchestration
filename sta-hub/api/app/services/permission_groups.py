@@ -59,12 +59,26 @@ async def get_own_permission_groups(authorization: str) -> dict[str, dict]:
         logger.debug("Using cached permission groups")
         return cached
 
-    data = await fetch_dsm_api_or_raise(
-        "/permission-group/", authorization, "fetching own permission groups"
-    )
+    page_size = 100
+    page = 1
+    items: list[dict] = []
+    while True:
+        page_items = get_items(
+            await fetch_dsm_api_or_raise(
+                "/permission-group/",
+                authorization,
+                "fetching own permission groups",
+                params={"page": page, "size": page_size},
+            )
+        )
+        items += page_items
+        if len(page_items) < page_size:
+            break
+        page += 1
+
     permission_groups = {
         item["database_username"]: item
-        for item in get_items(data)
+        for item in items
         if item.get("database_username")
     }
     _cache[key] = permission_groups

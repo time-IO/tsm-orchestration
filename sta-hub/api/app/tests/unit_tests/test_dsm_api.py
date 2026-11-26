@@ -85,6 +85,23 @@ def test_fetch_own_permission_groups():
     }
 
 
+def test_fetch_own_permission_groups_reads_all_pages(
+    dsm_permission_groups, dsm_requests
+):
+    dsm_permission_groups[:] = [
+        {"id": i, "name": f"UFZ-TSM:Group {i}", "database_username": f"db_{i}"}
+        for i in range(1, 151)
+    ]
+
+    permission_groups = asyncio.run(fetch_own_permission_groups("Bearer valid"))
+
+    assert set(permission_groups) == {f"db_{i}" for i in range(1, 151)}
+    assert [(r.url.params["page"], r.url.params["size"]) for r in dsm_requests] == [
+        ("1", "100"),
+        ("2", "100"),
+    ]
+
+
 def test_fetch_own_permission_groups_on_error_is_empty():
     assert asyncio.run(fetch_own_permission_groups("Bearer invalid")) == {}
 
