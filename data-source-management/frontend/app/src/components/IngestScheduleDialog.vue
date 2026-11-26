@@ -5,7 +5,7 @@
     @keydown.esc="showDialog = false"
     @show="load"
   >
-    <q-card class="column no-wrap" style="width: 640px; max-width: 90vw; max-height: 80vh">
+    <q-card class="q-pa-sm column no-wrap" style="width: 60vw; max-width: 80vw; max-height: 80vh">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Sync Schedule</div>
         <q-space />
@@ -16,8 +16,9 @@
         <q-banner rounded dense class="bg-blue-1 text-blue-10">
           <template #avatar><q-icon name="info" color="blue-8" /></template>
           To spread the load, every sync gets its own start time within its interval plus a short
-          start delay. Both stay the same when the sync interval is changed. Changes take effect
-          within about a minute. All times are in UTC.
+          start delay. When the sync interval changes, the start delay stays the same and the start
+          minute is kept where the new interval allows it. Changes take effect within about a
+          minute. All times are in UTC.
         </q-banner>
       </q-card-section>
 
