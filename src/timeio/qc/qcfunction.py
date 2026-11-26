@@ -71,6 +71,37 @@ class QcFunctionStream:
         return f"{klass}({self.key}, {self.alias})"
 
 
+def merge_qc_streams(streams: list[QcFunctionStream]) -> list[QcFunctionStream]:
+    """Merge shared aliases without losing history or hiding conflicting sources."""
+    merged = {}
+    source_attributes = (
+        "sms_configuration_id",
+        "sta_stream_id",
+        "db_schema",
+        "db_stream_id",
+        "thing_uuid",
+        "position",
+        "is_mutable",
+        "start_date",
+        "end_date",
+    )
+    for stream in streams:
+        if stream.alias not in merged:
+            merged[stream.alias] = copy.copy(stream)
+            continue
+        existing = merged[stream.alias]
+        if any(
+            getattr(existing, attr) != getattr(stream, attr)
+            for attr in source_attributes
+        ):
+            raise ValueError(f"Conflicting QC sources for alias '{stream.alias}'")
+        # Different QC settings can request different amounts of history for the
+        # same stream. Keep the largest window so every function gets enough
+        # preceding observations; keeping the first request could truncate history.
+        existing.context_window = max(existing.context_window, stream.context_window)
+    return list(merged.values())
+
+
 class QcFunction:
     def __init__(
         self,
@@ -93,7 +124,7 @@ class QcFunction:
 
     @property
     def streams(self) -> list[QcFunctionStream]:
-        return list(set(self.fields + self.targets))
+        return merge_qc_streams(self.fields + self.targets)
 
     @property
     def field_names(self) -> list[str]:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import copy
 import json
 import random
 import sqlite3
@@ -18,6 +19,7 @@ from timeio.qc.qcfunction import (
     QcFunction,
     QcFunctionStream,
     get_qc_functions,
+    merge_qc_streams,
 )
 from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
@@ -464,6 +466,25 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     qc = SaQCWrapper(data)
 
 
+def make_stream(alias, thing=1, stream_id=27, context_days=0):
+    return QcFunctionStream(
+        key="field",
+        alias=alias,
+        sta_thing_id=thing,
+        sta_stream_id=stream_id,
+        mutable=False,
+        position=alias,
+        schema="source",
+        datastream_id=stream_id,
+        thing_uuid=str(thing),
+        context_window=pd.Timedelta(days=context_days),
+    )
+
+
+def make_function(name, field, target):
+    return QcFunction(name, "copyField", [field], {}, [target])
+
+
 @pytest.fixture
 def lookup(monkeypatch):
     # Execute the lookup SQL against two deployments of the same property.
@@ -582,3 +603,72 @@ def test_selected_deployment_values_reach_saqc(
     assert [quality["annotation"] for quality in qc.data[stream]["quality"]] == [
         "255.0" if value > 10 else "-inf" for value in values
     ]
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_shared_stream_uses_longest_context_through_read_execute_write(reverse):
+    short = make_stream("temperature", context_days=1)
+    long = make_stream("temperature", context_days=7)
+    streams = [short, long]
+    if reverse:
+        streams.reverse()
+    start = pd.Timestamp("2026-01-10", tz="UTC")
+    end = start + pd.Timedelta(days=1)
+
+    def observations(*args, start_date, end_date):
+        return {
+            "observations": [
+                {
+                    "result_time": date.isoformat(),
+                    "result_type": 0,
+                    "result_number": 10.0,
+                    "result_quality": None,
+                }
+                for date in pd.date_range(start_date, end_date, freq="1D")
+            ]
+        }
+
+    dbapi = Mock()
+    dbapi.get_datastream_observations.side_effect = observations
+    data = read_stream_data(dbapi, streams, start, end)
+    dbapi.get_datastream_observations.assert_called_once_with(
+        "1", "temperature", start_date=start - pd.Timedelta(days=7), end_date=end
+    )
+    assert next(iter(data.values())).index[0] == start - pd.Timedelta(days=7)
+    qc = SaQCWrapper(data)
+    for stream in streams:
+        qc.execute(QcFunction("range", "flagRange", [stream], {"max": 20}))
+    write_qc_data(dbapi, qc)
+    labels = dbapi.upsert_qc_labels.call_args.kwargs["qc_labels"]
+    assert [row["result_time"] for row in labels] == [
+        "2026-01-10T00:00:00",
+        "2026-01-11T00:00:00",
+    ]
+    dbapi.upsert_observations.assert_not_called()
+    assert short.context_window == pd.Timedelta(days=1)
+    assert long.context_window == pd.Timedelta(days=7)
+
+
+def test_function_streams_preserve_context_from_both_fields_and_targets():
+    short = make_stream("temperature", context_days=1)
+    long = make_stream("temperature", context_days=7)
+    func = make_function("range", short, long)
+    assert len(func.streams) == 1
+    assert func.streams[0].context_window == pd.Timedelta(days=7)
+
+
+@pytest.mark.parametrize(
+    "attribute,value",
+    [
+        ("sms_configuration_id", 2),
+        ("db_stream_id", 99),
+        ("thing_uuid", "other-thing"),
+        ("start_date", pd.Timestamp("2026-01-01", tz="UTC")),
+    ],
+)
+def test_shared_alias_cannot_silently_replace_a_different_source(attribute, value):
+    first = make_stream("temperature")
+    other = copy.copy(first)
+    setattr(other, attribute, value)
+    with pytest.raises(ValueError, match="Conflicting QC sources"):
+        merge_qc_streams([first, other])

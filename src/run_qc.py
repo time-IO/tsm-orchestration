@@ -125,7 +125,7 @@ class QcHandler(AbstractHandler):
             things = get_qc_things(qc_funcs)
 
             # load data
-            streams = list(set(sum([f.streams for f in qc_funcs], [])))
+            streams = [stream for func in qc_funcs for stream in func.streams]
             start_date = pd.Timestamp(content["start_date"])
             end_date = pd.Timestamp(content["end_date"])
             data = read_stream_data(self.dbapi, streams, start_date, end_date)

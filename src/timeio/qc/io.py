@@ -12,6 +12,7 @@ import pandas as pd
 
 from timeio.common import ObservationResultType, get_result_field_name
 from timeio.databases import DBapi
+from timeio.qc.qcfunction import merge_qc_streams
 
 if typing.TYPE_CHECKING:
     from timeio.qc.saqc import SaQCWrapper
@@ -173,7 +174,7 @@ def read_stream_data(
         end_date = pd.Timestamp(end_date).tz_localize("Europe/Berlin")
 
     out = {}
-    for stream in streams:
+    for stream in merge_qc_streams(streams):
         if stream.db_stream_id:
             start = max(filter(None, [start_date, stream.start_date]))
             end = min(filter(None, [end_date, stream.end_date]))
