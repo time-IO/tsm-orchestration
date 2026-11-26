@@ -748,8 +748,8 @@ def test_shared_stream_uses_longest_context_through_read_execute_write(reverse):
     write_qc_data(dbapi, qc)
     labels = dbapi.upsert_qc_labels.call_args.kwargs["qc_labels"]
     assert [row["result_time"] for row in labels] == [
-        "2026-01-10T00:00:00",
-        "2026-01-11T00:00:00",
+        "2026-01-10T00:00:00.000000Z",
+        "2026-01-11T00:00:00.000000Z",
     ]
     dbapi.upsert_observations.assert_not_called()
     assert short.context_window == pd.Timedelta(days=1)
@@ -779,3 +779,77 @@ def test_shared_alias_cannot_silently_replace_a_different_source(attribute, valu
     setattr(other, attribute, value)
     with pytest.raises(ValueError, match="Conflicting QC sources"):
         merge_qc_streams([first, other])
+
+
+@pytest.mark.parametrize("processing", [False, True], ids=["flags", "processed-data"])
+@pytest.mark.parametrize(
+    "timestamps,serialized_timestamps",
+    [
+        (
+            ["2026-01-10T12:00:00+01:00"],
+            ["2026-01-10T11:00:00.000000Z"],
+        ),
+        (
+            ["2026-07-10T12:00:00+02:00"],
+            ["2026-07-10T10:00:00.000000Z"],
+        ),
+        (
+            ["2026-03-29T01:30:00+01:00", "2026-03-29T03:30:00+02:00"],
+            ["2026-03-29T00:30:00.000000Z", "2026-03-29T01:30:00.000000Z"],
+        ),
+        (
+            ["2026-10-25T02:30:00+02:00", "2026-10-25T02:30:00+01:00"],
+            ["2026-10-25T00:30:00.000000Z", "2026-10-25T01:30:00.000000Z"],
+        ),
+        (
+            ["2026-07-10T12:00:00.123456+02:00"],
+            ["2026-07-10T10:00:00.123456Z"],
+        ),
+    ],
+    ids=["winter", "summer", "dst-start", "dst-end", "microseconds"],
+)
+def test_qc_upload_timestamps_preserve_instants_and_timezone(
+    timestamps, serialized_timestamps, processing
+):
+    stream = make_stream("temperature")
+    stream.is_mutable = processing
+    dbapi = Mock()
+    dbapi.get_datastream_observations.return_value = {
+        "observations": [
+            {
+                "result_time": timestamp,
+                "result_type": 0,
+                "result_number": 10.0,
+                "result_quality": None,
+            }
+            for timestamp in timestamps
+        ]
+    }
+    expected = pd.to_datetime(timestamps, utc=True).sort_values()
+    data = read_stream_data(dbapi, [stream], expected[0], expected[-1])
+    qc = SaQCWrapper(data)
+    if processing:
+        qc.execute(
+            QcFunction(
+                "scale", "processGeneric", [stream], {"function": "temperature * 2"}
+            )
+        )
+    qc.execute(QcFunction("range", "flagRange", [stream], {"max": 5}))
+    write_qc_data(dbapi, qc)
+
+    labels = dbapi.upsert_qc_labels.call_args.kwargs["qc_labels"]
+    payloads = [labels]
+    if processing:
+        payloads.append(dbapi.upsert_observations.call_args.kwargs["observations"])
+    else:
+        dbapi.upsert_observations.assert_not_called()
+
+    for payload in payloads:
+        assert [row["result_time"] for row in payload] == serialized_timestamps
+        assert len(payload) == len(expected)
+        for row, original in zip(payload, expected):
+            written = pd.Timestamp(row["result_time"])
+            # Without an offset the database would interpret this in its own
+            # connection timezone, which need not be UTC.
+            assert written.tzinfo is not None
+            assert written == original

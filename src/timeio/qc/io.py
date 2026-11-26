@@ -56,7 +56,9 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
             # trim context window away
             df = df.loc[df.index[0] + stream.context_window :]
 
-            df["result_time"] = df.index.strftime("%Y-%m-%dT%H:%M:%S")
+            # The QC index is UTC. Include microseconds and an explicit UTC marker
+            # so the database matches the original observation in any timezone.
+            df["result_time"] = df.index.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             df["result_type"] = rt = get_result_type(df["data"])
             df["datastream_id"] = stream.db_stream_id
             df["datastream_pos"] = stream.datastream_name
