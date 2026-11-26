@@ -29,6 +29,7 @@ fi
   echo ""
   echo "user $MQTT_INGEST_USER"
   echo "topic read mqtt_ingest/#"
+  echo "topic write ${TOPIC_DATA_PARSED:-data_parsed}"
   echo "topic readwrite health/#"
 } >/tmp/mosquitto/auth/mosquitto.acl
 
