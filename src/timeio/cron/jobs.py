@@ -2,18 +2,27 @@
 
 from __future__ import annotations
 
+import re
+import shlex
 import uuid as uuid_lib
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable
 
-from timeio.cron.schedule import MAX_JITTER_SECONDS, validate_expression
+from timeio.cron.schedule import (
+    MAX_JITTER_SECONDS,
+    normalize_expression,
+    validate_expression,
+)
 
 SCRIPT = "/scripts/mqtt_sync_wrapper.py"
+QC_SCRIPT = "/scripts/trigger_qaqc.py"
 
-JOB_TYPES = ("resync_thing", "sync_sms", "mqtt_monitoring")
+JOB_TYPES = ("resync_thing", "sync_sms", "mqtt_monitoring", "trigger_qc")
 SMS_ORIGINS = ("sms_backend", "sms_cv")
 DEFAULT_RESYNC_DAYS = 7
+# trigger_qaqc.py's look-back window, e.g. 30m, 1h, 7d
+QC_INTERVAL_RE = re.compile(r"^[1-9]\d*[smhd]$")
 
 
 def validate_params(job_type: str, params: dict[str, Any] | None) -> dict[str, Any]:
@@ -33,6 +42,11 @@ def validate_params(job_type: str, params: dict[str, Any] | None) -> dict[str, A
         if params:
             raise ValueError(f"mqtt_monitoring takes no params, got {params!r}")
         return {}
+    if job_type == "trigger_qc":
+        interval = params.get("interval")
+        if not isinstance(interval, str) or not QC_INTERVAL_RE.match(interval):
+            raise ValueError(f"interval must look like 30m, 1h or 7d, got {interval!r}")
+        return {"interval": interval}
     raise ValueError(f"unknown job type {job_type!r}")
 
 
@@ -41,9 +55,11 @@ def build_command(
     target_uuid: str | None,
     params: dict[str, Any] | None,
     jitter: int,
+    qc_settings_name: str | None = None,
 ) -> str:
     """Build the shell command of a job. Pseudo type `sync_thing` is the regular
-    per-thing sync of `ingest_schedule`. Raises ValueError on invalid input.
+    per-thing sync of `ingest_schedule`. For `trigger_qc`, `target_uuid` is the
+    permission group. Raises ValueError on invalid input.
     """
     if not 0 <= jitter <= MAX_JITTER_SECONDS:
         raise ValueError(f"jitter must be in 0..{MAX_JITTER_SECONDS}, got {jitter!r}")
@@ -52,6 +68,16 @@ def build_command(
     elif job_type == "mqtt_monitoring":
         validate_params(job_type, params)
         args = "mqtt-monitoring"
+    elif job_type == "trigger_qc":
+        interval = validate_params(job_type, params)["interval"]
+        group = str(uuid_lib.UUID(str(target_uuid)))
+        if not qc_settings_name or not qc_settings_name.isprintable():
+            raise ValueError(f"invalid QC settings name {qc_settings_name!r}")
+        return (
+            f"sleep {jitter} && python3 {QC_SCRIPT} --interval {interval} "
+            f"--project-uuid {group} --qc-settings-name {shlex.quote(qc_settings_name)} "
+            "> $STDOUT 2> $STDERR"
+        )
     elif job_type in ("sync_thing", "resync_thing"):
         target = str(uuid_lib.UUID(str(target_uuid)))
         if job_type == "sync_thing":
@@ -88,6 +114,7 @@ class JobRow:
     enabled: bool
     note: str | None
     updated_at: datetime
+    qc_settings_name: str | None = None
 
 
 def _clean(value: object) -> str:
@@ -116,7 +143,7 @@ def render_crontab(
 
     out: list[str] = []
     for s in sorted(schedules, key=lambda r: r.ingest_id):
-        expression = " ".join(s.cron_expression.split())
+        expression = normalize_expression(s.cron_expression)
         try:
             if not validate_expression(expression):
                 raise ValueError(f"invalid cron expression {s.cron_expression!r}")
@@ -130,7 +157,7 @@ def render_crontab(
         )
 
     for j in sorted(jobs, key=lambda r: r.id):
-        expression = " ".join(j.cron_expression.split())
+        expression = normalize_expression(j.cron_expression)
         try:
             if not validate_expression(expression, allow_seconds=True):
                 raise ValueError(f"invalid cron expression {j.cron_expression!r}")
@@ -139,8 +166,9 @@ def render_crontab(
             if not isinstance(j.params, dict):
                 raise ValueError("params must be a JSON object")
             command = build_command(
-                j.job_type, j.target_uuid, j.params, j.jitter_seconds
-            )
+                j.job_type, j.target_uuid, j.params, j.jitter_seconds,
+                j.qc_settings_name,
+            )  # fmt: skip
         except ValueError as e:
             skip(f"scheduled_job {j.id} ({j.job_type}): {e}")
             continue

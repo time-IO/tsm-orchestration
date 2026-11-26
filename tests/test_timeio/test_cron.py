@@ -159,6 +159,16 @@ def test_new_schedule(interval, expected):
         ("37 5 */13 * *", 20000, "37 5 */13 * *"),
         ("37 5 */13 * *", 20001, "37 5 */13 * *"),
         ("56 15 * * 2", 10080, "56 15 * * 2"),
+        # never returns a macro like @hourly, always 5 fields
+        ("0 * * * *", 60, "0 * * * *"),
+        ("0 * * * *", 90, "0 * * * *"),
+        ("0 0 * * *", 1440, "0 0 * * *"),
+        ("0 0 1-31/1 * *", 1440, "0 0 * * *"),
+        ("0 0 * * 0", 10080, "0 0 * * 0"),
+        ("0 0 * * 7", 10080, "0 0 * * 0"),
+        ("@hourly", 60, "0 * * * *"),
+        ("@daily", 120, "0 */2 * * *"),
+        ("@weekly", 10080, "0 0 * * 0"),
     ],
 )
 def test_update_cron_expression(schedule, new_interval, expected):
@@ -167,3 +177,31 @@ def test_update_cron_expression(schedule, new_interval, expected):
 
     new_schedule = cron.update_cron_expression(schedule, new_interval)
     assert new_schedule == expected
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    [
+        ("@hourly", "0 * * * *"),
+        ("@DAILY", "0 0 * * *"),
+        ("@midnight", "0 0 * * *"),
+        ("@weekly", "0 0 * * 0"),
+        ("@monthly", "0 0 1 * *"),
+        ("@yearly", "0 0 1 1 *"),
+        ("@annually", "0 0 1 1 *"),
+        ("  @hourly ", "0 * * * *"),
+        ("@reboot", "@reboot"),
+        ("5  *\t* * *", "5 * * * *"),
+        ("*/30 * * * * * *", "*/30 * * * * * *"),
+    ],
+)
+def test_normalize_expression(expression, expected):
+    assert cron.normalize_expression(expression) == expected
+
+
+@pytest.mark.parametrize("macro", sorted(cron.MACROS))
+@pytest.mark.parametrize("interval", [10, 60, 90, 1440, 10080, 20160])
+def test_update_cron_expression_always_valid(macro, interval):
+    expression = cron.MACROS[macro]
+    for current in (macro, expression):
+        assert cron.validate_expression(cron.update_cron_expression(current, interval))

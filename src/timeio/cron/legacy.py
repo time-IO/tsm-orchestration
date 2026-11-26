@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import shlex
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,17 +12,22 @@ from pathlib import Path
 import psycopg
 
 from timeio.cron import db
-from timeio.cron.jobs import DEFAULT_RESYNC_DAYS, SMS_ORIGINS
-from timeio.cron.schedule import MAX_JITTER_SECONDS, validate_expression
+from timeio.cron.jobs import DEFAULT_RESYNC_DAYS, QC_INTERVAL_RE, SMS_ORIGINS
+from timeio.cron.schedule import (
+    MACROS,
+    MAX_JITTER_SECONDS,
+    normalize_expression,
+    validate_expression,
+)
 
 logger = logging.getLogger("cron")
 
 BACKUP_SUFFIX = ".pre-db.bkp"
 
-# prod lines vary: optional python3, optional .py, optional sleep, 5 or 7 fields
+# prod lines vary: optional python3, optional .py, optional sleep, 5/7 fields or @macro
 _LEGACY_JOB_RE = re.compile(
     r"""^(?P<comment>\#\s*)?
-        (?P<fields>(?:(?!python3\s|sleep\s)\S+\s+){4,6}(?!python3\s|sleep\s)\S+)\s+
+        (?P<fields>@\w+|(?:(?!python3\s|sleep\s)\S+\s+){4,6}(?!python3\s|sleep\s)\S+)\s+
         (?:sleep\s+(?P<sleep>\d+)\s+&&\s+)?
         (?:python3\s+)?/scripts/mqtt_sync_wrapper(?:\.py)?\s+
         (?P<cmd>sync-thing|resync-range|sync-sms|mqtt-monitoring)
@@ -29,6 +35,17 @@ _LEGACY_JOB_RE = re.compile(
         (?:\s*\d?>.*)?$""",
     re.VERBOSE,
 )
+# trigger_qaqc.py --interval 1h --project-uuid <group uuid> --qc-settings-name <name>
+_LEGACY_QC_RE = re.compile(
+    r"""^(?P<comment>\#\s*)?
+        (?P<fields>@\w+|(?:(?!python3\s|sleep\s)\S+\s+){4,6}(?!python3\s|sleep\s)\S+)\s+
+        (?:sleep\s+(?P<sleep>\d+)\s+&&\s+)?
+        (?:python3\s+)?/scripts/trigger_qaqc(?:\.py)?
+        (?P<args>(?:\s+.*?)?)
+        (?:\s+\d?>.*)?$""",
+    re.VERBOSE,
+)
+_QC_OPTIONS = {"--interval", "--project-uuid", "--qc-settings-name"}
 _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I
 )
@@ -43,19 +60,25 @@ _KINDS = {
 
 @dataclass
 class LegacyJob:
-    kind: str  # sync_thing | resync_thing | sync_sms | mqtt_monitoring
-    target: str | None  # thing uuid or sms origin
+    kind: str  # sync_thing | resync_thing | sync_sms | mqtt_monitoring | trigger_qc
+    target: str | None  # thing uuid, sms origin or permission group uuid
     days: int | None
     expression: str
     jitter: int
     enabled: bool
     line_no: int
+    qc_name: str | None = None
+    qc_interval: str | None = None
 
 
 @dataclass
 class LegacyCrontab:
     jobs: list[LegacyJob] = field(default_factory=list)
     unknown: list[tuple[int, str]] = field(default_factory=list)
+
+
+class ImportBlocked(RuntimeError):
+    """The legacy crontab has active lines the import would drop."""
 
 
 @dataclass
@@ -72,6 +95,16 @@ class ImportSummary:
         )
 
 
+def _is_commented_job(line: str) -> bool:
+    """True for a commented-out cron line, not for a plain comment."""
+    fields = line.lstrip("#").split()
+    if len(fields) > 1 and fields[0].lower() in MACROS:
+        return True
+    return (len(fields) > 5 and validate_expression(" ".join(fields[:5]))) or (
+        len(fields) > 7 and validate_expression(" ".join(fields[:7]), True)
+    )
+
+
 def parse_legacy_crontab(text: str) -> LegacyCrontab:
     """Line-wise parse of an old crontab.txt. Lines that are neither a known
     job nor a comment/blank end up in `unknown`."""
@@ -80,14 +113,16 @@ def parse_legacy_crontab(text: str) -> LegacyCrontab:
         line = raw.strip()
         if not line:
             continue
+        if (qc := _parse_legacy_qc(line, line_no)) is not None:
+            result.jobs.append(qc)
+            continue
         m = _LEGACY_JOB_RE.match(line)
         if m is None:
-            if not line.startswith("#"):
+            if not line.startswith("#") or _is_commented_job(line):
                 result.unknown.append((line_no, line))
             continue
         kind = _KINDS[m["cmd"]]
-        fields = m["fields"].split()
-        expression = " ".join(fields)
+        expression = normalize_expression(m["fields"])
         jitter = min(int(m["sleep"] or 0), MAX_JITTER_SECONDS)
         enabled = not m["comment"]
         if kind == "mqtt_monitoring":
@@ -132,6 +167,58 @@ def _parse_legacy_args(kind: str, args: list[str]) -> tuple[str, int | None] | N
     return target, int(value)
 
 
+def _parse_legacy_qc(line: str, line_no: int) -> LegacyJob | None:
+    """A trigger_qaqc.py line with exactly the three known options, else None."""
+    m = _LEGACY_QC_RE.match(line)
+    if m is None:
+        return None
+    expression = normalize_expression(m["fields"])
+    try:
+        tokens = shlex.split(m["args"])
+    except ValueError:
+        return None
+    options = {}
+    while tokens:
+        key, _, value = tokens.pop(0).partition("=")
+        if key not in _QC_OPTIONS or key in options:
+            return None
+        if not value:
+            if not tokens:
+                return None
+            value = tokens.pop(0)
+        options[key] = value
+    if (
+        options.keys() != _QC_OPTIONS
+        or not QC_INTERVAL_RE.match(options["--interval"])
+        or not _is_uuid(options["--project-uuid"])
+        or not validate_expression(expression, allow_seconds=True)
+    ):
+        return None
+    return LegacyJob(
+        "trigger_qc",
+        options["--project-uuid"].lower(),
+        None,
+        expression,
+        min(int(m["sleep"] or 0), MAX_JITTER_SECONDS),
+        not m["comment"],
+        line_no,
+        qc_name=options["--qc-settings-name"],
+        qc_interval=options["--interval"],
+    )
+
+
+def _qc_setting_id(conn: psycopg.Connection, group_uuid: str, name: str) -> int | None:
+    row = conn.execute(
+        f"""
+        SELECT q.id FROM {db.SCHEMA}.quality_control_setting q
+        JOIN {db.SCHEMA}.permission_group g ON g.id = q.permission_group_id
+        WHERE g.uuid::text = %s AND lower(q.name) = lower(%s)
+        """,
+        (group_uuid, name),
+    ).fetchone()
+    return row[0] if row else None
+
+
 def _is_uuid(value: str | None) -> bool:
     return value is not None and _UUID_RE.match(value) is not None
 
@@ -173,15 +260,45 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
     """Import a legacy crontab in one transaction and set the import marker.
     Existing rows win; nothing is updated."""
     parsed = parse_legacy_crontab(text)
-    summary = ImportSummary(unknown=len(parsed.unknown))
+    selected, duplicates, conflicts = _select_jobs(parsed.jobs)
+    active_unknown = [(n, line) for n, line in parsed.unknown if line[0] != "#"]
+    if active_unknown or conflicts:
+        problems = [
+            f"line {n} cannot be imported: {line}" for n, line in active_unknown
+        ]
+        raise ImportBlocked(
+            "; ".join(problems + conflicts)
+            + " -- comment out the lines to drop in the legacy crontab"
+        )
+    summary = ImportSummary(unknown=len(parsed.unknown), skipped=len(duplicates))
     for line_no, line in parsed.unknown:
         logger.warning(f"legacy crontab line {line_no} not imported: {line}")
+    for job, kept in duplicates:
+        logger.warning(
+            f"legacy crontab line {job.line_no} duplicates line {kept.line_no}, "
+            "not imported"
+        )
     with conn.transaction():
         if db.is_imported(conn):
             raise RuntimeError("legacy crontab was already imported")
-        uuids = sorted({j.target for j in parsed.jobs if _is_uuid(j.target)})
+        uuids = sorted(
+            {j.target for j in selected if j.kind in ("sync_thing", "resync_thing")}
+        )
         ingests = _ingests(conn, uuids)
-        for job in parsed.jobs:
+        for job in selected:
+            if job.kind == "trigger_qc":
+                qc_id = _qc_setting_id(conn, job.target, job.qc_name)
+                if qc_id is None:
+                    summary.orphaned += 1
+                    logger.warning(
+                        f"legacy crontab line {job.line_no}: unknown QC settings "
+                        f"{job.qc_name!r} in project {job.target}"
+                    )
+                elif _import_qc_job(conn, job, qc_id):
+                    summary.imported += 1
+                else:
+                    summary.skipped += 1
+                continue
             ingest_id, interval = ingests.get(job.target, (None, None))
             if job.kind in ("sync_thing", "resync_thing") and ingest_id is None:
                 summary.orphaned += 1
@@ -195,6 +312,37 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
                 summary.skipped += 1
         db.mark_imported(conn)
     return summary
+
+
+def _job_key(job: LegacyJob) -> tuple:
+    """Lines with the same key would end up as one DB row."""
+    if job.kind == "sync_thing":
+        return job.kind, job.target
+    qc_name = job.qc_name.lower() if job.qc_name else None
+    return job.kind, job.target, job.days, qc_name, job.qc_interval, job.expression
+
+
+def _select_jobs(
+    jobs: list[LegacyJob],
+) -> tuple[list[LegacyJob], list[tuple[LegacyJob, LegacyJob]], list[str]]:
+    """One job per key: the last active line, else the last line.
+    Returns (selected, (dropped, kept) pairs, conflicts)."""
+    groups: dict[tuple, list[LegacyJob]] = {}
+    for job in jobs:
+        groups.setdefault(_job_key(job), []).append(job)
+    selected, duplicates, conflicts = [], [], []
+    for group in groups.values():
+        active = [j for j in group if j.enabled]
+        if len({j.expression for j in active}) > 1:
+            lines = ", ".join(str(j.line_no) for j in active)
+            conflicts.append(
+                f"lines {lines} are active with different schedules for {group[0].target}"
+            )
+        kept = (active or group)[-1]
+        selected.append(kept)
+        duplicates += [(j, kept) for j in group if j is not kept]
+    selected.sort(key=lambda j: j.line_no)
+    return selected, duplicates, conflicts
 
 
 def _import_job(
@@ -229,5 +377,22 @@ def _import_job(
         ingest_id=ingest_id,
         enabled=job.enabled,
         note=f"imported from crontab.txt line {job.line_no}",
+    )
+    return True
+
+
+def _import_qc_job(conn: psycopg.Connection, job: LegacyJob, qc_id: int) -> bool:
+    params = {"interval": job.qc_interval}
+    if db.job_exists(conn, job.kind, params, None, job.expression, qc_id):
+        return False
+    db.insert_job(
+        conn,
+        job.kind,
+        job.expression,
+        job.jitter,
+        params,
+        enabled=job.enabled,
+        note=f"imported from crontab.txt line {job.line_no}",
+        qc_setting_id=qc_id,
     )
     return True

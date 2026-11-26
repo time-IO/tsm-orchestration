@@ -25,8 +25,11 @@ class Result:
 class FakeDB:
     """In-memory stand-in for the statements of timeio.cron.db/legacy."""
 
-    def __init__(self, ingests=None, schedules=None, jobs=None, imported=False):
+    def __init__(
+        self, ingests=None, schedules=None, jobs=None, imported=False, qc=None
+    ):
         self.ingests = ingests or {}  # uuid -> (ingest_id, interval)
+        self.qc = qc or {}  # (group uuid, lower name) -> qc setting id
         self.schedules = dict(schedules or {})  # ingest_id -> row tuple
         self.jobs = list(jobs or [])  # dicts
         self.imported = imported
@@ -49,6 +52,9 @@ class FakeDB:
         if "INSERT INTO dsm_db.cron_legacy_import" in sql:
             self.imported = True
             return Result()
+        if "FROM dsm_db.quality_control_setting q" in sql:
+            qc_id = self.qc.get((params[0], params[1].lower()))
+            return Result([(qc_id,)] if qc_id else [])
         if "FROM dsm_db.ingest i" in sql:
             rows = [(u, *self.ingests[u]) for u in params[0] if u in self.ingests]
             return Result(rows)
@@ -58,21 +64,23 @@ class FakeDB:
             self.schedules[params[0]] = params[1:]
             return Result(rowcount=1)
         if "SELECT 1 FROM dsm_db.scheduled_job" in sql:
-            job_type, params_, ingest_id, expr, _ = params
+            job_type, params_, ingest_id, qc_id, expr, _ = params
             hit = any(
                 j["job_type"] == job_type
                 and params_.obj.items() <= j["params"].items()
                 and j["ingest_id"] == ingest_id
+                and j.get("qc_id") == qc_id
                 and (expr is None or j["expr"] == expr)
                 for j in self.jobs
             )
             return Result([(1,)] if hit else [])
         if "INSERT INTO dsm_db.scheduled_job" in sql:
-            job_type, ingest_id, params_, expr, jitter, enabled, note = params
+            job_type, ingest_id, params_, expr, jitter, enabled, note, qc_id = params
             self.jobs.append(
                 dict(
                     job_type=job_type,
                     ingest_id=ingest_id,
+                    qc_id=qc_id,
                     params=params_.obj,
                     expr=expr,
                     jitter=jitter,
@@ -92,7 +100,7 @@ LEGACY = f"""\
 0 4 * * MON /scripts/mqtt_sync_wrapper resync-range {U1} --days 8
 5 * * * * {CMD} sync-thing {U3}
 5-59 * * * * {CMD} sync-sms sms_backend
-0 0 * * * /usr/bin/something-else
+# 0 0 * * * /usr/bin/something-else
 """
 
 
@@ -175,3 +183,100 @@ def test_backup_legacy_writes_once(tmp_path):
 def test_backup_legacy_raises_on_failure(tmp_path):
     with pytest.raises(OSError):
         legacy.backup_legacy(tmp_path / "missing.txt")
+
+
+G = "00000000-0000-0000-0000-0000000000aa"
+QC = "python3 /scripts/trigger_qaqc.py"
+
+
+def test_import_trigger_qc():
+    conn = FakeDB(qc={(G, "my qc"): 7})
+    text = (
+        f"0 * * * * {QC} --interval 1h --project-uuid {G} --qc-settings-name 'My QC'\n"
+        f"0 * * * * {QC} --interval 1h --project-uuid {G} --qc-settings-name 'my qc'\n"
+        f"# 0 2 * * * {QC} --interval 1d --project-uuid {G} --qc-settings-name gone\n"
+    )
+    summary = legacy.import_legacy(conn, text)
+    assert (summary.imported, summary.skipped, summary.orphaned) == (1, 1, 1)
+    assert [
+        (
+            j["job_type"],
+            j["qc_id"],
+            j["ingest_id"],
+            j["params"],
+            j["expr"],
+            j["enabled"],
+        )
+        for j in conn.jobs
+    ] == [("trigger_qc", 7, None, {"interval": "1h"}, "0 * * * *", True)]
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ("0 0 * * * /usr/bin/something-else\n", "line 1 cannot be imported"),
+        (f"@reboot {CMD} sync-thing {U1}\n", "line 1 cannot be imported"),
+        (
+            f"5 * * * * {CMD} sync-thing {U1}\n# x\n7 * * * * {CMD} sync-thing {U1}\n",
+            f"lines 1, 3 are active with different schedules for {U1}",
+        ),
+    ],
+)
+def test_import_blocked(text, message):
+    conn = FakeDB(ingests={U1: (1, 10)})
+    with pytest.raises(legacy.ImportBlocked, match=message):
+        legacy.import_legacy(conn, text)
+    assert conn.schedules == {} and conn.jobs == [] and not conn.imported
+
+
+def test_import_commented_unknown_is_dropped():
+    conn = FakeDB()
+    summary = legacy.import_legacy(conn, "# 0 0 * * * /usr/bin/x\n# a note\n")
+    assert summary.unknown == 1 and conn.imported
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        # the active line wins over a commented duplicate, wherever it is
+        (
+            f"# 1 * * * * {CMD} sync-thing {U1}\n5 * * * * {CMD} sync-thing {U1}\n",
+            ("5 * * * *", 0, True, 10),
+        ),
+        (
+            f"5 * * * * {CMD} sync-thing {U1}\n# 1 * * * * {CMD} sync-thing {U1}\n",
+            ("5 * * * *", 0, True, 10),
+        ),
+        # all commented: the last one
+        (
+            f"# 1 * * * * {CMD} sync-thing {U1}\n# 2 * * * * {CMD} sync-thing {U1}\n",
+            ("2 * * * *", 0, False, 10),
+        ),
+        # same schedule twice: the last jitter
+        (
+            f"5 * * * * {CMD} sync-thing {U1}\n"
+            f"5 * * * * sleep 9 && {CMD} sync-thing {U1}\n",
+            ("5 * * * *", 9, True, 10),
+        ),
+    ],
+)
+def test_import_duplicate_sync_lines(text, expected):
+    conn = FakeDB(ingests={U1: (1, 10)})
+    summary = legacy.import_legacy(conn, text)
+    assert (summary.imported, summary.skipped) == (1, 1)
+    assert conn.schedules == {1: expected}
+
+
+def test_import_duplicate_jobs_prefer_active():
+    conn = FakeDB(ingests={U1: (1, 10)})
+    text = (
+        f"# 0 4 * * MON {CMD} resync-range {U1} --days 8\n"
+        f"0 4 * * MON {CMD} resync-range {U1} --days 8\n"
+        f"0 5 * * MON {CMD} resync-range {U1} --days 8\n"
+    )
+    summary = legacy.import_legacy(conn, text)
+    assert (summary.imported, summary.skipped) == (2, 1)
+    assert [(j["expr"], j["enabled"]) for j in conn.jobs] == [
+        ("0 4 * * MON", True),
+        ("0 5 * * MON", True),
+    ]

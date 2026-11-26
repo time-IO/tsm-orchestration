@@ -7,9 +7,12 @@ import re
 from datetime import datetime
 from random import randint
 
-from crontab import CronItem, CronRange, CronSlices
+from crontab import SPECIALS, CronItem, CronRange, CronSlices
 
 logger = logging.getLogger("cron")
+
+# @hourly, @daily, ... -> 5 fields; @reboot has no schedule and stays invalid
+MACROS = {f"@{k}": v for k, v in SPECIALS.items() if k != "reboot"}
 
 MINUTES_PER_HOUR = 60
 MINUTES_PER_DAY = 60 * 24
@@ -150,7 +153,8 @@ def update_cron_expression(expression: str, interval: int) -> str:
 
     current_interval = get_current_interval(expression)
     if current_interval == interval:
-        return str(CronSlices(expression))
+        # clean_render: str() would collapse e.g. "0 * * * *" to "@hourly"
+        return CronSlices(normalize_expression(expression)).clean_render()
 
     base_minute = extract_base_minute(expression)
     base_hour = extract_base_hour(expression)
@@ -171,6 +175,12 @@ def update_cron_expression(expression: str, interval: int) -> str:
     else:  # new_interval > DAY_MINUTES
         day_step = interval // (60 * 24)
         return f"{base_minute} {base_hour} */{day_step} * *"
+
+
+def normalize_expression(expression: str) -> str:
+    """Collapse whitespace and expand a macro like @hourly to its 5 fields."""
+    expression = " ".join(expression.split())
+    return MACROS.get(expression.lower(), expression)
 
 
 def validate_expression(expression: str, allow_seconds: bool = False) -> bool:

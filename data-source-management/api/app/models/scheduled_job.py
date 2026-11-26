@@ -16,12 +16,16 @@ class ScheduledJob(SQLModel, table=True):
 
     __table_args__ = (
         CheckConstraint(
-            "job_type IN ('resync_thing', 'sync_sms', 'mqtt_monitoring')",
+            "job_type IN ('resync_thing', 'sync_sms', 'mqtt_monitoring', 'trigger_qc')",
             name="ck_scheduled_job_type",
         ),
         CheckConstraint(
             "(job_type = 'resync_thing') = (ingest_id IS NOT NULL)",
             name="ck_scheduled_job_ingest",
+        ),
+        CheckConstraint(
+            "(job_type = 'trigger_qc') = (quality_control_setting_id IS NOT NULL)",
+            name="ck_scheduled_job_qc_setting",
         ),
         CheckConstraint(
             "jitter_seconds BETWEEN 0 AND 59", name="ck_scheduled_job_jitter"
@@ -32,6 +36,9 @@ class ScheduledJob(SQLModel, table=True):
     job_type: str
     ingest_id: Optional[int] = Field(
         default=None, foreign_key="ingest.id", ondelete="CASCADE"
+    )
+    quality_control_setting_id: Optional[int] = Field(
+        default=None, foreign_key="quality_control_setting.id", ondelete="CASCADE"
     )
     params: dict = Field(
         default_factory=dict,

@@ -1283,6 +1283,7 @@ services:
       SFTP_SYNC_TOPIC: sync_ext_sftp
       SMS_SYNC_TOPIC: sync_sms
       MQTT_MONITORING_TOPIC: monitor_mqtt
+      QC_TRIGGER_TOPIC: run_qc_triggered
     depends_on:
       init:
         condition: service_completed_successfully

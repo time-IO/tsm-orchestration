@@ -43,6 +43,8 @@ class Scheduler:
         self.dir = Path(crontab_dir)
         self.path = self.dir / "crontab.txt"
         self.heartbeat = self.dir / ".heartbeat"
+        # read by supercronic-health.sh
+        self.import_failed = self.dir / ".import-failed"
         self.legacy = Path(legacy_path)
         self.poll = poll
         self.proc: subprocess.Popen | None = None
@@ -57,15 +59,19 @@ class Scheduler:
             summary = legacy.import_legacy(conn, self.legacy.read_text())
         except Exception as e:
             self.import_failures += 1
-            log = (
-                logger.error
-                if self.import_failures >= IMPORT_ERROR_AFTER
-                else logger.warning
-            )
-            log(
+            msg = (
                 f"legacy crontab import failed ({self.import_failures}x), "
                 f"keeping the legacy crontab: {e}"
             )
+            # a blocked import needs a human, retrying won't help
+            if (
+                isinstance(e, legacy.ImportBlocked)
+                or self.import_failures >= IMPORT_ERROR_AFTER
+            ):
+                logger.error(msg)
+                self.import_failed.write_text(msg + "\n")
+            else:
+                logger.warning(msg)
             return False
         logger.info(f"imported legacy crontab {self.legacy}: {summary}")
         return True
@@ -85,6 +91,7 @@ class Scheduler:
             if not db.is_imported(conn) and self.legacy.is_file():
                 if not self._import(conn):
                     return self.legacy.read_text()
+            self.import_failed.unlink(missing_ok=True)
             if seeded := db.seed_defaults(conn):
                 logger.info(f"seeded default jobs: {', '.join(seeded)}")
             with conn.transaction():

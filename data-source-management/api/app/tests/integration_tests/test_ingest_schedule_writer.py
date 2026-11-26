@@ -123,6 +123,28 @@ def test_interval_change_keeps_base_minute_and_jitter(client, base_data):
     assert (row.jitter_seconds, row.sync_interval_minutes) == (42, 120)
 
 
+@pytest.mark.parametrize(
+    ("stored", "interval", "expected"),
+    [
+        ("0 * * * *", 90, "0 * * * *"),  # adjusted to 60, used to store @hourly
+        ("@hourly", 90, "0 * * * *"),
+        ("@daily", 1440, "0 0 * * *"),
+        ("@daily", 120, "0 */2 * * *"),
+    ],
+)
+def test_interval_change_never_stores_macro(
+    client, base_data, stored, interval, expected
+):
+    ingest_id = _create_sftp(client, base_data, sync_interval_in_minutes=20)
+    _set_row(ingest_id, cron_expression=stored)
+
+    _patch_sftp(client, ingest_id, sync_interval_in_minutes=interval)
+
+    row = _row(ingest_id)
+    assert row.cron_expression == expected
+    assert next_runs(row.cron_expression, 0, True)
+
+
 def test_sync_enabled_toggle(client, base_data):
     ingest_id = _create_sftp(client, base_data)
     expression = _row(ingest_id).cron_expression

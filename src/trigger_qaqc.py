@@ -47,7 +47,8 @@ def main(interval, project_uuid, qc_settings_name):
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat(),
     }
-    topic = os.getenv("TOPIC_DATA_PARSED", "data_parsed")
+    # same topic and worker as the DSM's QC trigger, not the upload queue
+    topic = os.getenv("QC_TRIGGER_TOPIC", "run_qc_triggered")
     json_payload = json.dumps(payload)
     publish_single(topic, json_payload)
 

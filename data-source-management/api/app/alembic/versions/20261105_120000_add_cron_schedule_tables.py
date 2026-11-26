@@ -48,6 +48,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("job_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("ingest_id", sa.Integer(), nullable=True),
+        sa.Column("quality_control_setting_id", sa.Integer(), nullable=True),
         sa.Column(
             "params",
             postgresql.JSONB(astext_type=sa.Text()),
@@ -67,7 +68,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "job_type IN ('resync_thing', 'sync_sms', 'mqtt_monitoring')",
+            "job_type IN ('resync_thing', 'sync_sms', 'mqtt_monitoring', 'trigger_qc')",
             name="ck_scheduled_job_type",
         ),
         sa.CheckConstraint(
@@ -75,9 +76,18 @@ def upgrade() -> None:
             name="ck_scheduled_job_ingest",
         ),
         sa.CheckConstraint(
+            "(job_type = 'trigger_qc') = (quality_control_setting_id IS NOT NULL)",
+            name="ck_scheduled_job_qc_setting",
+        ),
+        sa.CheckConstraint(
             "jitter_seconds BETWEEN 0 AND 59", name="ck_scheduled_job_jitter"
         ),
         sa.ForeignKeyConstraint(["ingest_id"], ["ingest.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["quality_control_setting_id"],
+            ["quality_control_setting.id"],
+            ondelete="CASCADE",
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

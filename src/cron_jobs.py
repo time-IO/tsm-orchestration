@@ -27,9 +27,10 @@ def _lookup(conn: psycopg.Connection, uuid: str) -> tuple[int, str]:
 
 
 def _expression(expression: str, allow_seconds: bool) -> str:
-    if not schedule.validate_expression(expression, allow_seconds=allow_seconds):
+    normalized = schedule.normalize_expression(expression)
+    if not schedule.validate_expression(normalized, allow_seconds=allow_seconds):
         raise click.BadParameter(f"invalid cron expression {expression!r}")
-    return " ".join(expression.split())
+    return normalized
 
 
 def _jitter(jitter: int | None) -> int:
@@ -82,12 +83,12 @@ def add():
     """Add a job."""
 
 
-def _add(job_type, expression, jitter, params, note, ingest_id=None):
+def _add(job_type, expression, jitter, params, note, ingest_id=None, qc_id=None):
     expression = _expression(expression, allow_seconds=True)
     with _connect() as conn:
         job_id = db.insert_job(
             conn, job_type, expression, _jitter(jitter), params,
-            ingest_id=ingest_id, note=note,
+            ingest_id=ingest_id, note=note, qc_setting_id=qc_id,
         )  # fmt: skip
     click.echo(f"Added job {job_id}")
 
@@ -121,6 +122,24 @@ def add_sync_sms(origin, schedule, jitter, note):
 @_common
 def add_mqtt_monitoring(schedule, jitter, note):
     _add("mqtt_monitoring", schedule, jitter, _params("mqtt_monitoring"), note)
+
+
+@add.command("trigger-qc")
+@click.argument("qc_setting_uuid")
+@click.option("--interval", required=True, help="Look-back window, e.g. 30m, 1h or 7d.")
+@_common
+def add_trigger_qc(qc_setting_uuid, interval, schedule, jitter, note):
+    """Run QC settings on the data of the last INTERVAL (like the DSM trigger)."""
+    params = _params("trigger_qc", interval=interval)
+    _expression(schedule, allow_seconds=True)
+    with _connect() as conn:
+        row = conn.execute(
+            f"SELECT id FROM {db.SCHEMA}.quality_control_setting WHERE uuid::text = %s",
+            (qc_setting_uuid,),
+        ).fetchone()
+    if row is None:
+        raise click.ClickException(f"No QC settings found with uuid {qc_setting_uuid}")
+    _add("trigger_qc", schedule, jitter, params, note, qc_id=row[0])
 
 
 def _update(table: str, key: str, key_value, column: str, value) -> int:

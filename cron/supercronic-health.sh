@@ -13,6 +13,12 @@ if [ "$running" != true ]; then
   exit 1
 fi
 
+import_failed="${CRON_DIR:-/tmp/crontab}/.import-failed"
+if [ -f "$import_failed" ]; then
+  head -c 1000 "$import_failed"
+  exit 1
+fi
+
 if [ ! -f "$heartbeat" ]; then
   echo "No heartbeat at $heartbeat."
   exit 1

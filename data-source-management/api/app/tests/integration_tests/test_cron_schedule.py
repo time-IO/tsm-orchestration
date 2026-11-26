@@ -7,7 +7,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from dependencies import engine
-from models import CronLegacyImport, Ingest, IngestSchedule, ScheduledJob
+from models import (
+    CronLegacyImport,
+    Ingest,
+    IngestSchedule,
+    QualityControlSetting,
+    ScheduledJob,
+)
 
 
 @pytest.fixture
@@ -86,6 +92,53 @@ def test_scheduled_job_checks(kwargs, with_ingest, mqtt_ingest, cleanup_jobs):
         ingest_id = _ingest(session, mqtt_ingest).id if with_ingest else None
         session.add(
             ScheduledJob(cron_expression="0 * * * *", ingest_id=ingest_id, **kwargs)
+        )
+        with pytest.raises(IntegrityError):
+            session.commit()
+
+
+def _qc_setting(session: Session, base_data) -> int:
+    qc = QualityControlSetting(
+        permission_group_id=base_data["permission_group_id"],
+        name="Scheduled QC",
+        context_window="1h",
+    )
+    session.add(qc)
+    session.commit()
+    return qc.id
+
+
+def test_trigger_qc_cascades_on_qc_setting_delete(base_data, cleanup_qc, cleanup_jobs):
+    with Session(engine) as session:
+        qc_id = _qc_setting(session, base_data)
+        job = ScheduledJob(
+            job_type="trigger_qc",
+            quality_control_setting_id=qc_id,
+            params={"interval": "1h"},
+            cron_expression="0 * * * *",
+        )
+        session.add(job)
+        session.commit()
+        job_id = job.id
+        session.delete(session.get(QualityControlSetting, qc_id))
+        session.commit()
+        assert session.get(ScheduledJob, job_id) is None
+
+
+@pytest.mark.parametrize(
+    ("job_type", "with_qc"), [("trigger_qc", False), ("sync_sms", True)]
+)
+def test_scheduled_job_qc_setting_check(
+    job_type, with_qc, base_data, cleanup_qc, cleanup_jobs
+):
+    with Session(engine) as session:
+        qc_id = _qc_setting(session, base_data) if with_qc else None
+        session.add(
+            ScheduledJob(
+                job_type=job_type,
+                quality_control_setting_id=qc_id,
+                cron_expression="0 * * * *",
+            )
         )
         with pytest.raises(IntegrityError):
             session.commit()

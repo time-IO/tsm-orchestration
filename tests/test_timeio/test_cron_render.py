@@ -147,7 +147,22 @@ def test_parse_legacy_crontab():
     ]
     assert parsed.jobs[0].expression == "*/30 * * * * * *"
     assert parsed.jobs[1].expression == "5-59/10 * * * *"
-    assert [n for n, _ in parsed.unknown] == [9, 10]
+    # commented-out cron lines are reported, plain comments are not
+    assert [n for n, _ in parsed.unknown] == [1, 9, 10]
+
+
+@pytest.mark.parametrize(
+    ("line", "unknown"),
+    [
+        ("# 0 0 * * * /usr/bin/x", True),
+        ("#*/30 * * * * * * /usr/bin/x", True),
+        ("# mqtt monitoring", False),
+        (f"# 2026-01-01 00:00:00 | proj | thing | {U1}", False),
+        ("# 0 0 * * *", False),
+    ],
+)
+def test_parse_legacy_commented_lines(line, unknown):
+    assert bool(legacy.parse_legacy_crontab(line + "\n").unknown) is unknown
 
 
 def test_parse_legacy_seven_field_sync_is_unknown():
@@ -251,4 +266,116 @@ def test_parse_legacy_prod_shapes():
         ("sync_sms", "sms_backend", None, "5-59 * * * *", True),
         ("sync_sms", "sms_cv", None, "30 1 * * *", False),
     ]
+    assert [n for n, _ in parsed.unknown] == [5]
+
+
+QC = "python3 /scripts/trigger_qaqc.py"
+
+
+@pytest.mark.parametrize(
+    ("name", "quoted"),
+    [("My QC", "'My QC'"), ("plain", "plain"), ("it's", "'it'\"'\"'s'")],
+)
+def test_build_command_trigger_qc(name, quoted):
+    command = jobs.build_command("trigger_qc", U1, {"interval": "1h"}, 3, name)
+    assert command == (
+        f"sleep 3 && {QC} --interval 1h --project-uuid {U1} "
+        f"--qc-settings-name {quoted} {SUFFIX}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("params", "name"),
+    [
+        ({"interval": "1 h"}, "x"),
+        ({"interval": "0h"}, "x"),
+        ({"interval": "1w"}, "x"),
+        ({}, "x"),
+        ({"interval": "1h"}, None),
+        ({"interval": "1h"}, "a\nb"),
+    ],
+)
+def test_build_command_trigger_qc_rejects(params, name):
+    with pytest.raises(ValueError):
+        jobs.build_command("trigger_qc", U1, params, 0, name)
+
+
+def test_render_trigger_qc():
+    row = job(5, "trigger_qc", U2, {"interval": "1d"}, name="grp / My QC", note="n")
+    row.qc_settings_name = "My QC"
+    text = jobs.render_crontab([], [row])
+    assert text == (
+        "# 2026-01-02 03:04:05 | trigger_qc | grp / My QC | n\n"
+        f"0 3 * * 0 sleep 0 && {QC} --interval 1d --project-uuid {U2} "
+        f"--qc-settings-name 'My QC' {SUFFIX}\n"
+    )
+
+
+def test_render_trigger_qc_without_setting_is_skipped():
+    skipped = []
+    jobs.render_crontab(
+        [], [job(5, "trigger_qc", U2, {"interval": "1d"})], skipped.append
+    )
+    assert len(skipped) == 1
+
+
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        (
+            f"0 * * * * python3 /scripts/trigger_qaqc.py --interval 1h "
+            f"--project-uuid {U1} --qc-settings-name 'My QC' {SUFFIX}",
+            ("My QC", "1h", "0 * * * *", True),
+        ),
+        (
+            f"# 0 2 * * * /scripts/trigger_qaqc.py --project-uuid={U1} "
+            "--qc-settings-name x --interval=1d",
+            ("x", "1d", "0 2 * * *", False),
+        ),
+    ],
+)
+def test_parse_legacy_trigger_qc(line, expected):
+    parsed = legacy.parse_legacy_crontab(line + "\n")
     assert not parsed.unknown
+    (j,) = parsed.jobs
+    assert (j.kind, j.target) == ("trigger_qc", U1)
+    assert (j.qc_name, j.qc_interval, j.expression, j.enabled) == expected
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        f"--interval 1h --project-uuid {U1}",
+        f"--interval 1h --project-uuid {U1} --qc-settings-name x --extra y",
+        f"--interval 1h --project-uuid nope --qc-settings-name x",
+        f"--interval 1 --project-uuid {U1} --qc-settings-name x",
+        f"--interval 1h --project-uuid {U1} --qc-settings-name 'x",
+    ],
+)
+def test_parse_legacy_trigger_qc_unknown(args):
+    parsed = legacy.parse_legacy_crontab(f"0 * * * * {QC} {args}\n")
+    assert not parsed.jobs and len(parsed.unknown) == 1
+
+
+def test_render_expands_macros():
+    text = jobs.render_crontab(
+        [sched(expr="@daily")], [job(expr="@weekly"), job(2, expr="@reboot")]
+    )
+    assert f"\n0 0 * * * sleep 7 && {CMD} sync-thing {U1}" in text
+    assert "\n0 0 * * 0 " in text and "@" not in text.replace("$", "")
+
+
+def test_parse_legacy_macros():
+    parsed = legacy.parse_legacy_crontab(
+        f"@hourly {CMD} sync-thing {U1} {SUFFIX}\n"
+        f"# @DAILY sleep 3 && {CMD} sync-thing {U2}\n"
+        f"@reboot {CMD} sync-thing {U1}\n"
+        f"@weekly {QC} --interval 7d --project-uuid {U1} --qc-settings-name x\n"
+        "# @hourly /usr/bin/x\n"
+    )
+    assert [(j.kind, j.expression, j.jitter, j.enabled) for j in parsed.jobs] == [
+        ("sync_thing", "0 * * * *", 0, True),
+        ("sync_thing", "0 0 * * *", 3, False),
+        ("trigger_qc", "0 0 * * 0", 0, True),
+    ]
+    assert [n for n, _ in parsed.unknown] == [3, 5]

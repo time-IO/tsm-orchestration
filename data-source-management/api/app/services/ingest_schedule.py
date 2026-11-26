@@ -13,6 +13,7 @@ from models.scheduled_job import IngestScheduleInfoRead, ScheduledJobRead
 from timeio.cron.schedule import (
     SYNC_JITTER_SECONDS,
     new_schedule,
+    normalize_expression,
     update_cron_expression,
 )
 
@@ -27,6 +28,7 @@ def next_runs(
     now: Optional[datetime] = None,
 ) -> list[datetime]:
     """Upcoming start times (UTC) including the start delay; empty if disabled."""
+    expression = normalize_expression(expression)
     if not enabled or len(expression.split()) != 5:
         return []
     now = now or datetime.now(timezone.utc)
@@ -91,7 +93,7 @@ def apply_ingest_schedule(session: Session, ingest_id: int) -> None:
             )
         return
 
-    expression = row.cron_expression
+    expression = normalize_expression(row.cron_expression)
     if interval is not None and interval != row.sync_interval_minutes:
         expression = update_cron_expression(row.cron_expression, interval)
     # updated_at is rendered into the crontab, so only bump it on visible changes

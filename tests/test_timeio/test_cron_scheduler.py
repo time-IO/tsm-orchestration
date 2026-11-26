@@ -125,6 +125,35 @@ def test_import_errors_escalate(scheduler, fake_db, caplog):
     assert levels[-1] == "ERROR" and levels[0] == "WARNING"
 
 
+def test_import_failure_marks_unhealthy_after_retries(scheduler, fake_db):
+    scheduler.legacy.write_text(LEGACY)
+    fake_db.import_error = RuntimeError("boom")
+    for _ in range(cron_scheduler.IMPORT_ERROR_AFTER - 1):
+        scheduler.update()
+    assert not scheduler.import_failed.exists()
+    scheduler.update()
+    assert "boom" in scheduler.import_failed.read_text()
+
+    fake_db.import_error = None
+    scheduler.update()
+    assert not scheduler.import_failed.exists()
+
+
+def test_blocked_import_marks_unhealthy_at_once(scheduler, fake_db, caplog):
+    scheduler.legacy.write_text(LEGACY)
+    fake_db.import_error = legacy.ImportBlocked("line 3 cannot be imported")
+    scheduler.update()
+    assert "line 3" in scheduler.import_failed.read_text()
+    assert scheduler.path.read_text() == LEGACY
+    assert [r.levelname for r in caplog.records if "line 3" in r.message] == ["ERROR"]
+
+
+def test_import_marker_removed_when_not_pending(scheduler, fake_db):
+    scheduler.import_failed.write_text("old\n")
+    scheduler.update()
+    assert not scheduler.import_failed.exists()
+
+
 def test_no_legacy_file_renders_from_db(scheduler, fake_db):
     fake_db.schedules = [schedule()]
     assert scheduler.update()
@@ -375,3 +404,29 @@ def test_cli_thing_set_jitter(monkeypatch):
     r = invoke(monkeypatch, conn, "thing", "set-jitter", U1, "7")
     assert r.exit_code == 0, r.output
     assert conn.sql("UPDATE dsm_db.ingest_schedule")[0][1] == (7, 11)
+
+
+def test_cli_add_trigger_qc(monkeypatch):
+    conn = FakeConn({"FROM dsm_db.quality_control_setting": [(9,)], "RETURNING id": [(4,)]})  # fmt: skip
+    r = invoke(monkeypatch, conn, "add", "trigger-qc", U1, "--interval", "1h",
+               "--schedule", "0 * * * *", "--jitter", "2")  # fmt: skip
+    assert r.exit_code == 0, r.output
+    args = conn.sql("INSERT INTO dsm_db.scheduled_job")[0][1]
+    assert (
+        args[0] == "trigger_qc"
+        and args[1] is None
+        and args[2].obj == {"interval": "1h"}
+    )
+    assert args[3:5] == ("0 * * * *", 2) and args[7] == 9
+
+
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [(("--interval", "1 hour"), "interval"), (("--interval", "1h"), "No QC settings")],
+)
+def test_cli_add_trigger_qc_rejects(monkeypatch, args, message):
+    conn = FakeConn()
+    r = invoke(
+        monkeypatch, conn, "add", "trigger-qc", U1, *args, "--schedule", "0 * * * *"
+    )
+    assert r.exit_code != 0 and message in r.output and not conn.sql("INSERT")

@@ -45,11 +45,15 @@ def fetch_jobs(conn: psycopg.Connection) -> list[JobRow]:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(f"""
             SELECT j.id, j.job_type,
-                   i.uuid::text AS target_uuid, i.name AS target_name,
+                   COALESCE(i.uuid, g.uuid)::text AS target_uuid,
+                   COALESCE(i.name, g.name || ' / ' || q.name) AS target_name,
                    j.params, j.cron_expression, j.jitter_seconds, j.enabled,
-                   j.note, j.updated_at
+                   j.note, j.updated_at, q.name AS qc_settings_name
             FROM {SCHEMA}.scheduled_job j
             LEFT JOIN {SCHEMA}.ingest i ON i.id = j.ingest_id
+            LEFT JOIN {SCHEMA}.quality_control_setting q
+                ON q.id = j.quality_control_setting_id
+            LEFT JOIN {SCHEMA}.permission_group g ON g.id = q.permission_group_id
             ORDER BY j.id
             """)
         return [JobRow(**r) for r in cur.fetchall()]
@@ -64,13 +68,14 @@ def insert_job(
     ingest_id: int | None = None,
     enabled: bool = True,
     note: str | None = None,
+    qc_setting_id: int | None = None,
 ) -> int:
     row = conn.execute(
         f"""
         INSERT INTO {SCHEMA}.scheduled_job
             (job_type, ingest_id, params, cron_expression,
-             jitter_seconds, enabled, note)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+             jitter_seconds, enabled, note, quality_control_setting_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
@@ -81,6 +86,7 @@ def insert_job(
             jitter,
             enabled,
             note,
+            qc_setting_id,
         ),
     ).fetchone()
     return row[0]
@@ -92,18 +98,27 @@ def job_exists(
     params: dict[str, Any],
     ingest_id: int | None = None,
     cron_expression: str | None = None,
+    qc_setting_id: int | None = None,
 ) -> bool:
     """True if a job of `job_type` exists whose params contain `params` (and
-    which matches `ingest_id` and, if given, `cron_expression`)."""
+    which matches `ingest_id`, `qc_setting_id` and, if given, `cron_expression`)."""
     row = conn.execute(
         f"""
         SELECT 1 FROM {SCHEMA}.scheduled_job
         WHERE job_type = %s AND params @> %s
           AND ingest_id IS NOT DISTINCT FROM %s
+          AND quality_control_setting_id IS NOT DISTINCT FROM %s
           AND (%s::text IS NULL OR cron_expression = %s)
         LIMIT 1
         """,
-        (job_type, Jsonb(params), ingest_id, cron_expression, cron_expression),
+        (
+            job_type,
+            Jsonb(params),
+            ingest_id,
+            qc_setting_id,
+            cron_expression,
+            cron_expression,
+        ),
     ).fetchone()
     return row is not None
 
