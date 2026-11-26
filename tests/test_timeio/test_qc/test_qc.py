@@ -3,15 +3,22 @@
 
 import json
 import random
+import sqlite3
 import urllib
+from unittest.mock import Mock
 
 import pytest
 import numpy as np
 import pandas as pd
 
 from timeio.databases import Database, DBapi
+from timeio.feta import QAQCTest
 from timeio.qc import filter_qc_functions
-from timeio.qc.qcfunction import QcFunction, QcFunctionStream, get_qc_functions
+from timeio.qc.qcfunction import (
+    QcFunction,
+    QcFunctionStream,
+    get_qc_functions,
+)
 from timeio.qc.io import read_stream_data, write_qc_data, ImmutableDatastreamError
 from timeio.qc.saqc import SaQCWrapper
 from timeio import feta
@@ -455,3 +462,123 @@ def test_qc_workflow(thing_uuid, local_database, local_dbapi):
     # reloading the data checks that the format is right
     data = read_stream_data(local_dbapi, streams=streams)
     qc = SaQCWrapper(data)
+
+
+@pytest.fixture
+def lookup(monkeypatch):
+    # Execute the lookup SQL against two deployments of the same property.
+    # Only the driver placeholder syntax differs from PostgreSQL.
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    conn.executescript("""
+        ATTACH DATABASE ':memory:' AS public;
+        ATTACH DATABASE ':memory:' AS source;
+        CREATE TABLE public.sms_device_mount_action (id, configuration_id);
+        CREATE TABLE public.sms_datastream_link (
+            device_property_id, device_mount_action_id, datasource_id,
+            thing_id, datastream_id, begin_date, end_date
+        );
+        CREATE TABLE source.datastream (id, position, mutable);
+        INSERT INTO public.sms_device_mount_action VALUES (11, 1), (22, 2);
+        INSERT INTO public.sms_datastream_link VALUES
+            (27, 11, 'source', 'old-thing', 101, NULL, NULL),
+            (27, 22, 'source', 'selected-thing', 202, NULL, NULL);
+        INSERT INTO source.datastream VALUES
+            (101, 'old-position', 0), (202, 'selected-position', 0);
+        """)
+
+    def fetchall(conn, query, *params):
+        return [dict(row) for row in conn.execute(query.replace("%s", "?"), params)]
+
+    def fetchone(conn, query, *params):
+        rows = fetchall(conn, query, *params)
+        return rows[0] if rows else None
+
+    qc_test = QAQCTest({}, conn=conn, caching=False)
+    monkeypatch.setattr(qc_test, "_fetchall", fetchall)
+    monkeypatch.setattr(qc_test, "_fetchone", fetchone)
+    yield qc_test, conn
+    conn.close()
+
+
+def test_stream_lookup_uses_selected_thing(lookup):
+    qc_test, _ = lookup
+    stream = qc_test._get_existing_stream({"sta_stream_id": 27, "sta_thing_id": 2})
+    assert stream["thing_uuid"] == "selected-thing"
+    assert stream["datastream_id"] == 202
+    assert stream["position"] == "selected-position"
+
+
+def test_stream_lookup_does_not_fall_back_to_another_thing(lookup):
+    qc_test, _ = lookup
+    with pytest.raises(ValueError, match="does not exist on STA Thing 3"):
+        qc_test._get_existing_stream({"sta_stream_id": 27, "sta_thing_id": 3})
+
+
+def test_stream_lookup_rejects_ambiguous_deployments(lookup):
+    qc_test, conn = lookup
+    conn.execute(
+        "INSERT INTO public.sms_datastream_link VALUES "
+        "(27, 22, 'source', 'other-thing', 101, NULL, NULL)"
+    )
+    with pytest.raises(ValueError, match="multiple deployment links"):
+        qc_test._get_existing_stream({"sta_stream_id": 27, "sta_thing_id": 2})
+
+
+@pytest.mark.parametrize(
+    "thing_id,thing_uuid,position,values",
+    [
+        (1, "old-thing", "old-position", [100.0, 200.0]),
+        (2, "selected-thing", "selected-position", [1.0, 2.0]),
+    ],
+)
+def test_selected_deployment_values_reach_saqc(
+    lookup, thing_id, thing_uuid, position, values
+):
+    qc_test, _ = lookup
+    meta = qc_test._get_existing_stream({"sta_stream_id": 27, "sta_thing_id": thing_id})
+    stream = QcFunctionStream(
+        key="field",
+        alias="temperature",
+        sta_thing_id=thing_id,
+        sta_stream_id=27,
+        context_window=pd.Timedelta(0),
+        start_date=meta.pop("begin_date"),
+        **meta,
+    )
+    index = pd.date_range("2026-01-10", periods=2, tz="UTC")
+    deployments = {
+        ("old-thing", "old-position"): [100.0, 200.0],
+        ("selected-thing", "selected-position"): [1.0, 2.0],
+    }
+
+    def observations(uuid, pos, **kwargs):
+        return {
+            "observations": [
+                {
+                    "result_time": date.isoformat(),
+                    "result_type": 0,
+                    "result_number": value,
+                    "result_quality": None,
+                }
+                for date, value in zip(index, deployments[uuid, pos])
+            ]
+        }
+
+    dbapi = Mock()
+    dbapi.get_datastream_observations.side_effect = observations
+    qc = SaQCWrapper(read_stream_data(dbapi, [stream], index[0], index[-1]))
+    qc.execute(QcFunction("range", "flagRange", [stream], {"max": 10}))
+
+    dbapi.get_datastream_observations.assert_called_once_with(
+        thing_uuid, position, start_date=index[0], end_date=index[-1]
+    )
+    pd.testing.assert_series_equal(
+        qc.data[stream]["data"],
+        pd.Series(values, index=index, name="data"),
+        check_names=False,
+        check_freq=False,
+    )
+    assert [quality["annotation"] for quality in qc.data[stream]["quality"]] == [
+        "255.0" if value > 10 else "-inf" for value in values
+    ]
