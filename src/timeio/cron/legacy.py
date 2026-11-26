@@ -23,6 +23,7 @@ from timeio.cron.schedule import (
 logger = logging.getLogger("cron")
 
 BACKUP_SUFFIX = ".pre-db.bkp"
+IMPORTED_SUFFIX = ".imported"
 
 # prod lines vary: optional python3, optional .py, optional sleep, 5/7 fields or @macro
 _LEGACY_JOB_RE = re.compile(
@@ -240,6 +241,26 @@ def backup_legacy(path: Path) -> Path:
     return backup
 
 
+def _imported_marker(path: Path) -> Path:
+    return path.with_name(path.name + IMPORTED_SUFFIX)
+
+
+def is_imported(path: Path, tables_id: str) -> bool:
+    """True if `path` was imported into the current tables (see `db.tables_id`)."""
+    try:
+        return _imported_marker(path).read_text().strip() == tables_id
+    except FileNotFoundError:
+        return False
+
+
+def mark_imported(path: Path, tables_id: str) -> None:
+    """Write the marker next to `path`. Raises OSError."""
+    marker = _imported_marker(path)
+    tmp = marker.with_name(marker.name + ".tmp")
+    tmp.write_text(tables_id + "\n")
+    tmp.replace(marker)
+
+
 def _ingests(conn: psycopg.Connection, uuids: list[str]) -> dict[str, tuple]:
     """uuid -> (ingest_id, configured sync interval or None)."""
     rows = conn.execute(
@@ -257,8 +278,8 @@ def _ingests(conn: psycopg.Connection, uuids: list[str]) -> dict[str, tuple]:
 
 
 def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
-    """Import a legacy crontab in one transaction and set the import marker.
-    Existing rows win; nothing is updated."""
+    """Import a legacy crontab in one transaction. Existing rows win and nothing
+    is updated, so a repeated import only adds what is missing."""
     parsed = parse_legacy_crontab(text)
     selected, duplicates, conflicts = _select_jobs(parsed.jobs)
     active_unknown = [(n, line) for n, line in parsed.unknown if line[0] != "#"]
@@ -279,8 +300,6 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
             "not imported"
         )
     with conn.transaction():
-        if db.is_imported(conn):
-            raise RuntimeError("legacy crontab was already imported")
         uuids = sorted(
             {j.target for j in selected if j.kind in ("sync_thing", "resync_thing")}
         )
@@ -310,7 +329,6 @@ def import_legacy(conn: psycopg.Connection, text: str) -> ImportSummary:
                 summary.imported += 1
             else:
                 summary.skipped += 1
-        db.mark_imported(conn)
     return summary
 
 

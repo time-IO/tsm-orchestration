@@ -25,33 +25,25 @@ class Result:
 class FakeDB:
     """In-memory stand-in for the statements of timeio.cron.db/legacy."""
 
-    def __init__(
-        self, ingests=None, schedules=None, jobs=None, imported=False, qc=None
-    ):
+    def __init__(self, ingests=None, schedules=None, jobs=None, qc=None):
         self.ingests = ingests or {}  # uuid -> (ingest_id, interval)
         self.qc = qc or {}  # (group uuid, lower name) -> qc setting id
         self.schedules = dict(schedules or {})  # ingest_id -> row tuple
         self.jobs = list(jobs or [])  # dicts
-        self.imported = imported
         self.rolled_back = False
 
     @contextmanager
     def transaction(self):
-        snapshot = (dict(self.schedules), list(self.jobs), self.imported)
+        snapshot = (dict(self.schedules), list(self.jobs))
         try:
             yield
         except Exception:
-            self.schedules, self.jobs, self.imported = snapshot
+            self.schedules, self.jobs = snapshot
             self.rolled_back = True
             raise
 
     def execute(self, sql, params=None):
         sql = " ".join(sql.split())
-        if "FROM dsm_db.cron_legacy_import" in sql:
-            return Result([(1,)] if self.imported else [])
-        if "INSERT INTO dsm_db.cron_legacy_import" in sql:
-            self.imported = True
-            return Result()
         if "FROM dsm_db.quality_control_setting q" in sql:
             qc_id = self.qc.get((params[0], params[1].lower()))
             return Result([(qc_id,)] if qc_id else [])
@@ -117,7 +109,6 @@ def test_import_legacy():
         ("resync_thing", 1, {"days": 8}, "0 4 * * MON"),
         ("sync_sms", None, {"origin": "sms_backend"}, "5-59 * * * *"),
     ]  # fmt: skip
-    assert conn.imported
 
 
 def test_import_keeps_existing_rows():
@@ -139,11 +130,42 @@ def test_import_keeps_existing_rows():
     assert len(conn.jobs) == 1 and conn.jobs[0]["enabled"] is False
 
 
-def test_import_refuses_second_run():
-    conn = FakeDB(ingests={U1: (1, 10)}, imported=True)
+def test_import_twice_adds_nothing():
+    conn = FakeDB(ingests={U1: (1, 10), U2: (2, None)})
+    legacy.import_legacy(conn, LEGACY)
+    before = (dict(conn.schedules), list(conn.jobs))
+    summary = legacy.import_legacy(conn, LEGACY)
+    assert summary.imported == 0 and (conn.schedules, conn.jobs) == before
+
+
+def test_import_rolls_back_on_error():
+    conn = FakeDB(ingests={U1: (1, 10)})
+    text = f"5 * * * * {CMD} sync-thing {U1}\n0 0 * * * {CMD} sync-sms sms_backend\n"
+    real = conn.execute
+
+    def fail_on_jobs(sql, params=None):
+        if "INSERT INTO dsm_db.scheduled_job" in sql:
+            raise RuntimeError("boom")
+        return real(sql, params)
+
+    conn.execute = fail_on_jobs
     with pytest.raises(RuntimeError):
-        legacy.import_legacy(conn, f"5 * * * * {CMD} sync-thing {U1}\n")
+        legacy.import_legacy(conn, text)
     assert conn.schedules == {} and conn.rolled_back
+
+
+def test_imported_marker(tmp_path):
+    src = tmp_path / "crontab.txt"
+    src.write_text("x\n")
+    assert not legacy.is_imported(src, "41")
+    legacy.mark_imported(src, "41")
+    assert legacy.is_imported(src, "41")
+    # recreated tables (downgrade + upgrade) get a new id and re-import
+    assert not legacy.is_imported(src, "42")
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "crontab.txt",
+        "crontab.txt.imported",
+    ]
 
 
 def test_seed_defaults():
@@ -226,13 +248,13 @@ def test_import_blocked(text, message):
     conn = FakeDB(ingests={U1: (1, 10)})
     with pytest.raises(legacy.ImportBlocked, match=message):
         legacy.import_legacy(conn, text)
-    assert conn.schedules == {} and conn.jobs == [] and not conn.imported
+    assert conn.schedules == {} and conn.jobs == []
 
 
 def test_import_commented_unknown_is_dropped():
     conn = FakeDB()
     summary = legacy.import_legacy(conn, "# 0 0 * * * /usr/bin/x\n# a note\n")
-    assert summary.unknown == 1 and conn.imported
+    assert summary.unknown == 1
 
 
 @pytest.mark.parametrize(

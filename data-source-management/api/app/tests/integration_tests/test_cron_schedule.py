@@ -8,7 +8,6 @@ from sqlmodel import Session, select
 
 from dependencies import engine
 from models import (
-    CronLegacyImport,
     Ingest,
     IngestSchedule,
     QualityControlSetting,
@@ -142,23 +141,3 @@ def test_scheduled_job_qc_setting_check(
         )
         with pytest.raises(IntegrityError):
             session.commit()
-
-
-@pytest.fixture
-def cleanup_marker():
-    yield
-    with Session(engine) as session:
-        for row in session.exec(select(CronLegacyImport)).all():
-            session.delete(row)
-        session.commit()
-
-
-def test_cron_legacy_import_single_row(cleanup_marker):
-    with Session(engine) as session:
-        session.add(CronLegacyImport())
-        session.commit()
-    for row in (CronLegacyImport(), CronLegacyImport(id=False)):
-        with Session(engine) as session:
-            session.add(row)
-            with pytest.raises(IntegrityError):
-                session.commit()

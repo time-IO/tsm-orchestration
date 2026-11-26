@@ -135,11 +135,7 @@ def seed_defaults(conn: psycopg.Connection) -> list[str]:
     return inserted
 
 
-def is_imported(conn: psycopg.Connection) -> bool:
-    """True once the legacy crontab.txt was imported."""
-    row = conn.execute(f"SELECT 1 FROM {SCHEMA}.cron_legacy_import").fetchone()
-    return row is not None
-
-
-def mark_imported(conn: psycopg.Connection) -> None:
-    conn.execute(f"INSERT INTO {SCHEMA}.cron_legacy_import DEFAULT VALUES")
+def tables_id(conn: psycopg.Connection) -> str:
+    """Changes when the cron tables are recreated (Alembic downgrade + upgrade)."""
+    row = conn.execute(f"SELECT '{SCHEMA}.ingest_schedule'::regclass::oid").fetchone()
+    return str(row[0])

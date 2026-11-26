@@ -52,11 +52,12 @@ class Scheduler:
         self.import_failures = 0
         self._last_skips: frozenset[str] = frozenset()
 
-    def _import(self, conn: psycopg.Connection) -> bool:
-        """Back up and import the legacy crontab. False keeps the legacy file."""
+    def _import(self, conn: psycopg.Connection, tables_id: str) -> bool:
+        """Back up, import and mark the legacy crontab. False keeps the legacy file."""
         try:
             legacy.backup_legacy(self.legacy)
             summary = legacy.import_legacy(conn, self.legacy.read_text())
+            legacy.mark_imported(self.legacy, tables_id)
         except Exception as e:
             self.import_failures += 1
             msg = (
@@ -88,9 +89,11 @@ class Scheduler:
     def compute(self) -> str:
         """Return the crontab supercronic should run; legacy while the import is pending."""
         with db.connect(self.dsn) as conn:
-            if not db.is_imported(conn) and self.legacy.is_file():
-                if not self._import(conn):
-                    return self.legacy.read_text()
+            if self.legacy.is_file():
+                tables_id = db.tables_id(conn)
+                if not legacy.is_imported(self.legacy, tables_id):
+                    if not self._import(conn, tables_id):
+                        return self.legacy.read_text()
             self.import_failed.unlink(missing_ok=True)
             if seeded := db.seed_defaults(conn):
                 logger.info(f"seeded default jobs: {', '.join(seeded)}")

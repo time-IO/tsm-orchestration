@@ -90,22 +90,9 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
-        "cron_legacy_import",
-        sa.Column("id", sa.Boolean(), server_default="true", nullable=False),
-        sa.Column(
-            "imported_at",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.CheckConstraint("id", name="ck_cron_legacy_import_single_row"),
-        sa.PrimaryKeyConstraint("id"),
-    )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_table("cron_legacy_import")
     op.drop_table("scheduled_job")
     op.drop_table("ingest_schedule")

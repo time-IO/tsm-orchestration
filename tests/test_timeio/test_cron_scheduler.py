@@ -27,6 +27,7 @@ class FakeDB:
 
     def __init__(self):
         self.imported = False
+        self.tables_id = "1"
         self.schedules = []
         self.down = None
         self.import_error = None
@@ -56,7 +57,7 @@ def fake_db(monkeypatch):
         return []
 
     monkeypatch.setattr(db, "connect", lambda dsn: fake.conn())
-    monkeypatch.setattr(db, "is_imported", lambda conn: fake.imported)
+    monkeypatch.setattr(db, "tables_id", lambda conn: fake.tables_id)
     monkeypatch.setattr(db, "seed_defaults", seed)
     monkeypatch.setattr(db, "fetch_schedules", lambda conn: list(fake.schedules))
     monkeypatch.setattr(db, "fetch_jobs", lambda conn: [])
@@ -163,10 +164,38 @@ def test_no_legacy_file_renders_from_db(scheduler, fake_db):
 
 def test_imported_ignores_legacy_file(scheduler, fake_db):
     scheduler.legacy.write_text(LEGACY)
-    fake_db.imported = True
+    legacy.mark_imported(scheduler.legacy, fake_db.tables_id)
     scheduler.update()
-    assert LEGACY not in scheduler.path.read_text()
+    assert LEGACY not in scheduler.path.read_text() and not fake_db.imported
     assert not (scheduler.legacy.parent / "crontab.txt.pre-db.bkp").exists()
+
+
+def test_import_writes_marker_and_runs_once(scheduler, fake_db):
+    scheduler.legacy.write_text(LEGACY)
+    scheduler.update()
+    assert legacy.is_imported(scheduler.legacy, fake_db.tables_id)
+    fake_db.imported = False
+    scheduler.update()
+    assert not fake_db.imported
+
+
+def test_recreated_tables_reimport(scheduler, fake_db):
+    scheduler.legacy.write_text(LEGACY)
+    scheduler.update()
+    fake_db.imported, fake_db.tables_id = False, "2"
+    scheduler.update()
+    assert fake_db.imported and legacy.is_imported(scheduler.legacy, "2")
+
+
+def test_marker_write_failure_keeps_legacy(scheduler, fake_db, monkeypatch):
+    scheduler.legacy.write_text(LEGACY)
+
+    def fail(path, tables_id):
+        raise PermissionError("read-only")
+
+    monkeypatch.setattr(legacy, "mark_imported", fail)
+    scheduler.update()
+    assert scheduler.path.read_text() == LEGACY and scheduler.import_failures == 1
 
 
 def test_unchanged_hash_no_reload(scheduler, fake_db):

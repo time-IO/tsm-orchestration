@@ -36,7 +36,6 @@ from .ingest_mqtt import IngestMqtt
 from .ingest_sftp import IngestSftp
 from .ingest_schedule import IngestSchedule
 from .scheduled_job import ScheduledJob
-from .cron_legacy_import import CronLegacyImport
 
 from .parser import Parser
 from .parser_detailed import ParserDetailed
