@@ -13,8 +13,7 @@ mkdir -p /tmp/mosquitto/auth /tmp/mosquitto/data
 
 # create password db when not present
 if [ ! -f "/tmp/mosquitto/auth/mosquitto.passwd" ]; then
-  echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd &&
-  echo `echo -n "$MQTT_INGEST_USER:" && /mosquitto/pw -p "$MQTT_INGEST_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd
+  echo `echo -n "$MQTT_USER:" && /mosquitto/pw -p "$MQTT_PASSWORD"` >> /tmp/mosquitto/auth/mosquitto.passwd
 fi
 
 # always update acl file
@@ -26,10 +25,6 @@ fi
   echo "# Each user has its own topic and logging namespace"
   echo "pattern readwrite mqtt_ingest/%u/#"
   echo "pattern readwrite logging/%u/#"
-  echo ""
-  echo "user $MQTT_INGEST_USER"
-  echo "topic read mqtt_ingest/#"
-  echo "topic readwrite health/#"
 } >/tmp/mosquitto/auth/mosquitto.acl
 
 mkdir -p /var/lib/mosquitto/tls

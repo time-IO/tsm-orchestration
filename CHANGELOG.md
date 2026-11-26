@@ -22,6 +22,7 @@ When adding a changelog entry, ensure the following:
 - STA datastream selection for QC functions retrieves STA data using authentication, enabling access to internal datastreams ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/818))
 - empty projects list if project is null, use null if no license is available, spelling fix: responsiblePersons ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/820))
 - Re-uploaded files are parsed with the parser stored in the tag of the earlier version of the file, and tag and parser always match; if that parser no longer exists, the current parser is used and a warning is written to the journal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/823))
+- QC is triggered for external MQTT ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/830))
 - Users with membership in more than 50 permission groups now see all of their STA Hub endpoints as internal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/829))
 
 ### Changed
