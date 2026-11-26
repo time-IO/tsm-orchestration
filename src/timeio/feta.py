@@ -713,39 +713,49 @@ class QAQCTest(Base):
         return pd.Timedelta(0)
 
     def _get_existing_stream(self, stream):
-        tmp1 = self._fetchone(
+        links = self._fetchall(
             self._conn,
             """
             SELECT
-                datasource_id as schema,
-                thing_id as thing_uuid,
-                datastream_id,
-                begin_date,
-                end_date
-            FROM public.sms_datastream_link
-              WHERE device_property_id = %s
+                l.datasource_id as schema,
+                l.thing_id as thing_uuid,
+                l.datastream_id,
+                l.begin_date,
+                l.end_date
+            FROM public.sms_datastream_link l
+            JOIN public.sms_device_mount_action m ON m.id = l.device_mount_action_id
+            WHERE l.device_property_id = %s AND m.configuration_id = %s
             """,
             stream["sta_stream_id"],
+            stream["sta_thing_id"],
         )
 
-        if tmp1 is None:
+        if not links:
             raise ValueError(
-                f"STA Datastream with id {stream['sta_stream_id']} does not exist"
+                f"STA Datastream with id {stream['sta_stream_id']} does not exist "
+                f"on STA Thing {stream['sta_thing_id']}"
             )
+        if len(links) != 1:
+            raise ValueError(
+                f"STA Datastream {stream['sta_stream_id']} on STA Thing "
+                f"{stream['sta_thing_id']} has multiple deployment links; "
+                "cannot unambiguously select data for QC"
+            )
+        deployment_link = links[0]
 
-        tmp2 = self._fetchone(
+        datastream_metadata = self._fetchone(
             self._conn,
             f"""
-            SELECT position, mutable FROM {tmp1["schema"]}.datastream where id = %s
+            SELECT position, mutable FROM {deployment_link["schema"]}.datastream where id = %s
             """,
-            tmp1["datastream_id"],
+            deployment_link["datastream_id"],
         )
-        if tmp2 is None:
+        if datastream_metadata is None:
             raise ValueError(
                 f"Failed to query STA datastream {stream['sta_stream_id']}"
             )
 
-        return tmp1 | tmp2
+        return deployment_link | datastream_metadata
 
     def _get_new_stream(self, stream):
         out = self._fetchone(

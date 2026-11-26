@@ -12,6 +12,7 @@ import pandas as pd
 
 from timeio.common import ObservationResultType, get_result_field_name
 from timeio.databases import DBapi
+from timeio.qc.qcfunction import merge_qc_streams
 
 if typing.TYPE_CHECKING:
     from timeio.qc.saqc import SaQCWrapper
@@ -55,7 +56,9 @@ def write_qc_data(dbapi: DBapi, qc: SaQCWrapper):
             # trim context window away
             df = df.loc[df.index[0] + stream.context_window :]
 
-            df["result_time"] = df.index.strftime("%Y-%m-%dT%H:%M:%S")
+            # The QC index is UTC. Include microseconds and an explicit UTC marker
+            # so the database matches the original observation in any timezone.
+            df["result_time"] = df.index.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             df["result_type"] = rt = get_result_type(df["data"])
             df["datastream_id"] = stream.db_stream_id
             df["datastream_pos"] = stream.datastream_name
@@ -173,7 +176,7 @@ def read_stream_data(
         end_date = pd.Timestamp(end_date).tz_localize("Europe/Berlin")
 
     out = {}
-    for stream in streams:
+    for stream in merge_qc_streams(streams):
         if stream.db_stream_id:
             start = max(filter(None, [start_date, stream.start_date]))
             end = min(filter(None, [end_date, stream.end_date]))
