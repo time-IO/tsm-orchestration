@@ -1,3 +1,5 @@
+import math
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
@@ -94,6 +96,24 @@ def filter_ingests(params: httpx.QueryParams) -> list[dict]:
     return items
 
 
+def paginate(items: list[dict], params: httpx.QueryParams) -> dict:
+    page = int(params.get("page", 1))
+    size = int(params.get("size", 50))
+    start = (page - 1) * size
+    return {
+        "items": items[start : start + size],
+        "total": len(items),
+        "page": page,
+        "size": size,
+        "pages": math.ceil(len(items) / size),
+    }
+
+
+@pytest.fixture
+def dsm_permission_groups():
+    return list(DSM_PERMISSION_GROUPS["items"])
+
+
 @pytest.fixture
 def dsm_requests():
     """Collects the requests that reached the mocked DSM API."""
@@ -108,7 +128,7 @@ def permission_groups_cache():
 
 
 @pytest.fixture(autouse=True)
-def dsm_client(dsm_requests, monkeypatch):
+def dsm_client(dsm_requests, dsm_permission_groups, monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
         dsm_requests.append(request)
         if request.headers.get("authorization") != "Bearer valid":
@@ -116,7 +136,9 @@ def dsm_client(dsm_requests, monkeypatch):
         if request.url.path == "/me/":
             return httpx.Response(200, json=DSM_ME)
         if request.url.path == "/permission-group/":
-            return httpx.Response(200, json=DSM_PERMISSION_GROUPS)
+            return httpx.Response(
+                200, json=paginate(dsm_permission_groups, request.url.params)
+            )
         if request.url.path == "/ingest/":
             return httpx.Response(
                 200, json={"items": filter_ingests(request.url.params)}
