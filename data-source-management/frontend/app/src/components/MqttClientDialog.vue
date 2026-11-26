@@ -15,35 +15,20 @@
         <q-btn v-close-popup dense flat round icon="close" />
       </q-card-section>
 
-      <q-card-section class="row items-center q-gutter-sm q-pb-none">
-        <div class="text-caption text-grey-7">
-          {{ messages.length }} message{{ messages.length === 1 ? '' : 's' }}
-          <span v-if="dropped > 0" class="text-orange-9">· {{ dropped }} dropped</span>
-        </div>
-        <q-space />
-        <q-btn
-          dense
-          flat
-          icon="delete_sweep"
-          label="Clear"
-          :disable="!messages.length"
-          @click="messages = []"
-        />
-      </q-card-section>
-
       <q-card-section class="q-pt-sm col column no-wrap" style="min-height: 0">
         <overview-table
           v-model:pagination="pagination"
-          :rows="messages"
-          :loading="false"
+          :rows="rows"
+          :loading="loading"
           :columns="columns"
           storage-key="mqtt-messages"
           :column-widths="columnWidths"
           :column-toggle="false"
-          row-key="key"
+          binary-state-sort
           dense
           virtual-scroll
-          :no-data-label="status === 'connected' ? 'Waiting for messages…' : 'Not connected'"
+          no-data-label="No messages"
+          @request="onRequest"
         />
       </q-card-section>
 
@@ -93,10 +78,11 @@ import { computed, onUnmounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
 import OverviewTable from '@/components/common/OverviewTable.vue';
+import { API } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
 import { MqttLiveConnection } from '@/services/ingest_mqtt_client';
-import type { MqttLiveMessage } from '@/services/ingest_mqtt_client/types';
-import type { QTableRequestPropPagination } from '@/services/types';
+import type { MqttMessage } from '@/services/ingest_mqtt_messages/types';
+import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import type { ColumnWidths } from '@/utils/overview_table_utils';
 
 const showDialog = defineModel<boolean>({ default: false });
@@ -108,35 +94,40 @@ const { ingestId, topic } = defineProps<{
 const $q = useQuasar();
 const authStore = useAuthStore();
 
-type Row = MqttLiveMessage & { key: string; time: string };
+const initialPagination = (): QTableRequestPropPagination => ({
+  sortBy: 'timestamp',
+  descending: true,
+  page: 1,
+  rowsPerPage: 25,
+  rowsNumber: 0,
+});
 
-const MAX_ROWS = 500;
-const messages = ref<Row[]>([]);
-const dropped = ref(0);
+const rows = ref<MqttMessage[]>([]);
+const loading = ref(false);
+const pagination = ref<QTableRequestPropPagination>(initialPagination());
+
 const status = ref<'connecting' | 'connected' | 'closed' | 'error'>('closed');
 const publishSuffix = ref('');
 const publishPayload = ref('');
 
 let conn: MqttLiveConnection | null = null;
-let seq = 0;
-
-const pagination = ref<QTableRequestPropPagination>({
-  sortBy: '',
-  descending: false,
-  page: 1,
-  rowsPerPage: 25,
-});
+let requestSeq = 0;
 
 const columnWidths: ColumnWidths = {
-  time: { min: 8, default: 10, max: 16 },
-  topic: { min: 10, default: 20 },
-  payload: { min: 20, default: 40 },
+  timestamp: { min: 10, default: 12, max: 20 },
+  message: { min: 20, default: 48 },
 };
 
-const columns: QTableColumn<Row>[] = [
-  { name: 'time', label: 'Received', field: 'time', align: 'left' },
-  { name: 'topic', label: 'Topic', field: 'topic', align: 'left' },
-  { name: 'payload', label: 'Payload', field: 'payload', align: 'left' },
+const columns: QTableColumn<MqttMessage>[] = [
+  {
+    name: 'timestamp',
+    label: 'Received',
+    field: 'timestamp',
+    align: 'left',
+    sortable: true,
+    format: (v: string) => new Date(v).toLocaleString(),
+  },
+  { name: 'message', label: 'Payload', field: 'message', align: 'left' },
 ];
 
 const statusLabel = computed(
@@ -155,9 +146,33 @@ const statusColor = computed(
     ],
 );
 
+async function loadMessages(requested: QTableRequestPropPagination) {
+  const seq = ++requestSeq;
+  loading.value = true;
+  try {
+    const { data } = await API.ingestMqttMessages.fetchMqttMessages(ingestId, {
+      page_number: requested.page,
+      page_size: requested.rowsPerPage,
+      order: requested.descending ? 'desc' : 'asc',
+    });
+    // ignore responses of requests that were superseded meanwhile
+    if (seq !== requestSeq) return;
+    rows.value = data.mqtt_messages;
+    pagination.value = { ...requested, rowsNumber: data.total };
+  } catch {
+    if (seq === requestSeq) {
+      $q.notify({ type: 'negative', message: 'Failed to load MQTT messages' });
+    }
+  } finally {
+    if (seq === requestSeq) loading.value = false;
+  }
+}
+
+function onRequest({ pagination: requested }: QTableRequestProp) {
+  void loadMessages(requested);
+}
+
 function onOpen() {
-  messages.value = [];
-  dropped.value = 0;
   status.value = 'connecting';
   const token = authStore.accessToken;
   if (!token) {
@@ -168,21 +183,6 @@ function onOpen() {
   conn = new MqttLiveConnection(ingestId, token, {
     onConnected: () => {
       status.value = 'connected';
-    },
-    onMessage: (m) => {
-      messages.value.unshift({
-        ...m,
-        key: `${Date.now()}-${seq++}`,
-        // No explicit hour12: let each locale pick its own convention
-        // (en-US → am/pm, most of Europe → 24h).
-        time: new Date(m.received_at).toLocaleTimeString(),
-      });
-      if (messages.value.length > MAX_ROWS) {
-        messages.value.length = MAX_ROWS;
-      }
-    },
-    onDropped: (count) => {
-      dropped.value = count;
     },
     onPublished: () => {
       $q.notify({ type: 'positive', message: 'Message published', timeout: 800 });
@@ -208,6 +208,10 @@ function closeConnection() {
 
 function onHide() {
   closeConnection();
+  requestSeq++;
+  loading.value = false;
+  rows.value = [];
+  pagination.value = initialPagination();
 }
 
 onUnmounted(closeConnection);
