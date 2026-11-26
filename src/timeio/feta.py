@@ -486,6 +486,7 @@ class ExtAPI(Base):
         "uba": "ingest_external_api_uba",
         "zentra": "ingest_external_api_zentra",
         "sensoto": "ingest_external_api_sensoto",
+        "myatmosphere": "ingest_external_api_myatmosphere",
     }
     _schema = SCHEMA
     _table_name = "ingest_external_api"

@@ -13,6 +13,7 @@ When adding a changelog entry, ensure the following:
 ## [Unreleased]
 
 ### Added
+- Palas MyAtmosphere Device Measurements external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/827))
 - Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
 - Component Tests: IngestOverviewExternalApiFilter, IngestOverviewExternalApiTable, IngestOverviewFilter, IngestOverviewTable and TriggerExternalApiDialog ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/792))
 - Superusers can reparse files of file-based ingests from the DSM ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/810))

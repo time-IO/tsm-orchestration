@@ -54,6 +54,8 @@ export const default_ingest_columns: QTableColumn[] = [
           return 'Sensoto';
         case 'zentra':
           return 'Zentra';
+        case 'myatmosphere':
+          return 'Palas MyAtmosphere Device Measurements';
         default:
           return 'Type not defined';
       }
@@ -127,6 +129,8 @@ export const default_ingest_external_api_columns: QTableColumn[] = [
           return 'Sensoto';
         case 'zentra':
           return 'Zentra';
+        case 'myatmosphere':
+          return 'Palas MyAtmosphere Device Measurements';
         default:
           return '';
       }
@@ -235,6 +239,8 @@ export const generateIngestPath = (val: IngestWithApiInfoRead) => {
           return `/ingest/external-api/sensoto/${val.id}`;
         case 'zentra':
           return `/ingest/external-api/zentra/${val.id}`;
+        case 'myatmosphere':
+          return `/ingest/external-api/myatmosphere/${val.id}`;
         default:
           return 'api type not defined';
       }
@@ -286,6 +292,8 @@ export const formatExternalApiType = (val: string | null) => {
       return 'Sensoto';
     case 'zentra':
       return 'Zentra';
+    case 'myatmosphere':
+      return 'Palas MyAtmosphere Device Measurements';
     default:
       return val;
   }

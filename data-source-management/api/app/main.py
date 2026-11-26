@@ -25,6 +25,7 @@ from routers import (
     ingest_external_api_bosch,
     ingest_external_api_sensoto,
     ingest_external_api_zentra,
+    ingest_external_api_myatmosphere,
     quality_control_setting,
     neutron_monitor_station,
     health,
@@ -85,6 +86,7 @@ app.include_router(ingest_external_api_tsystems.router)
 app.include_router(ingest_external_api_uba.router)
 app.include_router(ingest_external_api_sensoto.router)
 app.include_router(ingest_external_api_zentra.router)
+app.include_router(ingest_external_api_myatmosphere.router)
 app.include_router(ingest_external_sftp.router)
 app.include_router(ingest_external_mqtt.router)
 app.include_router(ingest_mqtt.router)

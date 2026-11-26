@@ -15,6 +15,7 @@ const API_TYPES = [
   { id: 'uba', name: 'Umweltbundesamt (UBA) Air Data' },
   { id: 'sensoto', name: 'Sensoto' },
   { id: 'zentra', name: 'Zentra' },
+  { id: 'myatmosphere', name: 'Palas MyAtmosphere Device Measurements' },
 ];
 
 function mountIngestExternalApiTypeSelect(props: Record<string, unknown> = {}) {
@@ -34,7 +35,7 @@ const getSelect = (w: ReturnType<typeof mountIngestExternalApiTypeSelect>) =>
 
 describe('IngestExternalApiTypeSelect', () => {
   describe('initialization', () => {
-    it('offers exactly the seven api types in this order', () => {
+    it('offers exactly these api types in this order', () => {
       const options = getSelect(mountIngestExternalApiTypeSelect()).props('options');
       expect(options).toEqual(API_TYPES);
     });

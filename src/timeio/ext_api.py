@@ -821,3 +821,69 @@ class ZentraApiSyncer(ExtApiSyncer):
                     }
                     bodies.append(body)
         return bodies
+
+
+class MyAtmosphereApiSyncer(ExtApiSyncer):
+    base_url = "https://api.my-atmosphere.cloud/api"
+    # API maximum for $top on the customer endpoint
+    page_size = 50000
+    non_data_fields = frozenset({"timestamp", "saved_at", "serial_number"})
+
+    def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
+        settings = thing.ext_api.settings
+        customer = quote(str(settings["customer_id"]), safe="")
+        serial = str(settings["serial_number"])
+        url = (
+            f"{self.base_url}/customers/{customer}"
+            f"/devices/{quote(serial, safe='')}/measurements"
+        )
+        dt_from = self.normalize_datetime(content["datetime_from"])
+        dt_to = self.normalize_datetime(content["datetime_to"])
+        headers = {"Api-Key": decrypt(settings["api_key"], get_crypt_key())}
+        # without $orderby/$top the API returns only the newest 50 rows
+        params = {
+            "$filter": f"timestamp ge {dt_from} and timestamp lt {dt_to}",
+            "$orderby": "timestamp asc",
+            "$top": self.page_size,
+            "$count": "true",
+        }
+        records = []
+        while True:
+            res = request_with_handling(
+                "GET", url, params={**params, "$skip": len(records)}, headers=headers
+            )
+            page = res.json()
+            for rec in page:
+                rec["serial_number"] = serial
+            records.extend(page)
+            # prefer Total-Count so a silently lower server cap can't truncate
+            total = res.headers.get("Total-Count")
+            if total is not None:
+                done = len(records) >= int(total)
+            else:
+                done = len(page) < self.page_size
+            if not page or done:
+                return records
+
+    def do_parse(self, api_response):
+        bodies = []
+        for rec in api_response:
+            source = {"serial_number": rec["serial_number"]}
+            for field, value in rec.items():
+                if field in self.non_data_fields or value is None:
+                    continue
+                result_type = dynamic_parameter_mapping(value)
+                bodies.append(
+                    {
+                        "result_time": rec["timestamp"],
+                        "result_type": result_type,
+                        RESULT_TYPE_MAPPING[result_type]: self.result_value(
+                            result_type, value
+                        ),
+                        "datastream_pos": field,
+                        "parameters": json.dumps(
+                            {"origin": "myatmosphere_api", "column_header": source}
+                        ),
+                    }
+                )
+        return bodies

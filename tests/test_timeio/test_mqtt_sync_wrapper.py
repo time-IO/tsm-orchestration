@@ -60,3 +60,7 @@ def test_get_bosch_timerange_missing_period_raises_keyerror():
 
 def test_sensoto_mapped_to_bosch_timerange():
     assert TIMERANGE_MAPPING["sensoto"] is get_bosch_timerange
+
+
+def test_myatmosphere_uses_period_timerange():
+    assert TIMERANGE_MAPPING["myatmosphere"] is get_bosch_timerange
