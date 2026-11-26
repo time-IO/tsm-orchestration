@@ -161,7 +161,7 @@ class SaQCWrapper:
 
         # add targets
         for stream in func.targets:
-            self._streams[stream.alias] = stream
+            self._streams.setdefault(stream.alias, stream)
 
         saqc_func = getattr(self._qc, func.func_name)
 

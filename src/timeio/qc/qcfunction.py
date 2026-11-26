@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
@@ -59,7 +60,8 @@ class QcFunctionStream:
         if not isinstance(other, QcFunctionStream):
             return NotImplemented
         return (
-            self.sms_configuration_id == other.sms_configuration_id
+            self.alias == other.alias
+            and self.sms_configuration_id == other.sms_configuration_id
             and self.sta_stream_id == other.sta_stream_id
         )
 
@@ -69,6 +71,37 @@ class QcFunctionStream:
     def __repr__(self):
         klass = self.__class__.__name__
         return f"{klass}({self.key}, {self.alias})"
+
+
+def merge_qc_streams(streams: list[QcFunctionStream]) -> list[QcFunctionStream]:
+    """Merge shared aliases without losing history or hiding conflicting sources."""
+    merged = {}
+    source_attributes = (
+        "sms_configuration_id",
+        "sta_stream_id",
+        "db_schema",
+        "db_stream_id",
+        "thing_uuid",
+        "position",
+        "is_mutable",
+        "start_date",
+        "end_date",
+    )
+    for stream in streams:
+        if stream.alias not in merged:
+            merged[stream.alias] = copy.copy(stream)
+            continue
+        existing = merged[stream.alias]
+        if any(
+            getattr(existing, attr) != getattr(stream, attr)
+            for attr in source_attributes
+        ):
+            raise ValueError(f"Conflicting QC sources for alias '{stream.alias}'")
+        # Different QC settings can request different amounts of history for the
+        # same stream. Keep the largest window so every function gets enough
+        # preceding observations; keeping the first request could truncate history.
+        existing.context_window = max(existing.context_window, stream.context_window)
+    return list(merged.values())
 
 
 class QcFunction:
@@ -93,7 +126,7 @@ class QcFunction:
 
     @property
     def streams(self) -> list[QcFunctionStream]:
-        return list(set(self.fields + self.targets))
+        return merge_qc_streams(self.fields + self.targets)
 
     @property
     def field_names(self) -> list[str]:
@@ -151,35 +184,22 @@ def filter_thing_functions(
 def filter_functions_to_execute(
     all_funcs: list[QcFunction], selected_funcs: list[QcFunction]
 ) -> list[QcFunction]:
-    to_check = []
-    for func in selected_funcs:
-        targets = set(t.alias for t in func.targets)
-        for target in targets:
-            to_check.append(target)
-
-    # build up the function look up table
-    lut = {}
+    consumers = defaultdict(list)
     for func in all_funcs:
-        fields = set(f.alias for f in func.fields)
-        for field in fields:
-            lut[field] = func
+        for field in func.fields:
+            consumers[field].append(func)
 
+    to_check = list(selected_funcs)
     seen = set(selected_funcs)
+    for func in to_check:
+        for target in func.targets:
+            for consumer in consumers[target]:
+                if consumer not in seen:
+                    seen.add(consumer)
+                    to_check.append(consumer)
 
-    # NOTE:
-    # we explicitly allow cyclic dependencies, they are resolved in definition order
-    # in a setting like
-    # func1(field=x, target=y)
-    # func2(field=y, target=x)
-    # we allow func1 to write y and func2 to overwrite x
-    for target in to_check:
-        if target in lut:
-            func = lut[target]
-            to_check.append(func)
-            if func not in seen:
-                selected_funcs.append(func)
-
-    return selected_funcs
+    # Cycles are allowed; execute each selected function once, in definition order.
+    return [func for func in all_funcs if func in seen]
 
 
 def filter_qc_functions(funcs: list[QcFunction], thing_uuid: str) -> list[QcFunction]:
