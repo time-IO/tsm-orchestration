@@ -29,7 +29,16 @@
           virtual-scroll
           no-data-label="No messages"
           @request="onRequest"
-        />
+        >
+          <template #value-append="{ col, row }">
+            <copy-button
+              v-if="col.name === 'message'"
+              :text="row.message"
+              size="xs"
+              text-color="grey"
+            />
+          </template>
+        </overview-table>
       </q-card-section>
 
       <q-separator />
@@ -77,6 +86,7 @@
 import { computed, onUnmounted, ref } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
+import CopyButton from '@/components/common/CopyButton.vue';
 import OverviewTable from '@/components/common/OverviewTable.vue';
 import { API } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
