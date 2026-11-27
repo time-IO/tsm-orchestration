@@ -1,3 +1,4 @@
+import { date } from 'quasar';
 import { i18n } from '@/boot/i18n';
 import { isIsoDate } from '@/utils/validation/validators';
 
@@ -131,4 +132,20 @@ export function formatDate(date: Date, timeZone?: string): string {
   // "longOffset" yields e. g. "GMT+01:00", or just "GMT" for UTC
   const offset = parts.timeZoneName?.replace('GMT', '') || '+00:00';
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} ${offset}`;
+}
+
+export const dateTimePickerFormat = 'YYYY-MM-DD HH:mm:ss';
+export const dateTimePickerInputMask = dateTimePickerFormat.replace(/[A-Za-z]/g, '#');
+const dateTimePickerRegex = new RegExp(`^${dateTimePickerInputMask.replaceAll('#', '\\d')}$`);
+
+/**
+ * Parses a value of the DateTimePicker component, interpreted as local time.
+ *
+ * @param value - A value like "2024-01-01 13:00:00"
+ * @returns The Date, or null if the value is empty, incomplete or not an existing date
+ */
+export function parseDateTimePickerValue(value: string | null | undefined): Date | null {
+  if (!value || !dateTimePickerRegex.test(value)) return null;
+  const parsed = date.extractDate(value, dateTimePickerFormat);
+  return date.formatDate(parsed, dateTimePickerFormat) === value ? parsed : null;
 }

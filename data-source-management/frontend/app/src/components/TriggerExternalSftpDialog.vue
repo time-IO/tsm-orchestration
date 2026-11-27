@@ -57,7 +57,8 @@ import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerSyncExtSftpBase } from '@/services/trigger_external_sftp/types';
 import { useTriggerExternalSftpStore } from '@/stores/externalSftpTriggerStore';
-import { date, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
+import { parseDateTimePickerValue } from '@/utils/time_utils';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 const { ingest_id } = defineProps<{
@@ -72,19 +73,10 @@ const endDate = ref<string | undefined>('');
 const submitting = ref(false);
 
 const emit = defineEmits(['success']);
-const dateFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-const dateTimeFormat = 'YYYY-MM-DD HH:mm:ss';
-
-function isValidDate(value: string): boolean {
-  if (!dateFormat.test(value)) return false;
-  const parsed = date.extractDate(value, dateTimeFormat);
-  return !Number.isNaN(parsed.getTime()) && date.formatDate(parsed, dateTimeFormat) === value;
-}
-
 const validationError = computed(() => {
-  if (beginDate.value && !isValidDate(beginDate.value))
+  if (beginDate.value && !parseDateTimePickerValue(beginDate.value))
     return 'Start date has an invalid format (YYYY-MM-DD HH:MM:SS).';
-  if (endDate.value && !isValidDate(endDate.value))
+  if (endDate.value && !parseDateTimePickerValue(endDate.value))
     return 'End date has an invalid format (YYYY-MM-DD HH:MM:SS).';
   if (beginDate.value && endDate.value && new Date(beginDate.value) >= new Date(endDate.value))
     return 'End date must be after start date.';

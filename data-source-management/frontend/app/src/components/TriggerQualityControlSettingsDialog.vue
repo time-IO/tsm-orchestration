@@ -48,7 +48,8 @@ import DateTimePicker from '@/components/DateTimePicker.vue';
 import { computed, ref } from 'vue';
 import type { TriggerQCSBase } from '@/services/quality_control_settings_trigger/types';
 import { useTriggerQCSStore } from '@/stores/qualityControlSettingsTriggerStore';
-import { date, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
+import { parseDateTimePickerValue } from '@/utils/time_utils';
 
 const showDialog = defineModel<boolean | null>({ default: false });
 const { ids_to_trigger } = defineProps<{
@@ -70,26 +71,17 @@ const beginDateIsAfterEndDate = computed(() => {
 const emit = defineEmits(['success']);
 
 const validationError = computed(() => {
-  if (!isValidDate(beginDate.value) || !isValidDate(endDate.value))
+  if (!parseDateTimePickerValue(beginDate.value) || !parseDateTimePickerValue(endDate.value))
     return 'Date has an invalid format (YYYY-MM-DD HH:MM:SS).';
   if (new Date(beginDate.value) >= new Date(endDate.value))
     return 'End date must be after begin date.';
   return null;
 });
 
-const dateFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-const dateTimeFormat = 'YYYY-MM-DD HH:mm:ss';
-
-function isValidDate(value: string): boolean {
-  if (!dateFormat.test(value)) return false;
-  const parsed = date.extractDate(value, dateTimeFormat);
-  return !Number.isNaN(parsed.getTime()) && date.formatDate(parsed, dateTimeFormat) === value;
-}
-
 async function triggerQC() {
   if (ids_to_trigger.length === 0) return;
 
-  if (!isValidDate(beginDate.value) || !isValidDate(endDate.value)) {
+  if (!parseDateTimePickerValue(beginDate.value) || !parseDateTimePickerValue(endDate.value)) {
     $q.notify({
       type: 'negative',
       position: 'top',

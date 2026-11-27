@@ -3,13 +3,13 @@
     filled
     v-model="model"
     label="Select begin date"
-    mask="####-##-## ##:##:##"
+    :mask="dateTimePickerInputMask"
     v-bind="$attrs"
   >
     <template v-slot:append>
       <q-icon name="access_time" class="cursor-pointer">
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-          <q-time v-model="model" mask="YYYY-MM-DD HH:mm:ss" format24h with-seconds>
+          <q-time v-model="model" :mask="dateTimePickerFormat" format24h with-seconds>
             <div class="row items-center justify-end">
               <q-btn v-close-popup label="Close" color="primary" flat />
             </div>
@@ -21,7 +21,7 @@
     <template v-slot:prepend>
       <q-icon name="event" class="cursor-pointer">
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-          <q-date v-model="model" mask="YYYY-MM-DD HH:mm:ss">
+          <q-date v-model="model" :mask="dateTimePickerFormat">
             <div class="row items-center justify-end">
               <q-btn v-close-popup label="Close" color="primary" flat />
             </div>
@@ -33,6 +33,8 @@
 </template>
 
 <script setup lang="ts">
+import { dateTimePickerFormat, dateTimePickerInputMask } from '@/utils/time_utils';
+
 const model = defineModel<string | undefined>();
 </script>
 
