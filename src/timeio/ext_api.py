@@ -17,8 +17,9 @@ class NoHttpsError(Exception):
 
 
 class ExtApiRequestError(Exception):
-    def __init__(self, msg, status_code=None):
+    def __init__(self, msg, status_code=None, response=None):
         self.msg = f"{msg}. Status code: {status_code}" if status_code else msg
+        self.response = response
         super().__init__(self.msg)
 
 
@@ -82,14 +83,12 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         status_code = e.response.status_code
         if status_code == 401:
             raise ExtApiRequestError(
-                f"Unauthorized for url {url}", status_code=status_code
+                f"Unauthorized for url {url}", status_code, e.response
             )
         elif status_code == 403:
-            raise ExtApiRequestError("Forbidden", status_code=status_code)
+            raise ExtApiRequestError("Forbidden", status_code, e.response)
         else:
-            body = re.sub(r"(token=)[^&\s'\"]+", r"\1***", e.response.text or "")
-            body = f" ({body[:200]})" if body else ""
-            raise ExtApiRequestError(f"HTTP request failed{body}", status_code)
+            raise ExtApiRequestError("HTTP request failed", status_code, e.response)
     except requests.exceptions.RequestException as e:
         msg = re.sub(r"(token=)[^&\s'\"]+", r"\1***", str(e))
         raise ExtApiRequestError(f"Network error: {msg}")
@@ -715,6 +714,18 @@ class SensotoApiSyncer(ExtApiSyncer):
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+    @staticmethod
+    def _error_msg(e: ExtApiRequestError, token: str | None) -> str:
+        """Append Sensoto's JSON `message` (only that field) to the error."""
+        try:
+            detail = str(e.response.json()["message"])
+        except Exception:
+            return e.msg
+        if token:
+            detail = detail.replace(token, "***")
+        detail = re.sub(r"(token=)[^&\s'\"]+", r"\1***", detail)[:200]
+        return f"{e.msg} ({detail})"
+
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         network, device = (
@@ -734,8 +745,9 @@ class SensotoApiSyncer(ExtApiSyncer):
                 network, device, auth_params, organization=organization
             )
         except ExtApiRequestError as e:
+            msg = self._error_msg(e, auth_params.get("token"))
             raise ExtApiRequestError(
-                f"Sensoto device '{device}': fetching sensor list failed: {e.msg}"
+                f"Sensoto device '{device}': fetching sensor list failed: {msg}"
             )
         api_response = list()
         failed = list()
@@ -753,7 +765,9 @@ class SensotoApiSyncer(ExtApiSyncer):
                     params=params,
                 )
             except ExtApiRequestError as e:
-                failed.append(f"'{sensor}': {e.msg}")
+                failed.append(
+                    f"'{sensor}': {self._error_msg(e, auth_params.get('token'))}"
+                )
                 continue
             api_data = res.json()
             for i in api_data:

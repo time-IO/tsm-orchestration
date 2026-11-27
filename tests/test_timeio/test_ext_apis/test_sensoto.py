@@ -64,8 +64,11 @@ def test_sensoto_iso(value, expected):
     assert ext_api.SensotoApiSyncer._iso(value) == expected
 
 
-def _error(mock_response, status_code, text):
-    return mock_response(status_code=status_code, text=text)
+def _error(mock_response, status_code, data=None, text=None):
+    resp = mock_response(status_code=status_code, data=data, text=text)
+    if data is None:
+        resp.json.side_effect = ValueError("no json")
+    return resp
 
 
 @patch("timeio.ext_api.requests.request")
@@ -73,7 +76,7 @@ def test_sensoto_partial_failure(mock_req, mock_response, mock_thing):
     thing = mock_thing(SENSOTO_SETTINGS)
     mock_req.side_effect = [
         mock_response(data={"items": [{"name": "s1"}, {"name": "s2"}]}),
-        _error(mock_response, 500, '{"code": 500, "message": "boom"}'),
+        _error(mock_response, 500, {"code": 500, "message": "boom"}),
         mock_response(data=[{"end": "2025-01-01T00:15Z", "v": 2.2}]),
     ]
 
@@ -92,7 +95,7 @@ def test_sensoto_all_sensors_fail(mock_req, mock_response, mock_thing):
     thing = mock_thing(SENSOTO_SETTINGS)
     mock_req.side_effect = [
         mock_response(data={"items": [{"name": "s1"}]}),
-        _error(mock_response, 500, "boom"),
+        _error(mock_response, 500, text="<html>boom</html>"),
     ]
 
     with pytest.raises(ext_api.ExtApiRequestError) as exc:
@@ -100,29 +103,49 @@ def test_sensoto_all_sensors_fail(mock_req, mock_response, mock_thing):
 
     assert not isinstance(exc.value, ext_api.ExtApiPartialResult)
     assert "1 of 1" in exc.value.msg
+    assert "html" not in exc.value.msg
 
 
 @patch("timeio.ext_api.requests.request")
 def test_sensoto_sensor_list_fails(mock_req, mock_response, mock_thing):
     thing = mock_thing(SENSOTO_SETTINGS)
-    mock_req.return_value = _error(mock_response, 500, "boom")
+    mock_req.return_value = _error(mock_response, 500, {"message": "no such device"})
 
     with pytest.raises(ext_api.ExtApiRequestError) as exc:
         ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
 
     assert "sensor list" in exc.value.msg
+    assert "no such device" in exc.value.msg
+
+
+@patch("timeio.ext_api.get_crypt_key", return_value="dummy-key")
+@patch("timeio.ext_api.decrypt", return_value="tk1.secret")
+@patch("timeio.ext_api.requests.request")
+def test_sensoto_error_message_masks_token(
+    mock_req, mock_decrypt, mock_key, mock_response, mock_thing
+):
+    thing = mock_thing({**SENSOTO_SETTINGS, "token": "encrypted-token"})
+    mock_req.return_value = _error(
+        mock_response, 400, {"message": "bad token tk1.secret, url ?token=other"}
+    )
+
+    with pytest.raises(ext_api.ExtApiRequestError) as exc:
+        ext_api.SensotoApiSyncer().fetch_api_data(thing, CONTENT)
+
+    assert "tk1.secret" not in exc.value.msg
+    assert "token=other" not in exc.value.msg
+    assert "bad token ***" in exc.value.msg
 
 
 @patch("timeio.ext_api.requests.request")
-def test_request_with_handling_error_body_masks_token(mock_req, mock_response):
-    mock_req.return_value = _error(mock_response, 400, "bad url ?token=tk1.secret")
+def test_request_with_handling_keeps_body_out_of_message(mock_req, mock_response):
+    mock_req.return_value = _error(mock_response, 400, {"message": "secret echo"})
 
     with pytest.raises(ext_api.ExtApiRequestError) as exc:
         ext_api.request_with_handling("GET", "https://example.org/x")
 
-    assert "tk1.secret" not in exc.value.msg
-    assert "token=***" in exc.value.msg
-    assert "400" in exc.value.msg
+    assert exc.value.msg == "HTTP request failed. Status code: 400"
+    assert exc.value.response is mock_req.return_value
 
 
 def test_sensoto_do_parse():
