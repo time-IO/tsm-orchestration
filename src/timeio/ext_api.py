@@ -17,9 +17,19 @@ class NoHttpsError(Exception):
 
 
 class ExtApiRequestError(Exception):
-    def __init__(self, msg, status_code=None):
+    def __init__(self, msg, status_code=None, response=None):
         self.msg = f"{msg}. Status code: {status_code}" if status_code else msg
+        self.response = response
         super().__init__(self.msg)
+
+
+class ExtApiPartialResult(Exception):
+    """Some requests failed; `data` holds what was fetched successfully."""
+
+    def __init__(self, msg, data):
+        self.msg = msg
+        self.data = data
+        super().__init__(msg)
 
 
 class ExtApiSyncer(ABC):
@@ -73,12 +83,12 @@ def request_with_handling(method, url, timeout=(10, 60), **kwargs):
         status_code = e.response.status_code
         if status_code == 401:
             raise ExtApiRequestError(
-                f"Unauthorized for url {url}", status_code=status_code
+                f"Unauthorized for url {url}", status_code, e.response
             )
         elif status_code == 403:
-            raise ExtApiRequestError("Forbidden", status_code=status_code)
+            raise ExtApiRequestError("Forbidden", status_code, e.response)
         else:
-            raise ExtApiRequestError("HTTP request failed", status_code)
+            raise ExtApiRequestError("HTTP request failed", status_code, e.response)
     except requests.exceptions.RequestException as e:
         msg = re.sub(r"(token=)[^&\s'\"]+", r"\1***", str(e))
         raise ExtApiRequestError(f"Network error: {msg}")
@@ -696,6 +706,26 @@ class SensotoApiSyncer(ExtApiSyncer):
     def _networks_url(self, organization):
         return f"{self.organizations_url}/{self._seg(organization)}/networks"
 
+    @staticmethod
+    def _iso(value: str) -> str:
+        """Sensoto requires ISO-8601; the DSM trigger sends 'YYYY-MM-DD HH:MM:SS' (UTC)."""
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @staticmethod
+    def _error_msg(e: ExtApiRequestError, token: str | None) -> str:
+        """Append Sensoto's JSON `message` (only that field) to the error."""
+        try:
+            detail = str(e.response.json()["message"])
+        except Exception:
+            return e.msg
+        if token:
+            detail = detail.replace(token, "***")
+        detail = re.sub(r"(token=)[^&\s'\"]+", r"\1***", detail)[:200]
+        return f"{e.msg} ({detail})"
+
     def fetch_api_data(self, thing: Thing, content: MqttPayload.SyncExtApiT):
         settings = thing.ext_api.settings
         network, device = (
@@ -710,28 +740,50 @@ class SensotoApiSyncer(ExtApiSyncer):
         if token_enc := settings.get("token"):
             auth_params["token"] = decrypt(token_enc, get_crypt_key())
 
-        sensor_data = self.get_sensor_data(
-            network, device, auth_params, organization=organization
-        )
+        try:
+            sensors = self.get_sensors(
+                network, device, auth_params, organization=organization
+            )
+        except ExtApiRequestError as e:
+            msg = self._error_msg(e, auth_params.get("token"))
+            raise ExtApiRequestError(
+                f"Sensoto device '{device}': fetching sensor list failed: {msg}"
+            )
         api_response = list()
+        failed = list()
         params = {
-            "start": content["datetime_from"],
-            "end": content["datetime_to"],
+            "start": self._iso(content["datetime_from"]),
+            "end": self._iso(content["datetime_to"]),
             "timeFormat": "interval",
             **auth_params,
         }
-        for s in sensor_data:
-            res = request_with_handling(
-                "GET",
-                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s['sensor'])}/measurements/raw",
-                params=params,
-            )
+        for sensor in sensors:
+            try:
+                res = request_with_handling(
+                    "GET",
+                    f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(sensor)}/measurements/raw",
+                    params=params,
+                )
+            except ExtApiRequestError as e:
+                failed.append(
+                    f"'{sensor}': {self._error_msg(e, auth_params.get('token'))}"
+                )
+                continue
             api_data = res.json()
             for i in api_data:
-                i["sensor"] = s["sensor"]
+                i["sensor"] = sensor
                 i["network"] = network
                 i["device"] = device
             api_response.extend(api_data)
+
+        if failed:
+            msg = (
+                f"Sensoto device '{device}': {len(failed)} of {len(sensors)} "
+                f"sensors failed: " + "; ".join(failed)
+            )
+            if len(failed) == len(sensors):
+                raise ExtApiRequestError(msg)
+            raise ExtApiPartialResult(msg, api_response)
         return api_response
 
     def do_parse(self, api_response):
@@ -754,25 +806,15 @@ class SensotoApiSyncer(ExtApiSyncer):
 
         return bodies
 
-    def get_sensor_data(self, network, device, params=None, organization=None):
+    def get_sensors(self, network, device, params=None, organization=None):
         networks_url = self._networks_url(organization or self.default_organization)
         net, dev = self._seg(network), self._seg(device)
-        sensor_data = list()
         sensors_resp = request_with_handling(
             "GET",
             f"{networks_url}/{net}/devices/{dev}/sensors",
             params=params,
         )
-        sensors = [i["name"] for i in sensors_resp.json()["items"]]
-        for s in sensors:
-            agg_resp = request_with_handling(
-                "GET",
-                f"{networks_url}/{net}/devices/{dev}/sensors/{self._seg(s)}",
-                params=params,
-            )
-            agg = agg_resp.json()["phenomenon"]["aggregation"]
-            sensor_data.append({"sensor": s, "aggregation": agg})
-        return sensor_data
+        return [i["name"] for i in sensors_resp.json()["items"]]
 
 
 class ZentraApiSyncer(ExtApiSyncer):
