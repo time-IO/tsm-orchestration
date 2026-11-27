@@ -31,7 +31,7 @@ When adding a changelog entry, ensure the following:
 - Sensoto manual sync date format and failing sensors aborting the whole sync ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/832))
 
 ### Changed
-- FROST 2.7.3 and patch updates of base and service images ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
+- FROST 2.7.3 and patch updates of base and service images ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/834))
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 - Some enhancements to generic overview table and usage for STA datastream selection and External API trigger ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/821))
 - Permission group of ingests and QC settings can no longer be changed after creation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/826))
