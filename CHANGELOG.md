@@ -26,6 +26,7 @@ When adding a changelog entry, ensure the following:
 - QC is triggered for external MQTT ingests ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/830))
 - Users with membership in more than 50 permission groups now see all of their STA Hub endpoints as internal ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/829))
 - Timezone information is preserved when writing QC results ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/831))
+- Sensoto manual sync date format and failing sensors aborting the whole sync ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/832))
 
 ### Changed
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
