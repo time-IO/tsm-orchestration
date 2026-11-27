@@ -1,21 +1,56 @@
 <template>
   <q-dialog
     v-model="showDialog"
+    :maximized="$q.screen.lt.md"
     backdrop-filter="blur(4px) saturate(150%)"
     @keydown.esc="showDialog = false"
     @show="onOpen"
     @hide="onHide"
   >
-    <q-card class="q-pa-sm column no-wrap" style="width: 60vw; max-width: 80vw; height: 80vh">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">MQTT Client</div>
-        <q-badge :color="statusColor" class="q-ml-md" :label="statusLabel" text-color="white" />
+    <q-card
+      class="q-pa-sm column no-wrap"
+      :style="$q.screen.lt.md ? undefined : 'width: 60vw; max-width: 80vw; height: 80vh'"
+    >
+      <q-card-section class="row no-wrap items-center q-pb-none">
+        <div class="text-h6 ellipsis" style="min-width: 0">Message History</div>
+        <q-btn
+          class="q-ml-md no-wrap"
+          style="flex-shrink: 0"
+          :outline="!isLive"
+          :unelevated="isLive"
+          :color="isLive ? 'negative' : 'grey-7'"
+          icon="fiber_manual_record"
+          label="Live"
+          size="sm"
+          dense
+          padding="2px 8px"
+          @click="enableLive"
+        >
+          <q-tooltip>
+            {{
+              isLive
+                ? 'New messages appear automatically'
+                : 'Click to show the newest messages automatically'
+            }}
+          </q-tooltip>
+        </q-btn>
         <q-space />
-        <div class="text-caption text-grey-7 q-mr-sm">{{ topic }}/#</div>
+        <q-btn
+          class="q-ml-sm q-mr-sm no-pointer-events"
+          style="flex-shrink: 0"
+          unelevated
+          :color="statusColor"
+          :label="statusLabel"
+          size="sm"
+          dense
+          padding="2px 8px"
+          :ripple="false"
+          tabindex="-1"
+        />
         <q-btn v-close-popup dense flat round icon="close" />
       </q-card-section>
 
-      <q-card-section class="q-pt-sm col column no-wrap" style="min-height: 0">
+      <q-card-section class="q-pt-sm col column no-wrap mqtt-messages" style="min-height: 0">
         <overview-table
           v-model:pagination="pagination"
           :rows="rows"
@@ -32,22 +67,24 @@
           @cell-click="onCellClick"
         >
           <template #toolbar>
-            <date-time-picker
-              v-model="dateFrom"
-              clearable
-              dense
-              hide-bottom-space
-              label="Received after"
-              style="width: 230px"
-            />
-            <date-time-picker
-              v-model="dateTo"
-              clearable
-              dense
-              hide-bottom-space
-              label="Received before"
-              style="width: 230px"
-            />
+            <div class="col row items-center mqtt-toolbar">
+              <date-time-picker
+                v-model="dateFrom"
+                clearable
+                dense
+                hide-bottom-space
+                label="Received after"
+                class="mqtt-filter"
+              />
+              <date-time-picker
+                v-model="dateTo"
+                clearable
+                dense
+                hide-bottom-space
+                label="Received before"
+                class="mqtt-filter"
+              />
+            </div>
           </template>
 
           <template #value-append="{ col, row }">
@@ -61,42 +98,45 @@
         </overview-table>
       </q-card-section>
 
-      <q-separator />
-
-      <q-card-section>
-        <div class="text-subtitle2 text-weight-medium q-mb-sm">Publish a test message</div>
-        <div class="row q-col-gutter-md items-start">
-          <div class="col-12 col-md-6">
-            <q-input
-              v-model="publishSuffix"
-              dense
-              outlined
-              label="Topic"
-              :prefix="`${topic}/`"
-              hint="Sub-topic under this ingest (leave empty for the base topic)"
-            />
-          </div>
-          <div class="col-12 col-md-6">
+      <q-card-section class="q-pt-none">
+        <q-card flat>
+          <q-card-section class="q-pa-none">
+            <div class="row items-center q-mb-sm">
+              <div class="text-h6">Publish a test message</div>
+            </div>
             <q-input
               v-model="publishPayload"
-              dense
+              class="mqtt-payload-input"
               outlined
               type="textarea"
-              autogrow
+              rows="4"
               label="Payload"
             />
-          </div>
-        </div>
-        <div class="row items-center q-mt-sm">
-          <q-space />
-          <q-btn
-            color="primary"
-            icon="publish"
-            label="Publish"
-            :disable="status !== 'connected'"
-            @click="doPublish"
-          />
-        </div>
+            <div class="row q-col-gutter-x-md q-col-gutter-y-sm items-start q-pt-md">
+              <div class="col-12 col-md row no-wrap items-start">
+                <div class="mqtt-topic-prefix" :title="`${topic}/`">{{ topic }}/</div>
+                <q-input
+                  v-model="publishSuffix"
+                  class="col mqtt-topic-suffix"
+                  dense
+                  outlined
+                  placeholder="Sub-topic"
+                  hint="Leave empty to publish to the base topic"
+                />
+              </div>
+              <div class="col-12 col-md-auto row justify-end">
+                <q-btn
+                  color="primary"
+                  icon="publish"
+                  label="Publish"
+                  style="height: 40px"
+                  :disable="status !== 'connected'"
+                  @click="doPublish"
+                />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
       </q-card-section>
     </q-card>
 
@@ -176,7 +216,13 @@ const columns: QTableColumn<MqttMessage>[] = [
     sortable: true,
     format: (v: string) => new Date(v).toLocaleString(),
   },
-  { name: 'message', label: 'Payload', field: 'message', align: 'left', classes: 'cursor-pointer' },
+  {
+    name: 'message',
+    label: 'Payload',
+    field: 'message',
+    align: 'left',
+    classes: 'mqtt-payload cursor-pointer',
+  },
 ];
 
 const statusLabel = computed(
@@ -242,10 +288,26 @@ const liveRefreshRequirementsAreMet = computed(() => {
   return page === 1 && descending && !dateTo.value;
 });
 
+const isLive = computed(() => status.value === 'connected' && liveRefreshRequirementsAreMet.value);
+
 function onCellClick(colName: string, row: MqttMessage) {
   if (colName !== 'message') return;
   selectedMessage.value = row;
   payloadDialogOpen.value = true;
+}
+
+function enableLive() {
+  if (isLive.value) return;
+  if (status.value === 'closed' || status.value === 'error') {
+    closeConnection();
+    onOpen();
+  }
+  pagination.value = { ...pagination.value, page: 1, sortBy: 'timestamp', descending: true };
+  if (dateTo.value) {
+    dateTo.value = undefined;
+  } else {
+    void loadMessages(pagination.value);
+  }
 }
 
 function scheduleLiveRefresh() {
@@ -310,3 +372,45 @@ function doPublish() {
   conn.publish(publishSuffix.value, publishPayload.value);
 }
 </script>
+
+<style scoped>
+.mqtt-messages :deep(td.mqtt-payload),
+.mqtt-payload-input :deep(textarea) {
+  font-family: monospace;
+}
+
+.mqtt-toolbar {
+  gap: 8px;
+}
+
+.mqtt-filter {
+  flex: 1 1 200px;
+  max-width: 260px;
+}
+
+.mqtt-topic-prefix {
+  min-width: 0;
+  height: 40px;
+  line-height: 38px;
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid rgba(0, 0, 0, 0.24);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  background-color: #f5f5f5;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.mqtt-topic-suffix {
+  min-width: 140px;
+}
+
+.mqtt-topic-suffix :deep(.q-field__control),
+.mqtt-topic-suffix :deep(.q-field__control::before),
+.mqtt-topic-suffix :deep(.q-field__control::after) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+</style>
