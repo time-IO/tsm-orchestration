@@ -130,7 +130,7 @@
                   icon="publish"
                   label="Publish"
                   style="height: 40px"
-                  :disable="status !== 'connected'"
+                  :disable="status !== 'connected' || !publishPayload.trim()"
                   @click="doPublish"
                 />
               </div>
@@ -330,6 +330,7 @@ function onOpen() {
     },
     onMessage: scheduleLiveRefresh,
     onPublished: () => {
+      publishPayload.value = '';
       $q.notify({ type: 'positive', message: 'Message published', timeout: 800 });
     },
     onError: (detail) => {
