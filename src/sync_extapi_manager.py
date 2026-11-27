@@ -23,6 +23,7 @@ from timeio.ext_api import (
     ZentraApiSyncer,
     MyAtmosphereApiSyncer,
     ExtApiRequestError,
+    ExtApiPartialResult,
     NoHttpsError,
 )
 
@@ -65,6 +66,9 @@ class SyncExtApiManager(AbstractHandler):
         syncer = self.sync_handlers[ext_api_name]
         try:
             data = syncer.fetch_api_data(thing, content)
+        except ExtApiPartialResult as e:
+            journal.warning(e.msg, thing.uuid)
+            data = e.data
         except (ExtApiRequestError, NoHttpsError) as e:
             journal.error(e.msg, thing.uuid)
             return
