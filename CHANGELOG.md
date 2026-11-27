@@ -12,6 +12,8 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-11-27]
+
 ### Added
 - Palas MyAtmosphere Device Measurements external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/827))
 - Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
@@ -29,6 +31,7 @@ When adding a changelog entry, ensure the following:
 - Sensoto manual sync date format and failing sensors aborting the whole sync ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/832))
 
 ### Changed
+- FROST 2.7.3 and patch updates of base and service images ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 - Some enhancements to generic overview table and usage for STA datastream selection and External API trigger ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/821))
 - Permission group of ingests and QC settings can no longer be changed after creation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/826))
@@ -53,7 +56,6 @@ When adding a changelog entry, ensure the following:
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))
 - update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))
 - CVE scan lists fixable critical CVEs per image and package with fix version ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/797))
-- MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 
 ### Removed
 - deprecated Thing Management database credentials ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/805))
