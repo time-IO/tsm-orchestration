@@ -119,6 +119,7 @@
               ['action', 'created_by'].includes(col.name) ? 'text-center' : 'text-left',
               { 'col-highlight': col.name === highlightedCol },
             ]"
+            @click="emit('cell-click', col.name, props.row)"
           >
             <template v-if="col.name === 'action'">
               <slot name="actions" :row="props.row" :open-delete-dialog="openDeleteDialog" />
@@ -235,6 +236,7 @@ const emit = defineEmits<{
   request: [props: QTableRequestProp];
   // `closeDialog` lets the parent decide when the confirm dialog is closed
   delete: [id: number | null, closeDialog: () => void];
+  'cell-click': [colName: string, row: Row];
 }>();
 const tableRef = ref();
 

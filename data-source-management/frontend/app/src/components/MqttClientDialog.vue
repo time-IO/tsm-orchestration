@@ -29,6 +29,7 @@
           virtual-scroll
           no-data-label="No messages"
           @request="onRequest"
+          @cell-click="onCellClick"
         >
           <template #toolbar>
             <date-time-picker
@@ -98,6 +99,13 @@
         </div>
       </q-card-section>
     </q-card>
+
+    <json-content-dialog
+      v-model="payloadDialogOpen"
+      title="Payload"
+      :subtitle="selectedMessage ? new Date(selectedMessage.timestamp).toLocaleString() : undefined"
+      :content="selectedMessage?.message ?? null"
+    />
   </q-dialog>
 </template>
 
@@ -106,6 +114,7 @@ import { computed, onUnmounted, ref, watch } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
 import CopyButton from '@/components/common/CopyButton.vue';
+import JsonContentDialog from '@/components/common/JsonContentDialog.vue';
 import OverviewTable from '@/components/common/OverviewTable.vue';
 import DateTimePicker from '@/components/DateTimePicker.vue';
 import { API } from '@/services';
@@ -143,6 +152,8 @@ const dateFrom = ref<string | undefined>(undefined);
 const dateTo = ref<string | undefined>(undefined);
 
 const status = ref<'connecting' | 'connected' | 'closed' | 'error'>('closed');
+const selectedMessage = ref<MqttMessage | null>(null);
+const payloadDialogOpen = ref(false);
 const publishSuffix = ref('');
 const publishPayload = ref('');
 
@@ -165,7 +176,7 @@ const columns: QTableColumn<MqttMessage>[] = [
     sortable: true,
     format: (v: string) => new Date(v).toLocaleString(),
   },
-  { name: 'message', label: 'Payload', field: 'message', align: 'left' },
+  { name: 'message', label: 'Payload', field: 'message', align: 'left', classes: 'cursor-pointer' },
 ];
 
 const statusLabel = computed(
@@ -230,6 +241,12 @@ const liveRefreshRequirementsAreMet = computed(() => {
   const { page, descending } = pagination.value;
   return page === 1 && descending && !dateTo.value;
 });
+
+function onCellClick(colName: string, row: MqttMessage) {
+  if (colName !== 'message') return;
+  selectedMessage.value = row;
+  payloadDialogOpen.value = true;
+}
 
 function scheduleLiveRefresh() {
   if (!liveRefreshRequirementsAreMet.value) return;
