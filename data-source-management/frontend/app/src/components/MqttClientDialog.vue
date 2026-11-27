@@ -385,8 +385,8 @@ function doPublish() {
 }
 
 .mqtt-filter {
-  flex: 1 1 200px;
-  max-width: 260px;
+  flex: 1 1 260px;
+  max-width: 340px;
 }
 
 .mqtt-topic-prefix {
