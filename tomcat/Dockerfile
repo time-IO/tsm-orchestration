@@ -1,6 +1,6 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-ARG TOMCAT_IMAGE=tomcat:11.0.27-jdk25-temurin
+ARG TOMCAT_IMAGE=tomcat:11.0.29-jdk25-temurin
 
 # Build stage: same base, so the JDK and servlet-api.jar match the runtime.
 FROM ${TOMCAT_IMAGE} AS context-api
@@ -35,7 +35,7 @@ ARG UID=1000
 ARG GID=1000
 ARG FROST_URL=https://repo1.maven.org/maven2/de/fraunhofer/iosb/ilt/FROST-Server/FROST-Server.HTTP/$FROST_VERSION/FROST-Server.HTTP-$FROST_VERSION.war
 ARG POSTGIS_JDBC_URL=https://repo1.maven.org/maven2/net/postgis/postgis-jdbc/2025.1.1/postgis-jdbc-2025.1.1.jar
-ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.14/postgresql-42.7.14.jar
+ARG POSTGRESQL_URL=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.15/postgresql-42.7.15.jar
 
 LABEL maintainer="The ZID Team" \
     org.opencontainers.image.title="time.IO FROST-Server Image" \

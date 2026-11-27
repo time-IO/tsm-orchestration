@@ -1,6 +1,6 @@
 # Base image: exact version tag, never a floating one (latest, major-only,
 # trixie-slim, ...). Bump it deliberately in a merge request.
-FROM alpine:3.24.2
+FROM alpine:3.24.4
 ARG UID=1000
 
 ARG BUILD_DATE
