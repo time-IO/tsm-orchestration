@@ -30,6 +30,25 @@
           no-data-label="No messages"
           @request="onRequest"
         >
+          <template #toolbar>
+            <date-time-picker
+              v-model="dateFrom"
+              clearable
+              dense
+              hide-bottom-space
+              label="Received after"
+              style="width: 230px"
+            />
+            <date-time-picker
+              v-model="dateTo"
+              clearable
+              dense
+              hide-bottom-space
+              label="Received before"
+              style="width: 230px"
+            />
+          </template>
+
           <template #value-append="{ col, row }">
             <copy-button
               v-if="col.name === 'message'"
@@ -83,17 +102,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import type { QTableColumn } from 'quasar';
 import { useQuasar } from 'quasar';
 import CopyButton from '@/components/common/CopyButton.vue';
 import OverviewTable from '@/components/common/OverviewTable.vue';
+import DateTimePicker from '@/components/DateTimePicker.vue';
 import { API } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
 import { MqttLiveConnection } from '@/services/ingest_mqtt_client';
 import type { MqttMessage } from '@/services/ingest_mqtt_messages/types';
 import type { QTableRequestProp, QTableRequestPropPagination } from '@/services/types';
 import type { ColumnWidths } from '@/utils/overview_table_utils';
+import { parseDateTimePickerValue } from '@/utils/time_utils';
 
 const showDialog = defineModel<boolean>({ default: false });
 const { ingestId, topic } = defineProps<{
@@ -103,6 +124,9 @@ const { ingestId, topic } = defineProps<{
 
 const $q = useQuasar();
 const authStore = useAuthStore();
+
+const LIVE_REFRESH_DELAY_MS = 1500;
+const FILTER_DEBOUNCE_MS = 300;
 
 const initialPagination = (): QTableRequestPropPagination => ({
   sortBy: 'timestamp',
@@ -115,6 +139,8 @@ const initialPagination = (): QTableRequestPropPagination => ({
 const rows = ref<MqttMessage[]>([]);
 const loading = ref(false);
 const pagination = ref<QTableRequestPropPagination>(initialPagination());
+const dateFrom = ref<string | undefined>(undefined);
+const dateTo = ref<string | undefined>(undefined);
 
 const status = ref<'connecting' | 'connected' | 'closed' | 'error'>('closed');
 const publishSuffix = ref('');
@@ -122,6 +148,8 @@ const publishPayload = ref('');
 
 let conn: MqttLiveConnection | null = null;
 let requestSeq = 0;
+let filterTimer: ReturnType<typeof setTimeout> | undefined;
+let liveRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
 const columnWidths: ColumnWidths = {
   timestamp: { min: 10, default: 12, max: 20 },
@@ -156,11 +184,16 @@ const statusColor = computed(
     ],
 );
 
+const isUsableFilter = (value: string | undefined | null) =>
+  !value || parseDateTimePickerValue(value) !== null;
+
 async function loadMessages(requested: QTableRequestPropPagination) {
   const seq = ++requestSeq;
   loading.value = true;
   try {
     const { data } = await API.ingestMqttMessages.fetchMqttMessages(ingestId, {
+      datetime_from: parseDateTimePickerValue(dateFrom.value)?.toISOString(),
+      datetime_to: parseDateTimePickerValue(dateTo.value)?.toISOString(),
       page_number: requested.page,
       page_size: requested.rowsPerPage,
       order: requested.descending ? 'desc' : 'asc',
@@ -182,6 +215,28 @@ function onRequest({ pagination: requested }: QTableRequestProp) {
   void loadMessages(requested);
 }
 
+watch([dateFrom, dateTo], () => {
+  if (!showDialog.value || !isUsableFilter(dateFrom.value) || !isUsableFilter(dateTo.value)) {
+    return;
+  }
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(
+    () => void loadMessages({ ...pagination.value, page: 1 }),
+    FILTER_DEBOUNCE_MS,
+  );
+});
+
+const liveRefreshRequirementsAreMet = computed(() => {
+  const { page, descending } = pagination.value;
+  return page === 1 && descending && !dateTo.value;
+});
+
+function scheduleLiveRefresh() {
+  if (!liveRefreshRequirementsAreMet.value) return;
+  clearTimeout(liveRefreshTimer);
+  liveRefreshTimer = setTimeout(() => void loadMessages(pagination.value), LIVE_REFRESH_DELAY_MS);
+}
+
 function onOpen() {
   status.value = 'connecting';
   const token = authStore.accessToken;
@@ -194,6 +249,7 @@ function onOpen() {
     onConnected: () => {
       status.value = 'connected';
     },
+    onMessage: scheduleLiveRefresh,
     onPublished: () => {
       $q.notify({ type: 'positive', message: 'Message published', timeout: 800 });
     },
@@ -211,6 +267,8 @@ function onOpen() {
 }
 
 function closeConnection() {
+  clearTimeout(filterTimer);
+  clearTimeout(liveRefreshTimer);
   conn?.close();
   conn = null;
   status.value = 'closed';
@@ -221,6 +279,8 @@ function onHide() {
   requestSeq++;
   loading.value = false;
   rows.value = [];
+  dateFrom.value = undefined;
+  dateTo.value = undefined;
   pagination.value = initialPagination();
 }
 
