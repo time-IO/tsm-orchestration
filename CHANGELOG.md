@@ -12,6 +12,8 @@ When adding a changelog entry, ensure the following:
 
 ## [Unreleased]
 
+## [2026-11-27]
+
 ### Added
 - Palas MyAtmosphere Device Measurements external API ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/827))
 - Component tests for (async select): PermissionGroupSelect, ParserEncodingSelect, ParserTimezoneSelect, NeutronMonitorStationSelect, MqttParserSelect.([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/771))
@@ -29,6 +31,7 @@ When adding a changelog entry, ensure the following:
 - Sensoto manual sync date format and failing sensors aborting the whole sync ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/832))
 
 ### Changed
+- FROST 2.7.3 and patch updates of base and service images ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/834))
 - MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 - Some enhancements to generic overview table and usage for STA datastream selection and External API trigger ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/821))
 - Permission group of ingests and QC settings can no longer be changed after creation ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/826))
@@ -44,7 +47,7 @@ When adding a changelog entry, ensure the following:
 
 ### Fixed
 - Larger warnings in the parser test results now remain fully visible on smaller screens and at higher zoom levels ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/811))
-- FROST keepalive ping via `FROST_KEEPALIVE_INTERVAL` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/XXX))
+- FROST keepalive ping via `FROST_KEEPALIVE_INTERVAL` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/819))
 - Http Ingest: displays and copies full URL of the endpoint; additional infos how to use the api key ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/806))
 - CSV parser preserves observations from the repeated hour when switching from daylight saving time to standard time by inferring the correct UTC offsets ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/812))
 
@@ -53,7 +56,6 @@ When adding a changelog entry, ensure the following:
 - re-enable lightweight access token for `timeIO-client` and allow userinfo with it ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/804))
 - update keycloak and mqtt-notifier JAR; disable lightweight access token for `timeIO-client` ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/802))
 - CVE scan lists fixable critical CVEs per image and package with fix version ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/797))
-- MQTT ingest journal entries are more helpful ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/793))
 
 ### Removed
 - deprecated Thing Management database credentials ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/805))
@@ -110,7 +112,7 @@ When adding a changelog entry, ensure the following:
 - Grafana STA panels show the same data as FROST ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/747))
 - QC journal entries only list the QC settings that were actually executed ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/749))
 - The MQTT service integration test waits for the broker's healthcheck instead of fixed sleeps (twenty seconds before the test, two seconds after restarting the broker), which made the job fail at random on busy runners ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/736))
-- Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request]())
+- Monitoring MQTT-Broker: add missing mqtt_broker columns, ignore unknown metrics, reported as a warning ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/748))
 - Soilcan parser was parsing corrupted files leading to corrupted data ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/743))
 - QC: false `ImmutableDatastreamError` and NaN upload error when processing functions write to a new datastream ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/750))
 - Dragging columns in overview tables is smoother and does not generate unnecessary whitespace ([Merge Request](https://codebase.helmholtz.cloud/ufz-tsm/tsm-orchestration/-/merge_requests/742))

@@ -1,5 +1,5 @@
 # Exact version tag, never a floating one.
-FROM ghcr.io/lhns/mosquitto-go-auth:3.5.0-mosquitto_2.1.2
+FROM ghcr.io/lhns/mosquitto-go-auth:3.5.1-mosquitto_2.1.2
 
 ARG BUILD_DATE
 ARG VCS_REF
